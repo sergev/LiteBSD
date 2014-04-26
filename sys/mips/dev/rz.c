@@ -58,8 +58,8 @@
 #include <sys/stat.h>
 #include <sys/syslog.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/scsi.h>
+#include <mips/dev/device.h>
+#include <mips/dev/scsi.h>
 
 extern int splbio();
 extern void splx();

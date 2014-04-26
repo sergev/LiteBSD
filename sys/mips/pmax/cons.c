@@ -49,13 +49,13 @@
 #include <sys/file.h>
 #include <sys/conf.h>
 
-#include <pmax/stand/dec_prom.h>
+#include <mips/stand/dec_prom.h>
 
 /*
  * Console I/O is redirected to the appropriate device, either a screen and
  * keyboard, a serial port, or the "virtual" console.
  */
-#include <pmax/pmax/cons.h>
+#include <mips/pmax/cons.h>
 
 extern struct tty *constty;	/* virtual console output device */
 
@@ -80,7 +80,7 @@ cnopen(dev, flag, mode, p)
 	dev = cn_tab.cn_dev;
 	return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
 }
- 
+
 cnclose(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
@@ -91,7 +91,7 @@ cnclose(dev, flag, mode, p)
 	dev = cn_tab.cn_dev;
 	return ((*cdevsw[major(dev)].d_close)(dev, flag, mode, p));
 }
- 
+
 cnread(dev, uio, flag)
 	dev_t dev;
 	struct uio *uio;
@@ -101,7 +101,7 @@ cnread(dev, uio, flag)
 	dev = cn_tab.cn_dev;
 	return ((*cdevsw[major(dev)].d_read)(dev, uio, flag));
 }
- 
+
 cnwrite(dev, uio, flag)
 	dev_t dev;
 	struct uio *uio;
@@ -113,7 +113,7 @@ cnwrite(dev, uio, flag)
 	dev = cn_tab.cn_dev;
 	return ((*cdevsw[major(dev)].d_write)(dev, uio, flag));
 }
- 
+
 cnioctl(dev, cmd, data, flag, p)
 	dev_t dev;
 	caddr_t data;

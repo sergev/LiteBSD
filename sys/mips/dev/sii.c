@@ -52,11 +52,11 @@
 #include <sys/errno.h>
 
 #include <machine/machConst.h>
-#include <pmax/dev/device.h>
-#include <pmax/dev/scsi.h>
-#include <pmax/dev/siireg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/scsi.h>
+#include <mips/dev/siireg.h>
 
-#include <pmax/pmax/kn01.h>
+#include <mips/pmax/kn01.h>
 
 int	siiprobe();
 void	siistart();
@@ -99,7 +99,7 @@ struct siisoftc {
 	State	sc_st[SII_NCMD];	/* state info for each active command */
 } sii_softc[NSII];
 
-/* 
+/*
  * MACROS for timing out spin loops.
  *
  * Wait until expression is true.
@@ -285,7 +285,7 @@ sii_Reset(regs, reset)
 		register int i;
 
 		/*
-		 * Assert SCSI bus reset for at least 25 Usec to clear the 
+		 * Assert SCSI bus reset for at least 25 Usec to clear the
 		 * world. SII_DO_RST is self clearing.
 		 * Delay 250 ms before doing any commands.
 		 */
@@ -322,7 +322,7 @@ sii_StartCmd(sc, target)
 	register struct siisoftc *sc;	/* which SII to use */
 	register int target;		/* which command to start */
 {
-	register SIIRegs *regs;	
+	register SIIRegs *regs;
 	register ScsiCmd *scsicmd;
 	register State *state;
 	register u_int status;
@@ -618,7 +618,7 @@ again:
 
 		/*
 		 * There is a race condition with SII_SCH. There is a short
-		 * window between the time a SII_SCH is seen after a disconnect 
+		 * window between the time a SII_SCH is seen after a disconnect
 		 * and when the SII_SCH is cleared. A reselect can happen
 		 * in this window and we will clear the SII_SCH without
 		 * processing the reconnect.
@@ -725,7 +725,7 @@ again:
 	if (dstat & (SII_MIS | SII_IBF | SII_TBE)) {
 		/*
 		 * There is a race condition with SII_SCH. There is a short
-		 * window between the time a SII_SCH is seen after a disconnect 
+		 * window between the time a SII_SCH is seen after a disconnect
 		 * and when the SII_SCH is cleared. A reselect can happen
 		 * in this window and we will clear the SII_SCH without
 		 * processing the reconnect.
@@ -1703,7 +1703,7 @@ sii_StartDMA(regs, phase, dmaAddr, size)
 
 #ifdef DEBUG
 	if (sii_debug > 5) {
-		printf("sii_StartDMA: cs 0x%x, ds 0x%x, cm 0x%x, size %d\n", 
+		printf("sii_StartDMA: cs 0x%x, ds 0x%x, cm 0x%x, size %d\n",
 			regs->cstat, regs->dstat, regs->comm, size);
 	}
 #endif

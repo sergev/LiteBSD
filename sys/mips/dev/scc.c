@@ -36,28 +36,28 @@
  *	@(#)scc.c	8.3 (Berkeley) 6/2/95
  */
 
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -87,13 +87,13 @@
 
 #include <machine/pmioctl.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/pdma.h>
-#include <pmax/dev/sccreg.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/pdma.h>
+#include <mips/dev/sccreg.h>
+#include <mips/dev/fbreg.h>
 
-#include <pmax/pmax/cons.h>
-#include <pmax/pmax/pmaxtype.h>
+#include <mips/pmax/cons.h>
+#include <mips/pmax/pmaxtype.h>
 
 extern int pmax_boardtype;
 extern struct consdev cn_tab;

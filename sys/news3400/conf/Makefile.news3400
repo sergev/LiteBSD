@@ -25,14 +25,14 @@ AS=	cc2.11 -I
 LD=	/usr/local/gnu/lib/gcc-lib/mips-sony-bsd/2.3.3/ld
 
 S=	../..
-NEWS3400=	$S/news3400
+A=	$S/news3400
 
 INCLUDES= -I. -I$S
 COPTS=	${INCLUDES} ${IDENT} -Unews3800 -Unews3700 -Dmips -DKERNEL
 CFLAGS=	${COPTS}
 AHEADS=
 
-INLINECMD=	${NEWS3400}/inline/obj/inline
+INLINECMD=	$A/inline/obj/inline
 INLINE= ${INLINECMD} ${INLINEOPTS}
 
 
@@ -79,29 +79,29 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -DGENERIC ${COPTS} ${PARAM} \
-	  ${NEWS3400}/news3400/Locore.c ${CFILES} ioconf.c param.c | \
+	  $A/news3400/Locore.c ${CFILES} ioconf.c param.c | \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 
 ${INLINECMD}:
-	cd ${NEWS3400}/inline; make
+	cd $A/inline; make
 
-locore.o: assym.h ${AHEADS} ${NEWS3400}/news3400/locore.s
+locore.o: assym.h ${AHEADS} $A/news3400/locore.s
 locore.o: ../../sys/errno.h
 locore.o: ../../sys/syscall.h
 locore.o: ../../sys/cdefs.h
 locore.o: ../../sys/cdefs.h
-locore.o: ${NEWS3400}/include/param.h
-locore.o: ${NEWS3400}/include/vmparam.h
-locore.o: ${NEWS3400}/include/psl.h
-locore.o: ${NEWS3400}/include/machConst.h
-locore.o: ${NEWS3400}/include/reg.h
-locore.o: ${NEWS3400}/include/machAsmDefs.h
-locore.o: ${NEWS3400}/include/regdef.h
-locore.o: ${NEWS3400}/include/pte.h
-locore.o: ${NEWS3400}/include/endian.h
-locore.o: ${NEWS3400}/include/adrsmap.h
-	${AS} -c -DLOCORE ${COPTS} ${PARAM} ${NEWS3400}/news3400/locore.s
+locore.o: $A/include/param.h
+locore.o: $A/include/vmparam.h
+locore.o: $A/include/psl.h
+locore.o: $A/include/machConst.h
+locore.o: $A/include/reg.h
+locore.o: $A/include/machAsmDefs.h
+locore.o: $A/include/regdef.h
+locore.o: $A/include/pte.h
+locore.o: $A/include/endian.h
+locore.o: $A/include/adrsmap.h
+	${AS} -c -DLOCORE ${COPTS} ${PARAM} $A/news3400/locore.s
 
 # the following is necessary because autoconf.o depends on #if GENERIC
 autoconf.o tu.o: Makefile
@@ -121,12 +121,12 @@ assym.h: genassym
 
 genassym:
 	${CC} ${INCLUDES} ${IDENT} ${PARAM} -o genassym \
-	    ${NEWS3400}/news3400/genassym.c
+	    $A/news3400/genassym.c
 
 depend: assym.h param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c
 	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} \
-	    ${NEWS3400}/news3400/genassym.c
+	    $A/news3400/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

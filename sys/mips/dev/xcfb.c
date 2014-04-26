@@ -36,28 +36,28 @@
  *	@(#)xcfb.c	8.2 (Berkeley) 6/2/95
  */
 
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -69,7 +69,7 @@
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.  
+ *	provided that the above copyright notice appears in all copies.
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
@@ -99,14 +99,14 @@ xcfb needs dtop device
 #include <machine/machConst.h>
 #include <machine/pmioctl.h>
 
-#include <pmax/pmax/maxine.h>
-#include <pmax/pmax/cons.h>
-#include <pmax/pmax/pmaxtype.h>
+#include <mips/pmax/maxine.h>
+#include <mips/pmax/cons.h>
+#include <mips/pmax/pmaxtype.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/xcfbreg.h>
-#include <pmax/dev/dtopreg.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/xcfbreg.h>
+#include <mips/dev/dtopreg.h>
+#include <mips/dev/fbreg.h>
 
 /*
  * These need to be mapped into user space.
@@ -671,7 +671,7 @@ xcfbinit()
 	fp->fbu->scrInfo.max_cur_x = 1008;
 	fp->fbu->scrInfo.max_cur_y = 752;
 	fp->fbu->scrInfo.version = 11;
-	fp->fbu->scrInfo.mthreshold = 4;	
+	fp->fbu->scrInfo.mthreshold = 4;
 	fp->fbu->scrInfo.mscale = 2;
 	fp->fbu->scrInfo.min_cur_x = -15;
 	fp->fbu->scrInfo.min_cur_y = -15;

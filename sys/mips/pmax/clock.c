@@ -44,7 +44,7 @@
 #include <sys/kernel.h>
 
 #include <machine/machConst.h>
-#include <pmax/pmax/clockreg.h>
+#include <mips/pmax/clockreg.h>
 
 /*
  * Machine-dependent clock routines.

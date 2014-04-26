@@ -64,16 +64,16 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
-#include <pmax/pmax/clockreg.h>
-#include <pmax/pmax/kn01.h>
-#include <pmax/pmax/kn02.h>
-#include <pmax/pmax/kmin.h>
-#include <pmax/pmax/maxine.h>
-#include <pmax/pmax/kn03.h>
-#include <pmax/pmax/asic.h>
-#include <pmax/pmax/turbochannel.h>
+#include <mips/pmax/clockreg.h>
+#include <mips/pmax/kn01.h>
+#include <mips/pmax/kn02.h>
+#include <mips/pmax/kmin.h>
+#include <mips/pmax/maxine.h>
+#include <mips/pmax/kn03.h>
+#include <mips/pmax/asic.h>
+#include <mips/pmax/turbochannel.h>
 
-#include <pmax/stand/dec_prom.h>
+#include <mips/stand/dec_prom.h>
 
 #include <asc.h>
 #include <sii.h>
@@ -970,14 +970,14 @@ kmin_intr(mask, pc, statusReg, causeReg)
 		intr = *intrp;
 		/* masked interrupts are still observable */
 		intr &= old_mask;
-	
+
 		if (intr & KMIN_INTR_SCSI_PTR_LOAD) {
 			*intrp &= ~KMIN_INTR_SCSI_PTR_LOAD;
 #ifdef notdef
 			asc_dma_intr();
 #endif
 		}
-	
+
 		if (intr & (KMIN_INTR_SCSI_OVRUN | KMIN_INTR_SCSI_READ_E))
 			*intrp &= ~(KMIN_INTR_SCSI_OVRUN | KMIN_INTR_SCSI_READ_E);
 
@@ -986,34 +986,34 @@ kmin_intr(mask, pc, statusReg, causeReg)
 
 		if (intr & KMIN_INTR_TIMEOUT)
 			kn02ba_errintr();
-	
+
 		if (intr & KMIN_INTR_CLOCK) {
 			temp = c->regc;	/* XXX clear interrupt bits */
 			cf.pc = pc;
 			cf.sr = statusReg;
 			hardclock(&cf);
 		}
-	
+
 		if ((intr & KMIN_INTR_SCC_0) &&
 			tc_slot_info[KMIN_SCC0_SLOT].intr)
 			(*(tc_slot_info[KMIN_SCC0_SLOT].intr))
 			(tc_slot_info[KMIN_SCC0_SLOT].unit);
-	
+
 		if ((intr & KMIN_INTR_SCC_1) &&
 			tc_slot_info[KMIN_SCC1_SLOT].intr)
 			(*(tc_slot_info[KMIN_SCC1_SLOT].intr))
 			(tc_slot_info[KMIN_SCC1_SLOT].unit);
-	
+
 		if ((intr & KMIN_INTR_SCSI) &&
 			tc_slot_info[KMIN_SCSI_SLOT].intr)
 			(*(tc_slot_info[KMIN_SCSI_SLOT].intr))
 			(tc_slot_info[KMIN_SCSI_SLOT].unit);
-	
+
 		if ((intr & KMIN_INTR_LANCE) &&
 			tc_slot_info[KMIN_LANCE_SLOT].intr)
 			(*(tc_slot_info[KMIN_LANCE_SLOT].intr))
 			(tc_slot_info[KMIN_LANCE_SLOT].unit);
-	
+
 		if (user_warned && ((intr & KMIN_INTR_PSWARN) == 0)) {
 			printf("%s\n", "Power supply ok now.");
 			user_warned = 0;
@@ -1079,7 +1079,7 @@ xine_intr(mask, pc, statusReg, causeReg)
 			asc_dma_intr();
 #endif
 		}
-	
+
 		if (intr & (XINE_INTR_SCSI_OVRUN | XINE_INTR_SCSI_READ_E))
 			*intrp &= ~(XINE_INTR_SCSI_OVRUN | XINE_INTR_SCSI_READ_E);
 
@@ -1090,42 +1090,42 @@ xine_intr(mask, pc, statusReg, causeReg)
 			tc_slot_info[XINE_SCC0_SLOT].intr)
 			(*(tc_slot_info[XINE_SCC0_SLOT].intr))
 			(tc_slot_info[XINE_SCC0_SLOT].unit);
-	
+
 		if ((intr & XINE_INTR_DTOP_RX) &&
 			tc_slot_info[XINE_DTOP_SLOT].intr)
 			(*(tc_slot_info[XINE_DTOP_SLOT].intr))
 			(tc_slot_info[XINE_DTOP_SLOT].unit);
-	
+
 		if ((intr & XINE_INTR_FLOPPY) &&
 			tc_slot_info[XINE_FLOPPY_SLOT].intr)
 			(*(tc_slot_info[XINE_FLOPPY_SLOT].intr))
 			(tc_slot_info[XINE_FLOPPY_SLOT].unit);
-	
+
 		if ((intr & XINE_INTR_TC_0) &&
 			tc_slot_info[0].intr)
 			(*(tc_slot_info[0].intr))
 			(tc_slot_info[0].unit);
-	
+
 		if ((intr & XINE_INTR_TC_1) &&
 			tc_slot_info[1].intr)
 			(*(tc_slot_info[1].intr))
 			(tc_slot_info[1].unit);
-	
+
 		if ((intr & XINE_INTR_ISDN) &&
 			tc_slot_info[XINE_ISDN_SLOT].intr)
 			(*(tc_slot_info[XINE_ISDN_SLOT].intr))
 			(tc_slot_info[XINE_ISDN_SLOT].unit);
-	
+
 		if ((intr & XINE_INTR_SCSI) &&
 			tc_slot_info[XINE_SCSI_SLOT].intr)
 			(*(tc_slot_info[XINE_SCSI_SLOT].intr))
 			(tc_slot_info[XINE_SCSI_SLOT].unit);
-	
+
 		if ((intr & XINE_INTR_LANCE) &&
 			tc_slot_info[XINE_LANCE_SLOT].intr)
 			(*(tc_slot_info[XINE_LANCE_SLOT].intr))
 			(tc_slot_info[XINE_LANCE_SLOT].unit);
-	
+
 	}
 	if (mask & MACH_INT_MASK_2)
 		kn02ba_errintr();
@@ -1181,7 +1181,7 @@ kn03_intr(mask, pc, statusReg, causeReg)
 			asc_dma_intr();
 #endif
 		}
-	
+
 		if (intr & (KN03_INTR_SCSI_OVRUN | KN03_INTR_SCSI_READ_E))
 			*intrp &= ~(KN03_INTR_SCSI_OVRUN | KN03_INTR_SCSI_READ_E);
 
@@ -1192,37 +1192,37 @@ kn03_intr(mask, pc, statusReg, causeReg)
 			tc_slot_info[KN03_SCC0_SLOT].intr)
 			(*(tc_slot_info[KN03_SCC0_SLOT].intr))
 			(tc_slot_info[KN03_SCC0_SLOT].unit);
-	
+
 		if ((intr & KN03_INTR_SCC_1) &&
 			tc_slot_info[KN03_SCC1_SLOT].intr)
 			(*(tc_slot_info[KN03_SCC1_SLOT].intr))
 			(tc_slot_info[KN03_SCC1_SLOT].unit);
-	
+
 		if ((intr & KN03_INTR_TC_0) &&
 			tc_slot_info[0].intr)
 			(*(tc_slot_info[0].intr))
 			(tc_slot_info[0].unit);
-	
+
 		if ((intr & KN03_INTR_TC_1) &&
 			tc_slot_info[1].intr)
 			(*(tc_slot_info[1].intr))
 			(tc_slot_info[1].unit);
-	
+
 		if ((intr & KN03_INTR_TC_2) &&
 			tc_slot_info[2].intr)
 			(*(tc_slot_info[2].intr))
 			(tc_slot_info[2].unit);
-	
+
 		if ((intr & KN03_INTR_SCSI) &&
 			tc_slot_info[KN03_SCSI_SLOT].intr)
 			(*(tc_slot_info[KN03_SCSI_SLOT].intr))
 			(tc_slot_info[KN03_SCSI_SLOT].unit);
-	
+
 		if ((intr & KN03_INTR_LANCE) &&
 			tc_slot_info[KN03_LANCE_SLOT].intr)
 			(*(tc_slot_info[KN03_LANCE_SLOT].intr))
 			(tc_slot_info[KN03_LANCE_SLOT].unit);
-	
+
 		if (user_warned && ((intr & KN03_INTR_PSWARN) == 0)) {
 			printf("%s\n", "Power supply ok now.");
 			user_warned = 0;
@@ -1500,7 +1500,7 @@ MachEmulateBranch(regsPtr, instPC, fpcCSR, allowNonBranch)
 
 	case OP_J:
 	case OP_JAL:
-		retAddr = (inst.JType.target << 2) | 
+		retAddr = (inst.JType.target << 2) |
 			((unsigned)instPC & 0xF0000000);
 		break;
 

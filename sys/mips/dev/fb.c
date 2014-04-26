@@ -36,7 +36,7 @@
  *	@(#)fb.c	8.1 (Berkeley) 6/10/93
  */
 
-/* 
+/*
  *  devGraphics.c --
  *
  *     	This file contains machine-dependent routines for the graphics device.
@@ -44,7 +44,7 @@
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.  
+ *	provided that the above copyright notice appears in all copies.
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
@@ -81,14 +81,14 @@
 #include <machine/machConst.h>
 #include <machine/pmioctl.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/font.c>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/font.c>
+#include <mips/dev/fbreg.h>
 
-#include <pmax/stand/dec_prom.h>
+#include <mips/stand/dec_prom.h>
 
-#include <pmax/pmax/cons.h>
-#include <pmax/pmax/pmaxtype.h>
+#include <mips/pmax/cons.h>
+#include <mips/pmax/pmaxtype.h>
 
 #include <dc.h>
 #include <scc.h>
@@ -104,11 +104,11 @@ extern int dcGetc(), dcparam();
 extern void dcPutc();
 #endif
 #if NDTOP > 0
-#include <pmax/dev/dtopreg.h>
+#include <mips/dev/dtopreg.h>
 extern void dtopKBDPutc();
 #endif
 #if NSCC > 0
-#include <pmax/dev/sccreg.h>
+#include <mips/dev/sccreg.h>
 extern int sccGetc(), sccparam();
 extern void sccPutc();
 #endif
@@ -116,7 +116,7 @@ extern void sccPutc();
 /*
  * The default cursor.
  */
-u_short defCursor[32] = { 
+u_short defCursor[32] = {
 /* plane A */ 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF,
 	      0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF,
 /* plane B */ 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF, 0x00FF,
@@ -343,25 +343,25 @@ static unsigned char shiftedAscii[] = {
 /* fc */ KBD_NOKEY,	KBD_NOKEY,	KBD_NOKEY,	KBD_NOKEY,
 };
 
-/* 
+/*
  * Keyboard initialization string.
  */
 static u_char kbdInitString[] = {
 	LK_LED_ENABLE, LED_ALL,		/* show we are resetting keyboard */
 	LK_DEFAULTS,
-	LK_CMD_MODE(LK_AUTODOWN, 1), 
-	LK_CMD_MODE(LK_AUTODOWN, 2), 
-	LK_CMD_MODE(LK_AUTODOWN, 3), 
+	LK_CMD_MODE(LK_AUTODOWN, 1),
+	LK_CMD_MODE(LK_AUTODOWN, 2),
+	LK_CMD_MODE(LK_AUTODOWN, 3),
 	LK_CMD_MODE(LK_DOWN, 4),	/* could also be LK_AUTODOWN */
-	LK_CMD_MODE(LK_UPDOWN, 5),   
-	LK_CMD_MODE(LK_UPDOWN, 6),   
-	LK_CMD_MODE(LK_AUTODOWN, 7), 
-	LK_CMD_MODE(LK_AUTODOWN, 8), 
-	LK_CMD_MODE(LK_AUTODOWN, 9), 
-	LK_CMD_MODE(LK_AUTODOWN, 10), 
-	LK_CMD_MODE(LK_AUTODOWN, 11), 
-	LK_CMD_MODE(LK_AUTODOWN, 12), 
-	LK_CMD_MODE(LK_DOWN, 13), 
+	LK_CMD_MODE(LK_UPDOWN, 5),
+	LK_CMD_MODE(LK_UPDOWN, 6),
+	LK_CMD_MODE(LK_AUTODOWN, 7),
+	LK_CMD_MODE(LK_AUTODOWN, 8),
+	LK_CMD_MODE(LK_AUTODOWN, 9),
+	LK_CMD_MODE(LK_AUTODOWN, 10),
+	LK_CMD_MODE(LK_AUTODOWN, 11),
+	LK_CMD_MODE(LK_AUTODOWN, 12),
+	LK_CMD_MODE(LK_DOWN, 13),
 	LK_CMD_MODE(LK_AUTODOWN, 14),
 	LK_AR_ENABLE,			/* we want autorepeat by default */
 	LK_CL_ENABLE, 0x83,		/* keyclick, volume */
@@ -433,7 +433,7 @@ fbKbdEvent(ch, fp)
  *----------------------------------------------------------------------
  */
 void
-fbMouseEvent(newRepPtr, fp) 
+fbMouseEvent(newRepPtr, fp)
 	register MouseReport *newRepPtr;
 	register struct pmax_fb *fp;
 {
@@ -508,7 +508,7 @@ fbMouseEvent(newRepPtr, fp)
 		return;
 
 	i = PM_EVROUND(fp->fbu->scrInfo.qe.eTail - 1);
-	if ((fp->fbu->scrInfo.qe.eTail != fp->fbu->scrInfo.qe.eHead) && 
+	if ((fp->fbu->scrInfo.qe.eTail != fp->fbu->scrInfo.qe.eHead) &&
 	    (i != fp->fbu->scrInfo.qe.eHead)) {
 		pmEvent *eventPtr;
 
@@ -647,11 +647,11 @@ fbScroll(fp)
 	}
 
 	/*
-	 *  The following is an optimization to cause the scrolling 
-	 *  of text to be memory limited.  Basically the writebuffer is 
-	 *  4 words (32 bits ea.) long so to achieve maximum speed we 
-	 *  read and write in multiples of 4 words. We also limit the 
-	 *  size to be fp->fbu->scrInfo.max_col characters for more speed. 
+	 *  The following is an optimization to cause the scrolling
+	 *  of text to be memory limited.  Basically the writebuffer is
+	 *  4 words (32 bits ea.) long so to achieve maximum speed we
+	 *  read and write in multiples of 4 words. We also limit the
+	 *  size to be fp->fbu->scrInfo.max_col characters for more speed.
 	 */
 	if (fp->isMono) {
 		lineCount = 5;
@@ -689,8 +689,8 @@ fbScroll(fp)
 		dest += scanInc;
 	} while (src < end);
 
-	/* 
-	 * Now zero out the last two lines 
+	/*
+	 * Now zero out the last two lines
 	 */
 	bzero(fp->fr_addr + (fp->row * line), 3 * line);
 }
@@ -806,7 +806,7 @@ fbBlitc(c, fp)
 		if (c < ' ' || c > '~' && c < 0xA1 || c > 0xFD)
 			break;
 		/*
-		 * If the next character will wrap around then 
+		 * If the next character will wrap around then
 		 * increment fp->row counter or scroll screen.
 		 */
 		if (fp->col >= fp->fbu->scrInfo.max_col) {
@@ -820,12 +820,12 @@ fbBlitc(c, fp)
 			(fp->row * 15 & 0x3ff) * ote + fp->col * colMult);
 		i = c - ' ';
 		/*
-		 * This is to skip the (32) 8-bit 
-		 * control chars, as well as DEL 
+		 * This is to skip the (32) 8-bit
+		 * control chars, as well as DEL
 		 * and 0xA0 which aren't printable
 		 */
 		if (c > '~')
-			i -= 34; 
+			i -= 34;
 		i *= 15;
 		fRow = (char *)((int)pmFont + i);
 
@@ -854,24 +854,24 @@ fbBlitc(c, fp)
 			for (j = 0; j < 15; j++) {
 				/*
 				 * fontmaskBits converts a nibble
-				 * (4 bytes) to a long word 
+				 * (4 bytes) to a long word
 				 * containing 4 pixels corresponding
 				 * to each bit in the nibble.  Thus
 				 * we write two longwords for each
 				 * byte in font.
-				 * 
+				 *
 				 * Remember the font is 8 bits wide
 				 * and 15 bits high.
 				 *
 				 * We add 256/512 to the pointer to
-				 * point to the pixel on the 
+				 * point to the pixel on the
 				 * next scan line
 				 * directly below the current
 				 * pixel.
 				 */
 				pInt[0] = fontmaskBits[(*fRow) & 0xf];
 				pInt[1] = fontmaskBits[((*fRow) >> 4) & 0xf];
-				fRow++; 
+				fRow++;
 				if (fp->fbu->scrInfo.max_x > 1024)
 					pInt += 512;
 				else

@@ -23,13 +23,13 @@ C2=	/usr/old/libexec/c2
 LD=	/usr/bin/ld
 
 S=	../..
-TAHOE=	../../tahoe
+A=	../../tahoe
 
 INCLUDES= -I. -I$S -I$S/sys
 COPTS=	${INCLUDES} ${IDENT} -DKERNEL
 CFLAGS=	-O ${COPTS}
 
-INLINECMD=	${TAHOE}/inline/obj/inline
+INLINECMD=	$A/inline/obj/inline
 INLINE=	${INLINECMD} ${INLINEOPTS}
 
 %OBJS
@@ -44,23 +44,23 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -I. -DGENERIC ${COPTS} ${PARAM} \
-	  ${TAHOE}/tahoe/Locore.c ${CFILES} ioconf.c param.c | \
+	  $A/tahoe/Locore.c ${CFILES} ioconf.c param.c | \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 
-symbols.sort: ${TAHOE}/tahoe/symbols.raw
-	grep -v '^#' ${TAHOE}/tahoe/symbols.raw \
+symbols.sort: $A/tahoe/symbols.raw
+	grep -v '^#' $A/tahoe/symbols.raw \
 	    | sed 's/^	//' | sort -u > symbols.sort
 
 ${INLINECMD}:
-	cd ${TAHOE}/inline; make
+	cd $A/inline; make
 
-locore.o: assym.s ${TAHOE}/tahoe/scb.s vbvec.s ${TAHOE}/tahoe/locore.s 
-locore.o: vbglue.s ${TAHOE}/include/mtpr.h ${TAHOE}/include/trap.h 
-locore.o: ${TAHOE}/include/psl.h ${TAHOE}/include/pte.h ${TAHOE}/tahoe/cp.h
-locore.o: ${TAHOE}/tahoe/mem.h
+locore.o: assym.s $A/tahoe/scb.s vbvec.s $A/tahoe/locore.s
+locore.o: vbglue.s $A/include/mtpr.h $A/include/trap.h
+locore.o: $A/include/psl.h $A/include/pte.h $A/tahoe/cp.h
+locore.o: $A/tahoe/mem.h
 locore.o:
-	cat assym.s ${TAHOE}/tahoe/scb.s vbvec.s ${TAHOE}/tahoe/locore.s \
+	cat assym.s $A/tahoe/scb.s vbvec.s $A/tahoe/locore.s \
 	    vbglue.s > locore.c
 	${CC} -E -DLOCORE ${COPTS} locore.c > locore.i
 	@echo 'as -o locore.o locore.i'
@@ -84,11 +84,11 @@ assym.s: genassym
 
 genassym:
 	${CC} ${INCLUDES} ${IDENT} ${PARAM} -o genassym \
-	    ${TAHOE}/tahoe/genassym.c
+	    $A/tahoe/genassym.c
 
 depend: assym.s param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} ${TAHOE}/tahoe/genassym.c
+	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/tahoe/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

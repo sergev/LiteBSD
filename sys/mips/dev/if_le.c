@@ -85,13 +85,13 @@ extern llc_ctlinput(), cons_rtrequest();
 
 #include <machine/machConst.h>
 
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/kn01.h>
-#include <pmax/pmax/kmin.h>
-#include <pmax/pmax/asic.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/kn01.h>
+#include <mips/pmax/kmin.h>
+#include <mips/pmax/asic.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/if_lereg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/if_lereg.h>
 
 #if NBPFILTER > 0
 #include <net/bpf.h>
@@ -919,12 +919,12 @@ leioctl(ifp, cmd, data)
 			if (ns_nullhost(*ina))
 				ina->x_host = *(union ns_host *)(le->sc_addr);
 			else {
-				/* 
-				 * The manual says we can't change the address 
+				/*
+				 * The manual says we can't change the address
 				 * while the receiver is armed,
 				 * so reset everything
 				 */
-				ifp->if_flags &= ~IFF_RUNNING; 
+				ifp->if_flags &= ~IFF_RUNNING;
 				LEWREG(LE_STOP, ler1->ler1_rdp);
 				bcopy((caddr_t)ina->x_host.c_host,
 				    (caddr_t)le->sc_addr, sizeof(le->sc_addr));

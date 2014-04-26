@@ -58,9 +58,9 @@
 #include <sys/reboot.h>
 
 #include <machine/cpu.h>
-#include <pmax/dev/device.h>
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/turbochannel.h>
+#include <mips/dev/device.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/turbochannel.h>
 
 /*
  * The following several variables are related to

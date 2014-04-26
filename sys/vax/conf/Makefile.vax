@@ -23,16 +23,16 @@ C2=	/usr/libexec/c2
 LD=	/usr/bin/ld
 
 S=	../..
-VAX=	../../vax
+A=	../../vax
 
 INCLUDES= -I. -I$S -I$S/sys
 COPTS=	${INCLUDES} ${IDENT} -DKERNEL
 CFLAGS=	-O ${COPTS}
 
-INLINECMD=	${VAX}/inline/obj/inline
+INLINECMD=	$A/inline/obj/inline
 INLINE= ${INLINECMD} ${INLINEOPTS}
 
-AHEADS=	${VAX}/vax/pcb.m
+AHEADS=	$A/vax/pcb.m
 
 %OBJS
 
@@ -46,31 +46,31 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -DGENERIC ${COPTS} ${PARAM} \
-	  ${VAX}/vax/Locore.c ${CFILES} ioconf.c param.c | \
+	  $A/vax/Locore.c ${CFILES} ioconf.c param.c | \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 
-symbols.sort: ${VAX}/vax/symbols.raw
-	grep -v '^#' ${VAX}/vax/symbols.raw \
+symbols.sort: $A/vax/symbols.raw
+	grep -v '^#' $A/vax/symbols.raw \
 	    | sed 's/^	//' | sort -u > symbols.sort
 
 ${INLINECMD}:
-	cd ${VAX}/inline; make
+	cd $A/inline; make
 
-locore.o: assym.s ${AHEADS} ${VAX}/vax/rpb.s ${VAX}/vax/scb.s ubvec.s
-locore.o: ${VAX}/vax/locore.s ubglue.s ${VAX}/include/mtpr.h
-locore.o: ${VAX}/include/trap.h ${VAX}/include/psl.h ${VAX}/include/pte.h 
-locore.o: ${VAX}/include/cpu.h mba.h
+locore.o: assym.s ${AHEADS} $A/vax/rpb.s $A/vax/scb.s ubvec.s
+locore.o: $A/vax/locore.s ubglue.s $A/include/mtpr.h
+locore.o: $A/include/trap.h $A/include/psl.h $A/include/pte.h
+locore.o: $A/include/cpu.h mba.h
 locore.o:
-	cat assym.s ${VAX}/vax/rpb.s ${VAX}/vax/scb.s ubvec.s \
-	    ${VAX}/vax/locore.s ubglue.s > locore.c
+	cat assym.s $A/vax/rpb.s $A/vax/scb.s ubvec.s \
+	    $A/vax/locore.s ubglue.s > locore.c
 	${CC} -E -DLOCORE ${COPTS} locore.c > locore.i
 	@echo 'as -o locore.o $${AHEADS} locore.i'
 	@as -o locore.o ${AHEADS} locore.i
 	@rm locore.i
 
-emulate.o: ${VAX}/vax/emulate.s
-	cpp -I. ${COPTS} ${VAX}/vax/emulate.s | ${AS} -o emulate.o
+emulate.o: $A/vax/emulate.s
+	cpp -I. ${COPTS} $A/vax/emulate.s | ${AS} -o emulate.o
 
 # the following is necessary because autoconf.o depends on #if GENERIC
 autoconf.o tu.o: Makefile
@@ -93,11 +93,11 @@ assym.s: genassym
 	./genassym >assym.s
 
 genassym:
-	${CC} ${INCLUDES} ${IDENT} ${PARAM} -o genassym ${VAX}/vax/genassym.c
+	${CC} ${INCLUDES} ${IDENT} ${PARAM} -o genassym $A/vax/genassym.c
 
 depend: assym.s ${CFILES}
 	mkdep ${COPTS} ${.ALLSRC:M*.c} ioconf.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} ${VAX}/vax/genassym.c
+	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/vax/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

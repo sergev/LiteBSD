@@ -30,7 +30,7 @@ GPROF.EX=/usr/src/usr.lib/libc/csu/i386/gmon.ex
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
-I386=	$S/i386
+A=	$S/i386
 
 INCLUDES= -I. -I$S -I$S/sys
 COPTS+=	${INCLUDES} ${IDENT} -DKERNEL
@@ -96,19 +96,19 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -DGENERIC -Dvolatile= ${COPTS} ${PARAM} -UKGDB \
-	    ${I386}/i386/Locore.c ${CFILES} ${I386}/i386/swapgeneric.c \
+	    $A/i386/Locore.c ${CFILES} $A/i386/swapgeneric.c \
 	    ioconf.c param.c| \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 
-symbols.sort: ${I386}/i386/symbols.raw
-	grep -v '^#' ${I386}/i386/symbols.raw \
+symbols.sort: $A/i386/symbols.raw
+	grep -v '^#' $A/i386/symbols.raw \
 	    | sed 's/^	//' | sort -u > symbols.sort
 
-locore.o: assym.s vector.s ${I386}/i386/locore.s 
-locore.o: ${I386}/include/trap.h ${I386}/include/psl.h ${I386}/i386/pte.h
-locore.o: ${I386}/include/cpu.h
-	${CPP} -DLOCORE ${COPTS} ${I386}/i386/locore.s | ${AS} -o locore.o
+locore.o: assym.s vector.s $A/i386/locore.s
+locore.o: $A/include/trap.h $A/include/psl.h $A/i386/pte.h
+locore.o: $A/include/cpu.h
+	${CPP} -DLOCORE ${COPTS} $A/i386/locore.s | ${AS} -o locore.o
 
 # the following is necessary because autoconf.o depends on #if GENERIC
 autoconf.o: Makefile
@@ -128,11 +128,11 @@ assym.s: genassym
 
 genassym:
 	${CC} ${INCLUDES} ${IDENT} ${PARAM} -Di386 -o genassym \
-	    ${I386}/i386/genassym.c
+	    $A/i386/genassym.c
 
 depend: assym.s param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c param.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} ${I386}/i386/genassym.c
+	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/i386/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

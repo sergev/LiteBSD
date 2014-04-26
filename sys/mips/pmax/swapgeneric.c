@@ -42,7 +42,7 @@
 #include <sys/systm.h>
 #include <sys/reboot.h>
 
-#include <pmax/dev/device.h>
+#include <mips/dev/device.h>
 
 /*
  * Generic configuration;  all in one

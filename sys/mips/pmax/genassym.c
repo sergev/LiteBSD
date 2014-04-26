@@ -35,19 +35,20 @@
  *
  *	@(#)genassym.c	8.3 (Berkeley) 6/2/95
  */
-
 #define KERNEL
 
-#include <sys/param.h>
-#include <sys/buf.h>
-#include <sys/map.h>
-#include <sys/proc.h>
-#include <sys/mbuf.h>
-#include <sys/user.h>
+#include "sys/param.h"
+#include "sys/buf.h"
+#include "sys/map.h"
+#include "sys/proc.h"
+#include "sys/mbuf.h"
+#include "sys/user.h"
 
-#include <machine/reg.h>
+#include "machine/reg.h"
 
-main()
+extern int printf(char *, ...);
+
+int main()
 {
 	register struct proc *p = (struct proc *)0;
 	register struct user *up = (struct user *)0;
@@ -69,9 +70,9 @@ main()
 	printf("#define\tV_SWTCH %d\n", &vm->v_swtch);
 	printf("#define\tSIGILL %d\n", SIGILL);
 	printf("#define\tSIGFPE %d\n", SIGFPE);
-	exit(0);
+	return 0;
 }
 
-panic()
+void panic()
 {
 }

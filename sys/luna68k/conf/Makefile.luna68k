@@ -31,7 +31,7 @@ TOUCH=	touch -f -c
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
-LUNA68K=	$S/luna68k
+A=	$S/luna68k
 
 INCLUDES= -I. -I$S -I$S/sys
 COPTS=	${INCLUDES} ${IDENT} -DKERNEL -Dmc68020 -Dluna68k -DFPCOPROC
@@ -98,19 +98,19 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -DGENERIC -Dvolatile= ${COPTS} ${PARAM} -UKGDB \
-	    ${LUNA68K}/luna68k/Locore.c ${CFILES} ${LUNA68K}/luna68k/swapgeneric.c \
+	    $A/luna68k/Locore.c ${CFILES} $A/luna68k/swapgeneric.c \
 	    ioconf.c param.c| \
 	    grep -v 'struct/union .* never defined' | \
 	    grep -v 'possible pointer alignment problem'
 
-symbols.sort: ${LUNA68K}/luna68k/symbols.raw
-	grep -v '^#' ${LUNA68K}/luna68k/symbols.raw \
+symbols.sort: $A/luna68k/symbols.raw
+	grep -v '^#' $A/luna68k/symbols.raw \
 	    | sed 's/^	//' | sort -u > symbols.sort
 
-locore.o: assym.s ${LUNA68K}/luna68k/vectors.s ${LUNA68K}/luna68k/locore.s 
-locore.o: ${LUNA68K}/include/trap.h ${LUNA68K}/include/psl.h ${LUNA68K}/luna68k/pte.h
-locore.o: ${LUNA68K}/include/cpu.h
-	${CPP} -DLOCORE ${COPTS} ${LUNA68K}/luna68k/locore.s | ${AS} -o locore.o
+locore.o: assym.s $A/luna68k/vectors.s $A/luna68k/locore.s
+locore.o: $A/include/trap.h $A/include/psl.h $A/luna68k/pte.h
+locore.o: $A/include/cpu.h
+	${CPP} -DLOCORE ${COPTS} $A/luna68k/locore.s | ${AS} -o locore.o
 
 # the following is necessary because autoconf.o depends on #if GENERIC
 autoconf.o: Makefile
@@ -130,11 +130,11 @@ assym.s: genassym
 
 genassym:
 	${CC} ${INCLUDES} ${IDENT} ${PARAM} -Dmc68020 -Dluna68k -o genassym \
-	    ${LUNA68K}/luna68k/genassym.c
+	    $A/luna68k/genassym.c
 
 depend: assym.s param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c param.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} ${LUNA68K}/luna68k/genassym.c
+	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/luna68k/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

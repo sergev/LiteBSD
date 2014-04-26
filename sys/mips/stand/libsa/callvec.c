@@ -36,7 +36,7 @@
  *	@(#)callvec.c	8.1 (Berkeley) 6/10/93
  */
 
-#include <pmax/stand/dec_prom.h>
+#include <mips/stand/dec_prom.h>
 
 const struct callback callvec = {
 	(void *(*) __P((void *s1, void *s2, int n)))0,

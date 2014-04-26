@@ -75,12 +75,12 @@
 #include <machine/dc7085cons.h>
 #include <machine/pmioctl.h>
 
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/cons.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/cons.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/pdma.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/pdma.h>
+#include <mips/dev/fbreg.h>
 
 extern int pmax_boardtype;
 extern struct consdev cn_tab;

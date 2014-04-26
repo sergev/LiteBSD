@@ -385,8 +385,8 @@ void do_cfiles(fp)
 				fputs("\\\n\t", fp);
 			}
 			if (eq(fl->f_fn, "generic"))
-				fprintf(fp, "$S/%s/%s/%s ",
-				    machinename, machinename, swapname);
+				fprintf(fp, "$A/%s/%s ",
+				    machinename, swapname);
 			else
 				fprintf(fp, "%s ", swapname);
 			lpos += len + 1;
@@ -583,8 +583,8 @@ void do_swapspec(f, name)
 	if (!eq(name, "generic"))
 		fprintf(f, "swap%s.o: swap%s.c\n", name, name);
 	else
-		fprintf(f, "swapgeneric.o: $S/%s/%s/swapgeneric.c\n",
-			machinename, machinename);
+		fprintf(f, "swapgeneric.o: $A/%s/swapgeneric.c\n",
+			machinename);
 	fprintf(f, "\t${NORMAL_C}\n\n");
 }
 

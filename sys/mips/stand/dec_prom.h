@@ -83,7 +83,7 @@ typedef struct {
 	int	revision;	/* hardware revision level */
 	int	clk_period;	/* clock period in nano seconds */
 	int	slot_size;	/* slot size in magabytes */
-	int	io_timeout;	/* I/O timeout in cycles
+	int	io_timeout;	/* I/O timeout in cycles */
 	int	dma_range;	/* DMA address range in megabytes */
 	int	max_dma_burst;	/* maximum DMA burst length */
 	int	parity;		/* true if system module supports T.C. parity */

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -42,7 +42,7 @@
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.  
+ *	provided that the above copyright notice appears in all copies.
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
@@ -484,21 +484,21 @@ char pmFont[] = {
 	0x00, /* 0x00000000	  : */
 	0x00, /* 0x00000000	  : */
 /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x08, /* 0x00001000	  /* */
-	0x1c, /* 0x00011100	  /* */
-	0x08, /* 0x00001000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x1c, /* 0x00011100	  /* */
-	0x0c, /* 0x00001100	  /* */
-	0x02, /* 0x00000010	  /* */
-	0x00, /* 0x00000000	  /* */
-	0x00, /* 0x00000000	  /* */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x08, /* 0x00001000	  ; */
+	0x1c, /* 0x00011100	  ; */
+	0x08, /* 0x00001000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x1c, /* 0x00011100	  ; */
+	0x0c, /* 0x00001100	  ; */
+	0x02, /* 0x00000010	  ; */
+	0x00, /* 0x00000000	  ; */
+	0x00, /* 0x00000000	  ; */
 /* */
 	0x00, /* 0x00000000	  < */
 	0x00, /* 0x00000000	  < */

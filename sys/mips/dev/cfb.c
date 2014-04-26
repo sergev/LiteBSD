@@ -44,7 +44,7 @@
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.  
+ *	provided that the above copyright notice appears in all copies.
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
@@ -94,13 +94,13 @@
 #include <machine/machConst.h>
 #include <machine/pmioctl.h>
 
-#include <pmax/pmax/maxine.h>
-#include <pmax/pmax/cons.h>
-#include <pmax/pmax/pmaxtype.h>
+#include <mips/pmax/maxine.h>
+#include <mips/pmax/cons.h>
+#include <mips/pmax/pmaxtype.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/cfbreg.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/cfbreg.h>
+#include <mips/dev/fbreg.h>
 
 #include <dc.h>
 #include <dtop.h>

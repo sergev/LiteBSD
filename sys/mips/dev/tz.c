@@ -55,8 +55,8 @@
 #include <sys/syslog.h>
 #include <sys/tprintf.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/scsi.h>
+#include <mips/dev/device.h>
+#include <mips/dev/scsi.h>
 
 int	tzprobe();
 void	tzstart(), tzdone();

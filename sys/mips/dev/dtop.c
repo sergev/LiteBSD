@@ -36,28 +36,28 @@
  *	@(#)dtop.c	8.3 (Berkeley) 6/2/95
  */
 
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -73,13 +73,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -110,13 +110,13 @@ SOFTWARE.
 #include <machine/machConst.h>
 #include <machine/dc7085cons.h>
 
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/maxine.h>
-#include <pmax/pmax/asic.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/maxine.h>
+#include <mips/pmax/asic.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/dtopreg.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/dtopreg.h>
+#include <mips/dev/fbreg.h>
 
 extern int pmax_boardtype;
 
@@ -601,7 +601,7 @@ dtopparam(tp, t)
 		tp->t_state |= TS_CARR_ON;
 	return (0);
 }
- 
+
 /*
  * Stop output on a line.
  */
@@ -677,7 +677,7 @@ dtop_locator_handler(dev, msg, event, outc)
 			moved = 1;
 		}
 		mrp->dy = (coord & 0x1f);
-	
+
 		/*
 		 * Time for the buttons now
 		 * Shuffle button bits around to serial mouse order.
@@ -780,7 +780,7 @@ dtop_keyboard_handler(dev, msg, event, outc)
 	ls = &dev->keyboard.last_codes[dev->keyboard.last_codes_count - 1];
 	for ( ; ls >= le; ls--)
 	    if (c = *ls) {
-		(void) kbdMapChar(c);			
+		(void) kbdMapChar(c);
 
 		if (outc == 0 && dtopDivertXInput &&
 		    (keymodes[(c >> 5) & 0x7] & (1 << (c & 0x1f))))

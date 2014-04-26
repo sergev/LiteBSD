@@ -1,34 +1,34 @@
-pmax/pmax/autoconf.c		standard
-pmax/pmax/clock.c		standard
-pmax/pmax/conf.c		standard
-pmax/pmax/cons.c		standard
-pmax/pmax/fp.s			standard
-pmax/pmax/kadb.c		optional kadb
-pmax/pmax/machdep.c		standard config-dependent
-pmax/pmax/mem.c			standard
-pmax/pmax/pmap.c		standard
-pmax/pmax/procfs_machdep.c	optional procfs
-pmax/pmax/sys_machdep.c		standard
-pmax/pmax/trap.c		standard
-pmax/pmax/vm_machdep.c		standard
-pmax/stand/libsa/callvec.c	standard
-pmax/dev/fb.c			standard device-driver
-pmax/dev/scsi.c			standard
-pmax/dev/asc.c			optional asc device-driver
-pmax/dev/dc.c			optional dc device-driver
-pmax/dev/dtop.c			optional dtop device-driver
-pmax/dev/if_le.c		optional le
-pmax/dev/pm.c			optional pm device-driver
-pmax/dev/cfb.c			optional cfb device-driver
-pmax/dev/mfb.c			optional mfb device-driver
-pmax/dev/rz.c			optional rz
-pmax/dev/scc.c			optional scc device-driver
-pmax/dev/sii.c			optional sii device-driver
-pmax/dev/tz.c			optional tz
-pmax/dev/xcfb.c			optional xcfb device-driver
-pmax/ultrix/ultrix_compat.c	optional ultrixcompat
-pmax/ultrix/ultrix_syscalls.c	optional ultrixcompat
-pmax/ultrix/ultrix_sysent.c	optional ultrixcompat
+mips/pmax/autoconf.c		standard
+mips/pmax/clock.c		standard
+mips/pmax/conf.c		standard
+mips/pmax/cons.c		standard
+mips/pmax/fp.s			standard
+mips/pmax/kadb.c		optional kadb
+mips/pmax/machdep.c		standard config-dependent
+mips/pmax/mem.c			standard
+mips/pmax/pmap.c		standard
+mips/pmax/procfs_machdep.c	optional procfs
+mips/pmax/sys_machdep.c		standard
+mips/pmax/trap.c		standard
+mips/pmax/vm_machdep.c		standard
+mips/stand/libsa/callvec.c	standard
+mips/dev/fb.c			standard device-driver
+mips/dev/scsi.c			standard
+mips/dev/asc.c			optional asc device-driver
+mips/dev/dc.c			optional dc device-driver
+mips/dev/dtop.c			optional dtop device-driver
+mips/dev/if_le.c		optional le
+mips/dev/pm.c			optional pm device-driver
+mips/dev/cfb.c			optional cfb device-driver
+mips/dev/mfb.c			optional mfb device-driver
+mips/dev/rz.c			optional rz
+mips/dev/scc.c			optional scc device-driver
+mips/dev/sii.c			optional sii device-driver
+mips/dev/tz.c			optional tz
+mips/dev/xcfb.c			optional xcfb device-driver
+mips/ultrix/ultrix_compat.c	optional ultrixcompat
+mips/ultrix/ultrix_syscalls.c	optional ultrixcompat
+mips/ultrix/ultrix_sysent.c	optional ultrixcompat
 netinet/in_cksum.c		optional inet
 netns/ns_cksum.c		optional ns
 dev/cd.c			optional cd

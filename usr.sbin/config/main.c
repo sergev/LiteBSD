@@ -88,11 +88,14 @@ usage:		fputs("usage: config [-gp] sysname\n", stderr);
 	}
 
 	if (freopen(PREFIX = *argv, "r", stdin) == NULL) {
+fprintf(stderr, "--- PREFIX\n");
 		perror(PREFIX);
 		exit(2);
 	}
+	mkdir("../../compile", 0777);
 	if (stat(p = path((char *)NULL), &buf)) {
 		if (mkdir(p, 0777)) {
+fprintf(stderr, "--- mkdir path\n");
 			perror(p);
 			exit(2);
 		}
@@ -142,17 +145,6 @@ usage:		fputs("usage: config [-gp] sysname\n", stderr);
 	default:
 		printf("Specify machine type, e.g. ``machine vax''\n");
 		exit(1);
-	}
-	/*
-	 * make symbolic links in compilation directory
-	 * for "sys" (to make genassym.c work along with #include <sys/xxx>)
-	 * and similarly for "machine".
-	 */
-	{
-	char xxx[80];
-
-	(void) sprintf(xxx, "../../%s/include", machinename);
-	(void) symlink(xxx, path("machine"));
 	}
 	makefile();			/* build Makefile */
 	headers();			/* make a lot of .h files */

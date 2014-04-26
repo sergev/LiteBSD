@@ -36,7 +36,7 @@
  *	@(#)pm.c	8.2 (Berkeley) 6/2/95
  */
 
-/* 
+/*
  *  devGraphics.c --
  *
  *     	This file contains machine-dependent routines for the graphics device.
@@ -44,7 +44,7 @@
  *	Copyright (C) 1989 Digital Equipment Corporation.
  *	Permission to use, copy, modify, and distribute this software and
  *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.  
+ *	provided that the above copyright notice appears in all copies.
  *	Digital Equipment Corporation makes no representations about the
  *	suitability of this software for any purpose.  It is provided "as is"
  *	without express or implied warranty.
@@ -75,13 +75,13 @@ pm needs dc device
 #include <machine/dc7085cons.h>
 #include <machine/pmioctl.h>
 
-#include <pmax/pmax/kn01.h>
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/cons.h>
+#include <mips/pmax/kn01.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/cons.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/pmreg.h>
-#include <pmax/dev/fbreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/pmreg.h>
+#include <mips/dev/fbreg.h>
 
 /*
  * These need to be mapped into user space.
@@ -387,7 +387,7 @@ pminit()
 	fp->fbu->scrInfo.max_cur_x = 1023;
 	fp->fbu->scrInfo.max_cur_y = 863;
 	fp->fbu->scrInfo.version = 11;
-	fp->fbu->scrInfo.mthreshold = 4;	
+	fp->fbu->scrInfo.mthreshold = 4;
 	fp->fbu->scrInfo.mscale = 2;
 	fp->fbu->scrInfo.min_cur_x = -15;
 	fp->fbu->scrInfo.min_cur_y = -15;
@@ -408,7 +408,7 @@ pminit()
 	if (cn_tab.cn_fb == (struct pmax_fb *)0)
 		cn_tab.cn_fb = fp;
 	return (1);
-}	
+}
 
 /*
  * ----------------------------------------------------------------------------
@@ -500,7 +500,7 @@ pmRestoreCursorColor()
 
 	vdac->overWA = 0x04;
 	MachEmptyWriteBuffer();
-	for (i = 0; i < 3; i++) {  
+	for (i = 0; i < 3; i++) {
 		vdac->over = bg_RGB[i];
 		MachEmptyWriteBuffer();
 	}
@@ -563,7 +563,7 @@ pmCursorColor(color)
  *	None.
  *
  * Side effects:
- *	The colormap is initialized appropriately whether it is color or 
+ *	The colormap is initialized appropriately whether it is color or
  *	monochrome.
  *
  * ----------------------------------------------------------------------------

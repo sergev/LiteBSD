@@ -94,7 +94,9 @@ start:
 	tlbwi					# Write the TLB entry.
 
 	la	sp, start - START_FRAME
- #	la	gp, _gp
+#if 0
+	la	gp, _gp
+#endif
 	sw	zero, START_FRAME - 4(sp)	# Zero out old ra for debugger
 	jal	mach_init			# mach_init(argc, argv, envp)
 	sw	zero, START_FRAME - 8(sp)	# Zero out old fp for debugger
@@ -907,7 +909,7 @@ NON_LEAF(cpu_switch, STAND_FRAME_SIZE, ra)
 	sw	a0, STAND_FRAME_SIZE(sp)
 	beq	a1, zero, 1f
 	nop
-	PANIC("cpu_switch: intr_level %d")	# can't sleep in interrupt()
+	PANIC("cpu_switch: intr_level %d")	# cannot sleep in interrupt()
 1:
 #endif
 	lw	t2, cnt+V_SWTCH			# for statistics
@@ -1215,10 +1217,10 @@ MachException:
 	or	k1, k1, k0			# change index to user table
 1:
 	la	k0, machExceptionTable		# get base of the jump table
-	addu	k0, k0, k1			# Get the address of the
-						#  function entry.  Note that
-						#  the cause is already
-						#  shifted left by 2 bits so
+	addu	k0, k0, k1			# Get the address of the\
+						#  function entry.  Note that\
+						#  the cause is already\
+						#  shifted left by 2 bits so\
 						#  we dont have to shift.
 	lw	k0, 0(k0)			# Get the function address
 	nop
@@ -1229,7 +1231,7 @@ MachException:
 MachExceptionEnd:
 
 /*
- * We couldn't find a TLB entry.
+ * We could not find a TLB entry.
  * Find out what mode we came from and call the appropriate handler.
  */
 SlowFault:
@@ -1291,7 +1293,7 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
 	.mask	0x80000000, (STAND_RA_OFFSET - KERN_EXC_FRAME_SIZE)
 /*
  * Save the relevant kernel registers onto the stack.
- * We don't need to save s0 - s8, sp and gp because
+ * We do not need to save s0 - s8, sp and gp because
  * the compiler does it for us.
  */
 	sw	AT, KERN_REG_OFFSET + 0(sp)
@@ -1420,7 +1422,9 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
 	sw	v0, UADDR+U_PCB_REGS+(MULLO * 4)
 	sw	v1, UADDR+U_PCB_REGS+(MULHI * 4)
 	sw	a0, UADDR+U_PCB_REGS+(SR * 4)
- #	la	gp, _gp				# switch to kernel GP
+#if 0
+	la	gp, _gp				# switch to kernel GP
+#endif
 	sw	a3, UADDR+U_PCB_REGS+(PC * 4)
 	sw	a3, STAND_RA_OFFSET(sp)		# for debugging
 	.set	at
@@ -1481,7 +1485,7 @@ END(MachUserGenException)
  *
  *	Handle an interrupt from kernel mode.
  *	Interrupts use the standard kernel stack.
- *	switch_exit sets up a kernel stack after exit so interrupts won't fail.
+ *	switch_exit sets up a kernel stack after exit so interrupts would not fail.
  *
  * Results:
  *	None.
@@ -1503,7 +1507,7 @@ NNON_LEAF(MachKernIntr, KINTR_FRAME_SIZE, ra)
 	.mask	0x80000000, (STAND_RA_OFFSET - KINTR_FRAME_SIZE)
 /*
  * Save the relevant kernel registers onto the stack.
- * We don't need to save s0 - s8, sp and gp because
+ * We do not need to save s0 - s8, sp and gp because
  * the compiler does it for us.
  */
 	sw	AT, KINTR_REG_OFFSET + 0(sp)
@@ -1595,7 +1599,7 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 	.mask	0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
 /*
  * Save the relevant user registers into the u.u_pcb struct.
- * We don't need to save s0 - s8 because
+ * We do not need to save s0 - s8 because
  * the compiler does it for us.
  */
 	sw	AT, UADDR+U_PCB_REGS+(AST * 4)
@@ -1628,7 +1632,9 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 	sw	v1, UADDR+U_PCB_REGS+(MULHI * 4)
 	sw	a0, UADDR+U_PCB_REGS+(SR * 4)
 	sw	a2, UADDR+U_PCB_REGS+(PC * 4)
- #	la	gp, _gp				# switch to kernel GP
+#if 0
+	la	gp, _gp				# switch to kernel GP
+#endif
 	.set	at
 	and	t0, a0, ~MACH_SR_COP_1_BIT	# Turn off the FPU.
 	.set	noat
@@ -2677,6 +2683,7 @@ NON_LEAF(MachFPInterrupt, STAND_FRAME_SIZE, ra)
  */
 	srl	a3, a0, MACH_OPCODE_SHIFT
 	beq	a3, MACH_OPCODE_C1, 4f		# this should never fail
+        nop
 /*
  * Send a floating point exception signal to the current process.
  */
@@ -2735,7 +2742,7 @@ NON_LEAF(MachConfigCache, STAND_FRAME_SIZE, ra)
 	nop
 1:
 /*
- * This works because jal doesn't change pc[31..28] and the
+ * This works because jal does not change pc[31..28] and the
  * linker still thinks SizeCache is in the cached region so it computes
  * the correct address without complaining.
  */
@@ -3132,7 +3139,7 @@ END(cpu_getregs)
 
 /*
  * Interrupt counters for vmstat.
- * XXX These aren't used yet.
+ * XXX These are not used yet.
  */
 	.data
 	.globl	intrcnt, eintrcnt, intrnames, eintrnames
@@ -3150,5 +3157,5 @@ eintrnames:
 intrcnt:
 	.word	0,0,0,0,0,0,0,0
 eintrcnt:
-	.word	0	# This shouldn't be needed but the eintrcnt label
+	.word	0	# This should not be needed but the eintrcnt label\
 			# ends up in a different section otherwise.

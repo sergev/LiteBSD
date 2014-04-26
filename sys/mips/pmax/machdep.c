@@ -75,22 +75,22 @@
 #include <machine/pte.h>
 #include <machine/dc7085cons.h>
 
-#include <pmax/stand/dec_prom.h>
+#include <mips/stand/dec_prom.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/sccreg.h>
-#include <pmax/dev/ascreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/sccreg.h>
+#include <mips/dev/ascreg.h>
 
-#include <pmax/pmax/clockreg.h>
-#include <pmax/pmax/kn01.h>
-#include <pmax/pmax/kn02.h>
-#include <pmax/pmax/kmin.h>
-#include <pmax/pmax/maxine.h>
-#include <pmax/pmax/kn03.h>
-#include <pmax/pmax/asic.h>
-#include <pmax/pmax/turbochannel.h>
-#include <pmax/pmax/pmaxtype.h>
-#include <pmax/pmax/cons.h>
+#include <mips/pmax/clockreg.h>
+#include <mips/pmax/kn01.h>
+#include <mips/pmax/kn02.h>
+#include <mips/pmax/kmin.h>
+#include <mips/pmax/maxine.h>
+#include <mips/pmax/kn03.h>
+#include <mips/pmax/asic.h>
+#include <mips/pmax/turbochannel.h>
+#include <mips/pmax/pmaxtype.h>
+#include <mips/pmax/cons.h>
 
 #include <pm.h>
 #include <cfb.h>
@@ -1026,7 +1026,7 @@ sendsig(catcher, sig, mask, code)
 		psp->ps_sigstk.ss_flags |= SA_ONSTACK;
 	} else
 		fp = (struct sigframe *)(regs[SP] - fsize);
-	if ((unsigned)fp <= USRSTACK - ctob(p->p_vmspace->vm_ssize)) 
+	if ((unsigned)fp <= USRSTACK - ctob(p->p_vmspace->vm_ssize))
 		(void)grow(p, (unsigned)fp);
 #ifdef DEBUG
 	if ((sigdebug & SDB_FOLLOW) ||
@@ -1066,7 +1066,7 @@ sendsig(catcher, sig, mask, code)
 		psignal(p, SIGILL);
 		return;
 	}
-	/* 
+	/*
 	 * Build the argument list for the signal handler.
 	 */
 	regs[A0] = sig;
@@ -1412,7 +1412,7 @@ atoi(s)
 	if (neg)
 		val = -val;
 out:
-	return val;	
+	return val;
 }
 
 /*
@@ -1454,28 +1454,28 @@ pmax_slot_hand_fill()
 }
 
 #ifdef DS5000
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -1637,7 +1637,7 @@ tc_find_all_options()
 
 		if (found) {
 			/*
-			 * Found a slot, make a note of it 
+			 * Found a slot, make a note of it
 			 */
 			tc_slot_info[i].present = 1;
 			tc_slot_info[i].k1seg_address = addr;
@@ -1648,7 +1648,7 @@ tc_find_all_options()
 
 	/*
 	 * Some slots (e.g. the system slot on 3max) might require
-	 * hand-filling.  If so, do it now. 
+	 * hand-filling.  If so, do it now.
 	 */
 	if (tc_slot_hand_fill)
 		(*tc_slot_hand_fill) (tc_slot_info);
@@ -1692,7 +1692,7 @@ tc_find_all_options()
 				cp->pmax_pri = i;
 				/*
 				 * Only enable interrupts if there is an
-				 * interrupt handler for it. (e.g., PMAG-BA 
+				 * interrupt handler for it. (e.g., PMAG-BA
 				 * can't disable the vertical retrace interrupt
 				 * and we might want to ignore it).
 				 */

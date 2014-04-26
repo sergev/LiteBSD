@@ -30,7 +30,7 @@ TOUCH=	touch -f -c
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
-SPARC=	$S/sparc
+A=	$S/sparc
 LIBKERN=$S/libkern/obj/libkern.a
 
 INCLUDES=-I. -I$S -I$S/sys
@@ -51,10 +51,10 @@ NORMAL_C_C=	${CC} -c ${CFLAGS} ${PROF} ${PARAM} $<
 NOOPT_C=	${CC} -c ${COPTS} ${PROF} ${PARAM} $<
 
 NORMAL_S=	rm -f $*.c; ln -s $< $*.c; \
-		${CC} ${COPTS} -I${SPARC}/sparc -E $*.c > $*.i; \
+		${CC} ${COPTS} -I$A/sparc -E $*.c > $*.i; \
 		${AS} -o $@ $*.i; rm -f $*.c $*.i
 NORMAL_S_C=	rm -f $*.c; ln -s $< $*.c; \
-		${CC} ${COPTS} ${PARAM} -I${SPARC}/sparc -E $*.c > $*.i; \
+		${CC} ${COPTS} ${PARAM} -I$A/sparc -E $*.c > $*.i; \
 		${AS} -o $@ $*.i; rm -f $*.c $*.i
 
 %OBJS
@@ -95,7 +95,7 @@ clean:
 	rm -f eddep *vmunix vmunix.gdb tags tags1 *.[io] [a-z]*.s \
 		Errs errs linterrs makelinks
 
-locore.o: ${SPARC}/sparc/locore.s assym.s
+locore.o: $A/sparc/locore.s assym.s
 	${NORMAL_S}
 
 # depend on maxusers
@@ -108,11 +108,11 @@ assym.s: genassym
 genassym: genassym.o
 	${CC} -o $@ genassym.o
 
-genassym.o: ${SPARC}/sparc/genassym.c
+genassym.o: $A/sparc/genassym.c
 	${CC} -c ${CFLAGS} ${PARAM} $<
 
-SRCS=	${CFILES} ${SPARC}/sparc/locore.s ${SPARC}/sparc/bsd_audiointr.s \
-	${SPARC}/sparc/genassym.c ioconf.c param.c vnode_if.c
+SRCS=	${CFILES} $A/sparc/locore.s $A/sparc/bsd_audiointr.s \
+	$A/sparc/genassym.c ioconf.c param.c vnode_if.c
 depend: .depend
 .depend: ${SRCS} assym.s
 	mkdep ${COPTS} ${SRCS}

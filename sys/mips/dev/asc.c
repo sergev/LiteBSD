@@ -36,28 +36,28 @@
  *	@(#)asc.c	8.5 (Berkeley) 11/30/94
  */
 
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -68,18 +68,18 @@
  * Revision 2.5  91/02/05  17:45:07  mrt
  * 	Added author notices
  * 	[91/02/04  11:18:43  mrt]
- * 
+ *
  * 	Changed to use new Mach copyright
  * 	[91/02/02  12:17:20  mrt]
- * 
+ *
  * Revision 2.4  91/01/08  15:48:24  rpd
  * 	Added continuation argument to thread_block.
  * 	[90/12/27            rpd]
- * 
+ *
  * Revision 2.3  90/12/05  23:34:48  af
  * 	Recovered from pmax merge.. and from the destruction of a disk.
  * 	[90/12/03  23:40:40  af]
- * 
+ *
  * Revision 2.1.1.1  90/11/01  03:39:09  af
  * 	Created, from the DEC specs:
  * 	"PMAZ-AA TURBOchannel SCSI Module Functional Specification"
@@ -129,13 +129,13 @@
 
 #include <machine/machConst.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/scsi.h>
-#include <pmax/dev/ascreg.h>
+#include <mips/dev/device.h>
+#include <mips/dev/scsi.h>
+#include <mips/dev/ascreg.h>
 
-#include <pmax/pmax/asic.h>
-#include <pmax/pmax/kmin.h>
-#include <pmax/pmax/pmaxtype.h>
+#include <mips/pmax/asic.h>
+#include <mips/pmax/kmin.h>
+#include <mips/pmax/pmaxtype.h>
 
 #define	readback(a)	{ register int foo; foo = (a); }
 extern int pmax_boardtype;
@@ -1953,7 +1953,7 @@ asic_dma_end(asc, state, flag)
 		    MACH_UNCACHED_TO_PHYS(state->dmaBufAddr)), state->dmalen);
 		if (nb = *((int *)ASIC_REG_SCSI_SCR(asic_base))) {
 			/* pick up last upto6 bytes, sigh. */
-	
+
 			/* Last byte really xferred is.. */
 			w = *(int *)ASIC_REG_SCSI_SDR0(asic_base);
 			*to++ = w;

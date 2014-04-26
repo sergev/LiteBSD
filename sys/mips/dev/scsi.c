@@ -42,8 +42,8 @@
 
 #include <sys/param.h>
 
-#include <pmax/dev/device.h>
-#include <pmax/dev/scsi.h>
+#include <mips/dev/device.h>
+#include <mips/dev/scsi.h>
 
 /*
  * The error codes for class 0-6 sense data are class specific.
