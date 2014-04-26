@@ -149,7 +149,6 @@ union	cpuprid cpu;
 union	cpuprid fpu;
 u_int	machDataCacheSize;
 u_int	machInstCacheSize;
-extern	struct intr_tab intr_tab[];
 #endif
 
 /*

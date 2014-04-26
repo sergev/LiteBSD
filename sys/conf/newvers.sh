@@ -39,10 +39,19 @@ then
 fi
 
 touch version
-v=`cat version` u=${USER-root} d=`pwd` h=`hostname` t=`date`
+v=`cat version`
+u=${USER-root}
+h=`hostname`
+t=`date +'%Y-%m-%d'`
+
+IFS=/
+set `pwd | rev`
+d=`echo "$1/$2/$3/$4" | rev`
+
 echo "char ostype[] = \"4.4BSD\";" > vers.c
 echo "char osrelease[] = \"4.4BSD-Lite\";" >> vers.c
 echo "char sccs[4] = { '@', '(', '#', ')' };" >>vers.c
-echo "char version[] = \"4.4BSD-Lite #${v}: ${t}\\n    ${u}@${h}:${d}\\n\";" >>vers.c
+echo "char version[] = \"4.4BSD-Lite build ${v}: ${t}\\\\n\"" >>vers.c
+echo "\"    ${u}@${h}:${d}\\\\n\";" >>vers.c
 
 echo `expr ${v} + 1` > version

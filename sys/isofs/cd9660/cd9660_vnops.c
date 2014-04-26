@@ -621,7 +621,7 @@ cd9660_readdir(ap)
 		 * Guess the number of cookies needed.
 		 */
 		ncookies = uio->uio_resid / 16;
-		MALLOC(cookies, u_int *, ncookies * sizeof(u_int), M_TEMP,
+		MALLOC(cookies, u_long *, ncookies * sizeof(u_int), M_TEMP,
 		    M_WAITOK);
 		idp->cookies = cookies;
 		idp->ncookies = ncookies;
@@ -829,7 +829,7 @@ cd9660_readlink(ap)
 		symname = uio->uio_iov->iov_base;
 	else
 		MALLOC(symname, char *, MAXPATHLEN, M_NAMEI, M_WAITOK);
-	
+
 	/*
 	 * Ok, we just gathering a symbolic name in SL record.
 	 */
@@ -843,7 +843,7 @@ cd9660_readlink(ap)
 	 * Don't forget before you leave from home ;-)
 	 */
 	brelse(bp);
-	
+
 	/*
 	 * return with the symbolic name to caller's.
 	 */

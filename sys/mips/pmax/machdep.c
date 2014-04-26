@@ -1224,11 +1224,11 @@ boot(howto)
 			(*callv->rex)('b');
 		}
 	} else if (howto & RB_HALT) {
-		volatile void (*f)() = (volatile void (*)())DEC_PROM_REINIT;
+		void (*f)() = (void (*)())DEC_PROM_REINIT;
 
 		(*f)();	/* jump back to prom monitor */
 	} else {
-		volatile void (*f)() = (volatile void (*)())DEC_PROM_AUTOBOOT;
+		void (*f)() = (void (*)())DEC_PROM_AUTOBOOT;
 
 		if (howto & RB_DUMP)
 			dumpsys();

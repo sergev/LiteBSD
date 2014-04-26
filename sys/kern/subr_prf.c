@@ -91,8 +91,8 @@ const char *panicstr;
  * the disks as this often leads to recursive panics.
  */
 #ifdef __GNUC__
-volatile void boot(int flags);	/* boot() does not return */
-volatile			/* panic() does not return */
+void boot(int flags)
+	__attribute__((noreturn));	/* boot() does not return */
 #endif
 void
 #ifdef __STDC__

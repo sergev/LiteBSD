@@ -185,6 +185,7 @@ vn_bwrite(ap)
 	return (bwrite(ap->a_bp));
 }
 
+void
 bdwrite(a1)
 	struct buf *a1;
 {
@@ -195,6 +196,7 @@ bdwrite(a1)
 	return;
 }
 
+void
 bawrite(a1)
 	struct buf *a1;
 {
@@ -205,6 +207,7 @@ bawrite(a1)
 	return;
 }
 
+void
 brelse(a1)
 	struct buf *a1;
 {

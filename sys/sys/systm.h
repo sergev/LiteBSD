@@ -50,7 +50,7 @@
  *	raw disks of mounted filesystems, /dev/mem, and /dev/kmem are
  *	read-only.
  *    2	highly secure mode - same as (1) plus raw disks are always
- *	read-only whether mounted or not. This level precludes tampering 
+ *	read-only whether mounted or not. This level precludes tampering
  *	with filesystems by unmounting them, but also inhibits running
  *	newfs while the system is secured.
  *
@@ -119,7 +119,7 @@ void	*hashinit __P((int count, int type, u_long *hashmask));
 int	nosys __P((struct proc *, void *, register_t *));
 
 #ifdef __GNUC__
-volatile void	panic __P((const char *, ...));
+void	panic __P((const char *, ...)) __attribute__((noreturn));
 #else
 void	panic __P((const char *, ...));
 #endif

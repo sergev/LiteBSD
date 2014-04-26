@@ -16,6 +16,8 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
+CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc
+
 .MAIN: all
 
 # prefer .s to a .c, add .po, remove stuff not used in the BSD libraries
@@ -26,25 +28,25 @@ BINMODE?=	555
 	nroff -man ${.IMPSRC} > ${.TARGET}
 
 .c.o:
-	${CC} ${CFLAGS} -c ${.IMPSRC} 
-	@${LD} -x -r ${.TARGET}
+	${MIPS_TOOLCHAIN}${CC} ${CCROSS} ${CFLAGS} -c ${.IMPSRC}
+	@${MIPS_TOOLCHAIN}${LD} -x -r ${.TARGET}
 	@mv a.out ${.TARGET}
 
 .c.po:
-	${CC} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
+	${MIPS_TOOLCHAIN}${CC} ${CCROSS} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
+	@${MIPS_TOOLCHAIN}${LD} -X -r ${.TARGET}
 	@mv a.out ${.TARGET}
 
 .s.o:
 	${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
-	    ${AS} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
+	    ${MIPS_TOOLCHAIN}${AS} -o ${.TARGET}
+	@${MIPS_TOOLCHAIN}${LD} -x -r ${.TARGET}
 	@mv a.out ${.TARGET}
 
 .s.po:
 	${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
-	    ${AS} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
+	    ${MIPS_TOOLCHAIN}${AS} -o ${.TARGET}
+	@${MIPS_TOOLCHAIN}${LD} -X -r ${.TARGET}
 	@mv a.out ${.TARGET}
 
 MANALL=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8}
@@ -66,15 +68,15 @@ OBJS+=	${SRCS:R:S/$/.o/g}
 lib${LIB}.a:: ${OBJS}
 	@echo building standard ${LIB} library
 	@rm -f lib${LIB}.a
-	@${AR} cTq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
-	ranlib lib${LIB}.a
+	@${MIPS_TOOLCHAIN}${AR} cTq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
+	${MIPS_TOOLCHAIN}ranlib lib${LIB}.a
 
 POBJS+=	${OBJS:.o=.po}
 lib${LIB}_p.a:: ${POBJS}
 	@echo building profiled ${LIB} library
 	@rm -f lib${LIB}_p.a
-	@${AR} cTq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
-	ranlib lib${LIB}_p.a
+	@${MIPS_TOOLCHAIN}${AR} cTq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
+	${MIPS_TOOLCHAIN}ranlib lib${LIB}_p.a
 
 llib-l${LIB}.ln: ${SRCS}
 	${LINT} -C${LIB} ${CFLAGS} ${.ALLSRC:M*.c}
