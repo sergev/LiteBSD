@@ -53,7 +53,7 @@ struct kt {
 	{ "at",		AT },
 #if MACHINE_I386
 	{ "bio",	BIO },
-#endif MACHINE_I386
+#endif
 	{ "config",	CONFIG },
 	{ "controller",	CONTROLLER },
 	{ "cpu",	CPU },
@@ -61,9 +61,9 @@ struct kt {
 	{ "device",	DEVICE },
 	{ "disk",	DISK },
 	{ "drive",	DRIVE },
-#if	MACHINE_I386
+#if MACHINE_I386
 	{ "drq",	DRQ },
-#endif MACHINE_I386
+#endif
 	{ "dst",	DST },
 	{ "dumps",	DUMPS },
 	{ "flags",	FLAGS },
@@ -74,7 +74,7 @@ struct kt {
 	{ "iomem",	IOMEM },
 	{ "iosiz",	IOSIZ },
 	{ "irq",	IRQ },
-#endif MACHINE_I386
+#endif
 	{ "machine",	MACHINE },
 	{ "major",	MAJOR },
 	{ "makeoptions", MAKEOPTIONS },
@@ -83,13 +83,13 @@ struct kt {
 	{ "minor",	MINOR },
 #if MACHINE_I386
 	{ "net",	NET },
-#endif MACHINE_I386
+#endif
 	{ "nexus",	NEXUS },
 	{ "on",		ON },
 	{ "options",	OPTIONS },
 #if MACHINE_I386
 	{ "port",	PORT },
-#endif MACHINE_I386
+#endif
 	{ "priority",	PRIORITY },
 	{ "pseudo-device",PSEUDO_DEVICE },
 	{ "root",	ROOT },
@@ -103,12 +103,16 @@ struct kt {
 	{ "tape",	DEVICE },
 #if MACHINE_I386
 	{ "tty",	TTY },
-#endif MACHINE_I386
+#endif
 	{ "timezone",	TIMEZONE },
 	{ "trace",	TRACE },
 	{ "vector",	VECTOR },
 	{ 0, 0 },
 };
+
+int kw_lookup(char *word);
+int octal(char *str);
+int hex(char *str);
 %}
 WORD	[A-Za-z_][-A-Za-z_]*
 %%
@@ -180,7 +184,7 @@ WORD	[A-Za-z_][-A-Za-z_]*
  *	Look up a string in the keyword table.  Returns a -1 if the
  *	string is not a keyword otherwise it returns the keyword number
  */
-
+int
 kw_lookup(word)
 register char *word;
 {
@@ -195,7 +199,7 @@ register char *word;
 /*
  * Number conversion routines
  */
-
+int
 octal(str)
 char *str;
 {
@@ -205,6 +209,7 @@ char *str;
 	return num;
 }
 
+int
 hex(str)
 char *str;
 {

@@ -9,4 +9,4 @@ DPADD=	${LIBL}
 LDADD=	-ll
 CLEANFILES+=y.tab.h lang.c config.c y.tab.c
 
-.include <bsd.prog.mk>
+.include <local.prog.mk>

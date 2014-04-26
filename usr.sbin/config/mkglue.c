@@ -43,10 +43,147 @@ static char sccsid[] = "@(#)mkglue.c	8.1 (Berkeley) 6/6/93";
 #include "y.tab.h"
 #include <ctype.h>
 
+static int cntcnt = 0;		/* number of interrupt counters allocated */
+
+/*
+ * Print a UNIBUS interrupt vector.
+ */
+void dump_ubavec(fp, vector, number)
+	register FILE *fp;
+	char *vector;
+	int number;
+{
+	char nbuf[80];
+	register char *v = nbuf;
+
+	(void) sprintf(v, "%s%d", vector, number);
+	fprintf(fp, "\t.globl\t_X%s\n\t.align\t2\n_X%s:\n\tpushr\t$0x3f\n",
+	    v, v);
+	fprintf(fp, "\tincl\t_fltintrcnt+(4*%d)\n", cntcnt++);
+	if (strncmp(vector, "dzx", 3) == 0)
+		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdzdma\n\n", number);
+	else if (strncmp(vector, "dpx", 3) == 0)
+		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdpxdma\n\n", number);
+	else if (strncmp(vector, "dpr", 3) == 0)
+		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdprdma\n\n", number);
+	else {
+		if (strncmp(vector, "uur", 3) == 0) {
+			fprintf(fp, "#ifdef UUDMA\n");
+			fprintf(fp, "\tmovl\t$%d,r0\n\tjsb\tuudma\n", number);
+			fprintf(fp, "#endif\n");
+		}
+		fprintf(fp, "\tpushl\t$%d\n", number);
+		fprintf(fp, "\tcalls\t$1,_%s\n\tpopr\t$0x3f\n", vector);
+		fprintf(fp, "\tincl\t_cnt+V_INTR\n\trei\n\n");
+	}
+}
+
+static	char *vaxinames[] = {
+	"clock", "cnr", "cnx", "tur", "tux",
+	"mba0", "mba1", "mba2", "mba3",
+	"uba0", "uba1", "uba2", "uba3"
+};
+
+static	char *tahoeinames[] = {
+	"clock", "cnr", "cnx", "rmtr", "rmtx", "buserr",
+};
+
+static	struct stdintrs {
+	char	**si_names;	/* list of standard interrupt names */
+	int	si_n;		/* number of such names */
+} stdintrs[] = {
+	{ vaxinames, sizeof (vaxinames) / sizeof (vaxinames[0]) },
+	{ tahoeinames, (sizeof (tahoeinames) / sizeof (tahoeinames[0])) }
+};
+
+/*
+ * Start the interrupt name table with the names
+ * of the standard vectors not directly associated
+ * with a bus.  Also, dump the defines needed to
+ * reference the associated counters into a separate
+ * file which is prepended to locore.s.
+ */
+void dump_std(fp, gp)
+	register FILE *fp, *gp;
+{
+	register struct stdintrs *si = &stdintrs[machine-1];
+	register char **cpp;
+	register int i;
+
+	fprintf(fp, "\n\t.globl\t_intrnames\n");
+	fprintf(fp, "\n\t.globl\t_eintrnames\n");
+	fprintf(fp, "\t.data\n");
+	fprintf(fp, "_intrnames:\n");
+	cpp = si->si_names;
+	for (i = 0; i < si->si_n; i++) {
+		register char *cp, *tp;
+		char buf[80];
+
+		cp = *cpp;
+		if (cp[0] == 'i' && cp[1] == 'n' && cp[2] == 't') {
+			cp += 3;
+			if (*cp == 'r')
+				cp++;
+		}
+		for (tp = buf; *cp; cp++)
+			if (islower(*cp))
+				*tp++ = toupper(*cp);
+			else
+				*tp++ = *cp;
+		*tp = '\0';
+		fprintf(gp, "#define\tI_%s\t%d\n", buf, i * (int)sizeof (long));
+		fprintf(fp, "\t.asciz\t\"%s\"\n", *cpp);
+		cpp++;
+	}
+}
+
+void dump_intname(fp, vector, number)
+	register FILE *fp;
+	char *vector;
+	int number;
+{
+	register char *cp = vector;
+
+	fprintf(fp, "\t.asciz\t\"");
+	/*
+	 * Skip any "int" or "intr" in the name.
+	 */
+	while (*cp)
+		if (cp[0] == 'i' && cp[1] == 'n' &&  cp[2] == 't') {
+			cp += 3;
+			if (*cp == 'r')
+				cp++;
+		} else {
+			putc(*cp, fp);
+			cp++;
+		}
+	fprintf(fp, "%d\"\n", number);
+}
+
+/*
+ * Reserve space for the interrupt counters.
+ */
+void dump_ctrs(fp)
+	register FILE *fp;
+{
+	struct stdintrs *si = &stdintrs[machine-1];
+
+	fprintf(fp, "_eintrnames:\n");
+	fprintf(fp, "\n\t.globl\t_intrcnt\n");
+	fprintf(fp, "\n\t.globl\t_eintrcnt\n");
+	fprintf(fp, "\t.align 2\n");
+	fprintf(fp, "_intrcnt:\n");
+	fprintf(fp, "\t.space\t4 * %d\n", si->si_n);
+	fprintf(fp, "_fltintrcnt:\n");
+	fprintf(fp, "\t.space\t4 * %d\n", cntcnt);
+	fprintf(fp, "_eintrcnt:\n\n");
+	fprintf(fp, "\t.text\n");
+}
+
 /*
  * Create the UNIBUS interrupt vector glue file.
  */
-ubglue()
+void ubglue()
 {
 	register FILE *fp, *gp;
 	register struct device *dp, *mp;
@@ -105,12 +242,10 @@ ubglue()
 	(void) fclose(gp);
 }
 
-static int cntcnt = 0;		/* number of interrupt counters allocated */
-
 /*
- * Print a UNIBUS interrupt vector.
+ * Print a VERSAbus interrupt vector
  */
-dump_ubavec(fp, vector, number)
+void dump_vbavec(fp, vector, number)
 	register FILE *fp;
 	char *vector;
 	int number;
@@ -119,31 +254,23 @@ dump_ubavec(fp, vector, number)
 	register char *v = nbuf;
 
 	(void) sprintf(v, "%s%d", vector, number);
-	fprintf(fp, "\t.globl\t_X%s\n\t.align\t2\n_X%s:\n\tpushr\t$0x3f\n",
-	    v, v);
+	fprintf(fp, "SCBVEC(%s):\n", v);
+	fprintf(fp, "\tCHECK_SFE(4)\n");
+	fprintf(fp, "\tSAVE_FPSTAT(4)\n");
+	fprintf(fp, "\tPUSHR\n");
 	fprintf(fp, "\tincl\t_fltintrcnt+(4*%d)\n", cntcnt++);
-	if (strncmp(vector, "dzx", 3) == 0)
-		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdzdma\n\n", number);
-	else if (strncmp(vector, "dpx", 3) == 0)
-		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdpxdma\n\n", number);
-	else if (strncmp(vector, "dpr", 3) == 0)
-		fprintf(fp, "\tmovl\t$%d,r0\n\tjmp\tdprdma\n\n", number);
-	else {
-		if (strncmp(vector, "uur", 3) == 0) {
-			fprintf(fp, "#ifdef UUDMA\n");
-			fprintf(fp, "\tmovl\t$%d,r0\n\tjsb\tuudma\n", number);
-			fprintf(fp, "#endif\n");
-		}
-		fprintf(fp, "\tpushl\t$%d\n", number);
-		fprintf(fp, "\tcalls\t$1,_%s\n\tpopr\t$0x3f\n", vector);
-		fprintf(fp, "\tincl\t_cnt+V_INTR\n\trei\n\n");
-	}
+	fprintf(fp, "\tpushl\t$%d\n", number);
+	fprintf(fp, "\tcallf\t$8,_%s\n", vector);
+	fprintf(fp, "\tincl\t_cnt+V_INTR\n");
+	fprintf(fp, "\tPOPR\n");
+	fprintf(fp, "\tREST_FPSTAT\n");
+	fprintf(fp, "\trei\n\n");
 }
 
 /*
  * Create the VERSAbus interrupt vector glue file.
  */
-vbglue()
+void vbglue()
 {
 	register FILE *fp, *gp;
 	register struct device *dp, *mp;
@@ -201,139 +328,15 @@ vbglue()
 }
 
 /*
- * Print a VERSAbus interrupt vector
- */
-dump_vbavec(fp, vector, number)
-	register FILE *fp;
-	char *vector;
-	int number;
-{
-	char nbuf[80];
-	register char *v = nbuf;
-
-	(void) sprintf(v, "%s%d", vector, number);
-	fprintf(fp, "SCBVEC(%s):\n", v);
-	fprintf(fp, "\tCHECK_SFE(4)\n");
-	fprintf(fp, "\tSAVE_FPSTAT(4)\n");
-	fprintf(fp, "\tPUSHR\n");
-	fprintf(fp, "\tincl\t_fltintrcnt+(4*%d)\n", cntcnt++);
-	fprintf(fp, "\tpushl\t$%d\n", number);
-	fprintf(fp, "\tcallf\t$8,_%s\n", vector);
-	fprintf(fp, "\tincl\t_cnt+V_INTR\n");
-	fprintf(fp, "\tPOPR\n");
-	fprintf(fp, "\tREST_FPSTAT\n");
-	fprintf(fp, "\trei\n\n");
-}
-
-/*
  * HP9000/300 interrupts are auto-vectored.
  * Code is hardwired in locore.s
  */
-hpglue() {}
-
-static	char *vaxinames[] = {
-	"clock", "cnr", "cnx", "tur", "tux",
-	"mba0", "mba1", "mba2", "mba3",
-	"uba0", "uba1", "uba2", "uba3"
-};
-static	char *tahoeinames[] = {
-	"clock", "cnr", "cnx", "rmtr", "rmtx", "buserr",
-};
-static	struct stdintrs {
-	char	**si_names;	/* list of standard interrupt names */
-	int	si_n;		/* number of such names */
-} stdintrs[] = {
-	{ vaxinames, sizeof (vaxinames) / sizeof (vaxinames[0]) },
-	{ tahoeinames, (sizeof (tahoeinames) / sizeof (tahoeinames[0])) }
-};
-/*
- * Start the interrupt name table with the names
- * of the standard vectors not directly associated
- * with a bus.  Also, dump the defines needed to
- * reference the associated counters into a separate
- * file which is prepended to locore.s.
- */
-dump_std(fp, gp)
-	register FILE *fp, *gp;
-{
-	register struct stdintrs *si = &stdintrs[machine-1];
-	register char **cpp;
-	register int i;
-
-	fprintf(fp, "\n\t.globl\t_intrnames\n");
-	fprintf(fp, "\n\t.globl\t_eintrnames\n");
-	fprintf(fp, "\t.data\n");
-	fprintf(fp, "_intrnames:\n");
-	cpp = si->si_names;
-	for (i = 0; i < si->si_n; i++) {
-		register char *cp, *tp;
-		char buf[80];
-
-		cp = *cpp;
-		if (cp[0] == 'i' && cp[1] == 'n' && cp[2] == 't') {
-			cp += 3;
-			if (*cp == 'r')
-				cp++;
-		}
-		for (tp = buf; *cp; cp++)
-			if (islower(*cp))
-				*tp++ = toupper(*cp);
-			else
-				*tp++ = *cp;
-		*tp = '\0';
-		fprintf(gp, "#define\tI_%s\t%d\n", buf, i*sizeof (long));
-		fprintf(fp, "\t.asciz\t\"%s\"\n", *cpp);
-		cpp++;
-	}
-}
-
-dump_intname(fp, vector, number)
-	register FILE *fp;
-	char *vector;
-	int number;
-{
-	register char *cp = vector;
-
-	fprintf(fp, "\t.asciz\t\"");
-	/*
-	 * Skip any "int" or "intr" in the name.
-	 */
-	while (*cp)
-		if (cp[0] == 'i' && cp[1] == 'n' &&  cp[2] == 't') {
-			cp += 3;
-			if (*cp == 'r')
-				cp++;
-		} else {
-			putc(*cp, fp);
-			cp++;
-		}
-	fprintf(fp, "%d\"\n", number);
-}
-
-/*
- * Reserve space for the interrupt counters.
- */
-dump_ctrs(fp)
-	register FILE *fp;
-{
-	struct stdintrs *si = &stdintrs[machine-1];
-
-	fprintf(fp, "_eintrnames:\n");
-	fprintf(fp, "\n\t.globl\t_intrcnt\n");
-	fprintf(fp, "\n\t.globl\t_eintrcnt\n");
-	fprintf(fp, "\t.align 2\n");
-	fprintf(fp, "_intrcnt:\n");
-	fprintf(fp, "\t.space\t4 * %d\n", si->si_n);
-	fprintf(fp, "_fltintrcnt:\n");
-	fprintf(fp, "\t.space\t4 * %d\n", cntcnt);
-	fprintf(fp, "_eintrcnt:\n\n");
-	fprintf(fp, "\t.text\n");
-}
+void hpglue() {}
 
 /*
  * Create the ISA interrupt vector glue file.
  */
-vector() {
+void vector() {
 	register FILE *fp, *gp;
 	register struct device *dp, *mp;
 	int count;
@@ -387,7 +390,7 @@ VEC(clk)\n\
 		  				fprintf(fp,"_%smask, ",
 							dp->d_mask);
 		  	fprintf(fp,"%d)\n\tcall\t_%s\n\tINTREXIT%d\n\n\n",
-				++count, id->id, (dp->d_irq > 7)?2:1); 
+				++count, id->id, (dp->d_irq > 7)?2:1);
 						break;
 					}
 					if (!strcmp(id->id, id2->id))

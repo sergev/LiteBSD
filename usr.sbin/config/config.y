@@ -118,6 +118,11 @@ struct	device *curp = 0;
 char	*temp_id;
 char	*val_id;
 
+int yylex(void);
+int finddev(dev_t dev);
+void deverror(char *systemname, char *devtype);
+int alreadychecked(dev_t dev, dev_t list[], dev_t *last);
+
 %}
 %%
 Configuration:
@@ -223,7 +228,7 @@ System_spec:
 	  System_id System_parameter_list
 		= { checksystemspec(*confp); }
 	;
-		
+
 System_id:
 	  CONFIG Save_id
 		= { mkconf($2); }
@@ -240,16 +245,16 @@ System_parameter:
 	| dump_spec
 	| arg_spec
 	;
-	
+
 swap_spec:
 	  SWAP optional_on swap_device_list
 	;
-	
+
 swap_device_list:
 	  swap_device_list AND swap_device
 	| swap_device
 	;
-	
+
 swap_device:
 	  swap_device_spec optional_size optional_sflag
 	      = { mkswap(*confp, $1, $2, $3); }
@@ -550,7 +555,7 @@ Con_info:
 		} |
 	AT NEXUS NUMBER
 	      = { check_nexus(&cur, $3); cur.d_conn = TO_NEXUS; };
-    
+
 Info_list:
 	Info_list Info
 		|
@@ -582,11 +587,11 @@ Info:
 	      = { cur.d_port = ns($2); } |
 	PORT NUMBER
 	      = { cur.d_portn = $2; } |
-	TTY 
+	TTY
 	      = { cur.d_mask = "tty"; } |
-	BIO 
+	BIO
 	      = { cur.d_mask = "bio"; } |
-	NET 
+	NET
 	      = { cur.d_mask = "net"; } |
 	FLAGS NUMBER
 	      = { cur.d_flags = $2; };
@@ -613,7 +618,7 @@ Id_list:
 
 %%
 
-yyerror(s)
+void yyerror(s)
 	char *s;
 {
 
@@ -637,7 +642,7 @@ ns(str)
 /*
  * add a device to the list of devices
  */
-newdev(dp)
+void newdev(dp)
 	register struct device *dp;
 {
 	register struct device *np;
@@ -655,7 +660,7 @@ newdev(dp)
 /*
  * note that a configuration should be made
  */
-mkconf(sysname)
+void mkconf(sysname)
 	char *sysname;
 {
 	register struct file_list *fl, **flp;
@@ -691,7 +696,7 @@ newflist(ftype)
 /*
  * Add a swap device to the system's configuration
  */
-mkswap(system, fl, size, flag)
+void mkswap(system, fl, size, flag)
 	struct file_list *system, *fl;
 	int size, flag;
 {
@@ -729,7 +734,7 @@ mkswap(system, fl, size, flag)
 		system->f_fn = ns(system->f_needs);
 }
 
-mkcomp(dp)
+void mkcomp(dp)
 	register struct device *dp;
 {
 	register struct file_list *fl, **flp;
@@ -748,7 +753,7 @@ mkcomp(dp)
 	compp = flp;
 }
 
-addcomp(compdev, fl)
+void addcomp(compdev, fl)
 	struct file_list *compdev, *fl;
 {
 	register struct file_list **flp;
@@ -858,7 +863,7 @@ huhcon(dev)
 	return (dp);
 }
 
-init_dev(dp)
+void init_dev(dp)
 	register struct device *dp;
 {
 
@@ -881,7 +886,7 @@ init_dev(dp)
 /*
  * make certain that this is a reasonable type of thing to connect to a nexus
  */
-check_nexus(dev, num)
+void check_nexus(dev, num)
 	register struct device *dev;
 	int num;
 {
@@ -897,7 +902,7 @@ check_nexus(dev, num)
 		break;
 
 	case MACHINE_TAHOE:
-		if (!eq(dev->d_name, "vba")) 
+		if (!eq(dev->d_name, "vba"))
 			yyerror("only vba's should be connected to the nexus");
 		break;
 
@@ -923,8 +928,7 @@ check_nexus(dev, num)
 /*
  * Check the timezone to make certain it is sensible
  */
-
-check_tz()
+void check_tz()
 {
 	if (abs(zone) > 12 * 60)
 		yyerror("timezone is unreasonable");
@@ -936,7 +940,7 @@ check_tz()
  * Check system specification and apply defaulting
  * rules on root, argument, dump, and swap devices.
  */
-checksystemspec(fl)
+void checksystemspec(fl)
 	register struct file_list *fl;
 {
 	char buf[BUFSIZ];
@@ -964,7 +968,7 @@ checksystemspec(fl)
 		swap = newflist(SWAPSPEC);
 		dev = fl->f_rootdev;
 		if (minor(dev) & 07) {
-			(void) sprintf(buf, 
+			(void) sprintf(buf,
 "Warning, swap defaulted to 'b' partition with root on '%c' partition",
 				(minor(dev) & 07) + 'a');
 			yyerror(buf);
@@ -972,7 +976,7 @@ checksystemspec(fl)
 		swap->f_swapdev =
 		   makedev(major(dev), (minor(dev) &~ 07) | ('b' - 'a'));
 		swap->f_fn = devtoname(swap->f_swapdev);
-		mkswap(fl, swap, 0);
+		mkswap(fl, swap, 0, 0);
 	}
 	/*
 	 * Make sure a generic swap isn't specified, along with
@@ -1007,7 +1011,7 @@ checksystemspec(fl)
  * Verify all devices specified in the system specification
  * are present in the device specifications.
  */
-verifysystemspecs()
+void verifysystemspecs()
 {
 	register struct file_list *fl;
 	dev_t checked[50], *verifyswap();
@@ -1056,7 +1060,7 @@ verifyswap(fl, checked, pchecked)
 /*
  * Verify that components of a compound device have themselves been config'ed
  */
-verifycomp(fl)
+void verifycomp(fl)
 	register struct file_list *fl;
 {
 	char *dname = fl->f_needs;
@@ -1074,7 +1078,7 @@ verifycomp(fl)
  * Has a device already been checked
  * for it's existence in the configuration?
  */
-alreadychecked(dev, list, last)
+int alreadychecked(dev, list, last)
 	dev_t dev, list[];
 	register dev_t *last;
 {
@@ -1086,7 +1090,7 @@ alreadychecked(dev, list, last)
 	return (0);
 }
 
-deverror(systemname, devtype)
+void deverror(systemname, devtype)
 	char *systemname, *devtype;
 {
 
@@ -1100,7 +1104,7 @@ deverror(systemname, devtype)
  * take into account stuff wildcarded.
  */
 /*ARGSUSED*/
-finddev(dev)
+int finddev(dev)
 	dev_t dev;
 {
 

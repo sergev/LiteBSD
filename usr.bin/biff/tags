@@ -1,2 +1,0 @@
-Mbiff	biff.c	/^main(argc, argv)$/
-usage	biff.c	/^usage()$/

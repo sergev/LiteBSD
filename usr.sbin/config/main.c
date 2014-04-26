@@ -45,6 +45,7 @@ static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/6/93";
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <ctype.h>
 #include "y.tab.h"
 #include "config.h"
@@ -55,7 +56,7 @@ static char *PREFIX;
  * Config builds a set of files for building a UNIX
  * system given a description of the desired system.
  */
-main(argc, argv)
+int main(argc, argv)
 	int argc;
 	char **argv;
 {

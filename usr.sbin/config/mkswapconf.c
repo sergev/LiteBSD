@@ -41,9 +41,10 @@ static char sccsid[] = "@(#)mkswapconf.c	8.1 (Berkeley) 6/6/93";
 #include "config.h"
 
 #include <stdio.h>
+#include <unistd.h>
 #include <ctype.h>
 
-swapconf()
+void swapconf()
 {
 	register struct file_list *fl;
 	struct file_list *do_swap();
@@ -117,6 +118,30 @@ static	struct devdescription {
 	struct	devdescription *dev_next;
 } *devtable;
 
+void initdevtable()
+{
+	char buf[BUFSIZ];
+	int maj;
+	register struct devdescription **dp = &devtable;
+	FILE *fp;
+
+	(void) sprintf(buf, "../conf/devices.%s", machinename);
+	fp = fopen(buf, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "config: can't open %s\n", buf);
+		exit(1);
+	}
+	while (fscanf(fp, "%s\t%d\n", buf, &maj) == 2) {
+		*dp = (struct devdescription *)malloc(sizeof (**dp));
+		(*dp)->dev_name = ns(buf);
+		(*dp)->dev_major = maj;
+		dp = &(*dp)->dev_next;
+	}
+	*dp = 0;
+	fclose(fp);
+	devtablenotread = 0;
+}
+
 /*
  * Given a device name specification figure out:
  *	major device number
@@ -176,7 +201,7 @@ char *
 devtoname(dev)
 	dev_t dev;
 {
-	char buf[80]; 
+	char buf[80];
 	register struct devdescription *dp;
 
 	if (devtablenotread)
@@ -189,28 +214,4 @@ devtoname(dev)
 	(void) sprintf(buf, "%s%d%c", dp->dev_name,
 		minor(dev) >> 3, (minor(dev) & 07) + 'a');
 	return (ns(buf));
-}
-
-initdevtable()
-{
-	char buf[BUFSIZ];
-	int maj;
-	register struct devdescription **dp = &devtable;
-	FILE *fp;
-
-	(void) sprintf(buf, "../conf/devices.%s", machinename);
-	fp = fopen(buf, "r");
-	if (fp == NULL) {
-		fprintf(stderr, "config: can't open %s\n", buf);
-		exit(1);
-	}
-	while (fscanf(fp, "%s\t%d\n", buf, &maj) == 2) {
-		*dp = (struct devdescription *)malloc(sizeof (**dp));
-		(*dp)->dev_name = ns(buf);
-		(*dp)->dev_major = maj;
-		dp = &(*dp)->dev_next;
-	}
-	*dp = 0;
-	fclose(fp);
-	devtablenotread = 0;
 }

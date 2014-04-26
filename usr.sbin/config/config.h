@@ -43,7 +43,7 @@
 #define	NODEV	((dev_t)-1)
 
 struct file_list {
-	struct	file_list *f_next;	
+	struct	file_list *f_next;
 	char	*f_fn;			/* the name */
 	u_char	f_type;			/* see below */
 	u_char	f_flags;		/* see below */
@@ -210,3 +210,19 @@ int	debugging;
 int	maxusers;
 
 #define eq(a,b)	(!strcmp(a,b))
+
+void init_dev(register struct device *dp);
+int yyparse(void);
+void vax_ioconf(void);
+void tahoe_ioconf(void);
+void hp300_ioconf(void);
+void i386_ioconf(void);
+void pmax_ioconf(void);
+void news_ioconf(void);
+void ubglue(void);
+void vbglue(void);
+void hpglue(void);
+void vector(void);
+void makefile(void);
+void headers(void);
+void swapconf(void);

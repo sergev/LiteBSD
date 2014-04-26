@@ -130,99 +130,28 @@ static	struct users {
 };
 #define	NUSERS	(sizeof (users) / sizeof (users[0]))
 
-/*
- * Build the makefile from the skeleton
- */
-makefile()
+int opteq(cp, dp)
+	char *cp, *dp;
 {
-	FILE *ifp, *ofp;
-	char line[BUFSIZ];
-	struct opt *op;
-	struct users *up;
+	char c, d;
 
-	read_files();
-	strcpy(line, "Makefile.");
-	(void) strcat(line, machinename);
-	ifp = fopen(line, "r");
-	if (ifp == 0) {
-		perror(line);
-		exit(1);
-	}
-	ofp = fopen(path("Makefile"), "w");
-	if (ofp == 0) {
-		perror(path("Makefile"));
-		exit(1);
-	}
-	fprintf(ofp, "IDENT=-D%s", raise(ident));
-	if (profiling)
-		fprintf(ofp, " -DGPROF");
-	if (cputype == 0) {
-		printf("cpu type must be specified\n");
-		exit(1);
-	}
-	{ struct cputype *cp;
-	  for (cp = cputype; cp; cp = cp->cpu_next)
-		fprintf(ofp, " -D%s", cp->cpu_name);
-	}
-	for (op = opt; op; op = op->op_next)
-		if (op->op_value)
-			fprintf(ofp, " -D%s=\"%s\"", op->op_name, op->op_value);
-		else
-			fprintf(ofp, " -D%s", op->op_name);
-	fprintf(ofp, "\n");
-	if (hadtz == 0)
-		printf("timezone not specified; gmt assumed\n");
-	if ((unsigned)machine > NUSERS) {
-		printf("maxusers config info isn't present, using vax\n");
-		up = &users[MACHINE_VAX-1];
-	} else
-		up = &users[machine-1];
-	if (maxusers == 0) {
-		printf("maxusers not specified; %d assumed\n", up->u_default);
-		maxusers = up->u_default;
-	} else if (maxusers < up->u_min) {
-		printf("minimum of %d maxusers assumed\n", up->u_min);
-		maxusers = up->u_min;
-	} else if (maxusers > up->u_max)
-		printf("warning: maxusers > %d (%d)\n", up->u_max, maxusers);
-	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
-	    zone, dst, maxusers);
-	if (hz > 0)
-		fprintf(ofp, " -DHZ=%d", hz);
-	fprintf(ofp, "\n");
-	for (op = mkopt; op; op = op->op_next)
-		fprintf(ofp, "%s=%s\n", op->op_name, op->op_value);
-	if (debugging)
-		fprintf(ofp, "DEBUG=-g\n");
-	if (profiling)
-		fprintf(ofp, "PROF=-pg\n");
-	while (fgets(line, BUFSIZ, ifp) != 0) {
-		if (*line != '%') {
-			fprintf(ofp, "%s", line);
-			continue;
+	for (; ; cp++, dp++) {
+		if (*cp != *dp) {
+			c = isupper(*cp) ? tolower(*cp) : *cp;
+			d = isupper(*dp) ? tolower(*dp) : *dp;
+			if (c != d)
+				return (0);
 		}
-		if (eq(line, "%OBJS\n"))
-			do_objs(ofp);
-		else if (eq(line, "%CFILES\n"))
-			do_cfiles(ofp);
-		else if (eq(line, "%RULES\n"))
-			do_rules(ofp);
-		else if (eq(line, "%LOAD\n"))
-			do_load(ofp);
-		else
-			fprintf(stderr,
-			    "Unknown %% construct in generic makefile: %s",
-			    line);
+		if (*cp == 0)
+			return (1);
 	}
-	(void) fclose(ifp);
-	(void) fclose(ofp);
 }
 
 /*
  * Read in the information about files used in making the system.
  * Store it in the ftab linked list.
  */
-read_files()
+void read_files()
 {
 	FILE *fp;
 	register struct file_list *tp, *pf;
@@ -304,7 +233,7 @@ nextparam:
 	if (eq(wd, "compile-with")) {
 		next_quoted_word(fp, wd);
 		if (wd == 0) {
-			printf("%s: %s missing compile command string.\n",
+			printf("%s: missing compile command string.\n",
 			       fname);
 			exit(1);
 		}
@@ -389,24 +318,7 @@ save:
 	goto next;
 }
 
-opteq(cp, dp)
-	char *cp, *dp;
-{
-	char c, d;
-
-	for (; ; cp++, dp++) {
-		if (*cp != *dp) {
-			c = isupper(*cp) ? tolower(*cp) : *cp;
-			d = isupper(*dp) ? tolower(*dp) : *dp;
-			if (c != d)
-				return (0);
-		}
-		if (*cp == 0)
-			return (1);
-	}
-}
-
-do_objs(fp)
+void do_objs(fp)
 	FILE *fp;
 {
 	register struct file_list *tp, *fl;
@@ -444,7 +356,7 @@ cont:
 		putc('\n', fp);
 }
 
-do_cfiles(fp)
+void do_cfiles(fp)
 	FILE *fp;
 {
 	register struct file_list *tp, *fl;
@@ -483,18 +395,6 @@ do_cfiles(fp)
 		putc('\n', fp);
 }
 
-char *
-tail(fn)
-	char *fn;
-{
-	register char *cp;
-
-	cp = rindex(fn, '/');
-	if (cp == 0)
-		return (fn);
-	return (cp+1);
-}
-
 /*
  * Create the makerules for each file
  * which is part of the system.
@@ -502,7 +402,7 @@ tail(fn)
  * which avoids any problem areas with i/o addressing
  * (e.g. for the VAX); assembler files are processed by as.
  */
-do_rules(f)
+void do_rules(f)
 	FILE *f;
 {
 	register char *cp, *np, och, *tp;
@@ -558,7 +458,7 @@ do_rules(f)
 /*
  * Create the load strings
  */
-do_load(f)
+void do_load(f)
 	register FILE *f;
 {
 	register struct file_list *fl;
@@ -573,6 +473,119 @@ do_load(f)
 		if (fl->f_type == SYSTEMSPEC)
 			fprintf(f, " %s", fl->f_needs);
 	putc('\n', f);
+}
+
+/*
+ * Build the makefile from the skeleton
+ */
+void makefile()
+{
+	FILE *ifp, *ofp;
+	char line[BUFSIZ];
+	struct opt *op;
+	struct users *up;
+
+	read_files();
+	strcpy(line, "Makefile.");
+	(void) strcat(line, machinename);
+	ifp = fopen(line, "r");
+	if (ifp == 0) {
+		perror(line);
+		exit(1);
+	}
+	ofp = fopen(path("Makefile"), "w");
+	if (ofp == 0) {
+		perror(path("Makefile"));
+		exit(1);
+	}
+	fprintf(ofp, "IDENT=-D%s", raise(ident));
+	if (profiling)
+		fprintf(ofp, " -DGPROF");
+	if (cputype == 0) {
+		printf("cpu type must be specified\n");
+		exit(1);
+	}
+	{ struct cputype *cp;
+	  for (cp = cputype; cp; cp = cp->cpu_next)
+		fprintf(ofp, " -D%s", cp->cpu_name);
+	}
+	for (op = opt; op; op = op->op_next)
+		if (op->op_value)
+			fprintf(ofp, " -D%s=\"%s\"", op->op_name, op->op_value);
+		else
+			fprintf(ofp, " -D%s", op->op_name);
+	fprintf(ofp, "\n");
+	if (hadtz == 0)
+		printf("timezone not specified; gmt assumed\n");
+	if ((unsigned)machine > NUSERS) {
+		printf("maxusers config info isn't present, using vax\n");
+		up = &users[MACHINE_VAX-1];
+	} else
+		up = &users[machine-1];
+	if (maxusers == 0) {
+		printf("maxusers not specified; %d assumed\n", up->u_default);
+		maxusers = up->u_default;
+	} else if (maxusers < up->u_min) {
+		printf("minimum of %d maxusers assumed\n", up->u_min);
+		maxusers = up->u_min;
+	} else if (maxusers > up->u_max)
+		printf("warning: maxusers > %d (%d)\n", up->u_max, maxusers);
+	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
+	    zone, dst, maxusers);
+	if (hz > 0)
+		fprintf(ofp, " -DHZ=%d", hz);
+	fprintf(ofp, "\n");
+	for (op = mkopt; op; op = op->op_next)
+		fprintf(ofp, "%s=%s\n", op->op_name, op->op_value);
+	if (debugging)
+		fprintf(ofp, "DEBUG=-g\n");
+	if (profiling)
+		fprintf(ofp, "PROF=-pg\n");
+	while (fgets(line, BUFSIZ, ifp) != 0) {
+		if (*line != '%') {
+			fprintf(ofp, "%s", line);
+			continue;
+		}
+		if (eq(line, "%OBJS\n"))
+			do_objs(ofp);
+		else if (eq(line, "%CFILES\n"))
+			do_cfiles(ofp);
+		else if (eq(line, "%RULES\n"))
+			do_rules(ofp);
+		else if (eq(line, "%LOAD\n"))
+			do_load(ofp);
+		else
+			fprintf(stderr,
+			    "Unknown %% construct in generic makefile: %s",
+			    line);
+	}
+	(void) fclose(ifp);
+	(void) fclose(ofp);
+}
+
+char *
+tail(fn)
+	char *fn;
+{
+	register char *cp;
+
+	cp = rindex(fn, '/');
+	if (cp == 0)
+		return (fn);
+	return (cp+1);
+}
+
+void do_swapspec(f, name)
+	FILE *f;
+	register char *name;
+{
+
+	if (!eq(name, "generic"))
+		fprintf(f, "swap%s.o: swap%s.c\n", name, name);
+	else
+		fprintf(f, "swapgeneric.o: $S/%s/%s/swapgeneric.c\n",
+			machinename, machinename);
+	fprintf(f, "\t${NORMAL_C}\n\n");
 }
 
 struct file_list *
@@ -593,19 +606,6 @@ do_systemspec(f, fl, first)
 		if (fl->f_type != SWAPSPEC)
 			break;
 	return (fl);
-}
-
-do_swapspec(f, name)
-	FILE *f;
-	register char *name;
-{
-
-	if (!eq(name, "generic"))
-		fprintf(f, "swap%s.o: swap%s.c\n", name, name);
-	else
-		fprintf(f, "swapgeneric.o: $S/%s/%s/swapgeneric.c\n",
-			machinename, machinename);
-	fprintf(f, "\t${NORMAL_C}\n\n");
 }
 
 char *

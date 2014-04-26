@@ -1,0 +1,2 @@
+This directory contains make "include" files for cross-build
+of the BSD source tree for PIC32MZ target.

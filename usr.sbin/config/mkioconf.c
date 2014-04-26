@@ -48,7 +48,7 @@ char	*wnum();
 void	pseudo_ioconf();
 
 #if MACHINE_VAX
-vax_ioconf()
+void vax_ioconf()
 {
 	register struct device *dp, *mp, *np;
 	register int uba_n, slave;
@@ -103,7 +103,7 @@ vax_ioconf()
 				continue;
 			}
 			if (dp->d_slave != UNKNOWN) {
-				printf("can't specify slave number for %s%d\n", 
+				printf("can't specify slave number for %s%d\n",
 				    dp->d_name, dp->d_unit);
 				continue;
 			}
@@ -292,7 +292,7 @@ vax_ioconf()
 #endif
 
 #if MACHINE_TAHOE
-tahoe_ioconf()
+void tahoe_ioconf()
 {
 	register struct device *dp, *mp, *np;
 	register int vba_n, slave;
@@ -467,7 +467,32 @@ tahoe_ioconf()
 #endif
 
 #if MACHINE_HP300 || MACHINE_LUNA68K
-hp300_ioconf()
+
+#define ishpibdev(n) (eq(n,"rd") || eq(n,"ct") || eq(n,"mt") || eq(n,"ppi"))
+#define isscsidev(n) (eq(n,"sd") || eq(n,"st") || eq(n,"ac"))
+
+int hpbadslave(mp, dp)
+	register struct device *dp, *mp;
+{
+
+	if ((mp == TO_NEXUS && ishpibdev(dp->d_name)) ||
+	    (mp != TO_NEXUS && eq(mp->d_name, "hpib") &&
+	    !ishpibdev(dp->d_name))) {
+		printf("%s%s must be attached to an hpib\n",
+		       dp->d_name, wnum(dp->d_unit));
+		return (1);
+	}
+	if ((mp == TO_NEXUS && isscsidev(dp->d_name)) ||
+	    (mp != TO_NEXUS && eq(mp->d_name, "scsi") &&
+	    !isscsidev(dp->d_name))) {
+		printf("%s%s must be attached to a scsi\n",
+		       dp->d_name, wnum(dp->d_unit));
+		return (1);
+	}
+	return (0);
+}
+
+void hp300_ioconf()
 {
 	register struct device *dp, *mp;
 	register int hpib, slave;
@@ -503,7 +528,7 @@ hp300_ioconf()
 	for (dp = dtab; dp != 0; dp = dp->d_next) {
 		mp = dp->d_conn;
 		if (dp->d_unit == QUES ||
-			dp->d_type != MASTER && dp->d_type != CONTROLLER)
+		    (dp->d_type != MASTER && dp->d_type != CONTROLLER))
 			continue;
 		if (mp != TO_NEXUS) {
 			printf("%s%s must be attached to an sc (nexus)\n",
@@ -572,36 +597,12 @@ hp300_ioconf()
 	pseudo_ioconf(fp);
 	(void) fclose(fp);
 }
-
-#define ishpibdev(n) (eq(n,"rd") || eq(n,"ct") || eq(n,"mt") || eq(n,"ppi"))
-#define isscsidev(n) (eq(n,"sd") || eq(n,"st") || eq(n,"ac"))
-
-hpbadslave(mp, dp)
-	register struct device *dp, *mp;
-{
-
-	if (mp == TO_NEXUS && ishpibdev(dp->d_name) ||
-	    mp != TO_NEXUS && eq(mp->d_name, "hpib") &&
-	    !ishpibdev(dp->d_name)) {
-		printf("%s%s must be attached to an hpib\n",
-		       dp->d_name, wnum(dp->d_unit));
-		return (1);
-	}
-	if (mp == TO_NEXUS && isscsidev(dp->d_name) ||
-	    mp != TO_NEXUS && eq(mp->d_name, "scsi") &&
-	    !isscsidev(dp->d_name)) {
-		printf("%s%s must be attached to a scsi\n",
-		       dp->d_name, wnum(dp->d_unit));
-		return (1);
-	}
-	return (0);
-}
 #endif
 
 #if MACHINE_I386
-char *sirq();
+char *sirq(int);
 
-i386_ioconf()
+void i386_ioconf()
 {
 	register struct device *dp, *mp, *np;
 	register int uba_n, slave;
@@ -736,7 +737,7 @@ sirq(num)
 #endif
 
 #if MACHINE_PMAX
-pmax_ioconf()
+void pmax_ioconf()
 {
 	register struct device *dp, *mp;
 	FILE *fp;
@@ -748,7 +749,7 @@ pmax_ioconf()
 	}
 	fprintf(fp, "#include \"sys/types.h\"\n");
 	fprintf(fp, "#include \"sys/time.h\"\n");
-	fprintf(fp, "#include \"pmax/dev/device.h\"\n\n");
+	fprintf(fp, "#include \"mips/dev/device.h\"\n\n");
 	fprintf(fp, "#define C (char *)\n\n");
 
 	/* print controller initialization structures */
@@ -791,7 +792,7 @@ pmax_ioconf()
 			continue;
 		mp = dp->d_conn;
 		if (mp == 0 ||
-		    !eq(mp->d_name, "asc") && !eq(mp->d_name, "sii")) {
+		    (!eq(mp->d_name, "asc") && !eq(mp->d_name, "sii"))) {
 			printf("%s%s: devices must be attached to a SCSI (asc or sii) controller\n",
 				dp->d_name, wnum(dp->d_unit));
 			continue;
@@ -823,7 +824,7 @@ int have_iop = 0;
 int have_hb = 0;
 int have_vme = 0;
 
-news_ioconf()
+void news_ioconf()
 {
 	register struct device *dp, *mp;
 	register int slave;
@@ -890,8 +891,8 @@ news_ioconf()
 			continue;
 		}
 		if (dp->d_flags) {
-			printf("controllers (e.g. %s%d) don't have flags, ");
-			printf("only devices do\n",
+			printf("controllers (e.g. %s%d) don't have flags, "
+                               "only devices do\n",
 			    dp->d_name, dp->d_unit);
 			continue;
 		}
@@ -1007,6 +1008,39 @@ wnum(num)
 	return (errbuf);
 }
 
+void comp_config(fp)
+	FILE *fp;
+{
+	register struct file_list *fl;
+	register struct device *dp;
+
+	fprintf(fp, "\n#include \"dev/cdvar.h\"\n");
+	fprintf(fp, "\nstruct cddevice cddevice[] = {\n");
+	fprintf(fp, "/*\tunit\tileave\tflags\tdk\tdevs\t\t\t\t*/\n");
+
+	fl = comp_list;
+	while (fl) {
+		if (fl->f_type != COMPDEVICE) {
+			fl = fl->f_next;
+			continue;
+		}
+		for (dp = dtab; dp != 0; dp = dp->d_next)
+			if (dp->d_type == DEVICE &&
+			    eq(dp->d_name, fl->f_fn) &&
+			    dp->d_unit == fl->f_compinfo)
+				break;
+		if (dp == 0)
+			continue;
+		fprintf(fp, "\t%d,\t%d,\t%d,\t%d,\t{",
+			dp->d_unit, dp->d_pri < 0 ? 0 : dp->d_pri,
+			dp->d_flags, 1);
+		for (fl = fl->f_next; fl->f_type == COMPSPEC; fl = fl->f_next)
+			fprintf(fp, " 0x%x,", fl->f_compdev);
+		fprintf(fp, " NODEV },\n");
+	}
+	fprintf(fp, "\t-1,\t0,\t0,\t0,\t{ 0 },\n};\n");
+}
+
 void
 pseudo_ioconf(fp)
 	register FILE *fp;
@@ -1049,37 +1083,4 @@ pseudo_ioconf(fp)
 	(void)fprintf(fp, "\t{ 0, 0 }\n};\n");
 	if (seen_cd)
 		comp_config(fp);
-}
-
-comp_config(fp)
-	FILE *fp;
-{
-	register struct file_list *fl;
-	register struct device *dp;
-
-	fprintf(fp, "\n#include \"dev/cdvar.h\"\n");
-	fprintf(fp, "\nstruct cddevice cddevice[] = {\n");
-	fprintf(fp, "/*\tunit\tileave\tflags\tdk\tdevs\t\t\t\t*/\n");
-
-	fl = comp_list;
-	while (fl) {
-		if (fl->f_type != COMPDEVICE) {
-			fl = fl->f_next;
-			continue;
-		}
-		for (dp = dtab; dp != 0; dp = dp->d_next)
-			if (dp->d_type == DEVICE &&
-			    eq(dp->d_name, fl->f_fn) &&
-			    dp->d_unit == fl->f_compinfo)
-				break;
-		if (dp == 0)
-			continue;
-		fprintf(fp, "\t%d,\t%d,\t%d,\t%d,\t{",
-			dp->d_unit, dp->d_pri < 0 ? 0 : dp->d_pri,
-			dp->d_flags, 1);
-		for (fl = fl->f_next; fl->f_type == COMPSPEC; fl = fl->f_next)
-			fprintf(fp, " 0x%x,", fl->f_compdev);
-		fprintf(fp, " NODEV },\n");
-	}
-	fprintf(fp, "\t-1,\t0,\t0,\t0,\t{ 0 },\n};\n");
 }
