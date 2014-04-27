@@ -7,10 +7,7 @@ define	ifnet
 define	tty
 
 # net device attributes - we have generic code for ether.
-# we should have imp but right now it is a pseudo-device.
 define	ether
-# define	imp
-pseudo-device imp
 
 # scsi driver and associated stuff
 define	scsi { target = -1 }
@@ -130,28 +127,6 @@ file	net/raw_usrreq.c
 file	net/route.c
 file	net/rtsock.c
 file	net/slcompress.c	sl
-file	netccitt/ccitt_proto.c	ccitt
-file	netccitt/llc_input.c	llc
-file	netccitt/llc_output.c	llc
-file	netccitt/llc_subr.c	llc
-file	netccitt/llc_timer.c	llc
-file	netccitt/hd_debug.c	hdlc
-file	netccitt/hd_input.c	hdlc
-file	netccitt/hd_output.c	hdlc
-file	netccitt/hd_subr.c	hdlc
-file	netccitt/hd_timer.c	hdlc
-file	netccitt/if_x25subr.c	ccitt
-file	netccitt/pk_acct.c	ccitt
-file	netccitt/pk_debug.c	ccitt
-file	netccitt/pk_input.c	ccitt
-file	netccitt/pk_llcsubr.c	llc hdlc
-file	netccitt/pk_output.c	ccitt
-file	netccitt/pk_subr.c	ccitt
-file	netccitt/pk_timer.c	ccitt
-file	netccitt/pk_usrreq.c	ccitt
-file	netimp/if_imp.c		imp needs-count
-file	netimp/if_imphost.c	imp needs-count
-file	netimp/raw_imp.c	imp
 file	netinet/if_ether.c	ether
 file	netinet/igmp.c		inet
 file	netinet/in.c		inet
@@ -169,52 +144,6 @@ file	netinet/tcp_subr.c	inet
 file	netinet/tcp_timer.c	inet
 file	netinet/tcp_usrreq.c	inet
 file	netinet/udp_usrreq.c	inet
-file	netiso/clnp_debug.c	iso
-file	netiso/clnp_er.c	iso
-file	netiso/clnp_frag.c	iso
-file	netiso/clnp_input.c	iso
-file	netiso/clnp_options.c	iso
-file	netiso/clnp_output.c	iso
-file	netiso/clnp_raw.c	iso
-file	netiso/clnp_subr.c	iso
-file	netiso/clnp_timer.c	iso
-file	netiso/cltp_usrreq.c	iso
-file	netiso/esis.c		iso
-file	netiso/if_eon.c		eon
-file	netiso/idrp_usrreq.c	iso
-file	netiso/iso.c		iso
-file	netiso/iso_chksum.c	iso
-file	netiso/iso_pcb.c	iso
-file	netiso/iso_proto.c	iso
-file	netiso/iso_snpac.c	iso
-file	netiso/tp_astring.c	iso tpip
-file	netiso/tp_cons.c	iso
-file	netiso/tp_driver.c	iso tpip
-file	netiso/tp_emit.c	iso tpip
-file	netiso/tp_inet.c	iso tpip
-file	netiso/tp_input.c	iso tpip
-file	netiso/tp_iso.c		iso
-file	netiso/tp_meas.c	iso tpip
-file	netiso/tp_output.c	iso tpip
-file	netiso/tp_pcb.c		iso tpip
-file	netiso/tp_subr.c	iso tpip
-file	netiso/tp_subr2.c	iso tpip
-file	netiso/tp_timer.c	iso tpip
-file	netiso/tp_trace.c	iso tpip
-file	netiso/tp_usrreq.c	iso tpip
-file	netiso/tuba_subr.c	iso tuba
-file	netiso/tuba_table.c	iso tuba
-file	netiso/tuba_usrreq.c	iso tuba
-file	netns/idp_usrreq.c	ns
-file	netns/ns.c		ns
-file	netns/ns_error.c	ns
-file	netns/ns_input.c	ns
-file	netns/ns_ip.c		ns
-file	netns/ns_output.c	ns
-file	netns/ns_pcb.c		ns
-file	netns/ns_proto.c	ns
-file	netns/spp_debug.c	ns
-file	netns/spp_usrreq.c	ns
 file	nfs/nfs_bio.c		nfs
 file	nfs/nfs_node.c		nfs
 file	nfs/nfs_nqlease.c	nfs

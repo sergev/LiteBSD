@@ -16,7 +16,8 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
-CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc
+CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -I${DESTDIR}/usr/include
+LDCROSS?=       -mips32r2 -EL -nostdlib
 
 .MAIN: all
 
@@ -29,25 +30,17 @@ CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc
 
 .c.o:
 	${MIPS_TOOLCHAIN}${CC} ${CCROSS} ${CFLAGS} -c ${.IMPSRC}
-	@${MIPS_TOOLCHAIN}${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
 
 .c.po:
 	${MIPS_TOOLCHAIN}${CC} ${CCROSS} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
-	@${MIPS_TOOLCHAIN}${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
 
 .s.o:
 	${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
 	    ${MIPS_TOOLCHAIN}${AS} -o ${.TARGET}
-	@${MIPS_TOOLCHAIN}${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
 
 .s.po:
 	${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
 	    ${MIPS_TOOLCHAIN}${AS} -o ${.TARGET}
-	@${MIPS_TOOLCHAIN}${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
 
 MANALL=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8}
 manpages: ${MANALL}

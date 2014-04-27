@@ -1,8 +1,11 @@
 #	@(#)sys.mk	8.2 (Berkeley) 3/21/94
 
 unix		?=	We run UNIX.
+MACHINE_ARCH    =       mips
+MACHINE         =       pmax
+NOPROFILE       =       True
 
-.SUFFIXES: .out .a .ln .o .c .F .f .e .r .y .l .s .cl .p .h 
+.SUFFIXES: .out .a .ln .o .c .F .f .e .r .y .l .s .cl .p .h
 
 .LIBS:		.a
 

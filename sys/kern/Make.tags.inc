@@ -12,8 +12,7 @@ COMM=	/sys/conf/*.[ch] \
 	/sys/isofs/*/*.[ch] \
 	/sys/kern/*.[ch] /sys/libkern/*.[ch] \
 	/sys/miscfs/*/*.[ch] \
-	/sys/net/*.[ch] /sys/netccitt/*.[ch] /sys/netinet/*.[ch] \
-	/sys/netiso/*.[ch] /sys/netns/*.[ch] \
+	/sys/net/*.[ch] /sys/netinet/*.[ch] \
 	/sys/nfs/*.[ch] /sys/sys/*.[ch] \
 	/sys/ufs/*/*.[ch] \
 	/sys/vm/*.[ch]

@@ -76,10 +76,6 @@ domaininit()
 #ifdef CCITT
 	ADDDOMAIN(ccitt);
 #endif
-#include "imp.h"
-#if NIMP > 0
-	ADDDOMAIN(imp);
-#endif
 #endif
 
 	for (dp = domains; dp; dp = dp->dom_next) {

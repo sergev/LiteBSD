@@ -33,7 +33,7 @@ DGEN=	conf \
 	miscfs miscfs/deadfs miscfs/fdesc miscfs/fifofs miscfs/kernfs \
 	miscfs/lofs miscfs/nullfs miscfs/portal miscfs/procfs \
 	miscfs/specfs miscfs/umapfs miscfs/union \
-	net netccitt netinet netiso netns nfs scripts sys \
+	net netinet nfs scripts sys \
 	ufs ufs/ffs ufs/lfs ufs/mfs ufs/ufs \
 	vm
 
