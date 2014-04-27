@@ -30,7 +30,6 @@ mips/ultrix/ultrix_compat.c	optional ultrixcompat
 mips/ultrix/ultrix_syscalls.c	optional ultrixcompat
 mips/ultrix/ultrix_sysent.c	optional ultrixcompat
 netinet/in_cksum.c		optional inet
-netns/ns_cksum.c		optional ns
 dev/cd.c			optional cd
 dev/vn.c			optional vn
 thisisfor_in_proto.c		optional hy

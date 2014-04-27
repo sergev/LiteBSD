@@ -758,7 +758,7 @@ void pmax_ioconf()
 			continue;
 		fprintf(fp, "extern struct driver %sdriver;\n", dp->d_name);
 	}
-	fprintf(fp, "\nstruct pmax_ctlr pmax_cinit[] = {\n");
+	fprintf(fp, "\nstruct mips_ctlr mips_cinit[] = {\n");
 	fprintf(fp, "/*\tdriver,\t\tunit,\taddr,\t\tpri,\tflags */\n");
 	for (dp = dtab; dp != 0; dp = dp->d_next) {
 		if (dp->d_type != CONTROLLER && dp->d_type != MASTER)
@@ -811,6 +811,71 @@ void pmax_ioconf()
 		fprintf(fp, "{ &%sdriver,\t&%sdriver,", dp->d_name, mp->d_name);
 		fprintf(fp, "\t%d,\t%d,\t%d,\t%d,\t%d,\t0x%x },\n",
 			dp->d_unit, mp->d_unit, dp->d_drive, dp->d_slave,
+			dp->d_dk, dp->d_flags);
+	}
+	fprintf(fp, "0\n};\n");
+	pseudo_ioconf(fp);
+	(void) fclose(fp);
+}
+#endif
+
+#if MACHINE_PIC32
+void pic32_ioconf()
+{
+	register struct device *dp, *mp;
+	FILE *fp;
+
+	fp = fopen(path("ioconf.c"), "w");
+	if (fp == 0) {
+		perror(path("ioconf.c"));
+		exit(1);
+	}
+	fprintf(fp, "#include \"sys/types.h\"\n");
+	fprintf(fp, "#include \"sys/time.h\"\n");
+	fprintf(fp, "#include \"mips/dev/device.h\"\n\n");
+	fprintf(fp, "#define C (char *)\n\n");
+
+	/* print controller initialization structures */
+	for (dp = dtab; dp != 0; dp = dp->d_next) {
+		if (dp->d_type == PSEUDO_DEVICE)
+			continue;
+		fprintf(fp, "extern struct driver %sdriver;\n", dp->d_name);
+	}
+	fprintf(fp, "\nstruct mips_ctlr mips_cinit[] = {\n");
+	fprintf(fp, "/*\tdriver,\t\tunit,\taddr,\t\tpri,\tflags */\n");
+	for (dp = dtab; dp != 0; dp = dp->d_next) {
+		if (dp->d_type != CONTROLLER && dp->d_type != MASTER)
+			continue;
+		if (dp->d_drive != UNKNOWN || dp->d_slave != UNKNOWN) {
+			printf("can't specify drive/slave for %s%s\n",
+				dp->d_name, wnum(dp->d_unit));
+			continue;
+		}
+		if (dp->d_unit == UNKNOWN || dp->d_unit == QUES)
+			dp->d_unit = 0;
+		fprintf(fp,
+			"\t{ &%sdriver,\t%d,\tC 0x%x,\t%d,\t0x%x },\n",
+			dp->d_name, dp->d_unit, dp->d_addr, dp->d_pri,
+			dp->d_flags);
+	}
+	fprintf(fp, "\t0\n};\n");
+
+	/* print devices connected to other controllers */
+	fprintf(fp, "\nstruct scsi_device scsi_dinit[] = {\n");
+	fprintf(fp,
+	   "/*driver,\tcdriver,\tunit,\tctlr,\tdrive,\tslave,\tdk,\tflags*/\n");
+	for (dp = dtab; dp != 0; dp = dp->d_next) {
+		if (dp->d_type == CONTROLLER || dp->d_type == MASTER ||
+		    dp->d_type == PSEUDO_DEVICE)
+			continue;
+		if ((unsigned)dp->d_drive > 6) {
+			printf("%s%s: drive must be in the range 0..6\n",
+				dp->d_name, wnum(dp->d_unit));
+			continue;
+		}
+		fprintf(fp, "{ &%sdriver,\t0,", dp->d_name);
+		fprintf(fp, "\t%d,\t%d,\t%d,\t%d,\t%d,\t0x%x },\n",
+			dp->d_unit, 0, dp->d_drive, 0,
 			dp->d_dk, dp->d_flags);
 	}
 	fprintf(fp, "0\n};\n");

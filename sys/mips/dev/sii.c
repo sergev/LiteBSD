@@ -169,16 +169,16 @@ static int sii_GetByte();
  * Return true if found and initialized ok.
  */
 siiprobe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register struct siisoftc *sc;
 	register int i;
 
-	if (cp->pmax_unit >= NSII)
+	if (cp->mips_unit >= NSII)
 		return (0);
-	sc = &sii_softc[cp->pmax_unit];
-	sc->sc_regs = (SIIRegs *)cp->pmax_addr;
-	sc->sc_flags = cp->pmax_flags;
+	sc = &sii_softc[cp->mips_unit];
+	sc->sc_regs = (SIIRegs *)cp->mips_addr;
+	sc->sc_flags = cp->mips_flags;
 	sc->sc_target = -1;	/* no command active */
 	/*
 	 * Give each target its own DMA buffer region.
@@ -193,7 +193,7 @@ siiprobe(cp)
 			SII_MAX_DMA_XFER_LENGTH;
 	}
 
-	printf("sii%d at nexus0 csr 0x%x\n", cp->pmax_unit, cp->pmax_addr);
+	printf("sii%d at nexus0 csr 0x%x\n", cp->mips_unit, cp->mips_addr);
 	sii_Reset(sc->sc_regs, RESET);
 	return (1);
 }

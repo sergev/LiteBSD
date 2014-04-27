@@ -191,21 +191,21 @@ struct	driver dtopdriver =  {
 };
 
 dtopprobe(cp)
-	struct pmax_ctlr *cp;
+	struct mips_ctlr *cp;
 {
 	register struct tty *tp;
 	register int cntr;
-	int dtopunit = cp->pmax_unit, i, s;
+	int dtopunit = cp->mips_unit, i, s;
 	dtop_softc_t dtop;
 
 	if (dtopunit >= NDTOP)
 		return (0);
-	if (badaddr(cp->pmax_addr, 2))
+	if (badaddr(cp->mips_addr, 2))
 		return (0);
 	dtop = &dtop_softc[dtopunit];
 
 	dtop->poll = (poll_reg_t)MACH_PHYS_TO_UNCACHED(XINE_REG_INTR);
-	dtop->data = (data_reg_t)cp->pmax_addr;
+	dtop->data = (data_reg_t)cp->mips_addr;
 
 	for (i = 0; i < DTOP_MAX_DEVICES; i++)
 		dtop->device[i].handler = dtop_null_device_handler;
@@ -218,7 +218,7 @@ dtopprobe(cp)
 
 	dtop->probed_once = 1;
 	printf("dtop%d at nexus0 csr 0x%x priority %d\n",
-		cp->pmax_unit, cp->pmax_addr, cp->pmax_pri);
+		cp->mips_unit, cp->mips_addr, cp->mips_pri);
 	return (1);
 }
 

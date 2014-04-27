@@ -127,6 +127,7 @@ static	struct users {
 	{ 8, 2, 64 },			/* MACHINE_PMAX */
 	{ 8, 2, 64 },			/* MACHINE_LUNA68K */
 	{ 8, 2, 64 },			/* MACHINE_NEWS3400 */
+	{ 2, 1, 16 },			/* MACHINE_PIC32 */
 };
 #define	NUSERS	(sizeof (users) / sizeof (users[0]))
 

@@ -167,7 +167,7 @@ struct speedtab sccspeedtab[] = {
  * Return true if found and initialized ok.
  */
 sccprobe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register struct scc_softc *sc;
 	register struct pdma *pdp;
@@ -177,9 +177,9 @@ sccprobe(cp)
 	struct termios cterm;
 	int s;
 
-	if (cp->pmax_unit >= NSCC)
+	if (cp->mips_unit >= NSCC)
 		return (0);
-	if (badaddr(cp->pmax_addr, 2))
+	if (badaddr(cp->mips_addr, 2))
 		return (0);
 
 	/*
@@ -187,22 +187,22 @@ sccprobe(cp)
 	 * complete.
 	 */
 	if (major(cn_tab.cn_dev) == SCCDEV && cn_tab.cn_screen == 0 &&
-		SCCUNIT(cn_tab.cn_dev) == cp->pmax_unit)
+		SCCUNIT(cn_tab.cn_dev) == cp->mips_unit)
 		DELAY(10000);
 
-	sc = &scc_softc[cp->pmax_unit];
+	sc = &scc_softc[cp->mips_unit];
 	pdp = &sc->scc_pdma[0];
 
 	/* init pseudo DMA structures */
-	tp = &scc_tty[cp->pmax_unit * 2];
+	tp = &scc_tty[cp->mips_unit * 2];
 	for (cntr = 0; cntr < 2; cntr++) {
-		pdp->p_addr = (void *)cp->pmax_addr;
+		pdp->p_addr = (void *)cp->mips_addr;
 		pdp->p_arg = (int)tp;
 		pdp->p_fcn = (void (*)())0;
-		tp->t_dev = (dev_t)((cp->pmax_unit << 1) | cntr);
+		tp->t_dev = (dev_t)((cp->mips_unit << 1) | cntr);
 		pdp++, tp++;
 	}
-	sc->scc_softCAR = cp->pmax_flags | 0x2;
+	sc->scc_softCAR = cp->mips_flags | 0x2;
 
 	/* reset chip */
 	sccreset(sc);
@@ -212,7 +212,7 @@ sccprobe(cp)
 	 */
 	if (cn_tab.cn_screen) {
 		if (cn_tab.cn_kbdgetc == sccGetc) {
-			if (cp->pmax_unit == 1) {
+			if (cp->mips_unit == 1) {
 				s = spltty();
 				ctty.t_dev = makedev(SCCDEV, SCCKBD_PORT);
 				cterm.c_cflag = CS8;
@@ -229,7 +229,7 @@ sccprobe(cp)
 #endif
 				DELAY(10000);
 				splx(s);
-			} else if (cp->pmax_unit == 0) {
+			} else if (cp->mips_unit == 0) {
 				s = spltty();
 				ctty.t_dev = makedev(SCCDEV, SCCMOUSE_PORT);
 				cterm.c_cflag = CS8 | PARENB | PARODD;
@@ -241,7 +241,7 @@ sccprobe(cp)
 				splx(s);
 			}
 		}
-	} else if (SCCUNIT(cn_tab.cn_dev) == cp->pmax_unit) {
+	} else if (SCCUNIT(cn_tab.cn_dev) == cp->mips_unit) {
 		s = spltty();
 		ctty.t_dev = cn_tab.cn_dev;
 		cterm.c_cflag = CS8;
@@ -252,7 +252,7 @@ sccprobe(cp)
 		splx(s);
 	}
 	printf("scc%d at nexus0 csr 0x%x priority %d\n",
-		cp->pmax_unit, cp->pmax_addr, cp->pmax_pri);
+		cp->mips_unit, cp->mips_addr, cp->mips_pri);
 	return (1);
 }
 

@@ -140,14 +140,15 @@ struct config {
  */
 int	machine;
 char	*machinename;
-#define	MACHINE_VAX	1
-#define	MACHINE_TAHOE	2
-#define MACHINE_HP300	3
-#define	MACHINE_I386	4
-#define MACHINE_MIPS	5
-#define MACHINE_PMAX	6
-#define MACHINE_LUNA68K	7
-#define MACHINE_NEWS3400	8
+#define	MACHINE_VAX         1
+#define	MACHINE_TAHOE       2
+#define MACHINE_HP300       3
+#define	MACHINE_I386        4
+#define MACHINE_MIPS        5
+#define MACHINE_PMAX        6
+#define MACHINE_LUNA68K     7
+#define MACHINE_NEWS3400    8
+#define MACHINE_PIC32       9
 
 /*
  * For each machine, a set of CPU's may be specified as supported.
@@ -218,6 +219,7 @@ void tahoe_ioconf(void);
 void hp300_ioconf(void);
 void i386_ioconf(void);
 void pmax_ioconf(void);
+void pic32_ioconf(void);
 void news_ioconf(void);
 void ubglue(void);
 void vbglue(void);

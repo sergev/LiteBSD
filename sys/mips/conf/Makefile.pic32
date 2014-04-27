@@ -1,6 +1,5 @@
-#	@(#)Makefile.pmax	8.2 (Berkeley) 2/16/94
 #
-# Makefile for 4.4 BSD
+# Makefile for 4.4 BSD, pic32 target
 #
 # This makefile is constructed from a machine description:
 #	config machineid
@@ -26,7 +25,7 @@ CC=	${MIPS_TOOLCHAIN}gcc ${DEBUG} -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
 CPP=	cpp
 LD=	${MIPS_TOOLCHAIN}gcc
-LDFLAGS= -nostdlib -T $A/pmax/pmax.ld -Wl,-Map=unix.map
+LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_TOOLCHAIN}size
 
 # source tree is located via $S relative to the compilation directory
@@ -84,16 +83,16 @@ clean:
 
 lint: /tmp param.c
 	@lint -hbxn -DGENERIC -Dvolatile= ${COPTS} ${PARAM} -UKGDB \
-	    $A/pmax/Locore.c ${CFILES} $A/pmax/swapgeneric.c \
+	    $A/pic32/Locore.c ${CFILES} $A/pic32/swapgeneric.c \
 	    ioconf.c param.c
 
-symbols.sort: $A/pmax/symbols.raw
-	grep -v '^#' $A/pmax/symbols.raw \
+symbols.sort: $A/pic32/symbols.raw
+	grep -v '^#' $A/pic32/symbols.raw \
 	    | sed 's/^	//' | sort -u > symbols.sort
 
-locore.o: $A/pmax/locore.s $A/include/machAsmDefs.h \
+locore.o: $A/pic32/locore.s $A/include/machAsmDefs.h \
 	$A/include/machConst.h $A/include/reg.h assym.h
-	${CPP} ${COPTS} ${PARAM} -DLOCORE $A/pmax/locore.s | \
+	${CPP} ${COPTS} ${PARAM} -DLOCORE $A/pic32/locore.s | \
 	${AS} -o locore.o
 
 # the following is necessary because autoconf.o depends on #if GENERIC
@@ -109,15 +108,15 @@ uipc_proto.o vfs_conf.o: Makefile
 assym.h: genassym
 	./genassym >assym.h
 
-genassym: $A/pmax/genassym.c machine
-	${LOCALCC} -nostdinc -fno-builtin ${INCLUDES} -I. ${IDENT} ${PARAM} -o genassym $A/pmax/genassym.c
+genassym: $A/pic32/genassym.c machine
+	${LOCALCC} -nostdinc -fno-builtin ${INCLUDES} -I. ${IDENT} ${PARAM} -o genassym $A/pic32/genassym.c
 
 machine:
 	ln -s $A/include $@
 
 depend: machine assym.h param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c param.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/pmax/genassym.c
+	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/pic32/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \

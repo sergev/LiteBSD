@@ -169,6 +169,9 @@ Config_spec:
 		} else if (!strcmp($2, "pmax")) {
 			machine = MACHINE_PMAX;
 			machinename = "pmax";
+		} else if (!strcmp($2, "pic32")) {
+			machine = MACHINE_PIC32;
+			machinename = "pic32";
 		} else if (!strcmp($2, "luna68k")) {
 			machine = MACHINE_LUNA68K;
 			machinename = "luna68k";

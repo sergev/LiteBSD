@@ -167,11 +167,11 @@ struct	driver cfbdriver = {
  */
 /*ARGSUSED*/
 cfbprobe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register struct pmax_fb *fp = &cfbfb;
 
-	if (!fp->initialized && !cfbinit(cp->pmax_addr))
+	if (!fp->initialized && !cfbinit(cp->mips_addr))
 		return (0);
 	printf("cfb0 (color display)\n");
 	return (1);

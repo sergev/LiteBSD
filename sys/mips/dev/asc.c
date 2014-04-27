@@ -450,23 +450,23 @@ struct	driver ascdriver = {
  * Return true if found and initialized ok.
  */
 asc_probe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register asc_softc_t asc;
 	register asc_regmap_t *regs;
 	int unit, id, s, i;
 	int bufsiz;
 
-	if ((unit = cp->pmax_unit) >= NASC)
+	if ((unit = cp->mips_unit) >= NASC)
 		return (0);
-	if (badaddr(cp->pmax_addr + ASC_OFFSET_53C94, 1))
+	if (badaddr(cp->mips_addr + ASC_OFFSET_53C94, 1))
 		return (0);
 	asc = &asc_softc[unit];
 
 	/*
 	 * Initialize hw descriptor, cache some pointers
 	 */
-	asc->regs = (asc_regmap_t *)(cp->pmax_addr + ASC_OFFSET_53C94);
+	asc->regs = (asc_regmap_t *)(cp->mips_addr + ASC_OFFSET_53C94);
 
 	/*
 	 * Set up machine dependencies.
@@ -492,8 +492,8 @@ asc_probe(cp)
 	     */
 	case DS_3MAX:
 	default:
-	    asc->dmar = (volatile int *)(cp->pmax_addr + ASC_OFFSET_DMAR);
-	    asc->buff = (u_char *)(cp->pmax_addr + ASC_OFFSET_RAM);
+	    asc->dmar = (volatile int *)(cp->mips_addr + ASC_OFFSET_DMAR);
+	    asc->buff = (u_char *)(cp->mips_addr + ASC_OFFSET_RAM);
 	    bufsiz = PER_TGT_DMA_SIZE;
 	    asc->dma_start = tb_dma_start;
 	    asc->dma_end = tb_dma_end;
@@ -566,7 +566,7 @@ asc_probe(cp)
 		asc->st[i].dmaBufSize = bufsiz;
 	}
 	printf("asc%d at nexus0 csr 0x%x priority %d SCSI id %d\n",
-		unit, cp->pmax_addr, cp->pmax_pri, id);
+		unit, cp->mips_addr, cp->mips_pri, id);
 	return (1);
 }
 

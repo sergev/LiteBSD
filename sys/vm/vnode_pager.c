@@ -465,12 +465,15 @@ vnode_pager_uncache(vp)
 	if (vp->v_type != VREG || (pager = (vm_pager_t)vp->v_vmdata) == NULL)
 		return (TRUE);
 #ifdef DEBUG
+#include "nfs.h"
+#if NNFS > 0
 	if (!VOP_ISLOCKED(vp)) {
 		extern int (**nfsv2_vnodeop_p)();
 
 		if (vp->v_op != nfsv2_vnodeop_p)
 			panic("vnode_pager_uncache: vnode not locked!");
 	}
+#endif
 #endif
 	/*
 	 * Must use vm_object_lookup() as it actually removes

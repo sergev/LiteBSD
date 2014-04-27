@@ -138,6 +138,10 @@ fprintf(stderr, "--- mkdir path\n");
 		pmax_ioconf();
 		break;
 
+	case MACHINE_PIC32:
+		pic32_ioconf();
+		break;
+
 	case MACHINE_NEWS3400:
 		news_ioconf();
 		break;

@@ -54,14 +54,14 @@ struct driver {
  * This structure describes controllers directly connected to CPU
  * and is partially initialized in "ioconf.c" by the 'config' program.
  */
-struct pmax_ctlr {
-	struct driver	*pmax_driver;	/* controller driver routines */
-	int		pmax_unit;	/* controller number */
-	char		*pmax_addr;	/* address of controller */
-	int		pmax_pri;	/* interrupt priority */
-	int		pmax_flags;	/* flags */
+struct mips_ctlr {
+	struct driver	*mips_driver;	/* controller driver routines */
+	int		mips_unit;	/* controller number */
+	char		*mips_addr;	/* address of controller */
+	int		mips_pri;	/* interrupt priority */
+	int		mips_flags;	/* flags */
 
-	int		pmax_alive;	/* true if init routine succeeded */
+	int		mips_alive;	/* true if init routine succeeded */
 };
 
 /*
@@ -86,7 +86,7 @@ struct scsi_device {
 #define	UNKNOWN -2	/* -2 means not set yet */
 
 /*
- * This structure contains information that a SCSI interface controller 
+ * This structure contains information that a SCSI interface controller
  * needs to execute a SCSI command.
  */
 typedef struct ScsiCmd {
@@ -113,6 +113,6 @@ typedef struct ScsiCmd {
 #define SCSICMD_USE_SYNC	0x02
 
 #ifdef KERNEL
-extern struct pmax_ctlr pmax_cinit[];
+extern struct mips_ctlr mips_cinit[];
 extern struct scsi_device scsi_dinit[];
 #endif

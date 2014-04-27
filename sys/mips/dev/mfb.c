@@ -164,11 +164,11 @@ struct	driver mfbdriver = {
  */
 /*ARGSUSED*/
 mfbprobe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register struct pmax_fb *fp = &mfbfb;
 
-	if (!fp->initialized && !mfbinit(cp->pmax_addr))
+	if (!fp->initialized && !mfbinit(cp->mips_addr))
 		return (0);
 	printf("mfb0 (mono display)\n");
 	return (1);

@@ -92,16 +92,6 @@
 #include <mips/pmax/pmaxtype.h>
 #include <mips/pmax/cons.h>
 
-#include <pm.h>
-#include <cfb.h>
-#include <mfb.h>
-#include <xcfb.h>
-#include <dc.h>
-#include <dtop.h>
-#include <scc.h>
-#include <le.h>
-#include <asc.h>
-
 #if NDC > 0
 extern int dcGetc(), dcparam();
 extern void dcPutc();
@@ -215,13 +205,13 @@ mach_init(argc, argv, code, cv)
 	register unsigned firstaddr;
 	register caddr_t v;
 	caddr_t start;
-	extern char edata[], end[];
+	extern char _edata[], _end[];
 	extern char MachUTLBMiss[], MachUTLBMissEnd[];
 	extern char MachException[], MachExceptionEnd[];
 
 	/* clear the BSS segment */
-	v = (caddr_t)pmax_round_page(end);
-	bzero(edata, v - edata);
+	v = (caddr_t)pmax_round_page(_end);
+	bzero(_edata, v - _edata);
 
 	/* check for direct boot from DS5000 PROM */
 	if (argc > 0 && strcmp(argv[0], "boot") == 0) {
@@ -333,19 +323,10 @@ mach_init(argc, argv, code, cv)
 	/*
 	 * Determine what model of computer we are running on.
 	 */
-	if (code == DEC_PROM_MAGIC) {
-		callv = cv;
-		i = (*cv->getsysid)();
-		cp = "";
-	} else {
-		callv = &callvec;
-		if (cp = (*callv->getenv)("systype"))
-			i = atoi(cp);
-		else {
-			cp = "";
-			i = 0;
-		}
-	}
+	callv = cv;
+	i = (*cv->getsysid)();
+	cp = "";
+
 	/* check for MIPS based platform */
 	if (((i >> 24) & 0xFF) != 0x82) {
 		printf("Unknown System type '%s' 0x%x\n", cp, i);
@@ -1215,15 +1196,7 @@ boot(howto)
 		resettodr();
 	}
 	(void) splhigh();		/* extreme priority */
-	if (callv != &callvec) {
-		if (howto & RB_HALT)
-			(*callv->rex)('h');
-		else {
-			if (howto & RB_DUMP)
-				dumpsys();
-			(*callv->rex)('b');
-		}
-	} else if (howto & RB_HALT) {
+	if (howto & RB_HALT) {
 		void (*f)() = (void (*)())DEC_PROM_REINIT;
 
 		(*f)();	/* jump back to prom monitor */
@@ -1423,9 +1396,6 @@ static struct pmax_address {
 	char	*pmax_addr;
 	int	pmax_pri;
 } pmax_addresses[] = {
-	{ "pm",	(char *)MACH_PHYS_TO_CACHED(KN01_PHYS_FBUF_START),	3 },
-	{ "dc",	(char *)MACH_PHYS_TO_UNCACHED(KN01_SYS_DZ),		2 },
-	{ "le",	(char *)MACH_PHYS_TO_UNCACHED(KN01_SYS_LANCE),		1 },
 	{ "sii",(char *)MACH_PHYS_TO_UNCACHED(KN01_SYS_SII),		0 },
 	{ (char *)0, },
 };

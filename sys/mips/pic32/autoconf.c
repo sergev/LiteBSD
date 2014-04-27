@@ -193,13 +193,8 @@ configure()
 		}
 	}
 
-#ifdef GENERIC
-	if ((boothowto & RB_ASKNAME) == 0)
-		setroot();
-	setconf();
-#else
 	setroot();
-#endif
+
 	swapconf();
 	cold = 0;
 }

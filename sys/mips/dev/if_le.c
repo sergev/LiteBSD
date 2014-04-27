@@ -170,10 +170,10 @@ extern u_long asic_base;
  * to accept packets.
  */
 leprobe(dp)
-	struct pmax_ctlr *dp;
+	struct mips_ctlr *dp;
 {
 	volatile struct lereg1 *ler1;
-	struct le_softc *le = &le_softc[dp->pmax_unit];
+	struct le_softc *le = &le_softc[dp->mips_unit];
 	struct ifnet *ifp = &le->sc_if;
 	u_char *cp;
 	int i;
@@ -181,7 +181,7 @@ leprobe(dp)
 
 	switch (pmax_boardtype) {
 	case DS_PMAX:
-		le->sc_r1 = ler1 = (volatile struct lereg1 *)dp->pmax_addr;
+		le->sc_r1 = ler1 = (volatile struct lereg1 *)dp->mips_addr;
 		le->sc_r2 = (volatile void *)MACH_PHYS_TO_UNCACHED(0x19000000);
 		cp = (u_char *)(MACH_PHYS_TO_UNCACHED(KN01_SYS_CLOCK) + 1);
 		le->sc_ler2pad = 1;
@@ -192,7 +192,7 @@ leprobe(dp)
 	case DS_3MIN:
 	case DS_MAXINE:
 	case DS_3MAXPLUS:
-		if (dp->pmax_unit == 0) {
+		if (dp->mips_unit == 0) {
 			volatile u_int *ssr, *ldp;
 
 			le->sc_r1 = ler1 = (volatile struct lereg1 *)
@@ -221,9 +221,9 @@ leprobe(dp)
 		 */
 	case DS_3MAX:
 		le->sc_r1 = ler1 = (volatile struct lereg1 *)
-			(dp->pmax_addr + LE_OFFSET_LANCE);
-		le->sc_r2 = (volatile void *)(dp->pmax_addr + LE_OFFSET_RAM);
-		cp = (u_char *)(dp->pmax_addr + LE_OFFSET_ROM + 2);
+			(dp->mips_addr + LE_OFFSET_LANCE);
+		le->sc_r2 = (volatile void *)(dp->mips_addr + LE_OFFSET_RAM);
+		cp = (u_char *)(dp->mips_addr + LE_OFFSET_ROM + 2);
 		le->sc_ler2pad = 0;
 		le->sc_copytobuf = copytobuf_contig;
 		le->sc_copyfrombuf = copyfrombuf_contig;
@@ -246,7 +246,7 @@ leprobe(dp)
 	LEWREG(LE_CSR0, ler1->ler1_rap);
 	LEWREG(LE_STOP, ler1->ler1_rdp);
 
-	ifp->if_unit = dp->pmax_unit;
+	ifp->if_unit = dp->mips_unit;
 	ifp->if_name = "le";
 	ifp->if_mtu = ETHERMTU;
 	ifp->if_init = leinit;
@@ -265,7 +265,7 @@ leprobe(dp)
 	if_attach(ifp);
 
 	printf("le%d at nexus0 csr 0x%x priority %d ethernet address %s\n",
-		dp->pmax_unit, dp->pmax_addr, dp->pmax_pri,
+		dp->mips_unit, dp->mips_addr, dp->mips_pri,
 		ether_sprintf(le->sc_addr));
 	return (1);
 }

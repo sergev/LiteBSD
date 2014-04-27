@@ -161,7 +161,7 @@ struct speedtab dcspeedtab[] = {
  * Return true if found and initialized ok.
  */
 dcprobe(cp)
-	register struct pmax_ctlr *cp;
+	register struct mips_ctlr *cp;
 {
 	register dcregs *dcaddr;
 	register struct pdma *pdp;
@@ -169,21 +169,21 @@ dcprobe(cp)
 	register int cntr;
 	int s;
 
-	if (cp->pmax_unit >= NDC)
+	if (cp->mips_unit >= NDC)
 		return (0);
-	if (badaddr(cp->pmax_addr, 2))
+	if (badaddr(cp->mips_addr, 2))
 		return (0);
 
 	/*
 	 * For a remote console, wait a while for previous output to
 	 * complete.
 	 */
-	if (major(cn_tab.cn_dev) == DCDEV && cp->pmax_unit == 0 &&
+	if (major(cn_tab.cn_dev) == DCDEV && cp->mips_unit == 0 &&
 		cn_tab.cn_screen == 0)
 		DELAY(10000);
 
 	/* reset chip */
-	dcaddr = (dcregs *)cp->pmax_addr;
+	dcaddr = (dcregs *)cp->mips_addr;
 	dcaddr->dc_csr = CSR_CLR;
 	MachEmptyWriteBuffer();
 	while (dcaddr->dc_csr & CSR_CLR)
@@ -191,15 +191,15 @@ dcprobe(cp)
 	dcaddr->dc_csr = CSR_MSE | CSR_TIE | CSR_RIE;
 
 	/* init pseudo DMA structures */
-	pdp = &dcpdma[cp->pmax_unit * 4];
-	tp = &dc_tty[cp->pmax_unit * 4];
+	pdp = &dcpdma[cp->mips_unit * 4];
+	tp = &dc_tty[cp->mips_unit * 4];
 	for (cntr = 0; cntr < 4; cntr++) {
 		pdp->p_addr = (void *)dcaddr;
 		pdp->p_arg = (int)tp;
 		pdp->p_fcn = dcxint;
 		pdp++, tp++;
 	}
-	dcsoftCAR[cp->pmax_unit] = cp->pmax_flags | 0xB;
+	dcsoftCAR[cp->mips_unit] = cp->mips_flags | 0xB;
 
 	if (dc_timer == 0) {
 		dc_timer = 1;
@@ -209,7 +209,7 @@ dcprobe(cp)
 	/*
 	 * Special handling for consoles.
 	 */
-	if (cp->pmax_unit == 0) {
+	if (cp->mips_unit == 0) {
 		if (cn_tab.cn_screen) {
 			s = spltty();
 			dcaddr->dc_lpr = LPR_RXENAB | LPR_8_BIT_CHAR |
@@ -233,7 +233,7 @@ dcprobe(cp)
 		}
 	}
 	printf("dc%d at nexus0 csr 0x%x priority %d\n",
-		cp->pmax_unit, cp->pmax_addr, cp->pmax_pri);
+		cp->mips_unit, cp->mips_addr, cp->mips_pri);
 	return (1);
 }
 
