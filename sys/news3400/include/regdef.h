@@ -1,1 +1,1 @@
-../../pmax/include/regdef.h
+../../mips/include/regdef.h

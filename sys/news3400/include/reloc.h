@@ -1,1 +1,1 @@
-../../pmax/include/reloc.h
+../../mips/include/reloc.h

@@ -1,1 +1,1 @@
-../../pmax/pmax/fp.s
+../../mips/pmax/fp.s

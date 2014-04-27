@@ -1,1 +1,1 @@
-../../pmax/include/reg.h
+../../mips/include/reg.h

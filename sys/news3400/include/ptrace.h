@@ -1,1 +1,1 @@
-../../pmax/include/ptrace.h
+../../mips/include/ptrace.h

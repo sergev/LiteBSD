@@ -1,1 +1,1 @@
-../../pmax/include/pcb.h
+../../mips/include/pcb.h

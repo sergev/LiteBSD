@@ -1,1 +1,1 @@
-../../pmax/include/pmap.h
+../../mips/include/pmap.h

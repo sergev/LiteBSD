@@ -1,1 +1,1 @@
-../../pmax/include/machAsmDefs.h
+../../mips/include/machAsmDefs.h

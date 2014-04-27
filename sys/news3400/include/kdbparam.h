@@ -1,1 +1,1 @@
-../../pmax/include/kdbparam.h
+../../mips/include/kdbparam.h

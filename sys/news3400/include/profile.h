@@ -1,1 +1,1 @@
-../../pmax/include/profile.h
+../../mips/include/profile.h

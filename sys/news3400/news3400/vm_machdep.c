@@ -1,1 +1,1 @@
-../../pmax/pmax/vm_machdep.c
+../../mips/pmax/vm_machdep.c

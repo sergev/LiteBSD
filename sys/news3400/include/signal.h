@@ -1,1 +1,1 @@
-../../pmax/include/signal.h
+../../mips/include/signal.h

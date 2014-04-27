@@ -1,1 +1,1 @@
-../../pmax/include/pte.h
+../../mips/include/pte.h

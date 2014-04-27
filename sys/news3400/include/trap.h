@@ -1,1 +1,1 @@
-../../pmax/include/trap.h
+../../mips/include/trap.h

@@ -1,1 +1,1 @@
-../../pmax/include/psl.h
+../../mips/include/psl.h

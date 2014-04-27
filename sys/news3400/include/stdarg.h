@@ -1,1 +1,1 @@
-../../pmax/include/stdarg.h
+../../mips/include/stdarg.h

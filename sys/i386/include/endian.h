@@ -1,1 +1,1 @@
-../../pmax/include/endian.h
+../../mips/include/endian.h

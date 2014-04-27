@@ -1,1 +1,1 @@
-../../pmax/include/types.h
+../../mips/include/types.h

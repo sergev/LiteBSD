@@ -1,1 +1,1 @@
-../../pmax/include/vmparam.h
+../../mips/include/vmparam.h
