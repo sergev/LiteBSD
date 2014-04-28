@@ -21,7 +21,6 @@ LIBCOMPAT?=	/usr/lib/libcompat.a
 LIBCURSES?=	/usr/lib/libcurses.a
 LIBDBM?=	/usr/lib/libdbm.a
 LIBDES?=	/usr/lib/libdes.a
-LIBL?=		/usr/lib/libl.a
 LIBKDB?=	/usr/lib/libkdb.a
 LIBKRB?=	/usr/lib/libkrb.a
 LIBKVM?=	/usr/lib/libkvm.a

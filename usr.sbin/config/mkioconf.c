@@ -1100,7 +1100,7 @@ void comp_config(fp)
 			dp->d_unit, dp->d_pri < 0 ? 0 : dp->d_pri,
 			dp->d_flags, 1);
 		for (fl = fl->f_next; fl->f_type == COMPSPEC; fl = fl->f_next)
-			fprintf(fp, " 0x%x,", fl->f_compdev);
+			fprintf(fp, " 0x%x,", (unsigned) fl->f_compdev);
 		fprintf(fp, " NODEV },\n");
 	}
 	fprintf(fp, "\t-1,\t0,\t0,\t0,\t{ 0 },\n};\n");

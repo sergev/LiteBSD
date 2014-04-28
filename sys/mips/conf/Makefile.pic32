@@ -20,11 +20,11 @@
 
 # DEBUG is set to -g by config if debugging is requested (config -g).
 # PROF is set to -pg by config if profiling is requested (config -p).
-AS=	${MIPS_GCC_PREFIX}as ${DEBUG}
-CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -fno-builtin
+AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
+CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
 CPP=	cpp
-LD=	${MIPS_GCC_PREFIX}gcc
+LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_GCC_PREFIX}size
 
@@ -71,7 +71,7 @@ SYSTEM_LD_TAIL=	${SIZE} $@
 %LOAD
 
 $S/libkern/libkern.a:
-	${MAKE} -C $S/libkern all
+	cd $S/libkern && ${MAKE} all
 
 newvers:
 	sh $S/conf/newvers.sh
