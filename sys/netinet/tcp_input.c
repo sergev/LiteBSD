@@ -284,7 +284,7 @@ tcp_input(m, iphlen)
 		}
 		optlen = off - sizeof (struct tcphdr);
 		optp = mtod(m, u_char *) + sizeof (struct tcpiphdr);
-		/* 
+		/*
 		 * Do quick retrieval of timestamp options ("options
 		 * prediction?").  If timestamp is the only option and it's
 		 * formatted as recommended in RFC 1323 appendix A, we
@@ -341,7 +341,7 @@ findpcb:
 		goto dropwithreset;
 	if (tp->t_state == TCPS_CLOSED)
 		goto drop;
-	
+
 	/* Unscale the window into a 32-bit value. */
 	if ((tiflags & TH_SYN) == 0)
 		tiwin = ti->ti_win << tp->snd_scale;
@@ -413,7 +413,7 @@ findpcb:
 		tcp_dooptions(tp, optp, optlen, ti,
 			&ts_present, &ts_val, &ts_ecr);
 
-	/* 
+	/*
 	 * Header prediction: check for the two common cases
 	 * of a uni-directional data xfer.  If the packet has
 	 * no control flags, is in-sequence, the window didn't
@@ -434,7 +434,7 @@ findpcb:
 	    tiwin && tiwin == tp->snd_wnd &&
 	    tp->snd_nxt == tp->snd_max) {
 
-		/* 
+		/*
 		 * If last ACK falls within this segment's sequence numbers,
 		 *  record the timestamp.
 		 */
@@ -685,10 +685,10 @@ trimthenstep6:
 	/*
 	 * States other than LISTEN or SYN_SENT.
 	 * First check timestamp, if present.
-	 * Then check that at least some bytes of segment are within 
+	 * Then check that at least some bytes of segment are within
 	 * receive window.  If segment begins before rcv_nxt,
 	 * drop leading data (and SYN); if nothing left, just ack.
-	 * 
+	 *
 	 * RFC 1323 PAWS: If we have a timestamp reply on this segment
 	 * and it's less than ts_recent, drop it.
 	 */
@@ -722,7 +722,7 @@ trimthenstep6:
 		if (tiflags & TH_SYN) {
 			tiflags &= ~TH_SYN;
 			ti->ti_seq++;
-			if (ti->ti_urp > 1) 
+			if (ti->ti_urp > 1)
 				ti->ti_urp--;
 			else
 				tiflags &= ~TH_URG;
@@ -884,7 +884,7 @@ trimthenstep6:
 	 */
 	if ((tiflags & TH_ACK) == 0)
 		goto drop;
-	
+
 	/*
 	 * Ack processing.
 	 */
@@ -950,7 +950,7 @@ trimthenstep6:
 				 * the new ssthresh).
 				 *
 				 * Dup acks mean that packets have left the
-				 * network (they're now cached at the receiver) 
+				 * network (they're now cached at the receiver)
 				 * so bump cwnd by the amount in the receiver
 				 * to keep a constant cwnd packets in the
 				 * network.
@@ -1161,14 +1161,14 @@ step6:
 		 * If this segment advances the known urgent pointer,
 		 * then mark the data stream.  This should not happen
 		 * in CLOSE_WAIT, CLOSING, LAST_ACK or TIME_WAIT STATES since
-		 * a FIN has been received from the remote side. 
+		 * a FIN has been received from the remote side.
 		 * In these states we ignore the URG.
 		 *
 		 * According to RFC961 (Assigned Protocols),
 		 * the urgent pointer points to the last octet
 		 * of urgent data.  We continue, however,
 		 * to consider it to indicate the first octet
-		 * of data past the urgent section as the original 
+		 * of data past the urgent section as the original
 		 * spec states (in one of two places).
 		 */
 		if (SEQ_GT(ti->ti_seq+ti->ti_urp, tp->rcv_up)) {
@@ -1255,7 +1255,7 @@ dodata:							/* XXX */
 
 	 	/*
 		 * In FIN_WAIT_2 state enter the TIME_WAIT state,
-		 * starting the time-wait timer, turning off the other 
+		 * starting the time-wait timer, turning off the other
 		 * standard timers.
 		 */
 		case TCPS_FIN_WAIT_2:
@@ -1273,9 +1273,10 @@ dodata:							/* XXX */
 			break;
 		}
 	}
+#ifdef TCPDEBUG
 	if (so->so_options & SO_DEBUG)
 		tcp_trace(TA_INPUT, ostate, tp, &tcp_saveti, 0);
-
+#endif
 	/*
 	 * Return any desired output.
 	 */
@@ -1321,8 +1322,10 @@ drop:
 	/*
 	 * Drop space held by incoming segment and return.
 	 */
+#ifdef TCPDEBUG
 	if (tp && (tp->t_inpcb->inp_socket->so_options & SO_DEBUG))
 		tcp_trace(TA_DROP, ostate, tp, &tcp_saveti, 0);
+#endif
 	m_freem(m);
 	/* destroy temporarily created socket */
 	if (dropsocket)
@@ -1387,7 +1390,7 @@ tcp_dooptions(tp, cp, cnt, ti, ts_present, ts_val, ts_ecr)
 			bcopy((char *)cp + 6, (char *) ts_ecr, sizeof(*ts_ecr));
 			NTOHL(*ts_ecr);
 
-			/* 
+			/*
 			 * A timestamp received in a SYN makes
 			 * it ok to send timestamp requests and replies.
 			 */
@@ -1414,7 +1417,7 @@ tcp_pulloutofband(so, ti, m)
 	register struct mbuf *m;
 {
 	int cnt = ti->ti_urp - 1;
-	
+
 	while (cnt >= 0) {
 		if (m->m_len > cnt) {
 			char *cp = mtod(m, caddr_t) + cnt;
@@ -1473,7 +1476,7 @@ tcp_xmit_timer(tp, rtt)
 		if ((tp->t_rttvar += delta) <= 0)
 			tp->t_rttvar = 1;
 	} else {
-		/* 
+		/*
 		 * No rtt measurement yet - use the unsmoothed rtt.
 		 * Set the variance to half the rtt (so our first
 		 * retransmit happens at 3*rtt).
@@ -1497,7 +1500,7 @@ tcp_xmit_timer(tp, rtt)
 	 */
 	TCPT_RANGESET(tp->t_rxtcur, TCP_REXMTVAL(tp),
 	    tp->t_rttmin, TCPTV_REXMTMAX);
-	
+
 	/*
 	 * We received an ack for a packet that wasn't retransmitted;
 	 * it is probably safe to discard any error indications we've

@@ -20,13 +20,13 @@
 
 # DEBUG is set to -g by config if debugging is requested (config -g).
 # PROF is set to -pg by config if profiling is requested (config -p).
-AS=	${MIPS_TOOLCHAIN}as ${DEBUG}
-CC=	${MIPS_TOOLCHAIN}gcc ${DEBUG} -fno-builtin
+AS=	${MIPS_GCC_PREFIX}as ${DEBUG}
+CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
 CPP=	cpp
-LD=	${MIPS_TOOLCHAIN}gcc
+LD=	${MIPS_GCC_PREFIX}gcc
 LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
-SIZE=	${MIPS_TOOLCHAIN}size
+SIZE=	${MIPS_GCC_PREFIX}size
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
@@ -66,7 +66,7 @@ SYSTEM_DEP=	Makefile ${SYSTEM_OBJ} $S/libkern/libkern.a
 SYSTEM_LD_HEAD=	rm -f $@
 SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix; \
 		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix
-SYSTEM_LD_TAIL=	chmod 755 $@; ${SIZE} $@
+SYSTEM_LD_TAIL=	${SIZE} $@
 
 %LOAD
 

@@ -39,7 +39,6 @@
 #define TCPSTATES
 #define	TCPTIMERS
 #define	TANAMES
-#endif
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -65,9 +64,12 @@
 #include <netinet/tcpip.h>
 #include <netinet/tcp_debug.h>
 
-#ifdef TCPDEBUG
+#define	TCP_NDEBUG 100
+struct	tcp_debug tcp_debug[TCP_NDEBUG];
+int	tcp_debx;
+
 int	tcpconsdebug = 0;
-#endif
+
 /*
  * Tcp debug routines
  */
@@ -97,7 +99,7 @@ tcp_trace(act, ostate, tp, ti, req)
 	else
 		bzero((caddr_t)&td->td_ti, sizeof (*ti));
 	td->td_req = req;
-#ifdef TCPDEBUG
+
 	if (tcpconsdebug == 0)
 		return;
 	if (tp)
@@ -155,5 +157,5 @@ tcp_trace(act, ostate, tp, ti, req)
 	    tp->snd_max);
 	printf("\tsnd_(wl1,wl2,wnd) (%x,%x,%x)\n",
 	    tp->snd_wl1, tp->snd_wl2, tp->snd_wnd);
-#endif /* TCPDEBUG */
 }
+#endif /* TCPDEBUG */

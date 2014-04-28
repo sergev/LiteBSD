@@ -465,8 +465,7 @@ vnode_pager_uncache(vp)
 	if (vp->v_type != VREG || (pager = (vm_pager_t)vp->v_vmdata) == NULL)
 		return (TRUE);
 #ifdef DEBUG
-#include "nfs.h"
-#if NNFS > 0
+#ifdef NFS
 	if (!VOP_ISLOCKED(vp)) {
 		extern int (**nfsv2_vnodeop_p)();
 

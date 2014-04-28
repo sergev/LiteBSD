@@ -339,8 +339,10 @@ tcp_usrreq(so, req, m, nam, control)
 	default:
 		panic("tcp_usrreq");
 	}
+#ifdef TCPDEBUG
 	if (tp && (so->so_options & SO_DEBUG))
 		tcp_trace(TA_USER, ostate, tp, (struct tcpiphdr *)0, req);
+#endif
 	splx(s);
 	return (error);
 }

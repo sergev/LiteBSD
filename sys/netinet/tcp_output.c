@@ -194,7 +194,7 @@ again:
 	 * window, then want to send a window update to peer.
 	 */
 	if (win > 0) {
-		/* 
+		/*
 		 * "adv" is the amount we can increase the window,
 		 * taking into account that we are limited by
 		 * TCP_MAXWIN << tp->rcv_scale.
@@ -280,7 +280,7 @@ send:
 			mss = htons((u_short) tcp_mss(tp, 0));
 			bcopy((caddr_t)&mss, (caddr_t)(opt + 2), sizeof(mss));
 			optlen = 4;
-	 
+
 			if ((tp->t_flags & TF_REQ_SCALE) &&
 			    ((flags & TH_ACK) == 0 ||
 			    (tp->t_flags & TF_RCVD_SCALE))) {
@@ -293,9 +293,9 @@ send:
 			}
 		}
  	}
- 
+
  	/*
-	 * Send a timestamp and echo-reply if this is a SYN and our side 
+	 * Send a timestamp and echo-reply if this is a SYN and our side
 	 * wants to use timestamps (TF_REQ_TSTMP is set) or both our side
 	 * and our peer have sent timestamps in our SYN's.
  	 */
@@ -304,7 +304,7 @@ send:
  	    ((flags & (TH_SYN|TH_ACK)) == TH_SYN ||
 	     (tp->t_flags & TF_RCVD_TSTMP))) {
 		u_long *lp = (u_long *)(opt + optlen);
- 
+
  		/* Form timestamp option as shown in appendix A of RFC 1323. */
  		*lp++ = htonl(TCPOPT_TSTAMP_HDR);
  		*lp++ = htonl(tcp_now);
@@ -313,7 +313,7 @@ send:
  	}
 
  	hdrlen += optlen;
- 
+
 	/*
 	 * Adjust data length if insertion of options will
 	 * bump the packet length beyond the t_maxseg length.
@@ -414,7 +414,7 @@ send:
 	 * window for use in delaying messages about window sizes.
 	 * If resending a FIN, be sure not to use a new sequence number.
 	 */
-	if (flags & TH_FIN && tp->t_flags & TF_SENTFIN && 
+	if (flags & TH_FIN && tp->t_flags & TF_SENTFIN &&
 	    tp->snd_nxt == tp->snd_max)
 		tp->snd_nxt--;
 	/*
@@ -527,9 +527,10 @@ send:
 	/*
 	 * Trace.
 	 */
+#ifdef TCPDEBUG
 	if (so->so_options & SO_DEBUG)
 		tcp_trace(TA_OUTPUT, tp->t_state, tp, ti, 0);
-
+#endif
 	/*
 	 * Fill in IP length and desired time to live and
 	 * send to IP level.  There should be a better way
@@ -550,7 +551,7 @@ send:
 	error = ip_output(m, tp->t_inpcb->inp_options, &tp->t_inpcb->inp_route,
 	    so->so_options & SO_DONTROUTE, 0);
 #else
-	error = ip_output(m, (struct mbuf *)0, &tp->t_inpcb->inp_route, 
+	error = ip_output(m, (struct mbuf *)0, &tp->t_inpcb->inp_route,
 	    so->so_options & SO_DONTROUTE);
 #endif
     }
