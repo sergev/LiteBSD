@@ -44,7 +44,13 @@
 #include <sys/kernel.h>
 
 #include <machine/machConst.h>
-#include <mips/pmax/clockreg.h>
+
+#define SECMIN  60U                     /* seconds per minute */
+#define SECHOUR (60U * SECMIN)          /* seconds per hour */
+#define SECDAY  (24U * SECHOUR)         /* seconds per day */
+#define SECYR   (365U * SECDAY)         /* seconds per common year */
+
+#define LEAPYEAR(year)  (((year) % 4) == 0)
 
 /*
  * Machine-dependent clock routines.
@@ -74,8 +80,10 @@ cpu_initclocks()
 	hz = 1000000 / 15625;	/* 64 Hz */
 	tickadj = 240000 / (60000000 / 15625);
 	c = Mach_clock_addr;
-	c->rega = REGA_TIME_BASE | SELECTED_RATE;
-	c->regb = REGB_PER_INT_ENA | REGB_DATA_MODE | REGB_HOURS_FORMAT;
+
+	// TODO: pic32
+	//c->rega = REGA_TIME_BASE | SELECTED_RATE;
+	//c->regb = REGB_PER_INT_ENA | REGB_DATA_MODE | REGB_HOURS_FORMAT;
 }
 
 /*
@@ -112,7 +120,6 @@ void
 inittodr(base)
 	time_t base;
 {
-	register volatile struct chiptime *c;
 	register int days, yr;
 	int sec, min, hour, day, mon, year;
 	long deltat;
@@ -126,7 +133,9 @@ inittodr(base)
 	} else
 		badbase = 0;
 
-	c = Mach_clock_addr;
+#if 0
+        // TODO: pic32
+	register volatile struct chiptime *c = Mach_clock_addr;
 	/* don't read clock registers while they are being updated */
 	s = splclock();
 	while ((c->rega & REGA_UIP) == 1)
@@ -138,6 +147,7 @@ inittodr(base)
 	mon = c->mon;
 	year = c->year + YR_OFFSET;
 	splx(s);
+#endif
 
 	/* simple sanity checks */
 	if (year < 70 || mon < 1 || mon > 12 || day < 1 || day > 31 ||
@@ -188,7 +198,6 @@ bad:
  */
 resettodr()
 {
-	register volatile struct chiptime *c;
 	register int t, t2;
 	int sec, min, hour, day, mon, year;
 	int s;
@@ -218,8 +227,9 @@ resettodr()
 	t %= 3600;
 	min = t / 60;
 	sec = t % 60;
-
-	c = Mach_clock_addr;
+#if 0
+        // TODO: pic32
+	register volatile struct chiptime *c = Mach_clock_addr;
 	s = splclock();
 	t = c->regb;
 	c->regb = t | REGB_SET_TIME;
@@ -233,4 +243,5 @@ resettodr()
 	c->regb = t;
 	MachEmptyWriteBuffer();
 	splx(s);
+#endif
 }

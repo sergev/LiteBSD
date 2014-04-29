@@ -104,7 +104,7 @@
 
 /*
  * Size of kernel malloc arena in CLBYTES-sized logical pages
- */ 
+ */
 #ifndef NKMEMCLUSTERS
 #define	NKMEMCLUSTERS	(512*1024/CLBYTES)
 #endif
@@ -136,10 +136,9 @@
 /*
  * Mach derived conversion macros
  */
-#define pmax_round_page(x)	((((unsigned)(x)) + NBPG - 1) & ~(NBPG-1))
-#define pmax_trunc_page(x)	((unsigned)(x) & ~(NBPG-1))
-#define pmax_btop(x)		((unsigned)(x) >> PGSHIFT)
-#define pmax_ptob(x)		((unsigned)(x) << PGSHIFT)
+#define mips_round_page(x)	((((unsigned)(x)) + NBPG - 1) & ~(NBPG-1))
+#define mips_btop(x)		((unsigned)(x) >> PGSHIFT)
+#define mips_ptob(x)		((unsigned)(x) << PGSHIFT)
 
 #ifndef LOCORE
 #ifdef KERNEL

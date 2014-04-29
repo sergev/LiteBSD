@@ -36,5 +36,5 @@
 /*
  * Machine dependent trace commands.
  *
- * None for the pmax at this time.
+ * None for the MIPS at this time.
  */

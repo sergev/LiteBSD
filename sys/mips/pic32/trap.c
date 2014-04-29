@@ -64,17 +64,6 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
-#include <mips/pmax/clockreg.h>
-#include <mips/pmax/kn01.h>
-#include <mips/pmax/kn02.h>
-#include <mips/pmax/kmin.h>
-#include <mips/pmax/maxine.h>
-#include <mips/pmax/kn03.h>
-#include <mips/pmax/asic.h>
-#include <mips/pmax/turbochannel.h>
-
-#include <mips/stand/dec_prom.h>
-
 struct	proc *machFPCurProcPtr;		/* pointer to last proc to use FP */
 
 extern void MachKernGenException();
@@ -159,19 +148,6 @@ struct trapdebug {		/* trap history buffer for debugging */
 u_int	intr_level;		/* number of nested interrupts */
 #endif
 
-static void pmax_errintr();
-static void kn02_errintr(), kn02ba_errintr();
-#ifdef DS5000_240
-static void kn03_errintr();
-#endif
-static unsigned kn02ba_recover_erradr();
-extern tc_option_t tc_slot_info[TC_MAX_LOGICAL_SLOTS];
-extern u_long kmin_tc3_imask, xine_tc3_imask;
-extern const struct callback *callv;
-#ifdef DS5000_240
-extern u_long kn03_tc3_imask;
-#endif
-int (*pmax_hardware_intr)() = (int (*)())0;
 extern volatile struct chiptime *Mach_clock_addr;
 extern long intrcnt[];
 
@@ -583,10 +559,6 @@ trap(statusReg, causeReg, vadr, pc, args)
 			p->p_comm, p->p_pid, instr, pc,
 			p->p_md.md_ss_addr, p->p_md.md_ss_instr); /* XXX */
 #endif
-#ifdef KADB
-		if (instr == MACH_BREAK_BRKPT || instr == MACH_BREAK_SSTEP)
-			goto err;
-#endif
 		if (p->p_md.md_ss_addr != va || instr != MACH_BREAK_SSTEP) {
 			i = SIGTRAP;
 			break;
@@ -647,45 +619,8 @@ trap(statusReg, causeReg, vadr, pc, args)
 
 	default:
 	err:
-#ifdef KADB
-	    {
-		extern struct pcb kdbpcb;
-
-		if (USERMODE(statusReg))
-			kdbpcb = p->p_addr->u_pcb;
-		else {
-			kdbpcb.pcb_regs[ZERO] = 0;
-			kdbpcb.pcb_regs[AST] = ((int *)&args)[2];
-			kdbpcb.pcb_regs[V0] = ((int *)&args)[3];
-			kdbpcb.pcb_regs[V1] = ((int *)&args)[4];
-			kdbpcb.pcb_regs[A0] = ((int *)&args)[5];
-			kdbpcb.pcb_regs[A1] = ((int *)&args)[6];
-			kdbpcb.pcb_regs[A2] = ((int *)&args)[7];
-			kdbpcb.pcb_regs[A3] = ((int *)&args)[8];
-			kdbpcb.pcb_regs[T0] = ((int *)&args)[9];
-			kdbpcb.pcb_regs[T1] = ((int *)&args)[10];
-			kdbpcb.pcb_regs[T2] = ((int *)&args)[11];
-			kdbpcb.pcb_regs[T3] = ((int *)&args)[12];
-			kdbpcb.pcb_regs[T4] = ((int *)&args)[13];
-			kdbpcb.pcb_regs[T5] = ((int *)&args)[14];
-			kdbpcb.pcb_regs[T6] = ((int *)&args)[15];
-			kdbpcb.pcb_regs[T7] = ((int *)&args)[16];
-			kdbpcb.pcb_regs[T8] = ((int *)&args)[17];
-			kdbpcb.pcb_regs[T9] = ((int *)&args)[18];
-			kdbpcb.pcb_regs[RA] = ((int *)&args)[19];
-			kdbpcb.pcb_regs[MULLO] = ((int *)&args)[21];
-			kdbpcb.pcb_regs[MULHI] = ((int *)&args)[22];
-			kdbpcb.pcb_regs[PC] = pc;
-			kdbpcb.pcb_regs[SR] = statusReg;
-			bzero((caddr_t)&kdbpcb.pcb_regs[F0], 33 * sizeof(int));
-		}
-		if (kdb(causeReg, vadr, p, !USERMODE(statusReg)))
-			return (kdbpcb.pcb_regs[PC]);
-	    }
-#else
 #ifdef DEBUG
 		trapDump("trap");
-#endif
 #endif
 		panic("trap");
 	}
@@ -760,8 +695,8 @@ interrupt(statusReg, causeReg, pc)
 
 	cnt.v_intr++;
 	mask = causeReg & statusReg;	/* pending interrupts & enable mask */
-	if (pmax_hardware_intr)
-		splx((*pmax_hardware_intr)(mask, pc, statusReg, causeReg));
+        splx(pic32_intr(mask, pc, statusReg, causeReg));
+
 	if (mask & MACH_INT_MASK_5) {
 		intrcnt[7]++;
 		if (!USERMODE(statusReg)) {
@@ -815,24 +750,27 @@ interrupt(statusReg, causeReg, pc)
 }
 
 /*
- * Handle pmax (DECstation 2100/3100) interrupts.
+ * Handle pic32 interrupts.
  */
-pmax_intr(mask, pc, statusReg, causeReg)
+pic32_intr(mask, pc, statusReg, causeReg)
 	unsigned mask;
 	unsigned pc;
 	unsigned statusReg;
 	unsigned causeReg;
 {
-	register volatile struct chiptime *c = Mach_clock_addr;
 	struct clockframe cf;
 	int temp;
 
 	/* handle clock interrupts ASAP */
 	if (mask & MACH_INT_MASK_3) {
 		intrcnt[6]++;
+#if 0
+                // TODO
+                register volatile struct chiptime *c = Mach_clock_addr;
 		temp = c->regc;	/* XXX clear interrupt bits */
 		cf.pc = pc;
 		cf.sr = statusReg;
+#endif
 		hardclock(&cf);
 		/* keep clock interrupts enabled */
 		causeReg &= ~MACH_INT_MASK_3;
@@ -857,382 +795,9 @@ pmax_intr(mask, pc, statusReg, causeReg)
 		dcintr(0);
 	}
 #endif
-	if (mask & MACH_INT_MASK_4) {
-		intrcnt[5]++;
-		pmax_errintr();
-	}
 	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
 		MACH_SR_INT_ENA_CUR);
 }
-
-/*
- * Handle hardware interrupts for the KN02. (DECstation 5000/200)
- * Returns spl value.
- */
-kn02_intr(mask, pc, statusReg, causeReg)
-	unsigned mask;
-	unsigned pc;
-	unsigned statusReg;
-	unsigned causeReg;
-{
-	register unsigned i, m;
-	register volatile struct chiptime *c = Mach_clock_addr;
-	register unsigned csr;
-	int temp;
-	struct clockframe cf;
-	static int warned = 0;
-
-	/* handle clock interrupts ASAP */
-	if (mask & MACH_INT_MASK_1) {
-		csr = *(unsigned *)MACH_PHYS_TO_UNCACHED(KN02_SYS_CSR);
-		if ((csr & KN02_CSR_PSWARN) && !warned) {
-			warned = 1;
-			printf("WARNING: power supply is overheating!\n");
-		} else if (warned && !(csr & KN02_CSR_PSWARN)) {
-			warned = 0;
-			printf("WARNING: power supply is OK again\n");
-		}
-		intrcnt[6]++;
-
-		temp = c->regc;	/* XXX clear interrupt bits */
-		cf.pc = pc;
-		cf.sr = statusReg;
-		hardclock(&cf);
-
-		/* keep clock interrupts enabled */
-		causeReg &= ~MACH_INT_MASK_1;
-	}
-	/* Re-enable clock interrupts */
-	splx(MACH_INT_MASK_1 | MACH_SR_INT_ENA_CUR);
-	if (mask & MACH_INT_MASK_0) {
-		static int map[8] = { 8, 8, 8, 8, 8, 4, 3, 2 };
-
-		csr = *(unsigned *)MACH_PHYS_TO_UNCACHED(KN02_SYS_CSR);
-		m = csr & (csr >> KN02_CSR_IOINTEN_SHIFT) & KN02_CSR_IOINT;
-#if 0
-		*(unsigned *)MACHPHYS_TO_UNCACHED(KN02_SYS_CSR) =
-			(csr & ~(KN02_CSR_WRESERVED | 0xFF)) |
-			(m << KN02_CSR_IOINTEN_SHIFT);
-#endif
-		for (i = 0; m; i++, m >>= 1) {
-			if (!(m & 1))
-				continue;
-			intrcnt[map[i]]++;
-			if (tc_slot_info[i].intr)
-				(*tc_slot_info[i].intr)(tc_slot_info[i].unit);
-			else
-				printf("spurious interrupt %d\n", i);
-		}
-#if 0
-		*(unsigned *)MACH_PHYS_TO_UNCACHED(KN02_SYS_CSR) =
-			csr & ~(KN02_CSR_WRESERVED | 0xFF);
-#endif
-	}
-	if (mask & MACH_INT_MASK_3) {
-		intrcnt[5]++;
-		kn02_errintr();
-	}
-	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
-		MACH_SR_INT_ENA_CUR);
-}
-
-/*
- * 3min hardware interrupts. (DECstation 5000/1xx)
- */
-kmin_intr(mask, pc, statusReg, causeReg)
-	unsigned mask;
-	unsigned pc;
-	unsigned statusReg;
-	unsigned causeReg;
-{
-	register u_int intr;
-	register volatile struct chiptime *c = Mach_clock_addr;
-	volatile u_int *imaskp =
-		(volatile u_int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_IMSK);
-	volatile u_int *intrp =
-		(volatile u_int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_INTR);
-	unsigned int old_mask;
-	struct clockframe cf;
-	int temp;
-	static int user_warned = 0;
-
-	old_mask = *imaskp & kmin_tc3_imask;
-	*imaskp = old_mask;
-
-	if (mask & MACH_INT_MASK_4)
-		(*callv->halt)((int *)0, 0);
-	if (mask & MACH_INT_MASK_3) {
-		intr = *intrp;
-		/* masked interrupts are still observable */
-		intr &= old_mask;
-
-		if (intr & KMIN_INTR_SCSI_PTR_LOAD) {
-			*intrp &= ~KMIN_INTR_SCSI_PTR_LOAD;
-#ifdef notdef
-			asc_dma_intr();
-#endif
-		}
-
-		if (intr & (KMIN_INTR_SCSI_OVRUN | KMIN_INTR_SCSI_READ_E))
-			*intrp &= ~(KMIN_INTR_SCSI_OVRUN | KMIN_INTR_SCSI_READ_E);
-
-		if (intr & KMIN_INTR_LANCE_READ_E)
-			*intrp &= ~KMIN_INTR_LANCE_READ_E;
-
-		if (intr & KMIN_INTR_TIMEOUT)
-			kn02ba_errintr();
-
-		if (intr & KMIN_INTR_CLOCK) {
-			temp = c->regc;	/* XXX clear interrupt bits */
-			cf.pc = pc;
-			cf.sr = statusReg;
-			hardclock(&cf);
-		}
-
-		if ((intr & KMIN_INTR_SCC_0) &&
-			tc_slot_info[KMIN_SCC0_SLOT].intr)
-			(*(tc_slot_info[KMIN_SCC0_SLOT].intr))
-			(tc_slot_info[KMIN_SCC0_SLOT].unit);
-
-		if ((intr & KMIN_INTR_SCC_1) &&
-			tc_slot_info[KMIN_SCC1_SLOT].intr)
-			(*(tc_slot_info[KMIN_SCC1_SLOT].intr))
-			(tc_slot_info[KMIN_SCC1_SLOT].unit);
-
-		if ((intr & KMIN_INTR_SCSI) &&
-			tc_slot_info[KMIN_SCSI_SLOT].intr)
-			(*(tc_slot_info[KMIN_SCSI_SLOT].intr))
-			(tc_slot_info[KMIN_SCSI_SLOT].unit);
-
-		if ((intr & KMIN_INTR_LANCE) &&
-			tc_slot_info[KMIN_LANCE_SLOT].intr)
-			(*(tc_slot_info[KMIN_LANCE_SLOT].intr))
-			(tc_slot_info[KMIN_LANCE_SLOT].unit);
-
-		if (user_warned && ((intr & KMIN_INTR_PSWARN) == 0)) {
-			printf("%s\n", "Power supply ok now.");
-			user_warned = 0;
-		}
-		if ((intr & KMIN_INTR_PSWARN) && (user_warned < 3)) {
-			user_warned++;
-			printf("%s\n", "Power supply overheating");
-		}
-	}
-	if ((mask & MACH_INT_MASK_0) && tc_slot_info[0].intr)
-		(*tc_slot_info[0].intr)(tc_slot_info[0].unit);
-	if ((mask & MACH_INT_MASK_1) && tc_slot_info[1].intr)
-		(*tc_slot_info[1].intr)(tc_slot_info[1].unit);
-	if ((mask & MACH_INT_MASK_2) && tc_slot_info[2].intr)
-		(*tc_slot_info[2].intr)(tc_slot_info[2].unit);
-	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
-		MACH_SR_INT_ENA_CUR);
-}
-
-/*
- * Maxine hardware interrupts. (Personal DECstation 5000/xx)
- */
-xine_intr(mask, pc, statusReg, causeReg)
-	unsigned mask;
-	unsigned pc;
-	unsigned statusReg;
-	unsigned causeReg;
-{
-	register u_int intr;
-	register volatile struct chiptime *c = Mach_clock_addr;
-	volatile u_int *imaskp = (volatile u_int *)
-		MACH_PHYS_TO_UNCACHED(XINE_REG_IMSK);
-	volatile u_int *intrp = (volatile u_int *)
-		MACH_PHYS_TO_UNCACHED(XINE_REG_INTR);
-	u_int old_mask;
-	struct clockframe cf;
-	int temp;
-
-	old_mask = *imaskp & xine_tc3_imask;
-	*imaskp = old_mask;
-
-	if (mask & MACH_INT_MASK_4)
-		(*callv->halt)((int *)0, 0);
-
-	/* handle clock interrupts ASAP */
-	if (mask & MACH_INT_MASK_1) {
-		temp = c->regc;	/* XXX clear interrupt bits */
-		cf.pc = pc;
-		cf.sr = statusReg;
-		hardclock(&cf);
-		causeReg &= ~MACH_INT_MASK_1;
-		/* reenable clock interrupts */
-		splx(MACH_INT_MASK_1 | MACH_SR_INT_ENA_CUR);
-	}
-	if (mask & MACH_INT_MASK_3) {
-		intr = *intrp;
-		/* masked interrupts are still observable */
-		intr &= old_mask;
-
-		if (intr & XINE_INTR_SCSI_PTR_LOAD) {
-			*intrp &= ~XINE_INTR_SCSI_PTR_LOAD;
-#ifdef notdef
-			asc_dma_intr();
-#endif
-		}
-
-		if (intr & (XINE_INTR_SCSI_OVRUN | XINE_INTR_SCSI_READ_E))
-			*intrp &= ~(XINE_INTR_SCSI_OVRUN | XINE_INTR_SCSI_READ_E);
-
-		if (intr & XINE_INTR_LANCE_READ_E)
-			*intrp &= ~XINE_INTR_LANCE_READ_E;
-
-		if ((intr & XINE_INTR_SCC_0) &&
-			tc_slot_info[XINE_SCC0_SLOT].intr)
-			(*(tc_slot_info[XINE_SCC0_SLOT].intr))
-			(tc_slot_info[XINE_SCC0_SLOT].unit);
-
-		if ((intr & XINE_INTR_DTOP_RX) &&
-			tc_slot_info[XINE_DTOP_SLOT].intr)
-			(*(tc_slot_info[XINE_DTOP_SLOT].intr))
-			(tc_slot_info[XINE_DTOP_SLOT].unit);
-
-		if ((intr & XINE_INTR_FLOPPY) &&
-			tc_slot_info[XINE_FLOPPY_SLOT].intr)
-			(*(tc_slot_info[XINE_FLOPPY_SLOT].intr))
-			(tc_slot_info[XINE_FLOPPY_SLOT].unit);
-
-		if ((intr & XINE_INTR_TC_0) &&
-			tc_slot_info[0].intr)
-			(*(tc_slot_info[0].intr))
-			(tc_slot_info[0].unit);
-
-		if ((intr & XINE_INTR_TC_1) &&
-			tc_slot_info[1].intr)
-			(*(tc_slot_info[1].intr))
-			(tc_slot_info[1].unit);
-
-		if ((intr & XINE_INTR_ISDN) &&
-			tc_slot_info[XINE_ISDN_SLOT].intr)
-			(*(tc_slot_info[XINE_ISDN_SLOT].intr))
-			(tc_slot_info[XINE_ISDN_SLOT].unit);
-
-		if ((intr & XINE_INTR_SCSI) &&
-			tc_slot_info[XINE_SCSI_SLOT].intr)
-			(*(tc_slot_info[XINE_SCSI_SLOT].intr))
-			(tc_slot_info[XINE_SCSI_SLOT].unit);
-
-		if ((intr & XINE_INTR_LANCE) &&
-			tc_slot_info[XINE_LANCE_SLOT].intr)
-			(*(tc_slot_info[XINE_LANCE_SLOT].intr))
-			(tc_slot_info[XINE_LANCE_SLOT].unit);
-
-	}
-	if (mask & MACH_INT_MASK_2)
-		kn02ba_errintr();
-	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
-		MACH_SR_INT_ENA_CUR);
-}
-
-#ifdef DS5000_240
-/*
- * 3Max+ hardware interrupts. (DECstation 5000/240) UNTESTED!!
- */
-kn03_intr(mask, pc, statusReg, causeReg)
-	unsigned mask;
-	unsigned pc;
-	unsigned statusReg;
-	unsigned causeReg;
-{
-	register u_int intr;
-	register volatile struct chiptime *c = Mach_clock_addr;
-	volatile u_int *imaskp = (volatile u_int *)
-		MACH_PHYS_TO_UNCACHED(KN03_REG_IMSK);
-	volatile u_int *intrp = (volatile u_int *)
-		MACH_PHYS_TO_UNCACHED(KN03_REG_INTR);
-	u_int old_mask;
-	struct clockframe cf;
-	int temp;
-	static int user_warned = 0;
-
-	old_mask = *imaskp & kn03_tc3_imask;
-	*imaskp = old_mask;
-
-	if (mask & MACH_INT_MASK_4)
-		(*callv->halt)((int *)0, 0);
-
-	/* handle clock interrupts ASAP */
-	if (mask & MACH_INT_MASK_1) {
-		temp = c->regc;	/* XXX clear interrupt bits */
-		cf.pc = pc;
-		cf.sr = statusReg;
-		hardclock(&cf);
-		causeReg &= ~MACH_INT_MASK_1;
-		/* reenable clock interrupts */
-		splx(MACH_INT_MASK_1 | MACH_SR_INT_ENA_CUR);
-	}
-	if (mask & MACH_INT_MASK_0) {
-		intr = *intrp;
-		/* masked interrupts are still observable */
-		intr &= old_mask;
-
-		if (intr & KN03_INTR_SCSI_PTR_LOAD) {
-			*intrp &= ~KN03_INTR_SCSI_PTR_LOAD;
-#ifdef notdef
-			asc_dma_intr();
-#endif
-		}
-
-		if (intr & (KN03_INTR_SCSI_OVRUN | KN03_INTR_SCSI_READ_E))
-			*intrp &= ~(KN03_INTR_SCSI_OVRUN | KN03_INTR_SCSI_READ_E);
-
-		if (intr & KN03_INTR_LANCE_READ_E)
-			*intrp &= ~KN03_INTR_LANCE_READ_E;
-
-		if ((intr & KN03_INTR_SCC_0) &&
-			tc_slot_info[KN03_SCC0_SLOT].intr)
-			(*(tc_slot_info[KN03_SCC0_SLOT].intr))
-			(tc_slot_info[KN03_SCC0_SLOT].unit);
-
-		if ((intr & KN03_INTR_SCC_1) &&
-			tc_slot_info[KN03_SCC1_SLOT].intr)
-			(*(tc_slot_info[KN03_SCC1_SLOT].intr))
-			(tc_slot_info[KN03_SCC1_SLOT].unit);
-
-		if ((intr & KN03_INTR_TC_0) &&
-			tc_slot_info[0].intr)
-			(*(tc_slot_info[0].intr))
-			(tc_slot_info[0].unit);
-
-		if ((intr & KN03_INTR_TC_1) &&
-			tc_slot_info[1].intr)
-			(*(tc_slot_info[1].intr))
-			(tc_slot_info[1].unit);
-
-		if ((intr & KN03_INTR_TC_2) &&
-			tc_slot_info[2].intr)
-			(*(tc_slot_info[2].intr))
-			(tc_slot_info[2].unit);
-
-		if ((intr & KN03_INTR_SCSI) &&
-			tc_slot_info[KN03_SCSI_SLOT].intr)
-			(*(tc_slot_info[KN03_SCSI_SLOT].intr))
-			(tc_slot_info[KN03_SCSI_SLOT].unit);
-
-		if ((intr & KN03_INTR_LANCE) &&
-			tc_slot_info[KN03_LANCE_SLOT].intr)
-			(*(tc_slot_info[KN03_LANCE_SLOT].intr))
-			(tc_slot_info[KN03_LANCE_SLOT].unit);
-
-		if (user_warned && ((intr & KN03_INTR_PSWARN) == 0)) {
-			printf("%s\n", "Power supply ok now.");
-			user_warned = 0;
-		}
-		if ((intr & KN03_INTR_PSWARN) && (user_warned < 3)) {
-			user_warned++;
-			printf("%s\n", "Power supply overheating");
-		}
-	}
-	if (mask & MACH_INT_MASK_3)
-		kn03_errintr();
-	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
-		MACH_SR_INT_ENA_CUR);
-}
-#endif /* DS5000_240 */
 
 /*
  * This is called from MachUserIntr() if astpending is set.
@@ -1304,134 +869,6 @@ trapDump(msg)
 	splx(s);
 }
 #endif
-
-/*
- *----------------------------------------------------------------------
- *
- * MemErrorInterrupts --
- *   pmax_errintr - for the DS2100/DS3100
- *   kn02_errintr - for the DS5000/200
- *   kn02ba_errintr - for the DS5000/1xx and DS5000/xx
- *
- *	Handler an interrupt for the control register.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-static void
-pmax_errintr()
-{
-	volatile u_short *sysCSRPtr =
-		(u_short *)MACH_PHYS_TO_UNCACHED(KN01_SYS_CSR);
-	u_short csr;
-
-	csr = *sysCSRPtr;
-
-	if (csr & KN01_CSR_MERR) {
-		printf("Memory error at 0x%x\n",
-			*(unsigned *)MACH_PHYS_TO_UNCACHED(KN01_SYS_ERRADR));
-		panic("Mem error interrupt");
-	}
-	*sysCSRPtr = (csr & ~KN01_CSR_MBZ) | 0xff;
-}
-
-static void
-kn02_errintr()
-{
-	u_int erradr, chksyn, physadr;
-	int i;
-
-	erradr = *(u_int *)MACH_PHYS_TO_UNCACHED(KN02_SYS_ERRADR);
-	chksyn = *(u_int *)MACH_PHYS_TO_UNCACHED(KN02_SYS_CHKSYN);
-	*(u_int *)MACH_PHYS_TO_UNCACHED(KN02_SYS_ERRADR) = 0;
-	MachEmptyWriteBuffer();
-
-	if (!(erradr & KN02_ERR_VALID))
-		return;
-	/* extract the physical word address and compensate for pipelining */
-	physadr = erradr & KN02_ERR_ADDRESS;
-	if (!(erradr & KN02_ERR_WRITE))
-		physadr = (physadr & ~0xfff) | ((physadr & 0xfff) - 5);
-	physadr <<= 2;
-	printf("%s memory %s %s error at 0x%x\n",
-		(erradr & KN02_ERR_CPU) ? "CPU" : "DMA",
-		(erradr & KN02_ERR_WRITE) ? "write" : "read",
-		(erradr & KN02_ERR_ECCERR) ? "ECC" : "timeout",
-		physadr);
-	if (erradr & KN02_ERR_ECCERR) {
-		*(u_int *)MACH_PHYS_TO_UNCACHED(KN02_SYS_CHKSYN) = 0;
-		MachEmptyWriteBuffer();
-		printf("ECC 0x%x\n", chksyn);
-
-		/* check for a corrected, single bit, read error */
-		if (!(erradr & KN02_ERR_WRITE)) {
-			if (physadr & 0x4) {
-				/* check high word */
-				if (chksyn & KN02_ECC_SNGHI)
-					return;
-			} else {
-				/* check low word */
-				if (chksyn & KN02_ECC_SNGLO)
-					return;
-			}
-		}
-	}
-	panic("Mem error interrupt");
-}
-
-#ifdef DS5000_240
-static void
-kn03_errintr()
-{
-
-	printf("erradr %x\n", *(unsigned *)MACH_PHYS_TO_UNCACHED(KN03_SYS_ERRADR));
-	*(unsigned *)MACH_PHYS_TO_UNCACHED(KN03_SYS_ERRADR) = 0;
-	MachEmptyWriteBuffer();
-}
-#endif /* DS5000_240 */
-
-static void
-kn02ba_errintr()
-{
-	register int mer, adr, siz;
-	static int errintr_cnt = 0;
-
-	siz = *(volatile int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_MSR);
-	mer = *(volatile int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_MER);
-	adr = *(volatile int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_AER);
-
-	/* clear interrupt bit */
-	*(unsigned int *)MACH_PHYS_TO_UNCACHED(KMIN_REG_TIMEOUT) = 0;
-
-	errintr_cnt++;
-	printf("(%d)%s%x [%x %x %x]\n", errintr_cnt,
-	       "Bad memory chip at phys ",
-	       kn02ba_recover_erradr(adr, mer),
-	       mer, siz, adr);
-}
-
-static unsigned
-kn02ba_recover_erradr(phys, mer)
-	register unsigned phys, mer;
-{
-	/* phys holds bits 28:2, mer knows which byte */
-	switch (mer & KMIN_MER_LASTBYTE) {
-	case KMIN_LASTB31:
-		mer = 3; break;
-	case KMIN_LASTB23:
-		mer = 2; break;
-	case KMIN_LASTB15:
-		mer = 1; break;
-	case KMIN_LASTB07:
-		mer = 0; break;
-	}
-	return ((phys & KMIN_AER_ADDR_MASK) | mer);
-}
 
 /*
  * Return the resulting PC as if the branch was executed.

@@ -245,9 +245,15 @@ struct cdevsw	cdevsw[] =
 	cdev_ptc_init(NPTY,ptc),	/* 5: pseudo-tty master */
 	cdev_log_init(1,log),		/* 6: /dev/klog */
 	cdev_fd_init(1,fd),		/* 7: file descriptor pseudo-dev */
+        cdev_notdef(),                  /* 8: */
 	cdev_disk_init(NSD,sd),		/* 9: SD flash card */
+        cdev_notdef(),                  /* 10: */
 	cdev_vn_init(NVN,vn),		/* 11: vnode disk */
 	cdev_bpf_init(NBPFILTER,bpf),	/* 12: berkeley packet filter */
+        cdev_notdef(),                  /* 13: */
+        cdev_notdef(),                  /* 14: */
+        cdev_notdef(),                  /* 15: */
+        cdev_notdef(),                  /* 16: */
 	cdev_tty_init(NUART,uart),	/* 17: serial UART interface */
 };
 

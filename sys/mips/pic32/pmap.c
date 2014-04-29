@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -150,7 +150,7 @@ vm_offset_t	avail_end;	/* PA of last available physical page */
 vm_size_t	mem_size;	/* memory size in bytes */
 vm_offset_t	virtual_avail;  /* VA of first avail page (after kernel bss)*/
 vm_offset_t	virtual_end;	/* VA of last avail page (end of kernel AS) */
-int		pmaxpagesperpage;	/* PAGE_SIZE / NBPG */
+int		pagesperpage;	/* PAGE_SIZE / NBPG */
 #ifdef ATTR
 char		*pmap_attributes;	/* reference and modify bits */
 #endif
@@ -196,23 +196,23 @@ pmap_bootstrap(firstaddr)
 	 * phys_start and phys_end but its better to use kseg0 addresses
 	 * rather than kernel virtual addresses mapped through the TLB.
 	 */
-	i = maxmem - pmax_btop(MACH_CACHED_TO_PHYS(firstaddr));
+	i = maxmem - mips_btop(MACH_CACHED_TO_PHYS(firstaddr));
 	valloc(pv_table, struct pv_entry, i);
 
 	/*
 	 * Clear allocated memory.
 	 */
-	firstaddr = pmax_round_page(firstaddr);
+	firstaddr = mips_round_page(firstaddr);
 	bzero((caddr_t)start, firstaddr - start);
 
 	avail_start = MACH_CACHED_TO_PHYS(firstaddr);
-	avail_end = pmax_ptob(maxmem);
+	avail_end = mips_ptob(maxmem);
 	mem_size = avail_end - avail_start;
 
 	virtual_avail = VM_MIN_KERNEL_ADDRESS;
 	virtual_end = VM_MIN_KERNEL_ADDRESS + Sysmapsize * NBPG;
 	/* XXX need to decide how to set cnt.v_page_size */
-	pmaxpagesperpage = 1;
+	pagesperpage = 1;
 
 	simple_lock_init(&kernel_pmap_store.pm_lock);
 	kernel_pmap_store.pm_count = 1;
@@ -335,7 +335,7 @@ pmap_pinit(pmap)
 		pmap_zero_page(VM_PAGE_TO_PHYS(mem));
 		pmap->pm_segtab = stp = (struct segtab *)
 			MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
-		i = pmaxpagesperpage * (NBPG / sizeof(struct segtab));
+		i = pagesperpage * (NBPG / sizeof(struct segtab));
 		s = splimp();
 		while (--i != 0) {
 			stp++;
@@ -515,7 +515,7 @@ pmap_remove(pmap, sva, eva)
 		panic("pmap_remove: uva not in range");
 #endif
 	while (sva < eva) {
-		nssva = pmax_trunc_seg(sva) + NBSEG;
+		nssva = mips_trunc_seg(sva) + NBSEG;
 		if (nssva == 0 || nssva > eva)
 			nssva = eva;
 		/*
@@ -683,7 +683,7 @@ pmap_protect(pmap, sva, eva, prot)
 		panic("pmap_protect: uva not in range");
 #endif
 	while (sva < eva) {
-		nssva = pmax_trunc_seg(sva) + NBSEG;
+		nssva = mips_trunc_seg(sva) + NBSEG;
 		if (nssva == 0 || nssva > eva)
 			nssva = eva;
 		/*
@@ -897,10 +897,10 @@ pmap_enter(pmap, va, pa, prot, wired)
 		pte = kvtopte(va);
 		npte |= pa | PG_V | PG_G;
 		if (wired) {
-			pmap->pm_stats.wired_count += pmaxpagesperpage;
+			pmap->pm_stats.wired_count += pagesperpage;
 			npte |= PG_WIRED;
 		}
-		i = pmaxpagesperpage;
+		i = pagesperpage;
 		do {
 			if (!(pte->pt_entry & PG_V)) {
 				pmap->pm_stats.resident_count++;
@@ -933,11 +933,11 @@ pmap_enter(pmap, va, pa, prot, wired)
 	/*
 	 * Now validate mapping with desired protection/wiring.
 	 * Assume uniform modified and referenced status for all
-	 * PMAX pages in a MACH page.
+	 * MIPS pages in a MACH page.
 	 */
 	npte |= pa | PG_V;
 	if (wired) {
-		pmap->pm_stats.wired_count += pmaxpagesperpage;
+		pmap->pm_stats.wired_count += pagesperpage;
 		npte |= PG_WIRED;
 	}
 #ifdef DEBUG
@@ -948,7 +948,7 @@ pmap_enter(pmap, va, pa, prot, wired)
 		printf("\n");
 	}
 #endif
-	i = pmaxpagesperpage;
+	i = pagesperpage;
 	do {
 		pte->pt_entry = npte;
 		if (pmap->pm_tlbgen == tlbpid_gen)
@@ -1002,7 +1002,7 @@ pmap_change_wiring(pmap, va, wired)
 		pte += (va >> PGSHIFT) & (NPTEPG - 1);
 	}
 
-	i = pmaxpagesperpage;
+	i = pagesperpage;
 	if (!(pte->pt_entry & PG_WIRED) && p)
 		pmap->pm_stats.wired_count += i;
 	else if ((pte->pt_entry & PG_WIRED) && !p)
@@ -1285,7 +1285,7 @@ pmap_phys_address(ppn)
 	if (pmapdebug & PDB_FOLLOW)
 		printf("pmap_phys_address(%x)\n", ppn);
 #endif
-	return (pmax_ptob(ppn));
+	return (mips_ptob(ppn));
 }
 
 /*

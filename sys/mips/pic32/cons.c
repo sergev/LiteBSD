@@ -49,35 +49,42 @@
 #include <sys/file.h>
 #include <sys/conf.h>
 
-#include <mips/stand/dec_prom.h>
-
-/*
- * Console I/O is redirected to the appropriate device, either a screen and
- * keyboard, a serial port, or the "virtual" console.
- */
-#include <mips/pmax/cons.h>
-
 extern struct tty *constty;	/* virtual console output device */
 
-struct consdev cn_tab = {
-	1,
-	1,
-	NODEV,
-	(struct pmax_fb *)0,
-	(int (*)())0,
-	(int (*)())0,
-	(void (*)())0,
-	(struct tty *)0,
-};
+/*
+ * Console I/O is redirected to the serial port.
+ */
+#include "uart.h"
+#if NUART > 0
+extern int uartGetc();
+extern void uartPutc();
+
+#define redirect_getc   uartGetc
+#define redirect_putc   uartPutc
+#define UARTDEV         17      /* UART device major */
+
+dev_t cn_dev = makedev(UARTDEV, 0);
+
+#else
+#error Console: cannot redirect
+#endif
+
+/*
+ * Console initialization: called early on from main,
+ * before vm init or startup.  Do enough configuration
+ * to choose and initialize a console.
+ */
+consinit()
+{
+    // TODO
+}
 
 cnopen(dev, flag, mode, p)
 	dev_t dev;
 	int flag, mode;
 	struct proc *p;
 {
-	if (cn_tab.cn_dev == NODEV)
-		return (0);
-	dev = cn_tab.cn_dev;
+	dev = cn_dev;
 	return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
 }
 
@@ -86,9 +93,7 @@ cnclose(dev, flag, mode, p)
 	int flag, mode;
 	struct proc *p;
 {
-	if (cn_tab.cn_dev == NODEV)
-		return (0);
-	dev = cn_tab.cn_dev;
+	dev = cn_dev;
 	return ((*cdevsw[major(dev)].d_close)(dev, flag, mode, p));
 }
 
@@ -96,9 +101,7 @@ cnread(dev, uio, flag)
 	dev_t dev;
 	struct uio *uio;
 {
-	if (cn_tab.cn_dev == NODEV)
-		return (0);
-	dev = cn_tab.cn_dev;
+	dev = cn_dev;
 	return ((*cdevsw[major(dev)].d_read)(dev, uio, flag));
 }
 
@@ -108,9 +111,7 @@ cnwrite(dev, uio, flag)
 {
 	if (constty)
 		return ((*linesw[constty->t_line].l_write)(constty, uio, flag));
-	if (cn_tab.cn_dev == NODEV)
-		return (0);
-	dev = cn_tab.cn_dev;
+	dev = cn_dev;
 	return ((*cdevsw[major(dev)].d_write)(dev, uio, flag));
 }
 
@@ -140,9 +141,7 @@ cnioctl(dev, cmd, data, flag, p)
 			return (error);
 	}
 #endif
-	if (cn_tab.cn_dev == NODEV)
-		return (0);
-	dev = cn_tab.cn_dev;
+	dev = cn_dev;
 	return ((*cdevsw[major(dev)].d_ioctl)(dev, cmd, data, flag, p));
 }
 
@@ -152,9 +151,7 @@ cnselect(dev, rw, p)
 	int rw;
 	struct proc *p;
 {
-	if (cn_tab.cn_dev == NODEV)
-		return (1);
-	return (ttselect(cn_tab.cn_dev, rw, p));
+	return (ttselect(cn_dev, rw, p));
 }
 
 /*
@@ -162,11 +159,7 @@ cnselect(dev, rw, p)
  */
 cngetc()
 {
-
-	/* check to be sure device has been initialized */
-	if (cn_tab.cn_dev == NODEV || cn_tab.cn_disabled)
-		return ((*callv->getchar)());
-	return ((*cn_tab.cn_getc)(cn_tab.cn_dev));
+	return (redirect_getc(cn_dev));
 }
 
 /*
@@ -177,13 +170,9 @@ cnputc(c)
 {
 	int s;
 
-	if (cn_tab.cn_dev == NODEV || cn_tab.cn_disabled) {
-		s = splhigh();
-		(*callv->printf)("%c", c);
-		splx(s);
-	} else if (c) {
+	if (c) {
 		if (c == '\n')
-			(*cn_tab.cn_putc)(cn_tab.cn_dev, '\r');
-		(*cn_tab.cn_putc)(cn_tab.cn_dev, c);
+			redirect_putc(cn_dev, '\r');
+		redirect_putc(cn_dev, c);
 	}
 }

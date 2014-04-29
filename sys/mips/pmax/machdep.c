@@ -220,7 +220,7 @@ mach_init(argc, argv, code, cv)
 	extern char MachException[], MachExceptionEnd[];
 
 	/* clear the BSS segment */
-	v = (caddr_t)pmax_round_page(end);
+	v = (caddr_t)mips_round_page(end);
 	bzero(edata, v - edata);
 
 	/* check for direct boot from DS5000 PROM */

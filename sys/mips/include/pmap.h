@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1987 Carnegie-Mellon University
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -51,7 +51,7 @@
  * The user address space is mapped using a two level structure where
  * virtual address bits 30..22 are used to index into a segment table which
  * points to a page worth of PTEs (4096 page can hold 1024 PTEs).
- * Bits 21..12 are then used to index a PTE which describes a page within 
+ * Bits 21..12 are then used to index a PTE which describes a page within
  * a segment.
  *
  * The wired entries in the TLB will contain the following:
@@ -62,8 +62,7 @@
  * dynamically allocated at boot time.
  */
 
-#define pmax_trunc_seg(x)	((vm_offset_t)(x) & ~SEGOFSET)
-#define pmax_round_seg(x)	(((vm_offset_t)(x) + SEGOFSET) & ~SEGOFSET)
+#define mips_trunc_seg(x)	((vm_offset_t)(x) & ~SEGOFSET)
 #define pmap_segmap(m, v)	((m)->pm_segtab->seg_tab[((v) >> SEGSHIFT)])
 
 #define PMAP_SEGTABSIZE		512

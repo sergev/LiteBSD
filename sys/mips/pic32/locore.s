@@ -98,7 +98,7 @@ start:
 	la	gp, _gp
 #endif
 	sw	zero, START_FRAME - 4(sp)	# Zero out old ra for debugger
-	jal	mach_init			# mach_init(argc, argv, envp)
+	jal	mach_init			# mach_init()
 	sw	zero, START_FRAME - 8(sp)	# Zero out old fp for debugger
 
 	li	t0, MACH_SR_COP_1_BIT		# Disable interrupts and
@@ -200,10 +200,6 @@ onfault_table:
 	.word	fswberr
 #define FSWINTRBERR	4
 	.word	fswintrberr
-#ifdef KADB
-#define KADBERR		5
-	.word	kadberr
-#endif
 	.text
 
 /*
@@ -1275,20 +1271,6 @@ SlowFault:
 
 NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
 	.set	noat
-#ifdef KADB
-	la	k0, kdbpcb			# save registers for kadb
-	sw	s0, (S0 * 4)(k0)
-	sw	s1, (S1 * 4)(k0)
-	sw	s2, (S2 * 4)(k0)
-	sw	s3, (S3 * 4)(k0)
-	sw	s4, (S4 * 4)(k0)
-	sw	s5, (S5 * 4)(k0)
-	sw	s6, (S6 * 4)(k0)
-	sw	s7, (S7 * 4)(k0)
-	sw	s8, (S8 * 4)(k0)
-	sw	gp, (GP * 4)(k0)
-	sw	sp, (SP * 4)(k0)
-#endif
 	subu	sp, sp, KERN_EXC_FRAME_SIZE
 	.mask	0x80000000, (STAND_RA_OFFSET - KERN_EXC_FRAME_SIZE)
 /*
@@ -1742,50 +1724,6 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 	.set	at
 END(MachUserIntr)
 
-#if 0
-/*----------------------------------------------------------------------------
- *
- * MachTLBModException --
- *
- *	Handle a TLB modified exception.
- *	The BaddVAddr, Context, and EntryHi registers contain the failed
- *	virtual address.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------------
- */
-NLEAF(MachTLBModException)
-	.set	noat
-	tlbp					# find the TLB entry
-	mfc0	k0, MACH_COP_0_TLB_LOW		# get the physical address
-	mfc0	k1, MACH_COP_0_TLB_INDEX	# check to be sure its valid
-	or	k0, k0, VMMACH_TLB_MOD_BIT	# update TLB
-	blt	k1, zero, 4f			# not found!!!
-	mtc0	k0, MACH_COP_0_TLB_LOW
-	li	k1, MACH_CACHED_MEMORY_ADDR
-	subu	k0, k0, k1
-	srl	k0, k0, VMMACH_TLB_PHYS_PAGE_SHIFT
-	la	k1, pmap_attributes
-	addu	k0, k0, k1
-	lbu	k1, 0(k0)			# fetch old value
-	nop
-	or	k1, k1, 1			# set modified bit
-	sb	k1, 0(k0)			# save new value
-	mfc0	k0, MACH_COP_0_EXC_PC		# get return address
-	nop
-	j	k0
-	rfe
-4:
-	break	0				# panic
-	.set	at
-END(MachTLBModException)
-#endif
-
 /*----------------------------------------------------------------------------
  *
  * MachTLBMissException --
@@ -2072,42 +2010,6 @@ LEAF(MachTLBWriteIndexed)
 	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
 END(MachTLBWriteIndexed)
 
-#if 0
-/*--------------------------------------------------------------------------
- *
- * MachTLBWriteRandom --
- *
- *	Write the given entry into the TLB at a random location.
- *
- *	MachTLBWriteRandom(highEntry, lowEntry)
- *		unsigned highEntry;
- *		unsigned lowEntry;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	TLB entry set.
- *
- *--------------------------------------------------------------------------
- */
-LEAF(MachTLBWriteRandom)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	v0, MACH_COP_0_TLB_HI		# Save the current PID.
-	nop
-
-	mtc0	a0, MACH_COP_0_TLB_HI		# Set up entry high.
-	mtc0	a1, MACH_COP_0_TLB_LOW		# Set up entry low.
-	nop
-	tlbwr					# Write the TLB
-
-	mtc0	v0, MACH_COP_0_TLB_HI		# Restore the PID.
-	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
-END(MachTLBWriteRandom)
-#endif
-
 /*--------------------------------------------------------------------------
  *
  * MachSetPID --
@@ -2170,57 +2072,6 @@ LEAF(MachTLBFlush)
 	j	ra
 	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
 END(MachTLBFlush)
-
-#if 0
-/*--------------------------------------------------------------------------
- *
- * MachTLBFlushPID --
- *
- *	Flush all entries with the given PID from the TLB.
- *
- *	MachTLBFlushPID(pid)
- *		int pid;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	All entries corresponding to this PID are flushed.
- *
- *--------------------------------------------------------------------------
- */
-LEAF(MachTLBFlushPID)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Save the current PID
-	sll	a0, a0, VMMACH_TLB_PID_SHIFT	# Align the pid to flush.
-/*
- * Align the starting value (t1) and the upper bound (t2).
- */
-	li	t1, VMMACH_FIRST_RAND_ENTRY << VMMACH_TLB_INDEX_SHIFT
-	li	t2, VMMACH_NUM_TLB_ENTRIES << VMMACH_TLB_INDEX_SHIFT
-	mtc0	t1, MACH_COP_0_TLB_INDEX	# Set the index register
-1:
-	addu	t1, t1, 1 << VMMACH_TLB_INDEX_SHIFT	# Increment index.
-	tlbr					# Read from the TLB
-	mfc0	t4, MACH_COP_0_TLB_HI		# Fetch the hi register.
-	nop
-	and	t4, t4, VMMACH_TLB_PID		# compare PIDs
-	bne	t4, a0, 2f
-	li	v0, MACH_CACHED_MEMORY_ADDR	# invalid address
-	mtc0	v0, MACH_COP_0_TLB_HI		# Mark entry high as invalid
-	mtc0	zero, MACH_COP_0_TLB_LOW	# Zero out low entry.
-	nop
-	tlbwi					# Write the entry.
-2:
-	bne	t1, t2, 1b
-	mtc0	t1, MACH_COP_0_TLB_INDEX	# Set the index register
-
-	mtc0	t0, MACH_COP_0_TLB_HI		# restore PID
-	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
-END(MachTLBFlushPID)
-#endif
 
 /*--------------------------------------------------------------------------
  *
@@ -2991,142 +2842,6 @@ LEAF(MachFlushDCache)
 	j	ra				# return and run cached
 	nop
 END(MachFlushDCache)
-
-#ifdef KADB
-/*
- * Read a long and return it.
- * Note: addresses can be unaligned!
- *
- * long
-L* kdbpeek(addr)
-L*	caddt_t addr;
-L* {
-L*	return (*(long *)addr);
-L* }
- */
-LEAF(kdbpeek)
-	li	v0, KADBERR
-	sw	v0, UADDR+U_PCB_ONFAULT
-	and	v0, a0, 3		# unaligned address?
-	bne	v0, zero, 1f
-	nop
-	b	2f
-	lw	v0, (a0)		# aligned access
-1:
-	lwr	v0, 0(a0)		# get next 4 bytes (unaligned)
-	lwl	v0, 3(a0)
-2:
-	j	ra			# made it w/o errors
-	sw	zero, UADDR+U_PCB_ONFAULT
-kadberr:
-	li	v0, 1			# trap sends us here
-	sw	v0, kdbmkfault
-	j	ra
-	nop
-END(kdbpeek)
-
-/*
- * Write a long to 'addr'.
- * Note: addresses can be unaligned!
- *
-L* void
-L* kdbpoke(addr, value)
-L*	caddt_t addr;
-L*	long value;
-L* {
-L*	*(long *)addr = value;
-L* }
- */
-LEAF(kdbpoke)
-	li	v0, KADBERR
-	sw	v0, UADDR+U_PCB_ONFAULT
-	and	v0, a0, 3		# unaligned address?
-	bne	v0, zero, 1f
-	nop
-	b	2f
-	sw	a1, (a0)		# aligned access
-1:
-	swr	a1, 0(a0)		# store next 4 bytes (unaligned)
-	swl	a1, 3(a0)
-	and	a0, a0, ~3		# align address for cache flush
-2:
-	sw	zero, UADDR+U_PCB_ONFAULT
-	b	MachFlushICache		# flush instruction cache
-	li	a1, 8
-END(kdbpoke)
-
-/*
- * Save registers and state so we can do a 'kdbreset' (like longjmp) later.
- * Always returns zero.
- *
-L* int kdb_savearea[11];
-L*
-L* int
-L* kdbsetexit()
-L* {
-L*	kdb_savearea[0] = 0;
-L*	return (0);
-L* }
- */
-	.comm	kdb_savearea, (11 * 4)
-
-LEAF(kdbsetexit)
-	la	a0, kdb_savearea
-	sw	s0, 0(a0)
-	sw	s1, 4(a0)
-	sw	s2, 8(a0)
-	sw	s3, 12(a0)
-	sw	s4, 16(a0)
-	sw	s5, 20(a0)
-	sw	s6, 24(a0)
-	sw	s7, 28(a0)
-	sw	sp, 32(a0)
-	sw	s8, 36(a0)
-	sw	ra, 40(a0)
-	j	ra
-	move	v0, zero
-END(kdbsetexit)
-
-/*
- * Restore registers and state (like longjmp) and return x.
- *
-L* int
-L* kdbreset(x)
-L* {
-L*	return (x);
-L* }
- */
-LEAF(kdbreset)
-	la	v0, kdb_savearea
-	lw	ra, 40(v0)
-	lw	s0, 0(v0)
-	lw	s1, 4(v0)
-	lw	s2, 8(v0)
-	lw	s3, 12(v0)
-	lw	s4, 16(v0)
-	lw	s5, 20(v0)
-	lw	s6, 24(v0)
-	lw	s7, 28(v0)
-	lw	sp, 32(v0)
-	lw	s8, 36(v0)
-	j	ra
-	move	v0, a0
-END(kdbreset)
-
-/*
- * Trap into the debugger.
- *
-L* void
-L* kdbpanic()
-L* {
-L* }
- */
-LEAF(kdbpanic)
-	break	MACH_BREAK_KDB_VAL
-	j	ra
-	nop
-END(kdbpanic)
-#endif /* KADB */
 
 #ifdef DEBUG
 LEAF(cpu_getregs)

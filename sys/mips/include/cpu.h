@@ -42,7 +42,7 @@
 #include <machine/machConst.h>
 
 /*
- * Exported definitions unique to pmax/mips cpu support.
+ * Exported definitions unique to MIPS cpu support.
  */
 
 /*
@@ -80,7 +80,7 @@ struct clockframe {
 
 /*
  * Give a profiling tick to the current process when the user profiling
- * buffer pages are invalid.  On the PMAX, request an ast to send us
+ * buffer pages are invalid.  On MIPS, request an ast to send us
  * through trap, marking the proc as needing a profiling tick.
  */
 #define	need_proftick(p)	{ (p)->p_flag |= P_OWEUPC; aston(); }

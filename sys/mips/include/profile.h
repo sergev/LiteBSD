@@ -68,7 +68,7 @@
 /*
  * The following two macros do splhigh and splx respectively.
  * They have to be defined this way because these are real
- * functions on the PMAX, and we do not want to invoke mcount
+ * functions on MIPS, and we do not want to invoke mcount
  * recursively.
  */
 #define	MCOUNT_ENTER	s = _splhigh()
