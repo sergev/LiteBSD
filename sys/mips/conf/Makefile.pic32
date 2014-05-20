@@ -27,6 +27,7 @@ CPP=	cpp
 LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_GCC_PREFIX}size
+OBJCOPY= ${MIPS_GCC_PREFIX}objcopy
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
@@ -63,19 +64,15 @@ NORMAL_S_C=	${CPP} ${COPTS} ${PARAM} $< | ${AS} -o $@
 #	${SYSTEM_LD_TAIL}
 SYSTEM_OBJ=	locore.o ${OBJS} param.o ioconf.o vnode_if.o
 SYSTEM_DEP=	Makefile ${SYSTEM_OBJ} $S/libkern/libkern.a
-SYSTEM_LD_HEAD=	rm -f $@
+SYSTEM_LD_HEAD=	sh $S/conf/newvers.sh; ${CC} $(CFLAGS) -c vers.c; rm -f $@
 SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix; \
 		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix
-SYSTEM_LD_TAIL=	${SIZE} $@
+SYSTEM_LD_TAIL= ${SIZE} vmunix; $(OBJCOPY) -O ihex --change-addresses=0x80000000 $@ vmunix.hex
 
 %LOAD
 
 $S/libkern/libkern.a:
 	cd $S/libkern && ${MAKE} all
-
-newvers:
-	sh $S/conf/newvers.sh
-	${CC} $(CFLAGS) -c vers.c
 
 clean:
 	rm -f eddep *vmunix vmunix.gdb tags *.o locore.i [a-z]*.s \
