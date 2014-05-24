@@ -142,6 +142,10 @@
 
 #ifndef LOCORE
 #ifdef KERNEL
+#ifdef DS5000
+/*
+ * Decstation 5000.
+ */
 extern int (*Mach_splnet)(), (*Mach_splbio)(), (*Mach_splimp)(),
 	   (*Mach_spltty)(), (*Mach_splclock)(), (*Mach_splstatclock)();
 #define	splnet()	((*Mach_splnet)())
@@ -152,6 +156,22 @@ extern int (*Mach_splnet)(), (*Mach_splbio)(), (*Mach_splimp)(),
 #define	splstatclock()	((*Mach_splstatclock)())
 extern	int cpuspeed;
 #define	DELAY(n)	{ register int N = cpuspeed * (n); while (--N > 0); }
+#else /* !DS5000 */
+/*
+ * Generic MIPSr2.
+ */
+extern int splnet(void), splbio(void), splimp(void), spltty(void), splclock(void);
+#define	splsoftclock()  spl1()      /* low-priority clock processing */
+#define	splnet()        spl2()      /* network protocol processing */
+#define	splbio()        spl3()      /* disk controllers */
+#define	splimp()        spl4()      /* network device controllers */
+#define	spltty()        spl5()      /* uarts and terminal multiplexers */
+#define	splclock()      spl6()      /* high-priority clock processing */
+#define	splstatclock()	splhigh()   /* blocks all interrupt activity */
+
+extern void udelay(unsigned);
+#define	DELAY(usec)	udelay(usec)
+#endif /* !DS5000 */
 #else /* !KERNEL */
 #define	DELAY(n)	{ register int N = (n); while (--N > 0); }
 #endif /* !KERNEL */

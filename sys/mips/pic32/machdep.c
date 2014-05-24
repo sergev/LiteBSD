@@ -103,14 +103,6 @@ int	msgbufmapped = 0;	/* set when safe to use msgbuf */
 int	maxmem;			/* max memory per process */
 int	physmem;		/* max supported memory, changes to actual */
 
-extern	int Mach_spl0(), Mach_spl1(), Mach_spl2(), Mach_spl3(), splhigh();
-int	(*Mach_splnet)() = splhigh;
-int	(*Mach_splbio)() = splhigh;
-int	(*Mach_splimp)() = splhigh;
-int	(*Mach_spltty)() = splhigh;
-int	(*Mach_splclock)() = splhigh;
-int	(*Mach_splstatclock)() = splhigh;
-
 extern dev_t cn_dev;
 
 /*
@@ -199,15 +191,6 @@ mach_init()
 	MachConfigCache();
 	MachFlushCache();
 
-        /*
-         * Set up interrupt handling and I/O addresses.
-         */
-        Mach_splnet = Mach_spl1;
-        Mach_splbio = Mach_spl0;
-        Mach_splimp = Mach_spl1;
-        Mach_spltty = Mach_spl2;
-        Mach_splclock = Mach_spl3;
-        Mach_splstatclock = Mach_spl3;
         strcpy(cpu_model, "pic32mz");
 
 	/*
@@ -880,4 +863,26 @@ atoi(s)
 		val = -val;
 out:
 	return val;
+}
+
+#define MHZ     200             /* CPU clock. */
+
+/*
+ * Delay for a given number of microseconds.
+ * The processor has a 32-bit hardware Count register,
+ * which increments at half CPU rate.
+ * We use it to get a precise delay.
+ */
+void udelay (unsigned usec)
+{
+    unsigned now = mfc0 (9, 0); // C0_Count
+    unsigned final = now + usec * MHZ / 2;
+
+    for (;;) {
+        now = mfc0 (9, 0); // C0_Count
+
+        /* This comparison is valid only when using a signed type. */
+        if ((int) (now - final) >= 0)
+            break;
+    }
 }

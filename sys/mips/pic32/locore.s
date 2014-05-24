@@ -1855,23 +1855,14 @@ END(clearsoftnet)
 /*
  * Set/change interrupt priority routines.
  */
-
-LEAF(MachEnableIntr)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
-	nop
-	or	v0, v0, MACH_SR_INT_ENA_CUR
-	mtc0	v0, MACH_COP_0_STATUS_REG	# enable all interrupts
-	j	ra
-	nop
-END(MachEnableIntr)
-
 LEAF(spl0)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
-	nop
-	or	t0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-	mtc0	t0, MACH_COP_0_STATUS_REG	# enable all interrupts
-	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+        li      t0, MACH_SR_INT_ENA_CUR
+        di      v0                              # disable interrupts and read Status
+        or      t0, v0, t0                      # set IE
+        ins     t0, zero, 10, 9                 # clear IPL
+        mtc0    t0, MACH_COP_0_STATUS_REG       # write Status: enable all sources
+        jr.hb   ra                              # return (clear hazards)
+        nop
 END(spl0)
 
 LEAF(splsoftclock)
@@ -1883,41 +1874,59 @@ LEAF(splsoftclock)
 	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
 END(splsoftclock)
 
-LEAF(Mach_spl0)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
-	li	t0, ~(MACH_INT_MASK_0|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
-	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
-	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-END(Mach_spl0)
-
-LEAF(Mach_spl1)
+LEAF(spl1)
 	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
 	li	t0, ~(MACH_INT_MASK_1|MACH_SOFT_INT_MASK_0|MACH_SOFT_INT_MASK_1)
 	and	t0, t0, v0
 	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
 	j	ra
 	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-END(Mach_spl1)
+END(spl1)
 
-LEAF(Mach_spl2)
+LEAF(spl2)
 	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
 	li	t0, ~(MACH_INT_MASK_2|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
 	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
 	j	ra
 	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-END(Mach_spl2)
+END(spl2)
 
-LEAF(Mach_spl3)
+LEAF(spl3)
 	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
 	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
 	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
 	j	ra
 	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-END(Mach_spl3)
+END(spl3)
+
+LEAF(spl4)      // TODO
+	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
+	and	t0, t0, v0
+	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	j	ra
+	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+END(spl4)
+
+LEAF(spl5)      // TODO
+	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
+	and	t0, t0, v0
+	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	j	ra
+	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+END(spl5)
+
+LEAF(spl6)      // TODO
+	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
+	and	t0, t0, v0
+	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	j	ra
+	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+END(spl6)
 
 /*
  * We define an alternate entry point after mcount is called so it

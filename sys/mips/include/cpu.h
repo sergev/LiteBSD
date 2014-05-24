@@ -156,4 +156,20 @@ u_int	machInstCacheSize;
  */
 #define	enablertclock()
 
+/*
+ * Read C0 coprocessor register.
+ */
+#define mfc0(reg, sel) ({ int __value;				\
+	asm volatile (						\
+	"mfc0	%0, $%1, %2"					\
+	: "=r" (__value) : "K" (reg), "K" (sel));		\
+	__value; })
+
+/*
+ * Write coprocessor 0 register.
+ */
+#define mtc0(reg, sel, value) asm volatile (                    \
+	"mtc0	%z0, $%1, %2"                                   \
+	: : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
+
 #endif /* _CPU_H_ */
