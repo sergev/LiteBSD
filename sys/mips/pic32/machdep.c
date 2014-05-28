@@ -185,12 +185,6 @@ mach_init()
 	bcopy(MachException, (char *)MACH_GEN_EXC_VEC,
 		MachExceptionEnd - MachException);
 
-	/*
-	 * Clear out the I and D caches.
-	 */
-	MachConfigCache();
-	MachFlushCache();
-
         strcpy(cpu_model, "pic32mz");
 
 	/*
@@ -498,15 +492,6 @@ sendsig(catcher, sig, mask, code)
 	bcopy((caddr_t)&regs[1], (caddr_t)&ksc.sc_regs[1],
 		sizeof(ksc.sc_regs) - sizeof(int));
 	ksc.sc_fpused = p->p_md.md_flags & MDP_FPUSED;
-	if (ksc.sc_fpused) {
-		extern struct proc *machFPCurProcPtr;
-
-		/* if FPU has current state, save it first */
-		if (p == machFPCurProcPtr)
-			MachSaveCurFPState(p);
-		bcopy((caddr_t)&p->p_md.md_regs[F0], (caddr_t)ksc.sc_fpregs,
-			sizeof(ksc.sc_fpregs));
-	}
 	if (copyout((caddr_t)&ksc, (caddr_t)&fp->sf_sc, sizeof(ksc))) {
 		/*
 		 * Process has trashed its stack; give it an illegal

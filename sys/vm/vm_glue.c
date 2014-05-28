@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -38,17 +38,17 @@
  *
  * Copyright (c) 1987, 1990 Carnegie-Mellon University.
  * All rights reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -430,7 +430,7 @@ swapout_threads()
 				outpri2 = p->p_swtime;
 			}
 			continue;
-			
+
 		case SSLEEP:
 		case SSTOP:
 			if (p->p_slptime >= maxslp) {
@@ -497,6 +497,7 @@ swapout(p)
 		addr = (vm_offset_t) p->p_addr;
 	}
 #endif
+#if 0
 #ifdef mips
 	/*
 	 * Be sure to save the floating point coprocessor state before
@@ -510,6 +511,7 @@ swapout(p)
 			machFPCurProcPtr = (struct proc *)0;
 		}
 	}
+#endif
 #endif
 #ifndef	i386 /* temporary measure till we find spontaineous unwire of kstack */
 	vm_map_pageable(kernel_map, addr, addr+size, TRUE);

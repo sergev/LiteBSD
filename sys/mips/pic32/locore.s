@@ -76,10 +76,10 @@
 
 	.globl	start
 start:
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
 	li	t1, MACH_CACHED_MEMORY_ADDR	# invalid address
-	mtc0	t1, MACH_COP_0_TLB_HI		# Mark entry high as invalid
-	mtc0	zero, MACH_COP_0_TLB_LOW	# Zero out low entry.
+	mtc0	t1, MACH_C0_EntryHi		# Mark entry high as invalid
+	mtc0	zero, MACH_C0_EntryLo0		# Zero out low entry.
 /*
  * Clear the TLB (just to be safe).
  * Align the starting value (t1), the increment (t2) and the upper bound (t3).
@@ -88,7 +88,7 @@ start:
 	li	t2, 1 << VMMACH_TLB_INDEX_SHIFT
 	li	t3, VMMACH_NUM_TLB_ENTRIES << VMMACH_TLB_INDEX_SHIFT
 1:
-	mtc0	t1, MACH_COP_0_TLB_INDEX	# Set the index register.
+	mtc0	t1, MACH_C0_Index		# Set the index register.
 	addu	t1, t1, t2			# Increment index.
 	bne	t1, t3, 1b			# NB: always executes next
 	tlbwi					# Write the TLB entry.
@@ -101,10 +101,9 @@ start:
 	jal	mach_init			# mach_init()
 	sw	zero, START_FRAME - 8(sp)	# Zero out old fp for debugger
 
-	li	t0, MACH_SR_COP_1_BIT		# Disable interrupts and
-	mtc0	t0, MACH_COP_0_STATUS_REG	#   enable the coprocessor
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
 	li	sp, KERNELSTACK - START_FRAME	# switch to standard stack
-	mfc0	t0, MACH_COP_0_PRID		# read processor ID register
+	mfc0	t0, MACH_C0_PRId		# read processor ID register
 	cfc1	t1, MACH_FPC_ID			# read FPU ID register
 	sw	t0, cpu				# save PRID register
 	sw	t1, fpu				# save FPU ID register
@@ -116,7 +115,7 @@ start:
  */
 	.set	noat
 	li	v0, PSL_USERSET
-	mtc0	v0, MACH_COP_0_STATUS_REG	# switch to user mode
+	mtc0	v0, MACH_C0_Status	   	# switch to user mode
 	lw	a0, UADDR+U_PCB_REGS+(SR * 4)
 	lw	t0, UADDR+U_PCB_REGS+(MULLO * 4)
 	lw	t1, UADDR+U_PCB_REGS+(MULHI * 4)
@@ -751,7 +750,7 @@ ALEAF(savectx)
 	sw	s1, U_PCB_CONTEXT+4(a0)
 	sw	s2, U_PCB_CONTEXT+8(a0)
 	sw	s3, U_PCB_CONTEXT+12(a0)
-	mfc0	v0, MACH_COP_0_STATUS_REG
+	mfc0	v0, MACH_C0_Status
 	sw	s4, U_PCB_CONTEXT+16(a0)
 	sw	s5, U_PCB_CONTEXT+20(a0)
 	sw	s6, U_PCB_CONTEXT+24(a0)
@@ -857,15 +856,15 @@ LEAF(switch_exit)
 	lw	t0, P_UPTE+0(v1)		# t0 = first u. pte
 	lw	t1, P_UPTE+4(v1)		# t1 = 2nd u. pte
 	li	v0, UADDR			# v0 = first HI entry
-	mtc0	zero, MACH_COP_0_TLB_INDEX	# set the index register
-	mtc0	v0, MACH_COP_0_TLB_HI		# init high entry
-	mtc0	t0, MACH_COP_0_TLB_LOW		# init low entry
+	mtc0	zero, MACH_C0_Index		# set the index register
+	mtc0	v0, MACH_C0_EntryHi		# init high entry
+	mtc0	t0, MACH_C0_EntryLo0		# init low entry
 	li	t0, 1 << VMMACH_TLB_INDEX_SHIFT
 	tlbwi					# Write the TLB entry.
 	addu	v0, v0, NBPG			# 2nd HI entry
-	mtc0	t0, MACH_COP_0_TLB_INDEX	# set the index register
-	mtc0	v0, MACH_COP_0_TLB_HI		# init high entry
-	mtc0	t1, MACH_COP_0_TLB_LOW		# init low entry
+	mtc0	t0, MACH_C0_Index		# set the index register
+	mtc0	v0, MACH_C0_EntryHi		# init high entry
+	mtc0	t1, MACH_C0_EntryLo0		# init low entry
 	sw	zero, curproc
 	tlbwi					# Write the TLB entry.
 	b	cpu_switch
@@ -879,8 +878,8 @@ END(switch_exit)
  * profiling.
  */
 LEAF(idle)
-	li	t0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
-	mtc0	t0, MACH_COP_0_STATUS_REG	# enable all interrupts
+	li	t0, (MACH_INT_MASK | MACH_Status_IE)
+	mtc0	t0, MACH_C0_Status		# enable all interrupts
 	sw	zero, curproc			# set curproc NULL for stats
 1:
 	lw	t0, whichqs			# look for non-empty queue
@@ -888,7 +887,7 @@ LEAF(idle)
 	beq	t0, zero, 1b
 	nop
 	b	sw1
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable all interrupts
+	mtc0	zero, MACH_C0_Status		# Disable all interrupts
 END(idle)
 
 /*
@@ -907,7 +906,7 @@ NON_LEAF(cpu_switch, STAND_FRAME_SIZE, ra)
 	sw	s1, UADDR+U_PCB_CONTEXT+4
 	sw	s2, UADDR+U_PCB_CONTEXT+8
 	sw	s3, UADDR+U_PCB_CONTEXT+12
-	mfc0	t0, MACH_COP_0_STATUS_REG	# t0 = saved status register
+	mfc0	t0, MACH_C0_Status		# t0 = saved status register
 	sw	s4, UADDR+U_PCB_CONTEXT+16
 	sw	s5, UADDR+U_PCB_CONTEXT+20
 	sw	s6, UADDR+U_PCB_CONTEXT+24
@@ -918,7 +917,7 @@ NON_LEAF(cpu_switch, STAND_FRAME_SIZE, ra)
 	addu	t2, t2, 1
 	sw	t2, cnt+V_SWTCH
 	beq	t1, zero, idle			# if none, idle
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable all interrupts
+	mtc0	zero, MACH_C0_Status		# Disable all interrupts
 sw1:
 	nop					# wait for intrs disabled
 	nop
@@ -968,15 +967,15 @@ sw1:
  * NOTE: This is hard coded to UPAGES == 2.
  * Also, there should be no TLB faults at this point.
  */
-	mtc0	zero, MACH_COP_0_TLB_INDEX	# set the index register
-	mtc0	v0, MACH_COP_0_TLB_HI		# init high entry
-	mtc0	t0, MACH_COP_0_TLB_LOW		# init low entry
+	mtc0	zero, MACH_C0_Index		# set the index register
+	mtc0	v0, MACH_C0_EntryHi		# init high entry
+	mtc0	t0, MACH_C0_EntryLo0		# init low entry
 	li	t0, 1 << VMMACH_TLB_INDEX_SHIFT
 	tlbwi					# Write the TLB entry.
 	addu	v0, v0, NBPG			# 2nd HI entry
-	mtc0	t0, MACH_COP_0_TLB_INDEX	# set the index register
-	mtc0	v0, MACH_COP_0_TLB_HI		# init high entry
-	mtc0	t1, MACH_COP_0_TLB_LOW		# init low entry
+	mtc0	t0, MACH_C0_Index		# set the index register
+	mtc0	v0, MACH_C0_EntryHi		# init high entry
+	mtc0	t1, MACH_C0_EntryLo0		# init low entry
 	nop
 	tlbwi					# Write the TLB entry.
 /*
@@ -995,7 +994,7 @@ sw1:
 	lw	s7, UADDR+U_PCB_CONTEXT+28
 	lw	sp, UADDR+U_PCB_CONTEXT+32
 	lw	s8, UADDR+U_PCB_CONTEXT+36
-	mtc0	v0, MACH_COP_0_STATUS_REG
+	mtc0	v0, MACH_C0_Status
 	j	ra
 	li	v0, 1				# possible return to 'savectx()'
 END(cpu_switch)
@@ -1155,13 +1154,13 @@ END(_remque)
 	.globl	MachUTLBMiss
 MachUTLBMiss:
 	.set	noat
-	mfc0	k0, MACH_COP_0_BAD_VADDR	# get the virtual address
+	mfc0	k0, MACH_C0_BadVAddr		# get the virtual address
 	lw	k1, UADDR+U_PCB_SEGTAB		# get the current segment table
 	bltz	k0, 1f				# R3000 chip bug
 	srl	k0, k0, SEGSHIFT		# compute segment table index
 	sll	k0, k0, 2
 	addu	k1, k1, k0
-	mfc0	k0, MACH_COP_0_BAD_VADDR	# get the virtual address
+	mfc0	k0, MACH_C0_BadVAddr		# get the virtual address
 	lw	k1, 0(k1)			# get pointer to segment map
 	srl	k0, k0, PGSHIFT - 2		# compute segment map index
 	andi	k0, k0, (NPTEPG - 1) << 2
@@ -1170,13 +1169,13 @@ MachUTLBMiss:
 	lw	k0, 0(k1)			# get page PTE
 	nop
 	beq	k0, zero, 2f			# dont load invalid entries
-	mtc0	k0, MACH_COP_0_TLB_LOW
-	mfc0	k1, MACH_COP_0_EXC_PC		# get return address
+	mtc0	k0, MACH_C0_EntryLo0
+	mfc0	k1, MACH_C0_EPC			# get return address
 	tlbwr					# update TLB
 	j	k1
 	rfe
 1:
-	mfc0	k1, MACH_COP_0_EXC_PC		# get return address
+	mfc0	k1, MACH_C0_EPC			# get return address
 	nop
 	j	k1
 	rfe
@@ -1198,10 +1197,10 @@ MachException:
  * Find out what mode we came from and jump to the proper handler.
  */
 	.set	noat
-	mfc0	k0, MACH_COP_0_STATUS_REG	# Get the status register
-	mfc0	k1, MACH_COP_0_CAUSE_REG	# Get the cause register value.
-	and	k0, k0, MACH_SR_KU_PREV		# test for user mode
-	sll	k0, k0, 3			# shift user bit for cause index
+	mfc0	k0, MACH_C0_Status		# Get the status register
+	mfc0	k1, MACH_C0_Cause		# Get the cause register value.
+	and	k0, k0, MACH_Status_UM		# test for user mode
+	sll	k0, k0, 2			# shift user bit for cause index
 	and	k1, k1, MACH_CR_EXC_CODE	# Mask out the cause bits.
 	or	k1, k1, k0			# change index to user table
 1:
@@ -1225,9 +1224,9 @@ MachExceptionEnd:
  */
 SlowFault:
 	.set	noat
-	mfc0	k0, MACH_COP_0_STATUS_REG
+	mfc0	k0, MACH_C0_Status
 	nop
-	and	k0, k0, MACH_SR_KU_PREV
+	and	k0, k0, MACH_Status_UM
 	bne	k0, zero, MachUserGenException
 	nop
 	.set	at
@@ -1281,22 +1280,22 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
 	sw	a2, KERN_REG_OFFSET + 20(sp)
 	sw	a3, KERN_REG_OFFSET + 24(sp)
 	sw	t0, KERN_REG_OFFSET + 28(sp)
-	mfc0	a0, MACH_COP_0_STATUS_REG	# First arg is the status reg.
+	mfc0	a0, MACH_C0_Status		# First arg is the status reg.
 	sw	t1, KERN_REG_OFFSET + 32(sp)
 	sw	t2, KERN_REG_OFFSET + 36(sp)
 	sw	t3, KERN_REG_OFFSET + 40(sp)
 	sw	t4, KERN_REG_OFFSET + 44(sp)
-	mfc0	a1, MACH_COP_0_CAUSE_REG	# Second arg is the cause reg.
+	mfc0	a1, MACH_C0_Cause		# Second arg is the cause reg.
 	sw	t5, KERN_REG_OFFSET + 48(sp)
 	sw	t6, KERN_REG_OFFSET + 52(sp)
 	sw	t7, KERN_REG_OFFSET + 56(sp)
 	sw	t8, KERN_REG_OFFSET + 60(sp)
-	mfc0	a2, MACH_COP_0_BAD_VADDR	# Third arg is the fault addr.
+	mfc0	a2, MACH_C0_BadVAddr		# Third arg is the fault addr.
 	sw	t9, KERN_REG_OFFSET + 64(sp)
 	sw	ra, KERN_REG_OFFSET + 68(sp)
 	sw	v0, KERN_MULT_LO_OFFSET(sp)
 	sw	v1, KERN_MULT_HI_OFFSET(sp)
-	mfc0	a3, MACH_COP_0_EXC_PC		# Fourth arg is the pc.
+	mfc0	a3, MACH_C0_EPC			# Fourth arg is the pc.
 	sw	a0, KERN_SR_OFFSET(sp)
 /*
  * Call the exception handler.
@@ -1310,7 +1309,7 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
 	lw	a0, KERN_SR_OFFSET(sp)
 	lw	t0, KERN_MULT_LO_OFFSET(sp)
 	lw	t1, KERN_MULT_HI_OFFSET(sp)
-	mtc0	a0, MACH_COP_0_STATUS_REG	# Restore the SR, disable intrs
+	mtc0	a0, MACH_C0_Status		# Restore the SR, disable intrs
 	mtlo	t0
 	mthi	t1
 	move	k0, v0
@@ -1372,22 +1371,22 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
 	sw	t2, UADDR+U_PCB_REGS+(T2 * 4)
 	sw	t3, UADDR+U_PCB_REGS+(T3 * 4)
 	sw	t4, UADDR+U_PCB_REGS+(T4 * 4)
-	mfc0	a0, MACH_COP_0_STATUS_REG	# First arg is the status reg.
+	mfc0	a0, MACH_C0_Status		# First arg is the status reg.
 	sw	t5, UADDR+U_PCB_REGS+(T5 * 4)
 	sw	t6, UADDR+U_PCB_REGS+(T6 * 4)
 	sw	t7, UADDR+U_PCB_REGS+(T7 * 4)
 	sw	s0, UADDR+U_PCB_REGS+(S0 * 4)
-	mfc0	a1, MACH_COP_0_CAUSE_REG	# Second arg is the cause reg.
+	mfc0	a1, MACH_C0_Cause		# Second arg is the cause reg.
 	sw	s1, UADDR+U_PCB_REGS+(S1 * 4)
 	sw	s2, UADDR+U_PCB_REGS+(S2 * 4)
 	sw	s3, UADDR+U_PCB_REGS+(S3 * 4)
 	sw	s4, UADDR+U_PCB_REGS+(S4 * 4)
-	mfc0	a2, MACH_COP_0_BAD_VADDR	# Third arg is the fault addr
+	mfc0	a2, MACH_C0_BadVAddr		# Third arg is the fault addr
 	sw	s5, UADDR+U_PCB_REGS+(S5 * 4)
 	sw	s6, UADDR+U_PCB_REGS+(S6 * 4)
 	sw	s7, UADDR+U_PCB_REGS+(S7 * 4)
 	sw	t8, UADDR+U_PCB_REGS+(T8 * 4)
-	mfc0	a3, MACH_COP_0_EXC_PC		# Fourth arg is the pc.
+	mfc0	a3, MACH_C0_EPC			# Fourth arg is the pc.
 	sw	t9, UADDR+U_PCB_REGS+(T9 * 4)
 	sw	gp, UADDR+U_PCB_REGS+(GP * 4)
 	sw	sp, UADDR+U_PCB_REGS+(SP * 4)
@@ -1402,21 +1401,18 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
 #endif
 	sw	a3, UADDR+U_PCB_REGS+(PC * 4)
 	sw	a3, STAND_RA_OFFSET(sp)		# for debugging
-	.set	at
-	and	t0, a0, ~MACH_SR_COP_1_BIT	# Turn off the FPU.
-	.set	noat
 /*
  * Call the exception handler.
  */
 	jal	trap
-	mtc0	t0, MACH_COP_0_STATUS_REG
+	mtc0	a0, MACH_C0_Status
 /*
  * Restore user registers and return. NOTE: interrupts are enabled.
  */
 	lw	a0, UADDR+U_PCB_REGS+(SR * 4)
 	lw	t0, UADDR+U_PCB_REGS+(MULLO * 4)
 	lw	t1, UADDR+U_PCB_REGS+(MULHI * 4)
-	mtc0	a0, MACH_COP_0_STATUS_REG	# this should disable interrupts
+	mtc0	a0, MACH_C0_Status		# this should disable interrupts
 	mtlo	t0
 	mthi	t1
 	lw	k0, UADDR+U_PCB_REGS+(PC * 4)
@@ -1495,17 +1491,17 @@ NNON_LEAF(MachKernIntr, KINTR_FRAME_SIZE, ra)
 	sw	a2, KINTR_REG_OFFSET + 20(sp)
 	sw	a3, KINTR_REG_OFFSET + 24(sp)
 	sw	t0, KINTR_REG_OFFSET + 28(sp)
-	mfc0	a0, MACH_COP_0_STATUS_REG	# First arg is the status reg.
+	mfc0	a0, MACH_C0_Status		# First arg is the status reg.
 	sw	t1, KINTR_REG_OFFSET + 32(sp)
 	sw	t2, KINTR_REG_OFFSET + 36(sp)
 	sw	t3, KINTR_REG_OFFSET + 40(sp)
 	sw	t4, KINTR_REG_OFFSET + 44(sp)
-	mfc0	a1, MACH_COP_0_CAUSE_REG	# Second arg is the cause reg.
+	mfc0	a1, MACH_C0_Cause		# Second arg is the cause reg.
 	sw	t5, KINTR_REG_OFFSET + 48(sp)
 	sw	t6, KINTR_REG_OFFSET + 52(sp)
 	sw	t7, KINTR_REG_OFFSET + 56(sp)
 	sw	t8, KINTR_REG_OFFSET + 60(sp)
-	mfc0	a2, MACH_COP_0_EXC_PC		# Third arg is the pc.
+	mfc0	a2, MACH_C0_EPC			# Third arg is the pc.
 	sw	t9, KINTR_REG_OFFSET + 64(sp)
 	sw	ra, KINTR_REG_OFFSET + 68(sp)
 	sw	v0, KINTR_MULT_LO_OFFSET(sp)
@@ -1522,7 +1518,7 @@ NNON_LEAF(MachKernIntr, KINTR_FRAME_SIZE, ra)
 	lw	a0, KINTR_SR_OFFSET(sp)
 	lw	t0, KINTR_MULT_LO_OFFSET(sp)
 	lw	t1, KINTR_MULT_HI_OFFSET(sp)
-	mtc0	a0, MACH_COP_0_STATUS_REG	# Restore the SR, disable intrs
+	mtc0	a0, MACH_C0_Status		# Restore the SR, disable intrs
 	mtlo	t0
 	mthi	t1
 	lw	k0, STAND_RA_OFFSET(sp)
@@ -1587,17 +1583,17 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 	sw	a2, UADDR+U_PCB_REGS+(A2 * 4)
 	sw	a3, UADDR+U_PCB_REGS+(A3 * 4)
 	sw	t0, UADDR+U_PCB_REGS+(T0 * 4)
-	mfc0	a0, MACH_COP_0_STATUS_REG	# First arg is the status reg.
+	mfc0	a0, MACH_C0_Status		# First arg is the status reg.
 	sw	t1, UADDR+U_PCB_REGS+(T1 * 4)
 	sw	t2, UADDR+U_PCB_REGS+(T2 * 4)
 	sw	t3, UADDR+U_PCB_REGS+(T3 * 4)
 	sw	t4, UADDR+U_PCB_REGS+(T4 * 4)
-	mfc0	a1, MACH_COP_0_CAUSE_REG	# Second arg is the cause reg.
+	mfc0	a1, MACH_C0_Cause		# Second arg is the cause reg.
 	sw	t5, UADDR+U_PCB_REGS+(T5 * 4)
 	sw	t6, UADDR+U_PCB_REGS+(T6 * 4)
 	sw	t7, UADDR+U_PCB_REGS+(T7 * 4)
 	sw	t8, UADDR+U_PCB_REGS+(T8 * 4)
-	mfc0	a2, MACH_COP_0_EXC_PC		# Third arg is the pc.
+	mfc0	a2, MACH_C0_EPC			# Third arg is the pc.
 	sw	t9, UADDR+U_PCB_REGS+(T9 * 4)
 	sw	gp, UADDR+U_PCB_REGS+(GP * 4)
 	sw	sp, UADDR+U_PCB_REGS+(SP * 4)
@@ -1610,10 +1606,7 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 #if 0
 	la	gp, _gp				# switch to kernel GP
 #endif
-	.set	at
-	and	t0, a0, ~MACH_SR_COP_1_BIT	# Turn off the FPU.
-	.set	noat
-	mtc0	t0, MACH_COP_0_STATUS_REG
+	mtc0	a0, MACH_C0_Status
 /*
  * Call the interrupt handler.
  */
@@ -1624,7 +1617,7 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
  */
 	lw	a0, UADDR+U_PCB_REGS+(SR * 4)
 	lw	v0, astpending			# any pending interrupts?
-	mtc0	a0, MACH_COP_0_STATUS_REG	# Restore the SR, disable intrs
+	mtc0	a0, MACH_C0_Status		# Restore the SR, disable intrs
 	bne	v0, zero, 1f			# dont restore, call softintr
 	lw	t0, UADDR+U_PCB_REGS+(MULLO * 4)
 	lw	t1, UADDR+U_PCB_REGS+(MULHI * 4)
@@ -1667,19 +1660,19 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
 	sw	s6, UADDR+U_PCB_REGS+(S6 * 4)
 	sw	s7, UADDR+U_PCB_REGS+(S7 * 4)
 	sw	s8, UADDR+U_PCB_REGS+(S8 * 4)
-	li	t0, MACH_HARD_INT_MASK | MACH_SR_INT_ENA_CUR
+	li	t0, MACH_HARD_INT_MASK | MACH_Status_IE
 /*
  * Call the software interrupt handler.
  */
 	jal	softintr
-	mtc0	t0, MACH_COP_0_STATUS_REG	# enable interrupts (spl0)
+	mtc0	t0, MACH_C0_Status		# enable interrupts (spl0)
 /*
  * Restore user registers and return. NOTE: interrupts are enabled.
  */
 	lw	a0, UADDR+U_PCB_REGS+(SR * 4)
 	lw	t0, UADDR+U_PCB_REGS+(MULLO * 4)
 	lw	t1, UADDR+U_PCB_REGS+(MULHI * 4)
-	mtc0	a0, MACH_COP_0_STATUS_REG	# this should disable interrupts
+	mtc0	a0, MACH_C0_Status		# this should disable interrupts
 	mtlo	t0
 	mthi	t1
 	lw	k0, UADDR+U_PCB_REGS+(PC * 4)
@@ -1735,7 +1728,7 @@ END(MachUserIntr)
  */
 NLEAF(MachTLBMissException)
 	.set	noat
-	mfc0	k0, MACH_COP_0_BAD_VADDR	# get the fault address
+	mfc0	k0, MACH_C0_BadVAddr		# get the fault address
 	li	k1, VM_MIN_KERNEL_ADDRESS	# compute index
 	subu	k0, k0, k1
 	lw	k1, Sysmapsize			# index within range?
@@ -1747,8 +1740,8 @@ NLEAF(MachTLBMissException)
 	sll	k0, k0, 2			# compute offset from index
 	addu	k1, k1, k0
 	lw	k0, 0(k1)			# get PTE entry
-	mfc0	k1, MACH_COP_0_EXC_PC		# get return address
-	mtc0	k0, MACH_COP_0_TLB_LOW		# save PTE entry
+	mfc0	k1, MACH_C0_EPC			# get return address
+	mtc0	k0, MACH_C0_EntryLo0		# save PTE entry
 	and	k0, k0, PG_V			# check for valid entry
 	beq	k0, zero, MachKernGenException	# PTE invalid
 	nop
@@ -1766,15 +1759,15 @@ NLEAF(MachTLBMissException)
 	sw	sp, 24(a0)
 	move	sp, a0
 	la	a0, 1f
-	mfc0	a2, MACH_COP_0_STATUS_REG
-	mfc0	a3, MACH_COP_0_CAUSE_REG
-	mfc0	a1, MACH_COP_0_EXC_PC
+	mfc0	a2, MACH_C0_Status
+	mfc0	a3, MACH_C0_Cause
+	mfc0	a1, MACH_C0_EPC
 	sw	a2, 16(sp)
 	sw	a3, 20(sp)
 	sw	sp, 24(sp)
 	move	a2, ra
 	jal	printf
-	mfc0	a3, MACH_COP_0_BAD_VADDR
+	mfc0	a3, MACH_C0_BadVAddr
 	.data
 1:
 	.asciiz	"ktlbmiss: PC %x RA %x ADR %x\nSR %x CR %x SP %x\n"
@@ -1790,57 +1783,57 @@ END(MachTLBMissException)
  */
 
 LEAF(setsoftclock)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# save status register
-	mtc0	zero, MACH_COP_0_STATUS_REG	# disable interrupts (2 cycles)
+	mfc0	v1, MACH_C0_Status		# save status register
+	mtc0	zero, MACH_C0_Status		# disable interrupts (2 cycles)
 	nop
 	nop
-	mfc0	v0, MACH_COP_0_CAUSE_REG	# read cause register
+	mfc0	v0, MACH_C0_Cause		# read cause register
 	nop
 	or	v0, v0, MACH_SOFT_INT_MASK_0	# set soft clock interrupt
-	mtc0	v0, MACH_COP_0_CAUSE_REG	# save it
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v0, MACH_C0_Cause		# save it
+	mtc0	v1, MACH_C0_Status
 	j	ra
 	nop
 END(setsoftclock)
 
 LEAF(clearsoftclock)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# save status register
-	mtc0	zero, MACH_COP_0_STATUS_REG	# disable interrupts (2 cycles)
+	mfc0	v1, MACH_C0_Status		# save status register
+	mtc0	zero, MACH_C0_Status		# disable interrupts (2 cycles)
 	nop
 	nop
-	mfc0	v0, MACH_COP_0_CAUSE_REG	# read cause register
+	mfc0	v0, MACH_C0_Cause		# read cause register
 	nop
 	and	v0, v0, ~MACH_SOFT_INT_MASK_0	# clear soft clock interrupt
-	mtc0	v0, MACH_COP_0_CAUSE_REG	# save it
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v0, MACH_C0_Cause		# save it
+	mtc0	v1, MACH_C0_Status
 	j	ra
 	nop
 END(clearsoftclock)
 
 LEAF(setsoftnet)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# save status register
-	mtc0	zero, MACH_COP_0_STATUS_REG	# disable interrupts (2 cycles)
+	mfc0	v1, MACH_C0_Status		# save status register
+	mtc0	zero, MACH_C0_Status		# disable interrupts (2 cycles)
 	nop
 	nop
-	mfc0	v0, MACH_COP_0_CAUSE_REG	# read cause register
+	mfc0	v0, MACH_C0_Cause		# read cause register
 	nop
 	or	v0, v0, MACH_SOFT_INT_MASK_1	# set soft net interrupt
-	mtc0	v0, MACH_COP_0_CAUSE_REG	# save it
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v0, MACH_C0_Cause		# save it
+	mtc0	v1, MACH_C0_Status
 	j	ra
 	nop
 END(setsoftnet)
 
 LEAF(clearsoftnet)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# save status register
-	mtc0	zero, MACH_COP_0_STATUS_REG	# disable interrupts (2 cycles)
+	mfc0	v1, MACH_C0_Status		# save status register
+	mtc0	zero, MACH_C0_Status		# disable interrupts (2 cycles)
 	nop
 	nop
-	mfc0	v0, MACH_COP_0_CAUSE_REG	# read cause register
+	mfc0	v0, MACH_C0_Cause		# read cause register
 	nop
 	and	v0, v0, ~MACH_SOFT_INT_MASK_1	# clear soft net interrupt
-	mtc0	v0, MACH_COP_0_CAUSE_REG	# save it
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v0, MACH_C0_Cause		# save it
+	mtc0	v1, MACH_C0_Status
 	j	ra
 	nop
 END(clearsoftnet)
@@ -1849,76 +1842,76 @@ END(clearsoftnet)
  * Set/change interrupt priority routines.
  */
 LEAF(spl0)
-        li      t0, MACH_SR_INT_ENA_CUR
+        li      t0, MACH_Status_IE
         di      v0                              # disable interrupts and read Status
         or      t0, v0, t0                      # set IE
         ins     t0, zero, 10, 9                 # clear IPL
-        mtc0    t0, MACH_COP_0_STATUS_REG       # write Status: enable all sources
+        mtc0    t0, MACH_C0_Status       	# write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
 END(spl0)
 
 LEAF(splsoftclock)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~MACH_SOFT_INT_MASK_0	# disable soft clock
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(splsoftclock)
 
 LEAF(spl1)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_1|MACH_SOFT_INT_MASK_0|MACH_SOFT_INT_MASK_1)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl1)
 
 LEAF(spl2)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_2|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl2)
 
 LEAF(spl3)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl3)
 
 LEAF(spl4)      // TODO
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl4)
 
 LEAF(spl5)      // TODO
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl5)
 
 LEAF(spl6)      // TODO
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
+	mfc0	v0, MACH_C0_Status		# read status register
 	li	t0, ~(MACH_INT_MASK_3|MACH_SOFT_INT_MASK_1|MACH_SOFT_INT_MASK_0)
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(spl6)
 
 /*
@@ -1927,12 +1920,12 @@ END(spl6)
  */
 LEAF(splhigh)
 ALEAF(_splhigh)
-	mfc0	v0, MACH_COP_0_STATUS_REG	# read status register
-	li	t0, ~MACH_SR_INT_ENA_CUR	# disable all interrupts
+	mfc0	v0, MACH_C0_Status		# read status register
+	li	t0, ~MACH_Status_IE		# disable all interrupts
 	and	t0, t0, v0
-	mtc0	t0, MACH_COP_0_STATUS_REG	# save it
+	mtc0	t0, MACH_C0_Status		# save it
 	j	ra
-	and	v0, v0, (MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	and	v0, v0, (MACH_INT_MASK | MACH_Status_IE)
 END(splhigh)
 
 /*
@@ -1940,11 +1933,11 @@ END(splhigh)
  */
 LEAF(splx)
 ALEAF(_splx)
-	mfc0	v0, MACH_COP_0_STATUS_REG
-	li	t0, ~(MACH_INT_MASK | MACH_SR_INT_ENA_CUR)
+	mfc0	v0, MACH_C0_Status
+	li	t0, ~(MACH_INT_MASK | MACH_Status_IE)
 	and	t0, t0, v0
 	or	t0, t0, a0
-	mtc0	t0, MACH_COP_0_STATUS_REG
+	mtc0	t0, MACH_C0_Status
 	j	ra
 	nop
 END(splx)
@@ -1996,20 +1989,20 @@ END(MachEmptyWriteBuffer)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBWriteIndexed)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Save the current PID.
+	mfc0	v1, MACH_C0_Status		# Save the status register.
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
+	mfc0	t0, MACH_C0_EntryHi		# Save the current PID.
 
 	sll	a0, a0, VMMACH_TLB_INDEX_SHIFT
-	mtc0	a0, MACH_COP_0_TLB_INDEX	# Set the index.
-	mtc0	a1, MACH_COP_0_TLB_HI		# Set up entry high.
-	mtc0	a2, MACH_COP_0_TLB_LOW		# Set up entry low.
+	mtc0	a0, MACH_C0_Index		# Set the index.
+	mtc0	a1, MACH_C0_EntryHi		# Set up entry high.
+	mtc0	a2, MACH_C0_EntryLo0		# Set up entry low.
 	nop
 	tlbwi					# Write the TLB
 
-	mtc0	t0, MACH_COP_0_TLB_HI		# Restore the PID.
+	mtc0	t0, MACH_C0_EntryHi		# Restore the PID.
 	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
+	mtc0	v1, MACH_C0_Status		# Restore the status register
 END(MachTLBWriteIndexed)
 
 /*--------------------------------------------------------------------------
@@ -2031,7 +2024,7 @@ END(MachTLBWriteIndexed)
  */
 LEAF(MachSetPID)
 	sll	a0, a0, VMMACH_TLB_PID_SHIFT	# put PID in right spot
-	mtc0	a0, MACH_COP_0_TLB_HI		# Write the hi reg value
+	mtc0	a0, MACH_C0_EntryHi		# Write the hi reg value
 	j	ra
 	nop
 END(MachSetPID)
@@ -2053,26 +2046,26 @@ END(MachSetPID)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBFlush)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Save the PID
+	mfc0	v1, MACH_C0_Status		# Save the status register.
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
+	mfc0	t0, MACH_C0_EntryHi		# Save the PID
 	li	t1, MACH_CACHED_MEMORY_ADDR	# invalid address
-	mtc0	t1, MACH_COP_0_TLB_HI		# Mark entry high as invalid
-	mtc0	zero, MACH_COP_0_TLB_LOW	# Zero out low entry.
+	mtc0	t1, MACH_C0_EntryHi		# Mark entry high as invalid
+	mtc0	zero, MACH_C0_EntryLo0		# Zero out low entry.
 /*
  * Align the starting value (t1) and the upper bound (t2).
  */
 	li	t1, VMMACH_FIRST_RAND_ENTRY << VMMACH_TLB_INDEX_SHIFT
 	li	t2, VMMACH_NUM_TLB_ENTRIES << VMMACH_TLB_INDEX_SHIFT
 1:
-	mtc0	t1, MACH_COP_0_TLB_INDEX	# Set the index register.
+	mtc0	t1, MACH_C0_Index		# Set the index register.
 	addu	t1, t1, 1 << VMMACH_TLB_INDEX_SHIFT	# Increment index.
 	bne	t1, t2, 1b
 	tlbwi					# Write the TLB entry.
 
-	mtc0	t0, MACH_COP_0_TLB_HI		# Restore the PID
+	mtc0	t0, MACH_C0_EntryHi		# Restore the PID
 	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
+	mtc0	v1, MACH_C0_Status		# Restore the status register
 END(MachTLBFlush)
 
 /*--------------------------------------------------------------------------
@@ -2093,25 +2086,25 @@ END(MachTLBFlush)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBFlushAddr)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Get current PID
+	mfc0	v1, MACH_C0_Status		# Save the status register.
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
+	mfc0	t0, MACH_C0_EntryHi		# Get current PID
 	nop
 
-	mtc0	a0, MACH_COP_0_TLB_HI		# look for addr & PID
+	mtc0	a0, MACH_C0_EntryHi		# look for addr & PID
 	nop
 	tlbp					# Probe for the entry.
-	mfc0	v0, MACH_COP_0_TLB_INDEX	# See what we got
+	mfc0	v0, MACH_C0_Index		# See what we got
 	li	t1, MACH_CACHED_MEMORY_ADDR	# Load invalid entry.
 	bltz	v0, 1f				# index < 0 => !found
-	mtc0	t1, MACH_COP_0_TLB_HI		# Mark entry high as invalid
-	mtc0	zero, MACH_COP_0_TLB_LOW	# Zero out low entry.
+	mtc0	t1, MACH_C0_EntryHi		# Mark entry high as invalid
+	mtc0	zero, MACH_C0_EntryLo0		# Zero out low entry.
 	nop
 	tlbwi
 1:
-	mtc0	t0, MACH_COP_0_TLB_HI		# restore PID
+	mtc0	t0, MACH_C0_EntryHi		# restore PID
 	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
+	mtc0	v1, MACH_C0_Status		# Restore the status register
 END(MachTLBFlushAddr)
 
 /*--------------------------------------------------------------------------
@@ -2132,223 +2125,28 @@ END(MachTLBFlushAddr)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBUpdate)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Save current PID
+	mfc0	v1, MACH_C0_Status		# Save the status register.
+	mtc0	zero, MACH_C0_Status		# Disable interrupts
+	mfc0	t0, MACH_C0_EntryHi		# Save current PID
 	nop					# 2 cycles before intr disabled
-	mtc0	a0, MACH_COP_0_TLB_HI		# init high reg.
+	mtc0	a0, MACH_C0_EntryHi		# init high reg.
 	nop
 	tlbp					# Probe for the entry.
-	mfc0	v0, MACH_COP_0_TLB_INDEX	# See what we got
-	mtc0	a1, MACH_COP_0_TLB_LOW		# init low reg.
+	mfc0	v0, MACH_C0_Index		# See what we got
+	mtc0	a1, MACH_C0_EntryLo0		# init low reg.
 	bltz	v0, 1f				# index < 0 => !found
 	sra	v0, v0, VMMACH_TLB_INDEX_SHIFT	# convert index to regular num
 	b	2f
 	tlbwi					# update slot found
 1:
-	mtc0	a0, MACH_COP_0_TLB_HI		# init high reg.
+	mtc0	a0, MACH_C0_EntryHi		# init high reg.
 	nop
 	tlbwr					# enter into a random slot
 2:
-	mtc0	t0, MACH_COP_0_TLB_HI		# restore PID
+	mtc0	t0, MACH_C0_EntryHi		# restore PID
 	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
+	mtc0	v1, MACH_C0_Status		# Restore the status register
 END(MachTLBUpdate)
-
-/*----------------------------------------------------------------------------
- *
- * MachSwitchFPState --
- *
- *	Save the current state into 'from' and restore it from 'to'.
- *
- *	MachSwitchFPState(from, to)
- *		struct proc *from;
- *		struct user *to;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------------
- */
-LEAF(MachSwitchFPState)
-	mfc0	t1, MACH_COP_0_STATUS_REG	# Save old SR
-	li	t0, MACH_SR_COP_1_BIT		# enable the coprocessor
-	mtc0	t0, MACH_COP_0_STATUS_REG
-
-	beq	a0, zero, 1f			# skip save if NULL pointer
-	nop
-/*
- * First read out the status register to make sure that all FP operations
- * have completed.
- */
-	lw	a0, P_ADDR(a0)			# get pointer to pcb for proc
-	cfc1	t0, MACH_FPC_CSR		# stall til FP done
-	cfc1	t0, MACH_FPC_CSR		# now get status
-	li	t3, ~MACH_SR_COP_1_BIT
-	lw	t2, U_PCB_REGS+(PS * 4)(a0)	# get CPU status register
-	sw	t0, U_PCB_FPREGS+(32 * 4)(a0)	# save FP status
-	and	t2, t2, t3			# clear COP_1 enable bit
-	sw	t2, U_PCB_REGS+(PS * 4)(a0)	# save new status register
-/*
- * Save the floating point registers.
- */
-	swc1	$f0, U_PCB_FPREGS+(0 * 4)(a0)
-	swc1	$f1, U_PCB_FPREGS+(1 * 4)(a0)
-	swc1	$f2, U_PCB_FPREGS+(2 * 4)(a0)
-	swc1	$f3, U_PCB_FPREGS+(3 * 4)(a0)
-	swc1	$f4, U_PCB_FPREGS+(4 * 4)(a0)
-	swc1	$f5, U_PCB_FPREGS+(5 * 4)(a0)
-	swc1	$f6, U_PCB_FPREGS+(6 * 4)(a0)
-	swc1	$f7, U_PCB_FPREGS+(7 * 4)(a0)
-	swc1	$f8, U_PCB_FPREGS+(8 * 4)(a0)
-	swc1	$f9, U_PCB_FPREGS+(9 * 4)(a0)
-	swc1	$f10, U_PCB_FPREGS+(10 * 4)(a0)
-	swc1	$f11, U_PCB_FPREGS+(11 * 4)(a0)
-	swc1	$f12, U_PCB_FPREGS+(12 * 4)(a0)
-	swc1	$f13, U_PCB_FPREGS+(13 * 4)(a0)
-	swc1	$f14, U_PCB_FPREGS+(14 * 4)(a0)
-	swc1	$f15, U_PCB_FPREGS+(15 * 4)(a0)
-	swc1	$f16, U_PCB_FPREGS+(16 * 4)(a0)
-	swc1	$f17, U_PCB_FPREGS+(17 * 4)(a0)
-	swc1	$f18, U_PCB_FPREGS+(18 * 4)(a0)
-	swc1	$f19, U_PCB_FPREGS+(19 * 4)(a0)
-	swc1	$f20, U_PCB_FPREGS+(20 * 4)(a0)
-	swc1	$f21, U_PCB_FPREGS+(21 * 4)(a0)
-	swc1	$f22, U_PCB_FPREGS+(22 * 4)(a0)
-	swc1	$f23, U_PCB_FPREGS+(23 * 4)(a0)
-	swc1	$f24, U_PCB_FPREGS+(24 * 4)(a0)
-	swc1	$f25, U_PCB_FPREGS+(25 * 4)(a0)
-	swc1	$f26, U_PCB_FPREGS+(26 * 4)(a0)
-	swc1	$f27, U_PCB_FPREGS+(27 * 4)(a0)
-	swc1	$f28, U_PCB_FPREGS+(28 * 4)(a0)
-	swc1	$f29, U_PCB_FPREGS+(29 * 4)(a0)
-	swc1	$f30, U_PCB_FPREGS+(30 * 4)(a0)
-	swc1	$f31, U_PCB_FPREGS+(31 * 4)(a0)
-
-1:
-/*
- *  Restore the floating point registers.
- */
-	lw	t0, U_PCB_FPREGS+(32 * 4)(a1)	# get status register
-	lwc1	$f0, U_PCB_FPREGS+(0 * 4)(a1)
-	lwc1	$f1, U_PCB_FPREGS+(1 * 4)(a1)
-	lwc1	$f2, U_PCB_FPREGS+(2 * 4)(a1)
-	lwc1	$f3, U_PCB_FPREGS+(3 * 4)(a1)
-	lwc1	$f4, U_PCB_FPREGS+(4 * 4)(a1)
-	lwc1	$f5, U_PCB_FPREGS+(5 * 4)(a1)
-	lwc1	$f6, U_PCB_FPREGS+(6 * 4)(a1)
-	lwc1	$f7, U_PCB_FPREGS+(7 * 4)(a1)
-	lwc1	$f8, U_PCB_FPREGS+(8 * 4)(a1)
-	lwc1	$f9, U_PCB_FPREGS+(9 * 4)(a1)
-	lwc1	$f10, U_PCB_FPREGS+(10 * 4)(a1)
-	lwc1	$f11, U_PCB_FPREGS+(11 * 4)(a1)
-	lwc1	$f12, U_PCB_FPREGS+(12 * 4)(a1)
-	lwc1	$f13, U_PCB_FPREGS+(13 * 4)(a1)
-	lwc1	$f14, U_PCB_FPREGS+(14 * 4)(a1)
-	lwc1	$f15, U_PCB_FPREGS+(15 * 4)(a1)
-	lwc1	$f16, U_PCB_FPREGS+(16 * 4)(a1)
-	lwc1	$f17, U_PCB_FPREGS+(17 * 4)(a1)
-	lwc1	$f18, U_PCB_FPREGS+(18 * 4)(a1)
-	lwc1	$f19, U_PCB_FPREGS+(19 * 4)(a1)
-	lwc1	$f20, U_PCB_FPREGS+(20 * 4)(a1)
-	lwc1	$f21, U_PCB_FPREGS+(21 * 4)(a1)
-	lwc1	$f22, U_PCB_FPREGS+(22 * 4)(a1)
-	lwc1	$f23, U_PCB_FPREGS+(23 * 4)(a1)
-	lwc1	$f24, U_PCB_FPREGS+(24 * 4)(a1)
-	lwc1	$f25, U_PCB_FPREGS+(25 * 4)(a1)
-	lwc1	$f26, U_PCB_FPREGS+(26 * 4)(a1)
-	lwc1	$f27, U_PCB_FPREGS+(27 * 4)(a1)
-	lwc1	$f28, U_PCB_FPREGS+(28 * 4)(a1)
-	lwc1	$f29, U_PCB_FPREGS+(29 * 4)(a1)
-	lwc1	$f30, U_PCB_FPREGS+(30 * 4)(a1)
-	lwc1	$f31, U_PCB_FPREGS+(31 * 4)(a1)
-
-	and	t0, t0, ~MACH_FPC_EXCEPTION_BITS
-	ctc1	t0, MACH_FPC_CSR
-	nop
-
-	mtc0	t1, MACH_COP_0_STATUS_REG	# Restore the status register.
-	j	ra
-	nop
-END(MachSwitchFPState)
-
-/*----------------------------------------------------------------------------
- *
- * MachSaveCurFPState --
- *
- *	Save the current floating point coprocessor state.
- *
- *	MachSaveCurFPState(p)
- *		struct proc *p;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	machFPCurProcPtr is cleared.
- *
- *----------------------------------------------------------------------------
- */
-LEAF(MachSaveCurFPState)
-	lw	a0, P_ADDR(a0)			# get pointer to pcb for proc
-	mfc0	t1, MACH_COP_0_STATUS_REG	# Disable interrupts and
-	li	t0, MACH_SR_COP_1_BIT		#  enable the coprocessor
-	mtc0	t0, MACH_COP_0_STATUS_REG
-	sw	zero, machFPCurProcPtr		# indicate state has been saved
-/*
- * First read out the status register to make sure that all FP operations
- * have completed.
- */
-	lw	t2, U_PCB_REGS+(PS * 4)(a0)	# get CPU status register
-	li	t3, ~MACH_SR_COP_1_BIT
-	and	t2, t2, t3			# clear COP_1 enable bit
-	cfc1	t0, MACH_FPC_CSR		# stall til FP done
-	cfc1	t0, MACH_FPC_CSR		# now get status
-	sw	t2, U_PCB_REGS+(PS * 4)(a0)	# save new status register
-	sw	t0, U_PCB_FPREGS+(32 * 4)(a0)	# save FP status
-/*
- * Save the floating point registers.
- */
-	swc1	$f0, U_PCB_FPREGS+(0 * 4)(a0)
-	swc1	$f1, U_PCB_FPREGS+(1 * 4)(a0)
-	swc1	$f2, U_PCB_FPREGS+(2 * 4)(a0)
-	swc1	$f3, U_PCB_FPREGS+(3 * 4)(a0)
-	swc1	$f4, U_PCB_FPREGS+(4 * 4)(a0)
-	swc1	$f5, U_PCB_FPREGS+(5 * 4)(a0)
-	swc1	$f6, U_PCB_FPREGS+(6 * 4)(a0)
-	swc1	$f7, U_PCB_FPREGS+(7 * 4)(a0)
-	swc1	$f8, U_PCB_FPREGS+(8 * 4)(a0)
-	swc1	$f9, U_PCB_FPREGS+(9 * 4)(a0)
-	swc1	$f10, U_PCB_FPREGS+(10 * 4)(a0)
-	swc1	$f11, U_PCB_FPREGS+(11 * 4)(a0)
-	swc1	$f12, U_PCB_FPREGS+(12 * 4)(a0)
-	swc1	$f13, U_PCB_FPREGS+(13 * 4)(a0)
-	swc1	$f14, U_PCB_FPREGS+(14 * 4)(a0)
-	swc1	$f15, U_PCB_FPREGS+(15 * 4)(a0)
-	swc1	$f16, U_PCB_FPREGS+(16 * 4)(a0)
-	swc1	$f17, U_PCB_FPREGS+(17 * 4)(a0)
-	swc1	$f18, U_PCB_FPREGS+(18 * 4)(a0)
-	swc1	$f19, U_PCB_FPREGS+(19 * 4)(a0)
-	swc1	$f20, U_PCB_FPREGS+(20 * 4)(a0)
-	swc1	$f21, U_PCB_FPREGS+(21 * 4)(a0)
-	swc1	$f22, U_PCB_FPREGS+(22 * 4)(a0)
-	swc1	$f23, U_PCB_FPREGS+(23 * 4)(a0)
-	swc1	$f24, U_PCB_FPREGS+(24 * 4)(a0)
-	swc1	$f25, U_PCB_FPREGS+(25 * 4)(a0)
-	swc1	$f26, U_PCB_FPREGS+(26 * 4)(a0)
-	swc1	$f27, U_PCB_FPREGS+(27 * 4)(a0)
-	swc1	$f28, U_PCB_FPREGS+(28 * 4)(a0)
-	swc1	$f29, U_PCB_FPREGS+(29 * 4)(a0)
-	swc1	$f30, U_PCB_FPREGS+(30 * 4)(a0)
-	swc1	$f31, U_PCB_FPREGS+(31 * 4)(a0)
-
-	mtc0	t1, MACH_COP_0_STATUS_REG	# Restore the status register.
-	j	ra
-	nop
-END(MachSaveCurFPState)
 
 /*----------------------------------------------------------------------------
  *
@@ -2371,20 +2169,10 @@ END(MachSaveCurFPState)
  */
 NON_LEAF(MachFPInterrupt, STAND_FRAME_SIZE, ra)
 	subu	sp, sp, STAND_FRAME_SIZE
-	mfc0	t0, MACH_COP_0_STATUS_REG
+	mfc0	t0, MACH_C0_Status
 	sw	ra, STAND_RA_OFFSET(sp)
 	.mask	0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
 
-	or	t1, t0, MACH_SR_COP_1_BIT
-	mtc0	t1, MACH_COP_0_STATUS_REG
-	nop
-	nop
-	cfc1	t1, MACH_FPC_CSR	# stall til FP done
-	cfc1	t1, MACH_FPC_CSR	# now get status
-	nop
-	sll	t2, t1, (31 - 17)	# unimplemented operation?
-	bgez	t2, 3f			# no, normal trap
-	nop
 /*
  * We got an unimplemented operation trap so
  * fetch the instruction, compute the next PC and emulate the instruction.
@@ -2447,133 +2235,12 @@ NON_LEAF(MachFPInterrupt, STAND_FRAME_SIZE, ra)
  * Turn off the floating point coprocessor and return.
  */
 FPReturn:
-	mfc0	t0, MACH_COP_0_STATUS_REG
+	mfc0	t0, MACH_C0_Status
 	lw	ra, STAND_RA_OFFSET(sp)
-	and	t0, t0, ~MACH_SR_COP_1_BIT
-	mtc0	t0, MACH_COP_0_STATUS_REG
+	mtc0	t0, MACH_C0_Status
 	j	ra
 	addu	sp, sp, STAND_FRAME_SIZE
 END(MachFPInterrupt)
-
-/*----------------------------------------------------------------------------
- *
- * MachConfigCache --
- *
- *	Size the caches.
- *	NOTE: should only be called from mach_init().
- *
- * Results:
- *     	None.
- *
- * Side effects:
- *	The size of the data cache is stored into machDataCacheSize and the
- *	size of instruction cache is stored into machInstCacheSize.
- *
- *----------------------------------------------------------------------------
- */
-NON_LEAF(MachConfigCache, STAND_FRAME_SIZE, ra)
-	subu	sp, sp, STAND_FRAME_SIZE
-	sw	ra, STAND_RA_OFFSET(sp)		# Save return address.
-	.mask	0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts.
-	la	v0, 1f
-	or	v0, MACH_UNCACHED_MEMORY_ADDR	# Run uncached.
-	j	v0
-	nop
-1:
-/*
- * This works because jal does not change pc[31..28] and the
- * linker still thinks SizeCache is in the cached region so it computes
- * the correct address without complaining.
- */
-	jal	SizeCache			# Get the size of the d-cache.
-	nop
-	sw	v0, machDataCacheSize
-	nop					# Make sure sw out of pipe
-	nop
-	nop
-	nop
-	li	v0, MACH_SR_SWAP_CACHES		# Swap caches
-	mtc0	v0, MACH_COP_0_STATUS_REG
-	nop					# Insure caches stable
-	nop
-	nop
-	nop
-	jal	SizeCache			# Get the size of the i-cache.
-	nop
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Swap back caches and enable.
-	nop
-	nop
-	nop
-	nop
-	sw	v0, machInstCacheSize
-	la	t0, 1f
-	j	t0				# Back to cached mode
-	nop
-1:
-	lw	ra, STAND_RA_OFFSET(sp)		# Restore return addr
-	addu	sp, sp, STAND_FRAME_SIZE	# Restore sp.
-	j	ra
-	nop
-END(MachConfigCache)
-
-/*----------------------------------------------------------------------------
- *
- * SizeCache --
- *
- *	Get the size of the cache.
- *
- * Results:
- *	The size of the cache.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------------
- */
-LEAF(SizeCache)
-	mfc0	t0, MACH_COP_0_STATUS_REG	# Save the current status reg.
-	nop
-	or	v0, t0, MACH_SR_ISOL_CACHES	# Isolate the caches.
-	nop					# Make sure no stores in pipe
-	mtc0	v0, MACH_COP_0_STATUS_REG
-	nop					# Make sure isolated
-	nop
-	nop
-/*
- * Clear cache size boundaries.
- */
-	li	v0, MACH_MIN_CACHE_SIZE
-	li	v1, MACH_CACHED_MEMORY_ADDR
-	li	t2, MACH_MAX_CACHE_SIZE
-1:
-	addu	t1, v0, v1			# Compute address to clear
-	sw	zero, 0(t1)			# Clear cache memory
-	bne	v0, t2, 1b
-	sll	v0, v0, 1
-
-	li	v0, -1
-	sw	v0, 0(v1)			# Store marker in cache
-	li	v0, MACH_MIN_CACHE_SIZE
-2:
-	addu	t1, v0, v1			# Compute address
-	lw	t3, 0(t1)			# Look for marker
-	nop
-	bne	t3, zero, 3f			# Found marker.
-	nop
-	bne	v0, t2, 2b			# keep looking
-	sll	v0, v0, 1			# cache size * 2
-
-	move	v0, zero			# must be no cache
-3:
-	mtc0	t0, MACH_COP_0_STATUS_REG
-	nop					# Make sure unisolated
-	nop
-	nop
-	nop
-	j	ra
-	nop
-END(SizeCache)
 
 /*----------------------------------------------------------------------------
  *
@@ -2590,10 +2257,12 @@ END(SizeCache)
  *----------------------------------------------------------------------------
  */
 LEAF(MachFlushCache)
+#if 0
+        // TODO
 	lw	t1, machInstCacheSize		# Must load before isolating
 	lw	t2, machDataCacheSize		# Must load before isolating
-	mfc0	t3, MACH_COP_0_STATUS_REG 	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts.
+	mfc0	t3, MACH_C0_Status 		# Save the status register.
+	mtc0	zero, MACH_C0_Status		# Disable interrupts.
 	la	v0, 1f
 	or	v0, MACH_UNCACHED_MEMORY_ADDR	# Run uncached.
 	j	v0
@@ -2603,7 +2272,7 @@ LEAF(MachFlushCache)
  */
 1:
 	li	v0, MACH_SR_ISOL_CACHES | MACH_SR_SWAP_CACHES
-	mtc0	v0, MACH_COP_0_STATUS_REG	# Isolate and swap caches.
+	mtc0	v0, MACH_C0_Status		# Isolate and swap caches.
 	li	t0, MACH_UNCACHED_MEMORY_ADDR
 	subu	t0, t0, t1
 	li	t1, MACH_UNCACHED_MEMORY_ADDR
@@ -2624,7 +2293,7 @@ LEAF(MachFlushCache)
  */
 1:
 	li	v0, MACH_SR_ISOL_CACHES
-	mtc0	v0, MACH_COP_0_STATUS_REG	# Isolate and swap back caches
+	mtc0	v0, MACH_C0_Status		# Isolate and swap back caches
 	li	t0, MACH_UNCACHED_MEMORY_ADDR
 	subu	t0, t0, t2
 	la	v0, 1f
@@ -2639,11 +2308,12 @@ LEAF(MachFlushCache)
 	nop					#   out of pipe.
 	nop
 	nop
-	mtc0	t3, MACH_COP_0_STATUS_REG	# Restore status reg.
+	mtc0	t3, MACH_C0_Status		# Restore status reg.
 	nop					# Insure cache unisolated.
 	nop
 	nop
 	nop
+#endif
 	j	ra
 	nop
 END(MachFlushCache)
@@ -2667,8 +2337,10 @@ END(MachFlushCache)
  *----------------------------------------------------------------------------
  */
 LEAF(MachFlushICache)
-	mfc0	t0, MACH_COP_0_STATUS_REG	# Save SR
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts.
+#if 0
+        // TODO
+	mfc0	t0, MACH_C0_Status		# Save SR
+	mtc0	zero, MACH_C0_Status		# Disable interrupts.
 
 	la	v1, 1f
 	or	v1, MACH_UNCACHED_MEMORY_ADDR	# Run uncached.
@@ -2677,7 +2349,7 @@ LEAF(MachFlushICache)
 1:
 	bc0f	1b				# make sure stores are complete
 	li	v1, MACH_SR_ISOL_CACHES | MACH_SR_SWAP_CACHES
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v1, MACH_C0_Status
 	nop
 	addu	a1, a1, a0			# compute ending address
 1:
@@ -2685,7 +2357,8 @@ LEAF(MachFlushICache)
 	bne	a0, a1, 1b
 	sb	zero, -4(a0)
 
-	mtc0	t0, MACH_COP_0_STATUS_REG	# enable interrupts
+	mtc0	t0, MACH_C0_Status		# enable interrupts
+#endif
 	j	ra				# return and run cached
 	nop
 END(MachFlushICache)
@@ -2709,8 +2382,10 @@ END(MachFlushICache)
  *----------------------------------------------------------------------------
  */
 LEAF(MachFlushDCache)
-	mfc0	t0, MACH_COP_0_STATUS_REG	# Save SR
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts.
+#if 0
+        // TODO
+	mfc0	t0, MACH_C0_Status		# Save SR
+	mtc0	zero, MACH_C0_Status		# Disable interrupts.
 
 	la	v1, 1f
 	or	v1, MACH_UNCACHED_MEMORY_ADDR	# Run uncached.
@@ -2719,7 +2394,7 @@ LEAF(MachFlushDCache)
 1:
 	bc0f	1b				# make sure stores are complete
 	li	v1, MACH_SR_ISOL_CACHES
-	mtc0	v1, MACH_COP_0_STATUS_REG
+	mtc0	v1, MACH_C0_Status
 	nop
 	addu	a1, a1, a0			# compute ending address
 1:
@@ -2727,7 +2402,8 @@ LEAF(MachFlushDCache)
 	bne	a0, a1, 1b
 	sb	zero, -4(a0)
 
-	mtc0	t0, MACH_COP_0_STATUS_REG	# enable interrupts
+	mtc0	t0, MACH_C0_Status		# enable interrupts
+#endif
 	j	ra				# return and run cached
 	nop
 END(MachFlushDCache)

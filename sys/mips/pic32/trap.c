@@ -168,8 +168,8 @@ trap(statusReg, causeReg, vadr, pc, args)
 	 * Enable hardware interrupts if they were on before.
 	 * We only respond to software interrupts when returning to user mode.
 	 */
-	if (statusReg & MACH_SR_INT_ENA_PREV)
-		splx((statusReg & MACH_HARD_INT_MASK) | MACH_SR_INT_ENA_CUR);
+	if (statusReg & MACH_Status_IE)
+		splx((statusReg & MACH_HARD_INT_MASK) | MACH_Status_IE);
 
 	switch (type) {
 	case T_TLB_MOD:
@@ -549,15 +549,8 @@ trap(statusReg, causeReg, vadr, pc, args)
 		break;
 
 	case T_COP_UNUSABLE+T_USER:
-		if ((causeReg & MACH_CR_COP_ERR) != 0x10000000) {
-			i = SIGILL;	/* only FPU instructions allowed */
-			break;
-		}
-		MachSwitchFPState(machFPCurProcPtr, p->p_md.md_regs);
-		machFPCurProcPtr = p;
-		p->p_md.md_regs[PS] |= MACH_SR_COP_1_BIT;
-		p->p_md.md_flags |= MDP_FPUSED;
-		goto out;
+		i = SIGILL;
+		break;
 
 	case T_OVFLOW+T_USER:
 		i = SIGFPE;
@@ -704,7 +697,7 @@ pic32_intr(mask, pc, statusReg, causeReg)
 		causeReg &= ~MACH_INT_MASK_3;
 	}
 	/* Re-enable clock interrupts */
-	splx(MACH_INT_MASK_3 | MACH_SR_INT_ENA_CUR);
+	splx(MACH_INT_MASK_3 | MACH_Status_IE);
 #if NSII > 0
 	if (mask & MACH_INT_MASK_0) {
 		siiintr(0);
@@ -720,8 +713,7 @@ pic32_intr(mask, pc, statusReg, causeReg)
 		dcintr(0);
 	}
 #endif
-	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) |
-		MACH_SR_INT_ENA_CUR);
+	return ((statusReg & ~causeReg & MACH_HARD_INT_MASK) | MACH_Status_IE);
 }
 
 /*

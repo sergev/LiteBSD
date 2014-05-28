@@ -86,41 +86,22 @@
 #define MACH_CR_EXC_CODE_SHIFT	2
 
 /*
- * The bits in the status register.  All bits are active when set to 1.
- *
- *	MACH_SR_CO_USABILITY	Control the usability of the four coprocessors.
- *	MACH_SR_BOOT_EXC_VEC	Use alternate exception vectors.
- *	MACH_SR_TLB_SHUTDOWN	TLB disabled.
- *	MACH_SR_PARITY_ERR	Parity error.
- *	MACH_SR_CACHE_MISS	Most recent D-cache load resulted in a miss.
- *	MACH_SR_PARITY_ZERO	Zero replaces outgoing parity bits.
- *	MACH_SR_SWAP_CACHES	Swap I-cache and D-cache.
- *	MACH_SR_ISOL_CACHES	Isolate D-cache from main memory.
- *				Interrupt enable bits defined below.
- *	MACH_SR_KU_OLD		Old kernel/user mode bit. 1 => user mode.
- *	MACH_SR_INT_ENA_OLD	Old interrupt enable bit.
- *	MACH_SR_KU_PREV		Previous kernel/user mode bit. 1 => user mode.
- *	MACH_SR_INT_ENA_PREV	Previous interrupt enable bit.
- *	MACH_SR_KU_CUR		Current kernel/user mode bit. 1 => user mode.
- *	MACH_SR_INT_ENA_CUR	Current interrupt enable bit.
+ * The bits in the status register.
  */
-#define MACH_SR_COP_USABILITY	0xf0000000
-#define MACH_SR_COP_0_BIT	0x10000000
-#define MACH_SR_COP_1_BIT	0x20000000
-#define MACH_SR_BOOT_EXC_VEC	0x00400000
-#define MACH_SR_TLB_SHUTDOWN	0x00200000
-#define MACH_SR_PARITY_ERR	0x00100000
-#define MACH_SR_CACHE_MISS	0x00080000
-#define MACH_SR_PARITY_ZERO	0x00040000
-#define MACH_SR_SWAP_CACHES	0x00020000
-#define MACH_SR_ISOL_CACHES	0x00010000
-#define MACH_SR_KU_OLD		0x00000020
-#define MACH_SR_INT_ENA_OLD	0x00000010
-#define MACH_SR_KU_PREV		0x00000008
-#define MACH_SR_INT_ENA_PREV	0x00000004
-#define MACH_SR_KU_CUR		0x00000002
-#define MACH_SR_INT_ENA_CUR	0x00000001
-#define MACH_SR_MBZ		0x0f8000c0
+#define MACH_Status_CU0          0x10000000      /* Access to coprocessor 0 allowed (in user mode) */
+#define MACH_Status_RP           0x08000000      /* Enable reduced power mode */
+#define MACH_Status_RE           0x02000000      /* Reverse endianness (in user mode) */
+#define MACH_Status_MX           0x01000000      /* DSP resource enable */
+#define MACH_Status_BEV          0x00400000      /* Exception vectors: bootstrap */
+#define MACH_Status_TS           0x00200000      /* TLB shutdown control */
+#define MACH_Status_SR           0x00100000      /* Soft reset */
+#define MACH_Status_NMI          0x00080000      /* NMI reset */
+#define MACH_Status_IPL(x)       ((x) << 10)     /* Current interrupt priority level */
+#define MACH_Status_UM           0x00000010      /* User mode */
+#define MACH_Status_ERL          0x00000004      /* Error level */
+#define MACH_Status_EXL          0x00000002      /* Exception level */
+#define MACH_Status_IE           0x00000001      /* Interrupt enable */
+
 
 /*
  * The interrupt masks.
@@ -151,29 +132,19 @@
 #define MACH_GEN_EXC_VEC	0x80000080
 
 /*
- * Coprocessor 0 registers:
- *
- *	MACH_COP_0_TLB_INDEX	TLB index.
- *	MACH_COP_0_TLB_RANDOM	TLB random.
- *	MACH_COP_0_TLB_LOW	TLB entry low.
- *	MACH_COP_0_TLB_CONTEXT	TLB context.
- *	MACH_COP_0_BAD_VADDR	Bad virtual address.
- *	MACH_COP_0_TLB_HI	TLB entry high.
- *	MACH_COP_0_STATUS_REG	Status register.
- *	MACH_COP_0_CAUSE_REG	Exception cause register.
- *	MACH_COP_0_EXC_PC	Exception PC.
- *	MACH_COP_0_PRID		Processor revision identifier.
+ * Coprocessor 0 registers.
  */
-#define MACH_COP_0_TLB_INDEX	$0
-#define MACH_COP_0_TLB_RANDOM	$1
-#define MACH_COP_0_TLB_LOW	$2
-#define MACH_COP_0_TLB_CONTEXT	$4
-#define MACH_COP_0_BAD_VADDR	$8
-#define MACH_COP_0_TLB_HI	$10
-#define MACH_COP_0_STATUS_REG	$12
-#define MACH_COP_0_CAUSE_REG	$13
-#define MACH_COP_0_EXC_PC	$14
-#define MACH_COP_0_PRID		$15
+#define MACH_C0_Index		$0      /* TLB index */
+#define MACH_C0_Random		$1      /* TLB random */
+#define MACH_C0_EntryLo0	$2      /* TLB entry low 0 */
+#define MACH_C0_EntryLo1	$3      /* TLB entry low 1 */
+#define MACH_C0_Context		$4      /* TLB context */
+#define MACH_C0_BadVAddr	$8      /* Bad virtual address */
+#define MACH_C0_EntryHi		$10     /* TLB entry high */
+#define MACH_C0_Status		$12     /* Status register */
+#define MACH_C0_Cause		$13     /* Exception cause register */
+#define MACH_C0_EPC		$14     /* Exception PC */
+#define MACH_C0_PRId		$15     /* Processor revision identifier */
 
 /*
  * Values for the code field in a break instruction.

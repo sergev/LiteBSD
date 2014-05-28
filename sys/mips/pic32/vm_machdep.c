@@ -87,14 +87,7 @@ cpu_fork(p1, p2)
 	}
 
 	/*
-	 * Copy floating point state from the FP chip if this process
-	 * has state stored there.
-	 */
-	if (p1 == machFPCurProcPtr)
-		MachSaveCurFPState(p1);
-
-	/*
-	 * Copy pcb and stack from proc p1 to p2. 
+	 * Copy pcb and stack from proc p1 to p2.
 	 * We do this as cheaply as possible, copying only the active
 	 * part of the stack.  The stack and pcb need to agree;
 	 */
@@ -177,13 +170,6 @@ cpu_coredump(p, vp, cred)
 	struct ucred *cred;
 {
 	extern struct proc *machFPCurProcPtr;
-
-	/*
-	 * Copy floating point state from the FP chip if this process
-	 * has state stored there.
-	 */
-	if (p == machFPCurProcPtr)
-		MachSaveCurFPState(p);
 
 	return (vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
 	    (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL,
