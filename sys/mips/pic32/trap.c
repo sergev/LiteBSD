@@ -134,22 +134,7 @@ char	*trap_type[] = {
 	"reserved 15",
 };
 
-#ifdef DEBUG
-#define TRAPSIZE	10
-struct trapdebug {		/* trap history buffer for debugging */
-	u_int	status;
-	u_int	cause;
-	u_int	vadr;
-	u_int	pc;
-	u_int	ra;
-	u_int	code;
-} trapdebug[TRAPSIZE], *trp = trapdebug;
-
-u_int	intr_level;		/* number of nested interrupts */
-#endif
-
 extern volatile struct chiptime *Mach_clock_addr;
-extern long intrcnt[];
 
 /*
  * Handle an exception.
@@ -171,18 +156,6 @@ trap(statusReg, causeReg, vadr, pc, args)
 	u_quad_t sticks;
 	vm_prot_t ftype;
 	extern unsigned onfault_table[];
-
-#ifdef DEBUG
-	trp->status = statusReg;
-	trp->cause = causeReg;
-	trp->vadr = vadr;
-	trp->pc = pc;
-	trp->ra = !USERMODE(statusReg) ? ((int *)&args)[19] :
-		p->p_md.md_regs[RA];
-	trp->code = 0;
-	if (++trp == &trapdebug[TRAPSIZE])
-		trp = trapdebug;
-#endif
 
 	cnt.v_trap++;
 	type = (causeReg & MACH_CR_EXC_CODE) >> MACH_CR_EXC_CODE_SHIFT;
@@ -490,12 +463,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 #endif
 		rval[0] = 0;
 		rval[1] = locr0[V1];
-#ifdef DEBUG
-		if (trp == trapdebug)
-			trapdebug[TRAPSIZE - 1].code = code;
-		else
-			trp[-1].code = code;
-#endif
+
 		i = (*callp->sy_call)(p, &args, rval);
 		/*
 		 * Reinitialize proc pointer `p' as it may be different
@@ -503,20 +471,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 		 */
 		p = curproc;
 		locr0 = p->p_md.md_regs;
-#ifdef DEBUG
-		{ int s;
-		s = splhigh();
-		trp->status = statusReg;
-		trp->cause = causeReg;
-		trp->vadr = locr0[SP];
-		trp->pc = locr0[PC];
-		trp->ra = locr0[RA];
-		trp->code = -code;
-		if (++trp == &trapdebug[TRAPSIZE])
-			trp = trapdebug;
-		splx(s);
-		}
-#endif
+
 		switch (i) {
 		case 0:
 			locr0[V0] = rval[0];
@@ -619,9 +574,6 @@ trap(statusReg, causeReg, vadr, pc, args)
 
 	default:
 	err:
-#ifdef DEBUG
-		trapDump("trap");
-#endif
 		panic("trap");
 	}
 	trapsignal(p, i, ucode);
@@ -680,39 +632,20 @@ interrupt(statusReg, causeReg, pc)
 	register unsigned mask;
 	struct clockframe cf;
 
-#ifdef DEBUG
-	trp->status = statusReg;
-	trp->cause = causeReg;
-	trp->vadr = 0;
-	trp->pc = pc;
-	trp->ra = 0;
-	trp->code = 0;
-	if (++trp == &trapdebug[TRAPSIZE])
-		trp = trapdebug;
-
-	intr_level++;
-#endif
-
 	cnt.v_intr++;
 	mask = causeReg & statusReg;	/* pending interrupts & enable mask */
         splx(pic32_intr(mask, pc, statusReg, causeReg));
 
 	if (mask & MACH_INT_MASK_5) {
-		intrcnt[7]++;
 		if (!USERMODE(statusReg)) {
-#ifdef DEBUG
-			trapDump("fpintr");
-#else
 			printf("FPU interrupt: PC %x CR %x SR %x\n",
 				pc, causeReg, statusReg);
-#endif
 		} else
 			MachFPInterrupt(statusReg, causeReg, pc);
 	}
 	if (mask & MACH_SOFT_INT_MASK_0) {
 		clearsoftclock();
 		cnt.v_soft++;
-		intrcnt[0]++;
 		softclock();
 	}
 	/* process network interrupt if we trapped or will very soon */
@@ -720,7 +653,6 @@ interrupt(statusReg, causeReg, pc)
 	    netisr && (statusReg & MACH_SOFT_INT_MASK_1)) {
 		clearsoftnet();
 		cnt.v_soft++;
-		intrcnt[1]++;
 #ifdef INET
 		if (netisr & (1 << NETISR_ARP)) {
 			netisr &= ~(1 << NETISR_ARP);
@@ -744,9 +676,6 @@ interrupt(statusReg, causeReg, pc)
 		}
 #endif
 	}
-#ifdef DEBUG
-	intr_level--;
-#endif
 }
 
 /*
@@ -763,7 +692,6 @@ pic32_intr(mask, pc, statusReg, causeReg)
 
 	/* handle clock interrupts ASAP */
 	if (mask & MACH_INT_MASK_3) {
-		intrcnt[6]++;
 #if 0
                 // TODO
                 register volatile struct chiptime *c = Mach_clock_addr;
@@ -779,19 +707,16 @@ pic32_intr(mask, pc, statusReg, causeReg)
 	splx(MACH_INT_MASK_3 | MACH_SR_INT_ENA_CUR);
 #if NSII > 0
 	if (mask & MACH_INT_MASK_0) {
-		intrcnt[2]++;
 		siiintr(0);
 	}
 #endif
 #if NLE > 0
 	if (mask & MACH_INT_MASK_1) {
-		intrcnt[3]++;
 		leintr(0);
 	}
 #endif
 #if NDC > 0
 	if (mask & MACH_INT_MASK_2) {
-		intrcnt[4]++;
 		dcintr(0);
 	}
 #endif
@@ -841,34 +766,6 @@ softintr(statusReg, pc)
 	}
 	curpriority = p->p_priority;
 }
-
-#ifdef DEBUG
-trapDump(msg)
-	char *msg;
-{
-	register int i;
-	int s;
-
-	s = splhigh();
-	printf("trapDump(%s)\n", msg);
-	for (i = 0; i < TRAPSIZE; i++) {
-		if (trp == trapdebug)
-			trp = &trapdebug[TRAPSIZE - 1];
-		else
-			trp--;
-		if (trp->cause == 0)
-			break;
-		printf("%s: ADR %x PC %x CR %x SR %x\n",
-			trap_type[(trp->cause & MACH_CR_EXC_CODE) >>
-				MACH_CR_EXC_CODE_SHIFT],
-			trp->vadr, trp->pc, trp->cause, trp->status);
-		printf("   RA %x code %d\n", trp-> ra, trp->code);
-	}
-	bzero(trapdebug, sizeof(trapdebug));
-	trp = trapdebug;
-	splx(s);
-}
-#endif
 
 /*
  * Return the resulting PC as if the branch was executed.
@@ -1049,185 +946,3 @@ cpu_singlestep(p)
 #endif
 	return (0);
 }
-
-#ifdef DEBUG
-kdbpeek(addr)
-{
-	if (addr & 3) {
-		printf("kdbpeek: unaligned address %x\n", addr);
-		return (-1);
-	}
-	return (*(int *)addr);
-}
-
-#define MIPS_JR_RA	0x03e00008	/* instruction code for jr ra */
-
-/*
- * Print a stack backtrace.
- */
-void
-stacktrace(a0, a1, a2, a3)
-	int a0, a1, a2, a3;
-{
-	unsigned pc, sp, fp, ra, va, subr;
-	unsigned instr, mask;
-	InstFmt i;
-	int more, stksize;
-	int regs[3];
-	extern setsoftclock();
-	extern char start[], _edata[];
-
-	cpu_getregs(regs);
-
-	/* get initial values from the exception frame */
-	sp = regs[0];
-	pc = regs[1];
-	ra = 0;
-	fp = regs[2];
-
-loop:
-	/* check for current PC in the kernel interrupt handler code */
-	if (pc >= (unsigned)MachKernIntr && pc < (unsigned)MachUserIntr) {
-		/* NOTE: the offsets depend on the code in locore.s */
-		printf("interrupt\n");
-		a0 = kdbpeek(sp + 36);
-		a1 = kdbpeek(sp + 40);
-		a2 = kdbpeek(sp + 44);
-		a3 = kdbpeek(sp + 48);
-		pc = kdbpeek(sp + 20);
-		ra = kdbpeek(sp + 92);
-		sp = kdbpeek(sp + 100);
-		fp = kdbpeek(sp + 104);
-	}
-
-	/* check for current PC in the exception handler code */
-	if (pc >= 0x80000000 && pc < (unsigned)setsoftclock) {
-		ra = 0;
-		subr = 0;
-		goto done;
-	}
-
-	/* check for bad PC */
-	if (pc & 3 || pc < 0x80000000 || pc >= (unsigned)_edata) {
-		printf("PC 0x%x: not in kernel\n", pc);
-		ra = 0;
-		subr = 0;
-		goto done;
-	}
-
-	/*
-	 * Find the beginning of the current subroutine by scanning backwards
-	 * from the current PC for the end of the previous subroutine.
-	 */
-	va = pc - sizeof(int);
-	while ((instr = kdbpeek(va)) != MIPS_JR_RA)
-		va -= sizeof(int);
-	va += 2 * sizeof(int);	/* skip back over branch & delay slot */
-	/* skip over nulls which might separate .o files */
-	while ((instr = kdbpeek(va)) == 0)
-		va += sizeof(int);
-	subr = va;
-
-	/* scan forwards to find stack size and any saved registers */
-	stksize = 0;
-	more = 3;
-	mask = 0;
-	for (; more; va += sizeof(int), more = (more == 3) ? 3 : more - 1) {
-		/* stop if hit our current position */
-		if (va >= pc)
-			break;
-		instr = kdbpeek(va);
-		i.word = instr;
-		switch (i.JType.op) {
-		case OP_SPECIAL:
-			switch (i.RType.func) {
-			case OP_JR:
-			case OP_JALR:
-				more = 2; /* stop after next instruction */
-				break;
-
-			case OP_SYSCALL:
-			case OP_BREAK:
-				more = 1; /* stop now */
-			};
-			break;
-
-		case OP_BCOND:
-		case OP_J:
-		case OP_JAL:
-		case OP_BEQ:
-		case OP_BNE:
-		case OP_BLEZ:
-		case OP_BGTZ:
-			more = 2; /* stop after next instruction */
-			break;
-
-		case OP_COP0:
-		case OP_COP1:
-		case OP_COP2:
-		case OP_COP3:
-			switch (i.RType.rs) {
-			case OP_BCx:
-			case OP_BCy:
-				more = 2; /* stop after next instruction */
-			};
-			break;
-
-		case OP_SW:
-			/* look for saved registers on the stack */
-			if (i.IType.rs != 29)
-				break;
-			/* only restore the first one */
-			if (mask & (1 << i.IType.rt))
-				break;
-			mask |= 1 << i.IType.rt;
-			switch (i.IType.rt) {
-			case 4: /* a0 */
-				a0 = kdbpeek(sp + (short)i.IType.imm);
-				break;
-
-			case 5: /* a1 */
-				a1 = kdbpeek(sp + (short)i.IType.imm);
-				break;
-
-			case 6: /* a2 */
-				a2 = kdbpeek(sp + (short)i.IType.imm);
-				break;
-
-			case 7: /* a3 */
-				a3 = kdbpeek(sp + (short)i.IType.imm);
-				break;
-
-			case 30: /* fp */
-				fp = kdbpeek(sp + (short)i.IType.imm);
-				break;
-
-			case 31: /* ra */
-				ra = kdbpeek(sp + (short)i.IType.imm);
-			}
-			break;
-
-		case OP_ADDI:
-		case OP_ADDIU:
-			/* look for stack pointer adjustment */
-			if (i.IType.rs != 29 || i.IType.rt != 29)
-				break;
-			stksize = (short)i.IType.imm;
-		}
-	}
-
-done:
-	printf("%x+%x (%x,%x,%x,%x) ra %x sz %d\n",
-		subr, pc - subr, a0, a1, a2, a3, ra, stksize);
-
-	if (ra) {
-		if (pc == ra && stksize == 0)
-			printf("stacktrace: loop!\n");
-		else {
-			pc = ra;
-			sp -= stksize;
-			goto loop;
-		}
-	}
-}
-#endif /* DEBUG */

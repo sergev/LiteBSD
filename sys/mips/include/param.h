@@ -137,6 +137,7 @@
  * Mach derived conversion macros
  */
 #define mips_round_page(x)	((((unsigned)(x)) + NBPG - 1) & ~(NBPG-1))
+#define mips_trunc_page(x)      ((unsigned)(x) & ~(NBPG-1))
 #define mips_btop(x)		((unsigned)(x) >> PGSHIFT)
 #define mips_ptob(x)		((unsigned)(x) << PGSHIFT)
 

@@ -1911,7 +1911,7 @@ asic_dma_start(asc, state, cp, flag)
 	*((volatile int *)ASIC_REG_SCSI_SCR(asic_base)) = 0;
 
 	phys = MACH_CACHED_TO_PHYS(cp);
-	cp = (caddr_t)pmax_trunc_page(cp + NBPG);
+	cp = (caddr_t)mips_trunc_page(cp + NBPG);
 	nphys = MACH_CACHED_TO_PHYS(cp);
 
 	asc->dma_next = cp;

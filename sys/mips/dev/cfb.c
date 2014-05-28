@@ -340,13 +340,13 @@ cfbmap(dev, off, prot)
 {
 	int len;
 
-	len = pmax_round_page(((vm_offset_t)&cfbu & PGOFSET) + sizeof(cfbu));
+	len = mips_round_page(((vm_offset_t)&cfbu & PGOFSET) + sizeof(cfbu));
 	if (off < len)
-		return pmax_btop(MACH_CACHED_TO_PHYS(&cfbu) + off);
+		return mips_btop(MACH_CACHED_TO_PHYS(&cfbu) + off);
 	off -= len;
 	if (off >= cfbfb.fr_size)
 		return (-1);
-	return pmax_btop(MACH_UNCACHED_TO_PHYS(cfbfb.fr_addr) + off);
+	return mips_btop(MACH_UNCACHED_TO_PHYS(cfbfb.fr_addr) + off);
 }
 
 static u_char	cursor_RGB[6];	/* cursor color 2 & 3 */

@@ -900,14 +900,7 @@ NON_LEAF(cpu_switch, STAND_FRAME_SIZE, ra)
 	subu	sp, sp, STAND_FRAME_SIZE
 	sw	ra, STAND_RA_OFFSET(sp)
 	.mask	0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
-#ifdef DEBUG
-	lw	a1, intr_level
-	sw	a0, STAND_FRAME_SIZE(sp)
-	beq	a1, zero, 1f
-	nop
-	PANIC("cpu_switch: intr_level %d")	# cannot sleep in interrupt()
-1:
-#endif
+
 	lw	t2, cnt+V_SWTCH			# for statistics
 	lw	t1, whichqs			# look for non-empty queue
 	sw	s0, UADDR+U_PCB_CONTEXT+0	# do a 'savectx()'
@@ -2162,119 +2155,6 @@ LEAF(MachTLBUpdate)
 	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
 END(MachTLBUpdate)
 
-#if defined(DEBUG)
-/*--------------------------------------------------------------------------
- *
- * MachTLBFind --
- *
- *	Search the TLB for the given entry.
- *
- *	MachTLBFind(hi)
- *		unsigned hi;
- *
- * Results:
- *	Returns a value >= 0 if the entry was found (the index).
- *	Returns a value < 0 if the entry was not found.
- *
- * Side effects:
- *	tlbhi and tlblo will contain the TLB entry found.
- *
- *--------------------------------------------------------------------------
- */
-	.comm	tlbhi, 4
-	.comm	tlblo, 4
-LEAF(MachTLBFind)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Get current PID
-	nop
-	mtc0	a0, MACH_COP_0_TLB_HI		# Set up entry high.
-	nop
-	tlbp					# Probe for the entry.
-	mfc0	v0, MACH_COP_0_TLB_INDEX	# See what we got
-	nop
-	bltz	v0, 1f				# not found
-	nop
-	tlbr					# read TLB
-	mfc0	t1, MACH_COP_0_TLB_HI		# See what we got
-	mfc0	t2, MACH_COP_0_TLB_LOW		# See what we got
-	sw	t1, tlbhi
-	sw	t2, tlblo
-	srl	v0, v0, VMMACH_TLB_INDEX_SHIFT	# convert index to regular num
-1:
-	mtc0	t0, MACH_COP_0_TLB_HI		# Restore current PID
-	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
-END(MachTLBFind)
-
-/*--------------------------------------------------------------------------
- *
- * MachTLBRead --
- *
- *	Read the TLB entry.
- *
- *	MachTLBRead(entry)
- *		unsigned entry;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	tlbhi and tlblo will contain the TLB entry found.
- *
- *--------------------------------------------------------------------------
- */
-LEAF(MachTLBRead)
-	mfc0	v1, MACH_COP_0_STATUS_REG	# Save the status register.
-	mtc0	zero, MACH_COP_0_STATUS_REG	# Disable interrupts
-	mfc0	t0, MACH_COP_0_TLB_HI		# Get current PID
-
-	sll	a0, a0, VMMACH_TLB_INDEX_SHIFT
-	mtc0	a0, MACH_COP_0_TLB_INDEX	# Set the index register
-	nop
-	tlbr					# Read from the TLB
-	mfc0	t3, MACH_COP_0_TLB_HI		# fetch the hi entry
-	mfc0	t4, MACH_COP_0_TLB_LOW		# fetch the low entry
-	sw	t3, tlbhi
-	sw	t4, tlblo
-
-	mtc0	t0, MACH_COP_0_TLB_HI		# restore PID
-	j	ra
-	mtc0	v1, MACH_COP_0_STATUS_REG	# Restore the status register
-END(MachTLBRead)
-
-/*--------------------------------------------------------------------------
- *
- * MachTLBGetPID --
- *
- *	MachTLBGetPID()
- *
- * Results:
- *	Returns the current TLB pid reg.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------------------
- */
-LEAF(MachTLBGetPID)
-	mfc0	v0, MACH_COP_0_TLB_HI		# get PID
-	nop
-	and	v0, v0, VMMACH_TLB_PID		# mask off PID
-	j	ra
-	srl	v0, v0, VMMACH_TLB_PID_SHIFT	# put PID in right spot
-END(MachTLBGetPID)
-
-/*
- * Return the current value of the cause register.
- */
-LEAF(MachGetCauseReg)
-	mfc0	v0, MACH_COP_0_CAUSE_REG
-	j	ra
-	nop
-END(MachGetCauseReg)
-#endif /* DEBUG */
-
 /*----------------------------------------------------------------------------
  *
  * MachSwitchFPState --
@@ -2851,35 +2731,3 @@ LEAF(MachFlushDCache)
 	j	ra				# return and run cached
 	nop
 END(MachFlushDCache)
-
-#ifdef DEBUG
-LEAF(cpu_getregs)
-	sw	sp, 0(a0)
-	sw	ra, 4(a0)
-	j	ra
-	sw	s8, 8(a0)
-END(cpu_getregs)
-#endif /* DEBUG */
-
-/*
- * Interrupt counters for vmstat.
- * XXX These are not used yet.
- */
-	.data
-	.globl	intrcnt, eintrcnt, intrnames, eintrnames
-intrnames:
-	.asciiz	"softclock"
-	.asciiz	"softnet"
-	.asciiz	"dc"
-	.asciiz	"ether"
-	.asciiz	"disk"
-	.asciiz	"memory"
-	.asciiz	"clock"
-	.asciiz	"fp"
-eintrnames:
-	.align	2
-intrcnt:
-	.word	0,0,0,0,0,0,0,0
-eintrcnt:
-	.word	0	# This should not be needed but the eintrcnt label\
-			# ends up in a different section otherwise.

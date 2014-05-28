@@ -305,12 +305,6 @@ cpu_startup()
 	int base, residual;
 	vm_offset_t minaddr, maxaddr;
 	vm_size_t size;
-#ifdef DEBUG
-	extern int pmapdebug;
-	int opmapdebug = pmapdebug;
-
-	pmapdebug = 0;
-#endif
 
 	/*
 	 * Good {morning,afternoon,evening,night}.
@@ -377,9 +371,6 @@ cpu_startup()
 		callout[i-1].c_next = &callout[i];
 	callout[i-1].c_next = NULL;
 
-#ifdef DEBUG
-	pmapdebug = opmapdebug;
-#endif
 	printf("avail mem = %d\n", ptoa(cnt.v_free_count));
 	printf("using %d buffers containing %d bytes of memory\n",
 		nbuf, bufpages * CLBYTES);
@@ -459,14 +450,6 @@ struct sigframe {
 	struct	sigcontext sf_sc;	/* actual context */
 };
 
-#ifdef DEBUG
-int sigdebug = 0;
-int sigpid = 0;
-#define SDB_FOLLOW	0x01
-#define SDB_KSTACK	0x02
-#define SDB_FPSTATE	0x04
-#endif
-
 /*
  * Send an interrupt to process.
  */
@@ -504,12 +487,7 @@ sendsig(catcher, sig, mask, code)
 		fp = (struct sigframe *)(regs[SP] - fsize);
 	if ((unsigned)fp <= USRSTACK - ctob(p->p_vmspace->vm_ssize))
 		(void)grow(p, (unsigned)fp);
-#ifdef DEBUG
-	if ((sigdebug & SDB_FOLLOW) ||
-	    (sigdebug & SDB_KSTACK) && p->p_pid == sigpid)
-		printf("sendsig(%d): sig %d ssp %x usp %x scp %x\n",
-		       p->p_pid, sig, &oonstack, fp, &fp->sf_sc);
-#endif
+
 	/*
 	 * Build the signal context to be used by sigreturn.
 	 */
@@ -556,12 +534,6 @@ sendsig(catcher, sig, mask, code)
 	 * Signal trampoline code is at base of user stack.
 	 */
 	regs[RA] = (int)PS_STRINGS - (esigcode - sigcode);
-#ifdef DEBUG
-	if ((sigdebug & SDB_FOLLOW) ||
-	    (sigdebug & SDB_KSTACK) && p->p_pid == sigpid)
-		printf("sendsig(%d): sig %d returns\n",
-		       p->p_pid, sig);
-#endif
 }
 
 /*
@@ -588,10 +560,6 @@ sigreturn(p, uap, retval)
 	int error;
 
 	scp = SCARG(uap, sigcntxp);
-#ifdef DEBUG
-	if (sigdebug & SDB_FOLLOW)
-		printf("sigreturn: pid %d, scp %x\n", p->p_pid, scp);
-#endif
 	regs = p->p_md.md_regs;
 	/*
 	 * Test and fetch the context structure.
@@ -599,15 +567,6 @@ sigreturn(p, uap, retval)
 	 */
 	error = copyin((caddr_t)scp, (caddr_t)&ksc, sizeof(ksc));
 	if (error || ksc.sc_regs[ZERO] != 0xACEDBADE) {
-#ifdef DEBUG
-		if (!(sigdebug & SDB_FOLLOW))
-			printf("sigreturn: pid %d, scp %x\n", p->p_pid, scp);
-		printf("  old sp %x ra %x pc %x\n",
-			regs[SP], regs[RA], regs[PC]);
-		printf("  new sp %x ra %x pc %x err %d z %x\n",
-			ksc.sc_regs[SP], ksc.sc_regs[RA], ksc.sc_regs[PC],
-			error, ksc.sc_regs[ZERO]);
-#endif
 		return (EINVAL);
 	}
 	scp = &ksc;
@@ -638,11 +597,6 @@ boot(howto)
 	/* take a snap shot before clobbering any registers */
 	if (curproc)
 		savectx(curproc->p_addr, 0);
-
-#ifdef DEBUG
-	if (panicstr)
-		stacktrace();
-#endif
 
 	boothowto = howto;
 	if ((howto & RB_NOSYNC) == 0 && waittime < 0) {

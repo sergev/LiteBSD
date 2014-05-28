@@ -309,13 +309,13 @@ pmmap(dev, off, prot)
 {
 	int len;
 
-	len = pmax_round_page(((vm_offset_t)&pmu & PGOFSET) + sizeof(pmu));
+	len = mips_round_page(((vm_offset_t)&pmu & PGOFSET) + sizeof(pmu));
 	if (off < len)
-		return pmax_btop(MACH_CACHED_TO_PHYS(&pmu) + off);
+		return mips_btop(MACH_CACHED_TO_PHYS(&pmu) + off);
 	off -= len;
 	if (off >= pmfb.fr_size)
 		return (-1);
-	return pmax_btop(MACH_UNCACHED_TO_PHYS(pmfb.fr_addr) + off);
+	return mips_btop(MACH_UNCACHED_TO_PHYS(pmfb.fr_addr) + off);
 }
 
 pmselect(dev, flag, p)

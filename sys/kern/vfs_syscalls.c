@@ -411,8 +411,10 @@ dounmount(mp, flags, p)
 /*
  * Sync each mounted filesystem.
  */
-#ifdef DEBUG
+#ifdef DIAGNOSTIC
 int syncprt = 0;
+#endif
+#ifdef DEBUG
 struct ctldebug debug0 = { "syncprt", &syncprt };
 #endif
 
@@ -2199,7 +2201,7 @@ unionread:
 				lvp = NULL;
 			}
 		}
-		
+
 		if (lvp != NULLVP) {
 			error = VOP_OPEN(lvp, FREAD, fp->f_cred, p);
 			if (error) {

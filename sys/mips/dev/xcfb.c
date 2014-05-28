@@ -323,13 +323,13 @@ xcfbmap(dev, off, prot)
 {
 	int len;
 
-	len = pmax_round_page(((vm_offset_t)&xcfbu & PGOFSET) + sizeof(xcfbu));
+	len = mips_round_page(((vm_offset_t)&xcfbu & PGOFSET) + sizeof(xcfbu));
 	if (off < len)
-		return pmax_btop(MACH_CACHED_TO_PHYS(&xcfbu) + off);
+		return mips_btop(MACH_CACHED_TO_PHYS(&xcfbu) + off);
 	off -= len;
 	if (off >= xcfbfb.fr_size)
 		return (-1);
-	return pmax_btop(MACH_UNCACHED_TO_PHYS(xcfbfb.fr_addr) + off);
+	return mips_btop(MACH_UNCACHED_TO_PHYS(xcfbfb.fr_addr) + off);
 }
 
 xcfbselect(dev, flag, p)

@@ -41,7 +41,7 @@
 #ifndef _SYS_DIR_H_
 #define	_SYS_DIR_H_
 
-#include <dirent.h>
+#include <sys/dirent.h>
 
 /*
  * Backwards compatibility.

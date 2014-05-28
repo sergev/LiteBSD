@@ -320,13 +320,13 @@ mfbmap(dev, off, prot)
 {
 	int len;
 
-	len = pmax_round_page(((vm_offset_t)&mfbu & PGOFSET) + sizeof(mfbu));
+	len = mips_round_page(((vm_offset_t)&mfbu & PGOFSET) + sizeof(mfbu));
 	if (off < len)
-		return pmax_btop(MACH_CACHED_TO_PHYS(&mfbu) + off);
+		return mips_btop(MACH_CACHED_TO_PHYS(&mfbu) + off);
 	off -= len;
 	if (off >= mfbfb.fr_size)
 		return (-1);
-	return pmax_btop(MACH_UNCACHED_TO_PHYS(mfbfb.fr_addr) + off);
+	return mips_btop(MACH_UNCACHED_TO_PHYS(mfbfb.fr_addr) + off);
 }
 
 mfbselect(dev, flag, p)

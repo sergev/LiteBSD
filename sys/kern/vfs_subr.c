@@ -743,7 +743,7 @@ vop_nolock(ap)
 	 * function unlock them. Otherwise all intermediate vnode layers
 	 * (such as union, umapfs, etc) must catch these functions to do
 	 * the necessary locking at their layer. Note that the inactive
-	 * and lookup operations also change their lock state, but this 
+	 * and lookup operations also change their lock state, but this
 	 * cannot be avoided, so these two operations will always need
 	 * to be handled in intermediate layers.
 	 */
@@ -948,6 +948,8 @@ holdrele(vp)
  */
 #ifdef DIAGNOSTIC
 int busyprt = 0;	/* print out busy vnodes */
+#endif
+#ifdef DEBUG
 struct ctldebug debug1 = { "busyprt", &busyprt };
 #endif
 
@@ -1510,7 +1512,7 @@ sysctl_vnode(where, sizep, p)
 		return (0);
 	}
 	ewhere = where + *sizep;
-		
+
 	simple_lock(&mountlist_slock);
 	for (mp = mountlist.cqh_first; mp != (void *)&mountlist; mp = nmp) {
 		if (vfs_busy(mp, LK_NOWAIT, &mountlist_slock, p)) {

@@ -21,13 +21,14 @@
 
 # DEBUG is set to -g by config if debugging is requested (config -g).
 # PROF is set to -pg by config if profiling is requested (config -p).
-AS=	${MIPS_GCC_PREFIX}as ${DEBUG}
-CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -fno-builtin
+AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
+CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
 CPP=	cpp
-LD=	${MIPS_GCC_PREFIX}gcc
+LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/pmax/pmax.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_GCC_PREFIX}size
+OBJCOPY= ${MIPS_GCC_PREFIX}objcopy
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
@@ -64,19 +65,15 @@ NORMAL_S_C=	${CPP} ${COPTS} ${PARAM} $< | ${AS} -o $@
 #	${SYSTEM_LD_TAIL}
 SYSTEM_OBJ=	locore.o ${OBJS} param.o ioconf.o vnode_if.o
 SYSTEM_DEP=	Makefile ${SYSTEM_OBJ} $S/libkern/libkern.a
-SYSTEM_LD_HEAD=	rm -f $@
+SYSTEM_LD_HEAD=	sh $S/conf/newvers.sh; ${CC} $(CFLAGS) -c vers.c; rm -f $@
 SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix; \
 		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix
-SYSTEM_LD_TAIL=	chmod 755 $@; ${SIZE} $@
+SYSTEM_LD_TAIL= ${SIZE} vmunix; $(OBJCOPY) -O ihex --change-addresses=0x80000000 $@ vmunix.hex
 
 %LOAD
 
 $S/libkern/libkern.a:
-	${MAKE} -C $S/libkern all
-
-newvers:
-	sh $S/conf/newvers.sh
-	${CC} $(CFLAGS) -c vers.c
+	cd $S/libkern && ${MAKE} all
 
 clean:
 	rm -f eddep *vmunix vmunix.gdb tags *.o locore.i [a-z]*.s \

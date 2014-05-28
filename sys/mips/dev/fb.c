@@ -1101,8 +1101,8 @@ fbmmap(fp, dev, data, p)
 	struct specinfo si;
 	struct fbuaccess *fbp;
 
-	len = pmax_round_page(((vm_offset_t)fp->fbu & PGOFSET) +
-		sizeof(struct fbuaccess)) + pmax_round_page(fp->fr_size);
+	len = mips_round_page(((vm_offset_t)fp->fbu & PGOFSET) +
+		sizeof(struct fbuaccess)) + mips_round_page(fp->fr_size);
 	addr = (vm_offset_t)0x20000000;		/* XXX */
 	vn.v_type = VCHR;			/* XXX */
 	vn.v_specinfo = &si;			/* XXX */
@@ -1124,6 +1124,6 @@ fbmmap(fp, dev, data, p)
 	/*
 	 * Map the frame buffer into the user's address space.
 	 */
-	fp->fbu->scrInfo.bitmap = (char *)pmax_round_page(fbp + 1);
+	fp->fbu->scrInfo.bitmap = (char *)mips_round_page(fbp + 1);
 	return (0);
 }
