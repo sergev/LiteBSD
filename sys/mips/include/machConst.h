@@ -74,16 +74,22 @@
 
 /*
  * The bits in the cause register.
- *
- *	MACH_CR_BR_DELAY	Exception happened in branch delay slot.
- *	MACH_CR_COP_ERR		Coprocessor error.
- *				Interrupt pending bits defined below.
- *	MACH_CR_EXC_CODE	The exception type (see exception codes below).
  */
-#define MACH_CR_BR_DELAY	0x80000000
-#define MACH_CR_COP_ERR		0x30000000
-#define MACH_CR_EXC_CODE	0x0000003C
-#define MACH_CR_EXC_CODE_SHIFT	2
+#define MACH_Cause_BD           0x80000000      /* Exception occured in delay slot */
+#define MACH_Cause_TI           0x40000000      /* Timer interrupt is pending */
+#define MACH_Cause_CE           0x30000000      /* Coprocessor exception */
+#define MACH_Cause_DC           0x08000000      /* Disable COUNT register */
+#define MACH_Cause_PCI          0x04000000      /* Performance counter interrupt */
+#define MACH_Cause_IC           0x02000000      /* Interrupt changing since last IRET */
+#define MACH_Cause_AP           0x01000000      /* Exception occured in automated prolog */
+#define MACH_Cause_IV           0x00800000      /* Use special interrupt vector 0x200 */
+#define MACH_Cause_WP           0x00400000      /* Watch exception pending */
+#define MACH_Cause_FDCI         0x00200000      /* Fast debug channel interrupt */
+#define MACH_Cause_RIPL(r)      ((r)>>10 & 63)  /* Requested interrupt priority level */
+#define MACH_Cause_IP1          0x00020000      /* Request software interrupt 1 */
+#define MACH_Cause_IP0          0x00010000      /* Request software interrupt 0 */
+#define MACH_Cause_ExcCode      0x0000007c      /* Exception code */
+#define MACH_Cause_ExcCode_SHIFT	2
 
 /*
  * The bits in the status register.
@@ -117,12 +123,6 @@
 #define MACH_HARD_INT_MASK	0xfc00
 #define MACH_SOFT_INT_MASK_1	0x0200
 #define MACH_SOFT_INT_MASK_0	0x0100
-
-/*
- * The bits in the context register.
- */
-#define MACH_CNTXT_PTE_BASE	0xFFE00000
-#define MACH_CNTXT_BAD_VPN	0x001FFFFC
 
 /*
  * Location of exception vectors.

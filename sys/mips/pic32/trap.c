@@ -158,7 +158,7 @@ trap(statusReg, causeReg, vadr, pc, args)
 	extern unsigned onfault_table[];
 
 	cnt.v_trap++;
-	type = (causeReg & MACH_CR_EXC_CODE) >> MACH_CR_EXC_CODE_SHIFT;
+	type = (causeReg & MACH_Cause_ExcCode) >> MACH_Cause_ExcCode_SHIFT;
 	if (USERMODE(statusReg)) {
 		type |= T_USER;
 		sticks = p->p_sticks;

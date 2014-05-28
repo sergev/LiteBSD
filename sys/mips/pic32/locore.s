@@ -1201,7 +1201,7 @@ MachException:
 	mfc0	k1, MACH_C0_Cause		# Get the cause register value.
 	and	k0, k0, MACH_Status_UM		# test for user mode
 	sll	k0, k0, 2			# shift user bit for cause index
-	and	k1, k1, MACH_CR_EXC_CODE	# Mask out the cause bits.
+	and	k1, k1, MACH_Cause_ExcCode	# Mask out the cause bits.
 	or	k1, k1, k0			# change index to user table
 1:
 	la	k0, machExceptionTable		# get base of the jump table
