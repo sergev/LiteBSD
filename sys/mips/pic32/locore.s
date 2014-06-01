@@ -79,7 +79,8 @@ start:
         mtc0    zero, MACH_C0_Status            # Disable interrupts
         li      t1, MACH_CACHED_MEMORY_ADDR     # invalid address
         mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
-        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry.
+        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry 0.
+        mtc0    zero, MACH_C0_EntryLo1          # Zero out low entry 1.
 /*
  * Clear the TLB (just to be safe).
  * Align the starting value (t1), the increment (t2) and the upper bound (t3).
@@ -94,7 +95,7 @@ start:
         tlbwi                                   # Write the TLB entry.
 
         la      sp, start - START_FRAME
-#if 0
+#if 1
         la      gp, _gp
 #endif
         sw      zero, START_FRAME - 4(sp)       # Zero out old ra for debugger
@@ -104,24 +105,26 @@ start:
         mtc0    zero, MACH_C0_Status            # Disable interrupts
         li      sp, KERNELSTACK - START_FRAME   # switch to standard stack
         mfc0    t0, MACH_C0_PRId                # read processor ID register
-        cfc1    t1, MACH_FPC_ID                 # read FPU ID register
-        sw      t0, cpu                         # save PRID register
-        sw      t1, fpu                         # save FPU ID register
-        jal     main                            # main(regs)
+        sw      t0, cpu
+        sw      zero, fpu
+        jal     main                            # main(frame)
         move    a0, zero
 /*
  * proc[1] == /etc/init now running here.
  * Restore user registers and return.
  */
         .set    noat
-        li      v0, PSL_USERSET
+        li      v0, PSL_USERSET | MACH_Status_EXL
         mtc0    v0, MACH_C0_Status              # switch to user mode
+#if 0
         lw      a0, UADDR+U_PCB_REGS+(SR * 4)
+#endif
+        lw      v0, UADDR+U_PCB_REGS+(PC * 4)
+        mtc0    v0, MACH_C0_EPC
         lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
         lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
         mtlo    t0
         mthi    t1
-        lw      k0, UADDR+U_PCB_REGS+(PC * 4)
         lw      AT, UADDR+U_PCB_REGS+(AST * 4)
         lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
         lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
@@ -151,8 +154,7 @@ start:
         lw      sp, UADDR+U_PCB_REGS+(SP * 4)
         lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
         lw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        j       k0
-        rfe
+        eret
         .set    at
 
 /*
@@ -858,15 +860,10 @@ LEAF(switch_exit)
         li      v0, UADDR                       # v0 = first HI entry
         mtc0    zero, MACH_C0_Index             # set the index register
         mtc0    v0, MACH_C0_EntryHi             # init high entry
-        mtc0    t0, MACH_C0_EntryLo0            # init low entry
-        li      t0, 1 << VMMACH_TLB_INDEX_SHIFT
+        mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
+        mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
         tlbwi                                   # Write the TLB entry.
-        addu    v0, v0, NBPG                    # 2nd HI entry
-        mtc0    t0, MACH_C0_Index               # set the index register
-        mtc0    v0, MACH_C0_EntryHi             # init high entry
-        mtc0    t1, MACH_C0_EntryLo0            # init low entry
         sw      zero, curproc
-        tlbwi                                   # Write the TLB entry.
         b       cpu_switch
         li      sp, KERNELSTACK - START_FRAME   # switch to standard stack
 END(switch_exit)
@@ -972,14 +969,8 @@ sw1:
  */
         mtc0    zero, MACH_C0_Index             # set the index register
         mtc0    v0, MACH_C0_EntryHi             # init high entry
-        mtc0    t0, MACH_C0_EntryLo0            # init low entry
-        li      t0, 1 << VMMACH_TLB_INDEX_SHIFT
-        tlbwi                                   # Write the TLB entry.
-        addu    v0, v0, NBPG                    # 2nd HI entry
-        mtc0    t0, MACH_C0_Index               # set the index register
-        mtc0    v0, MACH_C0_EntryHi             # init high entry
-        mtc0    t1, MACH_C0_EntryLo0            # init low entry
-        nop
+        mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
+        mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
         tlbwi                                   # Write the TLB entry.
 /*
  * Now running on new u struct.
@@ -1159,7 +1150,6 @@ MachUTLBMiss:
         .set    noat
         mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
         lw      k1, UADDR+U_PCB_SEGTAB          # get the current segment table
-        bltz    k0, 1f                          # R3000 chip bug
         srl     k0, k0, SEGSHIFT                # compute segment table index
         sll     k0, k0, 2
         addu    k1, k1, k0
@@ -1167,24 +1157,14 @@ MachUTLBMiss:
         lw      k1, 0(k1)                       # get pointer to segment map
         srl     k0, k0, PGSHIFT - 2             # compute segment map index
         andi    k0, k0, (NPTEPG - 1) << 2
-        beq     k1, zero, 2f                    # invalid segment map
+        beq     k1, zero, SlowFault             # invalid segment map
         addu    k1, k1, k0                      # index into segment map
         lw      k0, 0(k1)                       # get page PTE
         nop
-        beq     k0, zero, 2f                    # dont load invalid entries
-        mtc0    k0, MACH_C0_EntryLo0
-        mfc0    k1, MACH_C0_EPC                 # get return address
+        beq     k0, zero, SlowFault             # dont load invalid entries
+        mtc0    k0, MACH_C0_EntryLo0            # TODO: EntryLo1
         tlbwr                                   # update TLB
-        j       k1
-        rfe
-1:
-        mfc0    k1, MACH_C0_EPC                 # get return address
-        nop
-        j       k1
-        rfe
-2:
-        j       SlowFault                       # handle the rest
-        nop
+        eret
         .set    at
         .globl  MachUTLBMissEnd
 MachUTLBMissEnd:
@@ -1265,8 +1245,9 @@ SlowFault:
 
 NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
         .set    noat
-        subu    sp, sp, KERN_EXC_FRAME_SIZE
         .mask   0x80000000, (STAND_RA_OFFSET - KERN_EXC_FRAME_SIZE)
+
+        subu    sp, sp, KERN_EXC_FRAME_SIZE
 /*
  * Save the relevant kernel registers onto the stack.
  * We do not need to save s0 - s8, sp and gp because
@@ -1299,6 +1280,10 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
         sw      v1, KERN_MULT_HI_OFFSET(sp)
         mfc0    a3, MACH_C0_EPC                 # Fourth arg is the pc.
         sw      a0, KERN_SR_OFFSET(sp)
+
+        move    t0, a0
+        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
+        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
 /*
  * Call the exception handler.
  */
@@ -1308,15 +1293,11 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
  * Restore registers and return from the exception.
  * v0 contains the return address.
  */
-        lw      a0, KERN_SR_OFFSET(sp)
         lw      t0, KERN_MULT_LO_OFFSET(sp)
         lw      t1, KERN_MULT_HI_OFFSET(sp)
-        mtc0    a0, MACH_C0_Status              # Restore the SR, disable intrs
         mtlo    t0
         mthi    t1
-        move    k0, v0
         lw      AT, KERN_REG_OFFSET + 0(sp)
-        lw      v0, KERN_REG_OFFSET + 4(sp)
         lw      v1, KERN_REG_OFFSET + 8(sp)
         lw      a0, KERN_REG_OFFSET + 12(sp)
         lw      a1, KERN_REG_OFFSET + 16(sp)
@@ -1333,9 +1314,13 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
         lw      t8, KERN_REG_OFFSET + 60(sp)
         lw      t9, KERN_REG_OFFSET + 64(sp)
         lw      ra, KERN_REG_OFFSET + 68(sp)
+        di                                      # Disable interrupts.
+        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
+        lw      k0, KERN_SR_OFFSET(sp)
+        mtc0    k0, MACH_C0_Status              # Restore Status.
+        lw      v0, KERN_REG_OFFSET + 4(sp)
         addu    sp, sp, KERN_EXC_FRAME_SIZE
-        j       k0                              # Now return from the
-        rfe                                     #  exception.
+        eret                                    # Return from exception, enable intrs.
         .set    at
 END(MachKernGenException)
 
@@ -1398,28 +1383,26 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
         sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
         sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
         sw      a0, UADDR+U_PCB_REGS+(SR * 4)
-#if 0
+        sw      a3, UADDR+U_PCB_REGS+(PC * 4)
+#if 1
         la      gp, _gp                         # switch to kernel GP
 #endif
-        sw      a3, UADDR+U_PCB_REGS+(PC * 4)
-        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
+        move    t0, a0
+        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
+        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
 /*
  * Call the exception handler.
  */
         jal     trap
-        mtc0    a0, MACH_C0_Status
+        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
 /*
  * Restore user registers and return. NOTE: interrupts are enabled.
  */
-        lw      a0, UADDR+U_PCB_REGS+(SR * 4)
         lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
         lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
-        mtc0    a0, MACH_C0_Status              # this should disable interrupts
         mtlo    t0
         mthi    t1
-        lw      k0, UADDR+U_PCB_REGS+(PC * 4)
         lw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
         lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
         lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
         lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
@@ -1444,11 +1427,15 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
         lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
         lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
         lw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
         lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
         lw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        j       k0
-        rfe
+        di                                      # Disable interrupts.
+        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
+        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        lw      k0, UADDR+U_PCB_REGS+(SR * 4)
+        mtc0    k0, MACH_C0_Status              # Restore Status.
+        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        eret
         .set    at
 END(MachUserGenException)
 
@@ -1622,7 +1609,7 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
         sw      ra, UADDR+U_PCB_REGS+(RA * 4)
         sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
         sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
-#if 0
+#if 1
         la      gp, _gp                         # switch to kernel GP
 #endif
 /*
@@ -1762,14 +1749,12 @@ NLEAF(MachTLBMissException)
         sll     k0, k0, 2                       # compute offset from index
         addu    k1, k1, k0
         lw      k0, 0(k1)                       # get PTE entry
-        mfc0    k1, MACH_C0_EPC                 # get return address
-        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
+        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry --TODO: EntryLo1
         and     k0, k0, PG_V                    # check for valid entry
         beq     k0, zero, MachKernGenException  # PTE invalid
         nop
         tlbwr                                   # update TLB
-        j       k1
-        rfe
+        eret
 
 1:
         subu    k0, sp, UADDR + 0x200           # check to see if we have a
@@ -1938,10 +1923,10 @@ END(splhigh)
  */
 LEAF(splx)
 ALEAF(_splx)
-        li      t0, ~(MACH_Status_IPL_MASK | MACH_Status_IE)
+        and     t1, a0, MACH_Status_IPL_MASK | MACH_Status_IE
         di      v0                              # read Status and disable interrupts
-        and     t0, t0, v0
-        or      t0, t0, a0
+        and     t0, v0, ~(MACH_Status_IPL_MASK | MACH_Status_IE)
+        or      t0, t1
         j       ra
         mtc0    t0, MACH_C0_Status              # restore interrupt mask
 END(splx)
@@ -2000,7 +1985,7 @@ LEAF(MachTLBWriteIndexed)
         sll     a0, a0, VMMACH_TLB_INDEX_SHIFT
         mtc0    a0, MACH_C0_Index               # Set the index.
         mtc0    a1, MACH_C0_EntryHi             # Set up entry high.
-        mtc0    a2, MACH_C0_EntryLo0            # Set up entry low.
+        mtc0    a2, MACH_C0_EntryLo0            # Set up entry low --TODO: EntryLo1
         nop
         tlbwi                                   # Write the TLB
 
@@ -2055,7 +2040,8 @@ LEAF(MachTLBFlush)
         mfc0    t0, MACH_C0_EntryHi             # Save the PID
         li      t1, MACH_CACHED_MEMORY_ADDR     # invalid address
         mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
-        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry.
+        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry 0.
+        mtc0    zero, MACH_C0_EntryLo1          # Zero out low entry 1.
 /*
  * Align the starting value (t1) and the upper bound (t2).
  */
@@ -2102,7 +2088,7 @@ LEAF(MachTLBFlushAddr)
         li      t1, MACH_CACHED_MEMORY_ADDR     # Load invalid entry.
         bltz    v0, 1f                          # index < 0 => !found
         mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
-        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry.
+        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry. --TODO: EntryLo1
         nop
         tlbwi
 1:
@@ -2137,7 +2123,7 @@ LEAF(MachTLBUpdate)
         nop
         tlbp                                    # Probe for the entry.
         mfc0    v0, MACH_C0_Index               # See what we got
-        mtc0    a1, MACH_C0_EntryLo0            # init low reg.
+        mtc0    a1, MACH_C0_EntryLo0            # init low reg. --TODO: EntryLo1
         bltz    v0, 1f                          # index < 0 => !found
         sra     v0, v0, VMMACH_TLB_INDEX_SHIFT  # convert index to regular num
         b       2f

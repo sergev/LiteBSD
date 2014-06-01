@@ -65,15 +65,12 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
-struct  proc *machFPCurProcPtr;         /* pointer to last proc to use FP */
-
 extern void MachKernGenException();
 extern void MachUserGenException();
 extern void MachKernIntr();
 extern void MachUserIntr();
 extern void MachTLBModException();
 extern void MachTLBMissException();
-extern unsigned MachEmulateBranch();
 
 void (*machExceptionTable[])() = {
     /*
@@ -149,27 +146,6 @@ void (*machExceptionTable[])() = {
     MachUserGenException,   /* 31 - 1F -      Reserved */
 };
 
-char    *trap_type[] = {
-    "external interrupt",
-    "TLB modification",
-    "TLB miss (load or instr. fetch)",
-    "TLB miss (store)",
-    "address error (load or I-fetch)",
-    "address error (store)",
-    "bus error (I-fetch)",
-    "bus error (load or store)",
-    "system call",
-    "breakpoint",
-    "reserved instruction",
-    "coprocessor unusable",
-    "arithmetic overflow",
-    "reserved 13",
-    "reserved 14",
-    "reserved 15",
-};
-
-extern volatile struct chiptime *Mach_clock_addr;
-
 /*
  * Handle an exception.
  * Called from MachKernGenException() or MachUserGenException()
@@ -192,11 +168,6 @@ trap(statusReg, causeReg, vadr, pc, args)
     extern unsigned onfault_table[];
 
     cnt.v_trap++;
-    type = (causeReg & MACH_Cause_ExcCode) >> MACH_Cause_ExcCode_SHIFT;
-    if (USERMODE(statusReg)) {
-        type |= T_USER;
-        sticks = p->p_sticks;
-    }
 
     /*
      * Enable hardware interrupts if they were on before.
@@ -206,8 +177,15 @@ trap(statusReg, causeReg, vadr, pc, args)
         int ipl = CURPRI(statusReg);
         if (ipl < 2)
             spl2();
+        else
+            splx(statusReg);
     }
 
+    type = (causeReg & MACH_Cause_ExcCode) >> MACH_Cause_ExcCode_SHIFT;
+    if (USERMODE(statusReg)) {
+        type |= T_USER;
+        sticks = p->p_sticks;
+    }
     switch (type) {
     case T_TLB_MOD:
         /* check for kernel address */
@@ -294,7 +272,8 @@ trap(statusReg, causeReg, vadr, pc, args)
             rv = vm_fault(kernel_map, va, ftype, FALSE);
             if (rv == KERN_SUCCESS)
                 return (pc);
-            if (i = ((struct pcb *)UADDR)->pcb_onfault) {
+            i = ((struct pcb *)UADDR)->pcb_onfault;
+            if (i) {
                 ((struct pcb *)UADDR)->pcb_onfault = 0;
                 return (onfault_table[i]);
             }
@@ -304,7 +283,8 @@ trap(statusReg, causeReg, vadr, pc, args)
          * It is an error for the kernel to access user space except
          * through the copyin/copyout routines.
          */
-        if ((i = ((struct pcb *)UADDR)->pcb_onfault) == 0)
+        i = ((struct pcb *)UADDR)->pcb_onfault;
+        if (i == 0)
             goto err;
         /* check for fuswintr() or suswintr() getting a page fault */
         if (i == 4)
@@ -350,8 +330,9 @@ trap(statusReg, causeReg, vadr, pc, args)
                 return (pc);
             goto out;
         }
-        if (!USERMODE(statusReg)) {
-            if (i = ((struct pcb *)UADDR)->pcb_onfault) {
+        if (! USERMODE(statusReg)) {
+            i = ((struct pcb *)UADDR)->pcb_onfault;
+            if (i) {
                 ((struct pcb *)UADDR)->pcb_onfault = 0;
                 return (onfault_table[i]);
             }
@@ -381,25 +362,13 @@ trap(statusReg, causeReg, vadr, pc, args)
         int rval[2];
         struct sysent *systab;
         extern int nsysent;
-#ifdef ULTRIXCOMPAT
-        extern struct sysent ultrixsysent[];
-        extern int ultrixnsysent;
-#endif
 
         cnt.v_syscall++;
-        /* compute next PC after syscall instruction */
-        if ((int)causeReg < 0)
-            locr0[PC] = MachEmulateBranch(locr0, pc, 0, 0);
-        else
-            locr0[PC] += 4;
+        /* Compute next PC after syscall instruction.
+         * Don't use syscall in branch delay slot. */
+        locr0[PC] += 4;
         systab = sysent;
         numsys = nsysent;
-#ifdef ULTRIXCOMPAT
-        if (p->p_md.md_flags & MDP_ULTRIX) {
-            systab = ultrixsysent;
-            numsys = ultrixnsysent;
-        }
-#endif
         code = locr0[V0];
         switch (code) {
         case SYS_syscall:
@@ -596,7 +565,8 @@ trap(statusReg, causeReg, vadr, pc, args)
     case T_ADDR_ERR_LD:     /* misaligned access */
     case T_ADDR_ERR_ST:     /* misaligned access */
     case T_BUS_ERR_LD_ST:   /* BERR asserted to cpu */
-        if (i = ((struct pcb *)UADDR)->pcb_onfault) {
+        i = ((struct pcb *)UADDR)->pcb_onfault;
+        if (i) {
             ((struct pcb *)UADDR)->pcb_onfault = 0;
             return (onfault_table[i]);
         }
@@ -754,181 +724,11 @@ softintr()
 }
 
 /*
- * Return the resulting PC as if the branch was executed.
- */
-unsigned
-MachEmulateBranch(regsPtr, instPC, fpcCSR, allowNonBranch)
-    unsigned *regsPtr;
-    unsigned instPC;
-    unsigned fpcCSR;
-    int allowNonBranch;
-{
-    InstFmt inst;
-    unsigned retAddr;
-    int condition;
-    extern unsigned GetBranchDest();
-
-
-    inst = *(InstFmt *)instPC;
-#if 0
-    printf("regsPtr=%x PC=%x Inst=%x fpcCsr=%x\n", regsPtr, instPC,
-        inst.word, fpcCSR); /* XXX */
-#endif
-    switch ((int)inst.JType.op) {
-    case OP_SPECIAL:
-        switch ((int)inst.RType.func) {
-        case OP_JR:
-        case OP_JALR:
-            retAddr = regsPtr[inst.RType.rs];
-            break;
-
-        default:
-            if (!allowNonBranch)
-                panic("MachEmulateBranch: Non-branch");
-            retAddr = instPC + 4;
-            break;
-        }
-        break;
-
-    case OP_BCOND:
-        switch ((int)inst.IType.rt) {
-        case OP_BLTZ:
-        case OP_BLTZAL:
-            if ((int)(regsPtr[inst.RType.rs]) < 0)
-                retAddr = GetBranchDest((InstFmt *)instPC);
-            else
-                retAddr = instPC + 8;
-            break;
-
-        case OP_BGEZAL:
-        case OP_BGEZ:
-            if ((int)(regsPtr[inst.RType.rs]) >= 0)
-                retAddr = GetBranchDest((InstFmt *)instPC);
-            else
-                retAddr = instPC + 8;
-            break;
-
-        default:
-            panic("MachEmulateBranch: Bad branch cond");
-        }
-        break;
-
-    case OP_J:
-    case OP_JAL:
-        retAddr = (inst.JType.target << 2) |
-            ((unsigned)instPC & 0xF0000000);
-        break;
-
-    case OP_BEQ:
-        if (regsPtr[inst.RType.rs] == regsPtr[inst.RType.rt])
-            retAddr = GetBranchDest((InstFmt *)instPC);
-        else
-            retAddr = instPC + 8;
-        break;
-
-    case OP_BNE:
-        if (regsPtr[inst.RType.rs] != regsPtr[inst.RType.rt])
-            retAddr = GetBranchDest((InstFmt *)instPC);
-        else
-            retAddr = instPC + 8;
-        break;
-
-    case OP_BLEZ:
-        if ((int)(regsPtr[inst.RType.rs]) <= 0)
-            retAddr = GetBranchDest((InstFmt *)instPC);
-        else
-            retAddr = instPC + 8;
-        break;
-
-    case OP_BGTZ:
-        if ((int)(regsPtr[inst.RType.rs]) > 0)
-            retAddr = GetBranchDest((InstFmt *)instPC);
-        else
-            retAddr = instPC + 8;
-        break;
-
-    case OP_COP1:
-        switch (inst.RType.rs) {
-        case OP_BCx:
-        case OP_BCy:
-            if ((inst.RType.rt & COPz_BC_TF_MASK) == COPz_BC_TRUE)
-                condition = fpcCSR & MACH_FPC_COND_BIT;
-            else
-                condition = !(fpcCSR & MACH_FPC_COND_BIT);
-            if (condition)
-                retAddr = GetBranchDest((InstFmt *)instPC);
-            else
-                retAddr = instPC + 8;
-            break;
-
-        default:
-            if (!allowNonBranch)
-                panic("MachEmulateBranch: Bad coproc branch instruction");
-            retAddr = instPC + 4;
-        }
-        break;
-
-    default:
-        if (!allowNonBranch)
-            panic("MachEmulateBranch: Non-branch instruction");
-        retAddr = instPC + 4;
-    }
-#if 0
-    printf("Target addr=%x\n", retAddr); /* XXX */
-#endif
-    return (retAddr);
-}
-
-unsigned
-GetBranchDest(InstPtr)
-    InstFmt *InstPtr;
-{
-    return ((unsigned)InstPtr + 4 + ((short)InstPtr->IType.imm << 2));
-}
-
-/*
  * This routine is called by procxmt() to single step one instruction.
- * We do this by storing a break instruction after the current instruction,
- * resuming execution, and then restoring the old instruction.
  */
 cpu_singlestep(p)
     register struct proc *p;
 {
-    register unsigned va;
-    register int *locr0 = p->p_md.md_regs;
-    int i;
-
-    /* compute next address after current location */
-    va = MachEmulateBranch(locr0, locr0[PC], locr0[FSR], 1);
-    if (p->p_md.md_ss_addr || p->p_md.md_ss_addr == va ||
-        !useracc((caddr_t)va, 4, B_READ)) {
-        printf("SS %s (%d): breakpoint already set at %x (va %x)\n",
-            p->p_comm, p->p_pid, p->p_md.md_ss_addr, va); /* XXX */
-        return (EFAULT);
-    }
-    p->p_md.md_ss_addr = va;
-    p->p_md.md_ss_instr = fuiword((caddr_t)va);
-    i = suiword((caddr_t)va, MACH_BREAK_SSTEP);
-    if (i < 0) {
-        vm_offset_t sa, ea;
-        int rv;
-
-        sa = trunc_page((vm_offset_t)va);
-        ea = round_page((vm_offset_t)va+sizeof(int)-1);
-        rv = vm_map_protect(&p->p_vmspace->vm_map, sa, ea,
-            VM_PROT_DEFAULT, FALSE);
-        if (rv == KERN_SUCCESS) {
-            i = suiword((caddr_t)va, MACH_BREAK_SSTEP);
-            (void) vm_map_protect(&p->p_vmspace->vm_map,
-                sa, ea, VM_PROT_READ|VM_PROT_EXECUTE, FALSE);
-        }
-    }
-    if (i < 0)
-        return (EFAULT);
-#if 0
-    printf("SS %s (%d): breakpoint set at %x: %x (pc %x) br %x\n",
-        p->p_comm, p->p_pid, p->p_md.md_ss_addr,
-        p->p_md.md_ss_instr, locr0[PC], fuword((caddr_t)va)); /* XXX */
-#endif
+    // TODO: use Debug.SST bit.
     return (0);
 }

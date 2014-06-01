@@ -423,15 +423,12 @@ setregs(p, entry, retval)
     register_t retval[2];
 {
     int sp = p->p_md.md_regs[SP];
-    extern struct proc *machFPCurProcPtr;
 
     bzero((caddr_t)p->p_md.md_regs, (FSR + 1) * sizeof(int));
     p->p_md.md_regs[SP] = sp;
     p->p_md.md_regs[PC] = entry & ~3;
     p->p_md.md_regs[PS] = PSL_USERSET;
     p->p_md.md_flags & ~MDP_FPUSED;
-    if (machFPCurProcPtr == p)
-        machFPCurProcPtr = (struct proc *)0;
 }
 
 /*
@@ -806,8 +803,6 @@ out:
     return val;
 }
 
-#define MHZ     200             /* CPU clock. */
-
 /*
  * Delay for a given number of microseconds.
  * The processor has a 32-bit hardware Count register,
@@ -817,7 +812,7 @@ out:
 void udelay (unsigned usec)
 {
     unsigned now = mfc0 (9, 0); // C0_Count
-    unsigned final = now + usec * MHZ / 2;
+    unsigned final = now + usec * CPU_KHZ / 2000;
 
     for (;;) {
     now = mfc0 (9, 0); // C0_Count

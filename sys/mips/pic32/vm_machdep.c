@@ -69,10 +69,9 @@ cpu_fork(p1, p2)
     register struct user *up = p2->p_addr;
     register pt_entry_t *pte;
     register int i;
-    extern struct proc *machFPCurProcPtr;
 
     p2->p_md.md_regs = up->u_pcb.pcb_regs;
-    p2->p_md.md_flags = p1->p_md.md_flags & (MDP_FPUSED | MDP_ULTRIX);
+    p2->p_md.md_flags = p1->p_md.md_flags & MDP_FPUSED;
 
     /*
      * Cache the PTEs for the user area in the machine dependent
@@ -148,11 +147,6 @@ cpu_swapin(p)
 cpu_exit(p)
     struct proc *p;
 {
-    extern struct proc *machFPCurProcPtr;
-
-    if (machFPCurProcPtr == p)
-        machFPCurProcPtr = (struct proc *)0;
-
     vmspace_free(p->p_vmspace);
 
     (void) splhigh();
@@ -169,8 +163,6 @@ cpu_coredump(p, vp, cred)
     struct vnode *vp;
     struct ucred *cred;
 {
-    extern struct proc *machFPCurProcPtr;
-
     return (vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
         (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL,
         p));

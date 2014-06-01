@@ -66,8 +66,6 @@
  * Resettodr restores the time of day hardware after a time change.
  */
 
-volatile struct chiptime *Mach_clock_addr;
-
 /*
  * Start the real-time and statistics clocks. Leave stathz 0 since there
  * are no other timers available.
