@@ -94,35 +94,26 @@
 /*
  * The bits in the status register.
  */
-#define MACH_Status_CU0          0x10000000      /* Access to coprocessor 0 allowed (in user mode) */
-#define MACH_Status_RP           0x08000000      /* Enable reduced power mode */
-#define MACH_Status_RE           0x02000000      /* Reverse endianness (in user mode) */
-#define MACH_Status_MX           0x01000000      /* DSP resource enable */
-#define MACH_Status_BEV          0x00400000      /* Exception vectors: bootstrap */
-#define MACH_Status_TS           0x00200000      /* TLB shutdown control */
-#define MACH_Status_SR           0x00100000      /* Soft reset */
-#define MACH_Status_NMI          0x00080000      /* NMI reset */
-#define MACH_Status_IPL(x)       ((x) << 10)     /* Current interrupt priority level */
-#define MACH_Status_UM           0x00000010      /* User mode */
-#define MACH_Status_ERL          0x00000004      /* Error level */
-#define MACH_Status_EXL          0x00000002      /* Exception level */
-#define MACH_Status_IE           0x00000001      /* Interrupt enable */
-
+#define MACH_Status_CU0         0x10000000      /* Access to coprocessor 0 allowed (in user mode) */
+#define MACH_Status_RP          0x08000000      /* Enable reduced power mode */
+#define MACH_Status_RE          0x02000000      /* Reverse endianness (in user mode) */
+#define MACH_Status_MX          0x01000000      /* DSP resource enable */
+#define MACH_Status_BEV         0x00400000      /* Exception vectors: bootstrap */
+#define MACH_Status_TS          0x00200000      /* TLB shutdown control */
+#define MACH_Status_SR          0x00100000      /* Soft reset */
+#define MACH_Status_NMI         0x00080000      /* NMI reset */
+#define MACH_Status_IPL(x)      ((x) << 10)     /* Current interrupt priority level */
+#define MACH_Status_IPL_MASK    0x0000fc00
+#define MACH_Status_IPL_SHIFT   10
+#define MACH_Status_UM          0x00000010      /* User mode */
+#define MACH_Status_ERL         0x00000004      /* Error level */
+#define MACH_Status_EXL         0x00000002      /* Exception level */
+#define MACH_Status_IE          0x00000001      /* Interrupt enable */
 
 /*
  * The interrupt masks.
  * If a bit in the mask is 1 then the interrupt is enabled (or pending).
  */
-#define MACH_INT_MASK		0xff00
-#define MACH_INT_MASK_5		0x8000
-#define MACH_INT_MASK_4		0x4000
-#define MACH_INT_MASK_3		0x2000
-#define MACH_INT_MASK_2		0x1000
-#define MACH_INT_MASK_1		0x0800
-#define MACH_INT_MASK_0		0x0400
-#define MACH_HARD_INT_MASK	0xfc00
-#define MACH_SOFT_INT_MASK_1	0x0200
-#define MACH_SOFT_INT_MASK_0	0x0100
 
 /*
  * Location of exception vectors.

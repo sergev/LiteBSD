@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: vm_machdep.c 1.21 91/04/06$
  *
- *	@(#)vm_machdep.c	8.3 (Berkeley) 1/4/94
+ *      @(#)vm_machdep.c        8.3 (Berkeley) 1/4/94
  */
 
 #include <sys/param.h>
@@ -64,52 +64,52 @@
  * the frame pointers on the stack after copying.
  */
 cpu_fork(p1, p2)
-	register struct proc *p1, *p2;
+    register struct proc *p1, *p2;
 {
-	register struct user *up = p2->p_addr;
-	register pt_entry_t *pte;
-	register int i;
-	extern struct proc *machFPCurProcPtr;
+    register struct user *up = p2->p_addr;
+    register pt_entry_t *pte;
+    register int i;
+    extern struct proc *machFPCurProcPtr;
 
-	p2->p_md.md_regs = up->u_pcb.pcb_regs;
-	p2->p_md.md_flags = p1->p_md.md_flags & (MDP_FPUSED | MDP_ULTRIX);
+    p2->p_md.md_regs = up->u_pcb.pcb_regs;
+    p2->p_md.md_flags = p1->p_md.md_flags & (MDP_FPUSED | MDP_ULTRIX);
 
-	/*
-	 * Cache the PTEs for the user area in the machine dependent
-	 * part of the proc struct so cpu_switch() can quickly map in
-	 * the user struct and kernel stack. Note: if the virtual address
-	 * translation changes (e.g. swapout) we have to update this.
-	 */
-	pte = kvtopte(up);
-	for (i = 0; i < UPAGES; i++) {
-		p2->p_md.md_upte[i] = pte->pt_entry & ~PG_G;
-		pte++;
-	}
+    /*
+     * Cache the PTEs for the user area in the machine dependent
+     * part of the proc struct so cpu_switch() can quickly map in
+     * the user struct and kernel stack. Note: if the virtual address
+     * translation changes (e.g. swapout) we have to update this.
+     */
+    pte = kvtopte(up);
+    for (i = 0; i < UPAGES; i++) {
+        p2->p_md.md_upte[i] = pte->pt_entry & ~PG_G;
+        pte++;
+    }
 
-	/*
-	 * Copy pcb and stack from proc p1 to p2.
-	 * We do this as cheaply as possible, copying only the active
-	 * part of the stack.  The stack and pcb need to agree;
-	 */
-	p2->p_addr->u_pcb = p1->p_addr->u_pcb;
-	/* cache segtab for ULTBMiss() */
-	p2->p_addr->u_pcb.pcb_segtab = (void *)p2->p_vmspace->vm_pmap.pm_segtab;
+    /*
+     * Copy pcb and stack from proc p1 to p2.
+     * We do this as cheaply as possible, copying only the active
+     * part of the stack.  The stack and pcb need to agree;
+     */
+    p2->p_addr->u_pcb = p1->p_addr->u_pcb;
+    /* cache segtab for ULTBMiss() */
+    p2->p_addr->u_pcb.pcb_segtab = (void *)p2->p_vmspace->vm_pmap.pm_segtab;
 
-	/*
-	 * Arrange for a non-local goto when the new process
-	 * is started, to resume here, returning nonzero from setjmp.
-	 */
+    /*
+     * Arrange for a non-local goto when the new process
+     * is started, to resume here, returning nonzero from setjmp.
+     */
 #ifdef DIAGNOSTIC
-	if (p1 != curproc)
-		panic("cpu_fork: curproc");
+    if (p1 != curproc)
+        panic("cpu_fork: curproc");
 #endif
-	if (copykstack(up)) {
-		/*
-		 * Return 1 in child.
-		 */
-		return (1);
-	}
-	return (0);
+    if (copykstack(up)) {
+        /*
+         * Return 1 in child.
+         */
+        return (1);
+    }
+    return (0);
 }
 
 /*
@@ -119,22 +119,22 @@ cpu_fork(p1, p2)
  */
 void
 cpu_swapin(p)
-	register struct proc *p;
+    register struct proc *p;
 {
-	register struct user *up = p->p_addr;
-	register pt_entry_t *pte;
-	register int i;
+    register struct user *up = p->p_addr;
+    register pt_entry_t *pte;
+    register int i;
 
-	/*
-	 * Cache the PTEs for the user area in the machine dependent
-	 * part of the proc struct so cpu_switch() can quickly map in
-	 * the user struct and kernel stack.
-	 */
-	pte = kvtopte(up);
-	for (i = 0; i < UPAGES; i++) {
-		p->p_md.md_upte[i] = pte->pt_entry & ~PG_G;
-		pte++;
-	}
+    /*
+     * Cache the PTEs for the user area in the machine dependent
+     * part of the proc struct so cpu_switch() can quickly map in
+     * the user struct and kernel stack.
+     */
+    pte = kvtopte(up);
+    for (i = 0; i < UPAGES; i++) {
+        p->p_md.md_upte[i] = pte->pt_entry & ~PG_G;
+        pte++;
+    }
 }
 
 /*
@@ -146,34 +146,34 @@ cpu_swapin(p)
  * until switch_exit has made things safe again.
  */
 cpu_exit(p)
-	struct proc *p;
+    struct proc *p;
 {
-	extern struct proc *machFPCurProcPtr;
+    extern struct proc *machFPCurProcPtr;
 
-	if (machFPCurProcPtr == p)
-		machFPCurProcPtr = (struct proc *)0;
+    if (machFPCurProcPtr == p)
+        machFPCurProcPtr = (struct proc *)0;
 
-	vmspace_free(p->p_vmspace);
+    vmspace_free(p->p_vmspace);
 
-	(void) splhigh();
-	kmem_free(kernel_map, (vm_offset_t)p->p_addr, ctob(UPAGES));
-	switch_exit();
-	/* NOTREACHED */
+    (void) splhigh();
+    kmem_free(kernel_map, (vm_offset_t)p->p_addr, ctob(UPAGES));
+    switch_exit();
+    /* NOTREACHED */
 }
 
 /*
  * Dump the machine specific header information at the start of a core dump.
  */
 cpu_coredump(p, vp, cred)
-	struct proc *p;
-	struct vnode *vp;
-	struct ucred *cred;
+    struct proc *p;
+    struct vnode *vp;
+    struct ucred *cred;
 {
-	extern struct proc *machFPCurProcPtr;
+    extern struct proc *machFPCurProcPtr;
 
-	return (vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
-	    (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL,
-	    p));
+    return (vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
+        (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL,
+        p));
 }
 
 /*
@@ -182,25 +182,25 @@ cpu_coredump(p, vp, cred)
  * and size must be a multiple of CLSIZE.
  */
 pagemove(from, to, size)
-	register caddr_t from, to;
-	int size;
+    register caddr_t from, to;
+    int size;
 {
-	register pt_entry_t *fpte, *tpte;
+    register pt_entry_t *fpte, *tpte;
 
-	if (size % CLBYTES)
-		panic("pagemove");
-	fpte = kvtopte(from);
-	tpte = kvtopte(to);
-	while (size > 0) {
-		MachTLBFlushAddr(from);
-		MachTLBUpdate(to, *fpte);
-		*tpte++ = *fpte;
-		fpte->pt_entry = 0;
-		fpte++;
-		size -= NBPG;
-		from += NBPG;
-		to += NBPG;
-	}
+    if (size % CLBYTES)
+        panic("pagemove");
+    fpte = kvtopte(from);
+    tpte = kvtopte(to);
+    while (size > 0) {
+        MachTLBFlushAddr(from);
+        MachTLBUpdate(to, *fpte);
+        *tpte++ = *fpte;
+        fpte->pt_entry = 0;
+        fpte++;
+        size -= NBPG;
+        from += NBPG;
+        to += NBPG;
+    }
 }
 
 extern vm_map_t phys_map;
@@ -209,48 +209,48 @@ extern vm_map_t phys_map;
  * Map an IO request into kernel virtual address space.  Requests fall into
  * one of five catagories:
  *
- *	B_PHYS|B_UAREA:	User u-area swap.
- *			Address is relative to start of u-area (p_addr).
- *	B_PHYS|B_PAGET:	User page table swap.
- *			Address is a kernel VA in usrpt (Usrptmap).
- *	B_PHYS|B_DIRTY:	Dirty page push.
- *			Address is a VA in proc2's address space.
- *	B_PHYS|B_PGIN:	Kernel pagein of user pages.
- *			Address is VA in user's address space.
- *	B_PHYS:		User "raw" IO request.
- *			Address is VA in user's address space.
+ *      B_PHYS|B_UAREA: User u-area swap.
+ *                      Address is relative to start of u-area (p_addr).
+ *      B_PHYS|B_PAGET: User page table swap.
+ *                      Address is a kernel VA in usrpt (Usrptmap).
+ *      B_PHYS|B_DIRTY: Dirty page push.
+ *                      Address is a VA in proc2's address space.
+ *      B_PHYS|B_PGIN:  Kernel pagein of user pages.
+ *                      Address is VA in user's address space.
+ *      B_PHYS:         User "raw" IO request.
+ *                      Address is VA in user's address space.
  *
  * All requests are (re)mapped into kernel VA space via the phys_map
  */
 vmapbuf(bp)
-	register struct buf *bp;
+    register struct buf *bp;
 {
-	register caddr_t addr;
-	register vm_size_t sz;
-	struct proc *p;
-	int off;
-	vm_offset_t kva;
-	register vm_offset_t pa;
+    register caddr_t addr;
+    register vm_size_t sz;
+    struct proc *p;
+    int off;
+    vm_offset_t kva;
+    register vm_offset_t pa;
 
-	if ((bp->b_flags & B_PHYS) == 0)
-		panic("vmapbuf");
-	addr = bp->b_saveaddr = bp->b_un.b_addr;
-	off = (int)addr & PGOFSET;
-	p = bp->b_proc;
-	sz = round_page(bp->b_bcount + off);
-	kva = kmem_alloc_wait(phys_map, sz);
-	bp->b_un.b_addr = (caddr_t) (kva + off);
-	sz = atop(sz);
-	while (sz--) {
-		pa = pmap_extract(vm_map_pmap(&p->p_vmspace->vm_map),
-			(vm_offset_t)addr);
-		if (pa == 0)
-			panic("vmapbuf: null page frame");
-		pmap_enter(vm_map_pmap(phys_map), kva, trunc_page(pa),
-			VM_PROT_READ|VM_PROT_WRITE, TRUE);
-		addr += PAGE_SIZE;
-		kva += PAGE_SIZE;
-	}
+    if ((bp->b_flags & B_PHYS) == 0)
+        panic("vmapbuf");
+    addr = bp->b_saveaddr = bp->b_un.b_addr;
+    off = (int)addr & PGOFSET;
+    p = bp->b_proc;
+    sz = round_page(bp->b_bcount + off);
+    kva = kmem_alloc_wait(phys_map, sz);
+    bp->b_un.b_addr = (caddr_t) (kva + off);
+    sz = atop(sz);
+    while (sz--) {
+        pa = pmap_extract(vm_map_pmap(&p->p_vmspace->vm_map),
+            (vm_offset_t)addr);
+        if (pa == 0)
+            panic("vmapbuf: null page frame");
+        pmap_enter(vm_map_pmap(phys_map), kva, trunc_page(pa),
+            VM_PROT_READ|VM_PROT_WRITE, TRUE);
+        addr += PAGE_SIZE;
+        kva += PAGE_SIZE;
+    }
 }
 
 /*
@@ -258,17 +258,17 @@ vmapbuf(bp)
  * We also invalidate the TLB entries and restore the original b_addr.
  */
 vunmapbuf(bp)
-	register struct buf *bp;
+    register struct buf *bp;
 {
-	register caddr_t addr = bp->b_un.b_addr;
-	register vm_size_t sz;
-	vm_offset_t kva;
+    register caddr_t addr = bp->b_un.b_addr;
+    register vm_size_t sz;
+    vm_offset_t kva;
 
-	if ((bp->b_flags & B_PHYS) == 0)
-		panic("vunmapbuf");
-	sz = round_page(bp->b_bcount + ((int)addr & PGOFSET));
-	kva = (vm_offset_t)((int)addr & ~PGOFSET);
-	kmem_free_wakeup(phys_map, kva, sz);
-	bp->b_un.b_addr = bp->b_saveaddr;
-	bp->b_saveaddr = NULL;
+    if ((bp->b_flags & B_PHYS) == 0)
+        panic("vunmapbuf");
+    sz = round_page(bp->b_bcount + ((int)addr & PGOFSET));
+    kva = (vm_offset_t)((int)addr & ~PGOFSET);
+    kmem_free_wakeup(phys_map, kva, sz);
+    bp->b_un.b_addr = bp->b_saveaddr;
+    bp->b_saveaddr = NULL;
 }

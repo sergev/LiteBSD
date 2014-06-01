@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: autoconf.c 1.31 91/01/21$
  *
- *	@(#)autoconf.c	8.1 (Berkeley) 6/10/93
+ *      @(#)autoconf.c  8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -65,9 +65,9 @@
  * the configuration process, and are used in initializing
  * the machine.
  */
-int	cold = 1;	/* if 1, still working on cold-start */
-int	dkn;		/* number of iostat dk numbers assigned so far */
-int	cpuspeed = 30;	/* approx # instr per usec. */
+int cold = 1;           /* if 1, still working on cold-start */
+int dkn;                /* number of iostat dk numbers assigned so far */
+int cpuspeed = 30;      /* approx # instr per usec. */
 
 /*
  * Determine mass storage and memory configuration for a machine.
@@ -76,47 +76,47 @@ int	cpuspeed = 30;	/* approx # instr per usec. */
  */
 configure()
 {
-	register struct mips_ctlr *cp;
-	register struct scsi_device *dp;
-	register struct driver *drp;
-	register int i;
+    register struct mips_ctlr *cp;
+    register struct scsi_device *dp;
+    register struct driver *drp;
+    register int i;
 
-	/* print what type of CPU and FPU we have */
+    /* print what type of CPU and FPU we have */
 
-        printf("cpu0 (MIPS PIC32MZ revision %d.%d)\n",
-                cpu.cpu.cp_majrev, cpu.cpu.cp_minrev);
+    printf("cpu0 (MIPS PIC32MZ revision %d.%d)\n",
+        cpu.cpu.cp_majrev, cpu.cpu.cp_minrev);
 
-	printf("data cache size %dK inst cache size %dK\n",
-		machDataCacheSize >> 10, machInstCacheSize >> 10);
+    printf("data cache size %dK inst cache size %dK\n",
+        machDataCacheSize >> 10, machInstCacheSize >> 10);
 
-	/* probe and initialize controllers */
-	for (cp = mips_cinit; drp = cp->mips_driver; cp++) {
-                if (cp->mips_addr == (char *)QUES)
-                        continue;
-                if (!(*drp->d_init)(cp))
-                        continue;
+    /* probe and initialize controllers */
+    for (cp = mips_cinit; drp = cp->mips_driver; cp++) {
+        if (cp->mips_addr == (char *)QUES)
+            continue;
+        if (!(*drp->d_init)(cp))
+            continue;
 
-		cp->mips_alive = 1;
+        cp->mips_alive = 1;
 
-		/* probe and initialize devices connected to controller */
-		for (dp = scsi_dinit; drp = dp->sd_driver; dp++) {
-			/* might want to get fancier later */
-			if (dp->sd_cdriver != cp->mips_driver ||
-			    dp->sd_ctlr != cp->mips_unit)
-				continue;	/* not connected */
-			if (!(*drp->d_init)(dp))
-				continue;
-			dp->sd_alive = 1;
-			/* if device is a disk, assign number for statistics */
-			if (dp->sd_dk && dkn < DK_NDRIVE)
-				dp->sd_dk = dkn++;
-			else
-				dp->sd_dk = -1;
-		}
-	}
+        /* probe and initialize devices connected to controller */
+        for (dp = scsi_dinit; drp = dp->sd_driver; dp++) {
+            /* might want to get fancier later */
+            if (dp->sd_cdriver != cp->mips_driver ||
+                dp->sd_ctlr != cp->mips_unit)
+                continue;       /* not connected */
+            if (!(*drp->d_init)(dp))
+                continue;
+            dp->sd_alive = 1;
+            /* if device is a disk, assign number for statistics */
+            if (dp->sd_dk && dkn < DK_NDRIVE)
+                dp->sd_dk = dkn++;
+            else
+                dp->sd_dk = -1;
+        }
+    }
 
-	swapconf();
-	cold = 0;
+    swapconf();
+    cold = 0;
 }
 
 /*
@@ -124,16 +124,16 @@ configure()
  */
 swapconf()
 {
-	register struct swdevt *swp;
-	register int nblks;
+    register struct swdevt *swp;
+    register int nblks;
 
-	for (swp = swdevt; swp->sw_dev != NODEV; swp++)
-		if (bdevsw[major(swp->sw_dev)].d_psize) {
-			nblks =
-			  (*bdevsw[major(swp->sw_dev)].d_psize)(swp->sw_dev);
-			if (nblks != -1 &&
-			    (swp->sw_nblks == 0 || swp->sw_nblks > nblks))
-				swp->sw_nblks = nblks;
-		}
-	dumpconf();
+    for (swp = swdevt; swp->sw_dev != NODEV; swp++)
+        if (bdevsw[major(swp->sw_dev)].d_psize) {
+            nblks =
+              (*bdevsw[major(swp->sw_dev)].d_psize)(swp->sw_dev);
+            if (nblks != -1 &&
+                (swp->sw_nblks == 0 || swp->sw_nblks > nblks))
+                swp->sw_nblks = nblks;
+        }
+    dumpconf();
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)genassym.c	8.3 (Berkeley) 6/2/95
+ *      @(#)genassym.c  8.3 (Berkeley) 6/2/95
  */
 #define KERNEL
 
@@ -50,27 +50,27 @@ extern int printf(char *, ...);
 
 int main()
 {
-	register struct proc *p = (struct proc *)0;
-	register struct user *up = (struct user *)0;
-	register struct vmmeter *vm = (struct vmmeter *)0;
-	register int size, s, n;
+    register struct proc *p = (struct proc *)0;
+    register struct user *up = (struct user *)0;
+    register struct vmmeter *vm = (struct vmmeter *)0;
+    register int size, s, n;
 
-	printf("#define\tP_FORW %d\n", &p->p_forw);
-	printf("#define\tP_BACK %d\n", &p->p_back);
-	printf("#define\tP_PRIORITY %d\n", &p->p_priority);
-	printf("#define\tP_ADDR %d\n", &p->p_addr);
-	printf("#define\tP_UPTE %d\n", p->p_md.md_upte);
-	printf("#define\tU_PCB_REGS %d\n", up->u_pcb.pcb_regs);
-	printf("#define\tU_PCB_FPREGS %d\n", &up->u_pcb.pcb_regs[F0]);
-	printf("#define\tU_PCB_CONTEXT %d\n", &up->u_pcb.pcb_context);
-	printf("#define\tU_PCB_ONFAULT %d\n", &up->u_pcb.pcb_onfault);
-	printf("#define\tU_PCB_SEGTAB %d\n", &up->u_pcb.pcb_segtab);
-	printf("#define\tVM_MIN_ADDRESS 0x%x\n", VM_MIN_ADDRESS);
-	printf("#define\tVM_MIN_KERNEL_ADDRESS 0x%x\n", VM_MIN_KERNEL_ADDRESS);
-	printf("#define\tV_SWTCH %d\n", &vm->v_swtch);
-	printf("#define\tSIGILL %d\n", SIGILL);
-	printf("#define\tSIGFPE %d\n", SIGFPE);
-	return 0;
+    printf("#define\tP_FORW %d\n", &p->p_forw);
+    printf("#define\tP_BACK %d\n", &p->p_back);
+    printf("#define\tP_PRIORITY %d\n", &p->p_priority);
+    printf("#define\tP_ADDR %d\n", &p->p_addr);
+    printf("#define\tP_UPTE %d\n", p->p_md.md_upte);
+    printf("#define\tU_PCB_REGS %d\n", up->u_pcb.pcb_regs);
+    printf("#define\tU_PCB_FPREGS %d\n", &up->u_pcb.pcb_regs[F0]);
+    printf("#define\tU_PCB_CONTEXT %d\n", &up->u_pcb.pcb_context);
+    printf("#define\tU_PCB_ONFAULT %d\n", &up->u_pcb.pcb_onfault);
+    printf("#define\tU_PCB_SEGTAB %d\n", &up->u_pcb.pcb_segtab);
+    printf("#define\tVM_MIN_ADDRESS 0x%x\n", VM_MIN_ADDRESS);
+    printf("#define\tVM_MIN_KERNEL_ADDRESS 0x%x\n", VM_MIN_KERNEL_ADDRESS);
+    printf("#define\tV_SWTCH %d\n", &vm->v_swtch);
+    printf("#define\tSIGILL %d\n", SIGILL);
+    printf("#define\tSIGFPE %d\n", SIGFPE);
+    return 0;
 }
 
 void panic()

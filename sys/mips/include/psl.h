@@ -38,17 +38,14 @@
 
 #include <machine/machConst.h>
 
-#define	PSL_LOWIPL	(MACH_INT_MASK | MACH_Status_IE)
+#define	PSL_LOWIPL	(MACH_Status_BEV | MACH_Status_IE)
 
-#define	PSL_USERSET 	(MACH_INT_MASK | MACH_Status_IE | MACH_Status_UM)
-
-#define	PSL_USERCLR	(MACH_Status_CU0 | MACH_Status_BEV | \
-			 MACH_Status_TS | MACH_Status_UM | \
-			 MACH_Status_IE | MACH_Status_MBZ)
+#define	PSL_USERSET 	(MACH_Status_BEV | MACH_Status_IE | MACH_Status_UM)
 
 /*
  * Macros to decode processor status word.
  */
 #define	USERMODE(ps)	((ps) & MACH_Status_UM)
-#define	BASEPRI(ps)	(((ps) & (MACH_INT_MASK | MACH_Status_IE)) \
-			== (MACH_INT_MASK | MACH_Status_IE))
+#define	BASEPRI(ps)	(((ps) & (MACH_Status_IPL_MASK | MACH_Status_IE)) \
+			== MACH_Status_IE)
+#define	CURPRI(ps)	(((ps) & MACH_Status_IPL_MASK) >> MACH_Status_IPL_SHIFT)

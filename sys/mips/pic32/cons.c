@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: cons.c 1.1 90/07/09$
  *
- *	@(#)cons.c	8.2 (Berkeley) 1/11/94
+ *      @(#)cons.c      8.2 (Berkeley) 1/11/94
  */
 
 #include <sys/param.h>
@@ -49,7 +49,7 @@
 #include <sys/file.h>
 #include <sys/conf.h>
 
-extern struct tty *constty;	/* virtual console output device */
+extern struct tty *constty;     /* virtual console output device */
 
 /*
  * Console I/O is redirected to the serial port.
@@ -80,78 +80,78 @@ consinit()
 }
 
 cnopen(dev, flag, mode, p)
-	dev_t dev;
-	int flag, mode;
-	struct proc *p;
+    dev_t dev;
+    int flag, mode;
+    struct proc *p;
 {
-	dev = cn_dev;
-	return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
+    dev = cn_dev;
+    return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
 }
 
 cnclose(dev, flag, mode, p)
-	dev_t dev;
-	int flag, mode;
-	struct proc *p;
+    dev_t dev;
+    int flag, mode;
+    struct proc *p;
 {
-	dev = cn_dev;
-	return ((*cdevsw[major(dev)].d_close)(dev, flag, mode, p));
+    dev = cn_dev;
+    return ((*cdevsw[major(dev)].d_close)(dev, flag, mode, p));
 }
 
 cnread(dev, uio, flag)
-	dev_t dev;
-	struct uio *uio;
+    dev_t dev;
+    struct uio *uio;
 {
-	dev = cn_dev;
-	return ((*cdevsw[major(dev)].d_read)(dev, uio, flag));
+    dev = cn_dev;
+    return ((*cdevsw[major(dev)].d_read)(dev, uio, flag));
 }
 
 cnwrite(dev, uio, flag)
-	dev_t dev;
-	struct uio *uio;
+    dev_t dev;
+    struct uio *uio;
 {
-	if (constty)
-		return ((*linesw[constty->t_line].l_write)(constty, uio, flag));
-	dev = cn_dev;
-	return ((*cdevsw[major(dev)].d_write)(dev, uio, flag));
+    if (constty)
+        return ((*linesw[constty->t_line].l_write)(constty, uio, flag));
+    dev = cn_dev;
+    return ((*cdevsw[major(dev)].d_write)(dev, uio, flag));
 }
 
 cnioctl(dev, cmd, data, flag, p)
-	dev_t dev;
-	caddr_t data;
-	struct proc *p;
+    dev_t dev;
+    caddr_t data;
+    struct proc *p;
 {
-	int error;
+    int error;
 
-	/*
-	 * Superuser can always use this to wrest control of console
-	 * output from the "virtual" console.
-	 */
-	if (cmd == TIOCCONS && constty) {
-		error = suser(p->p_ucred, (u_short *) NULL);
-		if (error)
-			return (error);
-		constty = NULL;
-		return (0);
-	}
+    /*
+     * Superuser can always use this to wrest control of console
+     * output from the "virtual" console.
+     */
+    if (cmd == TIOCCONS && constty) {
+        error = suser(p->p_ucred, (u_short *) NULL);
+        if (error)
+            return (error);
+        constty = NULL;
+        return (0);
+    }
 #if 0
-	if (constty) {
-		error = (*linesw[constty->t_line].l_ioctl)
-			(constty, cmd, data, flag, p);
-		if (error >= 0)
-			return (error);
-	}
+    if (constty) {
+        error = (*linesw[constty->t_line].l_ioctl)
+            (constty, cmd, data, flag, p);
+        if (error >= 0)
+            return (error);
+    }
 #endif
-	dev = cn_dev;
-	return ((*cdevsw[major(dev)].d_ioctl)(dev, cmd, data, flag, p));
+    dev = cn_dev;
+    return ((*cdevsw[major(dev)].d_ioctl)(dev, cmd, data, flag, p));
 }
 
 /*ARGSUSED*/
 cnselect(dev, rw, p)
-	dev_t dev;
-	int rw;
-	struct proc *p;
+    dev_t dev;
+    int rw;
+    struct proc *p;
 {
-	return (ttselect(cn_dev, rw, p));
+    return (ttselect(cn_dev, rw, p));
 }
 
 /*
@@ -159,20 +159,20 @@ cnselect(dev, rw, p)
  */
 cngetc()
 {
-	return (redirect_getc(cn_dev));
+    return (redirect_getc(cn_dev));
 }
 
 /*
  * Print a character on console.
  */
 cnputc(c)
-	register int c;
+    register int c;
 {
-	int s;
+    int s;
 
-	if (c) {
-		if (c == '\n')
-			redirect_putc(cn_dev, '\r');
-		redirect_putc(cn_dev, c);
-	}
+    if (c) {
+        if (c == '\n')
+            redirect_putc(cn_dev, '\r');
+        redirect_putc(cn_dev, c);
+    }
 }

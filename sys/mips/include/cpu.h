@@ -67,8 +67,8 @@ struct clockframe {
 };
 
 #define	CLKF_USERMODE(framep)	((framep)->sr & MACH_Status_UM)
-#define	CLKF_BASEPRI(framep)	\
-	((~(framep)->sr & (MACH_INT_MASK | MACH_Status_IE)) == 0)
+#define	CLKF_BASEPRI(framep)	(((framep)->sr & \
+            (MACH_Status_IPL_MASK | MACH_Status_IE)) == MACH_Status_IE)
 #define	CLKF_PC(framep)		((framep)->pc)
 #define	CLKF_INTR(framep)	(0)
 
