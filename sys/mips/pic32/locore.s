@@ -349,8 +349,8 @@ done_dcache:
         sw      zero, START_FRAME - 4(sp)       # Zero out old ra for debugger
         jal     mach_init                       # mach_init()
         sw      zero, START_FRAME - 8(sp)       # Zero out old fp for debugger
-
-        mtc0    zero, MACH_C0_Status            # Disable interrupts
+init_unix:
+        di                                      # Disable interrupts
         li      sp, KERNELSTACK - START_FRAME   # switch to standard stack
         mfc0    t0, MACH_C0_PRId                # read processor ID register
         sw      t0, cpu
@@ -362,6 +362,7 @@ done_dcache:
  * Restore user registers and return.
  */
         .set    noat
+enter_user_mode:
         li      v0, PSL_USERSET | MACH_Status_EXL
         mtc0    v0, MACH_C0_Status              # switch to user mode
 #if 0
@@ -419,6 +420,7 @@ END(__main)
  * of the sigcontext struct for the sigreturn call.
  */
         .globl  sigcode
+        .type   sigcode, @function
 sigcode:
         addu    a0, sp, 16              # address of sigcontext
         li      v0, SYS_sigreturn       # sigreturn(scp)
@@ -487,16 +489,9 @@ END(badaddr)
  */
 LEAF(htonl)                             # a0 = 0x11223344, return 0x44332211
 ALEAF(ntohl)
-        srl     v1, a0, 24              # v1 = 0x00000011
-        sll     v0, a0, 24              # v0 = 0x44000000
-        or      v0, v0, v1
-        and     v1, a0, 0xff00
-        sll     v1, v1, 8               # v1 = 0x00330000
-        or      v0, v0, v1
-        srl     v1, a0, 8
-        and     v1, v1, 0xff00          # v1 = 0x00002200
+        wsbh    a0, a0                  # word swap bytes within halfwords
         j       ra
-        or      v0, v0, v1
+        rotr    v0, a0, 16              # rotate word 16bits
 END(htonl)
 
 /*
@@ -505,28 +500,21 @@ END(htonl)
  */
 LEAF(htons)
 ALEAF(ntohs)
-        srl     v0, a0, 8
-        and     v0, v0, 0xff
-        sll     v1, a0, 8
-        and     v1, v1, 0xff00
+        wsbh    a0, a0                  # word swap bytes within halfwords
         j       ra
-        or      v0, v0, v1
+        and     v0, a0, 0xffff          # bound it to 16bits
 END(htons)
 
 /*
  * bit = ffs(value)
  */
 LEAF(ffs)
-        beq     a0, zero, 2f
-        move    v0, zero
-1:
-        and     v1, a0, 1               # bit set?
-        addu    v0, v0, 1
-        beq     v1, zero, 1b            # no, continue
-        srl     a0, a0, 1
-2:
+        negu    a1, a0                  # negate value
+        and     a0, a1                  # value & -value -> pick trailing 1
+        clz     v0, a0                  # count leading zeroes
+        li      v1, 32                  # load constant 32
         j       ra
-        nop
+        subu    v0, v1, v0              # return 32-clz
 END(ffs)
 
 /*
@@ -536,11 +524,11 @@ LEAF(strlen)
         addu    v1, a0, 1
 1:
         lb      v0, 0(a0)               # get byte from string
-        addu    a0, a0, 1               # increment pointer
         bne     v0, zero, 1b            # continue if not end
-        nop
+        addu    a0, a0, 1               # increment pointer (delay slot)
+
         j       ra
-        subu    v0, a0, v1              # compute length - 1 for '\0' char
+        subu    v0, a0, v1              # compute length-1 for '\0' char
 END(strlen)
 
 /*
@@ -1134,8 +1122,9 @@ LEAF(idle)
         nop
         beq     t0, zero, 1b
         nop
-        b       sw1
         mtc0    v0, MACH_C0_Status              # Restore interrupt mask
+        b       sw1
+        ehb
 END(idle)
 
 /*
@@ -1167,8 +1156,6 @@ NON_LEAF(cpu_switch, STAND_FRAME_SIZE, ra)
         beq     t1, zero, idle                  # if none, idle
         mtc0    zero, MACH_C0_Status            # Disable all interrupts
 sw1:
-        nop                                     # wait for intrs disabled
-        nop
         lw      t0, whichqs                     # look for non-empty queue
         li      t2, -1                          # t2 = lowest bit set
         beq     t0, zero, idle                  # if none, idle
@@ -2199,14 +2186,8 @@ END(splx)
  *----------------------------------------------------------------------------
  */
 LEAF(MachEmptyWriteBuffer)
-        nop
-        nop
-        nop
-        nop
-1:      bc0f    1b
-        nop
         j       ra
-        nop
+        sync
 END(MachEmptyWriteBuffer)
 
 /*--------------------------------------------------------------------------
@@ -2229,8 +2210,7 @@ END(MachEmptyWriteBuffer)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBWriteIndexed)
-        mfc0    v1, MACH_C0_Status              # Save the status register.
-        mtc0    zero, MACH_C0_Status            # Disable interrupts
+        di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save the current PID.
 
         sll     a0, a0, VMMACH_TLB_INDEX_SHIFT
@@ -2241,7 +2221,7 @@ LEAF(MachTLBWriteIndexed)
         tlbwi                                   # Write the TLB
 
         mtc0    t0, MACH_C0_EntryHi             # Restore the PID.
-        j       ra
+        jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
 END(MachTLBWriteIndexed)
 
@@ -2286,8 +2266,7 @@ END(MachSetPID)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBFlush)
-        mfc0    v1, MACH_C0_Status              # Save the status register.
-        mtc0    zero, MACH_C0_Status            # Disable interrupts
+        di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save the PID
         li      t1, MACH_CACHED_MEMORY_ADDR     # invalid address
         mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
@@ -2305,7 +2284,7 @@ LEAF(MachTLBFlush)
         tlbwi                                   # Write the TLB entry.
 
         mtc0    t0, MACH_C0_EntryHi             # Restore the PID
-        j       ra
+        jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
 END(MachTLBFlush)
 
@@ -2327,8 +2306,7 @@ END(MachTLBFlush)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBFlushAddr)
-        mfc0    v1, MACH_C0_Status              # Save the status register.
-        mtc0    zero, MACH_C0_Status            # Disable interrupts
+        di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Get current PID
         nop
 
@@ -2344,7 +2322,7 @@ LEAF(MachTLBFlushAddr)
         tlbwi
 1:
         mtc0    t0, MACH_C0_EntryHi             # restore PID
-        j       ra
+        jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
 END(MachTLBFlushAddr)
 
@@ -2366,8 +2344,7 @@ END(MachTLBFlushAddr)
  *--------------------------------------------------------------------------
  */
 LEAF(MachTLBUpdate)
-        mfc0    v1, MACH_C0_Status              # Save the status register.
-        mtc0    zero, MACH_C0_Status            # Disable interrupts
+        di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save current PID
         nop                                     # 2 cycles before intr disabled
         mtc0    a0, MACH_C0_EntryHi             # init high reg.
@@ -2385,7 +2362,7 @@ LEAF(MachTLBUpdate)
         tlbwr                                   # enter into a random slot
 2:
         mtc0    t0, MACH_C0_EntryHi             # restore PID
-        j       ra
+        jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
 END(MachTLBUpdate)
 
@@ -2408,8 +2385,7 @@ LEAF(MachFlushCache)
         // TODO
         lw      t1, machInstCacheSize           # Must load before isolating
         lw      t2, machDataCacheSize           # Must load before isolating
-        mfc0    t3, MACH_C0_Status              # Save the status register.
-        mtc0    zero, MACH_C0_Status            # Disable interrupts.
+        di      t3                              # Save Status, disable interrupts
         la      v0, 1f
         or      v0, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
         j       v0
@@ -2451,17 +2427,10 @@ LEAF(MachFlushCache)
         bne     t0, t1, 1b
         sb      zero, -4(t0)
 
-        nop                                     # Insure isolated stores
-        nop                                     #   out of pipe.
-        nop
-        nop
+        sync                                    # Insure isolated stores out of pipe.
         mtc0    t3, MACH_C0_Status              # Restore status reg.
-        nop                                     # Insure cache unisolated.
-        nop
-        nop
-        nop
 #endif
-        j       ra
+        jr.hb   ra
         nop
 END(MachFlushCache)
 
@@ -2486,8 +2455,7 @@ END(MachFlushCache)
 LEAF(MachFlushICache)
 #if 0
         // TODO
-        mfc0    t0, MACH_C0_Status              # Save SR
-        mtc0    zero, MACH_C0_Status            # Disable interrupts.
+        di      t0                              # Save Status, disable interrupts
 
         la      v1, 1f
         or      v1, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
@@ -2506,7 +2474,7 @@ LEAF(MachFlushICache)
 
         mtc0    t0, MACH_C0_Status              # enable interrupts
 #endif
-        j       ra                              # return and run cached
+        jr.hb   ra                              # return and run cached
         nop
 END(MachFlushICache)
 
@@ -2531,8 +2499,7 @@ END(MachFlushICache)
 LEAF(MachFlushDCache)
 #if 0
         // TODO
-        mfc0    t0, MACH_C0_Status              # Save SR
-        mtc0    zero, MACH_C0_Status            # Disable interrupts.
+        di      t0                              # Save Status, disable interrupts
 
         la      v1, 1f
         or      v1, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
@@ -2551,6 +2518,6 @@ LEAF(MachFlushDCache)
 
         mtc0    t0, MACH_C0_Status              # enable interrupts
 #endif
-        j       ra                              # return and run cached
+        jr.hb   ra                              # return and run cached
         nop
 END(MachFlushDCache)
