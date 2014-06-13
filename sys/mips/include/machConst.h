@@ -130,12 +130,25 @@
 #define MACH_C0_EntryLo0	$2      /* TLB entry low 0 */
 #define MACH_C0_EntryLo1	$3      /* TLB entry low 1 */
 #define MACH_C0_Context		$4      /* TLB context */
+#define MACH_C0_PageMask        $5
+#define MACH_C0_Wired           $6
 #define MACH_C0_BadVAddr	$8      /* Bad virtual address */
+#define MACH_C0_Count           $9
 #define MACH_C0_EntryHi		$10     /* TLB entry high */
+#define MACH_C0_Compare         $11
 #define MACH_C0_Status		$12     /* Status register */
+#define MACH_C0_SRSCtl          $12,2
 #define MACH_C0_Cause		$13     /* Exception cause register */
 #define MACH_C0_EPC		$14     /* Exception PC */
 #define MACH_C0_PRId		$15     /* Processor revision identifier */
+#define MACH_C0_Config          $16
+#define MACH_C0_Config1         $16,1
+#define MACH_C0_Config7         $16,7
+#define MACH_C0_WatchLo         $18
+#define MACH_C0_WatchHi         $19
+#define MACH_C0_ITagLo          $28
+#define MACH_C0_DTagLo          $28,2
+#define MACH_C0_ErrPC           $30
 
 /*
  * Values for the code field in a break instruction.

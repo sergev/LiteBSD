@@ -28,6 +28,7 @@ LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_GCC_PREFIX}size
 OBJCOPY= ${MIPS_GCC_PREFIX}objcopy
+OBJDUMP= ${MIPS_GCC_PREFIX}objdump
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
@@ -67,7 +68,9 @@ SYSTEM_DEP=	Makefile ${SYSTEM_OBJ} $S/libkern/libkern.a
 SYSTEM_LD_HEAD=	sh $S/conf/newvers.sh; ${CC} $(CFLAGS) -c vers.c; rm -f $@
 SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix; \
 		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix
-SYSTEM_LD_TAIL= ${SIZE} vmunix; $(OBJCOPY) -O ihex --change-addresses=0x80000000 $@ vmunix.hex
+SYSTEM_LD_TAIL= ${SIZE} vmunix; \
+                $(OBJCOPY) -O ihex --change-addresses=0x80000000 $@ vmunix.hex; \
+                $(OBJDUMP) -d -S vmunix > vmunix.dis
 
 %LOAD
 
