@@ -141,7 +141,7 @@ uartparam(tp, t)
     /* Reset line. */
     reg->mode = 0;
     reg->staset = 0;
-    DELAY(25);
+    udelay(25);
 
     /* Compute mode bits. */
     mode = PIC32_UMODE_ON;              /* UART Enable */
@@ -532,7 +532,7 @@ uartprobe(cp)
         cterm.c_cflag = CS8;
         cterm.c_ospeed = cterm.c_ispeed = TTYDEF_SPEED;
         uartparam(&ctty, &cterm);
-        DELAY(1000);
+        udelay(1000);
         splx(s);
     }
     printf("uart%d at address 0x%x irq %u,%u,%u\n",

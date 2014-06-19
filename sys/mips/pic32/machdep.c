@@ -611,7 +611,7 @@ boot(howto)
             if (nbusy == 0)
                 break;
             printf("%d ", nbusy);
-            DELAY(40000 * iter);
+            udelay(40000 * iter);
         }
         if (nbusy)
             printf("giving up\n");
