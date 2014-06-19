@@ -23,6 +23,10 @@ options		"NMBCLUSTERS=16"	# 4K pages in network mbuf pool, default 256/512 pages
 options		"CPU_KHZ=200"		# Oscillator frequency of CPU core
 options		"HZ=100"		# Frequency of clock interrupt
 
+# Console options
+options		"CONS_MAJOR=17"		# UART device
+options		"CONS_MINOR=3"		# UART4 - chipKIT WiFire board
+
 # Filesystem options
 options		FIFO		# POSIX fifo support (in all filesystems)
 options		FFS		# fast filesystem with user and group quotas
@@ -50,7 +54,7 @@ config		vmunix root on sd0a swap on sd0b dumps on sd0b
 controller	uart0
 controller	spi0
 disk		sd0	at spi0 drive 0
-disk		sd1	at spi0 drive 1
+#disk		sd1	at spi0 drive 1
 
 pseudo-device	pty		4	# pseudo ptys
 pseudo-device	bpfilter	1	# packet filter ports

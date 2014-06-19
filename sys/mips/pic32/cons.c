@@ -61,9 +61,8 @@ extern void uartPutc();
 
 #define redirect_getc   uartGetc
 #define redirect_putc   uartPutc
-#define UARTDEV         17      /* UART device major */
 
-dev_t cn_dev = makedev(UARTDEV, 0);
+dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
 
 #else
 #error Console: cannot redirect
