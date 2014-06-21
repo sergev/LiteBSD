@@ -215,30 +215,6 @@
 #define MACH_OPCODE_C1		0x11
 
 /*
- * The low part of the TLB entry.
- */
-#define VMMACH_TLB_PF_NUM		0xfffff000
-#define VMMACH_TLB_NON_CACHEABLE_BIT	0x00000800
-#define VMMACH_TLB_MOD_BIT		0x00000400
-#define VMMACH_TLB_VALID_BIT		0x00000200
-#define VMMACH_TLB_GLOBAL_BIT		0x00000100
-
-#define VMMACH_TLB_PHYS_PAGE_SHIFT	12
-
-/*
- * The high part of the TLB entry.
- */
-#define VMMACH_TLB_VIRT_PAGE_NUM	0xfffff000
-#define VMMACH_TLB_PID			0x00000fc0
-#define VMMACH_TLB_PID_SHIFT		6
-#define VMMACH_TLB_VIRT_PAGE_SHIFT	12
-
-/*
- * The shift to put the index in the right spot.
- */
-#define VMMACH_TLB_INDEX_SHIFT		8
-
-/*
  * The number of TLB entries and the first one that write random hits.
  */
 #define VMMACH_NUM_TLB_ENTRIES		64

@@ -78,18 +78,22 @@ typedef union pt_entry {
 
 #define	PT_ENTRY_NULL	((pt_entry_t *) 0)
 
-#define	PG_PROT		0x00000003
-#define PG_RW		0x00000000
-#define PG_RO		0x00000001
-#define PG_WIRED	0x00000002
-#define	PG_G		0x00000100
-#define	PG_V		0x00000200
-#define	PG_NV		0x00000000
-#define	PG_M		0x00000400
-#define	PG_N		0x00000800
-#define	PG_FRAME	0xfffff000
-#define PG_SHIFT	12
-#define	PG_PFNUM(x)	(((x) & PG_FRAME) >> PG_SHIFT)
+#define	PG_RI		0x80000000  /* Read Inhibit, enabled by PageGrain.RIE */
+#define	PG_XI		0x40000000  /* Execute Inhibit, enabled by PageGrain.RIE */
+
+#define	PG_FRAME_MASK	0x03ffffc0  /* Page Frame Number */
+#define	PG_FRAME(x)	(((x) & PG_FRAME_MASK) << 6)    /* Get physical address */
+#define	PG_PFNUM(pa)	(((pa) >> 6) & PG_FRAME_MASK)   /* PA to PFN */
+
+#define	PG_CA_MASK      0x00000038  /* Coherency Attribute */
+#define	PG_WBACK        0x00000018  /* Cacheable, write-back, write allocate */
+#define	PG_UNCACHED     0x00000010  /* Uncached */
+#define	PG_WTHRU_WA     0x00000008  /* Cacheable, write-through, write allocate */
+#define	PG_WTHRU_NWA    0x00000000  /* Cacheable, write-through, no write allocate */
+
+#define PG_D		0x00000004  /* Dirty (write-enable) bit */
+#define	PG_V		0x00000002  /* Valid bit: access enabled */
+#define	PG_G		0x00000001  /* Global bit: ASID ignored */
 
 #if defined(KERNEL) && !defined(LOCORE)
 /*

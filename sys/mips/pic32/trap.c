@@ -197,19 +197,19 @@ trap(statusReg, causeReg, vadr, pc, args)
             pte = kvtopte(vadr);
             entry = pte->pt_entry;
 #ifdef DIAGNOSTIC
-            if (!(entry & PG_V) || (entry & PG_M))
+            if (!(entry & PG_V) || (entry & PG_D))
                 panic("trap: ktlbmod: invalid pte");
 #endif
-            if (entry & PG_RO) {
+            if (! (entry & PG_D)) {
                 /* write to read only page in the kernel */
                 ftype = VM_PROT_WRITE;
                 goto kernel_fault;
             }
-            entry |= PG_M;
+            entry |= PG_D;
             pte->pt_entry = entry;
             vadr &= ~PGOFSET;
             MachTLBUpdate(vadr, entry);
-            pa = entry & PG_FRAME;
+            pa = PG_FRAME(entry);
 #ifdef ATTR
             pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
 #else
@@ -233,20 +233,19 @@ trap(statusReg, causeReg, vadr, pc, args)
         pte += (vadr >> PGSHIFT) & (NPTEPG - 1);
         entry = pte->pt_entry;
 #ifdef DIAGNOSTIC
-        if (!(entry & PG_V) || (entry & PG_M))
+        if (!(entry & PG_V) || (entry & PG_D))
             panic("trap: utlbmod: invalid pte");
 #endif
-        if (entry & PG_RO) {
+        if (! (entry & PG_D)) {
             /* write to read only page */
             ftype = VM_PROT_WRITE;
             goto dofault;
         }
-        entry |= PG_M;
+        entry |= PG_D;
         pte->pt_entry = entry;
-        vadr = (vadr & ~PGOFSET) |
-            (pmap->pm_tlbpid << VMMACH_TLB_PID_SHIFT);
+        vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
         MachTLBUpdate(vadr, entry);
-        pa = entry & PG_FRAME;
+        pa = PG_FRAME(entry);
 #ifdef ATTR
         pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
 #else

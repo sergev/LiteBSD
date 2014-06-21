@@ -73,6 +73,7 @@
 #include <machine/reg.h>
 #include <machine/psl.h>
 #include <machine/pte.h>
+#include <machine/pic32mz.h>
 
 #include <mips/dev/device.h>
 #include <mips/dev/sccreg.h>
@@ -125,13 +126,50 @@ mach_init()
     register unsigned firstaddr;
     register caddr_t v;
     caddr_t start;
-    extern char _edata[], _end[];
+    extern char __data_start[], _edata[], _end[];
     extern char MachUTLBMiss[], MachUTLBMissEnd[];
     extern char MachException[], MachExceptionEnd[];
+    extern void _etext();
 
-    /* clear the BSS segment */
+    /* Initialize .data + .bss segments by zeroes. */
     v = (caddr_t)mips_round_page(_end);
-    bzero(_edata, v - _edata);
+    bzero (__data_start, v - _edata);
+
+#ifndef __MPLABX__
+    /* Copy the .data image from flash to ram.
+     * Linker places it at the end of .text segment. */
+    unsigned *src = (unsigned*) _etext;
+    unsigned *dest = (unsigned*) __data_start;
+    unsigned *limit = (unsigned*) _edata;
+    while (dest < limit) {
+        /*printf ("copy %08x from (%08x) to (%08x)\n", *src, src, dest);*/
+        *dest++ = *src++;
+    }
+#else
+    /* Microchip C32 compiler generates a .dinit table with
+     * initialization values for .data segment. */
+    extern const unsigned _dinit_addr[];
+    unsigned const *dinit = &_dinit_addr[0];
+    for (;;) {
+            char *dst = (char*) (*dinit++);
+            if (dst == 0)
+                    break;
+
+            unsigned nbytes = *dinit++;
+            unsigned fmt = *dinit++;
+            if (fmt == 0) {                     /* Clear */
+                    do {
+                            *dst++ = 0;
+                    } while (--nbytes > 0);
+            } else {                            /* Copy */
+                    char *src = (char*) dinit;
+                    do {
+                            *dst++ = *src++;
+                    } while (--nbytes > 0);
+                    dinit = (unsigned*) ((unsigned) (src + 3) & ~3);
+            }
+    }
+#endif
 
     /*
      * Autoboot by default.
@@ -146,15 +184,16 @@ mach_init()
      * Init mapping for u page(s) for proc[0], pm_tlbpid 1.
      */
     start = v;
-    curproc->p_addr = proc0paddr = (struct user *)v;
+    proc0paddr = (struct user *)v;
+    curproc->p_addr = proc0paddr;
     curproc->p_md.md_regs = proc0paddr->u_pcb.pcb_regs;
     firstaddr = MACH_CACHED_TO_PHYS(v);
     for (i = 0; i < UPAGES; i++) {
-        MachTLBWriteIndexed(i,
-            (UADDR + (i << PGSHIFT)) | (1 << VMMACH_TLB_PID_SHIFT),
-            curproc->p_md.md_upte[i] = firstaddr | PG_V | PG_M);
+        curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_V | PG_D;
         firstaddr += NBPG;
     }
+    MachTLBWriteIndexed(0, UADDR | 1, curproc->p_md.md_upte[0],
+                                      curproc->p_md.md_upte[1]);
     v += UPAGES * NBPG;
     MachSetPID(1);
 
@@ -167,7 +206,7 @@ mach_init()
     nullproc.p_md.md_regs = nullproc.p_addr->u_pcb.pcb_regs;
     bcopy("nullproc", nullproc.p_comm, sizeof("nullproc"));
     for (i = 0; i < UPAGES; i++) {
-        nullproc.p_md.md_upte[i] = firstaddr | PG_V | PG_M;
+        nullproc.p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_V | PG_D;
         firstaddr += NBPG;
     }
     v += UPAGES * NBPG;
@@ -193,26 +232,8 @@ mach_init()
      * Find out how much memory is available.
      * Be careful to save and restore the original contents for msgbuf.
      */
-    physmem = btoc(v - KERNBASE);
-    cp = (char *)MACH_PHYS_TO_UNCACHED(physmem << PGSHIFT);
-    while (cp < (char *)MACH_MAX_MEM_ADDR) {
-        if (badaddr(cp, 4))
-            break;
-        i = *(int *)cp;
-        *(int *)cp = 0xa5a5a5a5;
-        /*
-         * Data will persist on the bus if we read it right away.
-         * Have to be tricky here.
-         */
-        ((int *)cp)[4] = 0x5a5a5a5a;
-        MachEmptyWriteBuffer();
-        if (*(int *)cp != 0xa5a5a5a5)
-            break;
-        *(int *)cp = i;
-        cp += NBPG;
-        physmem++;
-    }
-
+    /* Get total RAM size. */
+    physmem = (512 * 1024) / NBPG;
     maxmem = physmem;
 
     /*
@@ -275,6 +296,165 @@ mach_init()
      * Initialize the virtual memory system.
      */
     pmap_bootstrap((vm_offset_t)v);
+
+    /*
+     * Setup interrupt controller.
+     *
+     * Priority IRQ                     Devices
+     * --------------------------------------------------------------
+     *  1       Software interrupt 0    low-priority clock processing
+     *  2       Software interrupt 1    network protocol processing
+     *  3       SPI ports               disk controllers
+     *  4       Ethernet                network device controllers
+     *  5       UART ports              terminal multiplexers
+     *  6       Core timer              high-priority clock processing
+     */
+    INTCON = 0;				/* Interrupt Control */
+    IPTMR = 0;				/* Temporal Proximity Timer */
+
+    /* Interrupt Flag Status */
+    IFS(0) = 0;
+    IFS(1) = 0;
+    IFS(2) = 0;
+    IFS(3) = 0;
+    IFS(4) = 0;
+    IFS(5) = 0;
+
+    /* Interrupt Enable Control */
+    IEC(0) = 0;
+    IEC(1) = 0;
+    IEC(2) = 0;
+    IEC(3) = 0;
+    IEC(4) = 0;
+    IEC(5) = 0;
+
+    /* Interrupt Priority Control */
+    unsigned ipc = PIC32_IPC_IP0(1) | PIC32_IPC_IP1(1) |
+                   PIC32_IPC_IP2(1) | PIC32_IPC_IP3(1);
+
+    /* 0 - Core Timer Interrupt
+     * 1 - Core Software Interrupt 0
+     * 2 - Core Software Interrupt 1
+     * 3 - External Interrupt 0 */
+    IPC(0) = PIC32_IPC_IP0(6) | PIC32_IPC_IP1(1) | PIC32_IPC_IP2(2) | PIC32_IPC_IP3(0);
+    IPC(1) = 0;
+    IPC(2) = 0;
+    IPC(3) = 0;
+    IPC(4) = 0;
+    IPC(5) = 0;
+    IPC(6) = 0;
+    IPC(7) = 0;
+    IPC(8) = 0;
+    IPC(9) = 0;
+    IPC(10) = 0;
+    IPC(11) = 0;
+    IPC(12) = 0;
+    IPC(13) = 0;
+    IPC(14) = 0;
+    IPC(15) = 0;
+    IPC(16) = 0;
+    IPC(17) = 0;
+    IPC(18) = 0;
+    IPC(19) = 0;
+    IPC(20) = 0;
+    IPC(21) = 0;
+    IPC(22) = 0;
+    IPC(23) = 0;
+    IPC(24) = 0;
+    IPC(25) = 0;
+    IPC(26) = 0;
+
+    /* 108 - Reserved
+     * 109 - SPI1 Fault
+     * 110 - SPI1 Receive Done
+     * 111 - SPI1 Transfer Done */
+    IPC(27) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+
+    /* 112 - UART1 Fault
+     * 113 - UART1 Receive Done
+     * 114 - UART1 Transfer Done
+     * 115 - I2C1 Bus Collision Event */
+    IPC(28) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(0);
+    IPC(29) = 0;
+    IPC(30) = 0;
+    IPC(31) = 0;
+    IPC(32) = 0;
+    IPC(33) = 0;
+    IPC(34) = 0;
+
+    /* 140 - DMA Channel 6
+     * 141 - DMA Channel 7
+     * 142 - SPI2 Fault
+     * 143 - SPI2 Receive Done */
+    IPC(35) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+
+    /* 144 - SPI2 Transfer Done
+     * 145 - UART2 Fault
+     * 146 - UART2 Receive Done
+     * 147 - UART2 Transfer Done */
+    IPC(36) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+
+    IPC(37) = 0;
+
+    /* 152 - Control Area Network 2
+     * 153 - Ethernet Interrupt
+     * 154 - SPI3 Fault
+     * 155 - SPI3 Receive Done */
+    IPC(38) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(4) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+
+    /* 156 - SPI3 Transfer Done
+     * 157 - UART3 Fault
+     * 158 - UART3 Receive Done
+     * 159 - UART3 Transfer Done */
+    IPC(39) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+
+    /* 160 - I2C3 Bus Collision Event
+     * 161 - I2C3 Slave Event
+     * 162 - I2C3 Master Event
+     * 163 - SPI4 Fault */
+    IPC(40) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(3);
+
+    /* 164 - SPI4 Receive Done
+     * 165 - SPI4 Transfer Done
+     * 166 - Real Time Clock
+     * 167 - Flash Control Event */
+    IPC(41) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(6) | PIC32_IPC_IP3(0);
+
+    /* 168 - Prefetch Module SEC Event
+     * 169 - SQI1 Event
+     * 170 - UART4 Fault
+     * 171 - UART4 Receive Done */
+    IPC(42) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+
+    /* 172 - UART4 Transfer Done
+     * 173 - I2C4 Bus Collision Event
+     * 174 - I2C4 Slave Event
+     * 175 - I2C4 Master Event */
+    IPC(43) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
+
+    /* 176 - SPI5 Fault
+     * 177 - SPI5 Receive Done
+     * 178 - SPI5 Transfer Done
+     * 179 - UART5 Fault */
+    IPC(44) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(5);
+
+    /* 180 - UART5 Receive Done
+     * 181 - UART5 Transfer Done
+     * 182 - I2C5 Bus Collision Event
+     * 183 - I2C5 Slave Event */
+    IPC(45) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
+
+    /* 184 - I2C5 Master Event
+     * 185 - SPI6 Fault
+     * 186 - SPI6 Receive Done
+     * 187 - SPI6 Transfer Done */
+    IPC(46) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+
+    /* 188 - UART6 Fault
+     * 189 - UART6 Receive Done
+     * 190 - UART6 Transfer Done
+     * 191 - Reserved */
+    IPC(47) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(0);
 }
 
 void

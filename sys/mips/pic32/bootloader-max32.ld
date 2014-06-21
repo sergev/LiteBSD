@@ -20,6 +20,8 @@ MEMORY
   kseg1_data_mem       (w!x) : ORIGIN = 0xA0000000, LENGTH = 0x20000
 }
 
+_eram = ORIGIN(ram) + LENGTH(ram);
+
 SECTIONS
 {
   .text ORIGIN(flash) :

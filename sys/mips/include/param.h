@@ -79,7 +79,7 @@
 #define	SINCR		1		/* increment of stack/NBPG */
 
 #define	UPAGES		2		/* pages of u-area */
-#define	UADDR		0xffffd000	/* address of u */
+#define	UADDR		0xffffc000	/* address of u */
 #define	UVPN		(UADDR>>PGSHIFT)/* virtual page number of u */
 #define	KERNELSTACK	(UADDR+UPAGES*NBPG)	/* top of kernel stack */
 

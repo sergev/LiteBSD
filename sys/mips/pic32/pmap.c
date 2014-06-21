@@ -415,14 +415,14 @@ pmap_remove(pmap, sva, eva)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-            if (entry & PG_WIRED)
-                pmap->pm_stats.wired_count--;
+//            if (entry & PG_WIRED)
+//                pmap->pm_stats.wired_count--;
             pmap->pm_stats.resident_count--;
-            pmap_remove_pv(pmap, sva, entry & PG_FRAME);
+            pmap_remove_pv(pmap, sva, PG_FRAME(entry));
 #ifdef ATTR
-            pmap_attributes[atop(entry & PG_FRAME)] = 0;
+            pmap_attributes[atop(PG_FRAME(entry))] = 0;
 #endif
-            pte->pt_entry = PG_NV;
+            pte->pt_entry = 0;
             /*
              * Flush the TLB for the given address.
              */
@@ -455,20 +455,19 @@ pmap_remove(pmap, sva, eva)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-            if (entry & PG_WIRED)
-                pmap->pm_stats.wired_count--;
+//            if (entry & PG_WIRED)
+//                pmap->pm_stats.wired_count--;
             pmap->pm_stats.resident_count--;
-            pmap_remove_pv(pmap, sva, entry & PG_FRAME);
+            pmap_remove_pv(pmap, sva, PG_FRAME(entry));
 #ifdef ATTR
-            pmap_attributes[atop(entry & PG_FRAME)] = 0;
+            pmap_attributes[atop(PG_FRAME(entry))] = 0;
 #endif
-            pte->pt_entry = PG_NV;
+            pte->pt_entry = 0;
             /*
              * Flush the TLB for the given address.
              */
             if (pmap->pm_tlbgen == tlbpid_gen) {
-                MachTLBFlushAddr(sva | (pmap->pm_tlbpid <<
-                    VMMACH_TLB_PID_SHIFT));
+                MachTLBFlushAddr(sva | pmap->pm_tlbpid);
             }
         }
     }
@@ -557,7 +556,7 @@ pmap_protect(pmap, sva, eva, prot)
         return;
     }
 
-    p = (prot & VM_PROT_WRITE) ? PG_RW : PG_RO;
+    p = (prot & VM_PROT_WRITE) ? PG_D : 0;
 
     if (!pmap->pm_segtab) {
         /*
@@ -577,7 +576,7 @@ pmap_protect(pmap, sva, eva, prot)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-            entry = (entry & ~(PG_M | PG_RO)) | p;
+            entry = (entry & ~PG_D) | p;
             pte->pt_entry = entry;
             /*
              * Update the TLB if the given address is in the cache.
@@ -611,14 +610,13 @@ pmap_protect(pmap, sva, eva, prot)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-            entry = (entry & ~(PG_M | PG_RO)) | p;
+            entry = (entry & ~PG_D) | p;
             pte->pt_entry = entry;
             /*
              * Update the TLB if the given address is in the cache.
              */
             if (pmap->pm_tlbgen == tlbpid_gen)
-                MachTLBUpdate(sva | (pmap->pm_tlbpid <<
-                    VMMACH_TLB_PID_SHIFT), entry);
+                MachTLBUpdate(sva | pmap->pm_tlbpid, entry);
         }
     }
 }
@@ -669,7 +667,7 @@ pmap_enter(pmap, va, pa, prot, wired)
         int s;
 
         if (!(prot & VM_PROT_WRITE))
-            npte = PG_RO;
+            npte = 0;
         else {
             register vm_page_t mem;
 
@@ -679,7 +677,7 @@ pmap_enter(pmap, va, pa, prot, wired)
                  * Don't bother to trap on kernel writes,
                  * just record page as dirty.
                  */
-                npte = PG_M;
+                npte = PG_D;
                 mem->flags &= ~PG_CLEAN;
             } else
 #ifdef ATTR
@@ -688,7 +686,7 @@ pmap_enter(pmap, va, pa, prot, wired)
 #else
                 if (!(mem->flags & PG_CLEAN))
 #endif
-                    npte = PG_M;
+                    npte = PG_D;
             else
                 npte = 0;
         }
@@ -731,7 +729,7 @@ pmap_enter(pmap, va, pa, prot, wired)
                             entry = 0;
                     }
                     if (!(entry & PG_V) ||
-                        (entry & PG_FRAME) != pa)
+                        (PG_FRAME(entry)) != pa)
                         printf(
             "pmap_enter: found va %x pa %x in pv_table but != %x\n",
                             va, pa, entry);
@@ -753,9 +751,9 @@ pmap_enter(pmap, va, pa, prot, wired)
     } else {
         /*
          * Assumption: if it is not part of our managed memory
-         * then it must be device memory which may be volitile.
+         * then it must be device memory which may be volatile.
          */
-        npte = (prot & VM_PROT_WRITE) ? (PG_M | PG_N) : (PG_RO | PG_N);
+        npte = (prot & VM_PROT_WRITE) ? (PG_D | PG_V) : PG_V;
     }
 
     /*
@@ -775,7 +773,7 @@ pmap_enter(pmap, va, pa, prot, wired)
         npte |= pa | PG_V | PG_G;
         if (wired) {
             pmap->pm_stats.wired_count += pagesperpage;
-            npte |= PG_WIRED;
+//            npte |= PG_WIRED;
         }
         i = pagesperpage;
         do {
@@ -783,8 +781,8 @@ pmap_enter(pmap, va, pa, prot, wired)
                 pmap->pm_stats.resident_count++;
             } else {
 #ifdef DIAGNOSTIC
-                if (pte->pt_entry & PG_WIRED)
-                    panic("pmap_enter: kernel wired");
+//                if (pte->pt_entry & PG_WIRED)
+//                    panic("pmap_enter: kernel wired");
 #endif
             }
             /*
@@ -815,14 +813,13 @@ pmap_enter(pmap, va, pa, prot, wired)
     npte |= pa | PG_V;
     if (wired) {
         pmap->pm_stats.wired_count += pagesperpage;
-        npte |= PG_WIRED;
+//        npte |= PG_WIRED;
     }
     i = pagesperpage;
     do {
         pte->pt_entry = npte;
         if (pmap->pm_tlbgen == tlbpid_gen)
-            MachTLBUpdate(va | (pmap->pm_tlbpid <<
-                VMMACH_TLB_PID_SHIFT), npte);
+            MachTLBUpdate(va | pmap->pm_tlbpid, npte);
         va += NBPG;
         npte += NBPG;
         pte++;
@@ -849,7 +846,8 @@ pmap_change_wiring(pmap, va, wired)
     if (pmap == NULL)
         return;
 
-    p = wired ? PG_WIRED : 0;
+//    p = wired ? PG_WIRED : 0;
+    p = 0;
 
     /*
      * Don't need to flush the TLB since PG_WIRED is only in software.
@@ -868,13 +866,15 @@ pmap_change_wiring(pmap, va, wired)
     }
 
     i = pagesperpage;
-    if (!(pte->pt_entry & PG_WIRED) && p)
-        pmap->pm_stats.wired_count += i;
-    else if ((pte->pt_entry & PG_WIRED) && !p)
-        pmap->pm_stats.wired_count -= i;
+//    if (!(pte->pt_entry & PG_WIRED) && wired)
+//        pmap->pm_stats.wired_count += i;
+//    else if ((pte->pt_entry & PG_WIRED) && !wired)
+//        pmap->pm_stats.wired_count -= i;
     do {
-        if (pte->pt_entry & PG_V)
-            pte->pt_entry = (pte->pt_entry & ~PG_WIRED) | p;
+        if (pte->pt_entry & PG_V) {
+//            pte->pt_entry &= ~PG_WIRED;
+            pte->pt_entry |= p;
+        }
         pte++;
     } while (--i != 0);
 }
@@ -897,7 +897,7 @@ pmap_extract(pmap, va)
         if (va < VM_MIN_KERNEL_ADDRESS || va >= virtual_end)
             panic("pmap_extract");
 #endif
-        pa = kvtopte(va)->pt_entry & PG_FRAME;
+        pa = PG_FRAME(kvtopte(va)->pt_entry);
     } else {
         register pt_entry_t *pte;
 
@@ -905,7 +905,7 @@ pmap_extract(pmap, va)
             pa = 0;
         else {
             pte += (va >> PGSHIFT) & (NPTEPG - 1);
-            pa = pte->pt_entry & PG_FRAME;
+            pa = PG_FRAME(pte->pt_entry);
         }
     }
     if (pa)

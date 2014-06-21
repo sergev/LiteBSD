@@ -87,7 +87,7 @@ check_nmi:                              # Check whether we are here due to a res
         nop
 #if 0
         # Call nmi_exception().
-        la      sp, _stack-16           # Set up stack base.
+        la      sp, _eram - 16          # Set up stack base.
         la      gp, _gp                 # GP register value defined by linker script.
         la      s1, nmi_exception       # Call user-defined NMI handler.
         jalr    s1
@@ -342,10 +342,8 @@ done_dcache:
 #define START_FRAME     ((4 * 4) + 4 + 4)
 
         .set    at
-        la      sp, start - START_FRAME
-#if 1
+        la      sp, _eram - START_FRAME
         la      gp, _gp
-#endif
         sw      zero, START_FRAME - 4(sp)       # Zero out old ra for debugger
         jal     mach_init                       # mach_init()
         sw      zero, START_FRAME - 8(sp)       # Zero out old fp for debugger
@@ -1193,7 +1191,6 @@ sw1:
         jal     pmap_alloc_tlbpid               # v0 = TLB PID
         move    s0, a0                          # BDSLOT: save p
         sw      s0, curproc                     # set curproc
-        sll     v0, v0, VMMACH_TLB_PID_SHIFT    # v0 = aligned PID
         lw      t0, P_UPTE+0(s0)                # t0 = first u. pte
         lw      t1, P_UPTE+4(s0)                # t1 = 2nd u. pte
         or      v0, v0, UADDR                   # v0 = first HI entry
@@ -2000,7 +1997,7 @@ NLEAF(MachTLBMissException)
         bne     k0, zero, MachKernGenException  # Go panic
         nop
 
-        la      a0, start - START_FRAME - 8     # set sp to a valid place
+        la      a0, _eram - START_FRAME - 8     # set sp to a valid place
         sw      sp, 24(a0)
         move    sp, a0
         la      a0, 1f
@@ -2018,7 +2015,7 @@ NLEAF(MachTLBMissException)
         .asciiz "ktlbmiss: PC %x RA %x ADR %x\nSR %x CR %x SP %x\n"
         .text
 
-        la      sp, start - START_FRAME         # set sp to a valid place
+        la      sp, _eram - START_FRAME         # set sp to a valid place
         PANIC("kernel stack overflow")
         .set    at
 END(MachTLBMissException)
@@ -2191,33 +2188,21 @@ LEAF(MachEmptyWriteBuffer)
 END(MachEmptyWriteBuffer)
 
 /*--------------------------------------------------------------------------
+ * Write the given entry into the TLB at the given index.
  *
- * MachTLBWriteIndexed --
- *
- *      Write the given entry into the TLB at the given index.
- *
- *      MachTLBWriteIndexed(index, highEntry, lowEntry)
- *              int index;
- *              int highEntry;
- *              int lowEntry;
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      TLB entry set.
- *
- *--------------------------------------------------------------------------
+ *      MachTLBWriteIndexed(int index,
+ *                          int highEntry,
+ *                          int lowEntry0,
+ *                          int lowEntry1)
  */
 LEAF(MachTLBWriteIndexed)
         di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save the current PID.
 
-        sll     a0, a0, VMMACH_TLB_INDEX_SHIFT
         mtc0    a0, MACH_C0_Index               # Set the index.
         mtc0    a1, MACH_C0_EntryHi             # Set up entry high.
-        mtc0    a2, MACH_C0_EntryLo0            # Set up entry low --TODO: EntryLo1
-        nop
+        mtc0    a2, MACH_C0_EntryLo0            # Set up entry low 0
+        mtc0    a3, MACH_C0_EntryLo1            # Set up entry low 1
         tlbwi                                   # Write the TLB
 
         mtc0    t0, MACH_C0_EntryHi             # Restore the PID.
@@ -2243,7 +2228,6 @@ END(MachTLBWriteIndexed)
  *--------------------------------------------------------------------------
  */
 LEAF(MachSetPID)
-        sll     a0, a0, VMMACH_TLB_PID_SHIFT    # put PID in right spot
         mtc0    a0, MACH_C0_EntryHi             # Write the hi reg value
         j       ra
         nop
@@ -2275,11 +2259,11 @@ LEAF(MachTLBFlush)
 /*
  * Align the starting value (t1) and the upper bound (t2).
  */
-        li      t1, VMMACH_FIRST_RAND_ENTRY << VMMACH_TLB_INDEX_SHIFT
-        li      t2, VMMACH_NUM_TLB_ENTRIES << VMMACH_TLB_INDEX_SHIFT
+        li      t1, VMMACH_FIRST_RAND_ENTRY
+        li      t2, VMMACH_NUM_TLB_ENTRIES
 1:
         mtc0    t1, MACH_C0_Index               # Set the index register.
-        addu    t1, t1, 1 << VMMACH_TLB_INDEX_SHIFT     # Increment index.
+        addu    t1, t1, 1                       # Increment index.
         bne     t1, t2, 1b
         tlbwi                                   # Write the TLB entry.
 
@@ -2353,7 +2337,6 @@ LEAF(MachTLBUpdate)
         mfc0    v0, MACH_C0_Index               # See what we got
         mtc0    a1, MACH_C0_EntryLo0            # init low reg. --TODO: EntryLo1
         bltz    v0, 1f                          # index < 0 => !found
-        sra     v0, v0, VMMACH_TLB_INDEX_SHIFT  # convert index to regular num
         b       2f
         tlbwi                                   # update slot found
 1:
@@ -2521,3 +2504,13 @@ LEAF(MachFlushDCache)
         jr.hb   ra                              # return and run cached
         nop
 END(MachFlushDCache)
+
+/*-----------------------------------
+ * Exception handlers and data for bootloader.
+ */
+        .section .exception
+        .org    0xf8
+_ebase:
+        .word   0x9d000000                      # EBase value
+_imgptr:
+        .word   -1                              # Image header pointer
