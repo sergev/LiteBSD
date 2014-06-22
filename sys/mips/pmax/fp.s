@@ -78,24 +78,13 @@
 #define COND_SIGNAL	0x8
 
 /*----------------------------------------------------------------------------
+ * Emulate unimplemented floating point operations.
+ * This routine should only be called by fpu_exception().
+ * Floating point registers are modified according to instruction.
  *
- * MachEmulateFP --
- *
- *	Emulate unimplemented floating point operations.
- *	This routine should only be called by MachFPInterrupt().
- *
- *	MachEmulateFP(instr)
- *		unsigned instr;
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Floating point registers are modified according to instruction.
- *
- *----------------------------------------------------------------------------
+ *	mips_emulate_fp(unsigned instr)
  */
-NON_LEAF(MachEmulateFP, STAND_FRAME_SIZE, ra)
+NON_LEAF(mips_emulate_fp, STAND_FRAME_SIZE, ra)
 	subu	sp, sp, STAND_FRAME_SIZE
 	sw	ra, STAND_RA_OFFSET(sp)
 /*
@@ -2251,13 +2240,13 @@ done:
 	lw	ra, STAND_RA_OFFSET(sp)
 	addu	sp, sp, STAND_FRAME_SIZE
 	j	ra
-END(MachEmulateFP)
+END(mips_emulate_fp)
 
 /*----------------------------------------------------------------------------
  * get_fs_int --
  *
  *	Read (integer) the FS register (bits 15-11).
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the sign
@@ -2351,7 +2340,7 @@ END(get_fs_int)
  *
  *	Read (single precision) the FT register (bits 20-16) and
  *	the FS register (bits 15-11) and break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the FS sign
@@ -2452,7 +2441,7 @@ get_ft_s_done:
  *
  *	Read (single precision) the FS register (bits 15-11) and
  *	break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the sign
@@ -2551,7 +2540,7 @@ END(get_ft_fs_s)
  *
  *	Read (double precision) the FT register (bits 20-16) and
  *	the FS register (bits 15-11) and break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the FS sign
@@ -2670,7 +2659,7 @@ get_ft_d_done:
  *
  *	Read (double precision) the FS register (bits 15-11) and
  *	break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the sign
@@ -2786,7 +2775,7 @@ END(get_ft_fs_d)
  *
  *	Read (single precision) the FS register (bits 15-11) and
  *	the FT register (bits 20-16) and break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the sign
@@ -2962,7 +2951,7 @@ END(get_cmp_s)
  *
  *	Read (double precision) the FS register (bits 15-11) and
  *	the FT register (bits 20-16) and break up into fields.
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Results:
  *	t0	contains the sign
@@ -3171,7 +3160,7 @@ END(get_cmp_d)
  * set_fd_s --
  *
  *	Write (single precision) the FD register (bits 10-6).
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Arguments:
  *	a0	contains the FP instruction
@@ -3182,7 +3171,7 @@ END(get_cmp_d)
  * set_fd_word --
  *
  *	Write (integer) the FD register (bits 10-6).
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Arguments:
  *	a0	contains the FP instruction
@@ -3275,7 +3264,7 @@ END(set_fd_s)
  * set_fd_d --
  *
  *	Write (double precision) the FT register (bits 10-6).
- *	This is an internal routine used by MachEmulateFP only.
+ *	This is an internal routine used by mips_emulate_fp only.
  *
  * Arguments:
  *	a0	contains the FP instruction

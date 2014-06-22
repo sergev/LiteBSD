@@ -36,28 +36,28 @@
  *	@(#)mfbreg.h	8.1 (Berkeley) 6/10/93
  */
 
-/* 
+/*
  * Mach Operating System
  * Copyright (c) 1991,1990,1989 Carnegie Mellon University
  * All Rights Reserved.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and its
  * documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS
  * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
  * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
- * 
+ *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
  *  School of Computer Science
  *  Carnegie Mellon University
  *  Pittsburgh PA 15213-3890
- * 
+ *
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  */
@@ -85,7 +85,7 @@ typedef struct {
 /* when using autoincrement */
 #define	BT431_WRITE_REG_AUTOI(regs, val) { \
 		(regs)->addr_reg = SET_VALUE(val); \
-		MachEmptyWriteBuffer(); \
+		mips_sync(); \
 	}
 
 #define	BT431_READ_REG_AUTOI(regs) \
@@ -93,7 +93,7 @@ typedef struct {
 
 #define	BT431_WRITE_CMAP_AUTOI(regs, val) { \
 		(regs)->addr_cmap = (val); \
-		MachEmptyWriteBuffer(); \
+		mips_sync(); \
 	}
 
 #define	BT431_READ_CMAP_AUTOI(regs) \
@@ -116,7 +116,7 @@ typedef struct {
  */
 #define BT455_SELECT_ENTRY(regs, regno) { \
 		(regs)->addr_cmap = (regno)&0x0f; \
-		MachEmptyWriteBuffer(); \
+		mips_sync(); \
 	}
 
 /*

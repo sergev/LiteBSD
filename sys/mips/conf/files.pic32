@@ -2,7 +2,6 @@ mips/pic32/autoconf.c		standard
 mips/pic32/clock.c		standard
 mips/pic32/conf.c		standard
 mips/pic32/cons.c		standard
-mips/pic32/fp.s			standard
 mips/pic32/machdep.c		standard config-dependent
 mips/pic32/mem.c		standard
 mips/pic32/pmap.c		standard

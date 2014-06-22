@@ -426,7 +426,7 @@ pmap_remove(pmap, sva, eva)
             /*
              * Flush the TLB for the given address.
              */
-            MachTLBFlushAddr(sva);
+            tlb_flush_addr(sva);
         }
         return;
     }
@@ -467,7 +467,7 @@ pmap_remove(pmap, sva, eva)
              * Flush the TLB for the given address.
              */
             if (pmap->pm_tlbgen == tlbpid_gen) {
-                MachTLBFlushAddr(sva | pmap->pm_tlbpid);
+                tlb_flush_addr(sva | pmap->pm_tlbpid);
             }
         }
     }
@@ -581,7 +581,7 @@ pmap_protect(pmap, sva, eva, prot)
             /*
              * Update the TLB if the given address is in the cache.
              */
-            MachTLBUpdate(sva, entry);
+            tlb_update(sva, entry);
         }
         return;
     }
@@ -616,7 +616,7 @@ pmap_protect(pmap, sva, eva, prot)
              * Update the TLB if the given address is in the cache.
              */
             if (pmap->pm_tlbgen == tlbpid_gen)
-                MachTLBUpdate(sva | pmap->pm_tlbpid, entry);
+                tlb_update(sva | pmap->pm_tlbpid, entry);
         }
     }
 }
@@ -753,7 +753,9 @@ pmap_enter(pmap, va, pa, prot, wired)
          * Assumption: if it is not part of our managed memory
          * then it must be device memory which may be volatile.
          */
-        npte = (prot & VM_PROT_WRITE) ? (PG_D | PG_V) : PG_V;
+        npte = PG_V | PG_WBACK;
+        if (prot & VM_PROT_WRITE)
+            npte |= PG_D;
     }
 
     /*
@@ -765,12 +767,12 @@ pmap_enter(pmap, va, pa, prot, wired)
      * NOTE: we only support cache flush for read only text.
      */
     if (prot == (VM_PROT_READ | VM_PROT_EXECUTE))
-        MachFlushICache(MACH_PHYS_TO_CACHED(pa), PAGE_SIZE);
+        mips_flush_icache(MACH_PHYS_TO_CACHED(pa), PAGE_SIZE);
 
     if (!pmap->pm_segtab) {
         /* enter entries into kernel pmap */
         pte = kvtopte(va);
-        npte |= pa | PG_V | PG_G;
+        npte |= PG_PFNUM(pa) | PG_V | PG_G | PG_WBACK;
         if (wired) {
             pmap->pm_stats.wired_count += pagesperpage;
 //            npte |= PG_WIRED;
@@ -788,7 +790,7 @@ pmap_enter(pmap, va, pa, prot, wired)
             /*
              * Update the same virtual address entry.
              */
-            MachTLBUpdate(va, npte);
+            tlb_update(va, npte);
             pte->pt_entry = npte;
             va += NBPG;
             npte += NBPG;
@@ -810,7 +812,7 @@ pmap_enter(pmap, va, pa, prot, wired)
      * Assume uniform modified and referenced status for all
      * MIPS pages in a MACH page.
      */
-    npte |= pa | PG_V;
+    npte |= PG_PFNUM(pa) | PG_V | PG_WBACK;
     if (wired) {
         pmap->pm_stats.wired_count += pagesperpage;
 //        npte |= PG_WIRED;
@@ -819,7 +821,7 @@ pmap_enter(pmap, va, pa, prot, wired)
     do {
         pte->pt_entry = npte;
         if (pmap->pm_tlbgen == tlbpid_gen)
-            MachTLBUpdate(va | pmap->pm_tlbpid, npte);
+            tlb_update(va | pmap->pm_tlbpid, npte);
         va += NBPG;
         npte += NBPG;
         pte++;
@@ -1123,7 +1125,7 @@ pmap_alloc_tlbpid(p)
     if (pmap->pm_tlbgen != tlbpid_gen) {
         id = tlbpid_cnt;
         if (id == VMMACH_NUM_PIDS) {
-            MachTLBFlush();
+            tlb_flush();
             /* reserve tlbpid_gen == 0 to alway mean invalid */
             if (++tlbpid_gen == 0)
                 tlbpid_gen = 1;

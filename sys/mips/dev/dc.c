@@ -185,7 +185,7 @@ dcprobe(cp)
 	/* reset chip */
 	dcaddr = (dcregs *)cp->mips_addr;
 	dcaddr->dc_csr = CSR_CLR;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	while (dcaddr->dc_csr & CSR_CLR)
 		;
 	dcaddr->dc_csr = CSR_MSE | CSR_TIE | CSR_RIE;
@@ -214,10 +214,10 @@ dcprobe(cp)
 			s = spltty();
 			dcaddr->dc_lpr = LPR_RXENAB | LPR_8_BIT_CHAR |
 				LPR_B4800 | DCKBD_PORT;
-			MachEmptyWriteBuffer();
+			mips_sync();
 			dcaddr->dc_lpr = LPR_RXENAB | LPR_B4800 | LPR_OPAR |
 				LPR_PARENB | LPR_8_BIT_CHAR | DCMOUSE_PORT;
-			MachEmptyWriteBuffer();
+			mips_sync();
 			DELAY(1000);
 			KBDReset(makedev(DCDEV, DCKBD_PORT), dcPutc);
 			MouseInit(makedev(DCDEV, DCMOUSE_PORT), dcPutc, dcGetc);
@@ -226,7 +226,7 @@ dcprobe(cp)
 			s = spltty();
 			dcaddr->dc_lpr = LPR_RXENAB | LPR_8_BIT_CHAR |
 				LPR_B9600 | minor(cn_tab.cn_dev);
-			MachEmptyWriteBuffer();
+			mips_sync();
 			DELAY(1000);
 			cn_tab.cn_disabled = 0;
 			splx(s);
@@ -463,7 +463,7 @@ out:
 	dcaddr = (dcregs *)dcpdma[unit].p_addr;
 	s = spltty();
 	dcaddr->dc_lpr = lpr;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	splx(s);
 	DELAY(10);
 	return (0);
@@ -610,14 +610,14 @@ dcxint(tp)
 				ndflush(&tp->t_outq, dp->p_mem-tp->t_outq.c_cf);
 				dp->p_end = dp->p_mem = tp->t_outq.c_cf;
 				dcaddr->dc_tcr &= ~(1 << unit);
-				MachEmptyWriteBuffer();
+				mips_sync();
 				DELAY(10);
 				return;
 			}
 		}
 		dcaddr->dc_tdr = dc_brk[unit >> 2] | *(u_char *)dp->p_mem;
 		dp->p_mem++;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		DELAY(10);
 		return;
 	}
@@ -635,7 +635,7 @@ dcxint(tp)
 	if (tp->t_outq.c_cc == 0 || !(tp->t_state & TS_BUSY)) {
 		dcaddr = (dcregs *)dp->p_addr;
 		dcaddr->dc_tcr &= ~(1 << (unit & 03));
-		MachEmptyWriteBuffer();
+		mips_sync();
 		DELAY(10);
 	}
 }
@@ -687,7 +687,7 @@ dcstart(tp)
 	dp->p_end = dp->p_mem = tp->t_outq.c_cf;
 	dp->p_end += cc;
 	dcaddr->dc_tcr |= 1 << (unit & 03);
-	MachEmptyWriteBuffer();
+	mips_sync();
 out:
 	splx(s);
 }
@@ -922,7 +922,7 @@ dcPutc(dev, c)
 	dcaddr = (dcregs *)dcpdma[minor(dev)].p_addr;
 	tcr = dcaddr->dc_tcr;
 	dcaddr->dc_tcr = tcr | (1 << minor(dev));
-	MachEmptyWriteBuffer();
+	mips_sync();
 	DELAY(10);
 	while (1) {
 		/*
@@ -942,7 +942,7 @@ dcPutc(dev, c)
 		if (line != minor(dev)) {
 			tcr |= 1 << line;
 			dcaddr->dc_tcr &= ~(1 << line);
-			MachEmptyWriteBuffer();
+			mips_sync();
 			DELAY(10);
 			continue;
 		}
@@ -950,7 +950,7 @@ dcPutc(dev, c)
 		 * Start sending the character.
 		 */
 		dcaddr->dc_tdr = dc_brk[0] | (c & 0xff);
-		MachEmptyWriteBuffer();
+		mips_sync();
 		DELAY(10);
 		/*
 		 * Wait for character to be sent.
@@ -968,12 +968,12 @@ dcPutc(dev, c)
 			if (line != minor(dev)) {
 				tcr |= 1 << line;
 				dcaddr->dc_tcr &= ~(1 << line);
-				MachEmptyWriteBuffer();
+				mips_sync();
 				DELAY(10);
 				continue;
 			}
 			dcaddr->dc_tcr &= ~(1 << minor(dev));
-			MachEmptyWriteBuffer();
+			mips_sync();
 			DELAY(10);
 			break;
 		}
@@ -984,7 +984,7 @@ dcPutc(dev, c)
 	 */
 	if (tcr & 0xF) {
 		dcaddr->dc_tcr = tcr;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		DELAY(10);
 	}
 

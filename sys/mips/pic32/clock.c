@@ -231,7 +231,7 @@ resettodr()
     s = splclock();
     t = c->regb;
     c->regb = t | REGB_SET_TIME;
-    MachEmptyWriteBuffer();
+    mips_sync();
     c->sec = sec;
     c->min = min;
     c->hour = hour;
@@ -239,7 +239,7 @@ resettodr()
     c->mon = mon;
     c->year = year - YR_OFFSET;
     c->regb = t;
-    MachEmptyWriteBuffer();
+    mips_sync();
     splx(s);
 #endif
 }

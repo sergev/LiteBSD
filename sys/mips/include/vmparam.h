@@ -217,7 +217,7 @@
 #define	LOTSOFMEM	2
 
 #define	mapin(pte, v, pfnum, prot) \
-	(*(int *)(pte) = ((pfnum) << PG_SHIFT) | (prot), MachTLBFlushAddr(v))
+	(*(int *)(pte) = ((pfnum) << PG_SHIFT) | (prot), tlb_flush_addr(v))
 
 /*
  * Mach derived constants

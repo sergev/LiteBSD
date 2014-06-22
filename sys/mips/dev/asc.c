@@ -611,17 +611,17 @@ asc_reset(asc, regs)
 	 * Reset chip and wait till done
 	 */
 	regs->asc_cmd = ASC_CMD_RESET;
-	MachEmptyWriteBuffer(); DELAY(25);
+	mips_sync(); DELAY(25);
 
 	/* spec says this is needed after reset */
 	regs->asc_cmd = ASC_CMD_NOP;
-	MachEmptyWriteBuffer(); DELAY(25);
+	mips_sync(); DELAY(25);
 
 	/*
 	 * Set up various chip parameters
 	 */
 	regs->asc_ccf = asc->ccf;
-	MachEmptyWriteBuffer(); DELAY(25);
+	mips_sync(); DELAY(25);
 	regs->asc_sel_timo = asc->timeout_250;
 	/* restore our ID */
 	regs->asc_cnfg1 = asc->myid | ASC_CNFG1_P_CHECK;
@@ -632,7 +632,7 @@ asc_reset(asc, regs)
 	ASC_TC_PUT(regs, 0);
 	regs->asc_syn_p = asc->min_period;
 	regs->asc_syn_o = 0;	/* async for now */
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 /*
@@ -734,7 +734,7 @@ asc_startcmd(asc, target)
 
 	/* preload the FIFO with the message to be sent */
 	regs->asc_fifo = SCSI_DIS_REC_IDENTIFY;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	/* initialize the DMA */
 	(*asc->dma_start)(asc, state, state->dmaBufAddr, ASCDMA_WRITE);
@@ -1118,7 +1118,7 @@ again:
 	 */
 
 done:
-	MachEmptyWriteBuffer();
+	mips_sync();
 	/* watch out for HW race conditions and setup & hold time violations */
 	ir = regs->asc_status;
 	while (ir != (status = regs->asc_status))
@@ -1609,13 +1609,13 @@ asc_sendsync(asc, status, ss, ir)
 
 	/* send the extended synchronous negotiation message */
 	regs->asc_fifo = SCSI_EXTENDED_MSG;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = 3;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = SCSI_SYNCHRONOUS_XFER;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = SCSI_MIN_PERIOD;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = ASC_MAX_OFFSET;
 	/* state to resume after we see the sync reply message */
 	state->script = asc->script + 2;
@@ -1640,13 +1640,13 @@ asc_replysync(asc, status, ss, ir)
 #endif
 	/* send synchronous transfer in response to a request */
 	regs->asc_fifo = SCSI_EXTENDED_MSG;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = 3;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = SCSI_SYNCHRONOUS_XFER;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = asc_to_scsi_period[state->sync_period] * asc->tb_ticks;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->asc_fifo = state->sync_offset;
 	regs->asc_cmd = ASC_CMD_XFER_INFO;
 	readback(regs->asc_cmd);
@@ -1925,7 +1925,7 @@ asic_dma_start(asc, state, cp, flag)
 		*ssr |= ASIC_CSR_SCSI_DIR | ASIC_CSR_DMAEN_SCSI;
 	else
 		*ssr = (*ssr & ~ASIC_CSR_SCSI_DIR) | ASIC_CSR_DMAEN_SCSI;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 static void
@@ -1946,10 +1946,10 @@ asic_dma_end(asc, state, flag)
 	to = (u_short *)MACH_PHYS_TO_CACHED(*dmap >> 3);
 	*dmap = -1;
 	*((volatile int *)ASIC_REG_SCSI_DMANPTR(asic_base)) = -1;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	if (flag == ASCDMA_READ) {
-		MachFlushDCache(MACH_PHYS_TO_CACHED(
+		mips_flush_dcache(MACH_PHYS_TO_CACHED(
 		    MACH_UNCACHED_TO_PHYS(state->dmaBufAddr)), state->dmalen);
 		if (nb = *((int *)ASIC_REG_SCSI_SCR(asic_base))) {
 			/* pick up last upto6 bytes, sigh. */
@@ -1990,7 +1990,7 @@ asc_dma_intr()
 	}
 	*(volatile int *)ASIC_REG_SCSI_DMANPTR(asic_base) =
 		ASIC_DMA_ADDR(next_phys);
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 #endif
 

@@ -184,8 +184,8 @@ pagemove(from, to, size)
     fpte = kvtopte(from);
     tpte = kvtopte(to);
     while (size > 0) {
-        MachTLBFlushAddr(from);
-        MachTLBUpdate(to, *fpte);
+        tlb_flush_addr(from);
+        tlb_update(to, *fpte);
         *tpte++ = *fpte;
         fpte->pt_entry = 0;
         fpte++;

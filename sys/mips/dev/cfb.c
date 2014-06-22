@@ -436,7 +436,7 @@ bt459_select_reg(regs, regno)
 {
 	regs->addr_lo = regno;
 	regs->addr_hi = regno >> 8;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 static void
@@ -445,9 +445,9 @@ bt459_write_reg(regs, regno, val)
 {
 	regs->addr_lo = regno;
 	regs->addr_hi = regno >> 8;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_reg = val;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 static u_char
@@ -456,7 +456,7 @@ bt459_read_reg(regs, regno)
 {
 	regs->addr_lo = regno;
 	regs->addr_hi = regno >> 8;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	return (regs->addr_reg);
 }
 
@@ -649,18 +649,18 @@ cfbRestoreCursorColor()
 	bt459_select_reg(regs, BT459_REG_CCOLOR_2);
 	for (i = 0; i < 6; i++) {
 		regs->addr_reg = cursor_RGB[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 #else /* PMAX */
 	bt459_select_reg(regs, BT459_REG_CCOLOR_1);
 	for (i = 0; i < 3; i++) {
 		regs->addr_reg = cursor_RGB[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 	bt459_select_reg(regs, BT459_REG_CCOLOR_3);
 	for (i = 3; i < 6; i++) {
 		regs->addr_reg = cursor_RGB[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 #endif /* PMAX */
 }
@@ -726,13 +726,13 @@ cfbPosCursor(x, y)
 
 	bt459_select_reg(regs, BT459_REG_CXLO);
 	regs->addr_reg = x;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_reg = x >> 8;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_reg = y;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_reg = y >> 8;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 /*
@@ -757,14 +757,14 @@ cfbInitColorMap()
 	register int i;
 
 	bt459_select_reg(regs, 0);
-	regs->addr_cmap = 0; MachEmptyWriteBuffer();
-	regs->addr_cmap = 0; MachEmptyWriteBuffer();
-	regs->addr_cmap = 0; MachEmptyWriteBuffer();
+	regs->addr_cmap = 0; mips_sync();
+	regs->addr_cmap = 0; mips_sync();
+	regs->addr_cmap = 0; mips_sync();
 
 	for (i = 1; i < 256; i++) {
-		regs->addr_cmap = 0xff; MachEmptyWriteBuffer();
-		regs->addr_cmap = 0xff; MachEmptyWriteBuffer();
-		regs->addr_cmap = 0xff; MachEmptyWriteBuffer();
+		regs->addr_cmap = 0xff; mips_sync();
+		regs->addr_cmap = 0xff; mips_sync();
+		regs->addr_cmap = 0xff; mips_sync();
 	}
 
 	for (i = 0; i < 3; i++) {
@@ -800,9 +800,9 @@ cfbLoadColorMap(ptr)
 
 	bt459_select_reg(regs, ptr->index);
 
-	regs->addr_cmap = ptr->Entry.red; MachEmptyWriteBuffer();
-	regs->addr_cmap = ptr->Entry.green; MachEmptyWriteBuffer();
-	regs->addr_cmap = ptr->Entry.blue; MachEmptyWriteBuffer();
+	regs->addr_cmap = ptr->Entry.red; mips_sync();
+	regs->addr_cmap = ptr->Entry.green; mips_sync();
+	regs->addr_cmap = ptr->Entry.blue; mips_sync();
 }
 
 /*
@@ -839,11 +839,11 @@ bt459_video_on()
 	/* restore old color map entry zero */
 	bt459_select_reg(regs, 0);
 	regs->addr_cmap = vstate.color0[0];
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap = vstate.color0[1];
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap = vstate.color0[2];
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	/* enable normal display */
 	bt459_write_reg(regs, BT459_REG_PRM, 0xff);
@@ -884,11 +884,11 @@ bt459_video_off()
 	/* set color map entry zero to zero */
 	bt459_select_reg(regs, 0);
 	regs->addr_cmap = 0;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap = 0;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap = 0;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	/* disable display */
 	bt459_write_reg(regs, BT459_REG_PRM, 0);

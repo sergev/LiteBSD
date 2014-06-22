@@ -290,7 +290,7 @@ sii_Reset(regs, reset)
 		 * Delay 250 ms before doing any commands.
 		 */
 		regs->comm = SII_DO_RST;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		DELAY(250000);
 
 		/* rearbitrate synchronous offset */
@@ -308,7 +308,7 @@ sii_Reset(regs, reset)
 	 * Reselect Enable, and Interrupt Enable.
 	 */
 	regs->csr = SII_HPM | SII_RSE | SII_PCE | SII_IE;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 /*
@@ -423,7 +423,7 @@ sii_StartCmd(sc, target)
 		regs->comm = SII_INXFER | SII_SELECT | SII_ATN | SII_CON |
 			SII_MSG_OUT_PHASE;
 	}
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	/*
 	 * Wait for something to happen
@@ -436,7 +436,7 @@ sii_StartCmd(sc, target)
 	if ((status & (SII_RST | SII_SCH | SII_STATE_MSK)) ==
 	    (SII_SCH | SII_CON)) {
 		regs->cstat = status;
-		MachEmptyWriteBuffer();
+		mips_sync();
 
 #ifdef DEBUG
 		sii_logp->target = target;
@@ -505,7 +505,7 @@ sii_StartCmd(sc, target)
 	if (status & SII_SIP) {
 		error = ENXIO;	/* device didn't respond */
 		regs->comm = SII_DISCON;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		SII_WAIT_UNTIL(status, regs->cstat,
 			!(status & (SII_CON | SII_SIP)),
 			SII_WAIT_COUNT, retval);
@@ -520,7 +520,7 @@ sii_StartCmd(sc, target)
 	regs->cstat = 0xffff;
 	regs->dstat = 0xffff;
 	regs->comm = 0;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	sii_CmdDone(sc, target, error);
 }
 
@@ -562,7 +562,7 @@ again:
 #endif
 
 	regs->dstat = dstat;	/* acknowledge everything */
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	if (dstat & SII_CI) {
 		/* deglitch cstat register */
@@ -570,7 +570,7 @@ again:
 		while (msg != (cstat = regs->cstat))
 			msg = cstat;
 		regs->cstat = cstat;	/* acknowledge everything */
-		MachEmptyWriteBuffer();
+		mips_sync();
 #ifdef DEBUG
 		if (sii_logp > sii_log)
 			sii_logp[-1].cstat = cstat;
@@ -765,7 +765,7 @@ again:
 					regs->dmabyte = state->dmaByte;
 				regs->comm = SII_DMA | SII_INXFER |
 					(comm & SII_STATE_MSK) | SII_CMD_PHASE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 #ifdef DEBUG
 				if (sii_debug > 4)
 					printf("Cmd dcnt %d dadr %x ",
@@ -833,7 +833,7 @@ again:
 				regs->comm = SII_DMA | SII_INXFER |
 					(comm & SII_STATE_MSK) |
 					state->dmaCurPhase;
-				MachEmptyWriteBuffer();
+				mips_sync();
 #ifdef DEBUG
 				if (sii_debug > 4)
 					printf("Data %d dcnt %d dadr %x ",
@@ -915,9 +915,9 @@ again:
 				regs->dmlotc = 0;
 				regs->comm = comm &
 					(SII_STATE_MSK | SII_PHASE_MSK);
-				MachEmptyWriteBuffer();
+				mips_sync();
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 #ifdef DEBUG
 				if (sii_debug > 4)
 					printf("DMA amt %d ", i);
@@ -986,9 +986,9 @@ again:
 				state->dmaAddrH = regs->dmaddrh;
 				regs->comm = comm &
 					(SII_STATE_MSK | SII_PHASE_MSK);
-				MachEmptyWriteBuffer();
+				mips_sync();
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 #ifdef DEBUG
 				if (sii_debug > 4) {
 					printf("SavP dcnt %d dadr %x ",
@@ -1033,7 +1033,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				msg = sc->sc_target;
 				sc->sc_target = -1;
 				/*
@@ -1048,7 +1048,7 @@ again:
 				    SII_STATE_MSK)) == SII_SCH) {
 					regs->cstat = SII_SCH | SII_BER;
 					regs->comm = 0;
-					MachEmptyWriteBuffer();
+					mips_sync();
 					/*
 					 * Double check that we didn't miss a
 					 * state change between seeing it and
@@ -1074,7 +1074,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				/* read the message length */
 				msg = sii_GetByte(regs, SII_MSG_IN_PHASE, 1);
 				if (msg < 0) {
@@ -1109,7 +1109,7 @@ again:
 						dstat & SII_DNE,
 						SII_WAIT_COUNT, i);
 					regs->dstat = SII_DNE;
-					MachEmptyWriteBuffer();
+					mips_sync();
 					i = (sii_buf[3] << 24) |
 						(sii_buf[4] << 16) |
 						(sii_buf[5] << 8) |
@@ -1132,7 +1132,7 @@ again:
 						dstat & SII_DNE,
 						SII_WAIT_COUNT, i);
 					regs->dstat = SII_DNE;
-					MachEmptyWriteBuffer();
+					mips_sync();
 					sii_DoSync(regs, state);
 					break;
 
@@ -1149,7 +1149,7 @@ again:
 						dstat & SII_DNE,
 						SII_WAIT_COUNT, i);
 					regs->dstat = SII_DNE;
-					MachEmptyWriteBuffer();
+					mips_sync();
 
 					/* wait for MSG_OUT phase */
 					SII_WAIT_UNTIL(dstat, regs->dstat,
@@ -1165,7 +1165,7 @@ again:
 						dstat & SII_DNE,
 						SII_WAIT_COUNT, i);
 					regs->dstat = SII_DNE;
-					MachEmptyWriteBuffer();
+					mips_sync();
 				}
 				break;
 
@@ -1177,7 +1177,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				/* wait a short time for another msg */
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & (SII_CI | SII_DI),
@@ -1198,7 +1198,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				state->prevComm = comm;
 #ifdef DEBUG
 				if (sii_debug > 4)
@@ -1223,7 +1223,7 @@ again:
 				}
 				regs->cstat = SII_SCH | SII_BER;
 				regs->comm = 0;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				sc->sc_target = -1;
 				/*
 				 * Double check that we didn't miss a state
@@ -1243,7 +1243,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				printf("sii%d: device %d: message reject.\n",
 					sc - sii_softc, sc->sc_target);
 				break;
@@ -1264,7 +1264,7 @@ again:
 				SII_WAIT_UNTIL(dstat, regs->dstat,
 					dstat & SII_DNE, SII_WAIT_COUNT, i);
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 				/* may want to check LUN some day */
 				/* wait a short time for another msg */
 				SII_WAIT_UNTIL(dstat, regs->dstat,
@@ -1299,7 +1299,7 @@ again:
 				regs->data = SCSI_NO_OP;
 			regs->comm = SII_INXFER | (comm & SII_STATE_MSK) |
 				SII_MSG_OUT_PHASE;
-			MachEmptyWriteBuffer();
+			mips_sync();
 
 			/* wait a short time for XFER complete */
 			SII_WAIT_UNTIL(dstat, regs->dstat, dstat & SII_DNE,
@@ -1311,7 +1311,7 @@ again:
 			/* just clear the DNE bit and check errors later */
 			if (dstat & SII_DNE) {
 				regs->dstat = SII_DNE;
-				MachEmptyWriteBuffer();
+				mips_sync();
 			}
 			break;
 
@@ -1361,7 +1361,7 @@ abort:
 		regs->data = SCSI_ABORT;
 		regs->comm = SII_INXFER | SII_ATN | (cstat & SII_STATE_MSK) |
 			SII_MSG_OUT_PHASE;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		SII_WAIT_UNTIL(dstat, regs->dstat,
 			(dstat & (SII_DNE | SII_PHASE_MSK)) ==
 			(SII_DNE | SII_MSG_OUT_PHASE),
@@ -1374,7 +1374,7 @@ abort:
 		    (SII_DNE | SII_MSG_OUT_PHASE)) {
 			/* disconnect if command in progress */
 			regs->comm = SII_DISCON;
-			MachEmptyWriteBuffer();
+			mips_sync();
 			SII_WAIT_UNTIL(cstat, regs->cstat,
 				!(cstat & SII_CON), SII_WAIT_COUNT, i);
 		}
@@ -1387,7 +1387,7 @@ abort:
 	regs->cstat = 0xffff;
 	regs->dstat = 0xffff;
 	regs->comm = 0;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	i = sc->sc_target;
 	sc->sc_target = -1;
@@ -1463,7 +1463,7 @@ sii_StateChg(sc, cstat)
 		state = &sc->sc_st[i];
 		regs->comm = SII_CON | SII_DST | SII_MSG_IN_PHASE;
 		regs->dmctrl = state->dmaReqAck;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		if (!state->prevComm) {
 			printf("sii%d: device %d: spurrious reselection\n",
 				sc - sii_softc, i);
@@ -1483,7 +1483,7 @@ sii_StateChg(sc, cstat)
 		printf("sii%d: Selected by device %d as target!!\n",
 			sc - sii_softc, regs->destat);
 		regs->comm = SII_DISCON;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		SII_WAIT_UNTIL(!(regs->cstat & SII_CON),
 			SII_WAIT_COUNT, i);
 		regs->cstat = 0xffff;
@@ -1519,7 +1519,7 @@ sii_GetByte(regs, phase, ack)
 	state = regs->cstat & SII_STATE_MSK;
 	if (!(dstat & SII_IBF) || (dstat & SII_MIS)) {
 		regs->comm = state | phase;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		/* wait a short time for IBF */
 		SII_WAIT_UNTIL(dstat, regs->dstat, dstat & SII_IBF,
 			SII_WAIT_COUNT, i);
@@ -1550,7 +1550,7 @@ sii_GetByte(regs, phase, ack)
 
 	if (ack) {
 		regs->comm = SII_INXFER | state | phase;
-		MachEmptyWriteBuffer();
+		mips_sync();
 
 		/* wait a short time for XFER complete */
 		SII_WAIT_UNTIL(dstat, regs->dstat, dstat & SII_DNE,
@@ -1559,7 +1559,7 @@ sii_GetByte(regs, phase, ack)
 		/* clear the DNE */
 		if (dstat & SII_DNE) {
 			regs->dstat = SII_DNE;
-			MachEmptyWriteBuffer();
+			mips_sync();
 		}
 	}
 
@@ -1617,7 +1617,7 @@ sii_DoSync(regs, state)
 
 		regs->data = sii_buf[j];
 		regs->comm = comm;
-		MachEmptyWriteBuffer();
+		mips_sync();
 
 		/* wait a short time for XFER complete */
 		SII_WAIT_UNTIL(dstat, regs->dstat, dstat & SII_DNE,
@@ -1631,7 +1631,7 @@ sii_DoSync(regs, state)
 
 		/* clear the DNE, other errors handled later */
 		regs->dstat = SII_DNE;
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 #else
 	CopyToBuffer((u_short *)sii_buf, (volatile u_short *)SII_BUF_ADDR, 5);
@@ -1645,7 +1645,7 @@ sii_DoSync(regs, state)
 	regs->dmlotc = 5;
 	regs->comm = SII_DMA | SII_INXFER | SII_ATN |
 		(regs->cstat & SII_STATE_MSK) | SII_MSG_OUT_PHASE;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	/* wait a short time for XFER complete */
 	SII_WAIT_UNTIL(dstat, regs->dstat,
@@ -1662,7 +1662,7 @@ sii_DoSync(regs, state)
 	}
 	/* clear the DNE, other errors handled later */
 	regs->dstat = SII_DNE;
-	MachEmptyWriteBuffer();
+	mips_sync();
 #endif
 
 #if 0
@@ -1699,7 +1699,7 @@ sii_StartDMA(regs, phase, dmaAddr, size)
 	regs->dmlotc = size;
 	regs->comm = SII_DMA | SII_INXFER | (regs->cstat & SII_STATE_MSK) |
 		phase;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 #ifdef DEBUG
 	if (sii_debug > 5) {

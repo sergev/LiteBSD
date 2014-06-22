@@ -599,7 +599,7 @@ sccparam(tp, t)
 	value = SCC_WR9_MASTER_IE | SCC_WR9_VIS;
 	SCC_WRITE_REG(regs, line, SCC_WR9, value);
 	SCC_WRITE_REG(regs, line, SCC_WR1, sc->scc_wreg[line].wr1);
-	MachEmptyWriteBuffer();
+	mips_sync();
 	return (0);
 }
 
@@ -638,7 +638,7 @@ sccintr(unit)
 		dp = &sc->scc_pdma[chan];
 		if (dp->p_mem < dp->p_end) {
 			SCC_WRITE_DATA(regs, chan, *dp->p_mem++);
-			MachEmptyWriteBuffer();
+			mips_sync();
 		} else {
 			tp->t_state &= ~TS_BUSY;
 			if (tp->t_state & TS_FLUSH)
@@ -658,7 +658,7 @@ sccintr(unit)
 				cc = sc->scc_wreg[chan].wr1 & ~SCC_WR1_TX_IE;
 				SCC_WRITE_REG(regs, chan, SCC_WR1, cc);
 				sc->scc_wreg[chan].wr1 = cc;
-				MachEmptyWriteBuffer();
+				mips_sync();
 			}
 		}
 	    } else if (rr2 == SCC_RR2_A_RECV_DONE ||
@@ -842,7 +842,7 @@ sccstart(tp)
 #endif
 		SCC_WRITE_DATA(regs, chan, *dp->p_mem++);
 	}
-	MachEmptyWriteBuffer();
+	mips_sync();
 out:
 	splx(s);
 }
@@ -1034,7 +1034,7 @@ sccPutc(dev, c)
 	 * Send the char.
 	 */
 	SCC_WRITE_DATA(regs, line, c);
-	MachEmptyWriteBuffer();
+	mips_sync();
 	splx(s);
 }
 #endif /* NSCC */

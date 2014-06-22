@@ -432,7 +432,7 @@ esigcode:
  */
 
 /*
- * This table is indexed by u.u_pcb.pcb_onfault in trap().
+ * This table is indexed by u.u_pcb.pcb_onfault in exception().
  * The reason for using this table rather than storing an address in
  * u.u_pcb.pcb_onfault is simply to make the code faster.
  */
@@ -478,7 +478,7 @@ LEAF(badaddr)
         move    v0, zero                # made it w/o errors
 baderr:
         j       ra
-        li      v0, 1                   # trap sends us here
+        li      v0, 1                   # exception sends us here
 END(badaddr)
 
 /*
@@ -1281,7 +1281,7 @@ LEAF(suiword)
         sw      a1, 0(a0)               # store word
         sw      zero, UADDR+U_PCB_ONFAULT
         move    v0, zero
-        b       MachFlushICache         # NOTE: this should not clobber v0!
+        b       mips_flush_icache       # NOTE: this should not clobber v0!
         li      a1, 4                   # size of word
 END(suiword)
 
@@ -1317,7 +1317,7 @@ END(fswberr)
 
 /*
  * fuswintr and suswintr are just like fusword and susword except that if
- * the page is not in memory or would cause a trap, then we return an error.
+ * the page is not in memory or would cause an exception, then we return an error.
  * The important thing is to prevent sleep() and switch().
  */
 LEAF(fuswintr)
@@ -1373,69 +1373,6 @@ LEAF(_remque)
 END(_remque)
 
 /*
- * This code is copied to the UTLB exception vector address to
- * handle user level TLB translation misses.
- * NOTE: This code must be relocatable!!!
- */
-        .globl  MachUTLBMiss
-        .type   MachUTLBMiss, @function
-MachUTLBMiss:
-        .set    noat
-        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
-        lw      k1, UADDR+U_PCB_SEGTAB          # get the current segment table
-        srl     k0, k0, SEGSHIFT                # compute segment table index
-        sll     k0, k0, 2
-        addu    k1, k1, k0
-        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
-        lw      k1, 0(k1)                       # get pointer to segment map
-        srl     k0, k0, PGSHIFT - 2             # compute segment map index
-        andi    k0, k0, (NPTEPG - 1) << 2
-        beq     k1, zero, SlowFault             # invalid segment map
-        addu    k1, k1, k0                      # index into segment map
-        lw      k0, 0(k1)                       # get page PTE
-        nop
-        beq     k0, zero, SlowFault             # dont load invalid entries
-        mtc0    k0, MACH_C0_EntryLo0            # TODO: EntryLo1
-        tlbwr                                   # update TLB
-        eret
-        .set    at
-        .globl  MachUTLBMissEnd
-MachUTLBMissEnd:
-
-/*
- * This code is copied to the general exception vector address to
- * handle all execptions except RESET and UTLBMiss.
- * NOTE: This code must be relocatable!!!
- */
-        .globl  MachException
-        .type   MachException, @function
-MachException:
-/*
- * Find out what mode we came from and jump to the proper handler.
- */
-        .set    noat
-        mfc0    k0, MACH_C0_Status              # Get the status register
-        mfc0    k1, MACH_C0_Cause               # Get the cause register value.
-        and     k0, k0, MACH_Status_UM          # test for user mode
-        sll     k0, k0, 3                       # shift user bit for cause index
-        and     k1, k1, MACH_Cause_ExcCode      # Mask out the cause bits.
-        or      k1, k1, k0                      # change index to user table
-1:
-        la      k0, machExceptionTable          # get base of the jump table
-        addu    k0, k0, k1                      # Get the address of the\
-                                                #  function entry.  Note that\
-                                                #  the cause is already\
-                                                #  shifted left by 2 bits so\
-                                                #  we dont have to shift.
-        lw      k0, 0(k0)                       # Get the function address
-        j       k0                              # Jump to the function.
-        nop
-        .set    at
-        .globl  MachExceptionEnd
-        .type   MachExceptionEnd, @function
-MachExceptionEnd:
-
-/*
  * We could not find a TLB entry.
  * Find out what mode we came from and call the appropriate handler.
  */
@@ -1444,7 +1381,7 @@ SlowFault:
         mfc0    k0, MACH_C0_Status
         nop
         and     k0, k0, MACH_Status_UM
-        bne     k0, zero, MachUserGenException
+        bne     k0, zero, user_exception
         nop
         .set    at
 /*
@@ -1452,18 +1389,9 @@ SlowFault:
  */
 
 /*----------------------------------------------------------------------------
+ * Handle an exception from kernel mode.
  *
- * MachKernGenException --
- *
- *      Handle an exception from kernel mode.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
+ *      kern_exception()
  */
 
 /*
@@ -1478,7 +1406,7 @@ SlowFault:
 #define KERN_MULT_HI_OFFSET     (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
 #define KERN_EXC_FRAME_SIZE     (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
 
-NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
+NNON_LEAF(kern_exception, KERN_EXC_FRAME_SIZE, ra)
         .set    noat
         .mask   0x80000000, (STAND_RA_OFFSET - KERN_EXC_FRAME_SIZE)
 
@@ -1522,7 +1450,7 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
 /*
  * Call the exception handler.
  */
-        jal     trap
+        jal     exception
         sw      a3, STAND_RA_OFFSET(sp)         # for debugging
 /*
  * Restore registers and return from the exception.
@@ -1557,23 +1485,14 @@ NNON_LEAF(MachKernGenException, KERN_EXC_FRAME_SIZE, ra)
         addu    sp, sp, KERN_EXC_FRAME_SIZE
         eret                                    # Return from exception, enable intrs.
         .set    at
-END(MachKernGenException)
+END(kern_exception)
 
 /*----------------------------------------------------------------------------
+ * Handle an exception from user mode.
  *
- * MachUserGenException --
- *
- *      Handle an exception from user mode.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
+ *      user_exception()
  */
-NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
+NNON_LEAF(user_exception, STAND_FRAME_SIZE, ra)
         .set    noat
         .mask   0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
 /*
@@ -1628,7 +1547,7 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
 /*
  * Call the exception handler.
  */
-        jal     trap
+        jal     exception
         sw      a3, STAND_RA_OFFSET(sp)         # for debugging
 /*
  * Restore user registers and return. NOTE: interrupts are enabled.
@@ -1672,23 +1591,14 @@ NNON_LEAF(MachUserGenException, STAND_FRAME_SIZE, ra)
         lw      sp, UADDR+U_PCB_REGS+(SP * 4)
         eret
         .set    at
-END(MachUserGenException)
+END(user_exception)
 
 /*----------------------------------------------------------------------------
+ * Handle an interrupt from kernel mode.
+ * Interrupts use the standard kernel stack.
+ * switch_exit sets up a kernel stack after exit so interrupts would not fail.
  *
- * MachKernIntr --
- *
- *      Handle an interrupt from kernel mode.
- *      Interrupts use the standard kernel stack.
- *      switch_exit sets up a kernel stack after exit so interrupts would not fail.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
+ *      kern_interrupt()
  */
 #define KINTR_REG_OFFSET        (STAND_FRAME_SIZE)
 #define KINTR_SR_OFFSET         (STAND_FRAME_SIZE + KERN_REG_SIZE)
@@ -1696,7 +1606,7 @@ END(MachUserGenException)
 #define KINTR_MULT_HI_OFFSET    (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
 #define KINTR_FRAME_SIZE        (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
 
-NNON_LEAF(MachKernIntr, KINTR_FRAME_SIZE, ra)
+NNON_LEAF(kern_interrupt, KINTR_FRAME_SIZE, ra)
         .set    noat
         .mask   0x80000000, (STAND_RA_OFFSET - KINTR_FRAME_SIZE)
 
@@ -1777,11 +1687,11 @@ NNON_LEAF(MachKernIntr, KINTR_FRAME_SIZE, ra)
         addu    sp, sp, KINTR_FRAME_SIZE
         eret                                    # Return from interrupt.
         .set    at
-END(MachKernIntr)
+END(kern_interrupt)
 
 /*----------------------------------------------------------------------------
  *
- * MachUserIntr --
+ * user_interrupt --
  *
  *      Handle an interrupt from user mode.
  *      Note: we save minimal state in the u.u_pcb struct and use the standard
@@ -1798,7 +1708,7 @@ END(MachKernIntr)
  *
  *----------------------------------------------------------------------------
  */
-NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
+NNON_LEAF(user_interrupt, STAND_FRAME_SIZE, ra)
         .set    noat
         .mask   0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
 
@@ -1952,25 +1862,14 @@ NNON_LEAF(MachUserIntr, STAND_FRAME_SIZE, ra)
         mtc0    k1, MACH_C0_EPC                 # Restore EPC.
         eret                                    # Return from the interrupt.
         .set    at
-END(MachUserIntr)
+END(user_interrupt)
 
 /*----------------------------------------------------------------------------
- *
- * MachTLBMissException --
- *
- *      Handle a TLB miss exception from kernel mode.
- *      The BaddVAddr, Context, and EntryHi registers contain the failed
- *      virtual address.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
+ * Handle a TLB miss exception from kernel mode.
+ * The BaddVAddr, Context, and EntryHi registers contain the failed
+ * virtual address.
  */
-NLEAF(MachTLBMissException)
+NLEAF(kern_tlb_miss)
         .set    noat
         mfc0    k0, MACH_C0_BadVAddr            # get the fault address
         li      k1, VM_MIN_KERNEL_ADDRESS       # compute index
@@ -1986,7 +1885,7 @@ NLEAF(MachTLBMissException)
         lw      k0, 0(k1)                       # get PTE entry
         mtc0    k0, MACH_C0_EntryLo0            # save PTE entry --TODO: EntryLo1
         and     k0, k0, PG_V                    # check for valid entry
-        beq     k0, zero, MachKernGenException  # PTE invalid
+        beq     k0, zero, kern_exception        # PTE invalid
         nop
         tlbwr                                   # update TLB
         eret
@@ -1994,7 +1893,7 @@ NLEAF(MachTLBMissException)
 1:
         subu    k0, sp, UADDR + 0x200           # check to see if we have a
         sltiu   k0, UPAGES*NBPG - 0x200         #  valid kernel stack
-        bne     k0, zero, MachKernGenException  # Go panic
+        bne     k0, zero, kern_exception        # Go panic
         nop
 
         la      a0, _eram - START_FRAME - 8     # set sp to a valid place
@@ -2018,7 +1917,7 @@ NLEAF(MachTLBMissException)
         la      sp, _eram - START_FRAME         # set sp to a valid place
         PANIC("kernel stack overflow")
         .set    at
-END(MachTLBMissException)
+END(kern_tlb_miss)
 
 /*
  * Set/clear software interrupt routines.
@@ -2166,36 +2065,12 @@ ALEAF(_splx)
         mtc0    t0, MACH_C0_Status              # restore interrupt mask
 END(splx)
 
-/*----------------------------------------------------------------------------
- *
- * MachEmptyWriteBuffer --
- *
- *      Return when the write buffer is empty.
- *
- *      MachEmptyWriteBuffer()
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
- */
-LEAF(MachEmptyWriteBuffer)
-        j       ra
-        sync
-END(MachEmptyWriteBuffer)
-
 /*--------------------------------------------------------------------------
  * Write the given entry into the TLB at the given index.
  *
- *      MachTLBWriteIndexed(int index,
- *                          int highEntry,
- *                          int lowEntry0,
- *                          int lowEntry1)
+ *      tlb_write_indexed (int index, int highEntry, int lowEntry0, int lowEntry1)
  */
-LEAF(MachTLBWriteIndexed)
+LEAF(tlb_write_indexed)
         di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save the current PID.
 
@@ -2208,48 +2083,25 @@ LEAF(MachTLBWriteIndexed)
         mtc0    t0, MACH_C0_EntryHi             # Restore the PID.
         jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
-END(MachTLBWriteIndexed)
+END(tlb_write_indexed)
 
 /*--------------------------------------------------------------------------
+ * Write the given pid into the TLB pid reg.
  *
- * MachSetPID --
- *
- *      Write the given pid into the TLB pid reg.
- *
- *      MachSetPID(pid)
- *              int pid;
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      PID set in the entry hi register.
- *
- *--------------------------------------------------------------------------
+ *      tlb_set_pid(int asid)
  */
-LEAF(MachSetPID)
+LEAF(tlb_set_pid)
         mtc0    a0, MACH_C0_EntryHi             # Write the hi reg value
         j       ra
         nop
-END(MachSetPID)
+END(tlb_set_pid)
 
 /*--------------------------------------------------------------------------
+ * Flush the "random" entries from the TLB.
  *
- * MachTLBFlush --
- *
- *      Flush the "random" entries from the TLB.
- *
- *      MachTLBFlush()
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The TLB is flushed.
- *
- *--------------------------------------------------------------------------
+ *      tlb_flush()
  */
-LEAF(MachTLBFlush)
+LEAF(tlb_flush)
         di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save the PID
         li      t1, MACH_CACHED_MEMORY_ADDR     # invalid address
@@ -2270,26 +2122,14 @@ LEAF(MachTLBFlush)
         mtc0    t0, MACH_C0_EntryHi             # Restore the PID
         jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
-END(MachTLBFlush)
+END(tlb_flush)
 
 /*--------------------------------------------------------------------------
+ * Flush any TLB entries for the given address and TLB PID.
  *
- * MachTLBFlushAddr --
- *
- *      Flush any TLB entries for the given address and TLB PID.
- *
- *      MachTLBFlushAddr(highreg)
- *              unsigned highreg;
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The process's page is flushed from the TLB.
- *
- *--------------------------------------------------------------------------
+ *      tlb_flush_addr(unsigned highreg)
  */
-LEAF(MachTLBFlushAddr)
+LEAF(tlb_flush_addr)
         di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Get current PID
         nop
@@ -2308,26 +2148,14 @@ LEAF(MachTLBFlushAddr)
         mtc0    t0, MACH_C0_EntryHi             # restore PID
         jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
-END(MachTLBFlushAddr)
+END(tlb_flush_addr)
 
 /*--------------------------------------------------------------------------
+ * Update the TLB if highreg is found; otherwise, enter the data.
  *
- * MachTLBUpdate --
- *
- *      Update the TLB if highreg is found; otherwise, enter the data.
- *
- *      MachTLBUpdate(highreg, lowreg)
- *              unsigned highreg, lowreg;
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *--------------------------------------------------------------------------
+ *      tlb_update (unsigned highreg, unsigned lowreg)
  */
-LEAF(MachTLBUpdate)
+LEAF(tlb_update)
         di      v1                              # Save Status, disable interrupts
         mfc0    t0, MACH_C0_EntryHi             # Save current PID
         nop                                     # 2 cycles before intr disabled
@@ -2347,95 +2175,15 @@ LEAF(MachTLBUpdate)
         mtc0    t0, MACH_C0_EntryHi             # restore PID
         jr.hb   ra
         mtc0    v1, MACH_C0_Status              # Restore the status register
-END(MachTLBUpdate)
+END(tlb_update)
 
 /*----------------------------------------------------------------------------
+ * Flush instruction cache for range of addr to addr + len - 1.
+ * The address can be any valid address so long as no TLB misses occur.
  *
- * MachFlushCache --
- *
- *      Flush the caches.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The contents of the caches is flushed.
- *
- *----------------------------------------------------------------------------
+ *      void mips_flush_icache(vm_offset_t addr, vm_offset_t len)
  */
-LEAF(MachFlushCache)
-#if 0
-        // TODO
-        lw      t1, machInstCacheSize           # Must load before isolating
-        lw      t2, machDataCacheSize           # Must load before isolating
-        di      t3                              # Save Status, disable interrupts
-        la      v0, 1f
-        or      v0, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
-        j       v0
-        nop
-/*
- * Flush the instruction cache.
- */
-1:
-        li      v0, MACH_SR_ISOL_CACHES | MACH_SR_SWAP_CACHES
-        mtc0    v0, MACH_C0_Status              # Isolate and swap caches.
-        li      t0, MACH_UNCACHED_MEMORY_ADDR
-        subu    t0, t0, t1
-        li      t1, MACH_UNCACHED_MEMORY_ADDR
-        la      v0, 1f                          # Run cached
-        j       v0
-        nop
-1:
-        addu    t0, t0, 4
-        bne     t0, t1, 1b
-        sb      zero, -4(t0)
-
-        la      v0, 1f
-        or      v0, MACH_UNCACHED_MEMORY_ADDR
-        j       v0                              # Run uncached
-        nop
-/*
- * Flush the data cache.
- */
-1:
-        li      v0, MACH_SR_ISOL_CACHES
-        mtc0    v0, MACH_C0_Status              # Isolate and swap back caches
-        li      t0, MACH_UNCACHED_MEMORY_ADDR
-        subu    t0, t0, t2
-        la      v0, 1f
-        j       v0                              # Back to cached mode
-        nop
-1:
-        addu    t0, t0, 4
-        bne     t0, t1, 1b
-        sb      zero, -4(t0)
-
-        sync                                    # Insure isolated stores out of pipe.
-        mtc0    t3, MACH_C0_Status              # Restore status reg.
-#endif
-        jr.hb   ra
-        nop
-END(MachFlushCache)
-
-/*----------------------------------------------------------------------------
- *
- * MachFlushICache --
- *
- *      void MachFlushICache(addr, len)
- *              vm_offset_t addr, len;
- *
- *      Flush instruction cache for range of addr to addr + len - 1.
- *      The address can be any valid address so long as no TLB misses occur.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The contents of the cache is flushed.
- *
- *----------------------------------------------------------------------------
- */
-LEAF(MachFlushICache)
+LEAF(mips_flush_icache)
 #if 0
         // TODO
         di      t0                              # Save Status, disable interrupts
@@ -2459,27 +2207,16 @@ LEAF(MachFlushICache)
 #endif
         jr.hb   ra                              # return and run cached
         nop
-END(MachFlushICache)
+END(mips_flush_icache)
 
 /*----------------------------------------------------------------------------
- *
- * MachFlushDCache --
- *
- *      void MachFlushDCache(addr, len)
- *              vm_offset_t addr, len;
- *
  *      Flush data cache for range of addr to addr + len - 1.
  *      The address can be any valid address so long as no TLB misses occur.
  *      (Be sure to use cached K0SEG kernel addresses)
- * Results:
- *      None.
  *
- * Side effects:
- *      The contents of the cache is flushed.
- *
- *----------------------------------------------------------------------------
+ *      void mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
  */
-LEAF(MachFlushDCache)
+LEAF(mips_flush_dcache)
 #if 0
         // TODO
         di      t0                              # Save Status, disable interrupts
@@ -2503,14 +2240,70 @@ LEAF(MachFlushDCache)
 #endif
         jr.hb   ra                              # return and run cached
         nop
-END(MachFlushDCache)
+END(mips_flush_dcache)
 
 /*-----------------------------------
  * Exception handlers and data for bootloader.
  */
         .section .exception
+        .set    noat
+/*
+ * TLB exception vector: handle TLB translation misses.
+ */
+        .org    0
+tlb_miss:
+        .type   tlb_miss, @function
+        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
+        lw      k1, UADDR+U_PCB_SEGTAB          # get the current segment table
+        srl     k0, k0, SEGSHIFT                # compute segment table index
+        sll     k0, k0, 2
+        addu    k1, k1, k0
+        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
+        lw      k1, 0(k1)                       # get pointer to segment map
+        srl     k0, k0, PGSHIFT - 2             # compute segment map index
+        andi    k0, k0, (NPTEPG - 1) << 2
+        beq     k1, zero, SlowFault             # invalid segment map
+        addu    k1, k1, k0                      # index into segment map
+        lw      k0, 0(k1)                       # get page PTE
+        nop
+        beq     k0, zero, SlowFault             # dont load invalid entries
+        mtc0    k0, MACH_C0_EntryLo0            # TODO: EntryLo1
+        tlbwr                                   # update TLB
+        eret
+
+/*
+ * Data for bootloader.
+ */
         .org    0xf8
+        .type   _ebase, @object
 _ebase:
         .word   0x9d000000                      # EBase value
+
+        .type   _imgptr, @object
 _imgptr:
         .word   -1                              # Image header pointer
+
+/*
+ * General exception vector address:
+ * handle all execptions except RESET and TLBMiss.
+ * Find out what mode we came from and jump to the proper handler.
+ */
+        .org    0x180
+gen_exception:
+        .type   gen_exception, @function
+        mfc0    k0, MACH_C0_Status              # Get the status register
+        mfc0    k1, MACH_C0_Cause               # Get the cause register value.
+        and     k0, k0, MACH_Status_UM          # test for user mode
+        sll     k0, k0, 3                       # shift user bit for cause index
+        and     k1, k1, MACH_Cause_ExcCode      # Mask out the cause bits.
+        or      k1, k1, k0                      # change index to user table
+1:
+        la      k0, machExceptionTable          # get base of the jump table
+        addu    k0, k0, k1                      # Get the address of the\
+                                                #  function entry.  Note that\
+                                                #  the cause is already\
+                                                #  shifted left by 2 bits so\
+                                                #  we dont have to shift.
+        lw      k0, 0(k0)                       # Get the function address
+        j       k0                              # Jump to the function.
+        nop

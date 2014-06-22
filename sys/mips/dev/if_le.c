@@ -688,7 +688,7 @@ lerint(unit)
 		LER2_rmd1(rmd, LE_OWN);
 		LENEXTRMP;
 	}
-	MachEmptyWriteBuffer();		/* Paranoia */
+	mips_sync();		/* Paranoia */
 	le->sc_rmd = bix;
 }
 
@@ -1080,7 +1080,7 @@ lewritereg(regptr, val)
 
 	while (*regptr != val) {
 		*regptr = val;
-		MachEmptyWriteBuffer();
+		mips_sync();
 		if (++i > 10000) {
 			printf("le: Reg did not settle (to x%x): x%x\n",
 			       val, *regptr);

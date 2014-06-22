@@ -65,96 +65,95 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
-extern void MachKernGenException();
-extern void MachUserGenException();
-extern void MachKernIntr();
-extern void MachUserIntr();
-extern void MachTLBModException();
-extern void MachTLBMissException();
+extern void kern_exception();
+extern void user_exception();
+extern void kern_interrupt();
+extern void user_interrupt();
+extern void kern_tlb_miss();
 
 void (*machExceptionTable[])() = {
     /*
      * The kernel exception handlers.
      */
-    MachKernIntr,           /* 0  - 00 Int    External interrupt */
-    MachKernGenException,   /* 1  - 01 MOD    TLB modification */
-    MachTLBMissException,   /* 2  - 02 TLBL   TLB miss (load or instr. fetch) */
-    MachTLBMissException,   /* 3  - 03 TLBS   TLB miss (store) */
-    MachKernGenException,   /* 4  - 04 AdEL   Address error (load or I-fetch) */
-    MachKernGenException,   /* 5  - 05 AdES   Address error (store) */
-    MachKernGenException,   /* 6  - 06 IBE    Bus error (I-fetch) */
-    MachKernGenException,   /* 7  - 07 DBE    Bus error (load or store) */
-    MachKernGenException,   /* 8  - 08 Sys    System call */
-    MachKernGenException,   /* 9  - 09 Bp     Breakpoint */
-    MachKernGenException,   /* 10 - 0a RI     Reserved instruction */
-    MachKernGenException,   /* 11 - 0b CPU    Coprocessor unusable */
-    MachKernGenException,   /* 12 - 0c Ov     Arithmetic overflow */
-    MachKernGenException,   /* 13 - 0d Tr     Trap */
-    MachKernGenException,   /* 14 - 0e -      Reserved */
-    MachKernGenException,   /* 15 - 0f -      Reserved */
-    MachKernGenException,   /* 16 - 10 -      Reserved */
-    MachKernGenException,   /* 17 - 11 -      Reserved */
-    MachKernGenException,   /* 18 - 12 -      Reserved */
-    MachKernGenException,   /* 19 - 13 TLBRI  TLB read-inhibit */
-    MachKernGenException,   /* 20 - 14 TLBEI  TLB execute-inhibit */
-    MachKernGenException,   /* 21 - 15 -      Reserved */
-    MachKernGenException,   /* 22 - 16 -      Reserved */
-    MachKernGenException,   /* 23 - 17 WATCH  Watch point */
-    MachKernGenException,   /* 24 - 18 MCheck Machine check */
-    MachKernGenException,   /* 25 - 19 -      Reserved */
-    MachKernGenException,   /* 26 - 1A DSPDis DSP disabled */
-    MachKernGenException,   /* 27 - 1B -      Reserved */
-    MachKernGenException,   /* 28 - 1C -      Reserved */
-    MachKernGenException,   /* 29 - 1D -      Reserved */
-    MachKernGenException,   /* 30 - 1E -      Reserved */
-    MachKernGenException,   /* 31 - 1F -      Reserved */
+    kern_interrupt,         /* 0  - 00 Int    External interrupt */
+    kern_exception,         /* 1  - 01 MOD    TLB modification */
+    kern_tlb_miss,          /* 2  - 02 TLBL   TLB miss (load or instr. fetch) */
+    kern_tlb_miss,          /* 3  - 03 TLBS   TLB miss (store) */
+    kern_exception,         /* 4  - 04 AdEL   Address error (load or I-fetch) */
+    kern_exception,         /* 5  - 05 AdES   Address error (store) */
+    kern_exception,         /* 6  - 06 IBE    Bus error (I-fetch) */
+    kern_exception,         /* 7  - 07 DBE    Bus error (load or store) */
+    kern_exception,         /* 8  - 08 Sys    System call */
+    kern_exception,         /* 9  - 09 Bp     Breakpoint */
+    kern_exception,         /* 10 - 0a RI     Reserved instruction */
+    kern_exception,         /* 11 - 0b CPU    Coprocessor unusable */
+    kern_exception,         /* 12 - 0c Ov     Arithmetic overflow */
+    kern_exception,         /* 13 - 0d Tr     Trap */
+    kern_exception,         /* 14 - 0e -      Reserved */
+    kern_exception,         /* 15 - 0f -      Reserved */
+    kern_exception,         /* 16 - 10 -      Reserved */
+    kern_exception,         /* 17 - 11 -      Reserved */
+    kern_exception,         /* 18 - 12 -      Reserved */
+    kern_exception,         /* 19 - 13 TLBRI  TLB read-inhibit */
+    kern_exception,         /* 20 - 14 TLBEI  TLB execute-inhibit */
+    kern_exception,         /* 21 - 15 -      Reserved */
+    kern_exception,         /* 22 - 16 -      Reserved */
+    kern_exception,         /* 23 - 17 WATCH  Watch point */
+    kern_exception,         /* 24 - 18 MCheck Machine check */
+    kern_exception,         /* 25 - 19 -      Reserved */
+    kern_exception,         /* 26 - 1A DSPDis DSP disabled */
+    kern_exception,         /* 27 - 1B -      Reserved */
+    kern_exception,         /* 28 - 1C -      Reserved */
+    kern_exception,         /* 29 - 1D -      Reserved */
+    kern_exception,         /* 30 - 1E -      Reserved */
+    kern_exception,         /* 31 - 1F -      Reserved */
 
     /*
      * The user exception handlers.
      */
-    MachUserIntr,           /* 0  - 00 Int    External interrupt */
-    MachUserGenException,   /* 1  - 01 MOD    TLB modification */
-    MachUserGenException,   /* 2  - 02 TLBL   TLB miss (load or instr. fetch) */
-    MachUserGenException,   /* 3  - 03 TLBS   TLB miss (store) */
-    MachUserGenException,   /* 4  - 04 AdEL   Address error (load or I-fetch) */
-    MachUserGenException,   /* 5  - 05 AdES   Address error (store) */
-    MachUserGenException,   /* 6  - 06 IBE    Bus error (I-fetch) */
-    MachUserGenException,   /* 7  - 07 DBE    Bus error (load or store) */
-    MachUserGenException,   /* 8  - 08 Sys    System call */
-    MachUserGenException,   /* 9  - 09 Bp     Breakpoint */
-    MachUserGenException,   /* 10 - 0a RI     Reserved instruction */
-    MachUserGenException,   /* 11 - 0b CPU    Coprocessor unusable */
-    MachUserGenException,   /* 12 - 0c Ov     Arithmetic overflow */
-    MachUserGenException,   /* 13 - 0d Tr     Trap */
-    MachUserGenException,   /* 14 - 0e -      Reserved */
-    MachUserGenException,   /* 15 - 0f -      Reserved */
-    MachUserGenException,   /* 16 - 10 -      Reserved */
-    MachUserGenException,   /* 17 - 11 -      Reserved */
-    MachUserGenException,   /* 18 - 12 -      Reserved */
-    MachUserGenException,   /* 19 - 13 TLBRI  TLB read-inhibit */
-    MachUserGenException,   /* 20 - 14 TLBEI  TLB execute-inhibit */
-    MachUserGenException,   /* 21 - 15 -      Reserved */
-    MachUserGenException,   /* 22 - 16 -      Reserved */
-    MachUserGenException,   /* 23 - 17 WATCH  Watch point */
-    MachUserGenException,   /* 24 - 18 MCheck Machine check */
-    MachUserGenException,   /* 25 - 19 -      Reserved */
-    MachUserGenException,   /* 26 - 1A DSPDis DSP disabled */
-    MachUserGenException,   /* 27 - 1B -      Reserved */
-    MachUserGenException,   /* 28 - 1C -      Reserved */
-    MachUserGenException,   /* 29 - 1D -      Reserved */
-    MachUserGenException,   /* 30 - 1E -      Reserved */
-    MachUserGenException,   /* 31 - 1F -      Reserved */
+    user_interrupt,         /* 0  - 00 Int    External interrupt */
+    user_exception,         /* 1  - 01 MOD    TLB modification */
+    user_exception,         /* 2  - 02 TLBL   TLB miss (load or instr. fetch) */
+    user_exception,         /* 3  - 03 TLBS   TLB miss (store) */
+    user_exception,         /* 4  - 04 AdEL   Address error (load or I-fetch) */
+    user_exception,         /* 5  - 05 AdES   Address error (store) */
+    user_exception,         /* 6  - 06 IBE    Bus error (I-fetch) */
+    user_exception,         /* 7  - 07 DBE    Bus error (load or store) */
+    user_exception,         /* 8  - 08 Sys    System call */
+    user_exception,         /* 9  - 09 Bp     Breakpoint */
+    user_exception,         /* 10 - 0a RI     Reserved instruction */
+    user_exception,         /* 11 - 0b CPU    Coprocessor unusable */
+    user_exception,         /* 12 - 0c Ov     Arithmetic overflow */
+    user_exception,         /* 13 - 0d Tr     Trap */
+    user_exception,         /* 14 - 0e -      Reserved */
+    user_exception,         /* 15 - 0f -      Reserved */
+    user_exception,         /* 16 - 10 -      Reserved */
+    user_exception,         /* 17 - 11 -      Reserved */
+    user_exception,         /* 18 - 12 -      Reserved */
+    user_exception,         /* 19 - 13 TLBRI  TLB read-inhibit */
+    user_exception,         /* 20 - 14 TLBEI  TLB execute-inhibit */
+    user_exception,         /* 21 - 15 -      Reserved */
+    user_exception,         /* 22 - 16 -      Reserved */
+    user_exception,         /* 23 - 17 WATCH  Watch point */
+    user_exception,         /* 24 - 18 MCheck Machine check */
+    user_exception,         /* 25 - 19 -      Reserved */
+    user_exception,         /* 26 - 1A DSPDis DSP disabled */
+    user_exception,         /* 27 - 1B -      Reserved */
+    user_exception,         /* 28 - 1C -      Reserved */
+    user_exception,         /* 29 - 1D -      Reserved */
+    user_exception,         /* 30 - 1E -      Reserved */
+    user_exception,         /* 31 - 1F -      Reserved */
 };
 
 /*
  * Handle an exception.
- * Called from MachKernGenException() or MachUserGenException()
- * when a processor trap occurs.
- * In the case of a kernel trap, we return the pc where to resume if
+ * Called from kern_exception() or user_exception()
+ * when a processor exception occurs.
+ * In the case of a kernel exception, we return the pc where to resume if
  * ((struct pcb *)UADDR)->pcb_onfault is set, otherwise, return old pc.
  */
 unsigned
-trap(statusReg, causeReg, vadr, pc, args)
+exception(statusReg, causeReg, vadr, pc, args)
     unsigned statusReg;     /* status register at time of the exception */
     unsigned causeReg;      /* cause register at time of exception */
     unsigned vadr;          /* address (if any) the fault occured on */
@@ -208,7 +207,7 @@ trap(statusReg, causeReg, vadr, pc, args)
             entry |= PG_D;
             pte->pt_entry = entry;
             vadr &= ~PGOFSET;
-            MachTLBUpdate(vadr, entry);
+            tlb_update(vadr, entry);
             pa = PG_FRAME(entry);
 #ifdef ATTR
             pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
@@ -244,7 +243,7 @@ trap(statusReg, causeReg, vadr, pc, args)
         entry |= PG_D;
         pte->pt_entry = entry;
         vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
-        MachTLBUpdate(vadr, entry);
+        tlb_update(vadr, entry);
         pa = PG_FRAME(entry);
 #ifdef ATTR
         pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
@@ -620,7 +619,7 @@ out:
 
 /*
  * Handle an interrupt.
- * Called from MachKernIntr() or MachUserIntr()
+ * Called from kern_interrupt() or user_interrupt()
  * Note: curproc might be NULL.
  */
 interrupt(statusReg, pc)
@@ -681,8 +680,8 @@ interrupt(statusReg, pc)
 }
 
 /*
- * This is called from MachUserIntr() if astpending is set.
- * This is very similar to the tail of trap().
+ * This is called from user_interrupt() if astpending is set.
+ * This is very similar to the tail of exception().
  */
 softintr()
 {

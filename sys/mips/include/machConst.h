@@ -111,18 +111,6 @@
 #define MACH_Status_IE          0x00000001      /* Interrupt enable */
 
 /*
- * The interrupt masks.
- * If a bit in the mask is 1 then the interrupt is enabled (or pending).
- */
-
-/*
- * Location of exception vectors.
- */
-#define MACH_RESET_EXC_VEC	0xBFC00000
-#define MACH_UTLB_MISS_EXC_VEC	0x80000000
-#define MACH_GEN_EXC_VEC	0x80000080
-
-/*
  * Coprocessor 0 registers.
  */
 #define MACH_C0_Index		$0      /* TLB index */
@@ -238,5 +226,10 @@
  * (i.e., the address for the context register).
  */
 #define VMMACH_PTE_BASE		0xFFC00000
+
+/*
+ * Empty memory write buffer.
+ */
+#define mips_sync()             asm volatile("sync")
 
 #endif /* _MACHCONST */

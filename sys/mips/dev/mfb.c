@@ -539,11 +539,11 @@ mfbRestoreCursorColor()
 	else
 		fg = 0;
 	regs->addr_ovly = fg;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_ovly = fg;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_ovly = fg;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 /*
@@ -694,11 +694,11 @@ mfbLoadColorMap(ptr)
 
 	BT455_SELECT_ENTRY(regs, ptr->index);
 	regs->addr_cmap_data = ptr->Entry.red >> 12;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap_data = ptr->Entry.green >> 12;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	regs->addr_cmap_data = ptr->Entry.blue >> 12;
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 /*
@@ -739,7 +739,7 @@ bt455_video_on()
 	BT455_SELECT_ENTRY(regs, 0);
 	for (i = 0; i < 6; i++) {
 		regs->addr_cmap_data = vstate.color0[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 		cursor_RGB[i] = vstate.cursor[i];
 	}
 	mfbRestoreCursorColor();
@@ -897,7 +897,7 @@ bt431_select_reg(regs, regno)
 {
 	regs->addr_lo = SET_VALUE(regno & 0xff);
 	regs->addr_hi = SET_VALUE((regno >> 8) & 0xff);
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 static void
@@ -906,7 +906,7 @@ bt431_write_reg(regs, regno, val)
 {
 	bt431_select_reg(regs, regno);
 	regs->addr_reg = SET_VALUE(val);
-	MachEmptyWriteBuffer();
+	mips_sync();
 }
 
 static u_char

@@ -471,7 +471,7 @@ pmLoadCursor(cur)
 	pcc->cmdr = curReg;
 	for (i = 0; i < 32; i++) {
 		pcc->memory = cur[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 	curReg &= ~PCC_LODSA;
 	pcc->cmdr = curReg;
@@ -499,26 +499,26 @@ pmRestoreCursorColor()
 	register int i;
 
 	vdac->overWA = 0x04;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	for (i = 0; i < 3; i++) {
 		vdac->over = bg_RGB[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 
 	vdac->overWA = 0x08;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	vdac->over = 0x00;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	vdac->over = 0x00;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	vdac->over = 0x7f;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	vdac->overWA = 0x0c;
-	MachEmptyWriteBuffer();
+	mips_sync();
 	for (i = 0; i < 3; i++) {
 		vdac->over = fg_RGB[i];
-		MachEmptyWriteBuffer();
+		mips_sync();
 	}
 }
 
@@ -576,28 +576,28 @@ pmInitColorMap()
 	register int i;
 
 	*(volatile char *)MACH_PHYS_TO_UNCACHED(KN01_PHYS_COLMASK_START) = 0xff;
-	MachEmptyWriteBuffer();
+	mips_sync();
 
 	if (fp->isMono) {
-		vdac->mapWA = 0; MachEmptyWriteBuffer();
+		vdac->mapWA = 0; mips_sync();
 		for (i = 0; i < 256; i++) {
 			vdac->map = (i < 128) ? 0x00 : 0xff;
-			MachEmptyWriteBuffer();
+			mips_sync();
 			vdac->map = (i < 128) ? 0x00 : 0xff;
-			MachEmptyWriteBuffer();
+			mips_sync();
 			vdac->map = (i < 128) ? 0x00 : 0xff;
-			MachEmptyWriteBuffer();
+			mips_sync();
 		}
 	} else {
-		vdac->mapWA = 0; MachEmptyWriteBuffer();
-		vdac->map = 0; MachEmptyWriteBuffer();
-		vdac->map = 0; MachEmptyWriteBuffer();
-		vdac->map = 0; MachEmptyWriteBuffer();
+		vdac->mapWA = 0; mips_sync();
+		vdac->map = 0; mips_sync();
+		vdac->map = 0; mips_sync();
+		vdac->map = 0; mips_sync();
 
 		for (i = 1; i < 256; i++) {
-			vdac->map = 0xff; MachEmptyWriteBuffer();
-			vdac->map = 0xff; MachEmptyWriteBuffer();
-			vdac->map = 0xff; MachEmptyWriteBuffer();
+			vdac->map = 0xff; mips_sync();
+			vdac->map = 0xff; mips_sync();
+			vdac->map = 0xff; mips_sync();
 		}
 	}
 
@@ -632,18 +632,18 @@ pmVDACInit()
 	 *
 	 * Initialize the VDAC
 	 */
-	vdac->overWA = 0x04; MachEmptyWriteBuffer();
-	vdac->over = 0x00; MachEmptyWriteBuffer();
-	vdac->over = 0x00; MachEmptyWriteBuffer();
-	vdac->over = 0x00; MachEmptyWriteBuffer();
-	vdac->overWA = 0x08; MachEmptyWriteBuffer();
-	vdac->over = 0x00; MachEmptyWriteBuffer();
-	vdac->over = 0x00; MachEmptyWriteBuffer();
-	vdac->over = 0x7f; MachEmptyWriteBuffer();
-	vdac->overWA = 0x0c; MachEmptyWriteBuffer();
-	vdac->over = 0xff; MachEmptyWriteBuffer();
-	vdac->over = 0xff; MachEmptyWriteBuffer();
-	vdac->over = 0xff; MachEmptyWriteBuffer();
+	vdac->overWA = 0x04; mips_sync();
+	vdac->over = 0x00; mips_sync();
+	vdac->over = 0x00; mips_sync();
+	vdac->over = 0x00; mips_sync();
+	vdac->overWA = 0x08; mips_sync();
+	vdac->over = 0x00; mips_sync();
+	vdac->over = 0x00; mips_sync();
+	vdac->over = 0x7f; mips_sync();
+	vdac->overWA = 0x0c; mips_sync();
+	vdac->over = 0xff; mips_sync();
+	vdac->over = 0xff; mips_sync();
+	vdac->over = 0xff; mips_sync();
 }
 
 /*
@@ -670,10 +670,10 @@ pmLoadColorMap(ptr)
 	if (ptr->index > 256)
 		return;
 
-	vdac->mapWA = ptr->index; MachEmptyWriteBuffer();
-	vdac->map = ptr->Entry.red; MachEmptyWriteBuffer();
-	vdac->map = ptr->Entry.green; MachEmptyWriteBuffer();
-	vdac->map = ptr->Entry.blue; MachEmptyWriteBuffer();
+	vdac->mapWA = ptr->index; mips_sync();
+	vdac->map = ptr->Entry.red; mips_sync();
+	vdac->map = ptr->Entry.green; mips_sync();
+	vdac->map = ptr->Entry.blue; mips_sync();
 }
 
 /*

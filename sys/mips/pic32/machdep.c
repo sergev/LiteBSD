@@ -121,55 +121,28 @@ struct  proc nullproc;          /* for use by swtch_exit() */
  */
 mach_init()
 {
-    register char *cp;
-    register int i;
-    register unsigned firstaddr;
-    register caddr_t v;
-    caddr_t start;
+    char *cp;
+    int i;
+    unsigned firstaddr;
+    caddr_t v, start;
     extern char __data_start[], _edata[], _end[];
-    extern char MachUTLBMiss[], MachUTLBMissEnd[];
-    extern char MachException[], MachExceptionEnd[];
     extern void _etext();
 
-    /* Initialize .data + .bss segments by zeroes. */
-    v = (caddr_t)mips_round_page(_end);
-    bzero (__data_start, v - _edata);
-
-#ifndef __MPLABX__
-    /* Copy the .data image from flash to ram.
+    /* Copy .data image from flash to RAM.
      * Linker places it at the end of .text segment. */
+    bcopy(_etext, __data_start, _edata - __data_start);
+#if 0
     unsigned *src = (unsigned*) _etext;
     unsigned *dest = (unsigned*) __data_start;
     unsigned *limit = (unsigned*) _edata;
     while (dest < limit) {
-        /*printf ("copy %08x from (%08x) to (%08x)\n", *src, src, dest);*/
         *dest++ = *src++;
     }
-#else
-    /* Microchip C32 compiler generates a .dinit table with
-     * initialization values for .data segment. */
-    extern const unsigned _dinit_addr[];
-    unsigned const *dinit = &_dinit_addr[0];
-    for (;;) {
-            char *dst = (char*) (*dinit++);
-            if (dst == 0)
-                    break;
-
-            unsigned nbytes = *dinit++;
-            unsigned fmt = *dinit++;
-            if (fmt == 0) {                     /* Clear */
-                    do {
-                            *dst++ = 0;
-                    } while (--nbytes > 0);
-            } else {                            /* Copy */
-                    char *src = (char*) dinit;
-                    do {
-                            *dst++ = *src++;
-                    } while (--nbytes > 0);
-                    dinit = (unsigned*) ((unsigned) (src + 3) & ~3);
-            }
-    }
 #endif
+
+    /* Clear .bss segment. */
+    v = (caddr_t)mips_round_page(_end);
+    bzero (_edata, v - _edata);
 
     /*
      * Autoboot by default.
@@ -189,13 +162,13 @@ mach_init()
     curproc->p_md.md_regs = proc0paddr->u_pcb.pcb_regs;
     firstaddr = MACH_CACHED_TO_PHYS(v);
     for (i = 0; i < UPAGES; i++) {
-        curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_V | PG_D;
+        curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_WBACK | PG_V | PG_D;
         firstaddr += NBPG;
     }
-    MachTLBWriteIndexed(0, UADDR | 1, curproc->p_md.md_upte[0],
-                                      curproc->p_md.md_upte[1]);
+    tlb_write_indexed(0, UADDR | 1, curproc->p_md.md_upte[0],
+                                    curproc->p_md.md_upte[1]);
     v += UPAGES * NBPG;
-    MachSetPID(1);
+    tlb_set_pid(1);
 
     /*
      * init nullproc for swtch_exit().
@@ -206,23 +179,13 @@ mach_init()
     nullproc.p_md.md_regs = nullproc.p_addr->u_pcb.pcb_regs;
     bcopy("nullproc", nullproc.p_comm, sizeof("nullproc"));
     for (i = 0; i < UPAGES; i++) {
-        nullproc.p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_V | PG_D;
+        nullproc.p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_WBACK | PG_V | PG_D;
         firstaddr += NBPG;
     }
     v += UPAGES * NBPG;
 
     /* clear pages for u areas */
     bzero(start, v - start);
-
-    /*
-     * Copy down exception vector code.
-     */
-    if (MachUTLBMissEnd - MachUTLBMiss > 0x80)
-        panic("startup: UTLB code too large");
-    bcopy(MachUTLBMiss, (char *)MACH_UTLB_MISS_EXC_VEC,
-        MachUTLBMissEnd - MachUTLBMiss);
-    bcopy(MachException, (char *)MACH_GEN_EXC_VEC,
-        MachExceptionEnd - MachException);
 
     strcpy(cpu_model, "pic32mz");
     machDataCacheSize = 4*1024;     // 4kbyte data cache
@@ -235,6 +198,7 @@ mach_init()
     /* Get total RAM size. */
     physmem = (512 * 1024) / NBPG;
     maxmem = physmem;
+
 
     /*
      * Initialize error message buffer (at end of core).
