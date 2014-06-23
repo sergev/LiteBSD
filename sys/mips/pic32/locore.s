@@ -2165,11 +2165,12 @@ LEAF(tlb_update)
         mfc0    v0, MACH_C0_Index               # See what we got
         mtc0    a1, MACH_C0_EntryLo0            # init low reg. --TODO: EntryLo1
         bltz    v0, 1f                          # index < 0 => !found
+        ehb
         b       2f
         tlbwi                                   # update slot found
 1:
         mtc0    a0, MACH_C0_EntryHi             # init high reg.
-        nop
+        ehb
         tlbwr                                   # enter into a random slot
 2:
         mtc0    t0, MACH_C0_EntryHi             # restore PID
