@@ -29,27 +29,39 @@
  */
 #define mfc0_Index()        mips_mfc0(0,0)     /* Index into the TLB array */
 #define mtc0_Index(v)       mips_mtc0(0,0,v)
-#define C0_RANDOM           1,0     /* Randomly generated index into the TLB array */
-#define C0_ENTRYLO0         2,0     /* Low-order portion of the TLB entry for
-                                     * even-numbered virtual pages */
-#define C0_ENTRYLO1         3,0     /* Low-order portion of the TLB entry for
-                                     * odd-numbered virtual pages */
+
+#define mfc0_Random()       mips_mfc0(1,0)     /* Randomly generated index into the TLB array */
+
+#define mfc0_EntryLo0()     mips_mfc0(2,0)     /* Low-order portion of the TLB entry for */
+#define mtc0_EntryLo0(v)    mips_mtc0(2,0,v)   /* even-numbered virtual pages */
+
+#define mfc0_EntryLo1()     mips_mfc0(3,0)     /* Low-order portion of the TLB entry for */
+#define mtc0_EntryLo1(v)    mips_mtc0(3,0,v)   /* odd-numbered virtual pages */
+
 #define C0_CONTEXT          4,0     /* Pointer to the page table entry in memory */
 #define C0_USERLOCAL        4,1     /* User information that can be written by
                                      * privileged software and read via the RDHWR instruction */
 #define C0_PAGEMASK         5,0     /* Variable page sizes in TLB entries */
 #define C0_PAGEGRAIN        5,1     /* Support of 1 KB pages in the TLB */
-#define C0_WIRED            6,0     /* Controls the number of fixed TLB entries */
+
+#define mtc0_Wired(v)       mips_mtc0(6,0,v)    /* Controls the number of fixed TLB entries */
+
 #define C0_HWRENA           7,0     /* Enables access via the RDHWR instruction
                                      * to selected hardware registers in Non-privileged mode */
 #define C0_BADVADDR         8,0     /* Reports the address for the most recent
                                      * address-related exception */
 #define mfc0_Count()        mips_mfc0(9,0)      /* Processor cycle count */
 #define mtc0_Count(v)       mips_mtc0(9,0,v)
-#define C0_ENTRYHI          10,0    /* High-order portion of the TLB entry */
+
+#define mfc0_EntryHi()      mips_mfc0(10,0)     /* High-order portion of the TLB entry */
+#define mtc0_EntryHi(v)     mips_mtc0(10,0,v)
+
 #define mfc0_Compare()      mips_mfc0(11,0)     /* Core timer interrupt control */
 #define mtc0_Compare(v)     mips_mtc0(11,0,v)
-#define C0_STATUS           12,0    /* Processor status and control */
+
+#define mfc0_Status()       mips_mfc0(12,0)     /* Processor status and control */
+#define mtc0_Status(v)      mips_mtc0(12,0,v)
+
 #define C0_INTCTL           12,1    /* Interrupt control of vector spacing */
 #define C0_SRSCTL           12,2    /* Shadow register set control */
 #define C0_SRSMAP           12,3    /* Shadow register mapping control */
@@ -176,9 +188,14 @@
 	: : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
 
 /*
- * Hazard barrier.
+ * Disable the hardware interrupts,
+ * saving the value of Status register.
  */
-#define mips_ehb() asm volatile ("ehb")
+#define mips_di() ({ int __value;				\
+	asm volatile (						\
+	"di	%0"						\
+	: "=r" (__value));					\
+	__value; })
 
 /*--------------------------------------
  * Configuration registers.

@@ -205,8 +205,8 @@
 /*
  * The number of TLB entries and the first one that write random hits.
  */
-#define VMMACH_NUM_TLB_ENTRIES		64
-#define VMMACH_FIRST_RAND_ENTRY 	8
+#define VMMACH_NUM_TLB_ENTRIES		16
+#define VMMACH_FIRST_RAND_ENTRY 	1
 
 /*
  * The number of process id entries.

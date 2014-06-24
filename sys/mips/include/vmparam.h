@@ -237,3 +237,9 @@
 
 /* pcb base */
 #define	pcbb(p)		((u_int)(p)->p_addr)
+
+extern void tlb_set_pid(unsigned asid);
+extern void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1);
+extern void tlb_flush(void);
+extern void tlb_flush_addr(unsigned hi);
+extern void tlb_update(unsigned hi, unsigned lo);

@@ -165,8 +165,8 @@ mach_init()
         curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_WBACK | PG_V | PG_D;
         firstaddr += NBPG;
     }
-    tlb_write_indexed(0, UADDR | 1, curproc->p_md.md_upte[0],
-                                    curproc->p_md.md_upte[1]);
+    tlb_write_wired(0, UADDR | 1, curproc->p_md.md_upte[0],
+                                  curproc->p_md.md_upte[1]);
     v += UPAGES * NBPG;
     tlb_set_pid(1);
 
@@ -953,7 +953,7 @@ out:
  * which increments at half CPU rate.
  * We use it to get a precise delay.
  */
-void udelay (unsigned usec)
+void udelay(unsigned usec)
 {
     unsigned now = mfc0 (9, 0); // C0_Count
     unsigned final = now + usec * CPU_KHZ / 2000;
@@ -965,4 +965,132 @@ void udelay (unsigned usec)
     if ((int) (now - final) >= 0)
         break;
     }
+}
+
+/*
+ * Write the given pid into the TLB pid reg.
+ */
+void tlb_set_pid(unsigned pid)
+{
+    mtc0_EntryHi(pid);                  /* Set up entry high */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Write the entry into the wired part of TLB at the given index.
+ */
+void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1)
+{
+    int x = mips_di();                  /* Disable interrupts */
+    int pid = mfc0_EntryHi();           /* Save the current PID */
+
+    mtc0_Index(index);                  /* Set the index */
+    mtc0_EntryHi(hi);                   /* Set up entry high */
+    mtc0_EntryLo0(lo0);                 /* Set up entry low 0 */
+    mtc0_EntryLo1(lo1);                 /* Set up entry low 1 */
+    asm volatile ("ehb");               /* Hazard barrier */
+    asm volatile ("tlbwi");             /* Write the TLB entry */
+
+    mtc0_Wired(index + 1);              /* Set the number of wired entries */
+
+    mtc0_EntryHi(pid);                  /* Restore the PID */
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Flush the "random" entries from the TLB.
+ */
+void tlb_flush()
+{
+    int x = mips_di();                  /* Disable interrupts */
+    int pid = mfc0_EntryHi();           /* Save the current PID */
+    int index;
+
+    mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR);  /* Use invalid memory address */
+    mtc0_EntryLo0(0);                   /* Zero out low entry 0 */
+    mtc0_EntryLo1(0);                   /* Zero out low entry 1 */
+    for (index=VMMACH_FIRST_RAND_ENTRY; index<VMMACH_NUM_TLB_ENTRIES; index++) {
+        mtc0_Index(index);              /* Set the index */
+        asm volatile ("ehb");           /* Hazard barrier */
+        asm volatile ("tlbwi");         /* Write the TLB entry */
+    }
+    mtc0_EntryHi(pid);                  /* Restore the PID */
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Flush any TLB entries for the given address and TLB PID.
+ */
+void tlb_flush_addr(unsigned hi)
+{
+    int x = mips_di();                  /* Disable interrupts */
+    int pid = mfc0_EntryHi();           /* Save the current PID */
+    int index;
+
+    mtc0_EntryHi(hi);                   /* Look for addr & PID */
+    asm volatile ("ehb");               /* Hazard barrier */
+    asm volatile ("tlbp");              /* Probe for the entry */
+
+    index = mfc0_Index();               /* See what we got */
+    if (index >= 0) {
+        /* Entry found - mark it as invalid. */
+        mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR);  /* Use invalid memory address */
+        mtc0_EntryLo0(0);               /* Zero out low entry 0 */
+        mtc0_EntryLo1(0);               /* Zero out low entry 1 */
+        asm volatile ("ehb");           /* Hazard barrier */
+        asm volatile ("tlbwi");         /* Write the TLB entry */
+    }
+    mtc0_EntryHi(pid);                  /* Restore the PID */
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Update the TLB entry if highreg is found; otherwise, enter the data.
+ */
+void tlb_update (unsigned hi, unsigned lo)
+{
+    int x = mips_di();                  /* Disable interrupts */
+    int pid = mfc0_EntryHi();           /* Save the current PID */
+    int index;
+
+    mtc0_EntryHi(hi);                   /* Look for addr & PID */
+    asm volatile ("ehb");               /* Hazard barrier */
+    asm volatile ("tlbp");              /* Probe for the entry */
+    index = mfc0_Index();               /* See what we got */
+
+    if (hi & (1 << PGSHIFT)) {
+        /* Odd page. */
+        mtc0_EntryLo1(lo);              /* Init low entry 0 */
+        if (index >= 0) {
+            /* Entry found - update EntryLo1. */
+            asm volatile ("ehb");       /* Hazard barrier */
+            asm volatile ("tlbwi");     /* Write the TLB entry */
+        } else {
+            /* Not found - install new entry. */
+            mtc0_EntryHi(hi);           /* Restore high reg */
+            mtc0_EntryLo0(0);           /* Clear low entry 0 */
+            asm volatile ("ehb");       /* Hazard barrier */
+            asm volatile ("tlbwr");     /* Enter into a random slot */
+        }
+    } else {
+        /* Even page. */
+        mtc0_EntryLo0(lo);              /* Init low entry 0 */
+        if (index >= 0) {
+            /* Entry found - update EntryLo0. */
+            asm volatile ("ehb");       /* Hazard barrier */
+            asm volatile ("tlbwi");     /* Write the TLB entry */
+        } else {
+            /* Not found - install new entry. */
+            mtc0_EntryHi(hi);           /* Restore high reg */
+            mtc0_EntryLo1(0);           /* Clear low entry 1 */
+            asm volatile ("ehb");       /* Hazard barrier */
+            asm volatile ("tlbwr");     /* Enter into a random slot */
+        }
+    }
+    mtc0_EntryHi(pid);                  /* Restore the PID */
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
 }

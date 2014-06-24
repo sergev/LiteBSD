@@ -1379,9 +1379,8 @@ END(_remque)
 SlowFault:
         .set    noat
         mfc0    k0, MACH_C0_Status
-        nop
-        and     k0, k0, MACH_Status_UM
-        bne     k0, zero, user_exception
+        and     k0, MACH_Status_UM
+        bnez    k0, user_exception
         nop
         .set    at
 /*
@@ -2061,122 +2060,9 @@ ALEAF(_splx)
         di      v0                              # read Status and disable interrupts
         and     t0, v0, ~(MACH_Status_IPL_MASK | MACH_Status_IE)
         or      t0, t1
-        j       ra
+        jr.hb   ra
         mtc0    t0, MACH_C0_Status              # restore interrupt mask
 END(splx)
-
-/*--------------------------------------------------------------------------
- * Write the given entry into the TLB at the given index.
- *
- *      tlb_write_indexed (int index, int highEntry, int lowEntry0, int lowEntry1)
- */
-LEAF(tlb_write_indexed)
-        di      v1                              # Save Status, disable interrupts
-        mfc0    t0, MACH_C0_EntryHi             # Save the current PID.
-
-        mtc0    a0, MACH_C0_Index               # Set the index.
-        mtc0    a1, MACH_C0_EntryHi             # Set up entry high.
-        mtc0    a2, MACH_C0_EntryLo0            # Set up entry low 0
-        mtc0    a3, MACH_C0_EntryLo1            # Set up entry low 1
-        tlbwi                                   # Write the TLB
-
-        mtc0    t0, MACH_C0_EntryHi             # Restore the PID.
-        jr.hb   ra
-        mtc0    v1, MACH_C0_Status              # Restore the status register
-END(tlb_write_indexed)
-
-/*--------------------------------------------------------------------------
- * Write the given pid into the TLB pid reg.
- *
- *      tlb_set_pid(int asid)
- */
-LEAF(tlb_set_pid)
-        mtc0    a0, MACH_C0_EntryHi             # Write the hi reg value
-        j       ra
-        nop
-END(tlb_set_pid)
-
-/*--------------------------------------------------------------------------
- * Flush the "random" entries from the TLB.
- *
- *      tlb_flush()
- */
-LEAF(tlb_flush)
-        di      v1                              # Save Status, disable interrupts
-        mfc0    t0, MACH_C0_EntryHi             # Save the PID
-        li      t1, MACH_CACHED_MEMORY_ADDR     # invalid address
-        mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
-        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry 0.
-        mtc0    zero, MACH_C0_EntryLo1          # Zero out low entry 1.
-/*
- * Align the starting value (t1) and the upper bound (t2).
- */
-        li      t1, VMMACH_FIRST_RAND_ENTRY
-        li      t2, VMMACH_NUM_TLB_ENTRIES
-1:
-        mtc0    t1, MACH_C0_Index               # Set the index register.
-        addu    t1, t1, 1                       # Increment index.
-        bne     t1, t2, 1b
-        tlbwi                                   # Write the TLB entry.
-
-        mtc0    t0, MACH_C0_EntryHi             # Restore the PID
-        jr.hb   ra
-        mtc0    v1, MACH_C0_Status              # Restore the status register
-END(tlb_flush)
-
-/*--------------------------------------------------------------------------
- * Flush any TLB entries for the given address and TLB PID.
- *
- *      tlb_flush_addr(unsigned highreg)
- */
-LEAF(tlb_flush_addr)
-        di      v1                              # Save Status, disable interrupts
-        mfc0    t0, MACH_C0_EntryHi             # Get current PID
-        nop
-
-        mtc0    a0, MACH_C0_EntryHi             # look for addr & PID
-        nop
-        tlbp                                    # Probe for the entry.
-        mfc0    v0, MACH_C0_Index               # See what we got
-        li      t1, MACH_CACHED_MEMORY_ADDR     # Load invalid entry.
-        bltz    v0, 1f                          # index < 0 => !found
-        mtc0    t1, MACH_C0_EntryHi             # Mark entry high as invalid
-        mtc0    zero, MACH_C0_EntryLo0          # Zero out low entry. --TODO: EntryLo1
-        nop
-        tlbwi
-1:
-        mtc0    t0, MACH_C0_EntryHi             # restore PID
-        jr.hb   ra
-        mtc0    v1, MACH_C0_Status              # Restore the status register
-END(tlb_flush_addr)
-
-/*--------------------------------------------------------------------------
- * Update the TLB if highreg is found; otherwise, enter the data.
- *
- *      tlb_update (unsigned highreg, unsigned lowreg)
- */
-LEAF(tlb_update)
-        di      v1                              # Save Status, disable interrupts
-        mfc0    t0, MACH_C0_EntryHi             # Save current PID
-        nop                                     # 2 cycles before intr disabled
-        mtc0    a0, MACH_C0_EntryHi             # init high reg.
-        nop
-        tlbp                                    # Probe for the entry.
-        mfc0    v0, MACH_C0_Index               # See what we got
-        mtc0    a1, MACH_C0_EntryLo0            # init low reg. --TODO: EntryLo1
-        bltz    v0, 1f                          # index < 0 => !found
-        ehb
-        b       2f
-        tlbwi                                   # update slot found
-1:
-        mtc0    a0, MACH_C0_EntryHi             # init high reg.
-        ehb
-        tlbwr                                   # enter into a random slot
-2:
-        mtc0    t0, MACH_C0_EntryHi             # restore PID
-        jr.hb   ra
-        mtc0    v1, MACH_C0_Status              # Restore the status register
-END(tlb_update)
 
 /*----------------------------------------------------------------------------
  * Flush instruction cache for range of addr to addr + len - 1.
@@ -2211,9 +2097,9 @@ LEAF(mips_flush_icache)
 END(mips_flush_icache)
 
 /*----------------------------------------------------------------------------
- *      Flush data cache for range of addr to addr + len - 1.
- *      The address can be any valid address so long as no TLB misses occur.
- *      (Be sure to use cached K0SEG kernel addresses)
+ * Flush data cache for range of addr to addr + len - 1.
+ * The address can be any valid address so long as no TLB misses occur.
+ * (Be sure to use cached K0SEG kernel addresses)
  *
  *      void mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
  */
@@ -2255,20 +2141,21 @@ END(mips_flush_dcache)
 tlb_miss:
         .type   tlb_miss, @function
         mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
+        srl     k0, SEGSHIFT                    # compute segment table index
+        sll     k0, 2
         lw      k1, UADDR+U_PCB_SEGTAB          # get the current segment table
-        srl     k0, k0, SEGSHIFT                # compute segment table index
-        sll     k0, k0, 2
-        addu    k1, k1, k0
-        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
+        addu    k1, k0
         lw      k1, 0(k1)                       # get pointer to segment map
-        srl     k0, k0, PGSHIFT - 2             # compute segment map index
-        andi    k0, k0, (NPTEPG - 1) << 2
-        beq     k1, zero, SlowFault             # invalid segment map
-        addu    k1, k1, k0                      # index into segment map
-        lw      k0, 0(k1)                       # get page PTE
-        nop
-        beq     k0, zero, SlowFault             # dont load invalid entries
-        mtc0    k0, MACH_C0_EntryLo0            # TODO: EntryLo1
+        beqz    k1, SlowFault                   # invalid segment map
+        mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
+        srl     k0, PGSHIFT - 2                 # compute segment map index
+        andi    k0, (NPTEPG - 2) << 2           # make even
+        addu    k1, k0                          # index into segment map
+        lw      k0, 0(k1)                       # get even page PTE
+        lw      k1, 4(k1)                       # get odd page PTE
+        mtc0    k0, MACH_C0_EntryLo0
+        mtc0    k1, MACH_C0_EntryLo1
+        ehb
         tlbwr                                   # update TLB
         eret
 
@@ -2294,16 +2181,15 @@ gen_exception:
         .type   gen_exception, @function
         mfc0    k0, MACH_C0_Status              # Get the status register
         mfc0    k1, MACH_C0_Cause               # Get the cause register value.
-        and     k0, k0, MACH_Status_UM          # test for user mode
-        sll     k0, k0, 3                       # shift user bit for cause index
-        and     k1, k1, MACH_Cause_ExcCode      # Mask out the cause bits.
-        or      k1, k1, k0                      # change index to user table
-1:
+        and     k0, MACH_Status_UM              # test for user mode
+        sll     k0, 3                           # shift user bit for cause index
+        and     k1, MACH_Cause_ExcCode          # Mask out the cause bits.
+        or      k1, k0                          # change index to user table
         la      k0, machExceptionTable          # get base of the jump table
-        addu    k0, k0, k1                      # Get the address of the\
-                                                #  function entry.  Note that\
-                                                #  the cause is already\
-                                                #  shifted left by 2 bits so\
+        addu    k0, k1                          # Get the address of the
+                                                #  function entry.  Note that
+                                                #  the cause is already
+                                                #  shifted left by 2 bits so
                                                 #  we dont have to shift.
         lw      k0, 0(k0)                       # Get the function address
         j       k0                              # Jump to the function.
