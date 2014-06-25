@@ -62,7 +62,9 @@
 #define mfc0_Status()       mips_mfc0(12,0)     /* Processor status and control */
 #define mtc0_Status(v)      mips_mtc0(12,0,v)
 
-#define C0_INTCTL           12,1    /* Interrupt control of vector spacing */
+#define mfc0_IntCtl()       mips_mfc0(12,1)     /* Interrupt control of vector spacing */
+#define mtc0_IntCtl(v)      mips_mtc0(12,1,v)
+
 #define C0_SRSCTL           12,2    /* Shadow register set control */
 #define C0_SRSMAP           12,3    /* Shadow register mapping control */
 #define C0_VIEW_IPL         12,4    /* Allows the Priority Level to be read/written
@@ -70,7 +72,10 @@
 #define C0_SRSMAP2          12,5    /* Contains two 4-bit fields that provide
                                      * the mapping from a vector number to
                                      * the shadow set number to use when servicing such an interrupt */
-#define C0_CAUSE            13,0    /* Describes the cause of the last exception */
+
+#define mfc0_Cause()        mips_mfc0(13,0)     /* Describes the cause of the last exception */
+#define mtc0_Cause(v)       mips_mtc0(13,0,v)
+
 #define C0_NESTEDEXC        13,1    /* Contains the error and exception level
                                      * status bit values that existed prior to the current exception */
 #define C0_VIEW_RIPL        13,2    /* Enables read access to the RIPL bit that
@@ -78,8 +83,12 @@
 #define C0_EPC              14,0    /* Program counter at last exception */
 #define C0_NESTEDEPC        14,1    /* Contains the exception program counter
                                      * that existed prior to the current exception */
-#define C0_PRID             15,0    /* Processor identification and revision */
-#define C0_EBASE            15,1    /* Exception base address of exception vectors */
+
+#define mfc0_PRId()         mips_mfc0(15,0)     /* Processor identification and revision */
+
+#define mfc0_EBase()        mips_mfc0(15,1)     /* Exception base address of exception vectors */
+#define mtc0_EBase(v)       mips_mtc0(15,1,v)
+
 #define C0_CDMMBASE         15,2    /* Common device memory map base */
 
 #define mfc0_Config()       mips_mfc0(16,0)     /* Configuration register */

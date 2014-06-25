@@ -350,9 +350,6 @@ done_dcache:
 init_unix:
         di                                      # Disable interrupts
         li      sp, KERNELSTACK - START_FRAME   # switch to standard stack
-        mfc0    t0, MACH_C0_PRId                # read processor ID register
-        sw      t0, cpu
-        sw      zero, fpu
         jal     main                            # main(frame)
         move    a0, zero
 /*
@@ -2138,7 +2135,8 @@ END(mips_flush_dcache)
  * TLB exception vector: handle TLB translation misses.
  */
         .org    0
-tlb_miss:
+        .globl  _tlb_miss
+_tlb_miss:
         .type   tlb_miss, @function
         mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
         srl     k0, SEGSHIFT                    # compute segment table index
@@ -2165,7 +2163,7 @@ tlb_miss:
         .org    0xf8
         .type   _ebase, @object
 _ebase:
-        .word   0x9d000000                      # EBase value
+        .word   _tlb_miss                       # EBase value
 
         .type   _imgptr, @object
 _imgptr:

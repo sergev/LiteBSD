@@ -126,7 +126,19 @@ mach_init()
     unsigned firstaddr;
     caddr_t v, start;
     extern char __data_start[], _edata[], _end[];
-    extern void _etext();
+    extern void _etext(), _tlb_miss();
+
+    /* Initialize STATUS register: master interrupt disable.
+     * Setup interrupt vector base. */
+    mtc0_Status(ST_CU0 | ST_BEV);
+    mtc0_EBase(_tlb_miss);
+    mtc0_Status(ST_CU0);
+
+    /* Set vector spacing: not used really, but must be nonzero. */
+    mtc0_IntCtl(32);
+
+    /* Clear CAUSE register: use special interrupt vector 0x200. */
+    mtc0_Cause(CA_IV);
 
     /* Copy .data image from flash to RAM.
      * Linker places it at the end of .text segment. */
@@ -428,6 +440,9 @@ mach_init()
      * 190 - UART6 Transfer Done
      * 191 - Reserved */
     IPC(47) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(0);
+
+    /* Read processor ID register. */
+    cpu.cpuprid = mfc0_PRId();
 }
 
 void

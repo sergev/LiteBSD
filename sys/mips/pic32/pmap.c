@@ -783,6 +783,7 @@ pmap_enter(pmap, va, pa, prot, wired)
         /*
          * Update the same virtual address entry.
          */
+//printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
         tlb_update(va, npte);
         pte->pt_entry = npte;
         return;
