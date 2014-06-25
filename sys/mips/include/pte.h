@@ -80,6 +80,7 @@ typedef union pt_entry {
 
 #define	PG_RI		0x80000000  /* Read Inhibit, enabled by PageGrain.RIE */
 #define	PG_XI		0x40000000  /* Execute Inhibit, enabled by PageGrain.RIE */
+#define	PG_WIRED	0x08000000  /* Software-only bit for internal kernel use */
 
 #define	PG_FRAME_MASK	0x03ffffc0  /* Page Frame Number */
 #define	PG_FRAME(x)	(((x) & PG_FRAME_MASK) << 6)    /* Get physical address */

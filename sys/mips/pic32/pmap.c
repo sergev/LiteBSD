@@ -107,7 +107,6 @@ vm_offset_t     avail_end;      /* PA of last available physical page */
 vm_size_t       mem_size;       /* memory size in bytes */
 vm_offset_t     virtual_avail;  /* VA of first avail page (after kernel bss)*/
 vm_offset_t     virtual_end;    /* VA of last avail page (end of kernel AS) */
-int             pagesperpage;   /* PAGE_SIZE / NBPG */
 #ifdef ATTR
 char            *pmap_attributes;       /* reference and modify bits */
 #endif
@@ -169,7 +168,6 @@ pmap_bootstrap(firstaddr)
     virtual_avail = VM_MIN_KERNEL_ADDRESS;
     virtual_end = VM_MIN_KERNEL_ADDRESS + Sysmapsize * NBPG;
     /* XXX need to decide how to set cnt.v_page_size */
-    pagesperpage = 1;
 
     simple_lock_init(&kernel_pmap_store.pm_lock);
     kernel_pmap_store.pm_count = 1;
@@ -279,7 +277,7 @@ pmap_pinit(pmap)
         pmap_zero_page(VM_PAGE_TO_PHYS(mem));
         pmap->pm_segtab = stp = (struct segtab *)
             MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
-        i = pagesperpage * (NBPG / sizeof(struct segtab));
+        i = NBPG / sizeof(struct segtab);
         s = splimp();
         while (--i != 0) {
             stp++;
@@ -415,8 +413,8 @@ pmap_remove(pmap, sva, eva)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-//            if (entry & PG_WIRED)
-//                pmap->pm_stats.wired_count--;
+            if (entry & PG_WIRED)
+                pmap->pm_stats.wired_count--;
             pmap->pm_stats.resident_count--;
             pmap_remove_pv(pmap, sva, PG_FRAME(entry));
 #ifdef ATTR
@@ -455,8 +453,8 @@ pmap_remove(pmap, sva, eva)
             entry = pte->pt_entry;
             if (!(entry & PG_V))
                 continue;
-//            if (entry & PG_WIRED)
-//                pmap->pm_stats.wired_count--;
+            if (entry & PG_WIRED)
+                pmap->pm_stats.wired_count--;
             pmap->pm_stats.resident_count--;
             pmap_remove_pv(pmap, sva, PG_FRAME(entry));
 #ifdef ATTR
@@ -643,7 +641,7 @@ pmap_enter(pmap, va, pa, prot, wired)
 {
     register pt_entry_t *pte;
     register u_int npte;
-    register int i, j;
+    register int j;
     vm_page_t mem;
 
 #ifdef DIAGNOSTIC
@@ -666,9 +664,8 @@ pmap_enter(pmap, va, pa, prot, wired)
         register pv_entry_t pv, npv;
         int s;
 
-        if (!(prot & VM_PROT_WRITE))
-            npte = 0;
-        else {
+        npte = 0;
+        if (prot & VM_PROT_WRITE) {
             register vm_page_t mem;
 
             mem = PHYS_TO_VM_PAGE(pa);
@@ -679,16 +676,14 @@ pmap_enter(pmap, va, pa, prot, wired)
                  */
                 npte = PG_D;
                 mem->flags &= ~PG_CLEAN;
-            } else
+            } else if (
 #ifdef ATTR
-                if ((pmap_attributes[atop(pa)] &
-                    PMAP_ATTR_MOD) || !(mem->flags & PG_CLEAN))
-#else
-                if (!(mem->flags & PG_CLEAN))
+                (pmap_attributes[atop(pa)] & PMAP_ATTR_MOD) ||
 #endif
-                    npte = PG_D;
-            else
-                npte = 0;
+                !(mem->flags & PG_CLEAN)) {
+
+                npte = PG_D;
+            }
         }
 
         /*
@@ -753,7 +748,7 @@ pmap_enter(pmap, va, pa, prot, wired)
          * Assumption: if it is not part of our managed memory
          * then it must be device memory which may be volatile.
          */
-        npte = PG_V | PG_UNCACHED;
+        npte = 0;
         if (prot & VM_PROT_WRITE)
             npte |= PG_D;
     }
@@ -774,36 +769,31 @@ pmap_enter(pmap, va, pa, prot, wired)
         pte = kvtopte(va);
         npte |= PG_PFNUM(pa) | PG_V | PG_G | PG_UNCACHED;
         if (wired) {
-            pmap->pm_stats.wired_count += pagesperpage;
-//            npte |= PG_WIRED;
+            pmap->pm_stats.wired_count += 1;
+            npte |= PG_WIRED;
         }
-        i = pagesperpage;
-        do {
-            if (!(pte->pt_entry & PG_V)) {
-                pmap->pm_stats.resident_count++;
-            } else {
+        if (!(pte->pt_entry & PG_V)) {
+            pmap->pm_stats.resident_count++;
+        } else {
 #ifdef DIAGNOSTIC
-//                if (pte->pt_entry & PG_WIRED)
-//                    panic("pmap_enter: kernel wired");
+            if (pte->pt_entry & PG_WIRED)
+                panic("pmap_enter: kernel wired");
 #endif
-            }
-            /*
-             * Update the same virtual address entry.
-             */
-            tlb_update(va, npte);
-            pte->pt_entry = npte;
-            va += NBPG;
-            npte += NBPG;
-            pte++;
-        } while (--i != 0);
+        }
+        /*
+         * Update the same virtual address entry.
+         */
+        tlb_update(va, npte);
+        pte->pt_entry = npte;
         return;
     }
 
-    if (!(pte = pmap_segmap(pmap, va))) {
+    pte = pmap_segmap(pmap, va);
+    if (! pte) {
         mem = vm_page_alloc1();
         pmap_zero_page(VM_PAGE_TO_PHYS(mem));
-        pmap_segmap(pmap, va) = pte = (pt_entry_t *)
-            MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
+        pte = (pt_entry_t *) MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
+        pmap_segmap(pmap, va) = pte;
     }
     pte += (va >> PGSHIFT) & (NPTEPG - 1);
 
@@ -814,18 +804,12 @@ pmap_enter(pmap, va, pa, prot, wired)
      */
     npte |= PG_PFNUM(pa) | PG_V | PG_UNCACHED;
     if (wired) {
-        pmap->pm_stats.wired_count += pagesperpage;
-//        npte |= PG_WIRED;
+        pmap->pm_stats.wired_count += 1;
+        npte |= PG_WIRED;
     }
-    i = pagesperpage;
-    do {
-        pte->pt_entry = npte;
-        if (pmap->pm_tlbgen == tlbpid_gen)
-            tlb_update(va | pmap->pm_tlbpid, npte);
-        va += NBPG;
-        npte += NBPG;
-        pte++;
-    } while (--i != 0);
+    pte->pt_entry = npte;
+    if (pmap->pm_tlbgen == tlbpid_gen)
+        tlb_update(va | pmap->pm_tlbpid, npte);
 }
 
 /*
@@ -843,13 +827,11 @@ pmap_change_wiring(pmap, va, wired)
 {
     register pt_entry_t *pte;
     u_int p;
-    register int i;
 
     if (pmap == NULL)
         return;
 
-//    p = wired ? PG_WIRED : 0;
-    p = 0;
+    p = wired ? PG_WIRED : 0;
 
     /*
      * Don't need to flush the TLB since PG_WIRED is only in software.
@@ -867,18 +849,15 @@ pmap_change_wiring(pmap, va, wired)
         pte += (va >> PGSHIFT) & (NPTEPG - 1);
     }
 
-    i = pagesperpage;
-//    if (!(pte->pt_entry & PG_WIRED) && wired)
-//        pmap->pm_stats.wired_count += i;
-//    else if ((pte->pt_entry & PG_WIRED) && !wired)
-//        pmap->pm_stats.wired_count -= i;
-    do {
-        if (pte->pt_entry & PG_V) {
-//            pte->pt_entry &= ~PG_WIRED;
-            pte->pt_entry |= p;
-        }
-        pte++;
-    } while (--i != 0);
+    if (!(pte->pt_entry & PG_WIRED) && wired)
+        pmap->pm_stats.wired_count += 1;
+    else if ((pte->pt_entry & PG_WIRED) && !wired)
+        pmap->pm_stats.wired_count -= 1;
+
+    if (pte->pt_entry & PG_V) {
+        pte->pt_entry &= ~PG_WIRED;
+        pte->pt_entry |= p;
+    }
 }
 
 /*
