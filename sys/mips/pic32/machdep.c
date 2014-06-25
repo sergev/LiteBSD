@@ -187,7 +187,21 @@ mach_init()
     /* clear pages for u areas */
     bzero(start, v - start);
 
-    strcpy(cpu_model, "pic32mz");
+    switch (DEVID & 0x0fffffff) {
+    case 0x05104053: strcpy (cpu_model, "2048ECG064"); break;
+    case 0x0510E053: strcpy (cpu_model, "2048ECG100"); break;
+    case 0x05118053: strcpy (cpu_model, "2048ECG124"); break;
+    case 0x05122053: strcpy (cpu_model, "2048ECG144"); break;
+    case 0x05109053: strcpy (cpu_model, "2048ECH064"); break;
+    case 0x05113053: strcpy (cpu_model, "2048ECH100"); break;
+    case 0x0511D053: strcpy (cpu_model, "2048ECH124"); break;
+    case 0x05127053: strcpy (cpu_model, "2048ECH144"); break;
+    case 0x05131053: strcpy (cpu_model, "2048ECM064"); break;
+    case 0x0513B053: strcpy (cpu_model, "2048ECM100"); break;
+    case 0x05145053: strcpy (cpu_model, "2048ECM124"); break;
+    case 0x0514F053: strcpy (cpu_model, "2048ECM144"); break;
+    default:         sprintf(cpu_model, "DevID %08x", DEVID);
+    }
     machDataCacheSize = 4*1024;     // 4kbyte data cache
     machInstCacheSize = 16*1024;    // 16kbyte instruction cache
 
@@ -196,9 +210,8 @@ mach_init()
      * Be careful to save and restore the original contents for msgbuf.
      */
     /* Get total RAM size. */
-    physmem = (512 * 1024) / NBPG;
+    physmem = btoc(512 * 1024);
     maxmem = physmem;
-
 
     /*
      * Initialize error message buffer (at end of core).
@@ -434,6 +447,48 @@ initcpu()
     spl0();         /* safe to turn interrupts on now */
 }
 
+static void identify_cpu()
+{
+    unsigned osccon = OSCCON, spllcon = SPLLCON;
+    unsigned pllmult = (spllcon >> 16 & 127) + 1;
+    unsigned pllidiv = (spllcon >> 8 & 7) + 1;
+    unsigned pllodiv = "\2\2\4\10\20\40\40\40"[spllcon >> 24 & 7];
+    static const char *poscmod[] = { "external clock", "(reserved)",
+                                     "crystal", "(disabled)" };
+
+    printf ("cpu: %s rev A%u, %u MHz, I/D cache %u/%u kbytes\n",
+        cpu_model, DEVID >> 28, CPU_KHZ/1000,
+        machInstCacheSize >> 10, machDataCacheSize >> 10);
+
+    /* COSC: current oscillator selection bits */
+    printf ("oscillator: ");
+    switch (osccon >> 12 & 7) {
+    case 0:
+    case 7:
+        printf ("internal Fast RC, divided\n");
+        break;
+    case 1:
+        printf ("system PLL div 1:%d mult x%d\n",
+                pllidiv * pllodiv, pllmult);
+        break;
+    case 2:
+        printf ("%s\n", poscmod [DEVCFG1 >> 8 & 3]);
+        break;
+    case 3:
+        printf ("reserved\n");
+        break;
+    case 4:
+        printf ("secondary\n");
+        break;
+    case 5:
+        printf ("internal Low-Power RC\n");
+        break;
+    case 6:
+        printf ("back-up Fast RC\n");
+        break;
+    }
+}
+
 /*
  * cpu_startup: allocate memory for variable-sized tables,
  * initialize cpu, and do autoconfiguration.
@@ -450,7 +505,8 @@ cpu_startup()
      * Good {morning,afternoon,evening,night}.
      */
     printf(version);
-    printf("real mem = %d\n", ctob(physmem));
+    identify_cpu();
+    printf("real mem = %d kbytes\n", ctob(physmem) >> 10);
 
     /*
      * Allocate virtual address space for file I/O buffers.
@@ -511,7 +567,7 @@ cpu_startup()
         callout[i-1].c_next = &callout[i];
     callout[i-1].c_next = NULL;
 
-    printf("avail mem = %d\n", ptoa(cnt.v_free_count));
+    printf("avail mem = %d kbytes\n", ptoa(cnt.v_free_count) >> 10);
     printf("using %d buffers containing %d bytes of memory\n",
         nbuf, bufpages * CLBYTES);
     /*
