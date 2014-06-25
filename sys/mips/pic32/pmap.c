@@ -786,6 +786,12 @@ pmap_enter(pmap, va, pa, prot, wired)
 //printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
         tlb_update(va, npte);
         pte->pt_entry = npte;
+
+        /* Replicate G bit to paired even/odd entry. */
+        if (va & (1 << PGSHIFT))
+            pte[-1].pt_entry |= PG_G;
+        else
+            pte[1].pt_entry |= PG_G;
         return;
     }
 

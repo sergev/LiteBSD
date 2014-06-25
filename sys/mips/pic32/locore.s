@@ -1531,7 +1531,7 @@ _tlb_vector:
         .type   _tlb_vector, @function
         mfc0    k0, MACH_C0_Status              # Get the status register
         and     k0, MACH_Status_UM              # test for user mode
-        bnez    k0, kern_tlb_refill
+        beqz    k0, kern_tlb_refill
         nop
 
 user_tlb_refill:
@@ -1569,9 +1569,9 @@ kern_tlb_refill:
         addu    k1, k0
         lw      k0, 0(k1)                       # get even page PTE
         lw      k1, 4(k1)                       # get odd page PTE
+        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
         and     k0, PG_V                        # check for valid entry --TODO: check Lo1
         beqz    k0, kern_exception              # PTE invalid
-        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
         mtc0    k1, MACH_C0_EntryLo1
         ehb
         tlbwr                                   # update TLB
