@@ -753,7 +753,7 @@ pmap_enter(pmap, va, pa, prot, wired)
          * Assumption: if it is not part of our managed memory
          * then it must be device memory which may be volatile.
          */
-        npte = PG_V | PG_WBACK;
+        npte = PG_V | PG_UNCACHED;
         if (prot & VM_PROT_WRITE)
             npte |= PG_D;
     }
@@ -772,7 +772,7 @@ pmap_enter(pmap, va, pa, prot, wired)
     if (!pmap->pm_segtab) {
         /* enter entries into kernel pmap */
         pte = kvtopte(va);
-        npte |= PG_PFNUM(pa) | PG_V | PG_G | PG_WBACK;
+        npte |= PG_PFNUM(pa) | PG_V | PG_G | PG_UNCACHED;
         if (wired) {
             pmap->pm_stats.wired_count += pagesperpage;
 //            npte |= PG_WIRED;
@@ -812,7 +812,7 @@ pmap_enter(pmap, va, pa, prot, wired)
      * Assume uniform modified and referenced status for all
      * MIPS pages in a MACH page.
      */
-    npte |= PG_PFNUM(pa) | PG_V | PG_WBACK;
+    npte |= PG_PFNUM(pa) | PG_V | PG_UNCACHED;
     if (wired) {
         pmap->pm_stats.wired_count += pagesperpage;
 //        npte |= PG_WIRED;

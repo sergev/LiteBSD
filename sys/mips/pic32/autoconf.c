@@ -81,14 +81,6 @@ configure()
     register struct driver *drp;
     register int i;
 
-    /* print what type of CPU and FPU we have */
-
-    printf("cpu0 (MIPS PIC32MZ revision %d.%d)\n",
-        cpu.cpu.cp_majrev, cpu.cpu.cp_minrev);
-
-    printf("data cache size %dK inst cache size %dK\n",
-        machDataCacheSize >> 10, machInstCacheSize >> 10);
-
     /* probe and initialize controllers */
     for (cp = mips_cinit; drp = cp->mips_driver; cp++) {
         if (cp->mips_addr == (char *)QUES)

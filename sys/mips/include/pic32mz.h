@@ -81,8 +81,12 @@
 #define C0_PRID             15,0    /* Processor identification and revision */
 #define C0_EBASE            15,1    /* Exception base address of exception vectors */
 #define C0_CDMMBASE         15,2    /* Common device memory map base */
-#define C0_CONFIG           16,0    /* Configuration register */
-#define C0_CONFIG1          16,1    /* Configuration register 1 */
+
+#define mfc0_Config()       mips_mfc0(16,0)     /* Configuration register */
+#define mtc0_Config(v)      mips_mtc0(16,0,v)
+
+#define mfc0_Config1()      mips_mfc0(16,1)     /* Configuration register 1 */
+
 #define C0_CONFIG2          16,2    /* Configuration register 2 */
 #define C0_CONFIG3          16,3    /* Configuration register 3 */
 #define C0_CONFIG4          16,4    /* Configuration register 4 */

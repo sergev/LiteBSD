@@ -162,7 +162,7 @@ mach_init()
     curproc->p_md.md_regs = proc0paddr->u_pcb.pcb_regs;
     firstaddr = MACH_CACHED_TO_PHYS(v);
     for (i = 0; i < UPAGES; i++) {
-        curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_WBACK | PG_V | PG_D;
+        curproc->p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_UNCACHED | PG_V | PG_D;
         firstaddr += NBPG;
     }
     tlb_write_wired(0, UADDR | 1, curproc->p_md.md_upte[0],
@@ -179,7 +179,7 @@ mach_init()
     nullproc.p_md.md_regs = nullproc.p_addr->u_pcb.pcb_regs;
     bcopy("nullproc", nullproc.p_comm, sizeof("nullproc"));
     for (i = 0; i < UPAGES; i++) {
-        nullproc.p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_WBACK | PG_V | PG_D;
+        nullproc.p_md.md_upte[i] = PG_PFNUM(firstaddr) | PG_UNCACHED | PG_V | PG_D;
         firstaddr += NBPG;
     }
     v += UPAGES * NBPG;
@@ -202,14 +202,10 @@ mach_init()
     case 0x0514F053: strcpy (cpu_model, "2048ECM144"); break;
     default:         sprintf(cpu_model, "DevID %08x", DEVID);
     }
-    machDataCacheSize = 4*1024;     // 4kbyte data cache
-    machInstCacheSize = 16*1024;    // 16kbyte instruction cache
 
     /*
      * Find out how much memory is available.
-     * Be careful to save and restore the original contents for msgbuf.
      */
-    /* Get total RAM size. */
     physmem = btoc(512 * 1024);
     maxmem = physmem;
 
@@ -456,9 +452,8 @@ static void identify_cpu()
     static const char *poscmod[] = { "external clock", "(reserved)",
                                      "crystal", "(disabled)" };
 
-    printf ("cpu: %s rev A%u, %u MHz, I/D cache %u/%u kbytes\n",
-        cpu_model, DEVID >> 28, CPU_KHZ/1000,
-        machInstCacheSize >> 10, machDataCacheSize >> 10);
+    printf ("cpu: PIC32MZ%s rev A%u, %u MHz\n",
+        cpu_model, DEVID >> 28, CPU_KHZ/1000);
 
     /* COSC: current oscillator selection bits */
     printf ("oscillator: ");
@@ -486,6 +481,30 @@ static void identify_cpu()
     case 6:
         printf ("back-up Fast RC\n");
         break;
+    }
+
+    /*
+     * Compute cache sizes.
+     */
+    unsigned config1 = mfc0_Config1();
+    unsigned il = config1 >> 19 & 7;
+    unsigned dl = config1 >> 10 & 7;
+
+    machInstCacheSize = 0;
+    machDataCacheSize = 0;
+    if (il > 0) {
+        unsigned is = config1 >> 22 & 7;
+        unsigned ia = config1 >> 16 & 7;
+        machInstCacheSize = 64 * (1<<is) * 2 * (1<<il) * (ia+1);
+    }
+    if (dl > 0) {
+        unsigned ds = config1 >> 13 & 7;
+        unsigned da = config1 >> 7 & 7;
+        machDataCacheSize = 64 * (1<<ds) * 2 * (1<<dl) * (da+1);
+    }
+    if (machInstCacheSize > 0 || machDataCacheSize > 0) {
+        printf ("cache: %u/%u kbytes\n",
+            machInstCacheSize >> 10, machDataCacheSize >> 10);
     }
 }
 
