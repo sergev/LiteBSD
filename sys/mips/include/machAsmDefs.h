@@ -153,9 +153,9 @@ x: ; \
 	MSG(msg)
 
 #define	MSG(msg) \
-	.rdata; \
+	.pushsection .rdata; \
 9:	.asciiz	msg; \
-	.text
+	.popsection
 
 #define ASMSTR(str) \
 	.asciiz str; \

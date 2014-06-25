@@ -1278,7 +1278,7 @@ LEAF(suiword)
         sw      a1, 0(a0)               # store word
         sw      zero, UADDR+U_PCB_ONFAULT
         move    v0, zero
-        b       mips_flush_icache       # NOTE: this should not clobber v0!
+        j       mips_flush_icache       # NOTE: this should not clobber v0!
         li      a1, 4                   # size of word
 END(suiword)
 
@@ -1368,552 +1368,6 @@ LEAF(_remque)
         j       ra
         sw      v1, 4(v0)               # p->next->prev = p->prev
 END(_remque)
-
-/*
- * We could not find a TLB entry.
- * Find out what mode we came from and call the appropriate handler.
- */
-SlowFault:
-        .set    noat
-        mfc0    k0, MACH_C0_Status
-        and     k0, MACH_Status_UM
-        bnez    k0, user_exception
-        nop
-        .set    at
-/*
- * Fall though ...
- */
-
-/*----------------------------------------------------------------------------
- * Handle an exception from kernel mode.
- *
- *      kern_exception()
- */
-
-/*
- * The kernel exception stack contains 18 saved general registers,
- * the status register and the multiply lo and high registers.
- * In addition, we set this up for linkage conventions.
- */
-#define KERN_REG_SIZE           (18 * 4)
-#define KERN_REG_OFFSET         (STAND_FRAME_SIZE)
-#define KERN_SR_OFFSET          (STAND_FRAME_SIZE + KERN_REG_SIZE)
-#define KERN_MULT_LO_OFFSET     (STAND_FRAME_SIZE + KERN_REG_SIZE + 4)
-#define KERN_MULT_HI_OFFSET     (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
-#define KERN_EXC_FRAME_SIZE     (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
-
-NNON_LEAF(kern_exception, KERN_EXC_FRAME_SIZE, ra)
-        .set    noat
-        .mask   0x80000000, (STAND_RA_OFFSET - KERN_EXC_FRAME_SIZE)
-
-        subu    sp, sp, KERN_EXC_FRAME_SIZE
-/*
- * Save the relevant kernel registers onto the stack.
- * We do not need to save s0 - s8, sp and gp because
- * the compiler does it for us.
- */
-        sw      AT, KERN_REG_OFFSET + 0(sp)
-        sw      v0, KERN_REG_OFFSET + 4(sp)
-        sw      v1, KERN_REG_OFFSET + 8(sp)
-        sw      a0, KERN_REG_OFFSET + 12(sp)
-        mflo    v0
-        mfhi    v1
-        sw      a1, KERN_REG_OFFSET + 16(sp)
-        sw      a2, KERN_REG_OFFSET + 20(sp)
-        sw      a3, KERN_REG_OFFSET + 24(sp)
-        sw      t0, KERN_REG_OFFSET + 28(sp)
-        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
-        sw      t1, KERN_REG_OFFSET + 32(sp)
-        sw      t2, KERN_REG_OFFSET + 36(sp)
-        sw      t3, KERN_REG_OFFSET + 40(sp)
-        sw      t4, KERN_REG_OFFSET + 44(sp)
-        mfc0    a1, MACH_C0_Cause               # Second arg is the cause reg.
-        sw      t5, KERN_REG_OFFSET + 48(sp)
-        sw      t6, KERN_REG_OFFSET + 52(sp)
-        sw      t7, KERN_REG_OFFSET + 56(sp)
-        sw      t8, KERN_REG_OFFSET + 60(sp)
-        mfc0    a2, MACH_C0_BadVAddr            # Third arg is the fault addr.
-        sw      t9, KERN_REG_OFFSET + 64(sp)
-        sw      ra, KERN_REG_OFFSET + 68(sp)
-        sw      v0, KERN_MULT_LO_OFFSET(sp)
-        sw      v1, KERN_MULT_HI_OFFSET(sp)
-        mfc0    a3, MACH_C0_EPC                 # Fourth arg is the pc.
-        sw      a0, KERN_SR_OFFSET(sp)
-
-        move    t0, a0
-        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
-        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
-/*
- * Call the exception handler.
- */
-        jal     exception
-        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
-/*
- * Restore registers and return from the exception.
- * v0 contains the return address.
- */
-        lw      t0, KERN_MULT_LO_OFFSET(sp)
-        lw      t1, KERN_MULT_HI_OFFSET(sp)
-        mtlo    t0
-        mthi    t1
-        lw      AT, KERN_REG_OFFSET + 0(sp)
-        lw      v1, KERN_REG_OFFSET + 8(sp)
-        lw      a0, KERN_REG_OFFSET + 12(sp)
-        lw      a1, KERN_REG_OFFSET + 16(sp)
-        lw      a2, KERN_REG_OFFSET + 20(sp)
-        lw      a3, KERN_REG_OFFSET + 24(sp)
-        lw      t0, KERN_REG_OFFSET + 28(sp)
-        lw      t1, KERN_REG_OFFSET + 32(sp)
-        lw      t2, KERN_REG_OFFSET + 36(sp)
-        lw      t3, KERN_REG_OFFSET + 40(sp)
-        lw      t4, KERN_REG_OFFSET + 44(sp)
-        lw      t5, KERN_REG_OFFSET + 48(sp)
-        lw      t6, KERN_REG_OFFSET + 52(sp)
-        lw      t7, KERN_REG_OFFSET + 56(sp)
-        lw      t8, KERN_REG_OFFSET + 60(sp)
-        lw      t9, KERN_REG_OFFSET + 64(sp)
-        lw      ra, KERN_REG_OFFSET + 68(sp)
-        di                                      # Disable interrupts.
-        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
-        lw      k0, KERN_SR_OFFSET(sp)
-        mtc0    k0, MACH_C0_Status              # Restore Status.
-        lw      v0, KERN_REG_OFFSET + 4(sp)
-        addu    sp, sp, KERN_EXC_FRAME_SIZE
-        eret                                    # Return from exception, enable intrs.
-        .set    at
-END(kern_exception)
-
-/*----------------------------------------------------------------------------
- * Handle an exception from user mode.
- *
- *      user_exception()
- */
-NNON_LEAF(user_exception, STAND_FRAME_SIZE, ra)
-        .set    noat
-        .mask   0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
-/*
- * Save all of the registers except for the kernel temporaries in u.u_pcb.
- */
-        sw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        sw      v0, UADDR+U_PCB_REGS+(V0 * 4)
-        sw      v1, UADDR+U_PCB_REGS+(V1 * 4)
-        sw      a0, UADDR+U_PCB_REGS+(A0 * 4)
-        mflo    v0
-        sw      a1, UADDR+U_PCB_REGS+(A1 * 4)
-        sw      a2, UADDR+U_PCB_REGS+(A2 * 4)
-        sw      a3, UADDR+U_PCB_REGS+(A3 * 4)
-        sw      t0, UADDR+U_PCB_REGS+(T0 * 4)
-        mfhi    v1
-        sw      t1, UADDR+U_PCB_REGS+(T1 * 4)
-        sw      t2, UADDR+U_PCB_REGS+(T2 * 4)
-        sw      t3, UADDR+U_PCB_REGS+(T3 * 4)
-        sw      t4, UADDR+U_PCB_REGS+(T4 * 4)
-        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
-        sw      t5, UADDR+U_PCB_REGS+(T5 * 4)
-        sw      t6, UADDR+U_PCB_REGS+(T6 * 4)
-        sw      t7, UADDR+U_PCB_REGS+(T7 * 4)
-        sw      s0, UADDR+U_PCB_REGS+(S0 * 4)
-        mfc0    a1, MACH_C0_Cause               # Second arg is the cause reg.
-        sw      s1, UADDR+U_PCB_REGS+(S1 * 4)
-        sw      s2, UADDR+U_PCB_REGS+(S2 * 4)
-        sw      s3, UADDR+U_PCB_REGS+(S3 * 4)
-        sw      s4, UADDR+U_PCB_REGS+(S4 * 4)
-        mfc0    a2, MACH_C0_BadVAddr            # Third arg is the fault addr
-        sw      s5, UADDR+U_PCB_REGS+(S5 * 4)
-        sw      s6, UADDR+U_PCB_REGS+(S6 * 4)
-        sw      s7, UADDR+U_PCB_REGS+(S7 * 4)
-        sw      t8, UADDR+U_PCB_REGS+(T8 * 4)
-        mfc0    a3, MACH_C0_EPC                 # Fourth arg is the pc.
-        sw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        sw      sp, UADDR+U_PCB_REGS+(SP * 4)
-        sw      s8, UADDR+U_PCB_REGS+(S8 * 4)
-        li      sp, KERNELSTACK - STAND_FRAME_SIZE      # switch to kernel SP
-        sw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
-        sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
-        sw      a0, UADDR+U_PCB_REGS+(SR * 4)
-        sw      a3, UADDR+U_PCB_REGS+(PC * 4)
-#if 1
-        la      gp, _gp                         # switch to kernel GP
-#endif
-        move    t0, a0
-        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
-        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
-/*
- * Call the exception handler.
- */
-        jal     exception
-        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
-/*
- * Restore user registers and return. NOTE: interrupts are enabled.
- */
-        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
-        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
-        mtlo    t0
-        mthi    t1
-        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
-        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
-        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
-        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
-        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
-        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
-        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
-        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
-        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
-        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
-        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
-        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
-        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
-        lw      s0, UADDR+U_PCB_REGS+(S0 * 4)
-        lw      s1, UADDR+U_PCB_REGS+(S1 * 4)
-        lw      s2, UADDR+U_PCB_REGS+(S2 * 4)
-        lw      s3, UADDR+U_PCB_REGS+(S3 * 4)
-        lw      s4, UADDR+U_PCB_REGS+(S4 * 4)
-        lw      s5, UADDR+U_PCB_REGS+(S5 * 4)
-        lw      s6, UADDR+U_PCB_REGS+(S6 * 4)
-        lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
-        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
-        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
-        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        di                                      # Disable interrupts.
-        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
-        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
-        lw      k0, UADDR+U_PCB_REGS+(SR * 4)
-        mtc0    k0, MACH_C0_Status              # Restore Status.
-        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
-        eret
-        .set    at
-END(user_exception)
-
-/*----------------------------------------------------------------------------
- * Handle an interrupt from kernel mode.
- * Interrupts use the standard kernel stack.
- * switch_exit sets up a kernel stack after exit so interrupts would not fail.
- *
- *      kern_interrupt()
- */
-#define KINTR_REG_OFFSET        (STAND_FRAME_SIZE)
-#define KINTR_SR_OFFSET         (STAND_FRAME_SIZE + KERN_REG_SIZE)
-#define KINTR_MULT_LO_OFFSET    (STAND_FRAME_SIZE + KERN_REG_SIZE + 4)
-#define KINTR_MULT_HI_OFFSET    (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
-#define KINTR_FRAME_SIZE        (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
-
-NNON_LEAF(kern_interrupt, KINTR_FRAME_SIZE, ra)
-        .set    noat
-        .mask   0x80000000, (STAND_RA_OFFSET - KINTR_FRAME_SIZE)
-
-        subu    sp, sp, KINTR_FRAME_SIZE        # allocate stack frame
-        sw      a0, KINTR_REG_OFFSET + 12(sp)
-        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
-        sw      a1, KINTR_REG_OFFSET + 16(sp)
-        mfc0    a1, MACH_C0_EPC                 # Second arg is the pc.
-
-        mfc0    k0, MACH_C0_Cause               # Get Cause.
-        ext     k1, k0, 10, 6                   # Extract Cause.IPL.
-        move    k0, a0
-        ins     k0, k1, 10, 6                   # Raise Status.IPL,
-        ins     k0, zero, 1, 1                  # Clear EXL.
-        mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
-
-/*
- * Save the relevant kernel registers onto the stack.
- * We do not need to save s0 - s8, sp and gp because
- * the compiler does it for us.
- */
-        sw      a0, KINTR_SR_OFFSET(sp)
-        sw      AT, KINTR_REG_OFFSET + 0(sp)
-        sw      v0, KINTR_REG_OFFSET + 4(sp)
-        sw      v1, KINTR_REG_OFFSET + 8(sp)
-        mflo    v0
-        mfhi    v1
-        sw      a2, KINTR_REG_OFFSET + 20(sp)
-        sw      a3, KINTR_REG_OFFSET + 24(sp)
-        sw      t0, KINTR_REG_OFFSET + 28(sp)
-        sw      t1, KINTR_REG_OFFSET + 32(sp)
-        sw      t2, KINTR_REG_OFFSET + 36(sp)
-        sw      t3, KINTR_REG_OFFSET + 40(sp)
-        sw      t4, KINTR_REG_OFFSET + 44(sp)
-        sw      t5, KINTR_REG_OFFSET + 48(sp)
-        sw      t6, KINTR_REG_OFFSET + 52(sp)
-        sw      t7, KINTR_REG_OFFSET + 56(sp)
-        sw      t8, KINTR_REG_OFFSET + 60(sp)
-        sw      t9, KINTR_REG_OFFSET + 64(sp)
-        sw      ra, KINTR_REG_OFFSET + 68(sp)
-        sw      v0, KINTR_MULT_LO_OFFSET(sp)
-        sw      v1, KINTR_MULT_HI_OFFSET(sp)
-/*
- * Call the interrupt handler.
- */
-        jal     interrupt
-        sw      a1, STAND_RA_OFFSET(sp)         # for debugging
-/*
- * Restore registers and return from the interrupt.
- */
-        lw      t0, KINTR_MULT_LO_OFFSET(sp)
-        lw      t1, KINTR_MULT_HI_OFFSET(sp)
-        mtlo    t0
-        mthi    t1
-        lw      AT, KINTR_REG_OFFSET + 0(sp)
-        lw      v0, KINTR_REG_OFFSET + 4(sp)
-        lw      v1, KINTR_REG_OFFSET + 8(sp)
-        lw      a0, KINTR_REG_OFFSET + 12(sp)
-        lw      a1, KINTR_REG_OFFSET + 16(sp)
-        lw      a2, KINTR_REG_OFFSET + 20(sp)
-        lw      a3, KINTR_REG_OFFSET + 24(sp)
-        lw      t0, KINTR_REG_OFFSET + 28(sp)
-        lw      t1, KINTR_REG_OFFSET + 32(sp)
-        lw      t2, KINTR_REG_OFFSET + 36(sp)
-        lw      t3, KINTR_REG_OFFSET + 40(sp)
-        lw      t4, KINTR_REG_OFFSET + 44(sp)
-        lw      t5, KINTR_REG_OFFSET + 48(sp)
-        lw      t6, KINTR_REG_OFFSET + 52(sp)
-        lw      t7, KINTR_REG_OFFSET + 56(sp)
-        lw      t8, KINTR_REG_OFFSET + 60(sp)
-        lw      t9, KINTR_REG_OFFSET + 64(sp)
-        lw      ra, KINTR_REG_OFFSET + 68(sp)
-        di                                      # Disable interrupts.
-        lw      k0, KINTR_SR_OFFSET(sp)
-        mtc0    k0, MACH_C0_Status              # Restore Status
-        lw      k1, STAND_RA_OFFSET(sp)
-        mtc0    k1, MACH_C0_EPC                 # Restore EPC.
-        addu    sp, sp, KINTR_FRAME_SIZE
-        eret                                    # Return from interrupt.
-        .set    at
-END(kern_interrupt)
-
-/*----------------------------------------------------------------------------
- *
- * user_interrupt --
- *
- *      Handle an interrupt from user mode.
- *      Note: we save minimal state in the u.u_pcb struct and use the standard
- *      kernel stack since there has to be a u page if we came from user mode.
- *      If there is a pending software interrupt, then save the remaining state
- *      and call softintr(). This is all because if we call switch() inside
- *      interrupt(), not all the user registers have been saved in u.u_pcb.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------------
- */
-NNON_LEAF(user_interrupt, STAND_FRAME_SIZE, ra)
-        .set    noat
-        .mask   0x80000000, (STAND_RA_OFFSET - STAND_FRAME_SIZE)
-
-        sw      sp, UADDR+U_PCB_REGS+(SP * 4)
-        li      sp, KERNELSTACK - STAND_FRAME_SIZE      # switch to kernel SP
-        sw      a0, UADDR+U_PCB_REGS+(A0 * 4)
-        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
-        sw      a1, UADDR+U_PCB_REGS+(A1 * 4)
-        mfc0    a1, MACH_C0_EPC                 # Second arg is the pc.
-
-        mfc0    k0, MACH_C0_Cause               # Get Cause.
-        ext     k1, k0, 10, 6                   # Extract Cause.IPL.
-        move    k0, a0
-        ins     k0, k1, 10, 6                   # Raise Status.IPL,
-        ins     k0, zero, 1, 4                  # Clear UM and EXL.
-        mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
-
-/*
- * Save the relevant user registers into the u.u_pcb struct.
- * We do not need to save s0 - s8 because
- * the compiler does it for us.
- */
-        sw      a0, UADDR+U_PCB_REGS+(SR * 4)
-        sw      a1, UADDR+U_PCB_REGS+(PC * 4)
-        sw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        sw      v0, UADDR+U_PCB_REGS+(V0 * 4)
-        sw      v1, UADDR+U_PCB_REGS+(V1 * 4)
-        mflo    v0
-        mfhi    v1
-        sw      a2, UADDR+U_PCB_REGS+(A2 * 4)
-        sw      a3, UADDR+U_PCB_REGS+(A3 * 4)
-        sw      t0, UADDR+U_PCB_REGS+(T0 * 4)
-        sw      t1, UADDR+U_PCB_REGS+(T1 * 4)
-        sw      t2, UADDR+U_PCB_REGS+(T2 * 4)
-        sw      t3, UADDR+U_PCB_REGS+(T3 * 4)
-        sw      t4, UADDR+U_PCB_REGS+(T4 * 4)
-        sw      t5, UADDR+U_PCB_REGS+(T5 * 4)
-        sw      t6, UADDR+U_PCB_REGS+(T6 * 4)
-        sw      t7, UADDR+U_PCB_REGS+(T7 * 4)
-        sw      t8, UADDR+U_PCB_REGS+(T8 * 4)
-        sw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        sw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
-        sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
-#if 1
-        la      gp, _gp                         # switch to kernel GP
-#endif
-/*
- * Call the interrupt handler.
- */
-        jal     interrupt
-        sw      a1, STAND_RA_OFFSET(sp)         # for debugging
-/*
- * Restore registers and return from the interrupt.
- */
-        lw      a0, UADDR+U_PCB_REGS+(SR * 4)
-        mtc0    a0, MACH_C0_Status              # Restore the SR, disable intrs
-        ehb
-        lw      v0, astpending                  # any pending interrupts?
-        bne     v0, zero, 1f                    # dont restore, call softintr
-        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
-        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
-        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
-        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
-        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
-        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
-        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
-        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
-        mtlo    t0
-        mthi    t1
-        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
-        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
-        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
-        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
-        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
-        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
-        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
-        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
-        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
-        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
-        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        lw      k0, UADDR+U_PCB_REGS+(PC * 4)
-        mtc0    k0, MACH_C0_EPC                 # Restore EPC.
-        eret                                    # Return from the interrupt.
-
-/*
- * We have pending software interrupts; save remaining user state in u.u_pcb.
- */
-1:
-        sw      s0, UADDR+U_PCB_REGS+(S0 * 4)
-        sw      s1, UADDR+U_PCB_REGS+(S1 * 4)
-        sw      s2, UADDR+U_PCB_REGS+(S2 * 4)
-        sw      s3, UADDR+U_PCB_REGS+(S3 * 4)
-        sw      s4, UADDR+U_PCB_REGS+(S4 * 4)
-        sw      s5, UADDR+U_PCB_REGS+(S5 * 4)
-        sw      s6, UADDR+U_PCB_REGS+(S6 * 4)
-        sw      s7, UADDR+U_PCB_REGS+(S7 * 4)
-        sw      s8, UADDR+U_PCB_REGS+(S8 * 4)
-/*
- * Call the software interrupt handler.
- */
-        li      t1, 2                           # new IPL value
-        ins     a0, t1, 10, 9                   # set IPL
-        ins     a0, zero, 1, 4                  # clear UM and EXL
-        jal     softintr
-        mtc0    a0, MACH_C0_Status              # enable interrupts (spl2)
-/*
- * Restore user registers and return. NOTE: interrupts are enabled.
- */
-        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
-        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
-        mtlo    t0
-        mthi    t1
-        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
-        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
-        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
-        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
-        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
-        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
-        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
-        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
-        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
-        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
-        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
-        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
-        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
-        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
-        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
-        lw      s0, UADDR+U_PCB_REGS+(S0 * 4)
-        lw      s1, UADDR+U_PCB_REGS+(S1 * 4)
-        lw      s2, UADDR+U_PCB_REGS+(S2 * 4)
-        lw      s3, UADDR+U_PCB_REGS+(S3 * 4)
-        lw      s4, UADDR+U_PCB_REGS+(S4 * 4)
-        lw      s5, UADDR+U_PCB_REGS+(S5 * 4)
-        lw      s6, UADDR+U_PCB_REGS+(S6 * 4)
-        lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
-        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
-        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
-        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
-        di                                      # Disable interrupts.
-        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
-        lw      k0, UADDR+U_PCB_REGS+(SR * 4)
-        mtc0    k0, MACH_C0_Status              # Restore Status.
-        lw      k1, UADDR+U_PCB_REGS+(PC * 4)
-        mtc0    k1, MACH_C0_EPC                 # Restore EPC.
-        eret                                    # Return from the interrupt.
-        .set    at
-END(user_interrupt)
-
-/*----------------------------------------------------------------------------
- * Handle a TLB miss exception from kernel mode.
- * The BaddVAddr, Context, and EntryHi registers contain the failed
- * virtual address.
- */
-NLEAF(kern_tlb_miss)
-        .set    noat
-        mfc0    k0, MACH_C0_BadVAddr            # get the fault address
-        li      k1, VM_MIN_KERNEL_ADDRESS       # compute index
-        subu    k0, k0, k1
-        lw      k1, Sysmapsize                  # index within range?
-        srl     k0, k0, PGSHIFT
-        sltu    k1, k0, k1
-        beq     k1, zero, 1f                    # No. check for valid stack
-        nop
-        lw      k1, Sysmap
-        sll     k0, k0, 2                       # compute offset from index
-        addu    k1, k1, k0
-        lw      k0, 0(k1)                       # get PTE entry
-        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry --TODO: EntryLo1
-        and     k0, k0, PG_V                    # check for valid entry
-        beq     k0, zero, kern_exception        # PTE invalid
-        nop
-        tlbwr                                   # update TLB
-        eret
-
-1:
-        subu    k0, sp, UADDR + 0x200           # check to see if we have a
-        sltiu   k0, UPAGES*NBPG - 0x200         #  valid kernel stack
-        bne     k0, zero, kern_exception        # Go panic
-        nop
-
-        la      a0, _eram - START_FRAME - 8     # set sp to a valid place
-        sw      sp, 24(a0)
-        move    sp, a0
-        la      a0, 1f
-        mfc0    a2, MACH_C0_Status
-        mfc0    a3, MACH_C0_Cause
-        mfc0    a1, MACH_C0_EPC
-        sw      a2, 16(sp)
-        sw      a3, 20(sp)
-        sw      sp, 24(sp)
-        move    a2, ra
-        jal     printf
-        mfc0    a3, MACH_C0_BadVAddr
-        .data
-1:
-        .asciiz "ktlbmiss: PC %x RA %x ADR %x\nSR %x CR %x SP %x\n"
-        .text
-
-        la      sp, _eram - START_FRAME         # set sp to a valid place
-        PANIC("kernel stack overflow")
-        .set    at
-END(kern_tlb_miss)
 
 /*
  * Set/clear software interrupt routines.
@@ -2061,71 +1515,6 @@ ALEAF(_splx)
         mtc0    t0, MACH_C0_Status              # restore interrupt mask
 END(splx)
 
-/*----------------------------------------------------------------------------
- * Flush instruction cache for range of addr to addr + len - 1.
- * The address can be any valid address so long as no TLB misses occur.
- *
- *      void mips_flush_icache(vm_offset_t addr, vm_offset_t len)
- */
-LEAF(mips_flush_icache)
-#if 0
-        // TODO
-        di      t0                              # Save Status, disable interrupts
-
-        la      v1, 1f
-        or      v1, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
-        j       v1
-        nop
-1:
-        bc0f    1b                              # make sure stores are complete
-        li      v1, MACH_SR_ISOL_CACHES | MACH_SR_SWAP_CACHES
-        mtc0    v1, MACH_C0_Status
-        nop
-        addu    a1, a1, a0                      # compute ending address
-1:
-        addu    a0, a0, 4
-        bne     a0, a1, 1b
-        sb      zero, -4(a0)
-
-        mtc0    t0, MACH_C0_Status              # enable interrupts
-#endif
-        jr.hb   ra                              # return and run cached
-        nop
-END(mips_flush_icache)
-
-/*----------------------------------------------------------------------------
- * Flush data cache for range of addr to addr + len - 1.
- * The address can be any valid address so long as no TLB misses occur.
- * (Be sure to use cached K0SEG kernel addresses)
- *
- *      void mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
- */
-LEAF(mips_flush_dcache)
-#if 0
-        // TODO
-        di      t0                              # Save Status, disable interrupts
-
-        la      v1, 1f
-        or      v1, MACH_UNCACHED_MEMORY_ADDR   # Run uncached.
-        j       v1
-        nop
-1:
-        bc0f    1b                              # make sure stores are complete
-        li      v1, MACH_SR_ISOL_CACHES
-        mtc0    v1, MACH_C0_Status
-        nop
-        addu    a1, a1, a0                      # compute ending address
-1:
-        addu    a0, a0, 4
-        bne     a0, a1, 1b
-        sb      zero, -4(a0)
-
-        mtc0    t0, MACH_C0_Status              # enable interrupts
-#endif
-        jr.hb   ra                              # return and run cached
-        nop
-END(mips_flush_dcache)
-
 /*-----------------------------------
  * Exception handlers and data for bootloader.
  */
@@ -2133,18 +1522,26 @@ END(mips_flush_dcache)
         .set    noat
 /*
  * TLB exception vector: handle TLB translation misses.
+ * The BaddVAddr, Context, and EntryHi registers contain the failed
+ * virtual address.
  */
         .org    0
-        .globl  _tlb_miss
-_tlb_miss:
-        .type   tlb_miss, @function
+        .globl  _tlb_vector
+_tlb_vector:
+        .type   _tlb_vector, @function
+        mfc0    k0, MACH_C0_Status              # Get the status register
+        and     k0, MACH_Status_UM              # test for user mode
+        bnez    k0, kern_tlb_refill
+        nop
+
+user_tlb_refill:
         mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
         srl     k0, SEGSHIFT                    # compute segment table index
         sll     k0, 2
         lw      k1, UADDR+U_PCB_SEGTAB          # get the current segment table
         addu    k1, k0
         lw      k1, 0(k1)                       # get pointer to segment map
-        beqz    k1, SlowFault                   # invalid segment map
+        beqz    k1, user_exception              # invalid segment map
         mfc0    k0, MACH_C0_BadVAddr            # get the virtual address
         srl     k0, PGSHIFT - 2                 # compute segment map index
         andi    k0, (NPTEPG - 2) << 2           # make even
@@ -2156,6 +1553,29 @@ _tlb_miss:
         ehb
         tlbwr                                   # update TLB
         eret
+/*
+ * Handle a TLB miss exception from kernel mode.
+ */
+kern_tlb_refill:
+        mfc0    k0, MACH_C0_BadVAddr            # get the fault address
+        li      k1, VM_MIN_KERNEL_ADDRESS       # compute index
+        subu    k0, k1
+        srl     k0, PGSHIFT
+        lw      k1, Sysmapsize                  # index within range?
+        sltu    k1, k0, k1
+        beqz    k1, check_stack                 # No. check for valid stack
+        sll     k0, 2                           # compute offset from index
+        lw      k1, Sysmap
+        addu    k1, k0
+        lw      k0, 0(k1)                       # get even page PTE
+        lw      k1, 4(k1)                       # get odd page PTE
+        and     k0, PG_V                        # check for valid entry --TODO: check Lo1
+        beqz    k0, kern_exception              # PTE invalid
+        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
+        mtc0    k1, MACH_C0_EntryLo1
+        ehb
+        tlbwr                                   # update TLB
+        eret
 
 /*
  * Data for bootloader.
@@ -2163,11 +1583,35 @@ _tlb_miss:
         .org    0xf8
         .type   _ebase, @object
 _ebase:
-        .word   _tlb_miss                       # EBase value
+        .word   _tlb_vector                     # EBase value
 
         .type   _imgptr, @object
 _imgptr:
         .word   -1                              # Image header pointer
+
+check_stack:
+        subu    k0, sp, UADDR + 0x200           # check to see if we have a
+        sltiu   k0, UPAGES*NBPG - 0x200         #  valid kernel stack
+        bnez    k0, kern_exception              # Go panic
+        nop
+
+        la      a0, _eram - START_FRAME - 8     # set sp to a valid place
+        sw      sp, 24(a0)
+        move    sp, a0
+        la      a0, 9f
+        MSG("ktlbmiss: PC %x RA %x ADR %x\nSR %x CR %x SP %x\n")
+        mfc0    a2, MACH_C0_Status
+        mfc0    a3, MACH_C0_Cause
+        mfc0    a1, MACH_C0_EPC
+        sw      a2, 16(sp)
+        sw      a3, 20(sp)
+        sw      sp, 24(sp)
+        move    a2, ra
+        jal     printf
+        mfc0    a3, MACH_C0_BadVAddr
+
+        la      sp, _eram - START_FRAME         # set sp to a valid place
+        PANIC("kernel stack overflow")
 
 /*
  * General exception vector address:
@@ -2175,20 +1619,459 @@ _imgptr:
  * Find out what mode we came from and jump to the proper handler.
  */
         .org    0x180
-gen_exception:
-        .type   gen_exception, @function
+_exception_vector:
+        .type   _exception_vector, @function
         mfc0    k0, MACH_C0_Status              # Get the status register
-        mfc0    k1, MACH_C0_Cause               # Get the cause register value.
         and     k0, MACH_Status_UM              # test for user mode
-        sll     k0, 3                           # shift user bit for cause index
-        and     k1, MACH_Cause_ExcCode          # Mask out the cause bits.
-        or      k1, k0                          # change index to user table
-        la      k0, machExceptionTable          # get base of the jump table
-        addu    k0, k1                          # Get the address of the
-                                                #  function entry.  Note that
-                                                #  the cause is already
-                                                #  shifted left by 2 bits so
-                                                #  we dont have to shift.
-        lw      k0, 0(k0)                       # Get the function address
-        j       k0                              # Jump to the function.
+        beqz    k0, user_exception
         nop
+        j       kern_exception
+        nop
+
+/*
+ * General interrupt vector address.
+ * Find out what mode we came from and jump to the proper handler.
+ */
+        .org    0x200
+_interrupt_vector:
+        .type   _interrupt_vector, @function
+        mfc0    k0, MACH_C0_Status              # Get the status register
+        and     k0, MACH_Status_UM              # test for user mode
+        beqz    k0, user_interrupt
+        nop
+        j       kern_interrupt
+        nop
+
+/*----------------------------------------------------------------------------
+ * Handle an exception from kernel mode.
+ *
+ * The kernel exception stack contains 18 saved general registers,
+ * the status register and the multiply lo and high registers.
+ * In addition, we set this up for linkage conventions.
+ */
+#define KERN_REG_SIZE           (18 * 4)
+#define KERN_REG_OFFSET         (STAND_FRAME_SIZE)
+#define KERN_SR_OFFSET          (STAND_FRAME_SIZE + KERN_REG_SIZE)
+#define KERN_MULT_LO_OFFSET     (STAND_FRAME_SIZE + KERN_REG_SIZE + 4)
+#define KERN_MULT_HI_OFFSET     (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
+#define KERN_EXC_FRAME_SIZE     (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
+
+kern_exception:
+        subu    sp, sp, KERN_EXC_FRAME_SIZE
+/*
+ * Save the relevant kernel registers onto the stack.
+ * We do not need to save s0 - s8, sp and gp because
+ * the compiler does it for us.
+ */
+        sw      AT, KERN_REG_OFFSET + 0(sp)
+        sw      v0, KERN_REG_OFFSET + 4(sp)
+        sw      v1, KERN_REG_OFFSET + 8(sp)
+        sw      a0, KERN_REG_OFFSET + 12(sp)
+        mflo    v0
+        mfhi    v1
+        sw      a1, KERN_REG_OFFSET + 16(sp)
+        sw      a2, KERN_REG_OFFSET + 20(sp)
+        sw      a3, KERN_REG_OFFSET + 24(sp)
+        sw      t0, KERN_REG_OFFSET + 28(sp)
+        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
+        sw      t1, KERN_REG_OFFSET + 32(sp)
+        sw      t2, KERN_REG_OFFSET + 36(sp)
+        sw      t3, KERN_REG_OFFSET + 40(sp)
+        sw      t4, KERN_REG_OFFSET + 44(sp)
+        mfc0    a1, MACH_C0_Cause               # Second arg is the cause reg.
+        sw      t5, KERN_REG_OFFSET + 48(sp)
+        sw      t6, KERN_REG_OFFSET + 52(sp)
+        sw      t7, KERN_REG_OFFSET + 56(sp)
+        sw      t8, KERN_REG_OFFSET + 60(sp)
+        mfc0    a2, MACH_C0_BadVAddr            # Third arg is the fault addr.
+        sw      t9, KERN_REG_OFFSET + 64(sp)
+        sw      ra, KERN_REG_OFFSET + 68(sp)
+        sw      v0, KERN_MULT_LO_OFFSET(sp)
+        sw      v1, KERN_MULT_HI_OFFSET(sp)
+        mfc0    a3, MACH_C0_EPC                 # Fourth arg is the pc.
+        sw      a0, KERN_SR_OFFSET(sp)
+
+        move    t0, a0
+        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
+        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
+/*
+ * Call the exception handler.
+ */
+        jal     exception
+        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
+/*
+ * Restore registers and return from the exception.
+ * v0 contains the return address.
+ */
+        lw      t0, KERN_MULT_LO_OFFSET(sp)
+        lw      t1, KERN_MULT_HI_OFFSET(sp)
+        mtlo    t0
+        mthi    t1
+        lw      AT, KERN_REG_OFFSET + 0(sp)
+        lw      v1, KERN_REG_OFFSET + 8(sp)
+        lw      a0, KERN_REG_OFFSET + 12(sp)
+        lw      a1, KERN_REG_OFFSET + 16(sp)
+        lw      a2, KERN_REG_OFFSET + 20(sp)
+        lw      a3, KERN_REG_OFFSET + 24(sp)
+        lw      t0, KERN_REG_OFFSET + 28(sp)
+        lw      t1, KERN_REG_OFFSET + 32(sp)
+        lw      t2, KERN_REG_OFFSET + 36(sp)
+        lw      t3, KERN_REG_OFFSET + 40(sp)
+        lw      t4, KERN_REG_OFFSET + 44(sp)
+        lw      t5, KERN_REG_OFFSET + 48(sp)
+        lw      t6, KERN_REG_OFFSET + 52(sp)
+        lw      t7, KERN_REG_OFFSET + 56(sp)
+        lw      t8, KERN_REG_OFFSET + 60(sp)
+        lw      t9, KERN_REG_OFFSET + 64(sp)
+        lw      ra, KERN_REG_OFFSET + 68(sp)
+        di                                      # Disable interrupts.
+        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
+        lw      k0, KERN_SR_OFFSET(sp)
+        mtc0    k0, MACH_C0_Status              # Restore Status.
+        lw      v0, KERN_REG_OFFSET + 4(sp)
+        addu    sp, sp, KERN_EXC_FRAME_SIZE
+        eret                                    # Return from exception, enable intrs.
+
+/*----------------------------------------------------------------------------
+ * Handle an exception from user mode.
+ * Save all of the registers except for the kernel temporaries in u.u_pcb.
+ */
+user_exception:
+        sw      AT, UADDR+U_PCB_REGS+(AST * 4)
+        sw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        sw      v1, UADDR+U_PCB_REGS+(V1 * 4)
+        sw      a0, UADDR+U_PCB_REGS+(A0 * 4)
+        mflo    v0
+        sw      a1, UADDR+U_PCB_REGS+(A1 * 4)
+        sw      a2, UADDR+U_PCB_REGS+(A2 * 4)
+        sw      a3, UADDR+U_PCB_REGS+(A3 * 4)
+        sw      t0, UADDR+U_PCB_REGS+(T0 * 4)
+        mfhi    v1
+        sw      t1, UADDR+U_PCB_REGS+(T1 * 4)
+        sw      t2, UADDR+U_PCB_REGS+(T2 * 4)
+        sw      t3, UADDR+U_PCB_REGS+(T3 * 4)
+        sw      t4, UADDR+U_PCB_REGS+(T4 * 4)
+        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
+        sw      t5, UADDR+U_PCB_REGS+(T5 * 4)
+        sw      t6, UADDR+U_PCB_REGS+(T6 * 4)
+        sw      t7, UADDR+U_PCB_REGS+(T7 * 4)
+        sw      s0, UADDR+U_PCB_REGS+(S0 * 4)
+        mfc0    a1, MACH_C0_Cause               # Second arg is the cause reg.
+        sw      s1, UADDR+U_PCB_REGS+(S1 * 4)
+        sw      s2, UADDR+U_PCB_REGS+(S2 * 4)
+        sw      s3, UADDR+U_PCB_REGS+(S3 * 4)
+        sw      s4, UADDR+U_PCB_REGS+(S4 * 4)
+        mfc0    a2, MACH_C0_BadVAddr            # Third arg is the fault addr
+        sw      s5, UADDR+U_PCB_REGS+(S5 * 4)
+        sw      s6, UADDR+U_PCB_REGS+(S6 * 4)
+        sw      s7, UADDR+U_PCB_REGS+(S7 * 4)
+        sw      t8, UADDR+U_PCB_REGS+(T8 * 4)
+        mfc0    a3, MACH_C0_EPC                 # Fourth arg is the pc.
+        sw      t9, UADDR+U_PCB_REGS+(T9 * 4)
+        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        sw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        sw      s8, UADDR+U_PCB_REGS+(S8 * 4)
+        li      sp, KERNELSTACK - STAND_FRAME_SIZE      # switch to kernel SP
+        sw      ra, UADDR+U_PCB_REGS+(RA * 4)
+        sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
+        sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
+        sw      a0, UADDR+U_PCB_REGS+(SR * 4)
+        sw      a3, UADDR+U_PCB_REGS+(PC * 4)
+        la      gp, _gp                         # switch to kernel GP
+        move    t0, a0
+        ins     t0, zero, 0, 5                  # Clear UM, EXL, IE.
+        mtc0    t0, MACH_C0_Status              # Set Status, interrupts still disabled.
+/*
+ * Call the exception handler.
+ */
+        jal     exception
+        sw      a3, STAND_RA_OFFSET(sp)         # for debugging
+/*
+ * Restore user registers and return. NOTE: interrupts are enabled.
+ */
+        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
+        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
+        mtlo    t0
+        mthi    t1
+        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
+        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
+        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
+        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
+        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
+        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
+        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
+        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
+        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
+        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
+        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
+        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
+        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
+        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
+        lw      s0, UADDR+U_PCB_REGS+(S0 * 4)
+        lw      s1, UADDR+U_PCB_REGS+(S1 * 4)
+        lw      s2, UADDR+U_PCB_REGS+(S2 * 4)
+        lw      s3, UADDR+U_PCB_REGS+(S3 * 4)
+        lw      s4, UADDR+U_PCB_REGS+(S4 * 4)
+        lw      s5, UADDR+U_PCB_REGS+(S5 * 4)
+        lw      s6, UADDR+U_PCB_REGS+(S6 * 4)
+        lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
+        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
+        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
+        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
+        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
+        di                                      # Disable interrupts.
+        mtc0    v0, MACH_C0_EPC                 # Restore EPC.
+        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        lw      k0, UADDR+U_PCB_REGS+(SR * 4)
+        mtc0    k0, MACH_C0_Status              # Restore Status.
+        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        eret
+
+/*----------------------------------------------------------------------------
+ * Handle an interrupt from kernel mode.
+ * Interrupts use the standard kernel stack.
+ * switch_exit sets up a kernel stack after exit so interrupts would not fail.
+ *
+ *      kern_interrupt()
+ */
+#define KINTR_REG_OFFSET        (STAND_FRAME_SIZE)
+#define KINTR_SR_OFFSET         (STAND_FRAME_SIZE + KERN_REG_SIZE)
+#define KINTR_MULT_LO_OFFSET    (STAND_FRAME_SIZE + KERN_REG_SIZE + 4)
+#define KINTR_MULT_HI_OFFSET    (STAND_FRAME_SIZE + KERN_REG_SIZE + 8)
+#define KINTR_FRAME_SIZE        (STAND_FRAME_SIZE + KERN_REG_SIZE + 12)
+
+kern_interrupt:
+        subu    sp, sp, KINTR_FRAME_SIZE        # allocate stack frame
+        sw      a0, KINTR_REG_OFFSET + 12(sp)
+        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
+        sw      a1, KINTR_REG_OFFSET + 16(sp)
+        mfc0    a1, MACH_C0_EPC                 # Second arg is the pc.
+
+        mfc0    k0, MACH_C0_Cause               # Get Cause.
+        ext     k1, k0, 10, 6                   # Extract Cause.IPL.
+        move    k0, a0
+        ins     k0, k1, 10, 6                   # Raise Status.IPL,
+        ins     k0, zero, 1, 1                  # Clear EXL.
+        mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
+
+/*
+ * Save the relevant kernel registers onto the stack.
+ * We do not need to save s0 - s8, sp and gp because
+ * the compiler does it for us.
+ */
+        sw      a0, KINTR_SR_OFFSET(sp)
+        sw      AT, KINTR_REG_OFFSET + 0(sp)
+        sw      v0, KINTR_REG_OFFSET + 4(sp)
+        sw      v1, KINTR_REG_OFFSET + 8(sp)
+        mflo    v0
+        mfhi    v1
+        sw      a2, KINTR_REG_OFFSET + 20(sp)
+        sw      a3, KINTR_REG_OFFSET + 24(sp)
+        sw      t0, KINTR_REG_OFFSET + 28(sp)
+        sw      t1, KINTR_REG_OFFSET + 32(sp)
+        sw      t2, KINTR_REG_OFFSET + 36(sp)
+        sw      t3, KINTR_REG_OFFSET + 40(sp)
+        sw      t4, KINTR_REG_OFFSET + 44(sp)
+        sw      t5, KINTR_REG_OFFSET + 48(sp)
+        sw      t6, KINTR_REG_OFFSET + 52(sp)
+        sw      t7, KINTR_REG_OFFSET + 56(sp)
+        sw      t8, KINTR_REG_OFFSET + 60(sp)
+        sw      t9, KINTR_REG_OFFSET + 64(sp)
+        sw      ra, KINTR_REG_OFFSET + 68(sp)
+        sw      v0, KINTR_MULT_LO_OFFSET(sp)
+        sw      v1, KINTR_MULT_HI_OFFSET(sp)
+/*
+ * Call the interrupt handler.
+ */
+        jal     interrupt
+        sw      a1, STAND_RA_OFFSET(sp)         # for debugging
+/*
+ * Restore registers and return from the interrupt.
+ */
+        lw      t0, KINTR_MULT_LO_OFFSET(sp)
+        lw      t1, KINTR_MULT_HI_OFFSET(sp)
+        mtlo    t0
+        mthi    t1
+        lw      AT, KINTR_REG_OFFSET + 0(sp)
+        lw      v0, KINTR_REG_OFFSET + 4(sp)
+        lw      v1, KINTR_REG_OFFSET + 8(sp)
+        lw      a0, KINTR_REG_OFFSET + 12(sp)
+        lw      a1, KINTR_REG_OFFSET + 16(sp)
+        lw      a2, KINTR_REG_OFFSET + 20(sp)
+        lw      a3, KINTR_REG_OFFSET + 24(sp)
+        lw      t0, KINTR_REG_OFFSET + 28(sp)
+        lw      t1, KINTR_REG_OFFSET + 32(sp)
+        lw      t2, KINTR_REG_OFFSET + 36(sp)
+        lw      t3, KINTR_REG_OFFSET + 40(sp)
+        lw      t4, KINTR_REG_OFFSET + 44(sp)
+        lw      t5, KINTR_REG_OFFSET + 48(sp)
+        lw      t6, KINTR_REG_OFFSET + 52(sp)
+        lw      t7, KINTR_REG_OFFSET + 56(sp)
+        lw      t8, KINTR_REG_OFFSET + 60(sp)
+        lw      t9, KINTR_REG_OFFSET + 64(sp)
+        lw      ra, KINTR_REG_OFFSET + 68(sp)
+        di                                      # Disable interrupts.
+        lw      k0, KINTR_SR_OFFSET(sp)
+        mtc0    k0, MACH_C0_Status              # Restore Status
+        lw      k1, STAND_RA_OFFSET(sp)
+        mtc0    k1, MACH_C0_EPC                 # Restore EPC.
+        addu    sp, sp, KINTR_FRAME_SIZE
+        eret                                    # Return from interrupt.
+
+/*----------------------------------------------------------------------------
+ * Handle an interrupt from user mode.
+ * Note: we save minimal state in the u.u_pcb struct and use the standard
+ * kernel stack since there has to be a u page if we came from user mode.
+ * If there is a pending software interrupt, then save the remaining state
+ * and call softintr(). This is all because if we call switch() inside
+ * interrupt(), not all the user registers have been saved in u.u_pcb.
+ */
+user_interrupt:
+        sw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        li      sp, KERNELSTACK - STAND_FRAME_SIZE      # switch to kernel SP
+        sw      a0, UADDR+U_PCB_REGS+(A0 * 4)
+        mfc0    a0, MACH_C0_Status              # First arg is the status reg.
+        sw      a1, UADDR+U_PCB_REGS+(A1 * 4)
+        mfc0    a1, MACH_C0_EPC                 # Second arg is the pc.
+
+        mfc0    k0, MACH_C0_Cause               # Get Cause.
+        ext     k1, k0, 10, 6                   # Extract Cause.IPL.
+        move    k0, a0
+        ins     k0, k1, 10, 6                   # Raise Status.IPL,
+        ins     k0, zero, 1, 4                  # Clear UM and EXL.
+        mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
+
+/*
+ * Save the relevant user registers into the u.u_pcb struct.
+ * We do not need to save s0 - s8 because
+ * the compiler does it for us.
+ */
+        sw      a0, UADDR+U_PCB_REGS+(SR * 4)
+        sw      a1, UADDR+U_PCB_REGS+(PC * 4)
+        sw      AT, UADDR+U_PCB_REGS+(AST * 4)
+        sw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        sw      v1, UADDR+U_PCB_REGS+(V1 * 4)
+        mflo    v0
+        mfhi    v1
+        sw      a2, UADDR+U_PCB_REGS+(A2 * 4)
+        sw      a3, UADDR+U_PCB_REGS+(A3 * 4)
+        sw      t0, UADDR+U_PCB_REGS+(T0 * 4)
+        sw      t1, UADDR+U_PCB_REGS+(T1 * 4)
+        sw      t2, UADDR+U_PCB_REGS+(T2 * 4)
+        sw      t3, UADDR+U_PCB_REGS+(T3 * 4)
+        sw      t4, UADDR+U_PCB_REGS+(T4 * 4)
+        sw      t5, UADDR+U_PCB_REGS+(T5 * 4)
+        sw      t6, UADDR+U_PCB_REGS+(T6 * 4)
+        sw      t7, UADDR+U_PCB_REGS+(T7 * 4)
+        sw      t8, UADDR+U_PCB_REGS+(T8 * 4)
+        sw      t9, UADDR+U_PCB_REGS+(T9 * 4)
+        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        sw      ra, UADDR+U_PCB_REGS+(RA * 4)
+        sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
+        sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
+        la      gp, _gp                         # switch to kernel GP
+/*
+ * Call the interrupt handler.
+ */
+        jal     interrupt
+        sw      a1, STAND_RA_OFFSET(sp)         # for debugging
+/*
+ * Restore registers and return from the interrupt.
+ */
+        lw      a0, UADDR+U_PCB_REGS+(SR * 4)
+        mtc0    a0, MACH_C0_Status              # Restore the SR, disable intrs
+        ehb
+        lw      v0, astpending                  # any pending interrupts?
+        bne     v0, zero, 1f                    # dont restore, call softintr
+        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
+        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
+        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
+        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
+        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
+        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
+        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
+        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
+        mtlo    t0
+        mthi    t1
+        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
+        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
+        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
+        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
+        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
+        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
+        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
+        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
+        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
+        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
+        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
+        lw      k0, UADDR+U_PCB_REGS+(PC * 4)
+        mtc0    k0, MACH_C0_EPC                 # Restore EPC.
+        eret                                    # Return from the interrupt.
+
+/*
+ * We have pending software interrupts; save remaining user state in u.u_pcb.
+ */
+1:
+        sw      s0, UADDR+U_PCB_REGS+(S0 * 4)
+        sw      s1, UADDR+U_PCB_REGS+(S1 * 4)
+        sw      s2, UADDR+U_PCB_REGS+(S2 * 4)
+        sw      s3, UADDR+U_PCB_REGS+(S3 * 4)
+        sw      s4, UADDR+U_PCB_REGS+(S4 * 4)
+        sw      s5, UADDR+U_PCB_REGS+(S5 * 4)
+        sw      s6, UADDR+U_PCB_REGS+(S6 * 4)
+        sw      s7, UADDR+U_PCB_REGS+(S7 * 4)
+        sw      s8, UADDR+U_PCB_REGS+(S8 * 4)
+/*
+ * Call the software interrupt handler.
+ */
+        li      t1, 2                           # new IPL value
+        ins     a0, t1, 10, 9                   # set IPL
+        ins     a0, zero, 1, 4                  # clear UM and EXL
+        jal     softintr
+        mtc0    a0, MACH_C0_Status              # enable interrupts (spl2)
+/*
+ * Restore user registers and return. NOTE: interrupts are enabled.
+ */
+        lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
+        lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
+        mtlo    t0
+        mthi    t1
+        lw      AT, UADDR+U_PCB_REGS+(AST * 4)
+        lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
+        lw      v1, UADDR+U_PCB_REGS+(V1 * 4)
+        lw      a0, UADDR+U_PCB_REGS+(A0 * 4)
+        lw      a1, UADDR+U_PCB_REGS+(A1 * 4)
+        lw      a2, UADDR+U_PCB_REGS+(A2 * 4)
+        lw      a3, UADDR+U_PCB_REGS+(A3 * 4)
+        lw      t0, UADDR+U_PCB_REGS+(T0 * 4)
+        lw      t1, UADDR+U_PCB_REGS+(T1 * 4)
+        lw      t2, UADDR+U_PCB_REGS+(T2 * 4)
+        lw      t3, UADDR+U_PCB_REGS+(T3 * 4)
+        lw      t4, UADDR+U_PCB_REGS+(T4 * 4)
+        lw      t5, UADDR+U_PCB_REGS+(T5 * 4)
+        lw      t6, UADDR+U_PCB_REGS+(T6 * 4)
+        lw      t7, UADDR+U_PCB_REGS+(T7 * 4)
+        lw      s0, UADDR+U_PCB_REGS+(S0 * 4)
+        lw      s1, UADDR+U_PCB_REGS+(S1 * 4)
+        lw      s2, UADDR+U_PCB_REGS+(S2 * 4)
+        lw      s3, UADDR+U_PCB_REGS+(S3 * 4)
+        lw      s4, UADDR+U_PCB_REGS+(S4 * 4)
+        lw      s5, UADDR+U_PCB_REGS+(S5 * 4)
+        lw      s6, UADDR+U_PCB_REGS+(S6 * 4)
+        lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
+        lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
+        lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
+        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
+        lw      ra, UADDR+U_PCB_REGS+(RA * 4)
+        di                                      # Disable interrupts.
+        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        lw      k0, UADDR+U_PCB_REGS+(SR * 4)
+        mtc0    k0, MACH_C0_Status              # Restore Status.
+        lw      k1, UADDR+U_PCB_REGS+(PC * 4)
+        mtc0    k1, MACH_C0_EPC                 # Restore EPC.
+        eret                                    # Return from the interrupt.

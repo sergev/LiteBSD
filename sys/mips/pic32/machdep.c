@@ -126,12 +126,12 @@ mach_init()
     unsigned firstaddr;
     caddr_t v, start;
     extern char __data_start[], _edata[], _end[];
-    extern void _etext(), _tlb_miss();
+    extern void _etext(), _tlb_vector();
 
     /* Initialize STATUS register: master interrupt disable.
      * Setup interrupt vector base. */
     mtc0_Status(ST_CU0 | ST_BEV);
-    mtc0_EBase(_tlb_miss);
+    mtc0_EBase(_tlb_vector);
     mtc0_Status(ST_CU0);
 
     /* Set vector spacing: not used really, but must be nonzero. */
@@ -1181,6 +1181,33 @@ void tlb_update (unsigned hi, unsigned lo)
         }
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Flush instruction cache for range of addr to addr + len - 1.
+ * The address can be any valid address so long as no TLB misses occur.
+ */
+void mips_flush_icache(vm_offset_t addr, vm_offset_t len)
+{
+    int x = mips_di();                  /* Disable interrupts */
+
+    // TODO
+    mtc0_Status(x);                     /* Restore interrupts */
+    asm volatile ("ehb");               /* Hazard barrier */
+}
+
+/*
+ * Flush data cache for range of addr to addr + len - 1.
+ * The address can be any valid address so long as no TLB misses occur.
+ * (Be sure to use cached K0SEG kernel addresses)
+ */
+void mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
+{
+    int x = mips_di();                  /* Disable interrupts */
+
+    // TODO
     mtc0_Status(x);                     /* Restore interrupts */
     asm volatile ("ehb");               /* Hazard barrier */
 }

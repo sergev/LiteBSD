@@ -39,7 +39,7 @@
 #define mtc0_EntryLo1(v)    mips_mtc0(3,0,v)   /* odd-numbered virtual pages */
 
 #define C0_CONTEXT          4,0     /* Pointer to the page table entry in memory */
-#define C0_USERLOCAL        4,1     /* User information that can be written by
+#define C0_USERLOCAL        4,2     /* User information that can be written by
                                      * privileged software and read via the RDHWR instruction */
 #define C0_PAGEMASK         5,0     /* Variable page sizes in TLB entries */
 #define C0_PAGEGRAIN        5,1     /* Support of 1 KB pages in the TLB */
