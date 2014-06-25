@@ -858,16 +858,25 @@ boot(howto)
         resettodr();
     }
     (void) splhigh();               /* extreme priority */
-    if (howto & RB_HALT) {
-        void (*f)() = 0;    // TODO: (void (*)())DEC_PROM_REINIT;
-
-        (*f)(); /* jump back to prom monitor */
-    } else {
-        void (*f)() = 0;    // TODO: (void (*)())DEC_PROM_AUTOBOOT;
-
+    if (! (howto & RB_HALT)) {
         if (howto & RB_DUMP)
             dumpsys();
-        (*f)(); /* jump back to prom monitor and do 'auto' cmd */
+
+        /* Unlock access to reset register */
+        SYSKEY = 0;
+        SYSKEY = 0xaa996655;
+        SYSKEY = 0x556699aa;
+
+        /* Reset microcontroller */
+        RSWRSTSET = 1;
+        (void) RSWRST;
+    }
+
+    for (;;) {
+        /* Magic opcode to stop the simulator. */
+        asm volatile ("sltiu $zero, 0xabc2");
+
+        asm volatile ("wait");
     }
     /*NOTREACHED*/
 }
