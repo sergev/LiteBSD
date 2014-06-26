@@ -1564,6 +1564,7 @@ kern_tlb_refill:
         lw      k1, Sysmapsize                  # index within range?
         sltu    k1, k0, k1
         beqz    k1, check_stack                 # No. check for valid stack
+        ins     k0, zero, 0, 1                  # clear bit 0
         sll     k0, 2                           # compute offset from index
         lw      k1, Sysmap
         addu    k1, k0
