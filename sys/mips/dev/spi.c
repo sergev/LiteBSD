@@ -13,23 +13,23 @@
  * Return true if found and initialized ok.
  */
 spiprobe(cp)
-	register struct mips_ctlr *cp;
+    register struct mips_ctlr *cp;
 {
-        // TODO
-	return (0);
+    // TODO
+    return (0);
 }
 
 /*
- * Check for interrupts from all devices.
- */
+* Check for interrupts from all devices.
+*/
 void
 spiintr(unit)
-	register int unit;
+    register int unit;
 {
-        // TODO
+    // TODO
 }
 
 struct	driver spidriver = {
-	"spi", spiprobe, 0, 0, spiintr,
+    "spi", spiprobe, 0, 0, spiintr,
 };
 #endif /* NSPI */
