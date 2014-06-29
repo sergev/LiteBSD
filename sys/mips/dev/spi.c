@@ -12,11 +12,20 @@
  * Test to see if device is present.
  * Return true if found and initialized ok.
  */
+static int
 spiprobe(cp)
-    register struct mips_ctlr *cp;
+    struct scsi_device *config;
 {
+    int unit = config->sd_unit - 1;
+
+    if (unit < 0 || unit >= NSPI)
+        return 0;
+
     // TODO
-    return (0);
+
+    printf ("spi%u: sdi/sdo pins %c%d, %c%d\n",
+        unit, ???);
+    return 1;
 }
 
 /*

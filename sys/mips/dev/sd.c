@@ -798,6 +798,7 @@ sdprobe(config)
 
     printf ("sd: port %s, select pin %c%d\n",
         spi_name(fd), spi_csname(fd), spi_cspin(fd));
+    return 1;
 }
 
 /*

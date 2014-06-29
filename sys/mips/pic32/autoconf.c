@@ -69,19 +69,51 @@ int cold = 1;           /* if 1, still working on cold-start */
 int dkn;                /* number of iostat dk numbers assigned so far */
 int cpuspeed = 30;      /* approx # instr per usec. */
 
-static void
-configure_device(device)
-    struct scsi_device *device;
+/*
+ * Configure swap space and related parameters.
+ */
+void
+swapconf()
 {
-    if ((*device->sd_driver->d_init)(device)) {
-        device->sd_alive = 1;
+    struct swdevt *swp;
+    int nblks;
 
-        /* if device is a disk, assign number for statistics */
-        if (device->sd_dk && dkn < DK_NDRIVE)
-            device->sd_dk = dkn++;
-        else
-            device->sd_dk = -1;
+    for (swp = swdevt; swp->sw_dev != NODEV; swp++) {
+        if (bdevsw[major(swp->sw_dev)].d_psize) {
+            nblks = (*bdevsw[major(swp->sw_dev)].d_psize)(swp->sw_dev);
+            if (nblks != -1 &&
+                (swp->sw_nblks == 0 || swp->sw_nblks > nblks))
+            {
+                swp->sw_nblks = nblks;
+            }
+        }
     }
+    dumpconf();
+}
+
+/*
+ * Check whether the controller has been successfully initialized.
+ */
+static int
+is_controller_alive(driver, unit)
+    struct driver *driver;
+    int unit;
+{
+    struct mips_ctlr *ctlr;
+
+    /* No controller - that's OK. */
+    if (driver == 0)
+        return 1;
+
+    for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
+        if (ctlr->mips_driver == driver &&
+            ctlr->mips_unit == unit &&
+            ctlr->mips_alive)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 /*
@@ -89,6 +121,7 @@ configure_device(device)
  * Get cpu type, and then switch out to machine specific procedures
  * which will probe adaptors to see what is out there.
  */
+void
 configure()
 {
     struct mips_ctlr *ctlr;
@@ -97,52 +130,26 @@ configure()
 
     /* Probe and initialize controllers. */
     for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
-        if (ctlr->mips_addr == (char *)QUES)
-            continue;
-
-        if (! (*ctlr->mips_driver->d_init)(ctlr))
-            continue;
-        ctlr->mips_alive = 1;
-
-        /* Probe and initialize devices connected to controller. */
-        for (device = scsi_dinit; device->sd_driver; device++) {
-            /*
-             * Iterate through all devices connected to this controller unit.
-             */
-            if (device->sd_cdriver == ctlr->mips_driver &&
-                device->sd_ctlr == ctlr->mips_unit)
-            {
-                configure_device(device);
-            }
+        if ((*ctlr->mips_driver->d_init)(ctlr)) {
+            ctlr->mips_alive = 1;
         }
     }
 
-    /* Probe and initialize standalone devices. */
+    /* Probe and initialize devices. */
     for (device = scsi_dinit; device->sd_driver; device++) {
-        if (device->sd_cdriver == 0) {
-            configure_device(device);
+        if (is_controller_alive(device->sd_cdriver, device->sd_ctlr)) {
+            if ((*device->sd_driver->d_init)(device)) {
+                device->sd_alive = 1;
+
+                /* if device is a disk, assign number for statistics */
+                if (device->sd_dk && dkn < DK_NDRIVE)
+                    device->sd_dk = dkn++;
+                else
+                    device->sd_dk = -1;
+            }
         }
     }
 
     swapconf();
     cold = 0;
-}
-
-/*
- * Configure swap space and related parameters.
- */
-swapconf()
-{
-    register struct swdevt *swp;
-    register int nblks;
-
-    for (swp = swdevt; swp->sw_dev != NODEV; swp++)
-        if (bdevsw[major(swp->sw_dev)].d_psize) {
-            nblks =
-              (*bdevsw[major(swp->sw_dev)].d_psize)(swp->sw_dev);
-            if (nblks != -1 &&
-                (swp->sw_nblks == 0 || swp->sw_nblks > nblks))
-                swp->sw_nblks = nblks;
-        }
-    dumpconf();
 }
