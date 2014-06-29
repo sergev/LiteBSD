@@ -69,6 +69,21 @@ int cold = 1;           /* if 1, still working on cold-start */
 int dkn;                /* number of iostat dk numbers assigned so far */
 int cpuspeed = 30;      /* approx # instr per usec. */
 
+static void
+configure_device(device)
+    struct scsi_device *device;
+{
+    if ((*device->sd_driver->d_init)(device)) {
+        device->sd_alive = 1;
+
+        /* if device is a disk, assign number for statistics */
+        if (device->sd_dk && dkn < DK_NDRIVE)
+            device->sd_dk = dkn++;
+        else
+            device->sd_dk = -1;
+    }
+}
+
 /*
  * Determine mass storage and memory configuration for a machine.
  * Get cpu type, and then switch out to machine specific procedures
@@ -76,34 +91,36 @@ int cpuspeed = 30;      /* approx # instr per usec. */
  */
 configure()
 {
-    register struct mips_ctlr *cp;
-    register struct scsi_device *dp;
-    register struct driver *drp;
-    register int i;
+    struct mips_ctlr *ctlr;
+    struct scsi_device *device;
+    int i;
 
-    /* probe and initialize controllers */
-    for (cp = mips_cinit; drp = cp->mips_driver; cp++) {
-        if (cp->mips_addr == (char *)QUES)
-            continue;
-        if (!(*drp->d_init)(cp))
+    /* Probe and initialize controllers. */
+    for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
+        if (ctlr->mips_addr == (char *)QUES)
             continue;
 
-        cp->mips_alive = 1;
+        if (! (*ctlr->mips_driver->d_init)(ctlr))
+            continue;
+        ctlr->mips_alive = 1;
 
-        /* probe and initialize devices connected to controller */
-        for (dp = scsi_dinit; drp = dp->sd_driver; dp++) {
-            /* might want to get fancier later */
-            if (dp->sd_cdriver != cp->mips_driver ||
-                dp->sd_ctlr != cp->mips_unit)
-                continue;       /* not connected */
-            if (!(*drp->d_init)(dp))
-                continue;
-            dp->sd_alive = 1;
-            /* if device is a disk, assign number for statistics */
-            if (dp->sd_dk && dkn < DK_NDRIVE)
-                dp->sd_dk = dkn++;
-            else
-                dp->sd_dk = -1;
+        /* Probe and initialize devices connected to controller. */
+        for (device = scsi_dinit; device->sd_driver; device++) {
+            /*
+             * Iterate through all devices connected to this controller unit.
+             */
+            if (device->sd_cdriver == ctlr->mips_driver &&
+                device->sd_ctlr == ctlr->mips_unit)
+            {
+                configure_device(device);
+            }
+        }
+    }
+
+    /* Probe and initialize standalone devices. */
+    for (device = scsi_dinit; device->sd_driver; device++) {
+        if (device->sd_cdriver == 0) {
+            configure_device(device);
         }
     }
 

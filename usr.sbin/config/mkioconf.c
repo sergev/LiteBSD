@@ -854,7 +854,7 @@ void pic32_ioconf()
 		if (dp->d_unit == UNKNOWN || dp->d_unit == QUES)
 			dp->d_unit = 0;
 		fprintf(fp,
-			"\t{ &%sdriver,\t%d,\tC 0x%x,\t%d,\t0x%x },\n",
+			"\t{ &%sdriver,\t%d,\tC 0x%08x,\t%d,\t0x%x },\n",
 			dp->d_name, dp->d_unit, dp->d_addr, dp->d_pri,
 			dp->d_flags);
 	}
@@ -868,15 +868,18 @@ void pic32_ioconf()
 		if (dp->d_type == CONTROLLER || dp->d_type == MASTER ||
 		    dp->d_type == PSEUDO_DEVICE)
 			continue;
-		if ((unsigned)dp->d_drive > 6) {
-			printf("%s%s: drive must be in the range 0..6\n",
-				dp->d_name, wnum(dp->d_unit));
-			continue;
-		}
-		fprintf(fp, "{ &%sdriver,\t0,", dp->d_name);
-		fprintf(fp, "\t%d,\t%d,\t%d,\t%d,\t%d,\t0x%x },\n",
-			dp->d_unit, 0, dp->d_drive, 0,
-			dp->d_dk, dp->d_flags);
+
+		mp = dp->d_conn;
+		fprintf(fp, "{ &%sdriver,\t", dp->d_name);
+		if (mp) {
+                    fprintf(fp, "&%sdriver,\t%d,\t%d,\t",
+                            mp->d_name, dp->d_unit, mp->d_unit);
+                } else {
+                    fprintf(fp, "0,\t\t%d,\t0,\t",
+                            dp->d_unit);
+                }
+                fprintf(fp, "%d,\t%d,\t%d,\t0x%x },\n",
+                        dp->d_drive, dp->d_slave, dp->d_dk, dp->d_flags);
 	}
 	fprintf(fp, "0\n};\n");
 	pseudo_ioconf(fp);
