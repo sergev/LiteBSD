@@ -499,14 +499,14 @@ again:
  * Test to see if device is present.
  * Return true if found and initialized ok.
  */
-uartprobe(cp)
-    struct mips_ctlr *cp;
+uartprobe(config)
+    struct scsi_device *config;
 {
     uart_regmap_t *reg;
     struct tty *tp;
-    int unit = cp->mips_unit;
+    int unit = config->sd_unit - 1;
 
-    if (unit >= NUART)
+    if (unit < 0 || unit >= NUART)
         return 0;
     reg = uart[unit];
 
@@ -536,7 +536,7 @@ uartprobe(cp)
         splx(s);
     }
     printf("uart%d at address 0x%x irq %u,%u,%u\n",
-        unit, reg, uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
+        unit+1, reg, uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
     return 1;
 }
 

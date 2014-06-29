@@ -1,10 +1,10 @@
 #
-# GENERIC PIC32MZ target
+# PIC32MZ target: chipKIT Wi-Fire board
 #
 machine		"pic32"
 
 cpu		"PIC32MZ"
-ident		GENERIC
+ident		WIFIRE
 
 # Need to set locally
 timezone	8 dst
@@ -16,7 +16,7 @@ options		VNODEPAGER		# vnode pager (mapped files)
 options		DEVPAGER		# device pager (mapped devices)
 options		DIAGNOSTIC		# extra kernel debugging checks
 #options	DEBUG			# extra kernel debugging support
-options		"COMPAT_43"		# compatibility with 4.3BSD binaries
+#options	"COMPAT_43"		# compatibility with 4.3BSD binaries
 options		KTRACE			# system call tracing support
 options		"NKMEMCLUSTERS=16"	# 4K pages in kernel malloc pool, default 128 pages
 options		"NMBCLUSTERS=16"	# 4K pages in network mbuf pool, default 256/512 pages
@@ -43,18 +43,25 @@ options		PROCFS		# /proc filesystem
 
 # Networking options
 options		INET		# Internet protocols
-options		"TCP_COMPAT_42"	# compatibility with 4.2BSD TCP/IP
 #options	GATEWAY		# IP packet forwarding
 #options	MULTICAST	# Multicast support
 #options	MROUTING	# Multicast routing support
 
-#config		vmunix swap generic
 config		vmunix root on sd0a swap on sd0b dumps on sd0b
 
-controller	uart0
-controller	spi3
+device		uart1   flags 0x4e4f    # pins rx=RD14, tx=RD15 - logical 39/40
+device		uart4   flags 0x6268    # pins rx=RF2,  tx=RF8  - serial-to-USB converter
+
+controller	spi1    flags 0x3161    # pins rx=RC1,  tx=RF1 - logical 35/36/5
+controller	spi2    flags 0x4b60    # pins rx=RD11, tx=RF0 - logical 11/12/13
+controller	spi3    flags 0x2a34    # pins rx=RB10, tx=RC4 - SD card
+controller	spi4    flags 0x6570    # pins rx=RF5,  tx=RG0 - Wi-Fi interface
+
 disk		sd0	at spi3 drive 0 flags 0x33      # select pin RC3
-disk		sd1	at spi3 drive 1 flags 0x26      # select pin RB6
+#disk		sd1	at spi3 drive 1 flags 0x26      # select pin RB6
+
+# Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
+#device		mrf0    at spi4 flags 0x71641f49
 
 pseudo-device	pty		4	# pseudo ptys
 pseudo-device	bpfilter	1	# packet filter ports

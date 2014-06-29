@@ -543,6 +543,8 @@ Init_dev:
 Dev_info:
 	Con_info Info_list
 		|
+	Info_list
+		|
 	/* lambda */
 		;
 
