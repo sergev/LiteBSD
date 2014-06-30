@@ -235,6 +235,15 @@ cdev_decl(bpf);
 #include "uart.h"
 cdev_decl(uart);
 
+#include "spi.h"
+cdev_decl(spi);
+/* open, read, write, ioctl */
+#define cdev_spi_init(c,n) { \
+    dev_init(c,n,open), (dev_type_close((*))) nullop, dev_init(c,n,read), \
+    dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+    (dev_type_reset((*))) nullop, 0, seltrue, (dev_type_map((*))) enodev, \
+    (dev_type_strategy((*))) nullop, 0 }
+
 struct cdevsw   cdevsw[] =
 {
     cdev_cn_init(1,cn),             /* 0: virtual console */
@@ -253,7 +262,7 @@ struct cdevsw   cdevsw[] =
     cdev_notdef(),                  /* 13: */
     cdev_notdef(),                  /* 14: */
     cdev_notdef(),                  /* 15: */
-    cdev_notdef(),                  /* 16: */
+    cdev_spi_init(NSPI,spi),        /* 16: SPI interface */
     cdev_tty_init(NUART,uart),      /* 17: serial UART interface */
 };
 

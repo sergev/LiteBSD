@@ -65,5 +65,6 @@
 #define	_IOW(g,n,t)	_IOC(IOC_IN,	(g), (n), sizeof(t))
 /* this should be _IORW, but stdio got there first */
 #define	_IOWR(g,n,t)	_IOC(IOC_INOUT,	(g), (n), sizeof(t))
+#define	_ION(g,n,t)	_IOC(IOC_INOUT,	(g), (n), (t))
 
 #endif /* !_SYS_IOCCOM_H_ */
