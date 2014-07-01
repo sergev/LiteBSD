@@ -70,6 +70,11 @@ struct tty uart_tty[NUART];
 
 extern dev_t cn_dev;
 
+static const char pin_name[16] = "?ABCDEFGHJK?????";
+
+/* Convert port name/signal into a pin number. */
+#define RP(x,n) (((x)-'A'+1) << 4 | (n))
+
 /*
  * Control modem signals.
  * No hardware modem signals are actually present.
@@ -496,6 +501,124 @@ again:
 }
 
 /*
+ * Assign UxRX signal to specified pin.
+ */
+static void assign_rx(int channel, int pin)
+{
+    switch (channel) {
+    case 0: U1RXR = gpio_input_map1(pin); break;
+    case 1: U2RXR = gpio_input_map3(pin); break;
+    case 2: U3RXR = gpio_input_map2(pin); break;
+    case 3: U4RXR = gpio_input_map4(pin); break;
+    case 4: U5RXR = gpio_input_map1(pin); break;
+    case 5: U6RXR = gpio_input_map4(pin); break;
+    }
+}
+
+static int output_map1 (unsigned channel)
+{
+    switch (channel) {
+    case 2: return 1;   // 0001 = U3TX
+    }
+    printf ("uart%u: cannot map TX pin, group 1\n", channel);
+    return 0;
+}
+
+static int output_map2 (unsigned channel)
+{
+    switch (channel) {
+    case 0: return 1;   // 0001 = U1TX
+    case 4: return 3;   // 0011 = U5TX
+    }
+    printf ("uart%u: cannot map TX pin, group 2\n", channel);
+    return 0;
+}
+
+static int output_map3 (unsigned channel)
+{
+    switch (channel) {
+    case 3: return 2;   // 0010 = U4TX
+    case 5: return 4;   // 0100 = U6TX
+    }
+    printf ("uart%u: cannot map TX pin, group 3\n", channel);
+    return 0;
+}
+
+static int output_map4 (unsigned channel)
+{
+    switch (channel) {
+    case 1: return 2;   // 0010 = U2TX
+    case 5: return 4;   // 0100 = U6TX
+    }
+    printf ("uart%u: cannot map TX pin, group 4\n", channel);
+    return 0;
+}
+
+/*
+ * Assign UxTX signal to specified pin.
+ */
+static void assign_tx(int channel, int pin)
+{
+    switch (pin) {
+    case RP('A',14): RPA14R = output_map1(channel); return;
+    case RP('A',15): RPA15R = output_map2(channel); return;
+    case RP('B',0):  RPB0R  = output_map3(channel); return;
+    case RP('B',10): RPB10R = output_map1(channel); return;
+    case RP('B',14): RPB14R = output_map4(channel); return;
+    case RP('B',15): RPB15R = output_map3(channel); return;
+    case RP('B',1):  RPB1R  = output_map2(channel); return;
+    case RP('B',2):  RPB2R  = output_map4(channel); return;
+    case RP('B',3):  RPB3R  = output_map2(channel); return;
+    case RP('B',5):  RPB5R  = output_map1(channel); return;
+    case RP('B',6):  RPB6R  = output_map4(channel); return;
+    case RP('B',7):  RPB7R  = output_map3(channel); return;
+    case RP('B',8):  RPB8R  = output_map3(channel); return;
+    case RP('B',9):  RPB9R  = output_map1(channel); return;
+    case RP('C',13): RPC13R = output_map2(channel); return;
+    case RP('C',14): RPC14R = output_map1(channel); return;
+    case RP('C',1):  RPC1R  = output_map1(channel); return;
+    case RP('C',2):  RPC2R  = output_map4(channel); return;
+    case RP('C',3):  RPC3R  = output_map3(channel); return;
+    case RP('C',4):  RPC4R  = output_map2(channel); return;
+    case RP('D',0):  RPD0R  = output_map4(channel); return;
+    case RP('D',10): RPD10R = output_map1(channel); return;
+    case RP('D',11): RPD11R = output_map2(channel); return;
+    case RP('D',12): RPD12R = output_map3(channel); return;
+    case RP('D',14): RPD14R = output_map1(channel); return;
+    case RP('D',15): RPD15R = output_map2(channel); return;
+    case RP('D',1):  RPD1R  = output_map4(channel); return;
+    case RP('D',2):  RPD2R  = output_map1(channel); return;
+    case RP('D',3):  RPD3R  = output_map2(channel); return;
+    case RP('D',4):  RPD4R  = output_map3(channel); return;
+    case RP('D',5):  RPD5R  = output_map4(channel); return;
+    case RP('D',6):  RPD6R  = output_map1(channel); return;
+    case RP('D',7):  RPD7R  = output_map2(channel); return;
+    case RP('D',9):  RPD9R  = output_map3(channel); return;
+    case RP('E',3):  RPE3R  = output_map3(channel); return;
+    case RP('E',5):  RPE5R  = output_map2(channel); return;
+    case RP('E',8):  RPE8R  = output_map4(channel); return;
+    case RP('E',9):  RPE9R  = output_map3(channel); return;
+    case RP('F',0):  RPF0R  = output_map2(channel); return;
+    case RP('F',12): RPF12R = output_map3(channel); return;
+    case RP('F',13): RPF13R = output_map4(channel); return;
+    case RP('F',1):  RPF1R  = output_map1(channel); return;
+    case RP('F',2):  RPF2R  = output_map4(channel); return;
+    case RP('F',3):  RPF3R  = output_map4(channel); return;
+    case RP('F',4):  RPF4R  = output_map1(channel); return;
+    case RP('F',5):  RPF5R  = output_map2(channel); return;
+    case RP('F',8):  RPF8R  = output_map3(channel); return;
+    case RP('G',0):  RPG0R  = output_map2(channel); return;
+    case RP('G',1):  RPG1R  = output_map1(channel); return;
+    case RP('G',6):  RPG6R  = output_map3(channel); return;
+    case RP('G',7):  RPG7R  = output_map2(channel); return;
+    case RP('G',8):  RPG8R  = output_map1(channel); return;
+    case RP('G',9):  RPG9R  = output_map4(channel); return;
+    }
+    printf ("uart%u: cannot map TX pin %c%d\n",
+        channel, pin_name[pin>>4], pin & 15);
+}
+
+/*
  * Test to see if device is present.
  * Return true if found and initialized ok.
  */
@@ -505,6 +628,8 @@ uartprobe(config)
     uart_regmap_t *reg;
     struct tty *tp;
     int unit = config->sd_unit - 1;
+    int rx = config->sd_flags >> 8 & 0xFF;
+    int tx = config->sd_flags & 0xFF;
 
     if (unit < 0 || unit >= NUART)
         return 0;
@@ -513,11 +638,19 @@ uartprobe(config)
     tp = &uart_tty[unit];
     tp->t_dev = unit;
 
+    printf("uart%d at pins RX=%c%d,TX=%c%d - interrupts %u,%u,%u\n",
+        unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
+        uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
+
     /* Reset chip. */
     reg->brg = 0;
     reg->sta = 0;
     reg->mode = PIC32_UMODE_PDSEL_8NPAR | PIC32_UMODE_ON;
     reg->staset = 0;
+
+    /* Assign RX and TX pins. */
+    assign_rx (unit, rx);
+    assign_tx (unit, tx);
 
     /*
      * Special handling for consoles.
@@ -535,8 +668,6 @@ uartprobe(config)
         udelay(1000);
         splx(s);
     }
-    printf("uart%d at address 0x%x irq %u,%u,%u\n",
-        unit+1, reg, uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
     return 1;
 }
 

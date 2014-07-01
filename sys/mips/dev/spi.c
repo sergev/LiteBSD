@@ -930,7 +930,6 @@ static void assign_sdo(int channel, int pin)
     }
     printf ("spi%u: cannot map SDO pin %c%d\n",
         channel, pin_name[pin>>4], pin & 15);
-
 }
 
 /*
@@ -959,12 +958,12 @@ spiprobe(config)
     if (channel < 0 || channel >= NSPI)
         return 0;
     sck = sck_tab[channel];
-    printf ("spi%u: pins SDI=%c%d, SDO=%c%d, SCK=%c%d\n", channel,
+    printf ("spi%u at pins SDI=%c%d,SDO=%c%d,SCK=%c%d\n", channel,
         pin_name[sdi>>4], sdi & 15,
         pin_name[sdo>>4], sdo & 15,
         pin_name[sck>>4], sck & 15);
 
-    // Assign SDI and SDO pins.
+    /* Assign SDI and SDO pins. */
     assign_sdi (channel, sdi);
     assign_sdo (channel, sdo);
 
