@@ -9,7 +9,7 @@
 #include <sys/spi.h>
 
 #include <mips/dev/device.h>
-//#include <mips/dev/spiio.h>
+#include <mips/dev/spi.h>
 #include <machine/pic32mz.h>
 
 /*
@@ -20,702 +20,499 @@
 #   define PRINTDBG(...) /*empty*/
 #endif
 
-struct spireg {
-    volatile unsigned con;		/* Control */
-    volatile unsigned conclr;
-    volatile unsigned conset;
-    volatile unsigned coninv;
-    volatile unsigned stat;		/* Status */
-    volatile unsigned statclr;
-    volatile unsigned statset;
-    volatile unsigned statinv;
-    volatile unsigned buf;		/* Transmit and receive buffer */
-    volatile unsigned unused1;
-    volatile unsigned unused2;
-    volatile unsigned unused3;
-    volatile unsigned brg;		/* Baud rate generator */
-    volatile unsigned brgclr;
-    volatile unsigned brgset;
-    volatile unsigned brginv;
+/*
+ * PIC32 port i/o registers.
+ */
+struct gpioreg {
+    volatile unsigned ansel;            /* Analog select */
+    volatile unsigned anselclr;
+    volatile unsigned anselset;
+    volatile unsigned anselinv;
+    volatile unsigned tris;             /* Mask of inputs */
+    volatile unsigned trisclr;
+    volatile unsigned trisset;
+    volatile unsigned trisinv;
+    volatile unsigned port;             /* Read inputs, write outputs */
+    volatile unsigned portclr;
+    volatile unsigned portset;
+    volatile unsigned portinv;
+    volatile unsigned lat;              /* Read/write outputs */
+    volatile unsigned latclr;
+    volatile unsigned latset;
+    volatile unsigned latinv;
+    volatile unsigned odc;              /* Open drain configuration */
+    volatile unsigned odcclr;
+    volatile unsigned odcset;
+    volatile unsigned odcinv;
+    volatile unsigned cnpu;             /* Input pin pull-up enable */
+    volatile unsigned cnpuclr;
+    volatile unsigned cnpuset;
+    volatile unsigned cnpuinv;
+    volatile unsigned cnpd;             /* Input pin pull-down enable */
+    volatile unsigned cnpdclr;
+    volatile unsigned cnpdset;
+    volatile unsigned cnpdinv;
+    volatile unsigned cncon;            /* Interrupt-on-change control */
+    volatile unsigned cnconclr;
+    volatile unsigned cnconset;
+    volatile unsigned cnconinv;
+    volatile unsigned cnen;             /* Input change interrupt enable */
+    volatile unsigned cnenclr;
+    volatile unsigned cnenset;
+    volatile unsigned cneninv;
+    volatile unsigned cnstat;           /* Change notification status */
+    volatile unsigned cnstatclr;
+    volatile unsigned cnstatset;
+    volatile unsigned cnstatinv;
+    volatile unsigned unused[6*4];
 };
 
-struct spi_dev {
-    struct spireg *bus;
-    unsigned int *cs_tris;
-    unsigned int cs_pin;
-    unsigned int baud;
-    unsigned int mode;
+#if NSPI > 6
+#error Max 6 SPI ports supported.
+#endif
+static struct spireg *const spi_base[6] = {
+    (struct spireg*) &SPI1CON,
+    (struct spireg*) &SPI2CON,
+    (struct spireg*) &SPI3CON,
+    (struct spireg*) &SPI4CON,
+    (struct spireg*) &SPI5CON,
+    (struct spireg*) &SPI6CON,
 };
 
-int spi_fd[NSPI];
+struct spictl {
+    struct spiio io;
+} spitab[NSPI];
 
-#define MAXSPIDEV 10
-
-struct spi_dev spi_devices[MAXSPIDEV];
-
-// Default SPI bus speed
-
-#ifndef SPI_MHZ
-#define SPI_MHZ 10
+/*
+ * Default SPI bus speed in kHz.
+ */
+#ifndef SPI_KHZ
+#define SPI_KHZ 10000
 #endif
 
-
-// Open an SPI device in default mode.  Use further function calls to
-// set baud rate, clock phase, etc.
-// Returns an integer for the number of the device (ala fd).
-// Returns -1 if no devices are available.
-
-int spi_open(unsigned int bus, unsigned int *tris, unsigned int pin)
+/*
+ * Setup SPI connection in default mode.
+ * Use further function calls to set baud rate, clock phase, etc.
+ */
+void spi_setup(struct spiio *io, int port, int pin)
 {
-    int dno;
+    // Set up the device
+    io->reg     = spi_base[port];
+    io->mode    = PIC32_SPICON_MSTEN | PIC32_SPICON_ON;
+    io->cs_port = 0;
+    spi_set_speed(io, SPI_KHZ);
+    spi_set_cspin(io, pin);
+}
 
-    // Find a free device
-    for(dno=0; dno<MAXSPIDEV && spi_devices[dno].bus != NULL; dno++);
+/*
+ * Setup the chip select pin for the SPI device.
+ * Chip select pin is encoded as 0bPPPPNNNN, or 0xPN, where:
+ * N is the pin number 0..F,
+ * P is the port index 1..A:
+ *   1 - port A
+ *   2 - port B
+ *   3 - port C
+ *   4 - port D
+ *   5 - port E
+ *   6 - port F
+ *   7 - port G
+ *   8 - port H
+ *   9 - port J
+ *   A - port K
+ */
+void spi_set_cspin(struct spiio *io, int pin)
+{
+    /* Release the old CS pin. */
+    if (io->cs_port) {
+        /* Configure the chip select pin as input. */
+        io->cs_port->trisset = io->cs_mask;
+    }
+    io->cs_port = 0;
+    io->cs_pin  = 0;
+    io->cs_mask = 0;
 
-    // or return if not found
-    if(dno == MAXSPIDEV)
+    if (pin >= 0x10) {
+        struct gpioreg *cs_port = (struct gpioreg*) &ANSELA;
+
+        cs_port += (pin >> 4 & 15) - 1;
+        io->cs_port = cs_port;
+        io->cs_pin  = pin & 15;
+        io->cs_mask = 1 << io->cs_pin;
+
+        /* Configure the chip select pin as output high. */
+        cs_port->latset  = io->cs_mask;
+        cs_port->trisclr = io->cs_mask;
+    }
+}
+
+/*
+ * Set the SPI bit rate for a device (in kHz).
+ */
+void spi_set_speed(struct spiio *io, unsigned int khz)
+{
+    io->divisor = (CPU_KHZ / khz + 1) / 2 - 1;
+}
+
+/*
+ * Assert the CS pin of a device.
+ * Not only do we set the CS pin, but before we do so we also reconfigure
+ * the SPI bus to the required settings for this device.
+ */
+void spi_select(struct spiio *io)
+{
+    if (io->cs_port) {
+        io->reg->brg = io->divisor;
+        io->reg->con = io->mode;
+
+        io->cs_port->latclr = io->cs_mask;
+    }
+}
+
+/*
+ * Deassert the CS pin of a device.
+ */
+void spi_deselect(struct spiio *io)
+{
+    if (io->cs_port) {
+        io->cs_port->latset = io->cs_mask;
+    }
+}
+
+/*
+ * Set a mode setting or two - just updates the internal records,
+ * the actual mode is changed next time the CS is asserted.
+ */
+void spi_set(struct spiio *io, unsigned int set)
+{
+    io->mode |= set;
+}
+
+/*
+ * Clear a mode setting or two - just updates the internal records,
+ * the actual mode is changed next time the CS is asserted.
+ */
+void spi_clr(struct spiio *io, unsigned int set)
+{
+    io->mode &= ~set;
+}
+
+/*
+ * Return the current status of the SPI bus for the device in question
+ * Just returns the ->stat entry in the register set.
+ */
+unsigned int spi_status(struct spiio *io)
+{
+    if (! io->reg)
+        return 0;
+    return io->reg->stat;
+}
+
+/*
+ * Transfer one word of data, and return the read word of data.
+ * The actual number of bits sent depends on the mode of the transfer.
+ * This is blocking, and waits for the transfer to complete
+ * before returning.  Times out after a certain period.
+ */
+unsigned spi_transfer(struct spiio *io, unsigned data)
+{
+    struct spireg *reg = io->reg;
+    unsigned int cnt = 100000;
+
+    reg->con = io->mode;
+    reg->brg = io->divisor;
+    reg->buf = data;
+    while (! (reg->stat & PIC32_SPISTAT_SPIRBF) && --cnt > 0)
+        asm volatile ("nop");
+    if (cnt == 0)
         return -1;
 
-    // Set up the device
-    switch(bus)
-    {
-        case 1:
-            spi_devices[dno].bus = (struct spireg *)&SPI1CON;
-            break;
-        case 2:
-            spi_devices[dno].bus = (struct spireg *)&SPI2CON;
-            break;
-        case 3:
-            spi_devices[dno].bus = (struct spireg *)&SPI3CON;
-            break;
-        case 4:
-            spi_devices[dno].bus = (struct spireg *)&SPI4CON;
-            break;
-        default:
-            return -1;
-    }
-    spi_devices[dno].cs_tris = tris;
-    spi_devices[dno].cs_pin = pin;
-    spi_devices[dno].baud = (CPU_KHZ / SPI_MHZ / 1000 + 1) / 2 - 1;
-    spi_devices[dno].mode = PIC32_SPICON_MSTEN | PIC32_SPICON_ON;
-
-    if(tris)
-    {
-        // Configure the CS pin
-        LAT_SET(*tris) = 1<<pin;
-        TRIS_CLR(*tris) = 1<<pin;
-    }
-    // return the ID of the device.
-    return dno;
+    return reg->buf;
 }
 
-void spi_set_cspin(int dno, unsigned int *tris, unsigned int pin)
+/*
+ * Send a chunk of 8-bit data.
+ */
+void spi_bulk_write(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
-    if(dno >= MAXSPIDEV)
-        return;
+    unsigned i;
 
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    // Revert the old CS pin to an input (release it)
-    if(spi_devices[dno].cs_tris)
-    {
-        // Configure the CS pin
-        TRIS_SET(*spi_devices[dno].cs_tris) = 1<<pin;
-    }
-
-    spi_devices[dno].cs_tris = tris;
-    spi_devices[dno].cs_pin = pin;
-    if(tris)
-    {
-        // Configure the CS pin
-        LAT_SET(*tris) = 1<<pin;
-        TRIS_CLR(*tris) = 1<<pin;
+    for (i=0; i<nbytes; i++) {
+        spi_transfer(io, *data++);
     }
 }
 
-// Close an SPI device
-// Free up the device entry, and turn off the CS pin (set it to input)
-
-void spi_close(int dno)
+/*
+ * Receive a chunk of 8-bit data.
+ */
+void spi_bulk_read(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
-    if(dno >= MAXSPIDEV)
-        return;
+    unsigned i;
 
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    if (spi_devices[dno].cs_tris != NULL) {
-        // Revert the CS pin to input.
-        TRIS_CLR(*spi_devices[dno].cs_tris) = 1<<spi_devices[dno].cs_pin;
+    for(i=0; i<nbytes; i++) {
+        *data++ = spi_transfer(io, 0xFF);
     }
-    spi_devices[dno].cs_tris = NULL;
-
-    // Disable the device (remove the bus pointer)
-    spi_devices[dno].bus = NULL;
 }
 
-// Assert the CS pin of a device.
-// Not only do we set the CS pin, but before we do so we also reconfigure
-// the SPI bus to the required settings for this device.
-void spi_select(int dno)
+/*
+ * Send and receive a chunk of 8-bit data.
+ */
+void spi_bulk_rw(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    if (spi_devices[dno].cs_tris == NULL)
-        return;
-
-    spi_devices[dno].bus->brg = spi_devices[dno].baud;
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
-
-    LAT_CLR(*spi_devices[dno].cs_tris) = 1<<spi_devices[dno].cs_pin;
-}
-
-// Deassert the CS pin of a device.
-void spi_deselect(int dno)
-{
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    if (spi_devices[dno].cs_tris == NULL)
-        return;
-
-    LAT_SET(*spi_devices[dno].cs_tris) = 1<<spi_devices[dno].cs_pin;
-}
-
-// Set a mode setting or two - just updates the internal records, the
-// actual mode is changed next time the CS is asserted
-void spi_set(int dno, unsigned int set)
-{
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    spi_devices[dno].mode |= set;
-}
-
-// Clear a mode setting or two - just updates the internal records, the
-// actual mode is changed next time the CS is asserted
-void spi_clr(int dno, unsigned int set)
-{
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    spi_devices[dno].mode &= ~set;
-}
-
-// Return the current status of the SPI bus for the device in question
-// Just returns the ->stat entry in the register set.
-unsigned int spi_status(int dno)
-{
-    if(dno >= MAXSPIDEV)
-        return 0;
-
-    if(spi_devices[dno].bus==NULL)
-        return 0;
-
-    return spi_devices[dno].bus->stat;
-}
-
-// Transfer one word of data, and return the read word of
-// data.  The actual number of bits sent depends on the
-// mode of the transfer.
-// This is blocking, and waits for the transfer to complete
-// before returning.  Times out after a certain period.
-unsigned char spi_transfer(int dno, unsigned char data)
-{
-    unsigned int to = 100000;
-
-    if(dno >= MAXSPIDEV)
-        return 0xF0;
-
-    if(spi_devices[dno].bus==NULL)
-        return 0xF1;
-
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
-    spi_devices[dno].bus->brg = spi_devices[dno].baud;
-
-    spi_devices[dno].bus->buf = data;
-    while ((--to > 0) && (!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBF)))
-        asm volatile ("nop");
-
-    if(to  == 0)
-        return 0xF2;
-
-    return spi_devices[dno].bus->buf;
-}
-
-// Write a huge chunk of data as fast and as efficiently as
-// possible.  Switches in to 32-bit mode regardless, and uses
-// the enhanced buffer mode.
-// Data should be a multiple of 32 bits.
-void spi_bulk_write_32_be(int dno, unsigned int len, char *data)
-{
-    int *data32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
-
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = mips_bswap(*data32++);
-            nwritten--;
-        }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            (void) spi_devices[dno].bus->buf;
-            nread++;
-        }
-    }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
-}
-
-void spi_bulk_write_32(int dno, unsigned int len, char *data)
-{
-    int *data32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
-
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = *data32++;
-            nwritten--;
-        }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            (void) spi_devices[dno].bus->buf;
-            nread++;
-        }
-    }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
-}
-
-void spi_bulk_write_16(int dno, unsigned int len, char *data)
-{
-    short *data16 = (short *)data;
-    unsigned int words = len >> 1;
-    unsigned int nread;
-    unsigned int nwritten;
-
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = *data16++;
-            nwritten--;
-        }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            (void) spi_devices[dno].bus->buf;
-            nread++;
-        }
-    }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
-}
-
-void spi_bulk_write(int dno, unsigned int len, unsigned char *data)
-{
-    unsigned char *data8 = data;
     unsigned int i;
-    unsigned char out;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    for(i=0; i<len; i++)
-    {
-        out = *data8;
-        spi_transfer(dno, out);
-        data8++;
+    for(i=0; i<nbytes; i++) {
+        *data++ = spi_transfer(io, *data);
     }
+}
+
+void spi_bulk_write16(struct spiio *io, unsigned int nbytes, short *data)
+{
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 1;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
+
+    reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = *data++;
+            nwrite--;
+        }
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            (void) reg->buf;
+            nread++;
+        }
+    }
+    reg->con = io->mode;
+}
+
+/*
+ * Write a chunk of 32-bit data as fast as possible.
+ * Switches in to 32-bit mode regardless, and uses the enhanced buffer mode.
+ * Data should be a multiple of 32 bits.
+ */
+void spi_bulk_write32(struct spiio *io, unsigned int nbytes, int *data)
+{
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
+
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = *data++;
+            nwrite--;
+        }
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            (void) reg->buf;
+            nread++;
+        }
+    }
+    reg->con = io->mode;
+}
+
+void spi_bulk_write32_be(struct spiio *io, unsigned int nbytes, int *data)
+{
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
+
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = mips_bswap(*data++);
+            nwrite--;
+        }
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            (void) reg->buf;
+            nread++;
+        }
+    }
+    reg->con = io->mode;
 }
 
 // Read a huge chunk of data as fast and as efficiently as
 // possible.  Switches in to 32-bit mode regardless, and uses
 // the enhanced buffer mode.
 // Data should be a multiple of 32 bits.
-void spi_bulk_read_32_be(int dno, unsigned int len, char *data)
+void spi_bulk_read32_be(struct spiio *io, unsigned int nbytes, int *data)
 {
-    int *data32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = ~0;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = ~0;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *data32++ = mips_bswap(spi_devices[dno].bus->buf);
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *data++ = mips_bswap(reg->buf);
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_read_32(int dno, unsigned int len, char *data)
+void spi_bulk_read32(struct spiio *io, unsigned int nbytes, int *data)
 {
-    int *data32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = ~0;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = ~0;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *data32++ = spi_devices[dno].bus->buf;
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *data++ = reg->buf;
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_read_16(int dno, unsigned int len, char *data)
+void spi_bulk_read16(struct spiio *io, unsigned int nbytes, short *data)
 {
-    short *data16 = (short *)data;
-    unsigned int words = len >> 1;
-    unsigned int nread;
-    unsigned int nwritten;
+    struct spireg *reg = io->reg;
+    unsigned int words = nbytes >> 1;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = ~0;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = ~0;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *data16++ = mips_bswap(spi_devices[dno].bus->buf);
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *data++ = mips_bswap(reg->buf);
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_read(int dno, unsigned int len, unsigned char *data)
+void spi_bulk_rw32_be(struct spiio *io, unsigned int nbytes, int *writep)
 {
-    unsigned char *data8 = data;
-    unsigned int i;
-    unsigned char in,out;
+    struct spireg *reg = io->reg;
+    int *readp = writep;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    for(i=0; i<len; i++)
-    {
-        out = 0xFF;
-        in = spi_transfer(dno, out);
-        *data8 = in;
-        data8++;
-    }
-}
-
-void spi_bulk_rw_32_be(int dno, unsigned int len, char *data)
-{
-    int *read32 = (int *)data;
-    int *write32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
-
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = *write32++;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = *writep++;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *read32++ = mips_bswap(spi_devices[dno].bus->buf);
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *readp++ = mips_bswap(reg->buf);
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_rw_32(int dno, unsigned int len, char *data)
+void spi_bulk_rw32(struct spiio *io, unsigned int nbytes, int *writep)
 {
-    int *read32 = (int *)data;
-    int *write32 = (int *)data;
-    unsigned int words = len >> 2;
-    unsigned int nread;
-    unsigned int nwritten;
+    struct spireg *reg = io->reg;
+    int *readp = writep;
+    unsigned int words = nbytes >> 2;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = *write32++;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = *writep++;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *read32++ = spi_devices[dno].bus->buf;
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *readp++ = reg->buf;
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_rw_16(int dno, unsigned int len, char *data)
+void spi_bulk_rw16(struct spiio *io, unsigned int nbytes, short *writep)
 {
-    short *read16 = (short *)data;
-    short *write16 = (short *)data;
-    unsigned int words = len >> 1;
-    unsigned int nread;
-    unsigned int nwritten;
+    struct spireg *reg = io->reg;
+    short *readp = writep;
+    unsigned int words = nbytes >> 1;
+    unsigned int nread = 0;
+    unsigned int nwrite = words;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    nread = 0;
-    nwritten = words;
-
-    spi_devices[dno].bus->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
-    while(nread < words)
-    {
-        if(nwritten > 0 && !(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPITBF))
-        {
-            spi_devices[dno].bus->buf = *write16++;
-            nwritten--;
+    reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
+    while (nread < words) {
+        if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
+            reg->buf = *writep++;
+            nwrite--;
         }
-
-        if(!(spi_devices[dno].bus->stat & PIC32_SPISTAT_SPIRBE))
-        {
-            *read16++ = mips_bswap(spi_devices[dno].bus->buf);
+        if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
+            *readp++ = mips_bswap(reg->buf);
             nread++;
         }
     }
-    spi_devices[dno].bus->con = spi_devices[dno].mode;
+    reg->con = io->mode;
 }
 
-void spi_bulk_rw(int dno, unsigned int len, unsigned char *data)
+/*
+ * Return the name of the SPI bus for a device.
+ */
+const char *spi_name(struct spiio *io)
 {
-    unsigned char *data8 = data;
-    unsigned int i;
-    unsigned char in,out;
+    static const char *name[6] = { "SPI1", "SPI2", "SPI3", "SPI4", "SPI5", "SPI6" };
+    int i;
 
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    for(i=0; i<len; i++)
-    {
-        out = *data8;
-        in = spi_transfer(dno, out);
-        *data8 = in;
-        data8++;
+    for (i=0; i<6; i++) {
+        if (io->reg == spi_base[i])
+            return name[i];
     }
-}
-
-// Set the SPI baud rate for a device (in KHz)
-
-void spi_brg(int dno, unsigned int baud)
-{
-    if(dno >= MAXSPIDEV)
-        return;
-
-    if(spi_devices[dno].bus==NULL)
-        return;
-
-    spi_devices[dno].baud = (CPU_KHZ / baud + 1) / 2 - 1;
-}
-
-// Return the name of the SPI bus for a device
-
-char *spi_name(int dno)
-{
-    if(dno >= MAXSPIDEV)
-        return "SPI?";
-
-    if(spi_devices[dno].bus==NULL)
-        return "SPI?";
-
-    if(spi_devices[dno].bus == (struct spireg *)&SPI1CON)
-        return "SPI1";
-
-    if(spi_devices[dno].bus == (struct spireg *)&SPI2CON)
-        return "SPI2";
-
-    if(spi_devices[dno].bus == (struct spireg *)&SPI3CON)
-        return "SPI3";
-
-    if(spi_devices[dno].bus == (struct spireg *)&SPI4CON)
-        return "SPI4";
-
     return "SPI?";
 }
 
-// Return the port name of the CS pin for a device
-char spi_csname(int dno)
+/*
+ * Return the port name (A-K) of the chip select pin for a device.
+ */
+char spi_csname(struct spiio *io)
 {
-    if(dno >= MAXSPIDEV)
-        return '?';
+    unsigned n = io->cs_port - (struct gpioreg*) &ANSELA;
 
-    if(spi_devices[dno].bus==NULL)
-        return '?';
-
-    switch((unsigned int)spi_devices[dno].cs_tris)
-    {
-        case (unsigned int)&TRISA: return 'A';
-        case (unsigned int)&TRISB: return 'B';
-        case (unsigned int)&TRISC: return 'C';
-        case (unsigned int)&TRISD: return 'D';
-        case (unsigned int)&TRISE: return 'E';
-        case (unsigned int)&TRISF: return 'F';
-        case (unsigned int)&TRISG: return 'G';
-    }
+    if (n < 10)
+        return "ABCDEFGHJK"[n];
     return '?';
 }
 
-int spi_cspin(int dno)
+/*
+ * Return the pin index of the chip select pin for a device.
+ */
+int spi_cspin(struct spiio *io)
 {
-    if(dno >= MAXSPIDEV)
-        return '?';
+    if (! io->cs_port)
+        return 0;
 
-    if(spi_devices[dno].bus==NULL)
-        return '?';
-
-    return spi_devices[dno].cs_pin;
+    return io->cs_pin;
 }
 
-unsigned int spi_get_brg(int dno)
+/*
+ * Return the speed in kHz.
+ */
+unsigned int spi_get_speed(struct spiio *io)
 {
-    if(dno >= MAXSPIDEV)
+    if (! io->reg)
         return 0;
 
-    if(spi_devices[dno].bus==NULL)
-        return 0;
-
-    return CPU_KHZ / (spi_devices[dno].baud + 1) / 2;
+    return CPU_KHZ / (io->divisor + 1) / 2;
 }
 
 /*
@@ -734,9 +531,7 @@ int spiopen (dev_t dev, int flag, int mode)
     if (curproc->p_ucred->cr_uid != 0)
             return EPERM;
 
-    spi_fd[channel] = spi_open(channel+1, 0, 0);
-    if(spi_fd[channel]==-1)
-        return ENODEV;
+    spi_setup(&spitab[channel].io, 0, 0);
     return 0;
 }
 
@@ -750,7 +545,8 @@ int spiclose (dev_t dev, int flag, int mode)
     if (curproc->p_ucred->cr_uid != 0)
             return EPERM;
 
-    spi_close(spi_fd[channel]);
+    /* Release the chip select pin. */
+    spi_set_cspin(&spitab[channel].io, 0);
     return 0;
 }
 
@@ -786,6 +582,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
 {
     int channel = minor (dev);
     unsigned char *cval = (unsigned char *)addr;
+    struct spiio *io;
     int nelem;
     static unsigned volatile *const tris[8] = {
         0, &TRISA,&TRISB,&TRISC,&TRISD,&TRISE,&TRISF,&TRISG,
@@ -795,6 +592,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
     //PRINTDBG ("spi%d: ioctl (cmd=%08x, addr=%08x)\n", channel+1, cmd, addr);
     if (channel >= NSPI)
         return ENXIO;
+    io = &spitab[channel].io;
 
     switch (cmd & ~(IOCPARM_MASK << 16)) {
     default:
@@ -808,14 +606,14 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
          *   2     1       0
          *   3     1       1
          */
-        if((unsigned int) addr & 0x01)
-            spi_set(spi_fd[channel], PIC32_SPICON_CKE);
-        if((unsigned int) addr & 0x02)
-            spi_set(spi_fd[channel], PIC32_SPICON_CKP);
+        if ((unsigned int) addr & 0x01)
+            spi_set(io, PIC32_SPICON_CKE);
+        if ((unsigned int) addr & 0x02)
+            spi_set(io, PIC32_SPICON_CKP);
         return 0;
 
     case SPICTL_SETRATE:        /* set clock rate, kHz */
-        spi_brg(spi_fd[channel], (unsigned int) addr);
+        spi_set_speed(io, (unsigned int) addr);
         return 0;
 
     case SPICTL_SETSELPIN:      /* set select pin */
@@ -823,16 +621,16 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         portnum = ((unsigned int) addr >> 8) & 7;
         if (! portnum)
             return 0;
-        spi_set_cspin(spi_fd[channel], (unsigned int *)tris[((unsigned int) addr >> 8) & 7], (unsigned int) addr & 15);
+        spi_set_cspin(io, (unsigned) addr & 0xFF);
         return 0;
 
     case SPICTL_IO8(0):         /* transfer n*8 bits */
-        spi_select(spi_fd[channel]);
+        spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
         if (baduaddr (addr) || baduaddr (addr + nelem - 1))
             return EFAULT;
-        spi_bulk_rw(spi_fd[channel], nelem, cval);
-        spi_deselect(spi_fd[channel]);
+        spi_bulk_rw(io, nelem, cval);
+        spi_deselect(io);
         break;
 
     case SPICTL_IO16(0):        /* transfer n*16 bits */
@@ -840,7 +638,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 1) ||
             baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
             return EFAULT;
-        spi_bulk_rw_16(spi_fd[channel], nelem<<1, (char *)addr);
+        spi_bulk_rw16(io, nelem<<1, (short*) addr);
         break;
 
     case SPICTL_IO32(0):        /* transfer n*32 bits */
@@ -848,16 +646,16 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_rw_32(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_rw32(io, nelem<<2, (int*) addr);
         break;
 
     case SPICTL_IO8R(0):         /* transfer n*8 bits */
-        spi_select(spi_fd[channel]);
+        spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
         if (baduaddr (addr) || baduaddr (addr + nelem - 1))
             return EFAULT;
-        spi_bulk_read(spi_fd[channel], nelem, cval);
-        spi_deselect(spi_fd[channel]);
+        spi_bulk_read(io, nelem, cval);
+        spi_deselect(io);
         break;
 
     case SPICTL_IO16R(0):        /* transfer n*16 bits */
@@ -865,7 +663,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 1) ||
             baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
             return EFAULT;
-        spi_bulk_read_16(spi_fd[channel], nelem<<1, (char *)addr);
+        spi_bulk_read16(io, nelem<<1, (short*) addr);
         break;
 
     case SPICTL_IO32R(0):        /* transfer n*32 bits */
@@ -873,16 +671,16 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_read_32(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_read32(io, nelem<<2, (int*) addr);
         break;
 
     case SPICTL_IO8W(0):         /* transfer n*8 bits */
-        spi_select(spi_fd[channel]);
+        spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
         if (baduaddr (addr) || baduaddr (addr + nelem - 1))
             return EFAULT;
-        spi_bulk_write(spi_fd[channel], nelem, cval);
-        spi_deselect(spi_fd[channel]);
+        spi_bulk_write(io, nelem, cval);
+        spi_deselect(io);
         break;
 
     case SPICTL_IO16W(0):        /* transfer n*16 bits */
@@ -890,7 +688,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 1) ||
             baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
             return EFAULT;
-        spi_bulk_write_16(spi_fd[channel], nelem<<1, (char *)addr);
+        spi_bulk_write16(io, nelem<<1, (short*) addr);
         break;
 
     case SPICTL_IO32W(0):        /* transfer n*32 bits */
@@ -898,7 +696,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_write_32(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_write32(io, nelem<<2, (int*) addr);
         break;
 
     case SPICTL_IO32RB(0):        /* transfer n*32 bits */
@@ -906,7 +704,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_read_32_be(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_read32_be(io, nelem<<2, (int*) addr);
         break;
 
     case SPICTL_IO32WB(0):        /* transfer n*32 bits */
@@ -914,7 +712,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_write_32_be(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_write32_be(io, nelem<<2, (int*) addr);
         break;
 
     case SPICTL_IO32B(0):        /* transfer n*32 bits */
@@ -922,7 +720,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         if (((unsigned) addr & 3) ||
             baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
             return EFAULT;
-        spi_bulk_write_32_be(spi_fd[channel], nelem<<2, (char *)addr);
+        spi_bulk_write32_be(io, nelem<<2, (int*) addr);
         break;
     }
     return 0;
