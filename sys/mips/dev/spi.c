@@ -79,9 +79,9 @@ static struct spireg *const spi_base[6] = {
     (struct spireg*) &SPI6CON,
 };
 
-struct spictl {
-    struct spiio io;
-} spitab[NSPI];
+struct spiio spitab[NSPI];
+
+static const char pin_name[16] = "?ABCDEFGHJK?????";
 
 /*
  * Default SPI bus speed in kHz.
@@ -90,18 +90,28 @@ struct spictl {
 #define SPI_KHZ 10000
 #endif
 
+/* Convert port name/signal into a pin number. */
+#define RP(x,n) (((x)-'A'+1) << 4 | (n))
+
 /*
  * Setup SPI connection in default mode.
  * Use further function calls to set baud rate, clock phase, etc.
  */
-void spi_setup(struct spiio *io, int port, int pin)
+int spi_setup(struct spiio *io, int port, int pin)
 {
     // Set up the device
-    io->reg     = spi_base[port];
-    io->mode    = PIC32_SPICON_MSTEN | PIC32_SPICON_ON;
+    if (port >= NSPI)
+        return ENXIO;
+
+    io->reg = spitab[port].reg;
+    if (! io->reg)
+        return ENXIO;
+
+    io->mode = PIC32_SPICON_MSTEN | PIC32_SPICON_ON;
     io->cs_port = 0;
     spi_set_speed(io, SPI_KHZ);
     spi_set_cspin(io, pin);
+    return 0;
 }
 
 /*
@@ -265,10 +275,9 @@ void spi_bulk_rw(struct spiio *io, unsigned int nbytes, unsigned char *data)
     }
 }
 
-void spi_bulk_write16(struct spiio *io, unsigned int nbytes, short *data)
+void spi_bulk_write16(struct spiio *io, unsigned int words, short *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 1;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -291,10 +300,9 @@ void spi_bulk_write16(struct spiio *io, unsigned int nbytes, short *data)
  * Switches in to 32-bit mode regardless, and uses the enhanced buffer mode.
  * Data should be a multiple of 32 bits.
  */
-void spi_bulk_write32(struct spiio *io, unsigned int nbytes, int *data)
+void spi_bulk_write32(struct spiio *io, unsigned int words, int *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -312,10 +320,9 @@ void spi_bulk_write32(struct spiio *io, unsigned int nbytes, int *data)
     reg->con = io->mode;
 }
 
-void spi_bulk_write32_be(struct spiio *io, unsigned int nbytes, int *data)
+void spi_bulk_write32_be(struct spiio *io, unsigned int words, int *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -337,10 +344,9 @@ void spi_bulk_write32_be(struct spiio *io, unsigned int nbytes, int *data)
 // possible.  Switches in to 32-bit mode regardless, and uses
 // the enhanced buffer mode.
 // Data should be a multiple of 32 bits.
-void spi_bulk_read32_be(struct spiio *io, unsigned int nbytes, int *data)
+void spi_bulk_read32_be(struct spiio *io, unsigned int words, int *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -358,10 +364,9 @@ void spi_bulk_read32_be(struct spiio *io, unsigned int nbytes, int *data)
     reg->con = io->mode;
 }
 
-void spi_bulk_read32(struct spiio *io, unsigned int nbytes, int *data)
+void spi_bulk_read32(struct spiio *io, unsigned int words, int *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -379,10 +384,9 @@ void spi_bulk_read32(struct spiio *io, unsigned int nbytes, int *data)
     reg->con = io->mode;
 }
 
-void spi_bulk_read16(struct spiio *io, unsigned int nbytes, short *data)
+void spi_bulk_read16(struct spiio *io, unsigned int words, short *data)
 {
     struct spireg *reg = io->reg;
-    unsigned int words = nbytes >> 1;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -400,11 +404,10 @@ void spi_bulk_read16(struct spiio *io, unsigned int nbytes, short *data)
     reg->con = io->mode;
 }
 
-void spi_bulk_rw32_be(struct spiio *io, unsigned int nbytes, int *writep)
+void spi_bulk_rw32_be(struct spiio *io, unsigned int words, int *writep)
 {
     struct spireg *reg = io->reg;
     int *readp = writep;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -422,11 +425,10 @@ void spi_bulk_rw32_be(struct spiio *io, unsigned int nbytes, int *writep)
     reg->con = io->mode;
 }
 
-void spi_bulk_rw32(struct spiio *io, unsigned int nbytes, int *writep)
+void spi_bulk_rw32(struct spiio *io, unsigned int words, int *writep)
 {
     struct spireg *reg = io->reg;
     int *readp = writep;
-    unsigned int words = nbytes >> 2;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -444,11 +446,10 @@ void spi_bulk_rw32(struct spiio *io, unsigned int nbytes, int *writep)
     reg->con = io->mode;
 }
 
-void spi_bulk_rw16(struct spiio *io, unsigned int nbytes, short *writep)
+void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
 {
     struct spireg *reg = io->reg;
     short *readp = writep;
-    unsigned int words = nbytes >> 1;
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
@@ -524,14 +525,14 @@ unsigned int spi_get_speed(struct spiio *io)
 int spiopen (dev_t dev, int flag, int mode)
 {
     int channel = minor (dev);
+    struct spiio *io = &spitab[channel];
 
-    if (channel >= NSPI)
+    if (channel >= NSPI || ! io->reg)
         return ENXIO;
 
     if (curproc->p_ucred->cr_uid != 0)
-            return EPERM;
+        return EPERM;
 
-    spi_setup(&spitab[channel].io, 0, 0);
     return 0;
 }
 
@@ -546,7 +547,7 @@ int spiclose (dev_t dev, int flag, int mode)
             return EPERM;
 
     /* Release the chip select pin. */
-    spi_set_cspin(&spitab[channel].io, 0);
+    spi_set_cspin(&spitab[channel], 0);
     return 0;
 }
 
@@ -592,7 +593,9 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
     //PRINTDBG ("spi%d: ioctl (cmd=%08x, addr=%08x)\n", channel+1, cmd, addr);
     if (channel >= NSPI)
         return ENXIO;
-    io = &spitab[channel].io;
+    io = &spitab[channel];
+    if (! io->reg)
+        return ENODEV;
 
     switch (cmd & ~(IOCPARM_MASK << 16)) {
     default:
@@ -627,7 +630,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
     case SPICTL_IO8(0):         /* transfer n*8 bits */
         spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (baduaddr (addr) || baduaddr (addr + nelem - 1))
+        if (badaddr (addr, nelem))
             return EFAULT;
         spi_bulk_rw(io, nelem, cval);
         spi_deselect(io);
@@ -635,24 +638,22 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
 
     case SPICTL_IO16(0):        /* transfer n*16 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 1) ||
-            baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
+        if (((unsigned) addr & 1) || badaddr (addr, nelem*2))
             return EFAULT;
-        spi_bulk_rw16(io, nelem<<1, (short*) addr);
+        spi_bulk_rw16(io, nelem, (short*) addr);
         break;
 
     case SPICTL_IO32(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_rw32(io, nelem<<2, (int*) addr);
+        spi_bulk_rw32(io, nelem, (int*) addr);
         break;
 
     case SPICTL_IO8R(0):         /* transfer n*8 bits */
         spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (baduaddr (addr) || baduaddr (addr + nelem - 1))
+        if (badaddr (addr, nelem))
             return EFAULT;
         spi_bulk_read(io, nelem, cval);
         spi_deselect(io);
@@ -660,24 +661,22 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
 
     case SPICTL_IO16R(0):        /* transfer n*16 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 1) ||
-            baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
+        if (((unsigned) addr & 1) || badaddr (addr, nelem*2))
             return EFAULT;
-        spi_bulk_read16(io, nelem<<1, (short*) addr);
+        spi_bulk_read16(io, nelem, (short*) addr);
         break;
 
     case SPICTL_IO32R(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_read32(io, nelem<<2, (int*) addr);
+        spi_bulk_read32(io, nelem, (int*) addr);
         break;
 
     case SPICTL_IO8W(0):         /* transfer n*8 bits */
         spi_select(io);
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (baduaddr (addr) || baduaddr (addr + nelem - 1))
+        if (badaddr (addr, nelem))
             return EFAULT;
         spi_bulk_write(io, nelem, cval);
         spi_deselect(io);
@@ -685,64 +684,292 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
 
     case SPICTL_IO16W(0):        /* transfer n*16 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 1) ||
-            baduaddr (addr) || baduaddr (addr + nelem*2 - 1))
+        if (((unsigned) addr & 1) || badaddr (addr, nelem*2))
             return EFAULT;
-        spi_bulk_write16(io, nelem<<1, (short*) addr);
+        spi_bulk_write16(io, nelem, (short*) addr);
         break;
 
     case SPICTL_IO32W(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_write32(io, nelem<<2, (int*) addr);
+        spi_bulk_write32(io, nelem, (int*) addr);
         break;
 
     case SPICTL_IO32RB(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_read32_be(io, nelem<<2, (int*) addr);
+        spi_bulk_read32_be(io, nelem, (int*) addr);
         break;
 
     case SPICTL_IO32WB(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_write32_be(io, nelem<<2, (int*) addr);
+        spi_bulk_write32_be(io, nelem, (int*) addr);
         break;
 
     case SPICTL_IO32B(0):        /* transfer n*32 bits */
         nelem = (cmd >> 16) & IOCPARM_MASK;
-        if (((unsigned) addr & 3) ||
-            baduaddr (addr) || baduaddr (addr + nelem*4 - 1))
+        if (((unsigned) addr & 3) || badaddr (addr, nelem*4))
             return EFAULT;
-        spi_bulk_write32_be(io, nelem<<2, (int*) addr);
+        spi_bulk_write32_be(io, nelem, (int*) addr);
         break;
     }
     return 0;
 }
 
+int gpio_input_map1(int pin)
+{
+    switch (pin) {
+    case RP('D',2):  return 0;
+    case RP('G',8):  return 1;
+    case RP('F',4):  return 2;
+    case RP('D',10): return 3;
+    case RP('F',1):  return 4;
+    case RP('B',9):  return 5;
+    case RP('B',10): return 6;
+    case RP('C',14): return 7;
+    case RP('B',5):  return 8;
+    case RP('C',1):  return 10;
+    case RP('D',14): return 11;
+    case RP('G',1):  return 12;
+    case RP('A',14): return 13;
+    case RP('D',6):  return 14;
+    }
+    printf ("spi: cannot map SDI pin %c%d, group 1\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map2(int pin)
+{
+    switch (pin) {
+    case RP('D',3):  return 0;
+    case RP('G',7):  return 1;
+    case RP('F',5):  return 2;
+    case RP('D',11): return 3;
+    case RP('F',0):  return 4;
+    case RP('B',1):  return 5;
+    case RP('E',5):  return 6;
+    case RP('C',13): return 7;
+    case RP('B',3):  return 8;
+    case RP('C',4):  return 10;
+    case RP('D',15): return 11;
+    case RP('G',0):  return 12;
+    case RP('A',15): return 13;
+    case RP('D',7):  return 14;
+    }
+    printf ("spi: cannot map SDI pin %c%d, group 2\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map3(int pin)
+{
+    switch (pin) {
+    case RP('D',9):  return 0;
+    case RP('G',6):  return 1;
+    case RP('B',8):  return 2;
+    case RP('B',15): return 3;
+    case RP('D',4):  return 4;
+    case RP('B',0):  return 5;
+    case RP('E',3):  return 6;
+    case RP('B',7):  return 7;
+    case RP('F',12): return 9;
+    case RP('D',12): return 10;
+    case RP('F',8):  return 11;
+    case RP('C',3):  return 12;
+    case RP('E',9):  return 13;
+    }
+    printf ("spi: cannot map SDI pin %c%d, group 3\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map4(int pin)
+{
+    switch (pin) {
+    case RP('D',1):  return 0;
+    case RP('G',9):  return 1;
+    case RP('B',14): return 2;
+    case RP('D',0):  return 3;
+    case RP('B',6):  return 5;
+    case RP('D',5):  return 6;
+    case RP('B',2):  return 7;
+    case RP('F',3):  return 8;
+    case RP('F',13): return 9;
+    case RP('F',2):  return 11;
+    case RP('C',2):  return 12;
+    case RP('E',8):  return 13;
+    }
+    printf ("spi: cannot map SDI pin %c%d, group 3\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+/*
+ * Assign SDIx signal to specified pin.
+ */
+static void assign_sdi(int channel, int pin)
+{
+    switch (channel) {
+    case 0: SDI1R = gpio_input_map1(pin); break;
+    case 1: SDI2R = gpio_input_map2(pin); break;
+    case 2: SDI3R = gpio_input_map1(pin); break;
+    case 3: SDI4R = gpio_input_map2(pin); break;
+    case 4: SDI5R = gpio_input_map1(pin); break;
+    case 5: SDI6R = gpio_input_map4(pin); break;
+    }
+}
+
+static int output_map1 (unsigned channel)
+{
+    switch (channel) {
+    case 0: return 5;   // 0101 = SDO1
+    case 1: return 6;   // 0110 = SDO2
+    case 2: return 7;   // 0111 = SDO3
+    case 4: return 9;   // 1001 = SDO5
+    }
+    printf ("spi%u: cannot map SDO pin, group 1\n", channel);
+    return 0;
+}
+
+static int output_map2 (unsigned channel)
+{
+    switch (channel) {
+    case 0: return 5;   // 0101 = SDO1
+    case 1: return 6;   // 0110 = SDO2
+    case 2: return 7;   // 0111 = SDO3
+    case 3: return 8;   // 1000 = SDO4
+    case 4: return 9;   // 1001 = SDO5
+    }
+    printf ("spi%u: cannot map SDO pin, group 2\n", channel);
+    return 0;
+}
+
+static int output_map3 (unsigned channel)
+{
+    switch (channel) {
+    case 5: return 10;  // 1010 = SDO6
+    }
+    printf ("spi%u: cannot map SDO pin, group 3\n", channel);
+    return 0;
+}
+
+static int output_map4 (unsigned channel)
+{
+    switch (channel) {
+    case 3: return 8;   // 1000 = SDO4
+    case 5: return 10;  // 1010 = SDO6
+    }
+    printf ("spi%u: cannot map SDO pin, group 4\n", channel);
+    return 0;
+}
+
+/*
+ * Assign SDOx signal to specified pin.
+ */
+static void assign_sdo(int channel, int pin)
+{
+    switch (pin) {
+    case RP('A',14): RPA14R = output_map1(channel); return;
+    case RP('A',15): RPA15R = output_map2(channel); return;
+    case RP('B',0):  RPB0R  = output_map3(channel); return;
+    case RP('B',10): RPB10R = output_map1(channel); return;
+    case RP('B',14): RPB14R = output_map4(channel); return;
+    case RP('B',15): RPB15R = output_map3(channel); return;
+    case RP('B',1):  RPB1R  = output_map2(channel); return;
+    case RP('B',2):  RPB2R  = output_map4(channel); return;
+    case RP('B',3):  RPB3R  = output_map2(channel); return;
+    case RP('B',5):  RPB5R  = output_map1(channel); return;
+    case RP('B',6):  RPB6R  = output_map4(channel); return;
+    case RP('B',7):  RPB7R  = output_map3(channel); return;
+    case RP('B',8):  RPB8R  = output_map3(channel); return;
+    case RP('B',9):  RPB9R  = output_map1(channel); return;
+    case RP('C',13): RPC13R = output_map2(channel); return;
+    case RP('C',14): RPC14R = output_map1(channel); return;
+    case RP('C',1):  RPC1R  = output_map1(channel); return;
+    case RP('C',2):  RPC2R  = output_map4(channel); return;
+    case RP('C',3):  RPC3R  = output_map3(channel); return;
+    case RP('C',4):  RPC4R  = output_map2(channel); return;
+    case RP('D',0):  RPD0R  = output_map4(channel); return;
+    case RP('D',10): RPD10R = output_map1(channel); return;
+    case RP('D',11): RPD11R = output_map2(channel); return;
+    case RP('D',12): RPD12R = output_map3(channel); return;
+    case RP('D',14): RPD14R = output_map1(channel); return;
+    case RP('D',15): RPD15R = output_map2(channel); return;
+    case RP('D',1):  RPD1R  = output_map4(channel); return;
+    case RP('D',2):  RPD2R  = output_map1(channel); return;
+    case RP('D',3):  RPD3R  = output_map2(channel); return;
+    case RP('D',4):  RPD4R  = output_map3(channel); return;
+    case RP('D',5):  RPD5R  = output_map4(channel); return;
+    case RP('D',6):  RPD6R  = output_map1(channel); return;
+    case RP('D',7):  RPD7R  = output_map2(channel); return;
+    case RP('D',9):  RPD9R  = output_map3(channel); return;
+    case RP('E',3):  RPE3R  = output_map3(channel); return;
+    case RP('E',5):  RPE5R  = output_map2(channel); return;
+    case RP('E',8):  RPE8R  = output_map4(channel); return;
+    case RP('E',9):  RPE9R  = output_map3(channel); return;
+    case RP('F',0):  RPF0R  = output_map2(channel); return;
+    case RP('F',12): RPF12R = output_map3(channel); return;
+    case RP('F',13): RPF13R = output_map4(channel); return;
+    case RP('F',1):  RPF1R  = output_map1(channel); return;
+    case RP('F',2):  RPF2R  = output_map4(channel); return;
+    case RP('F',3):  RPF3R  = output_map4(channel); return;
+    case RP('F',4):  RPF4R  = output_map1(channel); return;
+    case RP('F',5):  RPF5R  = output_map2(channel); return;
+    case RP('F',8):  RPF8R  = output_map3(channel); return;
+    case RP('G',0):  RPG0R  = output_map2(channel); return;
+    case RP('G',1):  RPG1R  = output_map1(channel); return;
+    case RP('G',6):  RPG6R  = output_map3(channel); return;
+    case RP('G',7):  RPG7R  = output_map2(channel); return;
+    case RP('G',8):  RPG8R  = output_map1(channel); return;
+    case RP('G',9):  RPG9R  = output_map4(channel); return;
+    }
+    printf ("spi%u: cannot map SDO pin %c%d\n",
+        channel, pin_name[pin>>4], pin & 15);
+
+}
+
 /*
  * Test to see if device is present.
  * Return true if found and initialized ok.
+ * SPI ports are always present, if configured.
  */
 static int
 spiprobe(config)
     struct scsi_device *config;
 {
-    int unit = config->sd_unit - 1;
+    int channel = config->sd_unit - 1;
+    struct spiio *io = &spitab[channel];
+    int sdi = config->sd_flags >> 8 & 0xFF;
+    int sdo = config->sd_flags & 0xFF;
+    int sck;
+    static const int sck_tab[6] = {
+        RP('D',1),  /* SCK1 */
+        RP('G',6),  /* SCK2 */
+        RP('B',14), /* SCK3 */
+        RP('D',10), /* SCK4 */
+        RP('F',13), /* SCK5 */
+        RP('D',15), /* SCK6 */
+    };
 
-    if (unit < 0 || unit >= NSPI)
+    if (channel < 0 || channel >= NSPI)
         return 0;
+    sck = sck_tab[channel];
+    printf ("spi%u: pins SDI=%c%d, SDO=%c%d, SCK=%c%d\n", channel,
+        pin_name[sdi>>4], sdi & 15,
+        pin_name[sdo>>4], sdo & 15,
+        pin_name[sck>>4], sck & 15);
 
-    // TODO
+    // Assign SDI and SDO pins.
+    assign_sdi (channel, sdi);
+    assign_sdo (channel, sdo);
 
-    printf ("spi%u: sdi/sdo pins %c%d, %c%d\n",
-        unit, ???);
+    io->reg = spi_base[channel];
+    spi_setup(io, 0, 0);
     return 1;
 }
 
@@ -750,8 +977,8 @@ spiprobe(config)
 * Check for interrupts from all devices.
 */
 void
-spiintr(unit)
-    register int unit;
+spiintr(channel)
+    register int channel;
 {
     // TODO
 }

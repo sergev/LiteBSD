@@ -34,9 +34,10 @@ struct spiio {
 
 /*
  * Setup SPI connection on a given port (0..5) with a specified chip select pin.
- * Use default speed
+ * Use default speed.
+ * Return 0 if the SPI port is not configured.
  */
-void spi_setup(struct spiio *io, int port, int pin);
+int spi_setup(struct spiio *io, int port, int pin);
 
 /*
  * Set the SPI bit rate for a device (in kHz).
@@ -127,20 +128,20 @@ void spi_bulk_rw(struct spiio *io, unsigned int nbytes, unsigned char *data);
 /*
  * Transmit a chunk of 16-bit data.
  */
-void spi_bulk_write16(struct spiio *io, unsigned int nbytes, short *data);
-void spi_bulk_read16(struct spiio *io, unsigned int nbytes, short *data);
-void spi_bulk_rw16(struct spiio *io, unsigned int nbytes, short *data);
+void spi_bulk_write16(struct spiio *io, unsigned int nelem, short *data);
+void spi_bulk_read16(struct spiio *io, unsigned int nelem, short *data);
+void spi_bulk_rw16(struct spiio *io, unsigned int nelem, short *data);
 
 /*
  * Transmit a chunk of 32-bit data.
  */
-void spi_bulk_write32(struct spiio *io, unsigned int nbytes, int *data);
-void spi_bulk_read32(struct spiio *io, unsigned int nbytes, int *data);
-void spi_bulk_rw32(struct spiio *io, unsigned int nbytes, int *data);
+void spi_bulk_write32(struct spiio *io, unsigned int nelem, int *data);
+void spi_bulk_read32(struct spiio *io, unsigned int nelem, int *data);
+void spi_bulk_rw32(struct spiio *io, unsigned int nelem, int *data);
 
 /*
  * Transmit a chunk of 32-bit data with reversed endianness.
  */
-void spi_bulk_write32_be(struct spiio *io, unsigned int nbytes, int *data);
-void spi_bulk_read32_be(struct spiio *io, unsigned int nbytes, int *data);
-void spi_bulk_rw32_be(struct spiio *io, unsigned int nbytes, int *data);
+void spi_bulk_write32_be(struct spiio *io, unsigned int nelem, int *data);
+void spi_bulk_read32_be(struct spiio *io, unsigned int nelem, int *data);
+void spi_bulk_rw32_be(struct spiio *io, unsigned int nelem, int *data);
