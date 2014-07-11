@@ -873,9 +873,6 @@ boot(howto)
     }
 
     for (;;) {
-        /* Magic opcode to stop the simulator. */
-        asm volatile ("sltiu $zero, 0xabc2");
-
         asm volatile ("wait");
     }
     /*NOTREACHED*/

@@ -958,7 +958,7 @@ spiprobe(config)
     if (channel < 0 || channel >= NSPI)
         return 0;
     sck = sck_tab[channel];
-    printf ("spi%u at pins SDI=%c%d,SDO=%c%d,SCK=%c%d\n", channel,
+    printf ("spi%u at pins sdi=%c%d/sdo=%c%d/sck=%c%d\n", channel,
         pin_name[sdi>>4], sdi & 15,
         pin_name[sdo>>4], sdo & 15,
         pin_name[sck>>4], sck & 15);

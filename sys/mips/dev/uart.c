@@ -42,7 +42,7 @@ typedef struct {
 #if NUART > 6
 #error Max 6 UARTs supported.
 #endif
-uart_regmap_t *const uart[6] = {
+static uart_regmap_t *const uart_base[6] = {
     (uart_regmap_t*) &U1MODE,
     (uart_regmap_t*) &U2MODE,
     (uart_regmap_t*) &U3MODE,
@@ -57,7 +57,7 @@ struct uart_irq {
     int tx;
 };
 
-const struct uart_irq uartirq[6] = {
+static const struct uart_irq uartirq[6] = {
     { PIC32_IRQ_U1E, PIC32_IRQ_U1RX, PIC32_IRQ_U1TX },
     { PIC32_IRQ_U2E, PIC32_IRQ_U2RX, PIC32_IRQ_U2TX },
     { PIC32_IRQ_U3E, PIC32_IRQ_U3RX, PIC32_IRQ_U3TX },
@@ -119,7 +119,7 @@ uartparam(tp, t)
     struct termios *t;
 {
     int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     unsigned rxirq = uartirq[unit].rx;
     unsigned cflag = t->c_cflag;
     unsigned mode;
@@ -179,7 +179,7 @@ uartstart(tp)
     struct tty *tp;
 {
     int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     unsigned txirq = uartirq[unit].tx;
     int c, s;
 
@@ -275,7 +275,7 @@ uartclose(dev, flag, mode, p)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
 
     if (reg->sta & PIC32_USTA_UTXBRK) {
         /* Stop sending break. */
@@ -331,7 +331,7 @@ uartioctl(dev, cmd, data, flag, p)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     int error;
 
     error = (*linesw[tp->t_line].l_ioctl)(tp, cmd, data, flag, p);
@@ -382,7 +382,7 @@ uartstop(tp, flag)
     struct tty *tp;
 {
     int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     int s;
 
     s = spltty();
@@ -403,7 +403,7 @@ uartintr(dev)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     unsigned rxirq = uartirq[unit].rx;
     unsigned txirq = uartirq[unit].tx;
     unsigned erirq = uartirq[unit].er;
@@ -441,10 +441,14 @@ uartGetc(dev)
     dev_t dev;
 {
     int unit = minor(dev);
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = uart_tty[unit].t_sc;
     unsigned rxirq = uartirq[unit].rx;
     unsigned erirq = uartirq[unit].er;
     int s, c;
+
+    /* Check whether the port is configured. */
+    if (! reg)
+        return -1;
 
     s = spltty();
     for (;;) {
@@ -470,9 +474,13 @@ uartPutc(dev, c)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = uart[unit];
+    uart_regmap_t *reg = tp->t_sc;
     unsigned txirq = uartirq[unit].tx;
     int timo, s;
+
+    /* Check whether the port is configured. */
+    if (! reg)
+        return;
 
     s = spltty();
 again:
@@ -633,12 +641,13 @@ uartprobe(config)
 
     if (unit < 0 || unit >= NUART)
         return 0;
-    reg = uart[unit];
+    reg = uart_base[unit];
 
     tp = &uart_tty[unit];
     tp->t_dev = unit;
+    tp->t_sc = reg;
 
-    printf("uart%d at pins RX=%c%d,TX=%c%d - interrupts %u,%u,%u\n",
+    printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u\n",
         unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
         uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
 
