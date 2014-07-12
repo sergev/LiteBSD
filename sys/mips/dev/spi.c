@@ -97,13 +97,15 @@ static const char pin_name[16] = "?ABCDEFGHJK?????";
  * Setup SPI connection in default mode.
  * Use further function calls to set baud rate, clock phase, etc.
  */
-int spi_setup(struct spiio *io, int port, int pin)
+int spi_setup(struct spiio *io, int unit, int pin)
 {
+    int channel = unit - 1;
+
     // Set up the device
-    if (port >= NSPI)
+    if (channel < 0 || channel >= NSPI)
         return ENXIO;
 
-    io->reg = spitab[port].reg;
+    io->reg = spitab[channel].reg;
     if (! io->reg)
         return ENXIO;
 
@@ -939,12 +941,12 @@ static void assign_sdo(int channel, int pin)
  */
 static int
 spiprobe(config)
-    struct scsi_device *config;
+    struct mips_ctlr *config;
 {
-    int channel = config->sd_unit - 1;
+    int channel = config->mips_unit - 1;
     struct spiio *io = &spitab[channel];
-    int sdi = config->sd_flags >> 8 & 0xFF;
-    int sdo = config->sd_flags & 0xFF;
+    int sdi = config->mips_flags >> 8 & 0xFF;
+    int sdo = config->mips_flags & 0xFF;
     int sck;
     static const int sck_tab[6] = {
         RP('D',1),  /* SCK1 */
@@ -958,7 +960,7 @@ spiprobe(config)
     if (channel < 0 || channel >= NSPI)
         return 0;
     sck = sck_tab[channel];
-    printf ("spi%u at pins sdi=%c%d/sdo=%c%d/sck=%c%d\n", channel,
+    printf ("spi%u at pins sdi=%c%d/sdo=%c%d/sck=%c%d\n", channel+1,
         pin_name[sdi>>4], sdi & 15,
         pin_name[sdo>>4], sdo & 15,
         pin_name[sck>>4], sck & 15);

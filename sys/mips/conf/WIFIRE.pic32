@@ -52,10 +52,10 @@ config		vmunix root on sd0a swap on sd0b dumps on sd0b
 device		uart1   flags 0x4e4f    # pins rx=RD14, tx=RD15 - logical 39/40
 device		uart4   flags 0x6268    # pins rx=RF2,  tx=RF8  - serial-to-USB converter
 
-controller	spi1    flags 0x3161    # pins rx=RC1,  tx=RF1 - logical 35/36/5
-controller	spi2    flags 0x4b60    # pins rx=RD11, tx=RF0 - logical 11/12/13
-controller	spi3    flags 0x2a34    # pins rx=RB10, tx=RC4 - SD card
-controller	spi4    flags 0x6570    # pins rx=RF5,  tx=RG0 - Wi-Fi interface
+controller	spi1    flags 0x6131    # pins sdi=RF1,  sdo=RC1  - logical 36/35/5
+controller	spi2    flags 0x604b    # pins sdi=RF0,  sdo=RD11 - logical 12/11/13
+controller	spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - SD card
+controller	spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
 
 disk		sd0	at spi3 drive 0 flags 0x33      # select pin RC3
 #disk		sd1	at spi3 drive 1 flags 0x26      # select pin RB6

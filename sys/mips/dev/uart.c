@@ -113,7 +113,7 @@ uartmctl(dev, bits, how)
 /*
  * Set parameters of tty device, as specified by termios data structure.
  */
-static int
+int
 uartparam(tp, t)
     struct tty *tp;
     struct termios *t;
@@ -123,6 +123,13 @@ uartparam(tp, t)
     unsigned rxirq = uartirq[unit].rx;
     unsigned cflag = t->c_cflag;
     unsigned mode;
+
+    /* Check whether the port is configured. */
+    if (! reg) {
+        if (tp->t_dev != cn_dev)
+            return;
+        reg = uart_base[unit];
+    }
 
     /* Receive speed must be equal to transmit speed. */
     if (t->c_ispeed && t->c_ispeed != t->c_ospeed) {
@@ -447,8 +454,11 @@ uartGetc(dev)
     int s, c;
 
     /* Check whether the port is configured. */
-    if (! reg)
-        return -1;
+    if (! reg) {
+        if (dev != cn_dev)
+            return -1;
+        reg = uart_base[unit];
+    }
 
     s = spltty();
     for (;;) {
@@ -479,8 +489,12 @@ uartPutc(dev, c)
     int timo, s;
 
     /* Check whether the port is configured. */
-    if (! reg)
-        return;
+    if (! reg) {
+        if (dev != cn_dev)
+            return;
+        tp = 0;
+        reg = uart_base[unit];
+    }
 
     s = spltty();
 again:
@@ -492,9 +506,9 @@ again:
     while (! (reg->sta & PIC32_USTA_TRMT))
         if (--timo == 0)
             break;
-    if (tp->t_state & TS_BUSY) {
-            uartintr (dev);
-            goto again;
+    if (tp && tp->t_state & TS_BUSY) {
+        uartintr (dev);
+        goto again;
     }
     reg->txreg = (unsigned char) c;
 
@@ -647,9 +661,12 @@ uartprobe(config)
     tp->t_dev = unit;
     tp->t_sc = reg;
 
-    printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u\n",
+    printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u",
         unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
         uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
+    if (CONS_MAJOR == 17 && CONS_MINOR == unit)
+        printf(", console");
+    printf("\n");
 
     /* Reset chip. */
     reg->brg = 0;
@@ -661,22 +678,6 @@ uartprobe(config)
     assign_rx (unit, rx);
     assign_tx (unit, tx);
 
-    /*
-     * Special handling for consoles.
-     */
-    if (minor(cn_dev) == unit) {
-        struct tty ctty;
-        struct termios cterm;
-        int s;
-
-        s = spltty();
-        ctty.t_dev = cn_dev;
-        cterm.c_cflag = CS8;
-        cterm.c_ospeed = cterm.c_ispeed = TTYDEF_SPEED;
-        uartparam(&ctty, &cterm);
-        udelay(1000);
-        splx(s);
-    }
     return 1;
 }
 

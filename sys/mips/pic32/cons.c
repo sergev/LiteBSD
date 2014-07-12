@@ -75,7 +75,17 @@ dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
  */
 consinit()
 {
-    // TODO
+    int unit = minor(cn_dev);
+    struct tty ctty;
+    struct termios cterm;
+
+    ctty.t_dev = cn_dev;
+    ctty.t_sc = 0;
+    cterm.c_cflag = CS8;
+    cterm.c_ospeed = TTYDEF_SPEED;
+    cterm.c_ispeed = TTYDEF_SPEED;
+    uartparam(&ctty, &cterm);
+    udelay(1000);
 }
 
 cnopen(dev, flag, mode, p)
