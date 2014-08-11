@@ -76,8 +76,6 @@
 #include <machine/pic32mz.h>
 
 #include <mips/dev/device.h>
-#include <mips/dev/sccreg.h>
-#include <mips/dev/ascreg.h>
 
 /* the following is used externally (sysctl_hw) */
 char    machine[] = "MIPS";     /* cpu "architecture" */
