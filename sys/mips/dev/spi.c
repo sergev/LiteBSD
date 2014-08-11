@@ -474,7 +474,7 @@ void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
  */
 const char *spi_name(struct spiio *io)
 {
-    static const char *name[6] = { "SPI1", "SPI2", "SPI3", "SPI4", "SPI5", "SPI6" };
+    static const char *name[6] = { "spi1", "spi2", "spi3", "spi4", "spi5", "spi6" };
     int i;
 
     for (i=0; i<6; i++) {

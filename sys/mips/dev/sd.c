@@ -594,10 +594,10 @@ sdopen(dev, flags, mode, p)
 #if 1
             for (i=1; i<=NPARTITIONS; i++) {
                 if (u->dk_part[i].type != 0)
-                    printf ("rd%d%c: type %02X, start %u, length %u\n",
+                    printf ("sd%d%c: partition type %02x, sector %u, size %u kbytes\n",
                         unit, i+'a'-1, u->dk_part[i].type,
                         u->dk_part[i].lba_start,
-                        u->dk_part[i].lba_length);
+                        u->dk_part[i].lba_length / 2);
             }
 #endif
         }
@@ -804,7 +804,7 @@ sdprobe(config)
     spi_set_speed(io, SD_KHZ);
     spi_set(io, PIC32_SPICON_CKE);
 
-    printf ("sd%u: port %s, select pin %c%d\n", unit,
+    printf ("sd%u at port %s, pin cs=%c%d\n", unit,
         spi_name(io), spi_csname(io), spi_cspin(io));
     return 1;
 }
