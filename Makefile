@@ -10,7 +10,6 @@ build:
 	(cd include && make install)
 	make cleandir
 	(cd lib && make depend && make && make install)
-	(cd kerberosIV && make depend  && make && make install)
 	make depend && make && make install
-	
+
 .include <bsd.subdir.mk>

@@ -17,7 +17,7 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
-LIBC?=		/usr/lib/libc.a
+LIBC?=		/usr/lib/i386-linux-gnu/libc.a
 LIBCOMPAT?=	/usr/lib/libcompat.a
 LIBCURSES?=	/usr/lib/libcurses.a
 LIBDBM?=	/usr/lib/libdbm.a
@@ -33,7 +33,7 @@ LIBPLOT?=	/usr/lib/libplot.a
 LIBRESOLV?=	/usr/lib/libresolv.a
 LIBRPC?=	/usr/lib/sunrpc.a
 LIBTERM?=	/usr/lib/libterm.a
-LIBUTIL?=	/usr/lib/libutil.a
+LIBUTIL?=	/usr/lib/i386-linux-gnu/libutil.a
 
 .if defined(SHAREDSTRINGS)
 CLEANFILES+=strings

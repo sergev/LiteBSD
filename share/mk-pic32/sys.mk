@@ -2,7 +2,7 @@
 
 unix		?=	We run UNIX.
 MACHINE_ARCH    =       mips
-MACHINE         =       pmax
+MACHINE         =       mips
 NOPROFILE       =       True
 
 .SUFFIXES: .out .a .ln .o .c .F .f .e .r .y .l .s .cl .p .h
