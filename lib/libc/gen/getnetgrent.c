@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)getnetgrent.c	8.2 (Berkeley) 4/27/95";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
 
 #define _PATH_NETGROUP "/etc/netgroup"

@@ -16,8 +16,9 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
-CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -I${DESTDIR}/usr/include
+CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -Werror -I${DESTDIR}/usr/include
 LDCROSS?=       -mips32r2 -EL -nostdlib
+ASCROSS?=       -mips32r2 -EL
 
 .MAIN: all
 
@@ -35,12 +36,12 @@ LDCROSS?=       -mips32r2 -EL -nostdlib
 	${MIPS_GCC_PREFIX}${CC} ${CCROSS} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
 
 .s.o:
-	${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
-	    ${MIPS_GCC_PREFIX}${AS} -o ${.TARGET}
+	${MIPS_GCC_PREFIX}${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${ASCROSS} ${.IMPSRC} | \
+	    ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.TARGET}
 
 .s.po:
-	${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
-	    ${MIPS_GCC_PREFIX}${AS} -o ${.TARGET}
+	${MIPS_GCC_PREFIX}${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${ASCROSS} ${.IMPSRC} | \
+	    ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.TARGET}
 
 MANALL=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8}
 manpages: ${MANALL}

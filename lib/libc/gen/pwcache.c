@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)pwcache.c	8.1 (Berkeley) 6/4/93";
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <string.h>
 #include <utmp.h>
 
 #define	NCACHE	64			/* power of 2 */

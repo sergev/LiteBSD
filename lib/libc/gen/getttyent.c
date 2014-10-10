@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)getttyent.c	8.1 (Berkeley) 6/4/93";
 
 static char zapchar;
 static FILE *tf;
+static char *skip(), *value();
 
 struct ttyent *
 getttynam(tty)
@@ -65,7 +66,6 @@ getttyent()
 	register char *p;
 #define	MAXLINELENGTH	100
 	static char line[MAXLINELENGTH];
-	static char *skip(), *value();
 
 	if (!tf && !setttyent())
 		return (NULL);

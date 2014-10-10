@@ -10,23 +10,21 @@ BINMODE?=	555
 
 _SUBDIRUSE: .USE
 	@for entry in ${SUBDIR}; do \
-		(if test -d ${.CURDIR}/$${entry}.${MACHINE}; then \
+		if test -d ${.CURDIR}/$${entry}.${MACHINE}; then \
 			echo "===> $${entry}.${MACHINE}"; \
-			cd ${.CURDIR}/$${entry}.${MACHINE}; \
+			${MAKE} -C ${.CURDIR}/$${entry}.${MACHINE} ${.TARGET:realinstall=install}; \
 		else \
 			echo "===> $$entry"; \
-			cd ${.CURDIR}/$${entry}; \
+			${MAKE} -C ${.CURDIR}/$${entry} ${.TARGET:realinstall=install}; \
 		fi; \
-		${MAKE} ${.TARGET:realinstall=install}); \
 	done
 
 ${SUBDIR}::
 	@if test -d ${.TARGET}.${MACHINE}; then \
-		cd ${.CURDIR}/${.TARGET}.${MACHINE}; \
+		${MAKE} -C ${.CURDIR}/${.TARGET}.${MACHINE} all; \
 	else \
-		cd ${.CURDIR}/${.TARGET}; \
-	fi; \
-	${MAKE} all
+		${MAKE} -C ${.CURDIR}/${.TARGET} all; \
+	fi
 
 .if !target(all)
 all: _SUBDIRUSE

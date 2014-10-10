@@ -1,4 +1,7 @@
 *.o
+*.po
 *.0
+*.a
+.depend
 
 DESTDIR

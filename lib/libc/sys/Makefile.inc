@@ -36,29 +36,22 @@ PSEUDO=	_exit.o _getlogin.o
 
 OBJS+=	${ASM} ${PSEUDO}
 POBJS+=	${ASM:.o=.po} ${PSEUDO:.o=.po}
-CLEANFILES+=${ASM} ${PSEUDO} ${POBJS} 
+CLEANFILES+=${ASM} ${PSEUDO} ${POBJS}
+AINC+=  -I${DESTDIR}/usr/include
 
 ${ASM}: ${.CURDIR}/${MACHINE}/SYS.h /usr/include/sys/syscall.h
 	@echo creating ${.PREFIX}.o ${.PREFIX}.po
 	@printf '#include "SYS.h"\nRSYSCALL(${.PREFIX})\n' | \
-	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${AS} -o ${.PREFIX}.o
-	@${LD} -x -r ${.PREFIX}.o
-	@mv a.out ${.PREFIX}.o
+	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.o
 	@printf '#include "SYS.h"\nRSYSCALL(${.PREFIX})\n' | \
-	    ${CPP} -DPROF ${CFLAGS:M-[ID]*} ${AINC} | ${AS} -o ${.PREFIX}.po
-	@${LD} -x -r ${.PREFIX}.po
-	@mv a.out ${.PREFIX}.po
+	    ${CPP} -DPROF ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.po
 
 ${PSEUDO}: ${.CURDIR}/${MACHINE}/SYS.h /usr/include/sys/syscall.h
 	@echo creating ${.PREFIX}.o ${.PREFIX}.po
 	@printf '#include "SYS.h"\nPSEUDO(${.PREFIX},${.PREFIX:S/_//})\n' | \
-	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${AS} -o ${.PREFIX}.o
-	@${LD} -x -r ${.PREFIX}.o
-	@mv a.out ${.PREFIX}.o
+	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.o
 	@printf '#include "SYS.h"\nPSEUDO(${.PREFIX},${.PREFIX:S/_//})\n' | \
-	    ${CPP} -DPROF ${CFLAGS:M-[ID]*} ${AINC} | ${AS} -o ${.PREFIX}.po
-	@${LD} -x -r ${.PREFIX}.po
-	@mv a.out ${.PREFIX}.po
+	    ${CPP} -DPROF ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.po
 
 MAN2+=	accept.0 access.0 acct.0 adjtime.0 bind.0 brk.0 chdir.0 chflags.0 \
 	chmod.0 chown.0 chroot.0 close.0 connect.0 dup.0 execve.0 _exit.0 \

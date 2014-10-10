@@ -138,4 +138,4 @@ const char *const sys_errlist[] = {
 	"Inappropriate file type or format",	/* 79 - EFTYPE */
 };
 int errno;
-const int sys_nerr = sizeof(sys_errlist) / sizeof(sys_errlist[0]);
+int sys_nerr = sizeof(sys_errlist) / sizeof(sys_errlist[0]);

@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)sysctl.c	8.2 (Berkeley) 1/4/94";
 #include <limits.h>
 #include <paths.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 int

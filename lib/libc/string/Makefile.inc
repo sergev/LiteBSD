@@ -13,70 +13,50 @@ SRCS+=	memccpy.c strcasecmp.c strcoll.c strdup.c strerror.c \
 .if empty(SRCS:Mbzero.s)
 OBJS+=	bzero.o
 bzero.o: memset.c
-	${CC} -DBZERO ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DBZERO ${CCROSS} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 
 bzero.po: memset.c
-	${CC} -DBZERO ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DBZERO ${CCROSS} ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
 .endif
 
 # If no machine specific memmove(3), build one out of bcopy(3).
 .if empty(SRCS:Mmemmove.s)
 OBJS+=	memmove.o
 memmove.o: bcopy.c
-	${CC} -DMEMMOVE ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DMEMMOVE ${CCROSS} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 
 memmove.po: bcopy.c
-	${CC} -DMEMMOVE ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DMEMMOVE ${CCROSS} ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
 .endif
 
 # If no machine specific memcpy(3), build one out of bcopy(3).
 .if empty(SRCS:Mmemcpy.s)
 OBJS+=	memcpy.o
 memcpy.o: bcopy.c
-	${CC} -DMEMCOPY ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DMEMCOPY ${CCROSS} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 
 memcpy.po: bcopy.c
-	${CC} -DMEMCOPY ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DMEMCOPY ${CCROSS} ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
 .endif
 
 # If no machine specific strchr(3), build one out of index(3).
 .if empty(SRCS:Mstrchr.s)
 OBJS+=	strchr.o
 strchr.o: index.c
-	${CC} -DSTRCHR ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DSTRCHR ${CCROSS} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 
 strchr.po: index.c
-	${CC} -DSTRCHR ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DSTRCHR ${CCROSS} ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
 .endif
 
 # If no machine specific strrchr(3), build one out of rindex(3).
 .if empty(SRCS:Mstrrchr.s)
 OBJS+=	strrchr.o
 strrchr.o: rindex.c
-	${CC} -DSTRRCHR ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
-	@${LD} -x -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DSTRRCHR ${CCROSS} ${CFLAGS} -c ${.ALLSRC} -o ${.TARGET}
 
 strrchr.po: rindex.c
-	${CC} -DSTRRCHR ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
-	@${LD} -X -r ${.TARGET}
-	@mv a.out ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -DSTRRCHR ${CCROSS} ${CFLAGS} -c -p ${.ALLSRC} -o ${.TARGET}
 .endif
 
 MAN3+=	bcmp.0 bcopy.0 bstring.0 bzero.0 ffs.0 index.0 memccpy.0 memchr.0 \

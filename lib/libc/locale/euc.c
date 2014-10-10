@@ -44,6 +44,7 @@ static char sccsid[] = "@(#)euc.c	8.1 (Berkeley) 6/4/93";
 #include <rune.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 rune_t	_EUC_sgetrune __P((const char *, size_t, char const **));

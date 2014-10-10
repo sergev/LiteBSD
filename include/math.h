@@ -36,24 +36,30 @@
 #ifndef	_MATH_H_
 #define	_MATH_H_
 
-#if defined(vax) || defined(tahoe)		/* DBL_MAX from float.h */
-#define	HUGE_VAL	1.701411834604692294E+38
-#else
-#define	HUGE_VAL	1e500			/* IEEE: positive infinity */
-#endif
+/* IEEE positive infinity (-HUGE_VAL is negative infinity).  */
+
+#if defined __GNUC__
+# define HUGE_VAL	(__builtin_huge_val())
+#else /* not GCC */
+
+# include <endian.h>
+
+typedef union { unsigned char __c[8]; double __d; } __huge_val_t;
+
+# if __BYTE_ORDER == __BIG_ENDIAN
+#  define __HUGE_VAL_bytes	{ 0x7f, 0xf0, 0, 0, 0, 0, 0, 0 }
+# endif
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+#  define __HUGE_VAL_bytes	{ 0, 0, 0, 0, 0, 0, 0xf0, 0x7f }
+# endif
+
+static __huge_val_t __huge_val = { __HUGE_VAL_bytes };
+# define HUGE_VAL	(__huge_val.__d)
+
+#endif	/* GCC.  */
 
 #if !defined(_ANSI_SOURCE) && !defined(_POSIX_SOURCE)
-#if defined(vax) || defined(tahoe)
-/*
- * HUGE for the VAX and Tahoe converts to the largest possible F-float value.
- * This implies an understanding of the conversion behavior of atof(3).  It
- * was defined to be the largest float so that overflow didn't occur when it
- * was assigned to a single precision number.  HUGE_VAL is strongly preferred.
- */
-#define	HUGE	1.701411733192644270E+38		
-#else
-#define	HUGE	HUGE_VAL
-#endif
+#define	HUGE		HUGE_VAL
 
 #define	M_E		2.7182818284590452354	/* e */
 #define	M_LOG2E		1.4426950408889634074	/* log 2e */
@@ -121,7 +127,7 @@ __pure	double	lgamma __P((double));
 __pure	double	log1p __P((double));
 __pure	double	logb __P((double));
 __pure	double	rint __P((double));
-__pure	double	scalb __P((double, int));
+__pure	double	scalb __P((double, double));
 __pure	double	y0 __P((double));
 __pure	double	y1 __P((double));
 __pure	double	yn __P((int, double));

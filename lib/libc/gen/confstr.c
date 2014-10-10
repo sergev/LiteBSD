@@ -41,6 +41,7 @@ static char sccsid[] = "@(#)confstr.c	8.1 (Berkeley) 6/4/93";
 #include <errno.h>
 #include <paths.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 size_t

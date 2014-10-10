@@ -80,11 +80,10 @@ _PROGSUBDIR: .USE
 	@for entry in ${SUBDIR}; do \
 		(echo "===> $$entry"; \
 		if test -d ${.CURDIR}/$${entry}.${MACHINE}; then \
-			cd ${.CURDIR}/$${entry}.${MACHINE}; \
+			${MAKE} -C ${.CURDIR}/$${entry}.${MACHINE} ${.TARGET:S/realinstall/install/:S/.depend/depend/}; \
 		else \
-			cd ${.CURDIR}/$${entry}; \
-		fi; \
-		${MAKE} ${.TARGET:S/realinstall/install/:S/.depend/depend/}); \
+			${MAKE} -C ${.CURDIR}/$${entry} ${.TARGET:S/realinstall/install/:S/.depend/depend/}; \
+		fi); \
 	done
 .endif
 

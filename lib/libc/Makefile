@@ -8,7 +8,6 @@
 LIB=c
 CFLAGS+=-DLIBC_SCCS -DSYSLIBC_SCCS
 AINC=	-I${.CURDIR}/${MACHINE}
-CLEANFILES+=tags
 
 .include "${.CURDIR}/db/Makefile.inc"
 .include "${.CURDIR}/compat-43/Makefile.inc"
@@ -22,6 +21,8 @@ CLEANFILES+=tags
 .include "${.CURDIR}/stdlib/Makefile.inc"
 .include "${.CURDIR}/string/Makefile.inc"
 .include "${.CURDIR}/sys/Makefile.inc"
+
+CLEANFILES+= tags ${MAN2} ${MAN3} ${MAN4} ${MAN7}
 
 KQSRCS=	adddi3.c anddi3.c ashldi3.c ashrdi3.c cmpdi2.c divdi3.c iordi3.c \
 	lshldi3.c lshrdi3.c moddi3.c muldi3.c negdi2.c notdi2.c qdivrem.c \
