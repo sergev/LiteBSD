@@ -14,7 +14,6 @@ MAN3=	curses.0
 beforeinstall:
 	-cd ${.CURDIR}; cmp -s curses.h ${DESTDIR}/usr/include/curses.h > \
 	    /dev/null 2>&1 || \
-	    install -c -o ${BINOWN} -g ${BINGRP} -m 444 curses.h \
-	    ${DESTDIR}/usr/include
+	    install -c -m 444 curses.h ${DESTDIR}/usr/include
 
 .include <bsd.lib.mk>

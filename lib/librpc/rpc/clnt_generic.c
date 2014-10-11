@@ -6,11 +6,11 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
@@ -18,11 +18,11 @@
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
@@ -37,10 +37,11 @@ static char sccsid[] = "@(#)clnt_generic.c 1.4 87/08/11 (C) 1987 SMI";
 #include <sys/socket.h>
 #include <sys/errno.h>
 #include <netdb.h>
+#include <strings.h>
 
 /*
  * Generic client creation: takes (hostname, program-number, protocol) and
- * returns client handle. Default options are set, which the user can 
+ * returns client handle. Default options are set, which the user can
  * change using the rpc equivalent of ioctl()'s.
  */
 CLIENT *
@@ -67,7 +68,7 @@ clnt_create(hostname, prog, vers, proto)
 		 * Only support INET for now
 		 */
 		rpc_createerr.cf_stat = RPC_SYSTEMERROR;
-		rpc_createerr.cf_error.re_errno = EAFNOSUPPORT; 
+		rpc_createerr.cf_error.re_errno = EAFNOSUPPORT;
 		return (NULL);
 	}
 	sin.sin_family = h->h_addrtype;
@@ -77,7 +78,7 @@ clnt_create(hostname, prog, vers, proto)
 	p = getprotobyname(proto);
 	if (p == NULL) {
 		rpc_createerr.cf_stat = RPC_UNKNOWNPROTO;
-		rpc_createerr.cf_error.re_errno = EPFNOSUPPORT; 
+		rpc_createerr.cf_error.re_errno = EPFNOSUPPORT;
 		return (NULL);
 	}
 	sock = RPC_ANYSOCK;
@@ -103,7 +104,7 @@ clnt_create(hostname, prog, vers, proto)
 		break;
 	default:
 		rpc_createerr.cf_stat = RPC_SYSTEMERROR;
-		rpc_createerr.cf_error.re_errno = EPFNOSUPPORT; 
+		rpc_createerr.cf_error.re_errno = EPFNOSUPPORT;
 		return (NULL);
 	}
 	return (client);

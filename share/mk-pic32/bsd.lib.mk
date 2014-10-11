@@ -16,9 +16,9 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
-CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -Werror -I${DESTDIR}/usr/include
-LDCROSS?=       -mips32r2 -EL -nostdlib
-ASCROSS?=       -mips32r2 -EL
+#CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -Werror -I${DESTDIR}/usr/include
+#LDCROSS?=       -mips32r2 -EL -nostdlib
+#ASCROSS?=       -mips32r2 -EL
 
 .MAIN: all
 
@@ -62,14 +62,14 @@ OBJS+=	${SRCS:R:S/$/.o/g}
 lib${LIB}.a:: ${OBJS}
 	@echo building standard ${LIB} library
 	@rm -f lib${LIB}.a
-	@${MIPS_GCC_PREFIX}${AR} cTq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
+	@${MIPS_GCC_PREFIX}${AR} cq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
 	${MIPS_GCC_PREFIX}ranlib lib${LIB}.a
 
 POBJS+=	${OBJS:.o=.po}
 lib${LIB}_p.a:: ${POBJS}
 	@echo building profiled ${LIB} library
 	@rm -f lib${LIB}_p.a
-	@${MIPS_GCC_PREFIX}${AR} cTq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
+	@${MIPS_GCC_PREFIX}${AR} cq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
 	${MIPS_GCC_PREFIX}ranlib lib${LIB}_p.a
 
 llib-l${LIB}.ln: ${SRCS}
@@ -107,15 +107,13 @@ beforeinstall:
 .endif
 
 realinstall: beforeinstall
-	ranlib lib${LIB}.a
-	install -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} lib${LIB}.a \
-	    ${DESTDIR}${LIBDIR}
-	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}.a
+	${MIPS_GCC_PREFIX}ranlib lib${LIB}.a
+	install -D lib${LIB}.a ${DESTDIR}${LIBDIR}/lib${LIB}.a
+	${MIPS_GCC_PREFIX}${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}.a
 .if !defined(NOPROFILE)
-	ranlib lib${LIB}_p.a
-	install -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    lib${LIB}_p.a ${DESTDIR}${LIBDIR}
-	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
+	${MIPS_GCC_PREFIX}ranlib lib${LIB}_p.a
+	install -D lib${LIB}_p.a ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
+	${MIPS_GCC_PREFIX}${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
 .endif
 #	install -c -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 #	    llib-l${LIB}.ln ${DESTDIR}${LINTLIBDIR}

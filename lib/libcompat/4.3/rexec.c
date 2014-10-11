@@ -43,6 +43,7 @@ static char sccsid[] = "@(#)rexec.c	8.1 (Berkeley) 6/4/93";
 #include <stdio.h>
 #include <netdb.h>
 #include <errno.h>
+#include <strings.h>
 
 extern	errno;
 char	*index();
@@ -93,7 +94,7 @@ retry:
 	} else {
 		char num[8];
 		int s2, sin2len;
-		
+
 		s2 = socket(AF_INET, SOCK_STREAM, 0);
 		if (s2 < 0) {
 			(void) close(s);

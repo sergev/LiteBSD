@@ -39,7 +39,7 @@
 static char sccsid[] = "@(#)kvm_mips.c	8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 /*
- * MIPS machine dependent routines for kvm.  Hopefully, the forthcoming 
+ * MIPS machine dependent routines for kvm.  Hopefully, the forthcoming
  * vm code will one day obsolete this module.
  */
 
@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)kvm_mips.c	8.1 (Berkeley) 6/4/93";
 #include <sys/user.h>
 #include <sys/proc.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <nlist.h>
 #include <kvm.h>
@@ -146,14 +147,14 @@ _kvm_kvatop(kd, va, pa)
 	addr = (u_long)(vm->Sysmap + ((va - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT));
 	/*
 	 * Can't use KREAD to read kernel segment table entries.
-	 * Fortunately it is 1-to-1 mapped so we don't have to. 
+	 * Fortunately it is 1-to-1 mapped so we don't have to.
 	 */
 	if (lseek(kd->pmfd, (off_t)addr, 0) < 0 ||
 	    read(kd->pmfd, (char *)&pte, sizeof(pte)) < 0)
 		goto invalid;
 	if (!(pte & PG_V))
 		goto invalid;
-	*pa = (pte & PG_FRAME) | offset;
+	*pa = (pte & PG_FRAME_MASK) | offset;
 	return (NBPG - offset);
 
 invalid:
@@ -198,7 +199,7 @@ _kvm_uvatop(kd, p, va, pa)
 	if (!(kva & PG_V))
 		goto invalid;
 	offset = va & PGOFSET;
-	*pa = (kva & PG_FRAME) | offset;
+	*pa = (kva & PG_FRAME_MASK) | offset;
 	return (NBPG - offset);
 
 invalid:

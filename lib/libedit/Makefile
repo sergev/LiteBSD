@@ -12,11 +12,11 @@ OSRCS=	chared.c common.c el.c emacs.c hist.c key.c map.c parse.c \
 SRCS=	editline.c tokenizer.c history.c
 
 CLEANFILES+=common.h emacs.h fcns.h help.h vi.h help.c fcns.c editline.c
-CFLAGS+=-I. -I${.CURDIR} 
+CFLAGS+=-I. -I${.CURDIR}
 CFLAGS+=#-DDEBUG_TTY -DDEBUG_KEY -DDEBUG_READ -DDEBUG -DDEBUG_REFRESH
 CFLAGS+=#-DDEBUG_PASTE
 
-AHDR=vi.h emacs.h common.h 
+AHDR=vi.h emacs.h common.h
 ASRC=${.CURDIR}/vi.c ${.CURDIR}/emacs.c ${.CURDIR}/common.c
 
 vi.h: vi.c makelist
@@ -34,7 +34,7 @@ fcns.h: ${AHDR} makelist
 fcns.c: ${AHDR} fcns.h makelist
 	sh ${.CURDIR}/makelist -fc ${AHDR} > ${.TARGET}
 
-help.c: ${ASRC} makelist 
+help.c: ${ASRC} makelist
 	sh ${.CURDIR}/makelist -bc ${ASRC} > ${.TARGET}
 
 help.h: ${ASRC} makelist
@@ -46,13 +46,12 @@ editline.c: ${OSRCS}
 .depend: vi.h emacs.h common.h fcns.h help.h help.c
 
 
-test:	libedit.a test.o 
+test:	libedit.a test.o
 	${CC} ${CFLAGS} ${.ALLSRC} -o ${.TARGET} libedit.a ${LDADD} -ltermcap
 
 beforeinstall:
 	-cd ${.CURDIR}; cmp -s histedit.h ${DESTDIR}/usr/include/histedit.h > \
 	    /dev/null 2>&1 || \
-	    install -c -o ${BINOWN} -g ${BINGRP} -m 444 histedit.h \
-	    ${DESTDIR}/usr/include
+	    install -c -m 444 histedit.h ${DESTDIR}/usr/include
 
 .include <bsd.lib.mk>

@@ -36,6 +36,7 @@ static char sccsid[] = "@(#)refresh.c	8.7 (Berkeley) 8/13/94";
 #endif /* not lint */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "curses.h"
 

@@ -61,8 +61,7 @@ MAN2+=	accept.0 access.0 acct.0 adjtime.0 bind.0 brk.0 chdir.0 chflags.0 \
 	getrusage.0 getsockname.0 getsockopt.0 gettimeofday.0 getuid.0 \
 	intro.0 ioctl.0 kill.0 ktrace.0 link.0 listen.0 lseek.0 \
 	mkdir.0 mkfifo.0 mknod.0 madvise.0 mincore.0 mlock.0 mmap.0 \
-	mount.0 mprotect.0 msync.0 munmap.0 \
-	nfssvc.0 open.0 pathconf.0 pipe.0 profil.0 ptrace.0 quotactl.0 \
+	mount.0 mprotect.0 msync.0 pathconf.0 \
 	munmap.0 nfssvc.0 open.0 pipe.0 profil.0 ptrace.0 quotactl.0 \
 	read.0 readlink.0 reboot.0 recv.0 rename.0 revoke.0 rmdir.0 \
 	select.0 send.0 setgroups.0 setpgid.0 setsid.0 setuid.0 shutdown.0 \

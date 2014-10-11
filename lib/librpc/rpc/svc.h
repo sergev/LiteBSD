@@ -6,23 +6,23 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
@@ -186,7 +186,7 @@ extern void	xprt_unregister();
 /*
  * When the service routine is called, it must first check to see if it
  * knows about the procedure;  if not, it should call svcerr_noproc
- * and return.  If so, it should deserialize its arguments via 
+ * and return.  If so, it should deserialize its arguments via
  * SVC_GETARGS (defined above).  If the deserialization does not work,
  * svcerr_decode should be called followed by a return.  Successful
  * decoding of the arguments should be followed the execution of the
@@ -197,7 +197,7 @@ extern void	xprt_unregister();
  * Note: do not confuse access-control failure with weak authentication!
  *
  * NB: In pure implementations of rpc, the caller always waits for a reply
- * msg.  This message is sent when svc_sendreply is called.  
+ * msg.  This message is sent when svc_sendreply is called.
  * Therefore pure service implementations should always call
  * svc_sendreply even if the function logically returns void;  use
  * xdr.h - xdr_void for the xdr routine.  HOWEVER, tcp based rpc allows
@@ -217,7 +217,7 @@ extern void	svcerr_progvers();
 extern void	svcerr_auth();
 extern void	svcerr_noprog();
 extern void	svcerr_systemerr();
-    
+
 /*
  * Lowest level dispatching -OR- who owns this process anyway.
  * Somebody has to wait for incoming requests and then call the correct
@@ -231,7 +231,7 @@ extern void	svcerr_systemerr();
 
 /*
  * Global keeper of rpc service descriptors in use
- * dynamic; must be inspected before each call to select 
+ * dynamic; must be inspected before each call to select
  */
 #ifdef FD_SETSIZE
 extern fd_set svc_fdset;
@@ -277,4 +277,4 @@ extern SVCXPRT *svctcp_create();
 
 
 
-#endif !__SVC_HEADER__
+#endif

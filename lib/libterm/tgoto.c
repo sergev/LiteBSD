@@ -35,6 +35,8 @@
 static char sccsid[] = "@(#)tgoto.c	8.1 (Berkeley) 6/4/93";
 #endif /* not lint */
 
+#include <string.h>
+
 #define	CTRL(c)	((c) & 037)
 
 #define MAXRETURNSIZE 64
@@ -114,7 +116,7 @@ toohard:
 			/* fall into... */
 
 		case '2':
-two:	
+two:
 			*dp++ = which / 10 | '0';
 one:
 			*dp++ = which % 10 | '0';

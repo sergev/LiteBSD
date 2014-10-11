@@ -53,7 +53,9 @@ static char sccsid[] = "@(#)kvm_proc.c	8.4 (Berkeley) 8/20/94";
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <strings.h>
 #include <nlist.h>
 #include <kvm.h>
 
@@ -95,11 +97,11 @@ kvm_readswap(kd, p, va, cnt)
 	 */
 	addr = head;
 	while (1) {
-		if (kvm_read(kd, addr, (char *)&vme, sizeof(vme)) != 
+		if (kvm_read(kd, addr, (char *)&vme, sizeof(vme)) !=
 		    sizeof(vme))
 			return (0);
 
-		if (va >= vme.start && va <= vme.end && 
+		if (va >= vme.start && va <= vme.end &&
 		    vme.object.vm_object != 0)
 			break;
 
@@ -113,7 +115,7 @@ kvm_readswap(kd, p, va, cnt)
 	offset = va - vme.start + vme.offset;
 	addr = (u_long)vme.object.vm_object;
 	while (1) {
-		if (kvm_read(kd, addr, (char *)&vmo, sizeof(vmo)) != 
+		if (kvm_read(kd, addr, (char *)&vmo, sizeof(vmo)) !=
 		    sizeof(vmo))
 			return (0);
 		addr = (u_long)vmo.shadow;
@@ -200,7 +202,7 @@ kvm_proclist(kd, what, arg, p, bp, maxcnt)
 			      &eproc.e_ucred);
 
 		switch(what) {
-			
+
 		case KERN_PROC_PID:
 			if (proc.p_pid != (pid_t)arg)
 				continue;
@@ -238,7 +240,7 @@ kvm_proclist(kd, what, arg, p, bp, maxcnt)
 		eproc.e_pgid = pgrp.pg_id;
 		eproc.e_jobc = pgrp.pg_jobc;
 		if (KREAD(kd, (u_long)pgrp.pg_session, &sess)) {
-			_kvm_err(kd, kd->program, "can't read session at %x", 
+			_kvm_err(kd, kd->program, "can't read session at %x",
 				pgrp.pg_session);
 			return (-1);
 		}
@@ -253,7 +255,7 @@ kvm_proclist(kd, what, arg, p, bp, maxcnt)
 			if (tty.t_pgrp != NULL) {
 				if (KREAD(kd, (u_long)tty.t_pgrp, &pgrp)) {
 					_kvm_err(kd, kd->program,
-						 "can't read tpgrp at &x", 
+						 "can't read tpgrp at &x",
 						tty.t_pgrp);
 					return (-1);
 				}
@@ -266,7 +268,7 @@ kvm_proclist(kd, what, arg, p, bp, maxcnt)
 		if (sess.s_leader == p)
 			eproc.e_flag |= EPROC_SLEADER;
 		if (proc.p_wmesg)
-			(void)kvm_read(kd, (u_long)proc.p_wmesg, 
+			(void)kvm_read(kd, (u_long)proc.p_wmesg,
 			    eproc.e_wmesg, WMESGLEN);
 
 #ifdef sparc
@@ -291,7 +293,7 @@ kvm_proclist(kd, what, arg, p, bp, maxcnt)
 			break;
 
 		case KERN_PROC_TTY:
-			if ((proc.p_flag & P_CONTROLT) == 0 || 
+			if ((proc.p_flag & P_CONTROLT) == 0 ||
 			     eproc.e_tdev != (dev_t)arg)
 				continue;
 			break;
@@ -349,7 +351,7 @@ kvm_getprocs(kd, op, arg, cnt)
 
 	if (kd->procbase != 0) {
 		free((void *)kd->procbase);
-		/* 
+		/*
 		 * Clear this pointer in case this call fails.  Otherwise,
 		 * kvm_close() will free it again.
 		 */
@@ -445,7 +447,7 @@ _kvm_realloc(kd, p, n)
 
 /*
  * Read in an argument vector from the user address space of process p.
- * addr if the user-space base address of narg null-terminated contiguous 
+ * addr if the user-space base address of narg null-terminated contiguous
  * strings.  This is used to read in both the command arguments and
  * environment strings.  Read at most maxcnt characters of strings.
  */
@@ -473,13 +475,13 @@ kvm_argv(kd, p, addr, narg, maxcnt)
 		 * Try to avoid reallocs.
 		 */
 		kd->argc = MAX(narg + 1, 32);
-		kd->argv = (char **)_kvm_malloc(kd, kd->argc * 
+		kd->argv = (char **)_kvm_malloc(kd, kd->argc *
 						sizeof(*kd->argv));
 		if (kd->argv == 0)
 			return (0);
 	} else if (narg + 1 > kd->argc) {
 		kd->argc = MAX(2 * kd->argc, narg + 1);
-		kd->argv = (char **)_kvm_realloc(kd, kd->argv, kd->argc * 
+		kd->argv = (char **)_kvm_realloc(kd, kd->argv, kd->argc *
 						sizeof(*kd->argv));
 		if (kd->argv == 0)
 			return (0);
@@ -588,7 +590,7 @@ proc_verify(kd, kernp, p)
 	 * Just read in the whole proc.  It's not that big relative
 	 * to the cost of the read system call.
 	 */
-	if (kvm_read(kd, kernp, (char *)&kernproc, sizeof(kernproc)) != 
+	if (kvm_read(kd, kernp, (char *)&kernproc, sizeof(kernproc)) !=
 	    sizeof(kernproc))
 		return (0);
 	return (p->p_pid == kernproc.p_pid &&
@@ -611,7 +613,7 @@ kvm_doargv(kd, kp, nchr, info)
 	/*
 	 * Pointers are stored at the top of the user stack.
 	 */
-	if (p->p_stat == SZOMB || 
+	if (p->p_stat == SZOMB ||
 	    kvm_uread(kd, p, USRSTACK - sizeof(arginfo), (char *)&arginfo,
 		      sizeof(arginfo)) != sizeof(arginfo))
 		return (0);
@@ -665,7 +667,7 @@ kvm_uread(kd, p, uva, buf, len)
 	while (len > 0) {
 		u_long pa;
 		register int cc;
-		
+
 		cc = _kvm_uvatop(kd, p, uva, &pa);
 		if (cc > 0) {
 			if (cc > len)

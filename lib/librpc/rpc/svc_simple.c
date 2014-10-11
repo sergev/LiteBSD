@@ -6,23 +6,23 @@
  * may copy or modify Sun RPC without charge, but are not authorized
  * to license or distribute it to anyone else except as part of a product or
  * program developed by the user.
- * 
+ *
  * SUN RPC IS PROVIDED AS IS WITH NO WARRANTIES OF ANY KIND INCLUDING THE
  * WARRANTIES OF DESIGN, MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE, OR ARISING FROM A COURSE OF DEALING, USAGE OR TRADE PRACTICE.
- * 
+ *
  * Sun RPC is provided with no support and without any obligation on the
  * part of Sun Microsystems, Inc. to assist in its use, correction,
  * modification or enhancement.
- * 
+ *
  * SUN MICROSYSTEMS, INC. SHALL HAVE NO LIABILITY WITH RESPECT TO THE
  * INFRINGEMENT OF COPYRIGHTS, TRADE SECRETS OR ANY PATENTS BY SUN RPC
  * OR ANY PART THEREOF.
- * 
+ *
  * In no event will Sun Microsystems, Inc. be liable for any lost revenue
  * or profits or other special, indirect and consequential damages, even if
  * Sun has been advised of the possibility of such damages.
- * 
+ *
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
@@ -31,7 +31,7 @@
 static char sccsid[] = "@(#)svc_simple.c 1.18 87/08/11 Copyr 1984 Sun Micro";
 #endif
 
-/* 
+/*
  * svc_simple.c
  * Simplified front end to rpc.
  *
@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)svc_simple.c 1.18 87/08/11 Copyr 1984 Sun Micro";
  */
 
 #include <stdio.h>
+#include <strings.h>
 #include <rpc/rpc.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -58,7 +59,7 @@ registerrpc(prognum, versnum, procnum, progname, inproc, outproc)
 	char *(*progname)();
 	xdrproc_t inproc, outproc;
 {
-	
+
 	if (procnum == NULLPROC) {
 		(void) fprintf(stderr,
 		    "can't reassign procedure number %d\n", NULLPROC);
@@ -72,7 +73,7 @@ registerrpc(prognum, versnum, procnum, progname, inproc, outproc)
 		}
 	}
 	(void) pmap_unset((u_long)prognum, (u_long)versnum);
-	if (!svc_register(transp, (u_long)prognum, (u_long)versnum, 
+	if (!svc_register(transp, (u_long)prognum, (u_long)versnum,
 	    universal, IPPROTO_UDP)) {
 	    	(void) fprintf(stderr, "couldn't register prog %d vers %d\n",
 		    prognum, versnum);
@@ -103,7 +104,7 @@ universal(rqstp, transp)
 	char xdrbuf[UDPMSGSIZE];
 	struct proglst *pl;
 
-	/* 
+	/*
 	 * enforce "procnum 0 is echo" convention
 	 */
 	if (rqstp->rq_proc == NULLPROC) {
@@ -140,4 +141,3 @@ universal(rqstp, transp)
 	(void) fprintf(stderr, "never registered prog %d\n", prog);
 	exit(1);
 }
-
