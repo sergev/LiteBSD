@@ -39,14 +39,14 @@ POBJS+=	${ASM:.o=.po} ${PSEUDO:.o=.po}
 CLEANFILES+=${ASM} ${PSEUDO} ${POBJS}
 AINC+=  -I${DESTDIR}/usr/include
 
-${ASM}: ${.CURDIR}/${MACHINE}/SYS.h /usr/include/sys/syscall.h
+${ASM}: ${.CURDIR}/${MACHINE}/SYS.h ${DESTDIR}/usr/include/sys/syscall.h
 	@echo creating ${.PREFIX}.o ${.PREFIX}.po
 	@printf '#include "SYS.h"\nRSYSCALL(${.PREFIX})\n' | \
 	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.o
 	@printf '#include "SYS.h"\nRSYSCALL(${.PREFIX})\n' | \
 	    ${CPP} -DPROF ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.po
 
-${PSEUDO}: ${.CURDIR}/${MACHINE}/SYS.h /usr/include/sys/syscall.h
+${PSEUDO}: ${.CURDIR}/${MACHINE}/SYS.h ${DESTDIR}/usr/include/sys/syscall.h
 	@echo creating ${.PREFIX}.o ${.PREFIX}.po
 	@printf '#include "SYS.h"\nPSEUDO(${.PREFIX},${.PREFIX:S/_//})\n' | \
 	    ${CPP} ${CFLAGS:M-[ID]*} ${AINC} | ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.PREFIX}.o

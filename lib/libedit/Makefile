@@ -34,7 +34,7 @@ fcns.h: ${AHDR} makelist
 fcns.c: ${AHDR} fcns.h makelist
 	sh ${.CURDIR}/makelist -fc ${AHDR} > ${.TARGET}
 
-help.c: ${ASRC} makelist
+help.c: ${ASRC} makelist help.h
 	sh ${.CURDIR}/makelist -bc ${ASRC} > ${.TARGET}
 
 help.h: ${ASRC} makelist

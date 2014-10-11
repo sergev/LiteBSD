@@ -17,29 +17,29 @@ BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
 
-LIBC?=		/usr/lib/libc.a
-LIBCOMPAT?=	/usr/lib/libcompat.a
-LIBCURSES?=	/usr/lib/libcurses.a
-LIBDBM?=	/usr/lib/libdbm.a
-LIBDES?=	/usr/lib/libdes.a
-LIBL?=		/usr/lib/libl.a
-LIBKDB?=	/usr/lib/libkdb.a
-LIBKRB?=	/usr/lib/libkrb.a
-LIBKVM?=	/usr/lib/libkvm.a
-LIBM?=		/usr/lib/libm.a
-LIBMP?=		/usr/lib/libmp.a
-LIBPC?=		/usr/lib/libpc.a
-LIBPLOT?=	/usr/lib/libplot.a
-LIBRESOLV?=	/usr/lib/libresolv.a
-LIBRPC?=	/usr/lib/sunrpc.a
-LIBTERM?=	/usr/lib/libterm.a
-LIBUTIL?=	/usr/lib/libutil.a
+LIBC?=		${DESTDIR}/usr/lib/libc.a
+LIBCOMPAT?=	${DESTDIR}/usr/lib/libcompat.a
+LIBCURSES?=	${DESTDIR}/usr/lib/libcurses.a
+LIBDBM?=	${DESTDIR}/usr/lib/libdbm.a
+LIBDES?=	${DESTDIR}/usr/lib/libdes.a
+LIBL?=		${DESTDIR}/usr/lib/libl.a
+LIBKDB?=	${DESTDIR}/usr/lib/libkdb.a
+LIBKRB?=	${DESTDIR}/usr/lib/libkrb.a
+LIBKVM?=	${DESTDIR}/usr/lib/libkvm.a
+LIBM?=		${DESTDIR}/usr/lib/libm.a
+LIBMP?=		${DESTDIR}/usr/lib/libmp.a
+LIBPC?=		${DESTDIR}/usr/lib/libpc.a
+LIBPLOT?=	${DESTDIR}/usr/lib/libplot.a
+LIBRESOLV?=	${DESTDIR}/usr/lib/libresolv.a
+LIBRPC?=	${DESTDIR}/usr/lib/sunrpc.a
+LIBTERM?=	${DESTDIR}/usr/lib/libterm.a
+LIBUTIL?=	${DESTDIR}/usr/lib/libutil.a
 
 .if defined(SHAREDSTRINGS)
 CLEANFILES+=strings
 .c.o:
-	${CC} -E ${CFLAGS} ${.IMPSRC} | xstr -c -
-	@${CC} ${CFLAGS} -c x.c -o ${.TARGET}
+	${MIPS_GCC_PREFIX}${CC} -E ${CFLAGS} ${.IMPSRC} | xstr -c -
+	@${MIPS_GCC_PREFIX}${CC} ${CFLAGS} -c x.c -o ${.TARGET}
 	@rm -f x.c
 .endif
 
@@ -49,14 +49,16 @@ CLEANFILES+=strings
 OBJS+=  ${SRCS:R:S/$/.o/g}
 
 ${PROG}: ${OBJS} ${LIBC} ${DPADD}
-	${CC} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD}
+	${MIPS_GCC_PREFIX}${CC} ${LDCROSS} ${LDFLAGS} \
+            -o ${.TARGET} ${OBJS} ${LDADD} -lc -lgcc
 
 .else defined(SRCS)
 
 SRCS= ${PROG}.c
 
 ${PROG}: ${SRCS} ${LIBC} ${DPADD}
-	${CC} ${CFLAGS} -o ${.TARGET} ${.CURDIR}/${SRCS} ${LDADD}
+	${MIPS_GCC_PREFIX}${CC} ${CCROSS} ${CFLAGS} ${LDCROSS} ${LDFLAGS} \
+            -o ${.TARGET} ${.CURDIR}/${SRCS} ${LDADD} -lc -lgcc
 
 MKDEP=	-p
 
@@ -108,7 +110,7 @@ cleandir: _PROGSUBDIR
 depend: .depend _PROGSUBDIR
 .depend: ${SRCS}
 .if defined(PROG)
-	mkdep ${MKDEP} ${CFLAGS:M-[ID]*} ${.ALLSRC:M*.c}
+	mkdep ${MKDEP} ${CFLAGS:M-[ID]*} ${INCCROSS} ${.ALLSRC:M*.c}
 .endif
 .endif
 
@@ -160,9 +162,9 @@ obj: _PROGSUBDIR
 .else
 obj: _PROGSUBDIR
 	@cd ${.CURDIR}; rm -rf obj; \
-	here=`pwd`; dest=/usr/obj/`echo $$here | sed 's,/usr/src/,,'`; \
+	here=`pwd`; dest=${DESTDIR}/usr/obj/`echo $$here | sed 's,/.*/src/,,'`; \
 	echo "$$here -> $$dest"; ln -s $$dest obj; \
-	if test -d /usr/obj -a ! -d $$dest; then \
+	if test -d ${DESTDIR}/usr/obj -a ! -d $$dest; then \
 		mkdir -p $$dest; \
 	else \
 		true; \
@@ -176,8 +178,8 @@ objdir: _PROGSUBDIR
 .else
 objdir: _PROGSUBDIR
 	@cd ${.CURDIR}; \
-	here=`pwd`; dest=/usr/obj/`echo $$here | sed 's,/usr/src/,,'`; \
-	if test -d /usr/obj -a ! -d $$dest; then \
+	here=`pwd`; dest=${DESTDIR}/usr/obj/`echo $$here | sed 's,/.*/src/,,'`; \
+	if test -d ${DESTDIR}/usr/obj -a ! -d $$dest; then \
 		mkdir -p $$dest; \
 	else \
 		true; \

@@ -16,8 +16,10 @@ gcrt0.o: crt0.s
 	${MIPS_GCC_PREFIX}${CPP} ${ASCROSS} -DMCRT0 ${.ALLSRC} | \
             ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o $@
 
-install:
+install: elf32-mips-le.ld
 	install -m 444 ${OBJS} ${DESTDIR}/usr/lib
+	install -m 444 elf32-mips-le.ld ${DESTDIR}/usr/lib
+	install -m 444 ${MIPS_GCC_ROOT}/lib/gcc/mips-sde-elf/*/el/sof/libgcc.a ${DESTDIR}/usr/lib
 
 depend lint tags:
 

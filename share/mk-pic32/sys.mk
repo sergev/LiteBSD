@@ -39,7 +39,7 @@ LDFLAGS		?=
 LINT		?=	lint
 LINTFLAGS	?=	-chapbx
 
-MAKE		?=	make
+MAKE		?=	${MAKE}
 
 PC		?=	pc
 PFLAGS		?=
@@ -52,8 +52,12 @@ SHELL		?=	sh
 YACC		?=	yacc
 YFLAGS		?=	-d
 
-CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -Werror -I${DESTDIR}/usr/include
-LDCROSS?=       -mips32r2 -EL -nostdlib
+MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
+INCCROSS        ?= -I${DESTDIR}/usr/include
+CCROSS          ?= -mips32r2 -EL -msoft-float -nostdinc -Werror ${INCCROSS}
+LDCROSS         ?= -mips32r2 -EL -nostdlib -nostartfiles \
+                   -T${DESTDIR}/usr/lib/elf32-mips-le.ld -L${DESTDIR}/usr/lib \
+                   ${DESTDIR}/usr/lib/crt0.o
 ASCROSS?=       -mips32r2 -EL
 
 .c:

@@ -40,7 +40,7 @@
 #include <machine/machAsmDefs.h>
 
 	.comm	environ, 4
-	.data
+	.sdata
 	.align	2
 	.globl	__progname
 __progname:
@@ -49,14 +49,15 @@ $L1:
 	.word	0		# null string plus padding
 	.text
 
-NON_LEAF(start, 24, ra)
+NON_LEAF(__start, 24, ra)
 	.set	noreorder
+        la      gp, _gp         # setup GP pointer
 	lw	s0, 0(sp)	# get argc from stack
 	addu	s1, sp, 4	# get pointer to argv
 	addu	s2, s1, 4	# skip null pointer on stack
 	sll	v0, s0, 2	# add number of argv pointers
 	addu	s2, s2, v0	# final pointer to environment list
-	sw	s2, environ	# save environment pointer
+	sw	s2, %gp_rel(environ)(gp)	# save environment pointer
 	subu	sp, sp, 24	# allocate standard frame
 	.mask	0x80000000, -4
 	sw	zero, 20(sp)	# clear return address for debugging
@@ -69,7 +70,7 @@ eprol:
 	la	a0, _mcleanup
 	jal	atexit		# atext(_mcleanup);
 	nop
-	sw	zero, errno
+	sw	zero, %gp_rel(errno)(gp)
 #endif
 	lw	a0, 0(s1)	# a0 = argv[0];
 	nop
@@ -81,7 +82,7 @@ eprol:
 	addu	v0, v0, 1
 	move	v0, s3		# v0 = argv[0];
 1:
-	sw	v0, __progname
+	sw	v0, %gp_rel(__progname)(gp)
 2:
 	move	a0, s0
 	move	a1, s1
@@ -91,7 +92,7 @@ eprol:
 	move	a0, v0
 	break	0
 	.set	reorder
-END(start)
+END(__start)
 
 #ifndef MCRT0
 LEAF(moncontrol)
