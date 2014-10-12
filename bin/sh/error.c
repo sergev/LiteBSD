@@ -51,7 +51,7 @@ static char sccsid[] = "@(#)error.c	8.2 (Berkeley) 5/4/95";
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
-
+#include <stdlib.h>
 
 /*
  * Code to handle exceptions in C.
@@ -71,7 +71,7 @@ char *commandname;
  */
 
 void
-exraise(e) 
+exraise(e)
 	int e;
 {
 	if (handler == NULL)
@@ -240,7 +240,7 @@ STATIC const struct errname errormsg[] = {
  */
 
 char *
-errmsg(e, action) 
+errmsg(e, action)
 	int e;
 	int action;
 {

@@ -41,7 +41,7 @@ clean cleandir:
 
 FILES?=	${SRCS}
 install:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 \
+	install -c -m 444 \
 	    Makefile ${FILES} ${EXTRA} ${DESTDIR}${BINDIR}/${DIR}
 
 spell: ${SRCS}

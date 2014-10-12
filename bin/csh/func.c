@@ -348,7 +348,7 @@ gotolab(lab)
     zlast = T_GOTO;
     for (wp = whyles; wp; wp = wp->w_next)
 	if (wp->w_end.type == F_SEEK && wp->w_end.f_seek == 0) {
-	    search(T_BREAK, 0, NULL);
+	    search(T_BRK, 0, NULL);
 	    btell(&wp->w_end);
 	}
 	else
@@ -515,7 +515,7 @@ preread()
 	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
     }
 
-    search(T_BREAK, 0, NULL);		/* read the expression in */
+    search(T_BRK, 0, NULL);		/* read the expression in */
     if (setintr)
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
     btell(&whyles->w_end);
@@ -673,12 +673,12 @@ search(type, level, goal)
 
 	case T_FOREACH:
 	case T_WHILE:
-	    if (type == T_BREAK)
+	    if (type == T_BRK)
 		level++;
 	    break;
 
 	case T_END:
-	    if (type == T_BREAK)
+	    if (type == T_BRK)
 		level--;
 	    break;
 
@@ -800,7 +800,7 @@ past:
     case T_SWITCH:
 	stderror(ERR_NAME | ERR_NOTFOUND, "endsw");
 
-    case T_BREAK:
+    case T_BRK:
 	stderror(ERR_NAME | ERR_NOTFOUND, "end");
 
     case T_GOTO:
@@ -842,7 +842,7 @@ static void
 toend()
 {
     if (whyles->w_end.type == F_SEEK && whyles->w_end.f_seek == 0) {
-	search(T_BREAK, 0, NULL);
+	search(T_BRK, 0, NULL);
 	btell(&whyles->w_end);
 	whyles->w_end.f_seek--;
     }
@@ -869,12 +869,12 @@ wfree()
 	if (wp->w_end.type != I_SEEK && wp->w_start.type == wp->w_end.type &&
 	    wp->w_start.type == o.type) {
 	    if (wp->w_end.type == F_SEEK) {
-		if (o.f_seek >= wp->w_start.f_seek && 
+		if (o.f_seek >= wp->w_start.f_seek &&
 		    (wp->w_end.f_seek == 0 || o.f_seek < wp->w_end.f_seek))
 		    break;
 	    }
 	    else {
-		if (o.a_seek >= wp->w_start.a_seek && 
+		if (o.a_seek >= wp->w_start.a_seek &&
 		    (wp->w_end.a_seek == 0 || o.a_seek < wp->w_end.a_seek))
 		    break;
 	    }

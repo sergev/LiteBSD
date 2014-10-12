@@ -371,7 +371,7 @@ extern int nsrchn;
 /*
  * The keywords for the parser
  */
-#define	T_BREAK		0
+#define	T_BRK		0
 #define	T_BRKSW		1
 #define	T_CASE		2
 #define	T_DEFAULT 	3

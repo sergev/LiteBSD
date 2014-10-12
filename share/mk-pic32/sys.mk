@@ -1,40 +1,39 @@
 #	@(#)sys.mk	8.2 (Berkeley) 3/21/94
 
-unix		?=	We run UNIX.
-MACHINE_ARCH    =       mips
-MACHINE         =       mips
-NOPROFILE       =       True
+unix		?= We run UNIX.
+MACHINE_ARCH    =  mips
+MACHINE         =  mips
+NOPROFILE       =  True
 
 .SUFFIXES: .out .a .ln .o .c .F .f .e .r .y .l .s .cl .p .h
 
 .LIBS:		.a
 
-AR		?=	ar
-ARFLAGS		?=	rl
-RANLIB		?=	ranlib
+GCC_PREFIX      ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
 
-AS		?=	as
+AR		?= ${GCC_PREFIX}ar
+ARFLAGS		?= rl
+RANLIB		?= ${GCC_PREFIX}ranlib
+
+AS		?= ${GCC_PREFIX}as -mips32r2 -EL
 AFLAGS		?=
 
-CC		?=	gcc
+CC		?= ${GCC_PREFIX}gcc -mips32r2 -EL
+USRINCLUDE      ?= -I${DESTDIR}/usr/include
+CFLAGS		?= -msoft-float -nostdinc -Werror -Os ${USRINCLUDE}
 
-.if ${MACHINE} == "sparc"
-CFLAGS		?=	-O4
-.else
-CFLAGS		?=	-O2
-.endif
+CPP		?= ${GCC_PREFIX}cpp
 
-CPP		?=	cpp
-
-FC		?=	f77
-FFLAGS		?=	-O
+FC		?= f77
+FFLAGS		?= -O
 EFLAGS		?=
 
-LEX		?=	lex
+LEX		?= flex
 LFLAGS		?=
 
-LD		?=	ld
-LDFLAGS		?=
+LD		?= ${GCC_PREFIX}ld -mips32r2 -EL
+LDFLAGS		?= -nostdlib -nostartfiles -L${DESTDIR}/usr/lib \
+                   ${DESTDIR}/usr/lib/crt0.o
 
 LINT		?=	lint
 LINTFLAGS	?=	-chapbx
@@ -49,16 +48,8 @@ RFLAGS		?=
 
 SHELL		?=	sh
 
-YACC		?=	yacc
+YACC		?=	byacc
 YFLAGS		?=	-d
-
-MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
-INCCROSS        ?= -I${DESTDIR}/usr/include
-CCROSS          ?= -mips32r2 -EL -msoft-float -nostdinc -Werror ${INCCROSS}
-LDCROSS         ?= -mips32r2 -EL -nostdlib -nostartfiles \
-                   -T${DESTDIR}/usr/lib/elf32-mips-le.ld -L${DESTDIR}/usr/lib \
-                   ${DESTDIR}/usr/lib/crt0.o
-ASCROSS?=       -mips32r2 -EL
 
 .c:
 	${CC} ${CFLAGS} ${.IMPSRC} -o ${.TARGET}

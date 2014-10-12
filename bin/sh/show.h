@@ -33,6 +33,7 @@
  *	@(#)show.h	1.1 (Berkeley) 5/4/95
  */
 
+union node;
 void showtree __P((union node *));
 void trputc __P((int));
 void trace __P((const char *, ...));

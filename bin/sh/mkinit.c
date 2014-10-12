@@ -91,7 +91,7 @@ struct text {
 	int nleft;
 	struct block *start;
 	struct block *last;
-};      
+};
 
 struct block {
 	struct block *next;
@@ -164,8 +164,8 @@ void addchar __P((int, struct text *));
 void writetext __P((struct text *, FILE *));
 FILE *ckfopen __P((char *, char *));
 void *ckmalloc __P((int));
-char *savestr __P((char *)); 
-void error __P((char *));  
+char *savestr __P((char *));
+void error __P((char *));
 
 #define equal(s1, s2)	(strcmp(s1, s2) == 0)
 
@@ -185,7 +185,8 @@ main(argc, argv)
 	output();
 	if (file_changed()) {
 		unlink(OUTFILE);
-		link(OUTTEMP, OUTFILE);
+		if (link(OUTTEMP, OUTFILE) < 0)
+                        error("link() failed");
 		unlink(OUTTEMP);
 	} else {
 		unlink(OUTTEMP);
@@ -418,7 +419,7 @@ output() {
  */
 
 int
-file_changed() 
+file_changed()
 {
 	register FILE *f1, *f2;
 	register int c;
@@ -452,7 +453,8 @@ touch(file)
 		return 0;
 	}
 	lseek(fd, (off_t)0, 0);
-	write(fd, &c, 1);
+	if (write(fd, &c, 1) != 1)
+                error("write() failed");
 	close(fd);
 	return 1;
 }
@@ -531,7 +533,7 @@ ckfopen(file, mode)
 }
 
 void *
-ckmalloc(nbytes) 
+ckmalloc(nbytes)
 	int nbytes;
 {
 	register char *p;

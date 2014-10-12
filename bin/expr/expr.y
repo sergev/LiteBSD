@@ -21,7 +21,7 @@
 /* a single `expression' is evaluated and printed: */
 
 expression: expr NOARG = {
-            printf("%s\n", $1);
+            printf("%s\n", (char*) $1);
             exit((! strcmp((char*) $1, "0") ||
                   ! strcmp((char*) $1, "\0")) ? 1 : 0);
             }
@@ -58,7 +58,6 @@ expr:   '(' expr ')'            = { $$ = (int) $2; }
 #define ESIZE   256
 #define error(c)    errxx(c)
 #define EQL(x,y) !strcmp(x,y)
-long atol();
 char    **Av;
 int Ac;
 int Argi;
@@ -66,11 +65,12 @@ int Argi;
 char Mstring[1][128];
 extern int nbra;
 
-main(argc, argv) char **argv; {
+int main(argc, argv) char **argv; {
     Ac = argc;
     Argi = 1;
     Av = argv;
     yyparse();
+    return 0;
 }
 
 char *operators[] = { "|", "&", "+", "-", "*", "/", "%", ":",
@@ -80,187 +80,12 @@ int op[] = { OR, AND, ADD,  SUBT, MULT, DIV, REM, MCH,
     EQ, EQ, LT, LEQ, GT, GEQ, NEQ,
     MATCH, SUBSTR, LENGTH, INDEX };
 
-yylex()
-{
-    register char *p;
-    register i;
-
-    if(Argi >= Ac) return NOARG;
-
-    p = Av[Argi++];
-
-    if(*p == '(' || *p == ')')
-        return (int)*p;
-    for(i = 0; *operators[i]; ++i)
-        if(EQL(operators[i], p))
-            return op[i];
-    yylval = (int) p;
-    return A_STRING;
-}
-
-char *rel(op, r1, r2) register char *r1, *r2;
-{
-    register long i;
-
-    if(ematch(r1, "-*[0-9]*$") && ematch(r2, "[0-9]*$"))
-        i = atol(r1) - atol(r2);
-    else
-        i = strcmp(r1, r2);
-    switch(op) {
-    case EQ: i = i==0; break;
-    case GT: i = i>0; break;
-    case GEQ: i = i>=0; break;
-    case LT: i = i<0; break;
-    case LEQ: i = i<=0; break;
-    case NEQ: i = i!=0; break;
-    }
-    return i? "1": "0";
-}
-
-char *arith(op, r1, r2) char *r1, *r2;
-{
-    long i1, i2;
-    register char *rv;
-
-    if(!(ematch(r1, "[0-9]*$") && ematch(r2, "[0-9]*$")))
-        yyerror("non-numeric argument");
-    i1 = atol(r1);
-    i2 = atol(r2);
-
-    switch(op) {
-    case ADD: i1 = i1 + i2; break;
-    case SUBT: i1 = i1 - i2; break;
-    case MULT: i1 = i1 * i2; break;
-    case DIV: i1 = i1 / i2; break;
-    case REM: i1 = i1 % i2; break;
-    }
-    rv = malloc(16);
-    sprintf(rv, "%D", i1);
-    return rv;
-}
-
-char *conju(op, r1, r2) char *r1, *r2;
-{
-    register char *rv;
-
-    switch(op) {
-
-    case OR:
-        if(EQL(r1, "0")
-        || EQL(r1, ""))
-            if(EQL(r2, "0")
-            || EQL(r2, ""))
-                rv = "0";
-            else
-                rv = r2;
-        else
-            rv = r1;
-        break;
-    case AND:
-        if(EQL(r1, "0")
-        || EQL(r1, ""))
-            rv = "0";
-        else if(EQL(r2, "0")
-        || EQL(r2, ""))
-            rv = "0";
-        else
-            rv = r1;
-        break;
-    }
-    return rv;
-}
-
-char *substr(v, s, w) char *v, *s, *w;
-{
-register si, wi;
-register char *res;
-
-    si = atol(s);
-    wi = atol(w);
-    while(--si) if(*v) ++v;
-
-    res = v;
-
-    while(wi--) if(*v) ++v;
-
-    *v = '\0';
-    return res;
-}
-
-char *length(s) register char *s;
-{
-    register i = 0;
-    register char *rv;
-
-    while(*s++) ++i;
-
-    rv = malloc(8);
-    sprintf(rv, "%d", i);
-    return rv;
-}
-
-char *cindex(s, t) char *s, *t;
-{
-    register i, j;
-    register char *rv;
-
-    for(i = 0; s[i] ; ++i)
-        for(j = 0; t[j] ; ++j)
-            if(s[i]==t[j]) {
-                sprintf(rv = malloc(8), "%d", ++i);
-                return rv;
-            }
-    return "0";
-}
-
-char *match(s, p)
-{
-    register char *rv;
-
-    sprintf(rv = malloc(8), "%d", ematch(s, p));
-    if(nbra) {
-        rv = malloc(strlen(Mstring[0])+1);
-        strcpy(rv, Mstring[0]);
-    }
-    return rv;
-}
-
 #define INIT    register char *sp = instring;
 #define GETC()      (*sp++)
 #define PEEKC()     (*sp)
 #define UNGETC(c)   (--sp)
 #define RETURN(c)   return
 #define ERROR(c)    errxx(c)
-
-
-ematch(s, p)
-char *s;
-register char *p;
-{
-    static char expbuf[ESIZE];
-    char *compile();
-    register num;
-    extern char *braslist[], *braelist[], *loc2;
-
-    compile(p, expbuf, &expbuf[ESIZE], 0);
-    if(nbra > 1)
-        yyerror("Too many '\\('s");
-    if(advance(s, expbuf)) {
-        if(nbra == 1) {
-            p = braslist[0];
-            num = braelist[0] - p;
-            strncpy(Mstring[0], p, num);
-            Mstring[0][num] = '\0';
-        }
-        return(loc2-s);
-    }
-    return(0);
-}
-
-errxx(c)
-{
-    yyerror("RE error");
-}
 
 #define CBRA    2
 #define CCHR    4
@@ -300,14 +125,47 @@ char    bittab[] = {
     128
 };
 
+int
+yylex()
+{
+    register char *p;
+    register int i;
+
+    if(Argi >= Ac) return NOARG;
+
+    p = Av[Argi++];
+
+    if(*p == '(' || *p == ')')
+        return (int)*p;
+    for(i = 0; *operators[i]; ++i)
+        if(EQL(operators[i], p))
+            return op[i];
+    yylval = (int) p;
+    return A_STRING;
+}
+
+void
+yyerror(s)
+char *s;
+{
+    fprintf(stderr, "%s\n", s);
+    exit(2);
+}
+
+void
+errxx(c)
+{
+    yyerror("RE error");
+}
+
 char *
 compile(instring, ep, endbuf, seof)
 register char *ep;
 char *instring, *endbuf;
 {
     INIT    /* Dependent declarations and initializations */
-    register c;
-    register eof = seof;
+    register int c;
+    register int eof = seof;
     char *lastep = instring;
     int cclcnt;
     char bracket[NBRA], *bracketp;
@@ -320,7 +178,7 @@ char *instring, *endbuf;
     if((c = GETC()) == eof) {
         if(*ep == 0 && !sed)
             ERROR(41);
-        RETURN(ep);
+        return ep;
     }
     bracketp = bracket;
     circf = closed = nbra = 0;
@@ -335,7 +193,7 @@ char *instring, *endbuf;
             lastep = ep;
         if (c == eof) {
             *ep++ = CEOF;
-            RETURN(ep);
+            return ep;
         }
         switch (c) {
 
@@ -479,38 +337,28 @@ char *instring, *endbuf;
     }
 }
 
-step(p1, p2)
-register char *p1, *p2;
+void
+getrnge(str)
+register char *str;
 {
-    register c;
-
-    if (circf) {
-        loc1 = p1;
-        return(advance(p1, p2));
-    }
-    /* fast check for first character */
-    if (*p2==CCHR) {
-        c = p2[1];
-        do {
-            if (*p1 != c)
-                continue;
-            if (advance(p1, p2)) {
-                loc1 = p1;
-                return(1);
-            }
-        } while (*p1++);
-        return(0);
-    }
-        /* regular algorithm */
-    do {
-        if (advance(p1, p2)) {
-            loc1 = p1;
-            return(1);
-        }
-    } while (*p1++);
-    return(0);
+    low = *str++ & 0377;
+    size = *str == 255 ? 20000 : (*str &0377) - low;
 }
 
+int
+ecmp(a, b, count)
+register char *a, *b;
+register int count;
+{
+    if(a == b) /* should have been caught in compile() */
+        error(51);
+    while(count--)
+        if(*a++ != *b++)
+            return(0);
+    return(1);
+}
+
+int
 advance(lp, ep)
 register char *lp, *ep;
 {
@@ -548,11 +396,11 @@ register char *lp, *ep;
         }
         return(0);
     case CBRA:
-        braslist[*ep++] = lp;
+        braslist[(int)*ep++] = lp;
         continue;
 
     case CKET:
-        braelist[*ep++] = lp;
+        braelist[(int)*ep++] = lp;
         continue;
 
     case CCHR|RNGE:
@@ -603,8 +451,8 @@ register char *lp, *ep;
         goto star;
 
     case CBACK:
-        bbeg = braslist[*ep];
-        ct = braelist[*ep++] - bbeg;
+        bbeg = braslist[(int)*ep];
+        ct = braelist[(int)*ep++] - bbeg;
 
         if(ecmp(bbeg, lp, ct)) {
             lp += ct;
@@ -613,8 +461,8 @@ register char *lp, *ep;
         return(0);
 
     case CBACK|STAR:
-        bbeg = braslist[*ep];
-        ct = braelist[*ep++] - bbeg;
+        bbeg = braslist[(int)*ep];
+        ct = braelist[(int)*ep++] - bbeg;
         curlp = lp;
         while(ecmp(bbeg, lp, ct))
             lp += ct;
@@ -657,28 +505,199 @@ register char *lp, *ep;
     }
 }
 
-getrnge(str)
-register char *str;
-{
-    low = *str++ & 0377;
-    size = *str == 255 ? 20000 : (*str &0377) - low;
-}
-
-ecmp(a, b, count)
-register char   *a, *b;
-register    count;
-{
-    if(a == b) /* should have been caught in compile() */
-        error(51);
-    while(count--)
-        if(*a++ != *b++)
-            return(0);
-    return(1);
-}
-
-yyerror(s)
+int
+ematch(s, p)
 char *s;
+register char *p;
 {
-    fprintf(stderr, "%s\n", s);
-    exit(2);
+    static char expbuf[ESIZE];
+    register int num;
+    extern char *braslist[], *braelist[], *loc2;
+
+    compile(p, expbuf, &expbuf[ESIZE], 0);
+    if(nbra > 1)
+        yyerror("Too many '\\('s");
+    if(advance(s, expbuf)) {
+        if(nbra == 1) {
+            p = braslist[0];
+            num = braelist[0] - p;
+            strncpy(Mstring[0], p, num);
+            Mstring[0][num] = '\0';
+        }
+        return(loc2-s);
+    }
+    return(0);
+}
+
+char *
+rel(op, r1, r2)
+register char *r1, *r2;
+{
+    register long i;
+
+    if(ematch(r1, "-*[0-9]*$") && ematch(r2, "[0-9]*$"))
+        i = atol(r1) - atol(r2);
+    else
+        i = strcmp(r1, r2);
+    switch(op) {
+    case EQ: i = i==0; break;
+    case GT: i = i>0; break;
+    case GEQ: i = i>=0; break;
+    case LT: i = i<0; break;
+    case LEQ: i = i<=0; break;
+    case NEQ: i = i!=0; break;
+    }
+    return i? "1": "0";
+}
+
+char *
+arith(op, r1, r2)
+char *r1, *r2;
+{
+    long i1, i2;
+    register char *rv;
+
+    if(!(ematch(r1, "[0-9]*$") && ematch(r2, "[0-9]*$")))
+        yyerror("non-numeric argument");
+    i1 = atol(r1);
+    i2 = atol(r2);
+
+    switch(op) {
+    case ADD: i1 = i1 + i2; break;
+    case SUBT: i1 = i1 - i2; break;
+    case MULT: i1 = i1 * i2; break;
+    case DIV: i1 = i1 / i2; break;
+    case REM: i1 = i1 % i2; break;
+    }
+    rv = malloc(16);
+    sprintf(rv, "%ld", i1);
+    return rv;
+}
+
+char *
+conju(op, r1, r2)
+char *r1, *r2;
+{
+    register char *rv = 0;
+
+    switch(op) {
+
+    case OR:
+        if(EQL(r1, "0")
+        || EQL(r1, ""))
+            if(EQL(r2, "0")
+            || EQL(r2, ""))
+                rv = "0";
+            else
+                rv = r2;
+        else
+            rv = r1;
+        break;
+    case AND:
+        if(EQL(r1, "0")
+        || EQL(r1, ""))
+            rv = "0";
+        else if(EQL(r2, "0")
+        || EQL(r2, ""))
+            rv = "0";
+        else
+            rv = r1;
+        break;
+    }
+    return rv;
+}
+
+char *
+substr(v, s, w)
+char *v, *s, *w;
+{
+    register int si, wi;
+    register char *res;
+
+    si = atol(s);
+    wi = atol(w);
+    while(--si) if(*v) ++v;
+
+    res = v;
+
+    while(wi--) if(*v) ++v;
+
+    *v = '\0';
+    return res;
+}
+
+char *
+length(s)
+register char *s;
+{
+    register int i = 0;
+    register char *rv;
+
+    while(*s++) ++i;
+
+    rv = malloc(8);
+    sprintf(rv, "%d", i);
+    return rv;
+}
+
+char *
+cindex(s, t)
+char *s, *t;
+{
+    register int i, j;
+    register char *rv;
+
+    for(i = 0; s[i] ; ++i)
+        for(j = 0; t[j] ; ++j)
+            if(s[i]==t[j]) {
+                sprintf(rv = malloc(8), "%d", ++i);
+                return rv;
+            }
+    return "0";
+}
+
+char *
+match(s, p)
+{
+    register char *rv;
+
+    sprintf(rv = malloc(8), "%d", ematch(s, p));
+    if(nbra) {
+        rv = malloc(strlen(Mstring[0])+1);
+        strcpy(rv, Mstring[0]);
+    }
+    return rv;
+}
+
+int
+step(p1, p2)
+register char *p1, *p2;
+{
+    register int c;
+
+    if (circf) {
+        loc1 = p1;
+        return(advance(p1, p2));
+    }
+    /* fast check for first character */
+    if (*p2==CCHR) {
+        c = p2[1];
+        do {
+            if (*p1 != c)
+                continue;
+            if (advance(p1, p2)) {
+                loc1 = p1;
+                return(1);
+            }
+        } while (*p1++);
+        return(0);
+    }
+        /* regular algorithm */
+    do {
+        if (advance(p1, p2)) {
+            loc1 = p1;
+            return(1);
+        }
+    } while (*p1++);
+    return(0);
 }

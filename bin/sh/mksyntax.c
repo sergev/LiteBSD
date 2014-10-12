@@ -50,8 +50,8 @@ static char sccsid[] = "@(#)mksyntax.c	8.2 (Berkeley) 5/4/95";
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "parser.h"
-
 
 struct synclass {
 	char *name;
@@ -351,7 +351,7 @@ static char *macro[] = {
 };
 
 static void
-output_type_macros() 
+output_type_macros()
 {
 	char **pp;
 
@@ -372,7 +372,7 @@ output_type_macros()
  */
 
 static void
-digit_convert() 
+digit_convert()
 {
 	int maxdigit;
 	static char digit[] = "0123456789";

@@ -2,7 +2,7 @@
 
 .MAIN: all
 
-STRIP?=	-s
+#STRIP?=	-s
 
 BINGRP?=	bin
 BINOWN?=	bin

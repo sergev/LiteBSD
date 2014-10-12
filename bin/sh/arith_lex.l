@@ -71,7 +71,7 @@ extern char *arith_buf, *arith_startbuf;
 "*"	{ return(ARITH_MUL); }
 "/"	{ return(ARITH_DIV); }
 "%"	{ return(ARITH_REM); }
-"+"	{ return(ARITH_ADD); } 
+"+"	{ return(ARITH_ADD); }
 "-"	{ return(ARITH_SUB); }
 "~"	{ return(ARITH_BNOT); }
 "!"	{ return(ARITH_NOT); }
@@ -81,4 +81,8 @@ extern char *arith_buf, *arith_startbuf;
 void
 arith_lex_reset() {
 	YY_NEW_FILE;
+}
+
+int yywrap() {
+        return 1;
 }

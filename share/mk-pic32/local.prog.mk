@@ -33,8 +33,6 @@ LIBRPC?=	/usr/lib/sunrpc.a
 LIBTERM?=	/usr/lib/libterm.a
 LIBUTIL?=	/usr/lib/libutil.a
 
-YACC=		byacc
-
 .if defined(SHAREDSTRINGS)
 CLEANFILES+=strings
 .c.o:

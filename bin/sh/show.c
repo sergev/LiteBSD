@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)show.c	8.3 (Berkeley) 5/4/95";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 #if __STDC__
 #include <stdarg.h>
 #else
@@ -286,7 +287,7 @@ int debug = 0;
 
 
 void
-trputc(c) 
+trputc(c)
 	int c;
 {
 #ifdef DEBUG

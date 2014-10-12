@@ -11,7 +11,7 @@
 
 CFLAGS+=${COPTS}
 
-STRIP?=	-s
+#STRIP?=	-s
 
 BINGRP?=	bin
 BINOWN?=	bin
@@ -38,8 +38,8 @@ LIBUTIL?=	${DESTDIR}/usr/lib/libutil.a
 .if defined(SHAREDSTRINGS)
 CLEANFILES+=strings
 .c.o:
-	${MIPS_GCC_PREFIX}${CC} -E ${CFLAGS} ${.IMPSRC} | xstr -c -
-	@${MIPS_GCC_PREFIX}${CC} ${CFLAGS} -c x.c -o ${.TARGET}
+	${CC} -E ${CFLAGS} ${.IMPSRC} | xstr -c -
+	@${CC} ${CFLAGS} -c x.c -o ${.TARGET}
 	@rm -f x.c
 .endif
 
@@ -49,15 +49,14 @@ CLEANFILES+=strings
 OBJS+=  ${SRCS:R:S/$/.o/g}
 
 ${PROG}: ${OBJS} ${LIBC} ${DPADD}
-	${MIPS_GCC_PREFIX}${CC} ${LDCROSS} ${LDFLAGS} \
-            -o ${.TARGET} ${OBJS} ${LDADD} -lc -lgcc
+	${CC} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD} -lc -lgcc
 
 .else defined(SRCS)
 
 SRCS= ${PROG}.c
 
 ${PROG}: ${SRCS} ${LIBC} ${DPADD}
-	${MIPS_GCC_PREFIX}${CC} ${CCROSS} ${CFLAGS} ${LDCROSS} ${LDFLAGS} \
+	${CC} ${CFLAGS} ${LDFLAGS} \
             -o ${.TARGET} ${.CURDIR}/${SRCS} ${LDADD} -lc -lgcc
 
 MKDEP=	-p
@@ -110,7 +109,7 @@ cleandir: _PROGSUBDIR
 depend: .depend _PROGSUBDIR
 .depend: ${SRCS}
 .if defined(PROG)
-	mkdep ${MKDEP} ${CFLAGS:M-[ID]*} ${INCCROSS} ${.ALLSRC:M*.c}
+	mkdep ${MKDEP} ${CFLAGS:M-[ID]*} ${.ALLSRC:M*.c}
 .endif
 .endif
 
@@ -124,8 +123,8 @@ afterinstall:
 
 realinstall: _PROGSUBDIR
 .if defined(PROG)
-	install ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
-	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}
+	install ${STRIP} -D -m ${BINMODE} \
+	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROG}
 .endif
 .if defined(HIDEGAME)
 	(cd ${DESTDIR}/usr/games; rm -f ${PROG}; ln -s dm ${PROG}; \

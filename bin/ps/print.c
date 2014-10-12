@@ -367,12 +367,10 @@ started(k, ve)
 	if (!now)
 		(void)time(&now);
 	if (now - k->ki_u.u_start.tv_sec < 24 * SECSPERHOUR) {
-		/* I *hate* SCCS... */
-		static char fmt[] = __CONCAT("%l:%", "M%p");
+		static char fmt[] = "%l:%M%p";
 		(void)strftime(buf, sizeof(buf) - 1, fmt, tp);
 	} else if (now - k->ki_u.u_start.tv_sec < 7 * SECSPERDAY) {
-		/* I *hate* SCCS... */
-		static char fmt[] = __CONCAT("%a%", "I%p");
+		static char fmt[] = "%a%I%p";
 		(void)strftime(buf, sizeof(buf) - 1, fmt, tp);
 	} else
 		(void)strftime(buf, sizeof(buf) - 1, "%e%b%y", tp);
@@ -407,7 +405,7 @@ wchan(k, ve)
 	v = ve->var;
 	if (KI_PROC(k)->p_wchan) {
 		if (KI_PROC(k)->p_wmesg)
-			(void)printf("%-*.*s", v->width, v->width, 
+			(void)printf("%-*.*s", v->width, v->width,
 				      KI_EPROC(k)->e_wmesg);
 		else
 			(void)printf("%-*x", v->width,
@@ -596,7 +594,7 @@ pagein(k, ve)
 	VAR *v;
 
 	v = ve->var;
-	(void)printf("%*d", v->width, 
+	(void)printf("%*d", v->width,
 	    k->ki_u.u_valid ? k->ki_u.u_ru.ru_majflt : 0);
 }
 

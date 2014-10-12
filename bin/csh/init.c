@@ -114,7 +114,7 @@ int     nbfunc = sizeof bfunc / sizeof *bfunc;
 struct srch srchn[] =
 {
     { "@", 		T_LET		},
-    { "break", 		T_BREAK		},
+    { "break", 		T_BRK		},
     { "breaksw", 	T_BRKSW		},
     { "case", 		T_CASE		},
     { "default", 	T_DEFAULT	},
@@ -132,4 +132,3 @@ struct srch srchn[] =
     { "while", 		T_WHILE		}
 };
 int     nsrchn = sizeof srchn / sizeof *srchn;
-

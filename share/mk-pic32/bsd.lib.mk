@@ -10,15 +10,11 @@ LIBGRP?=	bin
 LIBOWN?=	bin
 LIBMODE?=	444
 
-STRIP?=	-s
+#STRIP?=	-s
 
 BINGRP?=	bin
 BINOWN?=	bin
 BINMODE?=	555
-
-#CCROSS?=        -mips32r2 -EL -msoft-float -nostdinc -Werror -I${DESTDIR}/usr/include
-#LDCROSS?=       -mips32r2 -EL -nostdlib
-#ASCROSS?=       -mips32r2 -EL
 
 .MAIN: all
 
@@ -30,18 +26,18 @@ BINMODE?=	555
 	nroff -man ${.IMPSRC} > ${.TARGET}
 
 .c.o:
-	${MIPS_GCC_PREFIX}${CC} ${CCROSS} ${CFLAGS} -c ${.IMPSRC}
+	${CC} ${CFLAGS} -c ${.IMPSRC}
 
 .c.po:
-	${MIPS_GCC_PREFIX}${CC} ${CCROSS} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
+	${CC} -p ${CFLAGS} -c ${.IMPSRC} -o ${.TARGET}
 
 .s.o:
-	${MIPS_GCC_PREFIX}${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${ASCROSS} ${.IMPSRC} | \
-	    ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.TARGET}
+	${CPP} -E ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
+	    ${AS} -o ${.TARGET}
 
 .s.po:
-	${MIPS_GCC_PREFIX}${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${ASCROSS} ${.IMPSRC} | \
-	    ${MIPS_GCC_PREFIX}${AS} ${ASCROSS} -o ${.TARGET}
+	${CPP} -E -DPROF ${CFLAGS:M-[ID]*} ${AINC} ${.IMPSRC} | \
+	    ${AS} -o ${.TARGET}
 
 MANALL=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8}
 manpages: ${MANALL}
@@ -62,15 +58,15 @@ OBJS+=	${SRCS:R:S/$/.o/g}
 lib${LIB}.a:: ${OBJS}
 	@echo building standard ${LIB} library
 	@rm -f lib${LIB}.a
-	@${MIPS_GCC_PREFIX}${AR} cq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
-	${MIPS_GCC_PREFIX}ranlib lib${LIB}.a
+	@${AR} cq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
+	${RANLIB} lib${LIB}.a
 
 POBJS+=	${OBJS:.o=.po}
 lib${LIB}_p.a:: ${POBJS}
 	@echo building profiled ${LIB} library
 	@rm -f lib${LIB}_p.a
-	@${MIPS_GCC_PREFIX}${AR} cq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
-	${MIPS_GCC_PREFIX}ranlib lib${LIB}_p.a
+	@${AR} cq lib${LIB}_p.a `lorder ${POBJS} | tsort` ${LDADD}
+	${RANLIB} lib${LIB}_p.a
 
 llib-l${LIB}.ln: ${SRCS}
 	${LINT} -C${LIB} ${CFLAGS} ${.ALLSRC:M*.c}
@@ -107,15 +103,15 @@ beforeinstall:
 .endif
 
 realinstall: beforeinstall
-	${MIPS_GCC_PREFIX}ranlib lib${LIB}.a
+	${RANLIB} lib${LIB}.a
 	install -D lib${LIB}.a ${DESTDIR}${LIBDIR}/lib${LIB}.a
-	${MIPS_GCC_PREFIX}${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}.a
+	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}.a
 .if !defined(NOPROFILE)
-	${MIPS_GCC_PREFIX}ranlib lib${LIB}_p.a
+	${RANLIB} lib${LIB}_p.a
 	install -D lib${LIB}_p.a ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
-	${MIPS_GCC_PREFIX}${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
+	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
 .endif
-#	install -c -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
+#	install -c -m ${LIBMODE} \
 #	    llib-l${LIB}.ln ${DESTDIR}${LINTLIBDIR}
 .if defined(LINKS) && !empty(LINKS)
 	@set ${LINKS}; \
