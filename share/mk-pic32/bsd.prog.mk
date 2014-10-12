@@ -32,7 +32,7 @@ LIBPC?=		${DESTDIR}/usr/lib/libpc.a
 LIBPLOT?=	${DESTDIR}/usr/lib/libplot.a
 LIBRESOLV?=	${DESTDIR}/usr/lib/libresolv.a
 LIBRPC?=	${DESTDIR}/usr/lib/sunrpc.a
-LIBTERM?=	${DESTDIR}/usr/lib/libterm.a
+LIBTERM?=	${DESTDIR}/usr/lib/libtermcap.a
 LIBUTIL?=	${DESTDIR}/usr/lib/libutil.a
 
 .if defined(SHAREDSTRINGS)

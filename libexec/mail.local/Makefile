@@ -4,6 +4,6 @@ PROG=	mail.local
 MAN8=	mail.local.0
 BINOWN=	root
 BINMODE=4555
-INSTALLFLAGS=-fschg
+#INSTALLFLAGS=-fschg
 
 .include <bsd.prog.mk>

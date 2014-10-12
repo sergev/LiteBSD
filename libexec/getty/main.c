@@ -160,7 +160,7 @@ static void	prompt __P((void));
 static void	putchr __P((int));
 static void	putf __P((char *));
 static void	putpad __P((char *));
-static void	puts __P((char *));
+static void	putstr __P((char *));
 
 int
 main(argc, argv)
@@ -194,7 +194,7 @@ main(argc, argv)
 	 * The following is a work around for vhangup interactions
 	 * which cause great problems getting window systems started.
 	 * If the tty line is "-", we do the old style getty presuming
-	 * that the file descriptors are already set up for us. 
+	 * that the file descriptors are already set up for us.
 	 * J. Gettys - MIT Project Athena.
 	 */
 	if (argc <= 2 || strcmp(argv[2], "-") == 0)
@@ -285,7 +285,7 @@ main(argc, argv)
 			alarm(0);
 			signal(SIGALRM, SIG_DFL);
 			if (name[0] == '-') {
-				puts("user names may not start with '-'.");
+				putstr("user names may not start with '-'.");
 				continue;
 			}
 			if (!(upper || lower || digit))
@@ -307,7 +307,7 @@ main(argc, argv)
 				env[i] = environ[i];
 			makeenv(&env[i]);
 
-			/* 
+			/*
 			 * this is what login was doing anyway.
 			 * soon we rewrite getty completely.
 			 */
@@ -374,7 +374,7 @@ getname()
 			if (np > name) {
 				np--;
 				if (tmode.sg_ospeed >= B1200)
-					puts("\b \b");
+					putstr("\b \b");
 				else
 					putchr(cs);
 			}
@@ -386,7 +386,7 @@ getname()
 				putchr('\n');
 			/* this is the way they do it down under ... */
 			else if (np > name)
-				puts("                                     \r");
+				putstr("                                     \r");
 			prompt();
 			np = name;
 			continue;
@@ -432,7 +432,7 @@ putpad(s)
 		}
 	}
 
-	puts(s);
+	putstr(s);
 	/*
 	 * If no delay needed, or output speed is
 	 * not comprehensible, then don't try to delay.
@@ -456,7 +456,7 @@ putpad(s)
 }
 
 static void
-puts(s)
+putstr(s)
 	register char *s;
 {
 	while (*s)
@@ -521,13 +521,13 @@ putf(cp)
 		case 't':
 			slash = strrchr(ttyn, '/');
 			if (slash == (char *) 0)
-				puts(ttyn);
+				putstr(ttyn);
 			else
-				puts(&slash[1]);
+				putstr(&slash[1]);
 			break;
 
 		case 'h':
-			puts(editedhost);
+			putstr(editedhost);
 			break;
 
 		case 'd': {
@@ -536,7 +536,7 @@ putf(cp)
 			fmt[4] = 'M';		/* I *hate* SCCS... */
 			(void)time(&t);
 			(void)strftime(db, sizeof(db), fmt, localtime(&t));
-			puts(db);
+			putstr(db);
 			break;
 		}
 

@@ -41,6 +41,7 @@ static char sccsid[] = "@(#)fields.c	8.1 (Berkeley) 6/6/93";
 /* Subroutines to generate sort keys. */
 
 #include "sort.h"
+#include <string.h>
 
 #define blancmange(ptr) {					\
 	if (BLANK & d_mask[*(ptr)])				\
@@ -52,7 +53,7 @@ static char sccsid[] = "@(#)fields.c	8.1 (Berkeley) 6/6/93";
 		while (BLANK & l_d_mask[*(++pos)]);		\
 	while (!((FLD_D | REC_D_F) & l_d_mask[*++pos]));	\
 }
-		
+
 extern u_char *enterfield __P((u_char *, u_char *, struct field *, int));
 
 extern u_char *number __P((u_char *, u_char *, u_char *, u_char *, int));
@@ -168,7 +169,7 @@ enterfield(tablepos, endkey, cur_fld, gflags)
 	}
 	mask = alltable;
 	mask = cur_fld->mask;
-	lweight = cur_fld->weights;	
+	lweight = cur_fld->weights;
 	for (; start < end; start++)
 		if (mask[*start]) {
 			if (*start <= 1) {
@@ -241,7 +242,7 @@ number(pos, bufend, line, lineend, Rflag)
 		return (pos);
 	}
 	if (expincr) {
-		for (tline = line-1; *++tline >= '0' && 
+		for (tline = line-1; *++tline >= '0' &&
 		    *tline <= '9' && tline < lineend;)
 			exponent++;
 	}
@@ -270,7 +271,7 @@ number(pos, bufend, line, lineend, Rflag)
 				if (pos == bufend)
 					return (NULL);
 				if (*line != '0' || lastvalue != '0')
-					nonzero = pos;	
+					nonzero = pos;
 			} else
 				lastvalue = *line;
 			parity ^= 1;
@@ -285,7 +286,7 @@ number(pos, bufend, line, lineend, Rflag)
 		*pos++ = or_sign ? OFF_NTENS[lastvalue] - '0' :
 					OFF_TENS[lastvalue] + '0';
 	} else
-		pos = nonzero;	
+		pos = nonzero;
 	if (pos > bufend-1)
 		return (NULL);
 	*pos++ = or_sign ? nweights[254] : nweights[0];

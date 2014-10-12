@@ -101,7 +101,7 @@ fsort(binno, depth, infiles, nfiles, outfd, ftbl)
 			get = makeline;
 		else
 			get = makekey;
-	}				
+	}
 	for (;;) {
 		memset(sizes, 0, sizeof(sizes));
 		c = ntfiles = 0;
@@ -132,8 +132,8 @@ fsort(binno, depth, infiles, nfiles, outfd, ftbl)
 			if (c == BUFFEND || ntfiles || mfct) {	/* push */
 				if (panic >= PANIC) {
 					fstack[MAXFCT-16+mfct].fd = ftmp();
-					if (radixsort(keylist, nelem, weights,
-					    REC_D))
+					if (radixsort((const unsigned char**)keylist,
+                                            nelem, weights, REC_D))
 						err(2, NULL);
 					append(keylist, nelem, depth, fstack[
 					 MAXFCT-16+mfct].fd, putrec, ftbl);
@@ -166,8 +166,9 @@ fsort(binno, depth, infiles, nfiles, outfd, ftbl)
 		get = getnext;
 		if (!ntfiles && !mfct) {	/* everything in memory--pop */
 			if (nelem > 1)
-			   if (radixsort(keylist, nelem, weights, REC_D))
-				err(2, NULL);
+                                if (radixsort((const unsigned char**)keylist,
+                                    nelem, weights, REC_D))
+                                        err(2, NULL);
 			append(keylist, nelem, depth, outfd, putline, ftbl);
 			break;					/* pop */
 		}
@@ -179,7 +180,7 @@ fsort(binno, depth, infiles, nfiles, outfd, ftbl)
 				fmerge(0, tfiles, ntfiles, geteasy,
 				    outfd, putline, ftbl);
 			break;
-				
+
 		}
 		total = maxb = lastb = 0;	/* find if one bin dominates */
 		for (i = 0; i < NBINS; i++)
@@ -269,8 +270,8 @@ onepass(a, depth, n, sizes, tr, fd)
 		if (c <= 1)
 			continue;
 	}
-	for(aj = a; aj < an; *aj = r, aj = bin[c+1]) 
-		for(r = *aj; aj < (ak = --top[c = tr[r[depth]]]) ;)			
+	for(aj = a; aj < an; *aj = r, aj = bin[c+1])
+		for(r = *aj; aj < (ak = --top[c = tr[r[depth]]]) ;)
 			swap(*ak, r, t);
 
 	for (ak = a, c = 0; c < 256; c++) {

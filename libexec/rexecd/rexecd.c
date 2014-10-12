@@ -93,7 +93,7 @@ char	*envinit[] =
 	    {homedir, shell, path, username, 0};
 char	**environ;
 
-struct	sockaddr_in asin = { AF_INET };
+struct	sockaddr_in asinet = { AF_INET };
 
 doit(f, fromp)
 	int f;
@@ -137,7 +137,7 @@ doit(f, fromp)
 		s = socket(AF_INET, SOCK_STREAM, 0);
 		if (s < 0)
 			exit(1);
-		if (bind(s, (struct sockaddr *)&asin, sizeof (asin)) < 0)
+		if (bind(s, (struct sockaddr *)&asinet, sizeof (asinet)) < 0)
 			exit(1);
 		(void) alarm(60);
 		fromp->sin_port = htons(port);

@@ -48,7 +48,7 @@ static char sccsid[] = "@(#)append.c	8.1 (Berkeley) 6/6/93";
 		for (; ppos < cpos; ++ppos)				\
 			*ppos -= odepth;				\
 		ppos -= n;						\
-		radixsort(ppos, n, wts1, REC_D);			\
+		radixsort((const unsigned char**)ppos, n, wts1, REC_D);	\
 		for (; ppos < cpos; ppos++) {				\
 			prec = (RECHEADER *) (*ppos - sizeof(TRECHEADER));\
 			put(prec, fd);					\

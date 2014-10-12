@@ -50,15 +50,16 @@ static char sccsid[] = "@(#)announce.c	8.3 (Berkeley) 4/28/95";
 #include <string.h>
 #include <vis.h>
 #include <paths.h>
+#include <stdlib.h>
 
 extern char hostname[];
 
 /*
  * Announce an invitation to talk.
  */
-	
+
 /*
- * See if the user is accepting messages. If so, announce that 
+ * See if the user is accepting messages. If so, announce that
  * a talk is requested.
  */
 announce(request, remote_machine)
@@ -81,7 +82,7 @@ announce(request, remote_machine)
 #define N_CHARS 256
 
 /*
- * Build a block of characters containing the message. 
+ * Build a block of characters containing the message.
  * It is sent blank filled and in a single block to
  * try to keep the message in one piece if the recipient
  * in in vi at the time

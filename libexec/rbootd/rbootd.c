@@ -207,7 +207,7 @@ main(argc, argv)
 		char *errmsg;
 
 		if ((IntfName = BpfGetIntfName(&errmsg)) == NULL) {
-			syslog(LOG_NOTICE, "restarted (??)");
+			syslog(LOG_NOTICE, "restarted (\?\?)");
 			syslog(LOG_ERR, errmsg);
 			Exit(0);
 		}
@@ -379,7 +379,7 @@ DoTimeout()
 **  FindClient -- Find client associated with a packet.
 **
 **	Parameters:
-**		rconn - the new packet. 
+**		rconn - the new packet.
 **
 **	Returns:
 **		Pointer to client info if found, NULL otherwise.

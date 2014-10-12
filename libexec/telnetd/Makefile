@@ -8,7 +8,7 @@ SRCS=	authenc.c global.c slc.c state.c sys_term.c telnetd.c \
 	termstat.c utility.c
 DPADD=	${LIBUTIL} ${LIBTERM}
 LDADD=	-lutil -ltermcap -ltelnet
-LDADD+=	-lkrb -ldes
+#LDADD+=	-lkrb -ldes
 MAN8=	telnetd.0
 
 # These are the sources that have encryption stuff in them.

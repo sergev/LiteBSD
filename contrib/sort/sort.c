@@ -81,6 +81,7 @@ char devstdin[] = _PATH_STDIN;
 char toutpath[_POSIX_PATH_MAX];
 
 static void cleanup __P((void));
+static void cleanupi __P((int));
 static void onsig __P((int));
 static void usage __P((char *));
 
@@ -225,7 +226,7 @@ main(argc, argv)
 		errno = 0;
 		if (access(outpath, W_OK))
 			err(2, "%s", outpath);
-		act.sa_handler = cleanup;
+		act.sa_handler = cleanupi;
 		(void)snprintf(toutpath, sizeof(toutpath), "%sXXXX", outpath);
 		outfile = mktemp(toutpath);
 		if (!outfile)
@@ -265,6 +266,13 @@ cleanup()
 {
 	if (toutpath[0])
 		(void)unlink(toutpath);
+}
+
+static void
+cleanupi(s)
+	int s;
+{
+        cleanup();
 }
 
 static void

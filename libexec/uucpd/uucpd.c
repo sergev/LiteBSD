@@ -86,7 +86,7 @@ char **argv;
 #ifndef BSDINETD
 	register int s, tcp_socket;
 	struct servent *sp;
-#endif !BSDINETD
+#endif
 	extern int errno;
 	int dologout();
 
@@ -104,7 +104,7 @@ char **argv;
 		doit(&hisctladdr);
 	dologout();
 	exit(1);
-#else !BSDINETD
+#else /* !BSDINETD */
 	sp = getservbyname("uucp", "tcp");
 	if (sp == NULL){
 		perror("uucpd: getservbyname");
@@ -136,7 +136,7 @@ char **argv;
 	for(;;) {
 		s = accept(tcp_socket, &hisctladdr, &hisaddrlen);
 		if (s < 0){
-			if (errno == EINTR) 
+			if (errno == EINTR)
 				continue;
 			perror("uucpd: accept");
 			exit(1);
@@ -150,9 +150,9 @@ char **argv;
 		}
 		close(s);
 	}
-#endif BSD4_2
+#endif /* BSD4_2 */
 
-#endif	!BSDINETD
+#endif /* !BSDINETD */
 }
 
 doit(sinp)
@@ -197,12 +197,12 @@ struct sockaddr_in *sinp;
 	setgid(pw->pw_gid);
 #ifdef BSD4_2
 	initgroups(pw->pw_name, pw->pw_gid);
-#endif BSD4_2
+#endif
 	chdir(pw->pw_dir);
 	setuid(pw->pw_uid);
 #ifdef BSD4_2
 	execl(UUCICO, "uucico", (char *)0);
-#endif BSD4_2
+#endif
 	perror("uucico server: execl");
 }
 
@@ -228,7 +228,7 @@ register int n;
 #include <utmp.h>
 #ifdef BSD4_2
 #include <fcntl.h>
-#endif BSD4_2
+#endif
 
 #define	SCPYN(a, b)	strncpy(a, b, sizeof (a))
 
@@ -241,9 +241,9 @@ dologout()
 
 #ifdef BSDINETD
 	while ((pid=wait((int *)&status)) > 0) {
-#else  !BSDINETD
+#else
 	while ((pid=wait3((int *)&status,WNOHANG,0)) > 0) {
-#endif !BSDINETD
+#endif
 		wtmp = open(_PATH_WTMP, O_WRONLY|O_APPEND);
 		if (wtmp >= 0) {
 			sprintf(utmp.ut_line, "uucp%.4d", pid);
