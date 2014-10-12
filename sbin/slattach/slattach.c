@@ -52,12 +52,13 @@ static char sccsid[] = "@(#)slattach.c	8.2 (Berkeley) 1/7/94";
 #include <netdb.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <paths.h>
 
 #define DEFAULT_BAUD	9600
 int	slipdisc = SLIPDISC;
 
-char	devname[32];
+char	dev_name[32];
 char	hostname[MAXHOSTNAMELEN];
 
 main(argc, argv)
@@ -79,9 +80,9 @@ main(argc, argv)
 		exit(1);
 	}
 	if (strncmp(_PATH_DEV, dev, sizeof(_PATH_DEV) - 1)) {
-		(void)snprintf(devname, sizeof(devname),
+		(void)snprintf(dev_name, sizeof(dev_name),
 		    "%s%s", _PATH_DEV, dev);
-		dev = devname;
+		dev = dev_name;
 	}
 	if ((fd = open(dev, O_RDWR | O_NDELAY)) < 0) {
 		perror(dev);

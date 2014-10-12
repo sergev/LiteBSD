@@ -45,6 +45,7 @@ static char sccsid[] = "@(#)startup.c	8.2 (Berkeley) 4/28/95";
 #include <net/if_dl.h>
 #include <syslog.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pathnames.h"
 
 struct	interface *ifnet;
@@ -302,7 +303,7 @@ addrouteforif(ifp)
 			rtadd(dst, &ifp->int_addr, ifp->int_metric,
 			    ((ifp->int_flags & (IFF_INTERFACE|IFF_REMOTE)) |
 			    RTS_PASSIVE | RTS_INTERNAL | RTS_SUBNET));
-		else if ((rt->rt_state & (RTS_INTERNAL|RTS_SUBNET)) == 
+		else if ((rt->rt_state & (RTS_INTERNAL|RTS_SUBNET)) ==
 		    (RTS_INTERNAL|RTS_SUBNET) &&
 		    ifp->int_metric < rt->rt_metric)
 			rtchange(rt, &rt->rt_router, ifp->int_metric);

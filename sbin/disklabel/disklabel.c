@@ -59,6 +59,7 @@ static char sccsid[] = "@(#)disklabel.c	8.4 (Berkeley) 5/4/95";
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "pathnames.h"
 
 /*
@@ -714,7 +715,7 @@ display(f, lp)
 			else
 			    putc(' ', f);
 			fprintf(f, "- %d",
-			    (pp->p_offset + 
+			    (pp->p_offset +
 			    pp->p_size + lp->d_secpercyl - 1) /
 			    lp->d_secpercyl - 1);
 			if (pp->p_size % lp->d_secpercyl)

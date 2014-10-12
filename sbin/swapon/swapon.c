@@ -44,6 +44,7 @@ static char sccsid[] = "@(#)swapon.c	8.1 (Berkeley) 6/5/93";
 #include <fstab.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 main(argc, argv)
 	int argc;

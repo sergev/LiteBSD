@@ -41,6 +41,8 @@ static char sccsid[] = "@(#)tables.c	8.2 (Berkeley) 4/28/95";
 #include "defs.h"
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/syslog.h>
 
 #ifndef DEBUG
@@ -418,7 +420,7 @@ rtioctl(action, ort)
 			len++;
 			w.w_netmask.sin_len = len;
 			len = 1 + ((len - 1) | (sizeof(long) - 1));
-		} else 
+		} else
 			len = sizeof(long);
 		rtm.rtm_msglen -= (sizeof(w.w_netmask) - len);
 	}

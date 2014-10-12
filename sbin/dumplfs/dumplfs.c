@@ -222,10 +222,10 @@ dump_ifile(fd, lfsp, do_ientries)
 			dump_cleaner_info(lfsp, ipage);
 			print_suheader;
 			continue;
-		} 
+		}
 
 		if (i < (lfsp->lfs_segtabsz + lfsp->lfs_cleansz)) {
-			inum = dump_ipage_segusage(lfsp, inum, ipage, 
+			inum = dump_ipage_segusage(lfsp, inum, ipage,
 			    lfsp->lfs_sepb);
 			if (!inum)
 				if(!do_ientries)
@@ -252,11 +252,11 @@ dump_ifile(fd, lfsp, do_ientries)
 		if (i < lfsp->lfs_cleansz) {
 			dump_cleaner_info(lfsp, ipage);
 			continue;
-		} else 
+		} else
 			i -= lfsp->lfs_cleansz;
 
 		if (i < lfsp->lfs_segtabsz) {
-			inum = dump_ipage_segusage(lfsp, inum, ipage, 
+			inum = dump_ipage_segusage(lfsp, inum, ipage,
 			    lfsp->lfs_sepb);
 			if (!inum)
 				if(!do_ientries)
@@ -286,7 +286,7 @@ dump_ifile(fd, lfsp, do_ientries)
 			if (i < lfsp->lfs_cleansz) {
 				dump_cleaner_info(lfsp, ipage);
 				continue;
-			} else 
+			} else
 				i -= lfsp->lfs_cleansz;
 
 			if (i < lfsp->lfs_segtabsz) {
@@ -357,9 +357,9 @@ dump_dinode(dip)
 		"gid   ", dip->di_gid,
 		"size  ", dip->di_size);
 	(void)printf("%s%s%s%s%s%s",
-		"atime ", ctime(&dip->di_atime),
-		"mtime ", ctime(&dip->di_mtime),
-		"ctime ", ctime(&dip->di_ctime));
+		"atime ", ctime((time_t*)&dip->di_atime),
+		"mtime ", ctime((time_t*)&dip->di_mtime),
+		"ctime ", ctime((time_t*)&dip->di_ctime));
 	(void)printf("inum  %d\n", dip->di_inumber);
 	(void)printf("Direct Addresses\n");
 	for (i = 0; i < NDADDR; i++) {
@@ -387,7 +387,7 @@ dump_sum(fd, lfsp, sp, segnum, addr)
 	struct dinode *inop;
 
 	if (sp->ss_magic != SS_MAGIC ||
-	    sp->ss_sumsum != (ck = cksum(&sp->ss_datasum, 
+	    sp->ss_sumsum != (ck = cksum(&sp->ss_datasum,
 	    LFS_SUMMARY_SIZE - sizeof(sp->ss_sumsum)))) {
 		(void)printf("dumplfs: %s %d address 0x%lx\n",
 		    "corrupt summary block; segment", segnum, addr);
@@ -413,10 +413,10 @@ dump_sum(fd, lfsp, sp, segnum, addr)
 	for (dp--, i = 0; i < sp->ss_ninos; dp--) {
 		numbytes += lfsp->lfs_bsize;	/* add bytes for inode block */
 		printf("\t0x%X {", *dp);
-		get(fd, *dp << (lfsp->lfs_bshift - lfsp->lfs_fsbtodb), inop, 
+		get(fd, *dp << (lfsp->lfs_bshift - lfsp->lfs_fsbtodb), inop,
 		    (1 << lfsp->lfs_bshift));
 		for (j = 0; i < sp->ss_ninos && j < INOPB(lfsp); j++, i++) {
-			if (j > 0) 
+			if (j > 0)
 				(void)printf(", ");
 			(void)printf("%d", inop[j].di_inumber);
 		}
@@ -469,7 +469,7 @@ dump_segment(fd, segnum, addr, lfsp, dump_sb)
 	do {
 		get(fd, sum_offset, sumblock, LFS_SUMMARY_SIZE);
 		sump = (SEGSUM *)sumblock;
-		if (sump->ss_sumsum != cksum (&sump->ss_datasum, 
+		if (sump->ss_sumsum != cksum (&sump->ss_datasum,
 			LFS_SUMMARY_SIZE - sizeof(sump->ss_sumsum))) {
 			sbp = (struct lfs *)sump;
 			if (sb = (sbp->lfs_magic == LFS_MAGIC)) {

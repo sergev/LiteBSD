@@ -49,16 +49,20 @@ static char sccsid[] = "@(#)ifconfig.c	8.2 (Berkeley) 2/16/94";
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifdef USE_NS
 #define	NSIP
 #include <netns/ns.h>
 #include <netns/ns_if.h>
-#include <netdb.h>
+#endif
 
+#ifdef USE_ISO
 #define EON
 #include <netiso/iso.h>
 #include <netiso/iso_var.h>
 #include <sys/protosw.h>
+#endif
 
+#include <netdb.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -69,9 +73,11 @@ static char sccsid[] = "@(#)ifconfig.c	8.2 (Berkeley) 2/16/94";
 
 struct	ifreq		ifr, ridreq;
 struct	ifaliasreq	addreq;
+struct	sockaddr_in	netmask;
+#ifdef USE_ISO
 struct	iso_ifreq	iso_ridreq;
 struct	iso_aliasreq	iso_addreq;
-struct	sockaddr_in	netmask;
+#endif
 
 char	name[30];
 int	flags;
@@ -116,8 +122,10 @@ struct	cmd {
 	{ "metric",	NEXTARG,	setifmetric },
 	{ "broadcast",	NEXTARG,	setifbroadaddr },
 	{ "ipdst",	NEXTARG,	setifipdst },
+#ifdef USE_ISO
 	{ "snpaoffset",	NEXTARG,	setsnpaoffset },
 	{ "nsellength",	NEXTARG,	setnsellength },
+#endif
 	{ "link0",	IFF_LINK0,	setifflags } ,
 	{ "-link0",	-IFF_LINK0,	setifflags } ,
 	{ "link1",	IFF_LINK1,	setifflags } ,
@@ -133,8 +141,12 @@ struct	cmd {
  * Maryland principally by James O'Toole and Chris Torek.
  */
 int	in_status(), in_getaddr();
+#ifdef USE_NS
 int	xns_status(), xns_getaddr();
+#endif
+#ifdef USE_ISO
 int	iso_status(), iso_getaddr();
+#endif
 
 /* Known address families */
 struct afswtch {
@@ -150,10 +162,14 @@ struct afswtch {
 #define C(x) ((caddr_t) &x)
 	{ "inet", AF_INET, in_status, in_getaddr,
 	     SIOCDIFADDR, SIOCAIFADDR, C(ridreq), C(addreq) },
+#ifdef USE_NS
 	{ "ns", AF_NS, xns_status, xns_getaddr,
 	     SIOCDIFADDR, SIOCAIFADDR, C(ridreq), C(addreq) },
+#endif
+#ifdef USE_ISO
 	{ "iso", AF_ISO, iso_status, iso_getaddr,
 	     SIOCDIFADDR_ISO, SIOCAIFADDR_ISO, C(iso_ridreq), C(iso_addreq) },
+#endif
 	{ 0,	0,	    0,		0 }
 };
 
@@ -227,8 +243,11 @@ main(argc, argv)
 		}
 		argc--, argv++;
 	}
+#ifdef USE_ISO
 	if (af == AF_ISO)
 		adjust_nsellength();
+#endif
+#ifdef USE_NS
 	if (setipdst && af==AF_NS) {
 		struct nsip_req rq;
 		int size = sizeof(rq);
@@ -239,6 +258,7 @@ main(argc, argv)
 		if (setsockopt(s, 0, SO_NSIP_ROUTE, &rq, size) < 0)
 			Perror("Encapsulation Routing");
 	}
+#endif
 	if (clearaddr) {
 		int ret;
 		strncpy(rafp->af_ridreq, name, sizeof ifr.ifr_name);
@@ -360,11 +380,13 @@ setifmetric(val)
 		perror("ioctl (set metric)");
 }
 
+#ifdef USE_ISO
 setsnpaoffset(val)
 	char *val;
 {
 	iso_addreq.ifra_snpaoffset = atoi(val);
 }
+#endif
 
 #define	IFFBITS \
 "\020\1UP\2BROADCAST\3DEBUG\4LOOPBACK\5POINTOPOINT\6NOTRAILERS\7RUNNING\10NOARP\
@@ -444,7 +466,7 @@ in_status(force)
 	putchar('\n');
 }
 
-
+#ifdef USE_NS
 xns_status(force)
 	int force;
 {
@@ -482,7 +504,9 @@ xns_status(force)
 	}
 	putchar('\n');
 }
+#endif
 
+#ifdef USE_ISO
 iso_status(force)
 	int force;
 {
@@ -531,6 +555,7 @@ iso_status(force)
 	}
 	putchar('\n');
 }
+#endif
 
 Perror(cmd)
 	char *cmd;
@@ -614,6 +639,7 @@ printb(s, v, bits)
 	}
 }
 
+#ifdef USE_NS
 #define SNS(x) ((struct sockaddr_ns *) &(x))
 struct sockaddr_ns *snstab[] = {
 SNS(ridreq.ifr_addr), SNS(addreq.ifra_addr),
@@ -631,7 +657,9 @@ char *addr;
 	if (which == MASK)
 		printf("Attempt to set XNS netmask will be ineffectual\n");
 }
+#endif
 
+#ifdef USE_ISO
 #define SISO(x) ((struct sockaddr_iso *) &(x))
 struct sockaddr_iso *sisotab[] = {
 SISO(iso_ridreq.ifr_Addr), SISO(iso_addreq.ifra_addr),
@@ -677,3 +705,4 @@ adjust_nsellength()
 	fixnsel(sisotab[ADDR]);
 	fixnsel(sisotab[DSTADDR]);
 }
+#endif

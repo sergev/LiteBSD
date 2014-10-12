@@ -53,6 +53,8 @@ static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/5/93";
 #include <sys/errno.h>
 #include <sys/signal.h>
 #include <sys/syslog.h>
+#include <stdlib.h>
+#include <strings.h>
 #include "pathnames.h"
 
 int	supplier = -1;		/* process should supply updates */
@@ -74,7 +76,7 @@ main(argc, argv)
 	register struct rip *query = msg;
 	fd_set ibits;
 	u_char retry;
-	
+
 	argv0 = argv;
 #if BSD >= 43
 	openlog("routed", LOG_PID | LOG_ODELAY, LOG_DAEMON);

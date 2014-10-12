@@ -75,6 +75,7 @@ static char sccsid[] = "@(#)ping.c	8.3 (Berkeley) 4/28/95";
 #include <netinet/ip_var.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
@@ -152,7 +153,7 @@ main(argc, argv)
 	register int i;
 	int ch, fdmask, hold, packlen, preload;
 	u_char *datap, *packet;
-	char *target, hnamebuf[MAXHOSTNAMELEN], *malloc();
+	char *target, hnamebuf[MAXHOSTNAMELEN];
 #ifdef IP_OPTIONS
 	char rspace[3 + 4 * NROUTES + 1];	/* record route space */
 #endif

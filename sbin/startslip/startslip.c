@@ -61,6 +61,8 @@ static char sccsid[] = "@(#)startslip.c	8.1 (Berkeley) 6/5/93";
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 
 #define DEFAULT_BAUD    B9600
@@ -168,7 +170,7 @@ main(argc, argv)
 
 	if (debug)
 		setbuf(stdout, NULL);
-	
+
 	if (pfd = fopen(PIDFILE, "r")) {
 		pid = 0;
 		fscanf(pfd, "%d", &pid);
@@ -273,7 +275,7 @@ restart:
 	if (tcsetattr(fd, TCSAFLUSH, &t) < 0) {
 		perror("tcsetattr");
 		syslog(LOG_ERR, "%s: tcsetattr: %m\n", argv[0]);
-	        if (first) 
+	        if (first)
 			exit(2);
 		else {
 			sleep(wait_time * tries);
@@ -294,7 +296,7 @@ restart:
 	        perror("ioctl (TIOCSETP)");
 		syslog(LOG_ERR, "%s: ioctl (TIOCSETP): %m\n",
 		    argv[0]);
-	        if (first) 
+	        if (first)
 			exit(2);
 		else {
 			sleep(wait_time * tries);
@@ -357,7 +359,7 @@ restart:
 			}
 		}
 	}
-	
+
 	/*
 	 * Security hack.  Do not want private information such as the
 	 * password and possible phone number to be left around.

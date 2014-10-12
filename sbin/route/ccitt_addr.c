@@ -48,6 +48,7 @@
  * Laboratory for Computational Vision
  * Copyright (c) 1984
  */
+#ifdef USE_X25
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -173,3 +174,5 @@ register char *from, *to;
 	*to = n;
 	return (from);
 }
+
+#endif /* USE_X25 */

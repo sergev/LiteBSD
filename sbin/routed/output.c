@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)output.c	8.2 (Berkeley) 4/28/95";
  * Routing Table Management Daemon
  */
 #include "defs.h"
+#include <string.h>
 
 /*
  * Apply the function "f" to all non-passive

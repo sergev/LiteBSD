@@ -116,7 +116,6 @@ int	 dump_exists __P((void));
 char	*find_dev __P((dev_t, int));
 int	 get_crashtime __P((void));
 void	 kmem_setup __P((void));
-void	 log __P((int, char *, ...));
 void	 Lseek __P((int, off_t, int));
 int	 Open __P((char *, int rw));
 int	 Read __P((int, void *, int));
@@ -200,7 +199,7 @@ kmem_setup()
 	FILE *fp;
 	int kmem, i;
 	char *dump_sys;
-	
+
 	/*
 	 * Some names we need for the currently running system, others for
 	 * the system that was running when the dump was made.  The values
@@ -406,7 +405,7 @@ err2:			syslog(LOG_WARNING,
 	(void)close(ifd);
 	if (compress)
 		(void)fclose(fp);
-	else 
+	else
 		(void)close(ofd);
 
 	/* Copy the kernel. */

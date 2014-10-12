@@ -8,7 +8,7 @@ CLEANFILES+=keywords.h
 BINOWN=	root
 BINMODE=4555
 
-all: route ${MAN8}
+all: keywords.h route ${MAN8}
 
 keywords.h: keywords
 	sed -e '/^#/d' -e '/^$$/d' ${.CURDIR}/keywords > _keywords.tmp

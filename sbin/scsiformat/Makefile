@@ -2,6 +2,6 @@
 
 PROG=	scsiformat
 MAN8=	scsiformat.0
-CFLAGS+=-I/sys
+CFLAGS+=-I../../sys
 
 .include <bsd.prog.mk>

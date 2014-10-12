@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)timer.c	8.1 (Berkeley) 6/5/93";
  * Routing Table Management Daemon
  */
 #include "defs.h"
+#include <stdlib.h>
 
 int	faketime;
 

@@ -14,5 +14,5 @@ afterinstall:
 	${MINSTALL} boot_tahoe.0 ${DESTDIR}${MANDIR}8/tahoe/boot.0
 	${MINSTALL} boot_vax.0 ${DESTDIR}${MANDIR}8/vax/boot.0
 
-.include <bsd.man.mk>
+#.include <bsd.man.mk>
 .include <bsd.prog.mk>

@@ -48,6 +48,8 @@ static char sccsid[] = "@(#)mkfs.c	8.11 (Berkeley) 5/3/95";
 #ifndef STANDALONE
 #include <a.out.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 /*
@@ -99,7 +101,6 @@ extern int	bbsize;		/* boot block size */
 extern int	sbsize;		/* superblock size */
 extern u_long	memleft;	/* virtual memory available */
 extern caddr_t	membase;	/* start address of memory based filesystem */
-extern caddr_t	malloc(), calloc();
 
 union {
 	struct fs fs;
@@ -119,6 +120,7 @@ struct dinode zino[MAXBSIZE / sizeof(struct dinode)];
 int	fsi, fso;
 daddr_t	alloc();
 long	calcipg();
+void 	started();
 
 mkfs(pp, fsys, fi, fo)
 	struct partition *pp;
@@ -134,7 +136,6 @@ mkfs(pp, fsys, fi, fo)
 	int ppid, status;
 	time_t utime;
 	quad_t sizepb;
-	void started();
 
 #ifndef STANDALONE
 	time(&utime);
@@ -359,7 +360,7 @@ mkfs(pp, fsys, fi, fo)
 			    fsize, sblock.fs_fsize);
 		exit(23);
 	}
-	/* 
+	/*
 	 * Calculate the number of cylinders per group
 	 */
 	sblock.fs_cpg = cpg;
@@ -607,7 +608,7 @@ next:
 			sblock.fs_cssize - i < sblock.fs_bsize ?
 			    sblock.fs_cssize - i : sblock.fs_bsize,
 			((char *)fscs) + i);
-	/* 
+	/*
 	 * Write out the duplicate super blocks
 	 */
 	for (cylno = 0; cylno < sblock.fs_ncg; cylno++)
@@ -674,7 +675,7 @@ initcg(cylno, utime)
 		acg.cg_nclusterblks = acg.cg_ndblk / sblock.fs_frag;
 	acg.cg_btotoff = &acg.cg_space[0] - (u_char *)(&acg.cg_firstfield);
 	acg.cg_boff = acg.cg_btotoff + sblock.fs_cpg * sizeof(long);
-	acg.cg_iusedoff = acg.cg_boff + 
+	acg.cg_iusedoff = acg.cg_boff +
 		sblock.fs_cpg * sblock.fs_nrpos * sizeof(short);
 	acg.cg_freeoff = acg.cg_iusedoff + howmany(sblock.fs_ipg, NBBY);
 	if (sblock.fs_contigsumsize <= 0) {
@@ -1043,9 +1044,9 @@ started()
 /*
  * Replace libc function with one suited to our needs.
  */
-caddr_t
+void *
 malloc(size)
-	register u_long size;
+	size_t size;
 {
 	char *base, *i;
 	static u_long pgsz;
@@ -1075,10 +1076,10 @@ malloc(size)
 /*
  * Replace libc function with one suited to our needs.
  */
-caddr_t
+void *
 realloc(ptr, size)
-	char *ptr;
-	u_long size;
+	void *ptr;
+	size_t size;
 {
 	void *p;
 
@@ -1092,9 +1093,9 @@ realloc(ptr, size)
 /*
  * Replace libc function with one suited to our needs.
  */
-char *
+void *
 calloc(size, numelm)
-	u_long size, numelm;
+	size_t size, numelm;
 {
 	caddr_t base;
 
@@ -1107,10 +1108,10 @@ calloc(size, numelm)
 /*
  * Replace libc function with one suited to our needs.
  */
+void
 free(ptr)
-	char *ptr;
+	void *ptr;
 {
-	
 	/* do not worry about it for now */
 }
 

@@ -44,6 +44,7 @@ static char sccsid[] = "@(#)trace.c	8.2 (Berkeley) 4/28/95";
 #include <sys/signal.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pathnames.h"
 
 #define	NRECORDS	50		/* size of circular trace buffer */
@@ -54,11 +55,11 @@ int	traceactions = 0;
 static	struct timeval lastlog;
 static	char *savetracename;
 
+static int iftraceinit();
+
 traceinit(ifp)
 	register struct interface *ifp;
 {
-	static int iftraceinit();
-
 	if (iftraceinit(ifp, &ifp->int_input) &&
 	    iftraceinit(ifp, &ifp->int_output))
 		return;

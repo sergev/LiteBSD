@@ -52,7 +52,7 @@ static char sccsid[] = "@(#)badsect.c	8.2 (Berkeley) 5/4/95";
  * does not support bad block forwarding.
  */
 #include <sys/param.h>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <sys/stat.h>
 
 #include <ufs/ufs/dinode.h>
@@ -63,6 +63,7 @@ static char sccsid[] = "@(#)badsect.c	8.2 (Berkeley) 5/4/95";
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 union {
 	struct	fs fs;
@@ -91,7 +92,7 @@ main(argc, argv)
 {
 	daddr_t number;
 	struct stat stbuf, devstat;
-	register struct direct *dp;
+	register struct dirent *dp;
 	DIR *dirp;
 	char name[BUFSIZ];
 

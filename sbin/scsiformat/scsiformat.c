@@ -207,7 +207,7 @@ print_inquiry()
 		break;
 
 	default:
-		(void)printf("(??)");
+		(void)printf("(\?\?)");
 		break;
 	}
 	scsi_str(si->si_vendor, vendor, sizeof(si->si_vendor));
