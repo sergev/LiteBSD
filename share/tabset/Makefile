@@ -8,7 +8,7 @@ NOOBJ=	noobj
 all clean cleandir depend lint tags:
 
 install:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
-	    ${DESTDIR}${BINDIR}/tabset
+	install -d ${DESTDIR}${BINDIR}/tabset
+	install -c -m 444 ${FILES} ${DESTDIR}${BINDIR}/tabset
 
 .include <bsd.prog.mk>

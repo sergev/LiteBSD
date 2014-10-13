@@ -6,7 +6,7 @@
 #
 MAN5=	termcap.0
 
-all: termcap termcap.db ${MAN5}
+all: termcap ${MAN5} #termcap.db
 
 termcap: reorder termcap.src
 	ex - ${.CURDIR}/termcap.src < ${.CURDIR}/reorder > /dev/null
@@ -21,12 +21,8 @@ cleandir: clean
 	rm -f ${MAN5}
 
 beforeinstall:
-	install -o ${BINOWN} -g ${BINGRP} -m 444 termcap \
-	     ${DESTDIR}${BINDIR}/misc
-	install -o ${BINOWN} -g ${BINGRP} -m 444 termcap.db \
-	     ${DESTDIR}${BINDIR}/misc
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/map3270 \
-	     ${DESTDIR}${BINDIR}/misc
+	install -D -m 444 termcap ${DESTDIR}${BINDIR}/misc/termcap
+#	install -m 444 termcap.db ${DESTDIR}${BINDIR}/misc
+	install -c -m 444 map3270 ${DESTDIR}${BINDIR}/misc
 
-	
 .include <bsd.prog.mk>

@@ -6,7 +6,7 @@ NOOBJ=	noobj
 all clean cleandir depend lint tags:
 
 install:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
-	    ${DESTDIR}${BINDIR}/dict
+	install -d ${DESTDIR}${BINDIR}/dict
+	install -c -m 444 ${FILES} ${DESTDIR}${BINDIR}/dict
 
 .include <bsd.prog.mk>

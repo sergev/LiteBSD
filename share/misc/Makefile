@@ -7,7 +7,7 @@ NOOBJ=	noobj
 all clean cleandir depend lint tags:
 
 install:
-	cd ${.CURDIR}; install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
-	    ${DESTDIR}${BINDIR}/misc
+	install -d ${DESTDIR}${BINDIR}/misc
+	install -c -m 444 ${FILES} ${DESTDIR}${BINDIR}/misc
 
 .include <bsd.prog.mk>

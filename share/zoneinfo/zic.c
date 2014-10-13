@@ -46,11 +46,11 @@ static char	elsieid[] = "@(#)zic.c	4.12";
 #include <sys/cdefs.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <tzfile.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include "tzfile.h"
 
 #ifndef TRUE
 #define TRUE	1
