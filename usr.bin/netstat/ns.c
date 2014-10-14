@@ -30,6 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#ifdef USE_NS
 
 #ifndef lint
 static char sccsid[] = "@(#)ns.c	8.1 (Berkeley) 6/6/93";
@@ -349,3 +350,4 @@ char *ns_prpr(x)
 	sns->sns_addr = *x;
 	return(ns_print((struct sockaddr *)sns));
 }
+#endif /* USE_NS */

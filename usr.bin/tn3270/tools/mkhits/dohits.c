@@ -54,24 +54,19 @@ static char sccsid[] = "@(#)dohits.c	8.1 (Berkeley) 6/6/93";
  */
 
 #include <stdio.h>
-#if	defined(unix)
-#include <strings.h>
-#else	/* defined(unix) */
+#include <stdlib.h>
 #include <string.h>
-#endif	/* defined(unix) */
 #include <ctype.h>
-#include "../general/general.h"
-#include "../api/asc_ebc.h"
-#include "../api/ebc_disp.h"
-#include "../ctlr/function.h"
+#include "../../general/general.h"
+#include "../../api/asc_ebc.h"
+#include "../../api/ebc_disp.h"
+#include "../../ctlr/function.h"
 
 #include "dohits.h"
 
 struct Hits Hits[256];		/* one for each of 0x00-0xff */
 
 struct thing *table[100];
-
-extern char *malloc();
 
 unsigned int
 dohash(seed, string)
@@ -257,7 +252,7 @@ char	*aidfile, *fcnfile;
     }
     scanwhite(fcnfile, "FCN_");
 
-    while (gets(line) != NULL) {
+    while (fgets(line, sizeof line, stdin) != NULL) {
 	if (!isdigit(line[0])) {
 	    continue;
 	}

@@ -48,8 +48,8 @@ static char sccsid[] = "@(#)mkastods.c	8.1 (Berkeley) 6/6/93";
 #include <string.h>
 #endif	/* defined(unix) */
 #include <ctype.h>
-#include "../api/asc_ebc.h"
-#include "../api/ebc_disp.h"
+#include "../../api/asc_ebc.h"
+#include "../../api/ebc_disp.h"
 
 int
 main()

@@ -6,4 +6,4 @@ CFLAGS+=-I${.CURDIR}/.. -I.
 NOMAN=	noman
 .PATH:	${.CURDIR}/../../api
 
-.include <bsd.prog.mk>
+.include <local.prog.mk>

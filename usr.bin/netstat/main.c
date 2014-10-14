@@ -149,6 +149,7 @@ struct protox {
 	  0,		0 }
 };
 
+#ifdef USE_NS
 struct protox nsprotox[] = {
 	{ N_IDP,	N_IDPSTAT,	1,	nsprotopr,
 	  idp_stats,	"idp" },
@@ -159,7 +160,9 @@ struct protox nsprotox[] = {
 	{ -1,		-1,		0,	0,
 	  0,		0 }
 };
+#endif
 
+#ifdef USE_ISO
 struct protox isoprotox[] = {
 	{ ISO_TP,	N_TPSTAT,	1,	iso_protopr,
 	  tp_stats,	"tp" },
@@ -172,8 +175,18 @@ struct protox isoprotox[] = {
 	{ -1,		-1,		0,	0,
 	  0,		0 }
 };
+#endif
 
-struct protox *protoprotox[] = { protox, nsprotox, isoprotox, NULL };
+struct protox *protoprotox[] = {
+    protox,
+#ifdef USE_NS
+    nsprotox,
+#endif
+#ifdef USE_ISO
+    isoprotox,
+#endif
+    NULL
+};
 
 static void printproto __P((struct protox *, char *));
 static void usage __P((void));
@@ -378,12 +391,16 @@ main(argc, argv)
 		}
 		endprotoent();
 	}
+#ifdef USE_NS
 	if (af == AF_NS || af == AF_UNSPEC)
 		for (tp = nsprotox; tp->pr_name; tp++)
 			printproto(tp, tp->pr_name);
+#endif
+#ifdef USE_ISO
 	if (af == AF_ISO || af == AF_UNSPEC)
 		for (tp = isoprotox; tp->pr_name; tp++)
 			printproto(tp, tp->pr_name);
+#endif
 	if ((af == AF_UNIX || af == AF_UNSPEC) && !sflag)
 		unixpr(nl[N_UNIXSW].n_value);
 	exit(0);

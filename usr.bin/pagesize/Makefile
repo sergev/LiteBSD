@@ -14,4 +14,4 @@ install: maninstall
 	    ${.CURDIR}/pagesize.sh ${DESTDIR}/${BINDIR}/pagesize
 
 .include <bsd.prog.mk>
-.include <bsd.man.mk>
+#.include <bsd.man.mk>

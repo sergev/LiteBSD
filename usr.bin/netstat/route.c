@@ -48,8 +48,9 @@ static char sccsid[] = "@(#)route.c	8.6 (Berkeley) 4/28/95";
 #undef KERNEL
 #include <netinet/in.h>
 
+#ifdef USE_NS
 #include <netns/ns.h>
-
+#endif
 #include <sys/sysctl.h>
 
 #include <netdb.h>
@@ -378,11 +379,11 @@ p_sockaddr(sa, mask, flags, width)
 			cp = netname(sin->sin_addr.s_addr, 0L);
 		break;
 	    }
-
+#ifdef USE_NS
 	case AF_NS:
 		cp = ns_print(sa);
 		break;
-
+#endif
 	case AF_LINK:
 	    {
 		register struct sockaddr_dl *sdl = (struct sockaddr_dl *)sa;
@@ -659,6 +660,8 @@ rt_stats(off)
 	printf("\t%u use%s of a wildcard route\n",
 		rtstat.rts_wildcard, plural(rtstat.rts_wildcard));
 }
+
+#ifdef USE_NS
 short ns_nullh[] = {0,0,0};
 short ns_bh[] = {-1,-1,-1};
 
@@ -726,6 +729,7 @@ ns_phost(sa)
 	if (strncmp("0H.", p, 3) == 0) p += 3;
 	return(p);
 }
+#endif
 
 void
 upHex(p0)

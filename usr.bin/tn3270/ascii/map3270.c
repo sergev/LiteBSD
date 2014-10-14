@@ -57,11 +57,8 @@ static char sccsid[] = "@(#)map3270.c	8.1 (Berkeley) 6/6/93";
 
 #include <stdio.h>
 #include <ctype.h>
-#if	defined(unix)
-#include <strings.h>
-#else	/* defined(unix) */
 #include <string.h>
-#endif	/* defined(unix) */
+#include <stdlib.h>
 
 #define	IsPrint(c)	((isprint(c) && !isspace(c)) || ((c) == ' '))
 
@@ -441,7 +438,7 @@ EatToNL()
 
     lex = Get();
 
-    while (!((lex.type != LEX_ESCAPED) && (lex.type != LEX_CARETED) && 
+    while (!((lex.type != LEX_ESCAPED) && (lex.type != LEX_CARETED) &&
 		(lex.value == '\n')) && (!(lex.type == LEX_END_OF_FILE))) {
 	lex = Get();
     }

@@ -33,28 +33,28 @@ DEPSRCS+= tn3270.c utilities.c
 astosc.o: astosc.OUT
 CLEANFILES+= astosc.OUT astosc.out
 astosc.OUT: ${.CURDIR}/../ctlr/hostctlr.h ${.CURDIR}/../ctlr/function.h
-astosc.OUT: ${.CURDIR}/../ctlr/${KBD} ${.CURDIR}/../tools/mkastosc/obj/mkastosc
-	${.CURDIR}/../tools/mkastosc/obj/mkastosc \
+astosc.OUT: ${.CURDIR}/../ctlr/${KBD} ${.CURDIR}/../tools/mkastosc/mkastosc
+	${.CURDIR}/../tools/mkastosc/mkastosc \
 	    ${.CURDIR}/../ctlr/hostctlr.h \
 	    ${.CURDIR}/../ctlr/function.h < ${.CURDIR}/../ctlr/${KBD} \
 	    > ${.TARGET}
 	rm -f astosc.out; ln -s astosc.OUT astosc.out
 
 disp_asc.o: asc_disp.OUT disp_asc.OUT
-asc_disp.OUT: ${.CURDIR}/../tools/mkastods/obj/mkastods
-	${.CURDIR}/../tools/mkastods/obj/mkastods > ${.TARGET}
+asc_disp.OUT: ${.CURDIR}/../tools/mkastods/mkastods
+	${.CURDIR}/../tools/mkastods/mkastods > ${.TARGET}
 	rm -f asc_disp.out; ln -s asc_disp.OUT asc_disp.out
 
-disp_asc.OUT: ${.CURDIR}/../tools/mkdstoas/obj/mkdstoas
-	${.CURDIR}/../tools/mkdstoas/obj/mkdstoas > ${.TARGET}
+disp_asc.OUT: ${.CURDIR}/../tools/mkdstoas/mkdstoas
+	${.CURDIR}/../tools/mkdstoas/mkdstoas > ${.TARGET}
 	rm -f disp_asc.out; ln -s disp_asc.OUT disp_asc.out
 
 inbound.o: kbd.OUT
 CLEANFILES += kbd.OUT kbd.out
 kbd.OUT: ${.CURDIR}/../ctlr/hostctlr.h ${.CURDIR}/../ctlr/${KBD}
-kbd.OUT: ${.CURDIR}/../tools/mkhits/obj/mkhits
+kbd.OUT: ${.CURDIR}/../tools/mkhits/mkhits
 	${CC} ${CFLAGS} -E ${.CURDIR}/../ctlr/function.c > TMPfunc.out
-	${.CURDIR}/../tools/mkhits/obj/mkhits ${.CURDIR}/../ctlr/hostctlr.h \
+	${.CURDIR}/../tools/mkhits/mkhits ${.CURDIR}/../ctlr/hostctlr.h \
 	    TMPfunc.out < ${.CURDIR}/../ctlr/${KBD} > ${.TARGET}
 	rm -f kbd.out; ln -s kbd.OUT kbd.out
 
@@ -63,14 +63,14 @@ kbd.OUT: ${.CURDIR}/../tools/mkhits/obj/mkhits
 # default.map
 # kbd.out
 
-${.CURDIR}/../tools/mkastosc/obj/mkastosc:
-	cd ${.CURDIR}/../tools/mkastosc; make
-${.CURDIR}/../tools/mkastods/obj/mkastods:
-	cd ${.CURDIR}/../tools/mkastods; make
-${.CURDIR}/../tools/mkdstoas/obj/mkdstoas:
-	cd ${.CURDIR}/../tools/mkdstoas; make
-${.CURDIR}/../tools/mkhits/obj/mkhits:
-	cd ${.CURDIR}/../tools/mkhits; make
+${.CURDIR}/../tools/mkastosc/mkastosc:
+	cd ${.CURDIR}/../tools/mkastosc; ${MAKE}
+${.CURDIR}/../tools/mkastods/mkastods:
+	cd ${.CURDIR}/../tools/mkastods; ${MAKE}
+${.CURDIR}/../tools/mkdstoas/mkdstoas:
+	cd ${.CURDIR}/../tools/mkdstoas; ${MAKE}
+${.CURDIR}/../tools/mkhits/mkhits:
+	cd ${.CURDIR}/../tools/mkhits; ${MAKE}
 
 depend: .depend
 .depend: ${DEPSRCS}

@@ -61,7 +61,7 @@ struct proc;
 static	void unixdomainpr __P((struct socket *, caddr_t));
 
 static struct	file *file, *fileNFILE;
-static int	nfiles;
+static int	nufiles;
 extern	kvm_t *kvmd;
 
 void
@@ -73,13 +73,13 @@ unixpr(off)
 	char *filebuf;
 	struct protosw *unixsw = (struct protosw *)off;
 
-	filebuf = (char *)kvm_getfiles(kvmd, KERN_FILE, 0, &nfiles);
+	filebuf = (char *)kvm_getfiles(kvmd, KERN_FILE, 0, &nufiles);
 	if (filebuf == 0) {
 		printf("Out of memory (file table).\n");
 		return;
 	}
 	file = (struct file *)(filebuf + sizeof(fp));
-	fileNFILE = file + nfiles;
+	fileNFILE = file + nufiles;
 	for (fp = file; fp < fileNFILE; fp++) {
 		if (fp->f_count == 0 || fp->f_type != DTYPE_SOCKET)
 			continue;

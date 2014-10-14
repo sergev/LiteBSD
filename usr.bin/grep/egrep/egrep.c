@@ -89,6 +89,8 @@ static char sccsid[] = "@(#)egrep.c	8.1 (Berkeley) 6/6/93";
 #include <sys/file.h>
 #include <regexp.h>		/* must be henry spencer's version */
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include "pathnames.h"
 
@@ -162,8 +164,6 @@ short altset[NMUSH + 1][256];
 char preamble[200];		/* match prefix (filename, line no.) */
 
 int fd;
-char *
-strchr(), *strrchr(), *strcpy(), *strncpy(), *strpbrk(), *malloc();
 char *
 grepxlat(), *fold(), *pfile(), *alternate(), *isolate();
 char *gotamatch(), *kanji(), *linesave(), *submatch();
@@ -268,7 +268,7 @@ oops("usage: egrep [-bchilnosv] {-f patfile | [-e] pattern} [file ...]");
 	 * classes with '-' at end (egrep bug?), and patterns beginning with
 	 * an asterisk (don't ask why). otherwise, characters meaningful to
 	 * 'egrep' but not to 'grep' are escaped; the entire expr is then
-	 * passed to 'egrep'. 
+	 * passed to 'egrep'.
 	 */
 	if (grepflag && !grepold) {
 		if (strindex(pattern, "\\(") >= 0 ||
@@ -288,7 +288,7 @@ oops("usage: egrep [-bchilnosv] {-f patfile | [-e] pattern} [file ...]");
 	/*
 	 * If the pattern is a plain string, just run boyer-moore. If it
 	 * consists of meta-free alternatives, run "superimposed" bmg.
-	 * Otherwise, find best string, and compile pattern for regexec(). 
+	 * Otherwise, find best string, and compile pattern for regexec().
 	 */
 	if (strpbrk(pattern, META) == NULL) {	/* do boyer-moore only */
 		boyonly++;
@@ -409,7 +409,7 @@ chimaera(file, pat)		/* "reach out and boyer-moore search someone" */
 			/*
 			 * for a large class of patterns, upwards of 80% of
 			 * match time is spent on the next line.  we beat
-			 * existing microcode (vax 'matchc') this way. 
+			 * existing microcode (vax 'matchc') this way.
 			 */
 			while ((k += deltazero[*(unsigned char *) k]) < strend);
 			if (k < (str + LARGE))
@@ -420,7 +420,7 @@ chimaera(file, pat)		/* "reach out and boyer-moore search someone" */
 				/*
 				 * Parallel Boyer-Moore.  Check whether each
 				 * of the previous <altmin> chars COULD be
-				 * from one of the alternative strings. 
+				 * from one of the alternative strings.
 				 */
 				s = k - 1;
 				j = altmin;
@@ -429,7 +429,7 @@ chimaera(file, pat)		/* "reach out and boyer-moore search someone" */
 				/*
 				 * quick test fails. in this life, compare
 				 * 'em all.  but, a "reverse trie" would
-				 * attenuate worst case (linear w/delta2?). 
+				 * attenuate worst case (linear w/delta2?).
 				 */
 				if (--j < 0) {
 					count = nalt - 1;
@@ -454,7 +454,7 @@ chimaera(file, pat)		/* "reach out and boyer-moore search someone" */
 			}
 			/*
 			 * delta-less shortcut for literati. short shrift for
-			 * genetic engineers? 
+			 * genetic engineers?
 			 */
 			if (j >= 0) {
 				k++;	/* no match; restart next char */
@@ -496,7 +496,7 @@ linesave(str, count)		/* accumulate partial line at end of buffer */
 		j--;
 	/*
 	 * break up these lines: long line (> BUFSIZE), last line of file, or
-	 * short return from read(), as from tee(1) input 
+	 * short return from read(), as from tee(1) input
 	 */
 	if (j < 0 && (count == (BUFSIZE - nleftover))) {
 		str[count++] = NL;
@@ -514,7 +514,7 @@ linesave(str, count)		/* accumulate partial line at end of buffer */
 /*
  * Process partial match. First check for mis-aligned Kanji, then match line
  * against full compiled r.e. if statistics do not warrant handing off to
- * standard egrep. 
+ * standard egrep.
  */
 char *
 submatch(file, pat, str, strend, k, altindex)
@@ -550,7 +550,7 @@ submatch(file, pat, str, strend, k, altindex)
 	while (*s++ != NL);
 	*--s = EOS;
 	/*
-	 * "quick henry -- the flit" (after theodor geisel) 
+	 * "quick henry -- the flit" (after theodor geisel)
 	 */
 	if (regexec(rspencer, ((iflag) ? fold(k) : k)) == 1) {
 		*s = NL;
@@ -564,8 +564,8 @@ submatch(file, pat, str, strend, k, altindex)
 #ifndef NOKANJI
 /*
  * EUC code disambiguation -- scan backwards to first 7-bit code, while
- * counting intervening 8-bit codes.  If odd, reject unaligned Kanji pattern. 
- * SS2/3 checks are for intermixed Japanase Katakana or Kanji2. 
+ * counting intervening 8-bit codes.  If odd, reject unaligned Kanji pattern.
+ * SS2/3 checks are for intermixed Japanase Katakana or Kanji2.
  */
 char *
 kanji(str, s, k)
@@ -587,7 +587,7 @@ kanji(str, s, k)
 #endif
 
 /*
- * Compute "Boyer-Moore" delta table -- put skip distance in delta0[c] 
+ * Compute "Boyer-Moore" delta table -- put skip distance in delta0[c]
  */
 gosper(pattern)
 	char *pattern;		/* ... HAKMEM lives ... */
@@ -631,7 +631,7 @@ gosper(pattern)
 
 /*
  * Print, count, or stop on full match. Result is either the location for
- * continued search, or NULL to stop. 
+ * continued search, or NULL to stop.
  */
 char *
 gotamatch(file, s)
@@ -741,7 +741,7 @@ grepxlat(pattern)		/* grep pattern meta conversion */
  * a pointer to the first string if it is. Warning:  sscanf size is a
  * fixpoint, beyond which the speedup linearity starts to break down.  In the
  * wake of the elegant aho/corrasick "trie"-based fgrep, generalizing
- * altpat[] to arbitrary size is not useful. 
+ * altpat[] to arbitrary size is not useful.
  */
 char *
 alternate(regexpr)
@@ -808,7 +808,7 @@ alternate(regexpr)
  * which is faster on complex patterns than regexp().  At FIRSTFEW,
  * dump the saved matches collected by savematch(). They are saved
  * so that a "PUNT" can "rewind" to ignore them.  Stdin is problematic,
- * since it's hard to rewind. 
+ * since it's hard to rewind.
  */
 
 execstrategy(file)
@@ -846,7 +846,7 @@ isolate(regexpr)		/* isolate longest metacharacter-free string */
 
 	/*
 	 * We add (.)* because Henry's regcomp only figures regmust if it
-	 * sees a leading * pattern.  Foo! 
+	 * sees a leading * pattern.  Foo!
 	 */
 	dummyexpr = malloc((unsigned) strlen(regexpr) + 5);
 	(void)sprintf(dummyexpr, "(.)*%s", regexpr);
@@ -905,7 +905,7 @@ kernighan(args)			/* "let others do the hard part ..." */
 	 * We may have already run grep on some of the files; remove them
 	 * from the arg list we pass on.  Note that we can't delete them
 	 * totally because the number of file names affects the output
-	 * (automatic -h). 
+	 * (automatic -h).
 	 */
 	/* better would be fork/exec per punted file -- jaw */
 

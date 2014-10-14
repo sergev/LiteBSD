@@ -66,7 +66,7 @@ static char sccsid[] = "@(#)mkhits.c	8.1 (Berkeley) 6/6/93";
 #include <string.h>
 #endif	/* defined(unix) */
 #include <ctype.h>
-#include "../ctlr/function.h"
+#include "../../ctlr/function.h"
 
 #include "dohits.h"
 

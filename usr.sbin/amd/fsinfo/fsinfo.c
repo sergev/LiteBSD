@@ -54,6 +54,8 @@ static char copyright[] =
 #include "../fsinfo/fsinfo.h"
 #include "fsi_gram.h"
 #include <pwd.h>
+#include <stdlib.h>
+#include <string.h>
 
 qelem *list_of_hosts;
 qelem *list_of_automounts;

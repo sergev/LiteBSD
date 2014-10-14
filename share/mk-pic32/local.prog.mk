@@ -9,7 +9,7 @@
 .8.0 .7.0 .6.0 .5.0 .4.0 .3.0 .2.0 .1.0:
 	nroff -man ${.IMPSRC} > ${.TARGET}
 
-CFLAGS+=${COPTS} -Werror
+CFLAGS=         ${COPTS} -Werror
 
 STRIP?=	-s
 
@@ -152,37 +152,6 @@ realinstall: beforeinstall
 lint: ${SRCS} _PROGSUBDIR
 .if defined(PROG)
 	@${LINT} ${LINTFLAGS} ${CFLAGS} ${.ALLSRC} | more 2>&1
-.endif
-.endif
-
-.if !target(obj)
-.if defined(NOOBJ)
-obj: _PROGSUBDIR
-.else
-obj: _PROGSUBDIR
-	@cd ${.CURDIR}; rm -rf obj; \
-	here=`pwd`; dest=/usr/obj/`echo $$here | sed 's,/usr/src/,,'`; \
-	echo "$$here -> $$dest"; ln -s $$dest obj; \
-	if test -d /usr/obj -a ! -d $$dest; then \
-		mkdir -p $$dest; \
-	else \
-		true; \
-	fi;
-.endif
-.endif
-
-.if !target(objdir)
-.if defined(NOOBJ)
-objdir: _PROGSUBDIR
-.else
-objdir: _PROGSUBDIR
-	@cd ${.CURDIR}; \
-	here=`pwd`; dest=/usr/obj/`echo $$here | sed 's,/usr/src/,,'`; \
-	if test -d /usr/obj -a ! -d $$dest; then \
-		mkdir -p $$dest; \
-	else \
-		true; \
-	fi;
 .endif
 .endif
 

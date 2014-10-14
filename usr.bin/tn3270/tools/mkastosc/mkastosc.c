@@ -49,8 +49,8 @@ static char sccsid[] = "@(#)mkastosc.c	8.1 (Berkeley) 6/6/93";
 #endif	/* defined(unix) */
 #include <ctype.h>
 
-#include "../general/general.h"
-#include "../ctlr/function.h"
+#include "../../general/general.h"
+#include "../../ctlr/function.h"
 
 #include "dohits.h"
 
@@ -133,7 +133,7 @@ char	*argv[];
 	}
 	printf(" */\n");
     }
-		
+
 
     for (attable = &table[0]; attable <= &table[highestof(table)]; attable++) {
 	for (this = *attable; this; this = this->next) {
@@ -146,7 +146,7 @@ char	*argv[];
 			(Ph->name[i][0] == this->name[0]) &&
 			(strcmp(Ph->name[i], this->name) == 0)) {
 		    printf("\t{ 0x%02x, %s, ",
-				Ph-Hits, shiftof[i]);
+				(int) (Ph - Hits), shiftof[i]);
 		    if (memcmp("AID_", this->name, 4) == 0) {	/* AID key */
 			printf("FCN_AID, ");
 		    } else {

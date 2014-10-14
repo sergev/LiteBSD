@@ -65,6 +65,7 @@ SOFTWARE.
 /*
  * ARGO Project, Computer Sciences Dept., University of Wisconsin - Madison
  */
+#ifdef USE_ISO
 
 #include <sys/param.h>
 #include <sys/mbuf.h>
@@ -840,3 +841,4 @@ hexprint(n, buf, delim)
 	*obuf = *delim; *out++ = delim[1]; *out = 0;
 	printf("%s", obuf);
 }
+#endif /* USE_ISO */

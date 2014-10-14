@@ -14,4 +14,4 @@ install: maninstall
 	    ${.CURDIR}/lorder.sh ${DESTDIR}/${BINDIR}/lorder
 
 .include <bsd.prog.mk>
-.include <bsd.man.mk>
+#.include <bsd.man.mk>

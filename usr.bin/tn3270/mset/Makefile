@@ -16,15 +16,15 @@ DEPSRCS+=	astosc.OUT map3270.c mset.c
 
 astosc.o: astosc.OUT
 astosc.OUT: ${.CURDIR}/../ctlr/hostctlr.h ${.CURDIR}/../ctlr/function.h
-astosc.OUT: ${.CURDIR}/../ctlr/${KBD} ${.CURDIR}/../tools/mkastosc/obj/mkastosc
-	${.CURDIR}/../tools/mkastosc/obj/mkastosc \
+astosc.OUT: ${.CURDIR}/../ctlr/${KBD} ${.CURDIR}/../tools/mkastosc/mkastosc
+	${.CURDIR}/../tools/mkastosc/mkastosc \
 	    ${.CURDIR}/../ctlr/hostctlr.h ${.CURDIR}/../ctlr/function.h \
 	    < ${.CURDIR}/../ctlr/${KBD} > ${.TARGET}
 	rm -f astosc.out; ln -s astosc.OUT astosc.out
 
 # astosc.out
-${.CURDIR}/../tools/mkastosc/obj/mkastosc:
-	cd ${.CURDIR}/../tools/mkastosc; make
+${.CURDIR}/../tools/mkastosc/mkastosc:
+	cd ${.CURDIR}/../tools/mkastosc; ${MAKE}
 
 depend:	.depend
 .depend:${DEPSRCS}

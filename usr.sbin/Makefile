@@ -1,9 +1,11 @@
 #	@(#)Makefile	5.20 (Berkeley) 6/12/93
 
-SUBDIR=	ac accton amd arp chown chroot cron dev_mkdb diskpart edquota \
-	inetd kgmon kvm_mkdb lpr mkproto mtree portmap pstat pwd_mkdb \
-	quot quotaon repquota rmt rwhod sa sendmail sliplogin sysctl \
+SUBDIR=	ac accton amd arp chown chroot dev_mkdb diskpart edquota \
+	inetd kgmon kvm_mkdb lpr mtree portmap pstat pwd_mkdb \
+	quot quotaon repquota rmt rwhod sendmail sliplogin sysctl \
 	syslogd traceroute trpt trsp update vipw
+
+# Missing on 4.4bsd tape: cron mkproto sa
 
 .if   make(clean) || make(cleandir)
 SUBDIR+=bad144 config config.new eeprom iostat timed

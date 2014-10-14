@@ -43,10 +43,14 @@ static char sccsid[] = "@(#)if.c	8.3 (Berkeley) 4/28/95";
 #include <net/if_dl.h>
 #include <netinet/in.h>
 #include <netinet/in_var.h>
+#ifdef USE_NS
 #include <netns/ns.h>
 #include <netns/ns_if.h>
+#endif
+#ifdef USE_ISO
 #include <netiso/iso.h>
 #include <netiso/iso_var.h>
+#endif
 #include <arpa/inet.h>
 
 #include <signal.h>
@@ -74,8 +78,12 @@ intpr(interval, ifnetaddr)
 	union {
 		struct ifaddr ifa;
 		struct in_ifaddr in;
+#ifdef USE_NS
 		struct ns_ifaddr ns;
+#endif
+#ifdef USE_ISO
 		struct iso_ifaddr iso;
+#endif
 	} ifaddr;
 	u_long ifaddraddr;
 	struct sockaddr *sa;
@@ -157,6 +165,7 @@ intpr(interval, ifnetaddr)
 				printf("%-15.15s ",
 				    routename(sin->sin_addr.s_addr));
 				break;
+#ifdef USE_NS
 			case AF_NS:
 				{
 				struct sockaddr_ns *sns =
@@ -165,13 +174,14 @@ intpr(interval, ifnetaddr)
 				char netnum[8];
 
 				*(union ns_net *) &net = sns->sns_addr.x_net;
-		sprintf(netnum, "%lxH", ntohl(net));
+                                sprintf(netnum, "%lxH", ntohl(net));
 				upHex(netnum);
 				printf("ns:%-8s ", netnum);
 				printf("%-15s ",
 				    ns_phost((struct sockaddr *)sns));
 				}
 				break;
+#endif
 			case AF_LINK:
 				{
 				struct sockaddr_dl *sdl =

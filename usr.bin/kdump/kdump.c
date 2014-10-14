@@ -218,7 +218,7 @@ dumpheader(kth)
 
 #include <sys/syscall.h>
 #define KTRACE
-#include "/sys/kern/syscalls.c"
+#include "../../sys/kern/syscalls.c"
 #undef KTRACE
 int nsyscalls = sizeof (syscallnames) / sizeof (syscallnames[0]);
 
@@ -324,7 +324,7 @@ ktrsysret(ktr)
 	(void)putchar('\n');
 }
 
-ktrnamei(cp, len) 
+ktrnamei(cp, len)
 	char *cp;
 {
 	(void)printf("\"%.*s\"\n", len, cp);

@@ -86,9 +86,6 @@ typedef char *voidp;
 
 #include "fsi_data.h"
 
-extern char* strchr P((Const char*, int)); /* C */
-extern char* strrchr P((Const char*, int)); /* C */
-extern char *strdup P((char*)); /* C */
 extern void fatal();
 extern void warning();
 extern void error();
