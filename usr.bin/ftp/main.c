@@ -57,6 +57,7 @@ static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 10/9/94";
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "ftp_var.h"
@@ -83,7 +84,7 @@ main(argc, argv)
 			options |= SO_DEBUG;
 			debug++;
 			break;
-			
+
 		case 'g':
 			doglob = 0;
 			break;
@@ -203,7 +204,7 @@ tail(filename)
 	char *filename;
 {
 	char *s;
-	
+
 	while (*filename) {
 		s = strrchr(filename, '/');
 		if (s == NULL)

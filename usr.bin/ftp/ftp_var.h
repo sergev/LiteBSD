@@ -114,6 +114,7 @@ struct cmd {
 	char	c_proxy;	/* proxy server may execute */
 	void	(*c_handler) __P((int, char **)); /* function to call */
 };
+extern struct	cmd cmdtab[];
 
 struct macel {
 	char mac_name[9];	/* macro name */

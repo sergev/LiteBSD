@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)ring.c	8.2 (Berkeley) 5/30/95";
  */
 
 #include	<stdio.h>
+#include	<string.h>
 #include	<errno.h>
 
 #ifdef	size_t

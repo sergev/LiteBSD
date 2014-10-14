@@ -201,7 +201,7 @@ server()
 			continue;
 
 		case 'L':  /* Log. save message in log file */
-			log(lfp, cp);
+			plog(lfp, cp);
 			continue;
 #endif
 
@@ -306,7 +306,7 @@ sendf(rname, opts)
 	int sizerr, f, u, len;
 	off_t i;
 	DIR *d;
-	struct direct *dp;
+	struct dirent *dp;
 	char *otp, *cp;
 	extern struct subcmd *subcmds;
 	static char user[15], group[15];
@@ -328,24 +328,24 @@ sendf(rname, opts)
 
 	if (pw == NULL || pw->pw_uid != stb.st_uid)
 		if ((pw = getpwuid(stb.st_uid)) == NULL) {
-			log(lfp, "%s: no password entry for uid %d \n",
+			plog(lfp, "%s: no password entry for uid %d \n",
 				target, stb.st_uid);
 			pw = NULL;
 			(void)sprintf(user, ":%lu", stb.st_uid);
 		}
 	if (gr == NULL || gr->gr_gid != stb.st_gid)
 		if ((gr = getgrgid(stb.st_gid)) == NULL) {
-			log(lfp, "%s: no name for group %d\n",
+			plog(lfp, "%s: no name for group %d\n",
 				target, stb.st_gid);
 			gr = NULL;
 			(void)sprintf(group, ":%lu", stb.st_gid);
 		}
 	if (u == 1) {
 		if (opts & VERIFY) {
-			log(lfp, "need to install: %s\n", target);
+			plog(lfp, "need to install: %s\n", target);
 			goto dospecial;
 		}
-		log(lfp, "installing: %s\n", target);
+		plog(lfp, "installing: %s\n", target);
 		opts &= ~(COMPARE|REMOVE);
 	}
 
@@ -439,10 +439,10 @@ sendf(rname, opts)
 
 	if (u == 2) {
 		if (opts & VERIFY) {
-			log(lfp, "need to update: %s\n", target);
+			plog(lfp, "need to update: %s\n", target);
 			goto dospecial;
 		}
-		log(lfp, "updating: %s\n", target);
+		plog(lfp, "updating: %s\n", target);
 	}
 
 	if (stb.st_nlink > 1) {
@@ -503,7 +503,7 @@ dospecial:
 			continue;
 		if (sc->sc_args != NULL && !inlist(sc->sc_args, target))
 			continue;
-		log(lfp, "special \"%s\"\n", sc->sc_name);
+		plog(lfp, "special \"%s\"\n", sc->sc_name);
 		if (opts & VERIFY)
 			continue;
 		(void) sprintf(buf, "SFILE=%s;%s\n", target, sc->sc_name);
@@ -528,7 +528,7 @@ savelink(stp)
 		}
 	lp = (struct linkbuf *) malloc(sizeof(*lp));
 	if (lp == NULL)
-		log(lfp, "out of memory, link information lost\n");
+		plog(lfp, "out of memory, link information lost\n");
 	else {
 		lp->nextp = ihead;
 		ihead = lp;
@@ -559,7 +559,7 @@ update(rname, opts, stp)
 	register off_t size;
 	register time_t mtime;
 
-	if (debug) 
+	if (debug)
 		printf("update(%s, %x, %x)\n", rname, opts, stp);
 
 	/*
@@ -597,8 +597,8 @@ again:
 
 	case '\3':
 		*--cp = '\0';
-		if (lfp != NULL) 
-			log(lfp, "update: note: %s\n", s);
+		if (lfp != NULL)
+			plog(lfp, "update: note: %s\n", s);
 		goto again;
 
 	default:
@@ -634,7 +634,7 @@ again:
 		if (stp->st_mtime == mtime)
 			return(0);
 		if (stp->st_mtime < mtime) {
-			log(lfp, "Warning: %s: remote copy is newer\n", target);
+			plog(lfp, "Warning: %s: remote copy is newer\n", target);
 			return(0);
 		}
 	} else if (stp->st_mtime == mtime && stp->st_size == size)
@@ -1136,7 +1136,7 @@ rmchk(opts)
 		case '\0':
 			*--cp = '\0';
 			if (*s != '\0')
-				log(lfp, "%s\n", s);
+				plog(lfp, "%s\n", s);
 			break;
 
 		case 'E':
@@ -1175,7 +1175,7 @@ clean(cp)
 	register char *cp;
 {
 	DIR *d;
-	register struct direct *dp;
+	register struct dirent *dp;
 	struct stat stb;
 	char *otp;
 	int len, opts;
@@ -1248,7 +1248,7 @@ removeit(stp)
 	struct stat *stp;
 {
 	DIR *d;
-	struct direct *dp;
+	struct dirent *dp;
 	register char *cp;
 	struct stat stb;
 	char *otp;
@@ -1388,9 +1388,9 @@ dospecial(cmd)
 
 void
 #if __STDC__
-log(FILE *fp, const char *fmt, ...)
+plog(FILE *fp, const char *fmt, ...)
 #else
-log(fp, fmt, va_alist)
+plog(fp, fmt, va_alist)
 	FILE *fp;
 	char *fmt;
         va_dcl
@@ -1509,13 +1509,13 @@ response()
 	case '\0':
 		*--cp = '\0';
 		if (*s != '\0') {
-			log(lfp, "%s\n", s);
+			plog(lfp, "%s\n", s);
 			return(1);
 		}
 		return(0);
 	case '\3':
 		*--cp = '\0';
-		log(lfp, "Note: %s\n",s);
+		plog(lfp, "Note: %s\n",s);
 		return(response());
 
 	default:

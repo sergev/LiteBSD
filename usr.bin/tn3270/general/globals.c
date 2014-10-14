@@ -38,6 +38,7 @@ static char sccsid[] = "@(#)globals.c	8.1 (Berkeley) 6/6/93";
 /*
  *	Do the defining instances for the globals of tn3270.
  */
+#include <strings.h>
 
 #include	"../ctlr/hostctlr.h"
 #include	"../ctlr/oia.h"

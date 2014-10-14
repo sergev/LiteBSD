@@ -71,7 +71,7 @@ dfn( parentp )
 	    printname( parentp );
 	    printf( ")\n" );
 	}
-#   endif DEBUG
+#   endif
 	/*
 	 *	if we're already numbered, no need to look any furthur.
 	 */
@@ -124,7 +124,7 @@ dfn_pre_visit( parentp )
 	    printname( parentp );
 	    printf( "\n" );
 	}
-#   endif DEBUG
+#   endif
 }
 
     /*
@@ -134,7 +134,7 @@ bool
 dfn_numbered( childp )
     nltype	*childp;
 {
-    
+
     return ( childp -> toporder != DFN_NAN && childp -> toporder != DFN_BUSY );
 }
 
@@ -184,7 +184,7 @@ dfn_findcycle( childp )
 	    printname( cycleheadp );
 	    printf( "\n" );
 	}
-#   endif DEBUG
+#   endif
     if ( cycletop == dfn_depth ) {
 	    /*
 	     *	this is previous function, e.g. this calls itself
@@ -206,13 +206,13 @@ dfn_findcycle( childp )
 		    printname( tailp );
 		    printf( "\n" );
 		}
-#	    endif DEBUG
+#	    endif
 	}
 	    /*
 	     *	if what we think is the top of the cycle
 	     *	has a cyclehead field, then it's not really the
 	     *	head of the cycle, which is really what we want
-	     */	
+	     */
 	if ( cycleheadp -> cyclehead != cycleheadp ) {
 	    cycleheadp = cycleheadp -> cyclehead;
 #	    ifdef DEBUG
@@ -221,7 +221,7 @@ dfn_findcycle( childp )
 		    printname( cycleheadp );
 		    printf( "\n" );
 		}
-#	    endif DEBUG
+#	    endif
 	}
 	for ( index = cycletop + 1 ; index <= dfn_depth ; index += 1 ) {
 	    childp = dfn_stack[ index ].nlentryp;
@@ -240,7 +240,7 @@ dfn_findcycle( childp )
 			printname( cycleheadp );
 			printf( "\n" );
 		    }
-#		endif DEBUG
+#		endif
 		for ( tailp = childp ; tailp->cnext ; tailp = tailp->cnext ) {
 		    tailp -> cnext -> cyclehead = cycleheadp;
 #		    ifdef DEBUG
@@ -251,7 +251,7 @@ dfn_findcycle( childp )
 			    printname( cycleheadp );
 			    printf( "\n" );
 			}
-#		    endif DEBUG
+#		    endif
 		}
 	    } else if ( childp -> cyclehead != cycleheadp /* firewall */ ) {
 		fprintf( stderr ,
@@ -278,7 +278,7 @@ dfn_self_cycle( parentp )
 	    printname( parentp );
 	    printf( "\n" );
 	}
-#   endif DEBUG
+#   endif
 }
 
     /*
@@ -297,7 +297,7 @@ dfn_post_visit( parentp )
 	    printname( parentp );
 	    printf( "\n" );
 	}
-#   endif DEBUG
+#   endif
 	/*
 	 *	number functions and things in their cycles
 	 *	unless the function is itself part of a cycle
@@ -312,14 +312,14 @@ dfn_post_visit( parentp )
 		    printname( memberp );
 		    printf( " -> toporder = %d\n" , dfn_counter );
 		}
-#	    endif DEBUG
+#	    endif
 	}
     } else {
 #	ifdef DEBUG
 	    if ( debug & DFNDEBUG ) {
 		printf( "[dfn_post_visit]\t\tis part of a cycle\n" );
 	    }
-#	endif DEBUG
+#	endif
     }
     dfn_depth -= 1;
 }

@@ -44,12 +44,14 @@ static char sccsid[] = "@(#)sccs.c	8.1 (Berkeley) 6/6/93";
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <signal.h>
 #include <sysexits.h>
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "pathnames.h"
 
 /*
@@ -150,11 +152,11 @@ static char sccsid[] = "@(#)sccs.c	8.1 (Berkeley) 6/6/93";
 
 # ifndef SCCSPATH
 # define SCCSPATH	"SCCS"	/* pathname in which to find s-files */
-# endif NOT SCCSPATH
+# endif
 
 # ifndef MYNAME
 # define MYNAME		"sccs"	/* name used for printing errors */
-# endif NOT MYNAME
+# endif
 
 /****************  End of Configuration Information  ****************/
 
@@ -266,7 +268,7 @@ bool	Debug;			/* turn on tracing */
 # endif
 # ifndef V6
 extern char	*getenv();
-# endif V6
+# endif
 
 char *gstrcat(), *strcat();
 char *gstrncat(), *strncat();
@@ -316,8 +318,8 @@ main(argc, argv)
 			SccsDir = buf;
 		}
 	}
-# endif SCCSDIR
-# endif V6
+# endif
+# endif
 
 	/*
 	**  Detect and decode flags intended for this program.
@@ -779,7 +781,7 @@ callprog(progpath, flags, argv, forkflag)
 		dup(OutFile);
 		close(OutFile);
 	}
-	
+
 	/* call real SCCS program */
 	execv(progpath, argv);
 	syserr("cannot execute %s", progpath);
@@ -819,8 +821,6 @@ makefile(name)
 {
 	register char *p;
 	char buf[3*FBUFSIZ];
-	extern char *malloc();
-	extern char *rindex();
 	extern bool safepath();
 	extern bool isdir();
 	register char *q;
@@ -853,7 +853,7 @@ makefile(name)
 	}
 	else
 		gstrcpy(buf, "", sizeof(buf));
-	
+
 	/* then the head of the pathname */
 	gstrncat(buf, name, p - name, sizeof(buf));
 	q = &buf[strlen(buf)];
@@ -975,7 +975,7 @@ clean(mode, argv)
 	int mode;
 	char **argv;
 {
-	struct direct *dir;
+	struct dirent *dir;
 	char buf[FBUFSIZ];
 	char *bufend;
 	register DIR *dirp;
@@ -1059,7 +1059,7 @@ clean(mode, argv)
 	while (dir = readdir(dirp)) {
 		if (strncmp(dir->d_name, "s.", 2) != 0)
 			continue;
-		
+
 		/* got an s. file -- see if the p. file exists */
 		gstrcpy(bufend, "/p.", sizeof(buf));
 		basefile = bufend + 3;
@@ -1094,7 +1094,7 @@ clean(mode, argv)
 			}
 			fclose(pfp);
 		}
-		
+
 		/* the s. file exists and no p. file exists -- unlink the g-file */
 		if (mode == CLEANC && !gotpfent)
 		{
@@ -1576,7 +1576,7 @@ username()
 	if (p == NULL || p[0] == '\0')
 		p = getlogin();
 	return (p);
-# endif UIDUSER
+# endif
 }
 
 /*

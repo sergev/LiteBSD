@@ -41,9 +41,10 @@ static char copyright[] =
 static char sccsid[] = "@(#)mkdctype.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
+#include <stdio.h>
+
 #include "../api/ebc_disp.h"
 #include "ectype.h"
-
 
 extern unsigned char ectype[256];
 

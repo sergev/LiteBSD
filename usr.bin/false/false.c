@@ -41,7 +41,7 @@ static char copyright[] =
 static char sccsid[] = "@(#)false.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
-main()
+int main()
 {
-	exit(1);
+	return 1;
 }

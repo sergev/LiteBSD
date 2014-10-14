@@ -38,7 +38,9 @@ static char sccsid[] = "@(#)get_names.c	8.1 (Berkeley) 6/6/93";
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <protocols/talkd.h>
+#include <stdlib.h>
 #include <pwd.h>
+#include <strings.h>
 #include "talk.h"
 
 char	*getlogin();

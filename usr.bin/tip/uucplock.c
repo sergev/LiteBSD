@@ -39,9 +39,10 @@ static char sccsid[] = "@(#)uucplock.c	8.1 (Berkeley) 6/6/93";
 #include <sys/file.h>
 #include <sys/dir.h>
 #include <errno.h>
+#include <stdio.h>
 #include "pathnames.h"
 
-/* 
+/*
  * uucp style locking routines
  * return: 0 - success
  * 	  -1 - failure

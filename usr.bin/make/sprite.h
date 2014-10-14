@@ -56,10 +56,10 @@
 typedef int Boolean;
 #ifndef TRUE
 #define TRUE	1
-#endif TRUE
+#endif
 #ifndef FALSE
 #define FALSE	0
-#endif FALSE
+#endif
 
 /*
  * Functions that must return a status can return a ReturnStatus to
@@ -69,7 +69,7 @@ typedef int Boolean;
 typedef int  ReturnStatus;
 
 /*
- * The following statuses overlap with the first 2 generic statuses 
+ * The following statuses overlap with the first 2 generic statuses
  * defined in status.h:
  *
  * SUCCESS			There was no error.
@@ -81,7 +81,7 @@ typedef int  ReturnStatus;
 
 
 /*
- * A nil pointer must be something that will cause an exception if 
+ * A nil pointer must be something that will cause an exception if
  * referenced.  There are two nils: the kernels nil and the nil used
  * by user processes.
  */
@@ -90,7 +90,7 @@ typedef int  ReturnStatus;
 #define USER_NIL 	0
 #ifndef NULL
 #define NULL	 	0
-#endif NULL
+#endif
 
 /*
  * An address is just a pointer in C.  It is defined as a character pointer

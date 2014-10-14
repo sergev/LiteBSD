@@ -49,6 +49,8 @@ static char sccsid[] = "@(#)checknr.c	8.1 (Berkeley) 6/6/93";
  * structured typesetting.
  */
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 #define MAXSTK	100	/* Stack size */
@@ -170,8 +172,6 @@ int	fflag;		/* -f: ignore \f */
 int	sflag;		/* -s: ignore \s */
 int	ncmds;		/* size of knowncmds */
 int	slot;		/* slot in knowncmds found by binsrch */
-
-char	*malloc();
 
 main(argc, argv)
 int argc;
@@ -534,7 +534,7 @@ char *mac;
 	if (binsrch(mac) >= 0){	/* it's OK to redefine something */
 #ifdef DEBUG
 		printf("binsrch(%s) -> already in table\n", mac);
-#endif DEBUG
+#endif
 		return;
 	}
 	/* binsrch sets slot as a side effect */

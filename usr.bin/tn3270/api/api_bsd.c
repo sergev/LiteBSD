@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)api_bsd.c	8.2 (Berkeley) 1/7/94";
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "../ctlr/api.h"
 #include "api_exch.h"

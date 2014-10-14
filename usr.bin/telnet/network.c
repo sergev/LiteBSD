@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)network.c	8.2 (Berkeley) 12/15/93";
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#include <stdlib.h>
 #include <errno.h>
 
 #include <arpa/telnet.h>

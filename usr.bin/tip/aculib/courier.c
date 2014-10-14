@@ -49,6 +49,8 @@ static	int timeout = 0;
 static	int connected = 0;
 static	jmp_buf timeoutbuf, intbuf;
 static	int coursync();
+static int cour_connect(), cour_swallow();
+static void cour_napx();
 
 cour_dialer(num, acu)
 	register char *num;
@@ -58,7 +60,6 @@ cour_dialer(num, acu)
 #ifdef ACULOG
 	char line[80];
 #endif
-	static int cour_connect(), cour_swallow();
 
 	if (boolean(value(VERBOSE)))
 		printf("Using \"%s\"\n", acu);
@@ -274,7 +275,7 @@ coursync()
 			buf[len] = '\0';
 			printf("coursync: (\"%s\")\n\r", buf);
 #endif
-			if (index(buf, '0') || 
+			if (index(buf, '0') ||
 		   	   (index(buf, 'O') && index(buf, 'K')))
 				return(1);
 		}
@@ -347,8 +348,6 @@ static int ringring;
 
 cour_nap()
 {
-	
-        static void cour_napx();
 	int omask;
         struct itimerval itv, oitv;
         register struct itimerval *itp = &itv;

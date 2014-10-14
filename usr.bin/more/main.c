@@ -34,9 +34,9 @@
 
 #ifndef lint
 char copyright[] =
-"@(#) Copyright (c) 1988 Mark Nudleman.\n\
-@(#) Copyright (c) 1988, 1993
-	Regents of the University of California.  All rights reserved.\n";
+"@(#) Copyright (c) 1988 Mark Nudleman.\n"
+"@(#) Copyright (c) 1988, 1993"
+"	Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
 
 #ifndef lint
@@ -50,6 +50,8 @@ static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/7/93";
 #include <sys/types.h>
 #include <sys/file.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <less.h>
 
 int	ispipe;
@@ -337,7 +339,7 @@ char *
 save(s)
 	char *s;
 {
-	char *p, *strcpy(), *malloc();
+	char *p;
 
 	p = malloc((u_int)strlen(s)+1);
 	if (p == NULL)

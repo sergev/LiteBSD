@@ -48,6 +48,8 @@ static char sccsid[] = "@(#)build.c	8.1 (Berkeley) 6/6/93";
 #include <fcntl.h>
 #include <ranlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "archive.h"

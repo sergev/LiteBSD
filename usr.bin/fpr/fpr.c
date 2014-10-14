@@ -45,6 +45,7 @@ static char sccsid[] = "@(#)fpr.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define BLANK ' '
 #define TAB '\t'
@@ -79,10 +80,6 @@ int highcol;
 COLUMN *line;
 int maxpos;
 int maxcol;
-
-extern char *malloc();
-extern char *calloc();
-extern char *realloc();
 
 
 
@@ -124,7 +121,7 @@ main()
 
   while ( ! ateof)
     {
-      gettext();
+      gettxt();
       ch = getchar();
       if (ch == EOF)
 	{
@@ -210,7 +207,7 @@ init()
 
 
 
-gettext()
+gettxt()
 {
   register int i;
   register char ateol;

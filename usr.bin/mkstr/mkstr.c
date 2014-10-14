@@ -42,11 +42,11 @@ static char sccsid[] = "@(#)mkstr.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define	ungetchar(c)	ungetc(c, stdin)
 
-long	ftell();
-char	*calloc();
 /*
  * mkstr - create a string error message file by massaging C source
  *

@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)biz22.c	8.1 (Berkeley) 6/6/93";
 static	void sigALRM();
 static	int timeout = 0;
 static	jmp_buf timeoutbuf;
+static int cmd(), detect();
 
 /*
  * Dial up on a BIZCOMP Model 1022 with either
@@ -54,7 +55,6 @@ biz_dialer(num, mod)
 {
 	register int connected = 0;
 	char cbuf[40];
-	static int cmd(), detect();
 
 	if (boolean(value(VERBOSE)))
 		printf("\nstarting call...");

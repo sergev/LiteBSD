@@ -107,7 +107,7 @@ static int eqrel __P((void));
 static int shift __P((void));
 static int primary __P((void));
 static int term __P((void));
-static int exp __P((void));
+static int exp_ __P((void));
 static int unary __P((void));
 static int factor __P((void));
 static int constant __P((void));
@@ -322,9 +322,9 @@ term()
 {
 	register int c, vl, vr;
 
-	vl = exp();
+	vl = exp_();
 	while ((c = skipws()) == '*' || c == '/' || c == '%') {
-		vr = exp();
+		vr = exp_();
 
 		switch (c) {
 		case '*':
@@ -346,7 +346,7 @@ term()
  * <term> := <unary> { <expop> <unary> }
  */
 static int
-exp()
+exp_()
 {
 	register c, vl, vr, n;
 
@@ -360,7 +360,7 @@ exp()
 		}
 
 	case '^':
-		vr = exp();
+		vr = exp_();
 		n = 1;
 		while (vr-- > 0)
 			n *= vl;
@@ -496,10 +496,10 @@ num()
 		ndig++;
 	}
 	ungetch();
-	
+
 	if (ndig == 0)
 		experr("bad constant");
-	
+
 	return rval;
 
 }
@@ -562,7 +562,7 @@ skipws()
 }
 
 /*
- * resets environment to eval(), prints an error 
+ * resets environment to eval(), prints an error
  * and forces eval to return FALSE.
  */
 static void

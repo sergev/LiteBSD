@@ -51,6 +51,7 @@ static char sccsid[] = "@(#)ktrace.c	8.2 (Berkeley) 4/28/95";
 
 #include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "ktrace.h"
@@ -111,10 +112,10 @@ main(argc, argv)
 		}
 	argv += optind;
 	argc -= optind;
-	
+
 	if (pidset && *argv || !pidset && !*argv)
 		usage();
-			
+
 	if (inherit)
 		trpoints |= KTRFAC_INHERIT;
 
@@ -137,7 +138,7 @@ main(argc, argv)
 		err(1, tracefile);
 	(void)close(fd);
 
-	if (*argv) { 
+	if (*argv) {
 		if (ktrace(tracefile, ops, trpoints, getpid()) < 0)
 			err(1, tracefile);
 		execvp(argv[0], &argv[0]);

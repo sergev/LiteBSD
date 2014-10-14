@@ -41,6 +41,7 @@ static char sccsid[] = "@(#)output.c	8.2 (Berkeley) 4/27/95";
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <less.h>
 
 int errmsgs;	/* Count of messages displayed by error() */
@@ -228,7 +229,7 @@ error(s)
 	}
 	lower_left();
 
-	if ((s != NULL ? strlen(s) : 0) + sizeof(return_to_continue) + 
+	if ((s != NULL ? strlen(s) : 0) + sizeof(return_to_continue) +
 		so_width + se_width + 1 > sc_width)
 		/*
 		 * Printing the message has probably scrolled the screen.

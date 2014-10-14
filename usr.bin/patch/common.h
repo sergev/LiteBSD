@@ -3,7 +3,7 @@
  * $Log:	common.h,v $
  * Revision 2.0  86/09/17  15:36:39  lwall
  * Baseline for netwide release.
- * 
+ *
  */
 
 #define DEBUGGING
@@ -27,6 +27,8 @@
 #define Strcat (void)strcat
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -129,10 +131,3 @@ EXT char else_defined[] INIT("#else\n");/* #else */
 EXT char end_defined[128];		/* #endif xyzzy */
 
 EXT char *revision INIT(Nullch);	/* prerequisite revision, if any */
-
-char *malloc();
-char *realloc();
-char *strcpy();
-char *strcat();
-long atol();
-char *mktemp();

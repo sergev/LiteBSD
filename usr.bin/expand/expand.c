@@ -42,6 +42,8 @@ static char sccsid[] = "@(#)expand.c	8.1 (Berkeley) 6/9/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
+
 /*
  * expand - expand tabs to equivalent spaces
  */

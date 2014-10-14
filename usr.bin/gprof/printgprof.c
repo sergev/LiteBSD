@@ -90,7 +90,7 @@ timecmp( npp1 , npp2 )
      */
 flatprofheader()
 {
-    
+
     if ( bflag ) {
 	printblurb( _PATH_FLAT_BLURB );
     }
@@ -250,7 +250,7 @@ totalcmp( npp1 , npp2 )
 	    return 1;
     if ( diff > 0.0 )
 	    return -1;
-    if ( np1 -> name == 0 && np1 -> cycleno != 0 ) 
+    if ( np1 -> name == 0 && np1 -> cycleno != 0 )
 	return -1;
     if ( np2 -> name == 0 && np2 -> cycleno != 0 )
 	return 1;
@@ -264,7 +264,7 @@ totalcmp( npp1 , npp2 )
 	return 1;
     if ( np1 -> ncall > np2 -> ncall )
 	return -1;
-    if ( np1 -> ncall < np2 -> ncall ) 
+    if ( np1 -> ncall < np2 -> ncall )
 	return 1;
     return strcmp( np1 -> name , np2 -> name );
 }
@@ -359,7 +359,7 @@ printname( selfp )
 	    if ( debug & PROPDEBUG ) {
 		printf( "%5.2f%% " , selfp -> propfraction );
 	    }
-#	endif DEBUG
+#	endif
     }
     if ( selfp -> cycleno != 0 ) {
 	printf( " <cycle %d>" , selfp -> cycleno );
@@ -487,7 +487,7 @@ printmembers( cyclep )
 
     sortmembers( cyclep );
     for ( memberp = cyclep -> cnext ; memberp ; memberp = memberp -> cnext ) {
-	printf( "%6.6s %5.5s %7.2f %11.2f %7d" , 
+	printf( "%6.6s %5.5s %7.2f %11.2f %7d" ,
 		"" , "" , memberp -> propself / hz , memberp -> propchild / hz ,
 		memberp -> npropcall );
 	if ( memberp -> selfcalls != 0 ) {
@@ -597,7 +597,7 @@ arccmp( thisp , thatp )
 		    thatp -> arc_count , thatchildp -> ncall );
 	    printf( "\n" );
 	}
-#   endif DEBUG
+#   endif
     if ( thisparentp == thischildp ) {
 	    /* this is a self call */
 	return LESSTHAN;

@@ -45,6 +45,7 @@ static char sccsid[] = "@(#)leave.c	8.1 (Berkeley) 6/6/93";
 #include <sys/time.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 /*
  * leave [[+]hhmm]

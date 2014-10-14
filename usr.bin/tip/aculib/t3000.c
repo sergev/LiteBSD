@@ -49,6 +49,8 @@ static	int timeout = 0;
 static	int connected = 0;
 static	jmp_buf timeoutbuf, intbuf;
 static	int t3000_sync();
+static int t3000_connect(), t3000_swallow();
+static void t3000_napx();
 
 t3000_dialer(num, acu)
 	register char *num;
@@ -58,7 +60,6 @@ t3000_dialer(num, acu)
 #ifdef ACULOG
 	char line[80];
 #endif
-	static int t3000_connect(), t3000_swallow();
 
 	if (boolean(value(VERBOSE)))
 		printf("Using \"%s\"\n", acu);
@@ -301,7 +302,7 @@ if (len == 0) len = 1;
 			buf[len] = '\0';
 			printf("t3000_sync: (\"%s\")\n\r", buf);
 #endif
-			if (index(buf, '0') || 
+			if (index(buf, '0') ||
 		   	   (index(buf, 'O') && index(buf, 'K')))
 				return(1);
 		}
@@ -375,8 +376,6 @@ static int ringring;
 
 t3000_nap()
 {
-
-        static void t3000_napx();
 	int omask;
         struct itimerval itv, oitv;
         register struct itimerval *itp = &itv;

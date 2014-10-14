@@ -42,11 +42,12 @@ static char sccsid[] = "@(#)position.c	8.1 (Berkeley) 6/6/93";
  * first char on each currently displayed line.
  *
  * {{ The position table is scrolled by moving all the entries.
- *    Would be better to have a circular table 
+ *    Would be better to have a circular table
  *    and just change a couple of pointers. }}
  */
 
 #include <sys/types.h>
+#include <stdlib.h>
 #include <less.h>
 
 static off_t *table;		/* The position table */
@@ -130,7 +131,6 @@ copytable()
 pos_clear()
 {
 	register int i;
-	extern char *malloc(), *realloc();
 
 	if (table == 0) {
 		tablesize = sc_height > 25 ? sc_height : 25;

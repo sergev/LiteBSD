@@ -42,6 +42,9 @@ static char sccsid[] = "@(#)v831.c	8.1 (Berkeley) 6/6/93";
 
 int	v831_abort();
 static	void alarmtr();
+static  int dialit();
+static  char *sanitize();
+
 extern	int errno;
 
 static jmp_buf jmpbuf;
@@ -52,7 +55,6 @@ v831_dialer(num, acu)
 {
         int status, pid, connected = 1;
         register int timelim;
-	static int dialit();
 
         if (boolean(value(VERBOSE)))
                 printf("\nstarting call...");
@@ -188,7 +190,6 @@ dialit(phonenum, acu)
 	struct sgttyb cntrl;
         char c;
         int i, two = 2;
-	static char *sanitize();
 
         phonenum = sanitize(phonenum);
 #ifdef DEBUG

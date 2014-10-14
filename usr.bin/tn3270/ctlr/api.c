@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)api.c	8.1 (Berkeley) 6/6/93";
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "api.h"
 #include "../general/general.h"
@@ -305,7 +306,7 @@ struct SREGS *sregs;
 	parms.rc = 0;
 	if (parms.options == OPTION_SINGLE_KEYSTROKE) {
 	    KeystrokeEntry *entry = &parms.keystroke_specifier.keystroke_entry;
-	    
+
 	    if (AcceptKeystroke(entry->scancode, entry->shift_state) == 0) {
 		parms.rc = 0x10;		/* XXX needs 0x12 too! */
 	    }

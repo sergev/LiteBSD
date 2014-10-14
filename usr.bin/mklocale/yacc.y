@@ -44,6 +44,7 @@ static char sccsid[] = "@(#)yacc.y	8.1 (Berkeley) 6/6/93";
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ldef.h"
 
@@ -793,7 +794,7 @@ dump_tables()
 	    fprintf(stderr, " %4s", (r & _T) ? "spec" : "");
 	    fprintf(stderr, " %4s", (r & _Q) ? "phon" : "");
 	    fprintf(stderr, "\n");
-	} else 
+	} else
 	for (x = list->min; x <= list->max; ++x) {
 	    u_long r = ntohl(list->types[x - list->min]);
 

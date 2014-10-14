@@ -39,7 +39,7 @@ static char sccsid[] = "@(#)lookup.c	8.1 (Berkeley) 6/6/93";
 
     /*
      *	look up an address in a sorted-by-address namelist
-     *	    this deals with misses by mapping them to the next lower 
+     *	    this deals with misses by mapping them to the next lower
      *	    entry point.
      */
 nltype *
@@ -53,18 +53,18 @@ nllookup( address )
 	register int	probes;
 
 	probes = 0;
-#   endif DEBUG
+#   endif
     for ( low = 0 , high = nname - 1 ; low != high ; ) {
 #	ifdef DEBUG
 	    probes += 1;
-#	endif DEBUG
+#	endif
 	middle = ( high + low ) >> 1;
 	if ( nl[ middle ].value <= address && nl[ middle+1 ].value > address ) {
 #	    ifdef DEBUG
 		if ( debug & LOOKUPDEBUG ) {
 		    printf( "[nllookup] %d (%d) probes\n" , probes , nname-1 );
 		}
-#	    endif DEBUG
+#	    endif
 	    return &nl[ middle ];
 	}
 	if ( nl[ middle ].value > address ) {
@@ -78,7 +78,7 @@ nllookup( address )
 	    fprintf( stderr , "[nllookup] (%d) binary search fails\n" ,
 		nname-1 );
 	}
-#   endif DEBUG
+#   endif
     return 0;
 }
 
@@ -98,7 +98,7 @@ arclookup( parentp , childp )
 	    printf( "[arclookup] parent %s child %s\n" ,
 		    parentp -> name , childp -> name );
 	}
-#   endif DEBUG
+#   endif
     for ( arcp = parentp -> children ; arcp ; arcp = arcp -> arc_childlist ) {
 #	ifdef DEBUG
 	    if ( debug & LOOKUPDEBUG ) {
@@ -106,7 +106,7 @@ arclookup( parentp , childp )
 			arcp -> arc_parentp -> name ,
 			arcp -> arc_childp -> name );
 	    }
-#	endif DEBUG
+#	endif
 	if ( arcp -> arc_childp == childp ) {
 	    return arcp;
 	}

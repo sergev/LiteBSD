@@ -38,11 +38,11 @@
 static char copyright[] =
 "@(#) Copyright (c) 1989, 1993, 1995\n\
 	The Regents of the University of California.  All rights reserved.\n";
-#endif not lint
+#endif
 
 #ifndef lint
 static char sccsid[] = "@(#)showmount.c	8.3 (Berkeley) 3/29/95";
-#endif not lint
+#endif
 
 #include <sys/types.h>
 #include <sys/file.h>

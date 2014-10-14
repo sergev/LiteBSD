@@ -37,7 +37,7 @@ char *from, *to;
 	dev_t to_device = filestat.st_dev;
 	ino_t to_inode  = filestat.st_ino;
 	char *simplename = bakname;
-	
+
 	for (s=bakname; *s; s++) {
 	    if (*s == '/')
 		simplename = s+1;
@@ -69,7 +69,7 @@ char *from, *to;
 #endif
     if (link(from, to) < 0) {		/* different file system? */
 	Reg4 int tofd;
-	
+
 	tofd = creat(to, 0666);
 	if (tofd < 0) {
 	    say3("patch: can't create %s, output is in %s.\n",
@@ -98,7 +98,7 @@ char *from, *to;
     Reg3 int tofd;
     Reg2 int fromfd;
     Reg1 int i;
-    
+
     tofd = creat(to, 0666);
     if (tofd < 0)
 	fatal2("patch: can't create %s.\n", to);
@@ -218,7 +218,7 @@ int arg1,arg2,arg3;
     if (!tty2)
 	say1(buf);
 }
-#endif lint
+#endif
 
 /* How to handle certain events when not in a critical region. */
 

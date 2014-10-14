@@ -34,7 +34,7 @@
  */
 
 #include <sys/param.h>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/file.h>
@@ -166,7 +166,7 @@ int	 inlist __P((struct namelist *, char *));
 void	 insert __P((char *,
 	    struct namelist *, struct namelist *, struct subcmd *));
 void	 install __P((char *, char *, int, int));
-void	 log __P((FILE *, const char *, ...));
+void	 plog __P((FILE *, const char *, ...));
 struct namelist *
 	 lookup __P((char *, int, struct namelist *));
 void	 lostconn __P((int));

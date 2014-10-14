@@ -41,6 +41,10 @@ static char sccsid[] = "@(#)termout.c	8.1 (Berkeley) 6/6/93";
 #endif
 #include <stdio.h>
 #include <curses.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #if	defined(ultrix)
 /* Some version of this OS has a bad definition for nonl() */
 #undef	nl
@@ -86,8 +90,9 @@ int	bellwinup = 0;			/* Are we up with it or not */
 
 #if	defined(unix)
 static char *myKS, *myKE;
+static void abortsig(int);
+static void aborttc(int);
 #endif	/* defined(unix) */
-
 
 static int inHighlightMode = 0;
 ScreenImage Terminal[MAXSCREENSIZE];
@@ -204,7 +209,7 @@ SlowScreen()
     register int fieldattr, termattr;
     register int columnsleft;
 
-#define	NORMAL		0		
+#define	NORMAL		0
 #define	HIGHLIGHT	1		/* Mask bits */
 #define	NONDISPLAY	4		/* Mask bits */
 #define	UNDETERMINED	8		/* Mask bits */
@@ -633,14 +638,12 @@ InitTerminal()
 		2400, 4800, 9600 };
 #endif
     extern void InitMapping();
-    
+
     InitMapping();		/* Go do mapping file (MAP3270) first */
     if (!screenInitd) { 	/* not initialized */
 #if	defined(unix)
 	char KSEbuffer[2050];
 	char *lotsofspace = KSEbuffer;
-	extern void abort();
-	extern char *tgetstr();
 #endif	/* defined(unix) */
 
 	if (initscr() == ERR) {	/* Initialize curses to get line size */
@@ -652,7 +655,7 @@ InitTerminal()
 	ClearArray(Terminal);
 	terminalCursorAddress = SetBufferAddress(0,0);
 #if defined(unix)
-	signal(SIGHUP, abort);
+	signal(SIGHUP, abortsig);
 #endif
 
 	TryToSend = FastScreen;
@@ -879,7 +882,6 @@ int		control;	/* To see if we are done */
 #if	defined(unix)
     extern char *transcom;
     int inpipefd[2], outpipefd[2];
-    static void aborttc();
 #endif	/* defined(unix) */
 
     while (DoTerminalOutput() == 0) {
@@ -953,5 +955,12 @@ aborttc(signo)
 	tout = savefd[1];
 	setconnmode();
 	tcflag = 0;
+}
+
+static void
+abortsig(signo)
+	int signo;
+{
+        abort();
 }
 #endif	/* defined(unix) */

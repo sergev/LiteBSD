@@ -44,6 +44,9 @@ static char sccsid[] = "@(#)ventel.c	8.1 (Berkeley) 6/6/93";
 #define	MAXRETRY	5
 
 static	void sigALRM();
+static  int gobble(), vensync();
+static  void echo();
+
 static	int timeout = 0;
 static	jmp_buf timeoutbuf;
 
@@ -64,8 +67,6 @@ ven_dialer(num, acu)
 	register char *cp;
 	register int connected = 0;
 	char *msg, *index(), line[80];
-	static int gobble(), vensync();
-	static void echo();
 
 	/*
 	 * Get in synch with a couple of carriage returns
@@ -248,4 +249,3 @@ vensync(fd)
 	}
 	return (0);
 }
-

@@ -28,7 +28,7 @@ static char sccsid[] = "@(#)ld.c	8.1 (Berkeley) 6/6/93";
 
 /* Written by Richard Stallman with some help from Eric Albert.
    Set, indirect, and warning symbol features added by Randy Smith.  */
-   
+
 /* Define how to initialize system-dependent header fields.  */
 
 #include <ar.h>
@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)ld.c	8.1 (Berkeley) 6/6/93";
 #include <a.out.h>
 #include <stab.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* symseg.h defines the obsolete GNU debugging format; we should nuke it.  */
 #define CORE_ADDR unsigned long	/* For symseg.h */
@@ -762,13 +763,6 @@ int force_executable;
    zero terminated. */
 struct glosym **cmdline_references;
 int cl_refs_allocated;
-
-void bcopy (), bzero ();
-int malloc (), realloc ();
-#ifndef alloca
-int alloca ();
-#endif
-int free ();
 
 int xmalloc ();
 int xrealloc ();
@@ -3792,7 +3786,7 @@ perform_relocation (data, pc_relocation, data_size, reloc_info, reloc_size, entr
 	/* WARNING:  This fix makes an assumption on byte ordering */
 	/* Marc Ullman, Stanford University    Nov. 1 1989  */
 	  if (RELOC_MEMORY_SUB_P(p)) {
-	    relocation -= mask & 
+	    relocation -= mask &
 	      ((*(unsigned short *) (data + addr) << 16) |
 		*(unsigned short *) (data + addr + 2));
 	  } else if (RELOC_MEMORY_ADD_P(p)) {

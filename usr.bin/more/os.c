@@ -54,6 +54,8 @@ static char sccsid[] = "@(#)os.c	8.1 (Berkeley) 6/6/93";
 #include <signal.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <less.h>
 #include "pathnames.h"
 
@@ -198,7 +200,7 @@ glob(filename)
 	FILE *f;
 	char *p;
 	int ch;
-	char *cmd, *malloc(), *getenv();
+	char *cmd;
 	static char buffer[MAXPATHLEN];
 
 	if (filename[0] == '#')
@@ -280,4 +282,3 @@ strtcpy(to, from, len)
 	(void)strncpy(to, from, (int)len);
 	to[len-1] = '\0';
 }
-

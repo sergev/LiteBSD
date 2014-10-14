@@ -50,6 +50,7 @@ static char sccsid[] = "@(#)swap.c	8.3 (Berkeley) 4/29/95";
 #include <nlist.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "systat.h"
@@ -173,7 +174,7 @@ fetchswap()
 		/*
 		 * Swap space is split up among the configured disks.
 		 * The first dmmax blocks of swap space some from the
-		 * first disk, the next dmmax blocks from the next, 
+		 * first disk, the next dmmax blocks from the next,
 		 * and so on.  The list of free space joins adjacent
 		 * free blocks, ignoring device boundries.  If we want
 		 * to keep track of this information per device, we'll
@@ -242,7 +243,7 @@ showswap()
 		npfree++;
 		avail += xsize;
 	}
-	/* 
+	/*
 	 * If only one partition has been set up via swapon(8), we don't
 	 * need to bother with totals.
 	 */

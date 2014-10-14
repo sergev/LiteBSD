@@ -185,7 +185,7 @@ done:
 			free(ihead);
 			if ((opts & IGNLNKS) || ihead->count == 0)
 				continue;
-			log(lfp, "%s: Warning: missing links\n",
+			plog(lfp, "%s: Warning: missing links\n",
 				ihead->pathname);
 		}
 	}
@@ -301,7 +301,7 @@ lostconn(signo)
 {
 	if (iamremote)
 		cleanup(0);
-	log(lfp, "rdist: lost connection\n");
+	plog(lfp, "rdist: lost connection\n");
 	longjmp(env, 1);
 }
 
@@ -445,7 +445,7 @@ cmptime(name)
 	}
 
 	if (stb.st_mtime > lastmod)
-		log(tfp, "new: %s\n", name);
+		plog(tfp, "new: %s\n", name);
 }
 
 static void
@@ -453,7 +453,7 @@ rcmptime(st)
 	struct stat *st;
 {
 	register DIR *d;
-	register struct direct *dp;
+	register struct dirent *dp;
 	register char *cp;
 	char *otp;
 	int len;

@@ -56,6 +56,8 @@ static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 #include <pwd.h>
 #include <varargs.h>
 #include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include <arpa/telnet.h>
 
@@ -78,7 +80,7 @@ static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 
 #ifndef	MAXHOSTNAMELEN
 #define	MAXHOSTNAMELEN 64
-#endif	MAXHOSTNAMELEN
+#endif
 
 #if	defined(IPPROTO_IP) && defined(IP_TOS)
 int tos = -1;
@@ -1139,7 +1141,7 @@ dolmmode(bit, on)
 }
 
     int
-setmode(bit)
+setmod(bit)
 {
     return dolmmode(bit, 1);
 }
@@ -1171,17 +1173,17 @@ static struct modelist ModeList[] = {
 #endif
     { "", "", 0 },
     { "",	"These require the LINEMODE option to be enabled", 0 },
-    { "isig",	"Enable signal trapping",	setmode, 1, MODE_TRAPSIG },
-    { "+isig",	0,				setmode, 1, MODE_TRAPSIG },
+    { "isig",	"Enable signal trapping",	setmod, 1, MODE_TRAPSIG },
+    { "+isig",	0,				setmod, 1, MODE_TRAPSIG },
     { "-isig",	"Disable signal trapping",	clearmode, 1, MODE_TRAPSIG },
-    { "edit",	"Enable character editing",	setmode, 1, MODE_EDIT },
-    { "+edit",	0,				setmode, 1, MODE_EDIT },
+    { "edit",	"Enable character editing",	setmod, 1, MODE_EDIT },
+    { "+edit",	0,				setmod, 1, MODE_EDIT },
     { "-edit",	"Disable character editing",	clearmode, 1, MODE_EDIT },
-    { "softtabs", "Enable tab expansion",	setmode, 1, MODE_SOFT_TAB },
-    { "+softtabs", 0,				setmode, 1, MODE_SOFT_TAB },
+    { "softtabs", "Enable tab expansion",	setmod, 1, MODE_SOFT_TAB },
+    { "+softtabs", 0,				setmod, 1, MODE_SOFT_TAB },
     { "-softtabs", "Disable character editing",	clearmode, 1, MODE_SOFT_TAB },
-    { "litecho", "Enable literal character echo", setmode, 1, MODE_LIT_ECHO },
-    { "+litecho", 0,				setmode, 1, MODE_LIT_ECHO },
+    { "litecho", "Enable literal character echo", setmod, 1, MODE_LIT_ECHO },
+    { "+litecho", 0,				setmod, 1, MODE_LIT_ECHO },
     { "-litecho", "Disable literal character echo", clearmode, 1, MODE_LIT_ECHO },
     { "help",	0,				modehelp, 0 },
 #ifdef	KLUDGELINEMODE

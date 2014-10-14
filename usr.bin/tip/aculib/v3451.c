@@ -42,6 +42,12 @@ static char sccsid[] = "@(#)v3451.c	8.1 (Berkeley) 6/6/93";
 
 static	jmp_buf Sjbuf;
 
+static int expect();
+static void vawrite();
+static int notin();
+static void alarmtr();
+static int prefix();
+
 v3451_dialer(num, acu)
 	register char *num;
 	char *acu;
@@ -53,8 +59,6 @@ v3451_dialer(num, acu)
 #ifdef ACULOG
 	char line[80];
 #endif
-	static int expect();
-	static void vawrite();
 
 	/*
 	 * Get in synch
@@ -149,8 +153,6 @@ expect(cp)
 	char buf[300];
 	register char *rp = buf;
 	int timeout = 30, online = 0;
-	static int notin();
-	static void alarmtr();
 
 	if (strcmp(cp, "\"\"") == 0)
 		return (1);
@@ -193,8 +195,6 @@ static int
 notin(sh, lg)
 	char *sh, *lg;
 {
-	static int prefix();
-
 	for (; *lg; lg++)
 		if (prefix(sh, lg))
 			return (0);

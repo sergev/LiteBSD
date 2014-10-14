@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)main.c	8.3 (Berkeley) 5/30/95";
 #endif /* not lint */
 
 #include <sys/types.h>
+#include <stdlib.h>
 
 #include "ring.h"
 #include "externs.h"

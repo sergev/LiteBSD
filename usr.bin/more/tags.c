@@ -38,6 +38,7 @@ static char sccsid[] = "@(#)tags.c	8.1 (Berkeley) 6/6/93";
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <string.h>
 #include <less.h>
 
 #define	WHITESP(c)	((c)==' ' || (c)=='\t')
@@ -147,7 +148,7 @@ findtag(tag)
  * We don't use search() for several reasons:
  *   -	We don't want to blow away any search string we may have saved.
  *   -	The various regular-expression functions (from different systems:
- *	regcmp vs. re_comp) behave differently in the presence of 
+ *	regcmp vs. re_comp) behave differently in the presence of
  *	parentheses (which are almost always found in a tag).
  */
 tagsearch()
@@ -161,14 +162,14 @@ tagsearch()
 	for (;;)
 	{
 		/*
-		 * Get lines until we find a matching one or 
+		 * Get lines until we find a matching one or
 		 * until we hit end-of-file.
 		 */
 		if (sigs)
 			return (1);
 
 		/*
-		 * Read the next line, and save the 
+		 * Read the next line, and save the
 		 * starting position of that line in linepos.
 		 */
 		linepos = pos;

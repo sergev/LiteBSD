@@ -22,7 +22,6 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 # plot ptx spell spline struct units xsend
 
 # Cmp, look and tail all use mmap, so new-VM only.
-# F77 and pascal are VAX/Tahoe only.
 .if	${MACHINE} == "hp300"
 SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "i386"
@@ -34,9 +33,9 @@ SUBDIR+=cmp look systat tail vmstat
 .elif	${MACHINE} == "sparc"
 SUBDIR+=cmp ld look tail vmstat.sparc
 .elif	${MACHINE} == "tahoe"
-SUBDIR+=f77 pascal systat vmstat
+SUBDIR+=systat vmstat
 .elif	${MACHINE} == "vax"
-SUBDIR+=f77 pascal systat vmstat
+SUBDIR+=systat vmstat
 .endif
 
 .include <bsd.subdir.mk>

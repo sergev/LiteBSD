@@ -1,6 +1,9 @@
 /*-
- * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ * Copyright (c) 1992 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * James da Silva at the University of Maryland at College Park.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,10 +13,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -31,21 +30,62 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)oia.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
- * Routines to maintain the Operator Information Area.
+ * Compatibility routines that implement the old re_comp/re_exec interface in
+ * terms of the regcomp/regexec interface.  It's possible that some programs
+ * rely on dark corners of re_comp/re_exec and won't work with this version,
+ * but most programs should be fine.
  */
-#include <strings.h>
 
-#include "../general/general.h"
+#if defined(LIBC_SCCS) && !defined(lint)
+static char sccsid[] = "@(#)regex.c	5.1 (Berkeley) 3/29/92";
+#endif /* LIBC_SCCS and not lint */
 
-#include "oia.h"
-#include "../general/globals.h"
+#include <sys/types.h>
+#include <regex.h>
+#include <stddef.h>
+#include <unistd.h>
 
-init_oia()
+static regex_t re_regexp;
+static int re_gotexp;
+static char re_errstr[100];
+
+char *
+re_comp(const char *s)
 {
-    ClearElement(OperatorInformationArea);
+	int rc;
+
+	if (s == NULL || *s == '\0') {
+		if (!re_gotexp)
+			return (char*) "no previous regular expression";
+		return (NULL);
+	}
+
+	if (re_gotexp) {
+		regfree(&re_regexp);
+		re_gotexp = 0;
+	}
+
+	rc = regcomp(&re_regexp, s, REG_EXTENDED);
+	if (rc == 0) {
+		re_gotexp = 1;
+		return (NULL);
+	}
+
+	regerror(rc, &re_regexp, re_errstr, sizeof(re_errstr));
+	re_errstr[sizeof(re_errstr) - 1] = '\0';
+	return (re_errstr);
+}
+
+int
+re_exec(const char *s)
+{
+	int rc;
+
+	if (!re_gotexp)
+		return (-1);
+	rc = regexec(&re_regexp, s, 0, NULL, 0);
+	return (rc == 0 ? 1 : 0);
 }

@@ -46,6 +46,7 @@ static char sccsid[] = "@(#)pigs.c	8.2 (Berkeley) 9/23/93";
 #include <sys/proc.h>
 #include <sys/sysctl.h>
 
+#include <string.h>
 #include <curses.h>
 #include <math.h>
 #include <nlist.h>
@@ -209,7 +210,7 @@ fetchpigs()
 		if (time == 0 || (pp->p_flag & P_INMEM) == 0)
 			*pctp = 0;
 		else
-			*pctp = ((double) pp->p_pctcpu / 
+			*pctp = ((double) pp->p_pctcpu /
 					fscale) / (1.0 - exp(time * lccpu));
 	}
 	/*

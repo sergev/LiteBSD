@@ -38,7 +38,6 @@
 #include <kvm.h>
 
 extern struct	cmdtab *curcmd;
-extern struct	cmdtab cmdtab[];
 extern struct	text *xtext;
 extern WINDOW	*wnd;
 extern char	**dr_name;

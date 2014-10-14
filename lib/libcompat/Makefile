@@ -18,7 +18,7 @@ AINC=	-I${.CURDIR}/../libc/${MACHINE}
 
 # compat 4.3 sources
 # Removed: ecvt gcvt regex sibuf sobuf strout
-SRCS+=	cfree.c lsearch.c rexec.c
+SRCS+=	cfree.c lsearch.c rexec.c re_comp.c
 
 .if	(${MACHINE} == "hp300" || ${MACHINE} == "luna68k")
 SRCS+=	insque.s remque.s

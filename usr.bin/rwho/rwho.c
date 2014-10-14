@@ -42,10 +42,12 @@ static char sccsid[] = "@(#)rwho.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <sys/param.h>
-#include <sys/dir.h>
+#include <dirent.h>
 #include <sys/file.h>
 #include <protocols/rwhod.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 DIR	*dirp;
 
@@ -60,7 +62,7 @@ struct	myutmp {
 int	nusers;
 
 #define	WHDRSIZE	(sizeof (wd) - sizeof (wd.wd_we))
-/* 
+/*
  * this macro should be shared with ruptime.
  */
 #define	down(w,now)	((now) - (w)->wd_recvtime > 11 * 60)
@@ -76,7 +78,7 @@ main(argc, argv)
 	extern char *optarg;
 	extern int optind;
 	int ch;
-	struct direct *dp;
+	struct dirent *dp;
 	int cc, width;
 	register struct whod *w = &wd;
 	register struct whoent *we;

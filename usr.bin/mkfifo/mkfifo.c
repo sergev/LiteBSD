@@ -46,6 +46,7 @@ static char sccsid[] = "@(#)mkfifo.c	8.2 (Berkeley) 1/5/94";
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int

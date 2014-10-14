@@ -46,6 +46,7 @@ struct  cmdtab {
 	int	(*c_cmd)();		/* display command interpreter */
 	char	c_flags;		/* see below */
 };
+extern struct	cmdtab cmdtab[];
 
 #define	CF_INIT		0x1		/* been initialized */
 #define	CF_LOADAV	0x2		/* display w/ load average */

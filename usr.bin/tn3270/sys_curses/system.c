@@ -36,6 +36,8 @@ static char sccsid[] = "@(#)system.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <sys/types.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #if     defined(pyr)
 #define fd_set fdset_t

@@ -52,6 +52,7 @@ static char sccsid[] = "@(#)tftp.c	8.1 (Berkeley) 6/6/93";
 #include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "extern.h"

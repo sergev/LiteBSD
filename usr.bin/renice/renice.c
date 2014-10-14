@@ -46,6 +46,7 @@ static char sccsid[] = "@(#)renice.c	8.1 (Berkeley) 6/9/93";
 #include <sys/resource.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pwd.h>
 
 /*
@@ -86,7 +87,7 @@ main(argc, argv)
 		}
 		if (which == PRIO_USER) {
 			register struct passwd *pwd = getpwnam(*argv);
-			
+
 			if (pwd == NULL) {
 				fprintf(stderr, "renice: %s: unknown user\n",
 					*argv);

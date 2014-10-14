@@ -37,6 +37,7 @@ static char sccsid[] = "@(#)option.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <less.h>
 
 int top_scroll;			/* Repaint screen from top */

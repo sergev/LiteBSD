@@ -205,7 +205,7 @@ read_names()
 #endif /* sun */
 
 #if defined(mips)
-#include <pmax/dev/device.h>
+#include <mips/dev/device.h>
 
 char *defdrives[] = { "rz0", "rz1", "rz2", "rz3", "rz4", "rz5", "rz6", 0 };
 

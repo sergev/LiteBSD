@@ -473,8 +473,6 @@ static void
 FreeState(pState)
 state *pState;
 {
-    extern int free();
-
     free((char *)pState);
 }
 
@@ -483,7 +481,6 @@ static state *
 GetState()
 {
     state *pState;
-    extern char *malloc();
 
     pState = (state *) malloc(sizeof (state));
 
@@ -829,7 +826,6 @@ strsave(string)
 char *string;
 {
     char *p;
-    extern char *malloc();
 
     p = malloc((unsigned int)strlen(string)+1);
     if (p != 0) {

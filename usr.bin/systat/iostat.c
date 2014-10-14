@@ -33,7 +33,7 @@
 
 #ifndef lint
 static char sccsid[] = "@(#)iostat.c	8.1 (Berkeley) 6/6/93";
-#endif not lint
+#endif
 
 #include <sys/param.h>
 #include <sys/dkstat.h>
@@ -261,7 +261,7 @@ showiostat()
 
 	/*
 	 * Last CPU state not calculated yet.
-	 */ 
+	 */
 	for (i = 0; i < CPUSTATES - 1; i++)
 		stat1(row++, i);
 	if (!numbers) {

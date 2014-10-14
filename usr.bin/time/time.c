@@ -46,6 +46,8 @@ static char sccsid[] = "@(#)time.c	8.1 (Berkeley) 6/6/93";
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 main(argc, argv)
 	int argc;

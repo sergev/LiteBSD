@@ -43,11 +43,12 @@ static char sccsid[] = "@(#)init_disp.c	8.2 (Berkeley) 2/16/94";
 #include <sys/ioctl.h>
 #include <sys/ioctl_compat.h>
 
+#include <stdlib.h>
 #include <signal.h>
 #include <err.h>
 #include "talk.h"
 
-/* 
+/*
  * Set up curses, catch the appropriate signals,
  * and build the various windows.
  */
@@ -100,7 +101,7 @@ set_edit_chars()
 	int cc;
 	struct sgttyb tty;
 	struct ltchars ltc;
-	
+
 	ioctl(0, TIOCGETP, &tty);
 	ioctl(0, TIOCGLTC, (struct sgttyb *)&ltc);
 	my_win.cerase = tty.sg_erase;

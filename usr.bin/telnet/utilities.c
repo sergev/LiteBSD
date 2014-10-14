@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)utilities.c	8.3 (Berkeley) 5/30/95";
 #include <sys/types.h>
 #include <sys/time.h>
 
+#include <stdlib.h>
 #include <ctype.h>
 
 #include "general.h"

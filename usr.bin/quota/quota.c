@@ -60,6 +60,8 @@ static char sccsid[] = "@(#)quota.c	8.4 (Berkeley) 4/28/95";
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 char *qfname = QUOTAFILENAME;
 char *qfextension[] = INITQFNAMES;
@@ -78,7 +80,7 @@ int	vflag;
 main(argc, argv)
 	char *argv[];
 {
-	int ngroups; 
+	int ngroups;
 	gid_t gidset[NGROUPS];
 	int i, gflag = 0, uflag = 0;
 	char ch;

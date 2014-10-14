@@ -91,9 +91,9 @@ main(argc, argv)
 	    debug |= ANYDEBUG;
 #	    ifdef DEBUG
 		printf("[main] debug = %d\n", debug);
-#	    else not DEBUG
+#	    else
 		printf("%s: -d ignored\n", whoami);
-#	    endif DEBUG
+#	    endif
 	    break;
 	case 'E':
 	    ++argv;
@@ -190,15 +190,15 @@ main(argc, argv)
 	/*
 	 *	print the dynamic profile
 	 */
-    printgprof( timesortnlp );	
+    printgprof( timesortnlp );
 	/*
 	 *	print the flat profile
 	 */
-    printprof();	
+    printprof();
 	/*
 	 *	print the index
 	 */
-    printindex();	
+    printindex();
     done();
 }
 
@@ -235,7 +235,7 @@ getnfile()
 		printf("[getnfile] 0X%08x\t%s\n", nl[j].value, nl[j].name);
 	    }
 	}
-#   endif DEBUG
+#   endif
 }
 
 getstrtab(nfile)
@@ -305,7 +305,7 @@ getsymtab(nfile)
 		    printf( "[getsymtab] rejecting: 0x%x %s\n" ,
 			    nbuf.n_type , strtab + nbuf.n_un.n_strx );
 		}
-#	    endif DEBUG
+#	    endif
 	    continue;
 	}
 	npe->value = nbuf.n_value;
@@ -315,7 +315,7 @@ getsymtab(nfile)
 		printf( "[getsymtab] %d %s 0x%08x\n" ,
 			nname , npe -> name , npe -> value );
 	    }
-#	endif DEBUG
+#	endif
 	npe++;
 	nname++;
     }
@@ -372,7 +372,7 @@ getpfile(filename)
 		printf( "[getpfile] frompc 0x%x selfpc 0x%x count %d\n" ,
 			arc.raw_frompc , arc.raw_selfpc , arc.raw_count );
 	    }
-#	endif DEBUG
+#	endif
 	    /*
 	     *	add this arc
 	     */
@@ -436,7 +436,7 @@ openpfile(filename)
 		sampbytes , nsamples );
 	    printf( "[openpfile] sample rate %d\n" , hz );
 	}
-#   endif DEBUG
+#   endif
     return(pfile);
 }
 
@@ -461,7 +461,7 @@ tally( rawp )
 	    printf( "[tally] arc from %s to %s traversed %d times\n" ,
 		    parentp -> name , childp -> name , rawp -> raw_count );
 	}
-#   endif DEBUG
+#   endif
     addarc( parentp , childp , rawp -> raw_count );
 }
 
@@ -511,7 +511,7 @@ dumpsum( sumfile )
 		    printf( "[dumpsum] frompc 0x%x selfpc 0x%x count %d\n" ,
 			    arc.raw_frompc , arc.raw_selfpc , arc.raw_count );
 		}
-#	    endif DEBUG
+#	    endif
 	}
     }
     fclose( sfile );
@@ -534,11 +534,11 @@ readsamples(pfile)
 {
     register i;
     UNIT	sample;
-    
+
     if (samples == 0) {
 	samples = (UNIT *) calloc(sampbytes, sizeof (UNIT));
 	if (samples == 0) {
-	    fprintf( stderr , "%s: No room for %d sample pc's\n", 
+	    fprintf( stderr , "%s: No room for %d sample pc's\n",
 		whoami , sampbytes / sizeof (UNIT));
 	    done();
 	}
@@ -615,13 +615,13 @@ asgnsamples()
 		printf( "[asgnsamples] pcl 0x%x pch 0x%x ccnt %d\n" ,
 			pcl , pch , ccnt );
 	    }
-#	endif DEBUG
+#	endif
 	totime += time;
 	for (j = j - 1; j < nname; j++) {
 	    svalue0 = nl[j].svalue;
 	    svalue1 = nl[j+1].svalue;
 		/*
-		 *	if high end of tick is below entry address, 
+		 *	if high end of tick is below entry address,
 		 *	go for next tick.
 		 */
 	    if (pch < svalue0)
@@ -638,10 +638,10 @@ asgnsamples()
 		    if (debug & SAMPLEDEBUG) {
 			printf("[asgnsamples] (0x%x->0x%x-0x%x) %s gets %f ticks %d overlap\n",
 				nl[j].value/sizeof(UNIT), svalue0, svalue1,
-				nl[j].name, 
+				nl[j].name,
 				overlap * time / scale, overlap);
 		    }
-#		endif DEBUG
+#		endif
 		nl[j].time += overlap * time / scale;
 	    }
 	}
@@ -650,7 +650,7 @@ asgnsamples()
 	if (debug & SAMPLEDEBUG) {
 	    printf("[asgnsamples] totime %f\n", totime);
 	}
-#   endif DEBUG
+#   endif
 }
 
 
@@ -694,7 +694,7 @@ alignentries()
 		    printf("[alignentries] pushing svalue 0x%x to 0x%x\n",
 			    nlp->svalue, nlp->svalue + UNITS_TO_CODE);
 		}
-#	    endif DEBUG
+#	    endif
 	    nlp->svalue += UNITS_TO_CODE;
 	}
     }

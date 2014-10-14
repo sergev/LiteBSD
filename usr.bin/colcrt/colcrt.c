@@ -42,6 +42,9 @@ static char sccsid[] = "@(#)colcrt.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
+
 /*
  * colcrt - replaces col for crts with new nroff esp. when using tbl.
  * Bill Joy UCB July 14, 1977

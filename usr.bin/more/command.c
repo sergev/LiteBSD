@@ -38,6 +38,7 @@ static char sccsid[] = "@(#)command.c	8.1 (Berkeley) 6/6/93";
 
 #include <sys/param.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <less.h>
 #include "pathnames.h"
@@ -484,7 +485,7 @@ again:		if (sigs)
 				 * to 0 and get a new character for the start
 				 * of the pattern.
 				 */
-				start_mca(action, 
+				start_mca(action,
 				    (action == A_F_SEARCH) ? "!/" : "!?");
 				wsearch = 0;
 				c = getcc();
@@ -494,10 +495,10 @@ again:		if (sigs)
 			if (number <= 0)
 				number = 1;
 			if (wsearch)
-				start_mca(last_mca, 
+				start_mca(last_mca,
 				    (last_mca == A_F_SEARCH) ? "/" : "?");
 			else
-				start_mca(last_mca, 
+				start_mca(last_mca,
 				    (last_mca == A_F_SEARCH) ? "!/" : "!?");
 			CMD_EXEC;
 			(void)search(mca == A_F_SEARCH, (char *)NULL,

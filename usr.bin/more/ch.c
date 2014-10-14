@@ -46,6 +46,7 @@ static char sccsid[] = "@(#)ch.c	8.1 (Berkeley) 6/6/93";
 #include <sys/file.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <less.h>
 
 int file = -1;		/* File descriptor of the input file */
@@ -105,7 +106,7 @@ fch_get()
 	register struct buf *bp;
 	register int n, ch;
 	register char *p, *t;
-	off_t pos, lseek();
+	off_t pos;
 
 	/* look for a buffer holding the desired block. */
 	for (bp = buf_head;  bp != END_OF_CHAIN;  bp = bp->next)
@@ -327,8 +328,6 @@ ch_beg_seek()
 off_t
 ch_length()
 {
-	off_t lseek();
-
 	if (ispipe)
 		return(ch_fsize);
 	return((off_t)(lseek(file, (off_t)0, L_XTND)));
@@ -425,10 +424,9 @@ ch_addbuf(nnew)
 {
 	register struct buf *bp;
 	register struct buf *newbufs;
-	char *calloc();
 
 	/*
-	 * We don't have enough buffers.  
+	 * We don't have enough buffers.
 	 * Allocate some new ones.
 	 */
 	newbufs = (struct buf *)calloc((u_int)nnew, sizeof(struct buf));
