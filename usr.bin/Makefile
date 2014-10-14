@@ -2,7 +2,7 @@
 
 SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
-	comm cpp ctags cut dirname du \
+	comm cpp ctags cut diff dirname du \
 	env error ex expand false file find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
@@ -18,7 +18,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	xargs xinstall xstr yacc yes
 
 # Missing on 4.4bsd tape:
-# at bc compress dc deroff diction diff graph learn
+# at bc compress dc deroff diction graph learn
 # plot ptx spell spline struct units xsend
 
 # Cmp, look and tail all use mmap, so new-VM only.
