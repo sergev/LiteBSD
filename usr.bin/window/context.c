@@ -42,12 +42,11 @@ static char sccsid[] = "@(#)context.c	8.1 (Berkeley) 6/6/93";
 #include "string.h"
 #include "context.h"
 #include <fcntl.h>
+#include <stdlib.h>
 
 /*
  * Context push/pop for nested command files.
  */
-
-char *malloc();
 
 cx_alloc()
 {

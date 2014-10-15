@@ -43,6 +43,7 @@ static char sccsid[] = "@(#)wwenviron.c	8.1 (Berkeley) 6/6/93";
 #include <sys/ioctl.h>
 #endif
 #include <sys/signal.h>
+#include <stdio.h>
 
 /*
  * Set up the environment of this process to run in window 'wp'.

@@ -41,8 +41,7 @@ static char sccsid[] = "@(#)var.c	8.1 (Berkeley) 6/6/93";
 #include "value.h"
 #include "var.h"
 #include "string.h"
-
-char *malloc();
+#include <stdlib.h>
 
 struct var *
 var_set1(head, name, v)

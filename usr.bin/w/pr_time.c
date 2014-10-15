@@ -46,7 +46,7 @@ static char sccsid[] = "@(#)pr_time.c	8.2 (Berkeley) 4/4/94";
 
 /*
  * pr_attime --
- *	Print the time since the user logged in. 
+ *	Print the time since the user logged in.
  *
  *	Note: SCCS forces the bizarre string manipulation, things like
  *	8.2 get replaced in the source code.
@@ -69,12 +69,12 @@ pr_attime(started, now)
 
 	/* If not today, use day-hour-am/pm. */
 	else if (*now / SECSPERDAY != *started / SECSPERDAY) {
-		(void)strcpy(fmt, __CONCAT("%a%", "I%p"));
+		(void)strcpy(fmt, "%a%I%p");
 	}
 
 	/* Default is hh:mm{am,pm}. */
 	else {
-		(void)strcpy(fmt, __CONCAT("%l:%", "M%p"));
+		(void)strcpy(fmt, "%l:%M%p");
 	}
 
 	(void)strftime(buf, sizeof(buf), fmt, tp);

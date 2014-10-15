@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)wwsize.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include "ww.h"
+#include <stdlib.h>
 
 /*
  * Resize a window.  Should be unattached.

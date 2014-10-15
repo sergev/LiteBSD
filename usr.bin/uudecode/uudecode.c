@@ -52,6 +52,7 @@ static char sccsid[] = "@(#)uudecode.c	8.2 (Berkeley) 4/2/94";
 
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 char *filename;

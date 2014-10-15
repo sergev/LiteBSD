@@ -8,14 +8,14 @@ BINDIR=	/usr/libexec
 CLEANFILES+=vgrindefs.src.db
 
 beforeinstall:
-	cap_mkdb -f vgrindefs.src ${.CURDIR}/vgrindefs.src
-	install -c -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+#	cap_mkdb -f vgrindefs.src ${.CURDIR}/vgrindefs.src
+	install -c -m ${BINMODE} \
 	    ${.CURDIR}/vgrind.sh ${DESTDIR}/usr/bin/vgrind
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/vgrindefs.src \
+	install -c -m 444 ${.CURDIR}/vgrindefs.src \
 	    ${DESTDIR}/usr/share/misc/vgrindefs
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 \
-	    vgrindefs.src.db ${DESTDIR}/usr/share/misc/vgrindefs.db
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/tmac.vgrind \
-	    ${DESTDIR}/usr/share/tmac
+#	install -c -m 444 \
+#	    vgrindefs.src.db ${DESTDIR}/usr/share/misc/vgrindefs.db
+	install -c -D -m 444 ${.CURDIR}/tmac.vgrind \
+	    ${DESTDIR}/usr/share/tmac/tmac.vgrind
 
 .include <bsd.prog.mk>

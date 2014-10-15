@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)win.c	8.1 (Berkeley) 6/6/93";
 
 #include "defs.h"
 #include "char.h"
+#include <string.h>
 
 /*
  * Higher level routines for dealing with windows.

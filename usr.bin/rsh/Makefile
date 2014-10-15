@@ -8,7 +8,7 @@ SRCS=	rsh.c
 #LDADD=	-lkrb -ldes
 BINOWN=	root
 BINMODE=4555
-INSTALLFLAGS=-fschg
+#INSTALLFLAGS=-fschg
 .PATH:	${.CURDIR}/../rlogin
 
 .include <bsd.prog.mk>

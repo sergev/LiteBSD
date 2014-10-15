@@ -130,7 +130,7 @@ struct tt_str {
 struct tt_str *tttgetstr();
 struct tt_str *ttxgetstr();	/* tgetstr() and expand delays */
 
-int tttputc();
+void tttputc(int);
 #define tttputs(s, n)	tputs((s)->ts_str, (n), tttputc)
 #define ttxputs(s)	ttwrite((s)->ts_str, (s)->ts_n)
 

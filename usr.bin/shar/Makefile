@@ -10,7 +10,7 @@ cleandir:
 	rm -f ${MAN1}
 
 beforeinstall:
-	install -c -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	install -c -m ${BINMODE} \
 	    ${.CURDIR}/shar.sh ${DESTDIR}/usr/bin/shar
 
 .include <bsd.prog.mk>

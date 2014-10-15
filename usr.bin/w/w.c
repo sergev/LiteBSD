@@ -266,7 +266,7 @@ main(argc, argv)
 	/* sort by idle time */
 	if (sortidle && ehead != NULL) {
 		struct entry *from = ehead, *save;
-		
+
 		ehead = NULL;
 		while (from != NULL) {
 			for (nextp = &ehead;
@@ -279,7 +279,7 @@ main(argc, argv)
 			*nextp = save;
 		}
 	}
-			
+
 	if (!nflag)
 		if (gethostname(domain, sizeof(domain) - 1) < 0 ||
 		    (p = strchr(domain, '.')) == 0)
@@ -348,8 +348,7 @@ pr_header(nowp, nusers)
 	 * SCCS forces the string manipulation below, as it replaces
 	 * %, M, and % in a character string with the file name.
 	 */
-	(void)strftime(buf, sizeof(buf),
-	    __CONCAT("%l:%","M%p"), localtime(nowp));
+	(void)strftime(buf, sizeof(buf), "%l:%M%p", localtime(nowp));
 	(void)printf("%s ", buf);
 
 	/*

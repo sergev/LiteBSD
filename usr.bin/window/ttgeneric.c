@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)ttgeneric.c	8.1 (Berkeley) 6/6/93";
 
 #include "ww.h"
 #include "tt.h"
+#include <stdlib.h>
 
 char PC, *BC, *UP;
 short ospeed;

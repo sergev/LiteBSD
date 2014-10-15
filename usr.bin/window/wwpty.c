@@ -39,6 +39,7 @@ static char sccsid[] = "@(#)wwpty.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include "ww.h"
+#include <string.h>
 #include <fcntl.h>
 #if !defined(OLD_TTY) && !defined(TIOCPKT)
 #include <sys/ioctl.h>

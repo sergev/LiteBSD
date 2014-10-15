@@ -43,6 +43,8 @@ static char sccsid[] = "@(#)lcmd1.c	8.1 (Berkeley) 6/6/93";
 #include "value.h"
 #include "lcmd.h"
 #include "var.h"
+#include <string.h>
+#include <stdio.h>
 
 struct lcmd_arg arg_window[] = {
 	{ "row",	1,	ARG_NUM },

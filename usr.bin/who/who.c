@@ -50,6 +50,7 @@ static char sccsid[] = "@(#)who.c	8.1 (Berkeley) 6/6/93";
 #include <pwd.h>
 #include <utmp.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 main(argc, argv)
 	int argc;

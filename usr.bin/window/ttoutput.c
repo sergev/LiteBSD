@@ -41,6 +41,7 @@ static char sccsid[] = "@(#)ttoutput.c	8.1 (Berkeley) 6/6/93";
 #include "ww.h"
 #include "tt.h"
 #include <sys/errno.h>
+#include <string.h>
 
 /*
  * Buffered output package.

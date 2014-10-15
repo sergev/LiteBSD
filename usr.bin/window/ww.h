@@ -306,15 +306,6 @@ void wwquit();
 char **wwalloc();
 char *wwerror();
 
-	/* c library functions */
-char *malloc();
-char *calloc();
-char *getenv();
-char *tgetstr();
-char *rindex();
-char *strcpy();
-char *strcat();
-
 #undef MIN
 #undef MAX
 #define MIN(x, y)	((x) > (y) ? (y) : (x))

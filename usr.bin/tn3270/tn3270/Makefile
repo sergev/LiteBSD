@@ -1,12 +1,12 @@
 #	@(#)Makefile	8.1 (Berkeley) 6/6/93
 
 PROG=	tn3270
-CFLAGS+=-I${.CURDIR} -I. -Dunix
+CFLAGS+=-I${.CURDIR} -I../api -Dunix
 LDADD+=	-lcurses -ltermcap -ltelnet
 DPADD+=	${LIBCURSES} ${DESTDIR}/usr/lib/libtermcap.a ${DESTDIR}/usr/lib/libtelnet.a
 CLEANFILES+= asc_disp.OUT asc_disp.out disp_asc.OUT disp_asc.out TMPfunc.out
-.PATH:	${.CURDIR}/../api ${.CURDIR}/../ascii ${.CURDIR}/../ctlr
-.PATH:	${.CURDIR}/../general ${.CURDIR}/../sys_curses ${.CURDIR}/../../telnet
+#.PATH:	${.CURDIR}/../api ${.CURDIR}/../ascii ${.CURDIR}/../ctlr
+#.PATH:	${.CURDIR}/../general ${.CURDIR}/../sys_curses ${.CURDIR}/../../telnet
 
 MAN1=	tn3270.0
 

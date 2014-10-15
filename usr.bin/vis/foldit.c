@@ -35,6 +35,8 @@
 static char sccsid[] = "@(#)foldit.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
+#include <stdio.h>
+
 foldit(chunk, col, max)
 	char *chunk;
 {
@@ -65,7 +67,7 @@ again:
 			printf("\\\n");
 			col = 0;
 			goto again;
-		} 
+		}
 		cp++;
 	}
 	return (col);

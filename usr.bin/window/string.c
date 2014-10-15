@@ -39,8 +39,9 @@ static char sccsid[] = "@(#)string.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include "string.h"
-
-char *malloc();
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 char *
 str_cpy(s)

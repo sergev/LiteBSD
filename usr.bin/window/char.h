@@ -52,6 +52,7 @@
 extern char *_unctrl[];
 extern char _cmap[];
 #define ctrl(c)		(c & 0x1f)
+#undef unctrl
 #define unctrl(c)	(_unctrl[(unsigned char) (c)])
 #define _C		0x01
 #define _P		0x02

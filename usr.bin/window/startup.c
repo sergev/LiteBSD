@@ -43,6 +43,8 @@ static char sccsid[] = "@(#)startup.c	8.1 (Berkeley) 6/6/93";
 #include "var.h"
 #include "char.h"
 #include "local.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 doconfig()
 {

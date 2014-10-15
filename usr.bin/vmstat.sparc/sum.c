@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)sum.c	8.1 (Berkeley) 6/6/93";
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/time.h>
 #include <vm/vm.h>
 
 #ifdef tahoe

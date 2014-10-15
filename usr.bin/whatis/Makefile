@@ -2,6 +2,7 @@
 
 PROG=	whatis
 SRCS=	whatis.c config.c
-.PATH:	${.CURDIR}/../man
+CFLAGS+= -I../man
+#.PATH:	${.CURDIR}/../man
 
 .include <bsd.prog.mk>

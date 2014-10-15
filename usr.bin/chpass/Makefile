@@ -10,6 +10,6 @@ LINKS=	${BINDIR}/chpass ${BINDIR}/chfn ${BINDIR}/chpass ${BINDIR}/chsh
 MLINKS=	chpass.1 chfn.1 chpass.1 chsh.1
 
 afterinstall:
-	chflags schg /usr/bin/chpass
+#	chflags schg /usr/bin/chpass
 
 .include <bsd.prog.mk>

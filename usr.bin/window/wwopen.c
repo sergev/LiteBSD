@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)wwopen.c	8.2 (Berkeley) 4/28/95";
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 struct ww *
 wwopen(flags, nrow, ncol, row, col, nline)

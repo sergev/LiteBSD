@@ -39,16 +39,16 @@ static char sccsid[] = "@(#)tttermcap.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include "tt.h"
+#include <stdlib.h>
+#include <curses.h>
 
-char *tgetstr();
-char *tgoto();
-char *malloc();
-
+void
 tttputc(c)
 {
 	ttputc(c);
 }
 
+void
 ttxputc(c)
 {
 	*tt_strp++ = c;

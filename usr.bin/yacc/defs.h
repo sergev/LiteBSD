@@ -39,6 +39,8 @@
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 /*  machine-dependent definitions			*/
@@ -311,17 +313,3 @@ extern short final_state;
 extern char *allocate();
 extern bucket *lookup();
 extern bucket *make_bucket();
-
-
-/* system variables */
-
-extern int errno;
-
-
-/* system functions */
-
-extern void free();
-extern char *calloc();
-extern char *malloc();
-extern char *realloc();
-extern char *strcpy();

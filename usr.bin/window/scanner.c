@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)scanner.c	8.1 (Berkeley) 6/6/93";
 #include "token.h"
 #include "context.h"
 #include "string.h"
+#include <stdlib.h>
 
 s_getc()
 {

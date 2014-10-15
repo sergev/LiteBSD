@@ -9,7 +9,7 @@ DPADD=	${LIBTERM} ${LIBCOMPAT}
 LDADD=	-ltermcap -lcompat
 
 beforeinstall:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/more.help \
+	install -c -m 444 ${.CURDIR}/more.help \
 	    ${DESTDIR}/usr/share/misc
 
 .include <bsd.prog.mk>

@@ -2192,7 +2192,7 @@ status(argc, argv)
 				sigiocount, (sigiocount == 1)? "":"s");
 	if (In3270) {
 	    printf("Process ID %d, process group %d.\n",
-					    getpid(), getpgrp(getpid()));
+					    getpid(), getpgrp());
 	    printf("Terminal input:\n");
 	    filestuff(tin);
 	    printf("Terminal output:\n");

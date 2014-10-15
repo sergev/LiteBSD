@@ -45,6 +45,7 @@ static char sccsid[] = "@(#)wwiomux.c	8.1 (Berkeley) 6/6/93";
 #include <sys/ioctl.h>
 #endif
 #include <fcntl.h>
+#include <strings.h>
 
 /*
  * Multiple window output handler.

@@ -42,11 +42,12 @@ static char sccsid[] = "@(#)vis.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <vis.h>
 
 int eflags, fold, foldwidth=80, none, markeol, debug;
 
-main(argc, argv) 
+main(argc, argv)
 	char *argv[];
 {
 	extern char *optarg;
@@ -80,7 +81,7 @@ main(argc, argv)
 			break;
 		case 'F':
 			if ((foldwidth = atoi(optarg))<5) {
-				fprintf(stderr, 
+				fprintf(stderr,
 				 "vis: can't fold lines to less than 5 cols\n");
 				exit(1);
 			}
@@ -98,7 +99,7 @@ main(argc, argv)
 #endif
 		case '?':
 		default:
-			fprintf(stderr, 
+			fprintf(stderr,
 		"usage: vis [-nwctsobf] [-F foldwidth]\n");
 			exit(1);
 		}
@@ -118,17 +119,17 @@ main(argc, argv)
 		process(stdin, "<stdin>");
 	exit(0);
 }
-	
+
 process(fp, filename)
 	FILE *fp;
 	char *filename;
 {
 	static int col = 0;
 	register char *cp = "\0"+1;	/* so *(cp-1) starts out != '\n' */
-	register int c, rachar; 
+	register int c, rachar;
 	register char nc;
 	char buff[5];
-	
+
 	c = getc(fp);
 	while (c != EOF) {
 		rachar = getc(fp);
@@ -145,7 +146,7 @@ process(fp, filename)
 			*cp++ = '$';
 			*cp++ = '\n';
 			*cp = '\0';
-		} else 
+		} else
 			(void) vis(buff, (char)c, eflags, (char)rachar);
 
 		cp = buff;

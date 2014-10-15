@@ -40,6 +40,8 @@ static char sccsid[] = "@(#)wwdump.c	8.1 (Berkeley) 6/6/93";
 
 #include "ww.h"
 #include "tt.h"
+#include <stdio.h>
+#include <string.h>
 
 static char cmap[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

@@ -42,6 +42,8 @@ static char sccsid[] = "@(#)ul.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
 
 #define	IESC	'\033'
 #define	SO	'\016'
@@ -424,7 +426,7 @@ initcap()
 		ENTER_REVERSE = ENTER_STANDOUT;
 	if (!EXIT_ATTRIBUTES && EXIT_STANDOUT)
 		EXIT_ATTRIBUTES = EXIT_STANDOUT;
-	
+
 	/*
 	 * Note that we use REVERSE for the alternate character set,
 	 * not the as/ae capabilities.  This is because we are modelling

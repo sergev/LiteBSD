@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)tty.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 main(argc, argv)
 	int argc;

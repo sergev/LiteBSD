@@ -10,7 +10,7 @@ cleandir:
 	rm -f ${MAN1}
 
 install: maninstall
-	install -c -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	install -c -m ${BINMODE} \
 	    ${.CURDIR}/pagesize.sh ${DESTDIR}/${BINDIR}/pagesize
 
 .include <bsd.prog.mk>

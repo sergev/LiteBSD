@@ -11,6 +11,6 @@ CFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../usr.sbin/vipw \
 	-I${.CURDIR}/../../usr.bin/chpass
 BINOWN=	root
 BINMODE=4555
-INSTALLFLAGS=-fschg
+#INSTALLFLAGS=-fschg
 
 .include <bsd.prog.mk>

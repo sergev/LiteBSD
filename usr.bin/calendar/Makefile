@@ -3,7 +3,8 @@
 PROG=	calendar
 
 beforeinstall:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 \
+	install -d ${DESTDIR}/usr/share/calendar
+	install -c -m 444 \
 	    ${.CURDIR}/calendars/calendar.* ${DESTDIR}/usr/share/calendar
 
 .include <bsd.prog.mk>

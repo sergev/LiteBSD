@@ -40,6 +40,9 @@ static char sccsid[] = "@(#)wwgets.c	8.1 (Berkeley) 6/6/93";
 
 #include "ww.h"
 #include "char.h"
+#include <string.h>
+
+static void rub();
 
 wwgets(buf, n, w)
 char *buf;
@@ -49,7 +52,6 @@ register struct ww *w;
 	register char *p = buf;
 	register char c;
 	char uc = w->ww_unctrl;
-	static void rub();
 
 	w->ww_unctrl = 0;
 	for (;;) {

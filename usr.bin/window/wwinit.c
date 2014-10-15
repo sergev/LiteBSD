@@ -42,6 +42,9 @@ static char sccsid[] = "@(#)wwinit.c	8.2 (Berkeley) 4/28/95";
 #include "tt.h"
 #include <sys/signal.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <curses.h>
 #include "char.h"
 
 wwinit()

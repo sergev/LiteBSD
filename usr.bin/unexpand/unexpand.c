@@ -45,6 +45,8 @@ static char sccsid[] = "@(#)unexpand.c	8.1 (Berkeley) 6/6/93";
  * unexpand - put tabs into a file replacing blanks
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 char	genbuf[BUFSIZ];
 char	linebuf[BUFSIZ];

@@ -42,6 +42,7 @@ static char sccsid[] = "@(#)what.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * what
@@ -51,7 +52,7 @@ main(argc, argv)
 	int argc;
 	char **argv;
 {
-	if (!*++argv) 
+	if (!*++argv)
 		search();
 	else do {
 		if (!freopen(*argv, "r", stdin)) {

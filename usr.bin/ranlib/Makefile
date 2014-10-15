@@ -10,7 +10,7 @@ CLEANFILES=ranlib.5.0
 ranlib.0: ranlib.5.0
 
 afterinstall:
-	install -c -o -m ${MANMODE} ranlib.5.0 \
+	install -c -m ${MANMODE} ranlib.5.0 \
 	    ${DESTDIR}${MANDIR}5/ranlib.0
 
 .include <bsd.prog.mk>

@@ -47,6 +47,8 @@ static char sccsid[] = "@(#)main.c	8.2 (Berkeley) 4/2/94";
 #include "defs.h"
 #include <paths.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "string.h"
 #include "char.h"
 #include "local.h"
@@ -64,7 +66,7 @@ char **argv;
 	char *cmd = 0;
 	char tflag = 0;
 
-	escapec = ESCAPEC;	
+	escapec = ESCAPEC;
 	if (p = rindex(*argv, '/'))
 		p++;
 	else

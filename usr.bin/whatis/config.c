@@ -1,0 +1,1 @@
+../man/config.c

@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)cmd7.c	8.1 (Berkeley) 6/6/93";
 
 #include "defs.h"
 #include "string.h"
+#include <stdlib.h>
 
 /*
  * Window size.

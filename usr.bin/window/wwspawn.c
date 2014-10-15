@@ -40,6 +40,7 @@ static char sccsid[] = "@(#)wwspawn.c	8.1 (Berkeley) 6/6/93";
 
 #include "ww.h"
 #include <sys/signal.h>
+#include <unistd.h>
 
 /*
  * There is a dead lock with vfork and closing of pseudo-ports.

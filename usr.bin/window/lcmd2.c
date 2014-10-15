@@ -46,6 +46,8 @@ static char sccsid[] = "@(#)lcmd2.c	8.1 (Berkeley) 6/6/93";
 #include "alias.h"
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <string.h>
+#include <stdio.h>
 
 /*ARGSUSED*/
 l_iostat(v, a)

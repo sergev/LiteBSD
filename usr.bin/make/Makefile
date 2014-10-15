@@ -12,8 +12,4 @@ SRCS+=	lstAppend.c lstAtEnd.c lstAtFront.c lstClose.c lstConcat.c \
 	lstMember.c lstNext.c lstOpen.c lstRemove.c lstReplace.c lstSucc.c
 .PATH:	${.CURDIR}/lst.lib
 
-.if make(install)
-SUBDIR+= PSD.doc
-.endif
-
 .include <bsd.prog.mk>

@@ -58,6 +58,7 @@ static char sccsid[] = "@(#)unifdef.c	8.1 (Berkeley) 6/6/93";
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 
 #define BSS

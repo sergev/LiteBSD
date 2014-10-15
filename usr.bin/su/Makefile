@@ -6,6 +6,6 @@ PROG=	su
 #LDADD=	-lkrb -ldes
 BINOWN=	root
 BINMODE=4555
-INSTALLFLAGS=-fschg
+#INSTALLFLAGS=-fschg
 
 .include <bsd.prog.mk>
