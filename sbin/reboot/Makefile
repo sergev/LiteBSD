@@ -8,6 +8,11 @@ MLINKS=	reboot.8 halt.8
 LINKS=	${BINDIR}/reboot ${BINDIR}/halt
 
 afterinstall:
+	install -d ${DESTDIR}${MANDIR}8/hp300
+	install -d ${DESTDIR}${MANDIR}8/i386
+	install -d ${DESTDIR}${MANDIR}8/sparc
+	install -d ${DESTDIR}${MANDIR}8/tahoe
+	install -d ${DESTDIR}${MANDIR}8/vax
 	${MINSTALL} boot_hp300.0 ${DESTDIR}${MANDIR}8/hp300/boot.0
 	${MINSTALL} boot_i386.0 ${DESTDIR}${MANDIR}8/i386/boot.0
 	${MINSTALL} boot_sparc.0 ${DESTDIR}${MANDIR}8/sparc/boot.0

@@ -4,9 +4,9 @@ MAN8=	fastboot.0
 MLINKS=	fastboot.8 fasthalt.8
 
 beforeinstall:
-	install -c -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	install -c -m ${BINMODE} \
 	    ${.CURDIR}/fastboot.sh ${DESTDIR}${BINDIR}/fastboot
-	install -c -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	install -c -m ${BINMODE} \
 	    ${.CURDIR}/fasthalt.sh ${DESTDIR}${BINDIR}/fasthalt
 
 .include <bsd.prog.mk>

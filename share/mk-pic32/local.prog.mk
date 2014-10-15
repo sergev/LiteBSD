@@ -18,7 +18,7 @@ BINOWN?=	bin
 BINMODE?=	555
 
 CC=             gcc
-LDFLAGS=
+LDFLAGS=        ${LDOPTS}
 
 LIBCOMPAT?=	/usr/lib/libcompat.a
 LIBCURSES?=	/usr/lib/libcurses.a

@@ -96,8 +96,8 @@ REDO=		right_only
 # to the end of the "CFLAGS=" line
 
 .PATH:	${.CURDIR}/datfiles
-CFLAGS=	-DTM_GMTOFF=tm_gmtoff -DTM_ZONE=tm_zone
-COPTS=  -O
+COPTS=  -m32 -O -DTM_GMTOFF=tm_gmtoff -DTM_ZONE=tm_zone
+LDOPTS= -m32
 PROG=	zic
 MAN5=	tzfile.0
 
@@ -140,7 +140,7 @@ install: maninstall uninstall ${DATA} ${REDO}
 	chmod -R a-w ${TZDIR}
 
 uninstall:
-	chmod -R a+w ${TZDIR}
+	if [ -d ${TZDIR} ]; then chmod -R a+w ${TZDIR}; fi
 	rm -rf ${TZDIR}
 
 .include <local.prog.mk>

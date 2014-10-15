@@ -5,7 +5,7 @@ MAN8=	init.0
 DPADD=	${LIBUTIL}
 LDADD=	-lutil
 BINMODE=500
-INSTALLFLAGS=-fschg
+#INSTALLFLAGS=-fschg
 CFLAGS+=-DDEBUGSHELL -DSECURE
 
 .include <bsd.prog.mk>

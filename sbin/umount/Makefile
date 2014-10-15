@@ -8,6 +8,6 @@ LDADD=	-lrpc
 
 MOUNT=	${.CURDIR}/../../sbin/mount
 CFLAGS+= -I${MOUNT}
-.PATH:	${MOUNT}
+#.PATH:	${MOUNT}
 
 .include <bsd.prog.mk>

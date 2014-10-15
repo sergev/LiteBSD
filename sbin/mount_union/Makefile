@@ -6,6 +6,6 @@ MAN8=	mount_union.0
 
 MOUNT=	${.CURDIR}/../mount
 CFLAGS+= -I../../sys -I${MOUNT}
-.PATH:	${MOUNT}
+#.PATH:	${MOUNT}
 
 .include <bsd.prog.mk>

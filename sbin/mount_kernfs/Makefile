@@ -6,6 +6,6 @@ MAN8=	mount_kernfs.0
 
 MOUNT=	${.CURDIR}/../mount
 CFLAGS+= -I${MOUNT}
-.PATH:	${MOUNT}
+#.PATH:	${MOUNT}
 
 .include <bsd.prog.mk>

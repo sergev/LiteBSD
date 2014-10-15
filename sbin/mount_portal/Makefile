@@ -7,7 +7,7 @@ MAN8=	mount_portal.0
 
 MOUNT=	${.CURDIR}/../mount
 CFLAGS+= -I../../sys -I${MOUNT}
-.PATH:	${MOUNT}
+#.PATH:	${MOUNT}
 
 DPADD=	$(LIBCOMPAT)
 LDADD=	-lcompat

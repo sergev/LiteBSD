@@ -41,3 +41,4 @@
 #include <paths.h>
 
 #define	_PATH_DEFTAPE	"/dev/rmt8"
+#define	_PATH_RMT	"rmt"

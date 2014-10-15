@@ -6,7 +6,7 @@ MAN8=	mount_nfs.0
 
 MOUNT=	${.CURDIR}/../mount
 CFLAGS+= -DNFS -I${MOUNT}
-.PATH:	${MOUNT}
+#.PATH:	${MOUNT}
 
 DPADD=	${LIBRPC}
 LDADD=	-lrpc
