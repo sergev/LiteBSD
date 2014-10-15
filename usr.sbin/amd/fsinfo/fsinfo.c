@@ -175,9 +175,9 @@ Usage: %s [-v] [-a autodir] [-h hostname] [-b bootparams] [-d dumpsets]\n\
 
 
 	if (g_argv[0])
-		log("g_argv[0] = %s", g_argv[0]);
+		plog("g_argv[0] = %s", g_argv[0]);
 	else
-		log("g_argv[0] = (nil)");
+		plog("g_argv[0] = (nil)");
 }
 
 /*
@@ -200,7 +200,7 @@ static char *find_username()
 	if (!u)
 		u = "root";
 
-	return strdup(u);
+	return xstrdup(u);
 }
 
 /*

@@ -59,6 +59,7 @@ static char sccsid[] = "@(#)edquota.c	8.3 (Berkeley) 4/27/95";
 #include <grp.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "pathnames.h"

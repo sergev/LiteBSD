@@ -46,6 +46,7 @@
 #ifdef READ_MTAB_BSD_STYLE
 
 #include <sys/mount.h>
+#include <string.h>
 
 static struct mntent *mnt_dup(mp)
 struct statfs *mp;

@@ -122,7 +122,7 @@ int nsize;
 	return 1;
 }
 
-	
+
 /*
  * The root of the mount tree.
  */

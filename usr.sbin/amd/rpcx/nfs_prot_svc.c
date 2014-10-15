@@ -42,6 +42,7 @@
  */
 
 #include "am.h"
+#include <string.h>
 
 void nfs_program_2(rqstp, transp)
 struct svc_req *rqstp;
@@ -195,4 +196,3 @@ SVCXPRT *transp;
 		going_down(1);
 	}
 }
-

@@ -9,7 +9,7 @@ CFLAGS+=-I${.CURDIR}/../config
 CFLAGS+=-DARCH_REP=\"${MACHINE}\"
 CFLAGS+=-DOS_REP=\"bsd44\"
 CFLAGS+=-DOS_HDR=\"os-bsd44.h\"
-.PATH: ${.CURDIR}/../rpcx ${.CURDIR}/../amd
+#.PATH: ${.CURDIR}/../rpcx ${.CURDIR}/../amd
 
 .include "../../Makefile.inc"
 .include <bsd.prog.mk>

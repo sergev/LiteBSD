@@ -35,11 +35,11 @@
 static char copyright[] =
 "@(#) Copyright (c) 1980, 1986, 1988, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
-#endif not lint
+#endif
 
 #ifndef lint
 static char sccsid[] = "@(#)bad144.c	8.2 (Berkeley) 4/27/95";
-#endif not lint
+#endif
 
 /*
  * bad144
@@ -51,7 +51,7 @@ static char sccsid[] = "@(#)bad144.c	8.2 (Berkeley) 4/27/95";
  *
  * It is preferable to write the bad information with a standard formatter,
  * but this program will do.
- * 
+ *
  * RP06 sectors are marked as bad by inverting the format bit in the
  * header; on other drives the valid-sector bit is cleared.
  */
@@ -60,9 +60,12 @@ static char sccsid[] = "@(#)bad144.c	8.2 (Berkeley) 4/27/95";
 #include <sys/ioctl.h>
 #include <sys/file.h>
 #include <sys/disklabel.h>
+#include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <paths.h>
 
 #define RETRIES	10		/* number of retries on reading old sectors */
@@ -80,8 +83,6 @@ char	label[BBSIZE];
 daddr_t	size, getold(), badsn();
 struct	disklabel *dp;
 char	name[BUFSIZ];
-char	*malloc();
-off_t	lseek();
 
 main(argc, argv)
 	int argc;
@@ -146,7 +147,7 @@ usage:
 	f = open(name, argc == 1? O_RDONLY : O_RDWR);
 	if (f < 0)
 		Perror(name);
-	if (read(f, label, sizeof(label)) < 0) 
+	if (read(f, label, sizeof(label)) < 0)
 		Perror("read");
 	for (dp = (struct disklabel *)(label + LABELOFFSET);
 	    dp < (struct disklabel *)
@@ -163,7 +164,7 @@ usage:
 			dp->d_secsize);
 		exit(7);
 	}
-	size = dp->d_nsectors * dp->d_ntracks * dp->d_ncylinders; 
+	size = dp->d_nsectors * dp->d_ntracks * dp->d_ncylinders;
 	argc--;
 	argv++;
 	if (argc == 0) {

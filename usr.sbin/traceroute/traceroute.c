@@ -447,14 +447,14 @@ main(argc, argv)
 		perror("traceroute: SO_SNDBUF");
 		exit(6);
 	}
-#endif SO_SNDBUF
+#endif
 #ifdef IP_HDRINCL
 	if (setsockopt(sndsock, IPPROTO_IP, IP_HDRINCL, (char *)&on,
 		       sizeof(on)) < 0) {
 		perror("traceroute: IP_HDRINCL");
 		exit(6);
 	}
-#endif IP_HDRINCL
+#endif
 	if (options & SO_DEBUG)
 		(void) setsockopt(sndsock, SOL_SOCKET, SO_DEBUG,
 				  (char *)&on, sizeof(on));
@@ -476,7 +476,7 @@ main(argc, argv)
 			perror ("traceroute: bind:");
 			exit (1);
 		}
-#endif IP_HDRINCL
+#endif
 	}
 
 	Fprintf(stderr, "traceroute to %s (%s)", hostname,
@@ -514,7 +514,7 @@ main(argc, argv)
 						ip = (struct ip *)packet;
 						if (ip->ip_ttl <= 1)
 							Printf(" !");
-#endif ARCHAIC
+#endif
 						++got_there;
 						break;
 					case ICMP_UNREACH_NET:
@@ -670,7 +670,7 @@ packet_ok(buf, cc, from, seq)
 	icp = (struct icmp *)(buf + hlen);
 #else
 	icp = (struct icmp *)buf;
-#endif ARCHAIC
+#endif
 	type = icp->icmp_type; code = icp->icmp_code;
 	if ((type == ICMP_TIMXCEED && code == ICMP_TIMXCEED_INTRANS) ||
 	    type == ICMP_UNREACH) {
@@ -697,7 +697,7 @@ packet_ok(buf, cc, from, seq)
 		for (i = 4; i < cc ; i += sizeof(long))
 			Printf("%2d: x%8.8lx\n", i, *lp++);
 	}
-#endif ARCHAIC
+#endif
 	return(0);
 }
 
@@ -763,7 +763,7 @@ in_cksum(addr, len)
 	answer = ~sum;				/* truncate to 16 bits */
 	return (answer);
 }
-#endif notyet
+#endif
 
 /*
  * Subtract 2 timeval structs:  out = out - in.

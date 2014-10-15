@@ -1,5 +1,5 @@
 %{
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -71,8 +71,6 @@ struct incl {
 static struct incl *incl;
 static int eoftoken;		/* current EOF token */
 static void endinclude __P((void));
-
-#define	yywrap() 1
 
 %}
 
@@ -235,4 +233,9 @@ currentline()
 	extern int yychar;
 
 	return (yyline - (yychar == '\n'));
+}
+
+int yywrap()
+{
+        return 1;
 }

@@ -448,7 +448,7 @@ mntfs *mf;
 	if (!mf->mf_private) {
 		int error;
 		struct fhstatus fhs;
-	
+
 		char *colon = strchr(mf->mf_info, ':');
 		if (colon == 0)
 			return ENOENT;

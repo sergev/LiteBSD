@@ -275,7 +275,7 @@ void	*erealloc __P((void *, size_t));
 char	*path __P((const char *));
 void	error __P((const char *, ...));			/* immediate errs */
 void	xerror __P((const char *, int, const char *, ...)); /* delayed errs */
-__dead void panic __P((const char *, ...));
+void    panic __P((const char *, ...));
 struct nvlist *newnv __P((const char *, const char *, void *, int));
 void	nvfree __P((struct nvlist *));
 void	nvfreel __P((struct nvlist *));

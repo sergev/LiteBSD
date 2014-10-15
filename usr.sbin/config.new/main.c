@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -69,7 +69,7 @@ static struct hashtab *mkopttab;
 static struct nvlist **nextopt;
 static struct nvlist **nextmkopt;
 
-static __dead void stop __P((void));
+static void stop __P((void));
 static int do_option __P((struct hashtab *, struct nvlist ***,
 			const char *, const char *, const char *));
 static int crosscheck __P((void));
@@ -251,7 +251,7 @@ mksymlinks()
 	return (ret);
 }
 
-static __dead void
+static void
 stop()
 {
 	(void)fprintf(stderr, "*** Stop.\n");

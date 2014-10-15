@@ -98,7 +98,7 @@ am_opts *fo;
 	if (!fo->opt_rfs)
 		fo->opt_rfs = "/";
 
-	
+
 	return (*nfs_ops.fs_match)(fo);
 }
 
@@ -155,10 +155,12 @@ mntfs *mf;
 	return mount_nfs_fh(fhp, dir, fs_name, opts, mf);
 }
 
-static int sortfun P((exports *a, exports *b));
-static int sortfun(a, b)
-exports *a,*b;
+static int sortfun P((const void *x, const void *y));
+static int sortfun(x, y)
+const void *x, *y;
 {
+        const exports *a = x, *b = y;
+
 	return strcmp((*a)->ex_dir, (*b)->ex_dir);
 }
 

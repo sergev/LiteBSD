@@ -54,6 +54,7 @@
 #include MNTENT_HDR
 #endif /* MNTENT_HDR */
 #include <assert.h>
+#include <string.h>
 
 #ifdef DEBUG_MEM
 #include <malloc.h>
@@ -303,12 +304,7 @@ extern void show_rcs_info P((Const char*, char*));
 extern void sigchld P((int));
 extern void srvrlog P((fserver*, char*));
 extern char* str3cat P((char*, char*, char*, char*));
-extern char* strcat P((char*, Const char*)); /* C */
-extern int strcmp P((Const char*, Const char*)); /* C */
-extern char* strdup P((Const char*));
-extern int strlen P((Const char*)); /* C */
 extern char* strnsave P((Const char*, int));
-extern char* strrchr P((Const char*, int)); /* C */
 extern char* strealloc P((char*, char *));
 extern char** strsplit P((char*, int, int));
 extern int switch_option P((char*));

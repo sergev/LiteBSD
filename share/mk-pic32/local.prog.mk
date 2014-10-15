@@ -122,26 +122,6 @@ afterinstall:
 .endif
 
 realinstall: _PROGSUBDIR
-.if defined(PROG)
-	install ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
-	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}
-.endif
-.if defined(HIDEGAME)
-	(cd ${DESTDIR}/usr/games; rm -f ${PROG}; ln -s dm ${PROG}; \
-	    chown games.bin ${PROG})
-.endif
-.if defined(LINKS) && !empty(LINKS)
-	@set ${LINKS}; \
-	while test $$# -ge 2; do \
-		l=${DESTDIR}$$1; \
-		shift; \
-		t=${DESTDIR}$$1; \
-		shift; \
-		echo $$t -\> $$l; \
-		rm -f $$t; \
-		ln $$l $$t; \
-	done; true
-.endif
 
 install: afterinstall maninstall
 afterinstall: realinstall

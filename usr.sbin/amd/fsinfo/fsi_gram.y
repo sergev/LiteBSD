@@ -194,7 +194,7 @@ automount :
 
 opt_auto_opts :
 	  /* empty */
-	  { $$ = strdup(""); }
+	  { $$ = xstrdup(""); }
 
 	| tOPTS tSTR
 	  { $$ = $2; }

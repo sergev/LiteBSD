@@ -42,6 +42,8 @@
  */
 
 #include "../fsinfo/fsinfo.h"
+#include <stdlib.h>
+#include <string.h>
 
 /* ---------- AIX 1 ------------------------------ */
 
@@ -52,7 +54,7 @@ static void write_aix1_dkfstab(ef, dp)
 FILE *ef;
 disk_fs *dp;
 {
-	char *hp = strdup(dp->d_host->h_hostname);
+	char *hp = xstrdup(dp->d_host->h_hostname);
 	char *p = strchr(hp, '.');
 	if (p)
 		*p = '\0';
@@ -73,8 +75,8 @@ FILE *ef;
 char *hn;
 fsmount *fp;
 {
-	char *h = strdup(fp->f_ref->m_dk->d_host->h_hostname);
-	char *hp = strdup(h);
+	char *h = xstrdup(fp->f_ref->m_dk->d_host->h_hostname);
+	char *hp = xstrdup(h);
 	char *p = strchr(hp, '.');
 	if (p)
 		*p = '\0';
@@ -120,7 +122,7 @@ FILE *ef;
 char *hn;
 fsmount *fp;
 {
-	char *h = strdup(fp->f_ref->m_dk->d_host->h_hostname);
+	char *h = xstrdup(fp->f_ref->m_dk->d_host->h_hostname);
 	domain_strip(h, hn);
 	fprintf(ef, "\n%s:\n\tdev = %s:%s\n\tvfs = %s\n\ttype = %s\n\tvol = %s\n\topts = %s\n\tmount = true\n\tcheck = true\n\tfree = false\n",
 		fp->f_localname,
@@ -154,7 +156,7 @@ FILE *ef;
 char *hn;
 fsmount *fp;
 {
-	char *h = strdup(fp->f_ref->m_dk->d_host->h_hostname);
+	char *h = xstrdup(fp->f_ref->m_dk->d_host->h_hostname);
 	domain_strip(h, hn);
 	fprintf(ef, "%s@%s:%s:%s:%s:0:0\n",
 		fp->f_volname,
@@ -188,7 +190,7 @@ FILE *ef;
 char *hn;
 fsmount *fp;
 {
-	char *h = strdup(fp->f_ref->m_dk->d_host->h_hostname);
+	char *h = xstrdup(fp->f_ref->m_dk->d_host->h_hostname);
 	domain_strip(h, hn);
 	fprintf(ef, "%s:%s %s %s %s 0 0\n",
 		h,
@@ -286,7 +288,7 @@ qelem *q;
 					if (hp->h_disk_fs)
 						errors += write_dkfstab(ef, hp->h_disk_fs, op->op_fstab);
 					else
-						log("No local disk mounts on %s", hp->h_hostname);
+						plog("No local disk mounts on %s", hp->h_hostname);
 
 					if (hp->h_mount)
 						errors += write_dkrmount(ef, hp->h_mount, hp->h_hostname, op->op_mount);

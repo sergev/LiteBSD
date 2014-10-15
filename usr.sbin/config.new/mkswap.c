@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -99,7 +99,7 @@ mkoneswap(cf)
 		if (fprintf(fp, "\t{ makedev(%d, %d),\t0,\t0 },\t/* %s */\n",
 		    major(nv->nv_int), minor(nv->nv_int), nv->nv_str) < 0)
 			goto wrerror;
-	if (fputs("\t{ NODEV, 0, 0 }\n};\n", fp) < 0)
+	if (fputs("\t{ -1, 0, 0 }\n};\n", fp) < 0)
 		goto wrerror;
 	if (fclose(fp)) {
 		fp = NULL;

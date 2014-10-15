@@ -77,6 +77,7 @@ static char sccsid[] = "@(#)trpt.c	8.1 (Berkeley) 6/6/93";
 #include <arpa/inet.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <nlist.h>
 #include <paths.h>
@@ -98,7 +99,15 @@ struct nlist nl[] = {
 #ifndef NEWVM
 static struct pte *Sysmap;
 #endif
+
+/*
+ * See /sys/netinet/tcp_debug.c for TCP_NDEBUG definition.
+ */
+#define TCP_NDEBUG 100
 static caddr_t tcp_pcbs[TCP_NDEBUG];
+struct tcp_debug tcp_debug[TCP_NDEBUG];
+int tcp_debx;
+
 static n_time ntime;
 static int aflag, kflag, memf, follow, sflag, tflag;
 
@@ -109,8 +118,7 @@ main(argc, argv)
 	extern char *optarg;
 	extern int optind;
 	int ch, i, jflag, npcbs, numeric();
-	char *system, *core, *malloc();
-	off_t lseek();
+	char *system, *core;
 
 	jflag = npcbs = 0;
 	while ((ch = getopt(argc, argv, "afjp:st")) != EOF)

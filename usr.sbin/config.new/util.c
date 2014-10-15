@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -45,6 +45,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #if __STDC__
 #include <stdarg.h>
 #else
@@ -55,7 +56,7 @@
 static void nomem __P((void));
 static void vxerror __P((const char *, int, const char *, va_list));
 
-/* 
+/*
  * Malloc, with abort on error.
  */
 void *
@@ -69,7 +70,7 @@ emalloc(size)
 	return (p);
 }
 
-/* 
+/*
  * Realloc, with abort on error.
  */
 void *
@@ -238,7 +239,7 @@ vxerror(file, line, fmt, ap)
 /*
  * Internal error, abort.
  */
-__dead void
+void
 #if __STDC__
 panic(const char *fmt, ...)
 #else

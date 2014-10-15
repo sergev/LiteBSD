@@ -49,6 +49,8 @@ static char sccsid[] = "@(#)diskpart.c	8.3 (Berkeley) 11/30/94";
 #include <sys/disklabel.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
 #define	for_now			/* show all of `c' partition for disklabel */
@@ -181,7 +183,7 @@ main(argc, argv)
 		badsecttable = spc * dp->d_ncylinders - totsize;
 	}
 
-	/* 
+	/*
 	 * Figure out if disk is large enough for
 	 * expanded swap area and 'd', 'e', and 'f'
 	 * partitions.  Otherwise, use smaller defaults

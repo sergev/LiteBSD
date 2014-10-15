@@ -143,6 +143,7 @@ extern dict *dict_of_volnames;
 
 extern char *xcalloc();
 extern char *xmalloc();
+extern char *xstrdup(const char *s);
 #define	ALLOC(x)	((struct x *) xcalloc(1, sizeof(struct x)))
 #define	STREQ(s,t)	(*(s) == *(t) && strcmp((s)+1,(t)+1) == 0)
 #define	ISSET(m,b)	((m) & (1<<(b)))

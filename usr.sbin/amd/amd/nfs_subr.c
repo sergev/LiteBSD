@@ -88,7 +88,7 @@ struct attrstat **attrpp;
 }
 
 /*ARGSUSED*/
-voidp 
+voidp
 nfsproc_null_2(argp, rqstp)
 voidp argp;
 struct svc_req *rqstp;
@@ -166,7 +166,7 @@ struct svc_req *rqstp;
 
 
 /*ARGSUSED*/
-voidp 
+voidp
 nfsproc_root_2(argp, rqstp)
 voidp argp;
 struct svc_req *rqstp;
@@ -283,7 +283,7 @@ struct svc_req *rqstp;
 
 
 /*ARGSUSED*/
-voidp 
+voidp
 nfsproc_writecache_2(argp, rqstp)
 voidp argp;
 struct svc_req *rqstp;

@@ -245,7 +245,7 @@ static void nfs_keepalive P((fserver*));
 static void recompute_portmap P((fserver *fs));
 static void recompute_portmap(fs)
 fserver *fs;
-{				
+{
 	int error;
 
 	if (nfs_auth)
@@ -357,7 +357,7 @@ int done;
 			if (np->np_mountd_inval)
 				recompute_portmap(fs);
 
-#ifdef DEBUG	
+#ifdef DEBUG
 			found_map++;
 #endif /* DEBUG */
 			break;

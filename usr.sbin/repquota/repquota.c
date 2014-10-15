@@ -55,6 +55,8 @@ static char sccsid[] = "@(#)repquota.c	8.2 (Berkeley) 11/22/94";
 #include <pwd.h>
 #include <grp.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 char *qfname = QUOTAFILENAME;
@@ -215,8 +217,8 @@ repquota(fs, type, qfpathname)
 			continue;
 		printf("%-10s", fup->fu_name);
 		printf("%c%c%8d%8d%8d%7s",
-			fup->fu_dqblk.dqb_bsoftlimit && 
-			    fup->fu_dqblk.dqb_curblocks >= 
+			fup->fu_dqblk.dqb_bsoftlimit &&
+			    fup->fu_dqblk.dqb_curblocks >=
 			    fup->fu_dqblk.dqb_bsoftlimit ? '+' : '-',
 			fup->fu_dqblk.dqb_isoftlimit &&
 			    fup->fu_dqblk.dqb_curinodes >=
@@ -224,8 +226,8 @@ repquota(fs, type, qfpathname)
 			dbtob(fup->fu_dqblk.dqb_curblocks) / 1024,
 			dbtob(fup->fu_dqblk.dqb_bsoftlimit) / 1024,
 			dbtob(fup->fu_dqblk.dqb_bhardlimit) / 1024,
-			fup->fu_dqblk.dqb_bsoftlimit && 
-			    fup->fu_dqblk.dqb_curblocks >= 
+			fup->fu_dqblk.dqb_bsoftlimit &&
+			    fup->fu_dqblk.dqb_curblocks >=
 			    fup->fu_dqblk.dqb_bsoftlimit ?
 			    timeprt(fup->fu_dqblk.dqb_btime) : "");
 		printf("  %6d%6d%6d%7s\n",
@@ -323,7 +325,6 @@ addid(id, type, name)
 {
 	struct fileusage *fup, **fhp;
 	int len;
-	extern char *calloc();
 
 	if (fup = lookup(id, type))
 		return (fup);

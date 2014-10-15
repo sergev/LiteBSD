@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -89,7 +89,7 @@ typedef int (*vec_cmp_func) __P((const void *, int, int));
 
 #define	TAILHSIZE	128
 #define	PVHASH(i)	((i) & (TAILHSIZE - 1))
-#define	LOCHASH(l)	(((int)(l) >> 2) & (TAILHSIZE - 1))
+#define	LOCHASH(l)	(((size_t)(l) >> 2) & (TAILHSIZE - 1))
 struct tails {
 	struct	tails *t_next;
 	int	t_ends_at;

@@ -48,6 +48,8 @@
  */
 
 #include "../fsinfo/fsinfo.h"
+#include <stdlib.h>
+#include <string.h>
 
 char *disk_fs_strings[] = {
 	"fstype", "opts", "dumpset", "passno", "freq", "mount", "log", 0,
@@ -113,7 +115,7 @@ char *otherdom, *localdom;
 static char *compute_hostpath(hn)
 char *hn;
 {
-	char *p = strdup(hn);
+	char *p = xstrdup(hn);
 	char *d;
 	char path[MAXPATHLEN];
 
@@ -131,7 +133,7 @@ char *hn;
 		}
 	} while (d);
 
-	log("hostpath of '%s' is '%s'", hn, path);
+	plog("hostpath of '%s' is '%s'", hn, path);
 
 	strcpy(p, path);
 	return p;
@@ -141,11 +143,11 @@ static dict_ent *find_volname(nn)
 char *nn;
 {
 	dict_ent *de;
-	char *p = strdup(nn);
+	char *p = xstrdup(nn);
 	char *q;
 
 	do {
-		log("Searching for volname %s", p);
+		plog("Searching for volname %s", p);
 		de = dict_locate(dict_of_volnames, p);
 		q = strrchr(p, '/');
 		if (q) *q = '\0';
@@ -163,7 +165,7 @@ char *hostname;
 char *strings[];
 {
 	int i;
-	log("mask left for %s:%s is %#x", hostname, info, mask);
+	plog("mask left for %s:%s is %#x", hostname, info, mask);
 
 	for (i = 0; strings[i]; i++)
 		if (ISSET(mask, i))
@@ -188,7 +190,7 @@ mount *e;
 				lwarning(mp->m_ioloc, "%s has duplicate exportfs data", mp->m_name);
 			mp->m_exported = mp;
 			if (!ISSET(mp->m_mask, DM_VOLNAME))
-				set_mount(mp, DM_VOLNAME, strdup(mp->m_name));
+				set_mount(mp, DM_VOLNAME, xstrdup(mp->m_name));
 		} else {
 			mp->m_exported = e;
 		}
@@ -221,7 +223,7 @@ disk_fs *dk;
 	int errors = 0;
 
 	ITER(mp, mount, q) {
-		log("Mount %s:", mp->m_name);
+		plog("Mount %s:", mp->m_name);
 		if (parent) {
 			char n[MAXPATHLEN];
 			sprintf(n, "%s/%s", parent->m_name, mp->m_name);
@@ -229,9 +231,9 @@ disk_fs *dk;
 				lerror(mp->m_ioloc, "sub-directory %s of %s starts with '/'", mp->m_name, parent->m_name);
 			else if (STREQ(mp->m_name, "default"))
 				lwarning(mp->m_ioloc, "sub-directory of %s is named \"default\"", parent->m_name);
-			log("Changing name %s to %s", mp->m_name, n);
+			plog("Changing name %s to %s", mp->m_name, n);
 			free(mp->m_name);
-			mp->m_name = strdup(n);
+			mp->m_name = xstrdup(n);
 		}
 		mp->m_name_len = strlen(mp->m_name);
 		mp->m_parent = parent;
@@ -286,8 +288,8 @@ qelem *q;
 			char nbuf[1024];
 			compute_automount_point(nbuf, dk->d_host, mp2->m_volname);
 			free(mp2->m_name);
-			mp2->m_name = strdup(nbuf);
-			log("%s:%s has default mount on %s", dk->d_host->h_hostname, dk->d_dev, mp2->m_name);
+			mp2->m_name = xstrdup(nbuf);
+			plog("%s:%s has default mount on %s", dk->d_host->h_hostname, dk->d_dev, mp2->m_name);
 		} else {
 			lerror(dk->d_ioloc, "no volname given for %s:%s", dk->d_host->h_hostname, dk->d_dev);
 			errors++;
@@ -297,9 +299,9 @@ qelem *q;
 	 * Fill in the disk mount point
 	 */
 	if (!errors && mp2 && mp2->m_name)
-		dk->d_mountpt = strdup(mp2->m_name);
+		dk->d_mountpt = xstrdup(mp2->m_name);
 	else
-		dk->d_mountpt = strdup("error");
+		dk->d_mountpt = xstrdup("error");
 
 	/*
 	 * Analyze the mount tree
@@ -350,7 +352,7 @@ disk_fs *dp;
 			 * "opts"
 			 */
 			if (!ISSET(dp->d_mask, DF_OPTS))
-				set_disk_fs(dp, DF_OPTS, strdup("swap"));
+				set_disk_fs(dp, DF_OPTS, xstrdup("swap"));
 
 			/*
 			 * "mount"
@@ -358,7 +360,7 @@ disk_fs *dp;
 			if (!ISSET(dp->d_mask, DF_MOUNT)) {
 				qelem *q = new_que();
 				mount *m = new_mount();
-				m->m_name = strdup("swap");
+				m->m_name = xstrdup("swap");
 				m->m_mount = new_que();
 				ins_que(&m->m_q, q->q_back);
 				dp->d_mount = q;
@@ -395,7 +397,7 @@ disk_fs *dp;
 			 * "opts"
 			 */
 			if (!ISSET(dp->d_mask, DF_OPTS))
-				set_disk_fs(dp, DF_OPTS, strdup("rw,defaults"));
+				set_disk_fs(dp, DF_OPTS, xstrdup("rw,defaults"));
 
 		}
 	}
@@ -419,24 +421,24 @@ dict_ent *de;
 				abort();
 			fp->f_ref = mp;
 			set_fsmount(fp, FM_FROM, mp->m_dk->d_host->h_hostname);
-			log("set: %s comes from %s", fp->f_volname, fp->f_from);
+			plog("set: %s comes from %s", fp->f_volname, fp->f_from);
 		}
 	}
 
 	if (!ISSET(fp->f_mask, FM_FSTYPE)) {
-		set_fsmount(fp, FM_FSTYPE, strdup("nfs"));
-		log("set: fstype is %s", fp->f_fstype);
+		set_fsmount(fp, FM_FSTYPE, xstrdup("nfs"));
+		plog("set: fstype is %s", fp->f_fstype);
 	}
 
 	if (!ISSET(fp->f_mask, FM_OPTS)) {
-		set_fsmount(fp, FM_OPTS, strdup("rw,nosuid,grpid,defaults"));
-		log("set: opts are %s", fp->f_opts);
+		set_fsmount(fp, FM_OPTS, xstrdup("rw,nosuid,grpid,defaults"));
+		plog("set: opts are %s", fp->f_opts);
 	}
 
 	if (!ISSET(fp->f_mask, FM_LOCALNAME)) {
 		if (fp->f_ref) {
-			set_fsmount(fp, FM_LOCALNAME, strdup(fp->f_volname));
-			log("set: localname is %s", fp->f_localname);
+			set_fsmount(fp, FM_LOCALNAME, xstrdup(fp->f_volname));
+			plog("set: localname is %s", fp->f_localname);
 		} else {
 			lerror(fp->f_ioloc, "cannot determine localname since volname %s is not uniquely defined", fp->f_volname);
 		}
@@ -457,7 +459,7 @@ host *hp;
 
 	ITER(dp, disk_fs, q) {
 		int req;
-		log("Disk %s:", dp->d_dev);
+		plog("Disk %s:", dp->d_dev);
 		dp->d_host = hp;
 		fixup_required_disk_info(dp);
 		req = ~dp->d_mask & DF_REQUIRED;
@@ -480,7 +482,7 @@ host *hp;
 
 	ITER(fp, fsmount, q) {
 		char *p;
-		char *nn = strdup(fp->f_volname);
+		char *nn = xstrdup(fp->f_volname);
 		int req;
 		dict_ent *de;
 		int found = 0;
@@ -488,7 +490,7 @@ host *hp;
 		do {
 			p = 0;
 			de = find_volname(nn);
-			log("Mount: %s (trying %s)", fp->f_volname, nn);
+			plog("Mount: %s (trying %s)", fp->f_volname, nn);
 
 			if (de) {
 				found = 1;
@@ -559,7 +561,7 @@ qelem *q;
 	 * Check all drives
 	 */
 	ITER(hp, host, q) {
-		log("disks on host %s", hp->h_hostname);
+		plog("disks on host %s", hp->h_hostname);
 		show_new("ana-host");
 		hp->h_hostpath = compute_hostpath(hp->h_hostname);
 
@@ -574,7 +576,7 @@ qelem *q;
 	 * Check static mounts
 	 */
 	ITER(hp, host, q) {
-		log("mounts on host %s", hp->h_hostname);
+		plog("mounts on host %s", hp->h_hostname);
 		show_new("ana-mount");
 		if (hp->h_mount)
 			analyze_mounts(hp);
@@ -613,19 +615,19 @@ int lvl;
 				lerror(ap->a_ioloc, "not allowed '/' in a directory name");
 		sprintf(nname, "%s/%s", pref, ap->a_name);
 		free(ap->a_name);
-		ap->a_name = strdup(nname[1] == '/' ? nname+1 : nname);
-		log("automount point %s:", ap->a_name);
+		ap->a_name = xstrdup(nname[1] == '/' ? nname+1 : nname);
+		plog("automount point %s:", ap->a_name);
 		show_new("ana-automount");
 		if (ap->a_mount) {
 			analyze_automount_tree(ap->a_mount, ap->a_name, lvl+1);
 		} else if (ap->a_volname) {
-			log("\tautomount from %s", ap->a_volname);
+			plog("\tautomount from %s", ap->a_volname);
 			analyze_automount(ap);
 		} else if (ap->a_symlink) {
-			log("\tsymlink to %s", ap->a_symlink);
+			plog("\tsymlink to %s", ap->a_symlink);
 		} else {
-			ap->a_volname = strdup(ap->a_name);
-			log("\timplicit automount from %s", ap->a_volname);
+			ap->a_volname = xstrdup(ap->a_name);
+			plog("\timplicit automount from %s", ap->a_volname);
 			analyze_automount(ap);
 		}
 	}

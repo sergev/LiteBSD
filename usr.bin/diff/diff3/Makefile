@@ -3,3 +3,4 @@
 PROG=	diff3
 
 .include <bsd.prog.mk>
+.include "../../Makefile.inc"

@@ -52,13 +52,8 @@
 
 #ifdef HAS_UNION_MAPS
 
-#ifdef _POSIX_SOURCE
 #include <dirent.h>
 #define	DIRENT struct dirent
-#else
-#include <sys/dir.h>
-#define	DIRENT struct direct
-#endif
 
 #define	UNION_PREFIX	"union:"
 #define	UNION_PREFLEN	6

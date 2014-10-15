@@ -90,6 +90,7 @@ static char sccsid[] = "@(#)sliplogin.c	8.2 (Berkeley) 2/1/94";
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include "pathnames.h"
 
 int	unit;
@@ -122,7 +123,7 @@ findid(name)
 		if (ferror(fp))
 			break;
 		n = sscanf(loginargs, "%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s%*[ \t]%15s\n",
-                        user, laddr, raddr, mask, slopt[0], slopt[1], 
+                        user, laddr, raddr, mask, slopt[0], slopt[1],
 			slopt[2], slopt[3], slopt[4]);
 		if (user[0] == '#' || isspace(user[0]))
 			continue;

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -353,7 +353,7 @@ badname:
 		dev->d_name = name;
 		dev->d_next = NULL;
 		dev->d_isdef = 0;
-		dev->d_major = NODEV;
+		dev->d_major = -1;
 		dev->d_atlist = NULL;
 		dev->d_vectors = NULL;
 		dev->d_attrs = NULL;
@@ -394,7 +394,7 @@ setmajor(d, n)
 	int n;
 {
 
-	if (d != &errdev && d->d_major != NODEV)
+	if (d != &errdev && d->d_major != -1)
 		error("device `%s' is already major %d",
 		    d->d_name, d->d_major);
 	else
@@ -416,7 +416,7 @@ exclude(nv, name, what)
 	return (0);
 }
 
-/* 
+/*
  * Map things like "ra0b" => makedev(major("ra"), 0*8 + 'b'-'a').
  * Handle the case where the device number is given but there is no
  * corresponding name, and map NULL to the default.
@@ -445,7 +445,7 @@ resolve(nvp, name, what, dflt, part)
 		min = (minor(dflt->nv_int) & ~7) | part;
 		*nvp = nv = newnv(NULL, NULL, NULL, makedev(maj, min));
 	}
-	if (nv->nv_int != NODEV) {
+	if (nv->nv_int != -1) {
 		/*
 		 * By the numbers.  Find the appropriate major number
 		 * to make a name.
@@ -481,7 +481,7 @@ resolve(nvp, name, what, dflt, part)
 		return (1);
 	}
 	dev = ht_lookup(devbasetab, intern(buf));
-	if (dev == NULL || dev->d_major == NODEV) {
+	if (dev == NULL || dev->d_major == -1) {
 		error("%s: can't make %s device from `%s'",
 		    name, what, nv->nv_str);
 		return (1);

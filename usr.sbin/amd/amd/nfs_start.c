@@ -41,10 +41,11 @@
  *
  */
 
-#include "am.h"
-#include "amq.h"
 #include <sys/signal.h>
 #include <setjmp.h>
+#include "am.h"
+#include "amq.h"
+
 extern jmp_buf select_intr;
 extern int select_intr_valid;
 
@@ -282,7 +283,7 @@ static serv_state run_rpc(P_void)
 			if (readfds & (1 << fwd_sock)) {
 				readfds &= ~(1 << fwd_sock);
 #endif
-				--nsel;	
+				--nsel;
 				do {
 					fwd_reply();
 				} while (rpc_pending_now() > 0);
@@ -345,7 +346,7 @@ int ppid;
 		return 1;
 	}
 
-	if ((nfsxprt = svcudp_create(so)) == NULL || 
+	if ((nfsxprt = svcudp_create(so)) == NULL ||
 			(amqp = svcudp_create(so)) == NULL) {
 		plog(XLOG_FATAL, "cannot create rpc/udp service");
 		return 2;

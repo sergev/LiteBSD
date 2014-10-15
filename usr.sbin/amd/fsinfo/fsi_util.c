@@ -39,6 +39,8 @@
  */
 
 #include "../fsinfo/fsinfo.h"
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * Lots of ways of reporting errors...
@@ -72,7 +74,7 @@ char *s, *s1, *s2, *s3, *s4;
 	fprintf(stderr, "%s:%d: ", l->i_file, l->i_line);
 	fprintf(stderr, s, s1, s2, s3, s4);
 	fputc('\n', stderr);
-	
+
 }
 
 void fatal(s, s1, s2, s3, s4)
@@ -88,8 +90,8 @@ char *s, *s1, *s2, *s3, *s4;
 /*
  * Dup a string
  */
-char *strdup(s)
-char *s;
+char *xstrdup(s)
+const char *s;
 {
 	int len = strlen(s);
 	char *sp = (char *) xmalloc(len+1);
@@ -103,7 +105,7 @@ char *s;
 /*
  * Debug log
  */
-void log(s, s1, s2, s3, s4)
+void plog(s, s1, s2, s3, s4)
 char *s, *s1, *s2, *s3, *s4;
 {
 	if (verbose > 0) {
@@ -248,7 +250,7 @@ char *arg;
 	char p[MAXPATHLEN];
 	FILE *ef;
 	sprintf(p, "%s%s", pref, hn);
-	log("Writing %s info for %s to %s", pref, hn, p);
+	plog("Writing %s info for %s to %s", pref, hn, p);
 	ef = fopen(p, "w");
 	if (ef) {
 		(*hdr)(ef, arg);
@@ -352,7 +354,7 @@ char *v;
 
 	switch (k) {
 	case HF_HOST: {
-		char *p = strdup(v);
+		char *p = xstrdup(v);
 		dict_ent *de = dict_locate(dict_of_hosts, v);
 		if (de)
 			yyerror("duplicate host %s!", v);

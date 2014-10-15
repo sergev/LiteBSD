@@ -71,15 +71,15 @@ char	*host;		/* user's machine name */
 char	*acctfile;	/* accounting information file */
 
 int
-main(argc, argv) 
+main(argc, argv)
 	int argc;
 	char *argv[];
 {
 	register FILE *p = stdin, *o = stdout;
-	register int i, col;
+	register int i, col, ch;
 	register char *cp;
 	int done, linedone, maxrep;
-	char ch, *limit;
+	char *limit;
 
 	while (--argc) {
 		if (*(cp = *++argv) == '-') {
@@ -117,7 +117,7 @@ main(argc, argv)
 
 	for (cp = buf[0], limit = buf[MAXREP]; cp < limit; *cp++ = ' ');
 	done = 0;
-	
+
 	while (!done) {
 		col = indent;
 		maxrep = -1;

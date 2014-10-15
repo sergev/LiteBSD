@@ -27,7 +27,7 @@ CLEANFILES+=vers.${PROG}.c vers.${PROG}.o version.amd
 vers.${PROG}.c: ${SRCS:.c=.o}
 	@d=${.CURDIR}/ sh ${.CURDIR}/../config/newvers.sh ${PROG} ${MACHINE} ${OS}
 
-.PATH: ${.CURDIR}/../rpcx ${.CURDIR}/../config
-.include "Makefile.config"
+#.PATH: ${.CURDIR}/../rpcx ${.CURDIR}/../config
+.include "../config/Makefile.config"
 .include "../../Makefile.inc"
 .include <bsd.prog.mk>

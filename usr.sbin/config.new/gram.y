@@ -318,7 +318,7 @@ swapdev_list:
 	dev_spec			= { $$ = $1; };
 
 dev_spec:
-	WORD				= { $$ = new_si($1, NODEV); } |
+	WORD				= { $$ = new_si($1, -1); } |
 	major_minor			= { $$ = new_si(NULL, $1); };
 
 major_minor:

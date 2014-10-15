@@ -42,6 +42,7 @@
  */
 
 #include "../fsinfo/fsinfo.h"
+#include <stdlib.h>
 
 /*
  * Write a host/path in NFS format
@@ -52,7 +53,7 @@ fsmount *fp;
 char *hn;
 {
 	int errors = 0;
-	char *h = strdup(fp->f_ref->m_dk->d_host->h_hostname);
+	char *h = xstrdup(fp->f_ref->m_dk->d_host->h_hostname);
 	domain_strip(h, hn);
 	fprintf(ef, "%s:%s", h, fp->f_volname);
 	free(h);

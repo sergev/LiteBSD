@@ -136,7 +136,7 @@ char *opts;
 	/*
 	 * get fhandle of remote path for automount point
 	 */
-	
+
 	fhp = root_fh(dir);
 	if (!fhp) {
 		plog(XLOG_FATAL, "Can't find root file handle for %s", dir);
@@ -424,7 +424,7 @@ static void union_mounted(mf)
 mntfs *mf;
 {
 	int i;
-	
+
 	afs_mkcacheref(mf);
 
 	/*

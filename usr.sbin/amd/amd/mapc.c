@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)mapc.c	8.1 (Berkeley) 6/6/93";
  */
 
 #include "am.h"
+
 #ifdef HAS_REGEXP
 #include RE_HDR
 #endif
@@ -164,7 +165,7 @@ qelem map_list_head = { &map_list_head, &map_list_head };
 /*
  * Configuration
  */
- 
+
 /* ROOT MAP */
 static int root_init P((char*, time_t*));
 

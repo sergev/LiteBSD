@@ -51,7 +51,7 @@ static int xinput();
 static void xunput();
 
 #ifdef FLEX_SCANNER
-static int yylineno;
+int yylineno;
 /* Flex support with help from Vern Paxson <vern@helios.ee.lbl.gov> */
 #undef YY_INPUT
 #define YY_INPUT(buf,result,max_size)		\
@@ -168,7 +168,7 @@ struct r {
 <Q>([ \t]|"\\\n"){2,}	{ char *p = yytext-1; while (p = strchr(p+1, '\n')) yylineno++; }
 <Q>\"			{ BEGIN F; quoted = 0;
 				*optr = '\0';
-				yylval.s = strdup(ostr);
+				yylval.s = xstrdup(ostr);
 				return tSTR;
 			}
 <Q>.			{ *optr++ = *yytext; }
@@ -182,7 +182,7 @@ char *s;
 
 	int l = 0, m = NRES_WORDS/2, h = NRES_WORDS-1;
 	int rc = 0;
-	
+
 	m = NRES_WORDS/2;
 
 #define FSTRCMP(p, q) ((*(p) == *(q)) ? strcmp((p)+1, (q)+1) : *(p) - *(q))
@@ -204,7 +204,7 @@ char *s;
 		s = "${host}";
 		/* fall through... */
 	case 0:
-		yylval.s = strdup(s);
+		yylval.s = xstrdup(s);
 		tok = tSTR;
 		/* fall through... */
 	default:
@@ -259,7 +259,7 @@ static int first = 1;
 		yyin = popen(prog, "r");
 		if (yyin) {
 			/*if (filename) free(filename);*/
-			filename = strdup("unknown");
+			filename = xstrdup("unknown");
 			yylineno = 1;
 			first = 0;
 			return 0;
@@ -314,7 +314,7 @@ static int c_comment = 0;
 		}
 
 		if (ch == '#') {
-			/*log("lastch = '%c' (%#x)", lastch, lastch);*/
+			/*plog("lastch = '%c' (%#x)", lastch, lastch);*/
 			if (lastch == '\n') {
 				char fname[MAXPATHLEN];
 				char *fptr;
@@ -352,9 +352,9 @@ static int c_comment = 0;
 					}
 					*fptr = '\0';
 					if (fname[0]) {
-						log("Setting filename to \"%s\"", fname);
+						plog("Setting filename to \"%s\"", fname);
 						/*if (filename) free(filename);*/
-						filename = strdup(fname);
+						filename = xstrdup(fname);
 					}
 				}
 				while (ch2 != '\n' && ch2 != EOF)

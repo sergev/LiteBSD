@@ -42,6 +42,7 @@
  */
 
 #include "../fsinfo/fsinfo.h"
+#include <string.h>
 
 /*
  * Write a sequence of automount mount map entries
@@ -261,7 +262,7 @@ char *def;
 			errors += pref_close(af);
 		}
 	}
-	
+
 	return errors;
 }
 

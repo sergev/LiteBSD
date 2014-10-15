@@ -167,8 +167,8 @@ newhashent(name, h)
 	register struct hashent *hp;
 	register char *m;
 
-	m = poolalloc(sizeof(*hp) + ALIGNBYTES);
-	hp = (struct hashent *)ALIGN(m);
+	m = poolalloc(sizeof(*hp) + 7);
+	hp = (struct hashent *)((size_t)(m + 7) & ~7);
 	hp->h_name = name;
 	hp->h_hash = h;
 	hp->h_next = NULL;
