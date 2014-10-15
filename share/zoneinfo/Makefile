@@ -132,15 +132,11 @@ posix_right: posix_only other_two
 
 right_posix: right_only other_two
 
-install: maninstall uninstall ${DATA} ${REDO}
+install: maninstall ${DATA} ${REDO}
 	install -d ${TZDIR}
 	(cd ${.CURDIR}/datfiles && ${.CURDIR}/zic -d ${TZDIR} -p ${POSIXRULES})
 	install -c -D -m 444 ${TZDIR}/${LOCALTIME} ${DESTDIR}/etc/localtime
 #	chown -R ${BINOWN}.${BINGRP} ${TZDIR}
-	chmod -R a-w ${TZDIR}
-
-uninstall:
-	if [ -d ${TZDIR} ]; then chmod -R a+w ${TZDIR}; fi
-	rm -rf ${TZDIR}
+#	chmod -R a-w ${TZDIR}
 
 .include <local.prog.mk>

@@ -8,7 +8,8 @@ LDADD=	-lkvm
 BINGRP=	kmem
 BINMODE=2555
 LINKS=	${BINDIR}/w ${BINDIR}/uptime
+CFLAGS+=-I${.CURDIR}/../../bin/ps
 
-.PATH: ${.CURDIR}/../../bin/ps
+#.PATH: ${.CURDIR}/../../bin/ps
 
 .include <bsd.prog.mk>

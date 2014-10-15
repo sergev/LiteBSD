@@ -2,6 +2,6 @@
 
 PROG=	chflags
 SRCS=	chflags.c stat_flags.c
-.PATH:	${.CURDIR}/../../bin/ls
+#.PATH:	${.CURDIR}/../../bin/ls
 
 .include <bsd.prog.mk>

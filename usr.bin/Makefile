@@ -12,7 +12,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	ranlib rdist renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size soelim split \
 	strings strip su talk tcopy tee telnet tftp time tip \
-	tn3270 touch tput tr true tset tsort tty ul uname unexpand \
+	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \
 	vgrind vis w wall wc what whatis whereis who whois window write \
 	xargs xinstall xstr yacc yes

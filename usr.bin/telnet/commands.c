@@ -35,19 +35,20 @@
 static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 #endif /* not lint */
 
-#if	defined(unix)
-#include <sys/param.h>
-#if	defined(CRAY) || defined(sysV88)
-#include <sys/types.h>
-#endif
-#include <sys/file.h>
+#if defined(unix)
+#   include <sys/param.h>
+#   if defined(CRAY) || defined(sysV88)
+#       include <sys/types.h>
+#   endif
+#   include <sys/file.h>
 #else
-#include <sys/types.h>
-#endif	/* defined(unix) */
+#   include <sys/types.h>
+#endif
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #ifdef	CRAY
-#include <fcntl.h>
+#   include <fcntl.h>
 #endif	/* CRAY */
 
 #include <signal.h>
@@ -58,6 +59,8 @@ static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <arpa/telnet.h>
 
@@ -70,13 +73,13 @@ static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 #include "types.h"
 
 #if !defined(CRAY) && !defined(sysV88)
-#include <netinet/in_systm.h>
-# if (defined(vax) || defined(tahoe) || defined(hp300)) && !defined(ultrix)
-# include <machine/endian.h>
-# endif /* vax */
+#   include <netinet/in_systm.h>
+#   if (defined(vax) || defined(tahoe) || defined(hp300)) && !defined(ultrix)
+#       include <machine/endian.h>
+#   endif /* vax */
 #endif /* !defined(CRAY) && !defined(sysV88) */
-#include <netinet/ip.h>
 
+#include <netinet/ip.h>
 
 #ifndef	MAXHOSTNAMELEN
 #define	MAXHOSTNAMELEN 64

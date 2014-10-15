@@ -1,0 +1,1 @@
+../../bin/ls/stat_flags.c

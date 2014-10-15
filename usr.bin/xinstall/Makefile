@@ -3,7 +3,7 @@
 PROG=	xinstall
 SRCS=	stat_flags.c xinstall.c
 MAN1=	install.0
-.PATH:	${.CURDIR}/../../bin/ls
+#.PATH:	${.CURDIR}/../../bin/ls
 
 install: maninstall
 	install ${STRIP} -m ${BINMODE} \
