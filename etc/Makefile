@@ -67,8 +67,6 @@ distribution:
 		    ${DESTDIR}/etc/mtree)
 	(cd namedb; install -c -o root -g wheel -m 644 ${NAMEDB} \
 	    ${DESTDIR}/etc/namedb)
-	(cd kerberosIV; install -c -o root -g wheel -m 444 ${KRB} \
-	    ${DESTDIR}/etc/kerberosIV)
 	install -c -o root -g operator -m 664 /dev/null \
 	    ${DESTDIR}/etc/dumpdates
 	install -c -o root -g staff -m 644 /dev/null \
@@ -101,17 +99,11 @@ distribution:
 	(cd ${DESTDIR}/etc && rm -f rmt && ln -s /usr/sbin/rmt rmt)
 	(cd ${DESTDIR}/etc && \
 	    rm -f termcap && ln -s /usr/share/misc/termcap termcap)
-	(cd ${DESTDIR}/usr && rm -f X11 && ln -s X11R5 X11)
-	(cd ${DESTDIR}/usr && rm -f X11 && ln -s X11R6 X11)
-	(cd ${DESTDIR}/usr/bin && rm -f X11 && ln -s /usr/X11/bin X11)
-	(cd ${DESTDIR}/usr/lib && rm -f X && ln -s /usr/hpux/lib/X X)
-	(cd ${DESTDIR}/usr/lib && rm -f X11 && ln -s /usr/X11/lib X11)
+.if ${MACHINE} == "hp300"
 	(cd ${DESTDIR}/usr/lib && rm -f grmd && ln -s /usr/hpux/lib/grmd grmd)
+.endif
 	(cd ${DESTDIR}/usr/lib && rm -f tmac && ln -s /usr/share/tmac tmac)
 	(cd ${DESTDIR}/usr/ucb && rm -f rdist && ln -s /usr/bin/rdist rdist)
-.if ${MACHINE} == "hp300"
-	(cd ${DESTDIR}/usr/bin && rm -f X11 && ln -s /usr/X11/bin X11)
-.endif
 
 hcx9-distribution:
 	(cd etc.tahoe; install -c -o root -g wheel -m 444 ${WCS2} \
