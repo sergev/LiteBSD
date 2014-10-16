@@ -7,6 +7,7 @@ afterinstall:
 	(cd share/man && ${MAKE} makedb)
 
 build:
+	(cd etc && ${MAKE} distribution)
 	(cd include && ${MAKE} install)
 	${MAKE} cleandir
 	(cd lib && ${MAKE} depend && ${MAKE} && ${MAKE} install)
