@@ -33,14 +33,14 @@
  *      @(#)nameser.h	8.2 (Berkeley) 2/16/94
  * -
  * Portions Copyright (c) 1993 by Digital Equipment Corporation.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies, and that
  * the name of Digital Equipment Corporation not be used in advertising or
  * publicity pertaining to distribution of the document or software without
  * specific, written prior permission.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND DIGITAL EQUIPMENT CORP. DISCLAIMS ALL
  * WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS.   IN NO EVENT SHALL DIGITAL EQUIPMENT
@@ -81,7 +81,7 @@
 #define QUERY		0x0		/* standard query */
 #define IQUERY		0x1		/* inverse query */
 #define STATUS		0x2		/* nameserver status query */
-/*#define xxx		0x3		/* 0x3 reserved */
+/*#define xxx		0x3		/ * 0x3 reserved */
 	/* non standard - supports ALLOW_UPDATES stuff from Mike Schwartz */
 #define UPDATEA		0x9		/* add resource record */
 #define UPDATED		0xa		/* delete a specific resource record */
