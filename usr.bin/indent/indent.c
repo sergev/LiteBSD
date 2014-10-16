@@ -1109,7 +1109,7 @@ check_type:
 	    break;		/* subsequent processing of the newline
 				 * character will cause the line to be printed */
 
-	case comment:		/* we have gotten a /*  this is a biggie */
+	case comment:		/* we have gotten a / * this is a biggie */
 	    if (flushed_nl) {	/* we should force a broken line here */
 		flushed_nl = false;
 		dump_line();

@@ -9,7 +9,12 @@ NOPROFILE       =  True
 
 .LIBS:		.a
 
+.if exists(${MIPS_GCC_ROOT}/bin/mips-sde-elf-gcc)
 GCC_PREFIX      ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
+.endif
+.if exists(${MIPS_GCC_ROOT}/bin/mips-elf-gcc)
+GCC_PREFIX      ?= ${MIPS_GCC_ROOT}/bin/mips-elf-
+.endif
 
 AR		?= ${GCC_PREFIX}ar
 ARFLAGS		?= rl

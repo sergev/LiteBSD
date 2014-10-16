@@ -50,6 +50,7 @@ $L1:
 	.text
 
 NON_LEAF(__start, 24, ra)
+ALEAF(_start)
 	.set	noreorder
         la      gp, _gp         # setup GP pointer
 	lw	s0, 0(sp)	# get argc from stack

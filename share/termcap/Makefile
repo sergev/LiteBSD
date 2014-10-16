@@ -21,8 +21,9 @@ cleandir: clean
 	rm -f ${MAN5}
 
 beforeinstall:
-	install -D -m 444 termcap ${DESTDIR}${BINDIR}/misc/termcap
+	install -d ${DESTDIR}${BINDIR}/misc
+	install -m 444 termcap ${DESTDIR}${BINDIR}/misc/termcap
 #	install -m 444 termcap.db ${DESTDIR}${BINDIR}/misc
-	install -c -m 444 map3270 ${DESTDIR}${BINDIR}/misc
+	install -m 444 map3270 ${DESTDIR}${BINDIR}/misc
 
 .include <bsd.prog.mk>

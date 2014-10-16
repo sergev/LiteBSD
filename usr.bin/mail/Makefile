@@ -10,7 +10,8 @@ MLINKS=	mail.1 Mail.1
 
 beforeinstall:
 	install -d ${DESTDIR}/usr/share/misc
+	install -d ${DESTDIR}/etc
 	cd ${.CURDIR}/misc; install -c -m 444 ${SFILES} ${DESTDIR}/usr/share/misc
-	cd ${.CURDIR}/misc; install -c -D -m 644 mail.rc ${DESTDIR}/etc/mail.rc
+	cd ${.CURDIR}/misc; install -c -m 644 mail.rc ${DESTDIR}/etc/mail.rc
 
 .include <bsd.prog.mk>

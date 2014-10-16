@@ -217,7 +217,7 @@ struct parser_state {
     float       cstk[STACKSIZE];/* used to store case stmt indentation levels */
     int         box_com;	/* set to true when we are in a "boxed"
 				 * comment. In that case, the first non-blank
-				 * char should be lined up with the / in /* */
+				 * char should be lined up with the / in / * */
     int         comment_delta,
                 n_comment_delta;
     int         cast_mask;	/* indicates which close parens close off

@@ -49,6 +49,8 @@ static char	elsieid[] = "@(#)scheck.c	8.9";
 #include <string.h>
 #include <stdlib.h>
 
+extern void ifree __P((char * p));
+
 char *
 scheck(string, format)
 const char * const	string;

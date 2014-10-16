@@ -123,7 +123,8 @@ afterinstall:
 
 realinstall: _PROGSUBDIR
 .if defined(PROG)
-	install ${STRIP} -D -m ${BINMODE} \
+	install -d ${DESTDIR}${BINDIR}
+	install ${STRIP} -m ${BINMODE} \
 	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROG}
 .endif
 .if defined(HIDEGAME)

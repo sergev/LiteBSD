@@ -41,7 +41,8 @@ libkern.${MACHINE}:: ${KMSRCS}
 .endif
 
 beforeinstall: tags
-	install -c -D -m 444 tags ${DESTDIR}/var/db/libc.tags
+	install -d ${DESTDIR}/var/db
+	install -c -m 444 tags ${DESTDIR}/var/db/libc.tags
 
 tags: ${SRCS}
 	ctags ${.ALLSRC:M*.c}

@@ -64,9 +64,9 @@ static char sccsid[] = "@(#)msgs.c	8.2 (Berkeley) 4/28/95";
 
 #define V7		/* will look for TERM in the environment */
 #define OBJECT		/* will object to messages without Subjects */
-/* #define REJECT	/* will reject messages without Subjects
+#undef REJECT		/* will reject messages without Subjects
 			   (OBJECT must be defined also) */
-/* #define UNBUFFERED	/* use unbuffered output */
+#undef UNBUFFERED	/* use unbuffered output */
 
 #include <sys/param.h>
 #include <dirent.h>

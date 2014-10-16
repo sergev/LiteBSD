@@ -24,7 +24,7 @@ all clean cleandir depend etc install lint:
 distribution:
 	# Hand-craft the password file first.
 	-mkdir -p ${DESTDIR}/etc/namedb ${DESTDIR}/dev ${DESTDIR}/tmp
-	-mkdir -p ${DESTDIR}/usr/lib
+	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys
 	-mkdir -p ${DESTDIR}/root ${DESTDIR}/var/log ${DESTDIR}/var/run
 # TODO: run pwd_mkdb from /etc/rc on first boot
 #	cp master.passwd ${DESTDIR}/tmp/p
@@ -79,8 +79,7 @@ distribution:
 .endif
 	# There are certain symbolic links we have to have, and
 	# no other place to have install them.
-# No need for kernel sources on target microcontroller.
-#	(cd ${DESTDIR}/ && rm -f sys && ln -s usr/src/sys sys)
+	(cd ${DESTDIR}/ && rm -f sys && ln -s usr/src/sys sys)
 	(cd ${DESTDIR}/etc && rm -f rmt && ln -s ../usr/sbin/rmt rmt)
 	(cd ${DESTDIR}/etc && \
 	    rm -f termcap && ln -s ../usr/share/misc/termcap termcap)

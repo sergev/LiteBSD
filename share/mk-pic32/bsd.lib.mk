@@ -104,11 +104,12 @@ beforeinstall:
 
 realinstall: beforeinstall
 	${RANLIB} lib${LIB}.a
-	install -D lib${LIB}.a ${DESTDIR}${LIBDIR}/lib${LIB}.a
+	install -d ${DESTDIR}${LIBDIR}
+	install lib${LIB}.a ${DESTDIR}${LIBDIR}/lib${LIB}.a
 	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}.a
 .if !defined(NOPROFILE)
 	${RANLIB} lib${LIB}_p.a
-	install -D lib${LIB}_p.a ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
+	install lib${LIB}_p.a ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
 	${RANLIB} -t ${DESTDIR}${LIBDIR}/lib${LIB}_p.a
 .endif
 #	install -c -m ${LIBMODE} \

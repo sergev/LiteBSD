@@ -50,6 +50,7 @@ static char	elsieid[] = "@(#)zic.c	4.12";
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "tzfile.h"
 
 #ifndef TRUE
@@ -1657,11 +1658,14 @@ register const struct lookup * const	table;
 	** Look for inexact match.
 	*/
 	foundlp = NULL;
-	for (lp = table; lp->l_word != NULL; ++lp)
-		if (itsabbr(word, lp->l_word))
+	for (lp = table; lp->l_word != NULL; ++lp) {
+		if (itsabbr(word, lp->l_word)) {
 			if (foundlp == NULL)
 				foundlp = lp;
-			else	return NULL;	/* multiple inexact matches */
+			else
+                                return NULL;	/* multiple inexact matches */
+                }
+        }
 	return foundlp;
 }
 
@@ -1708,7 +1712,9 @@ const long	t2;
 	register long	t;
 
 	t = t1 + t2;
-	if (t2 > 0 && t <= t1 || t2 < 0 && t >= t1) {
+	if ((t2 > 0 && t <= t1) ||
+            (t2 < 0 && t >= t1))
+        {
 		error("time overflow");
 		(void) exit(EXIT_FAILURE);
 	}
@@ -1727,7 +1733,9 @@ const long	t2;
 	if (t1 == min_time && t2 < 0)
 		return min_time;
 	t = t1 + t2;
-	if (t2 > 0 && t <= t1 || t2 < 0 && t >= t1) {
+	if ((t2 > 0 && t <= t1) ||
+            (t2 < 0 && t >= t1))
+        {
 		error("time overflow");
 		(void) exit(EXIT_FAILURE);
 	}
@@ -1879,7 +1887,10 @@ const int	i;
 	long	l;
 
 	l = i;
-	if (i < 0 && l >= 0 || i == 0 && l != 0 || i > 0 && l <= 0) {
+	if ((i < 0 && l >= 0) ||
+            (i == 0 && l != 0) ||
+            (i > 0 && l <= 0))
+        {
 		(void) fprintf(stderr, "%s: %d did not sign extend correctly\n",
 			progname, i);
 		(void) exit(EXIT_FAILURE);

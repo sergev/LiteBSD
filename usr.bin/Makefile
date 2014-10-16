@@ -14,7 +14,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	strings strip su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \
-	vgrind vis w wall wc what whatis whereis who whois window write \
+	vis w wall wc what whatis whereis who whois window write \
 	xargs xinstall xstr yacc yes
 
 # Missing on 4.4bsd tape:
