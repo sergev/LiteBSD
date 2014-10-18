@@ -49,20 +49,20 @@ int cfreecount, nclist;
 void
 clist_init()
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
 getc(a1)
 	struct clist *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((char)0);
 }
 
@@ -71,10 +71,10 @@ q_to_b(a1, a2, a3)
 	char *a2;
 	int a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -82,10 +82,10 @@ ndqb(a1, a2)
 	struct clist *a1;
 	int a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -94,10 +94,10 @@ ndflush(a1, a2)
 	struct clist *a1;
 	int a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
@@ -105,10 +105,10 @@ putc(a1, a2)
 	char a1;
 	struct clist *a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -117,10 +117,10 @@ b_to_q(a1, a2, a3)
 	int a2;
 	struct clist *a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -130,20 +130,20 @@ nextc(a1, a2, a3)
 	char *a2;
 	int *a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((char *)0);
 }
 
 unputc(a1)
 	struct clist *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((char)0);
 }
 
@@ -151,9 +151,9 @@ void
 catq(a1, a2)
 	struct clist *a1, *a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }

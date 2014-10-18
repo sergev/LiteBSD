@@ -56,16 +56,17 @@ acct(a1, a2, a3)
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (ENOSYS);
 }
 
 acct_process(a1)
 	struct proc *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 

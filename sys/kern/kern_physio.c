@@ -45,17 +45,17 @@
 #include <sys/proc.h>
 
 physio(a1, a2, a3, a4, a5, a6)
-	int (*a1)(); 
+	int (*a1)();
 	struct buf *a2;
 	dev_t a3;
 	int a4;
 	u_int (*a5)();
 	struct uio *a6;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (EIO);
 }
 
@@ -63,10 +63,10 @@ u_int
 minphys(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 

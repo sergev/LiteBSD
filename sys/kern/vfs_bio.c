@@ -146,10 +146,10 @@ bread(a1, a2, a3, a4, a5)
 	struct ucred *a4;
 	struct buf **a5;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (EIO);
 }
 
@@ -161,20 +161,20 @@ breadn(a1, a2, a3, a4, a5, a6, a7, a8)
 	struct ucred *a7;
 	struct buf **a8;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (EIO);
 }
 
 bwrite(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (EIO);
 }
 
@@ -189,10 +189,10 @@ void
 bdwrite(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
@@ -200,10 +200,10 @@ void
 bawrite(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
@@ -211,10 +211,10 @@ void
 brelse(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
@@ -223,10 +223,10 @@ incore(a1, a2)
 	struct vnode *a1;
 	daddr_t a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -236,10 +236,10 @@ getblk(a1, a2, a3, a4, a5)
 	daddr_t a2;
 	int a3, a4, a5;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((struct buf *)0);
 }
 
@@ -247,10 +247,10 @@ struct buf *
 geteblk(a1)
 	int a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((struct buf *)0);
 }
 
@@ -258,10 +258,10 @@ allocbuf(a1, a2)
 	struct buf *a1;
 	int a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -269,20 +269,20 @@ struct buf *
 getnewbuf(a1, a2)
 	int a1, a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return ((struct buf *)0);
 }
 
 biowait(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (EIO);
 }
 
@@ -290,20 +290,20 @@ void
 biodone(a1)
 	struct buf *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
 int
 count_lock_queue()
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 

@@ -51,24 +51,25 @@ struct ptrace_args {
 	caddr_t	addr;
 	int	data;
 };
+
 ptrace(a1, a2, a3)
 	struct proc *a1;
 	struct ptrace_args *a2;
 	int *a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (ENOSYS);
 }
 
 trace_req(a1)
 	struct proc *a1;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }

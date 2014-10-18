@@ -50,15 +50,16 @@ struct execve_args {
 	char	**argp;
 	char	**envp;
 };
+
 /* ARGSUSED */
 execve(a1, a2, a3)
 	struct proc *a1;
 	struct execve_args *a2;
 	int *a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (ENOSYS);
 }

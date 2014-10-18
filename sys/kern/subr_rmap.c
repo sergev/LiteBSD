@@ -49,10 +49,10 @@ rminit(a1, a2, a3, a4, a5)
 	char *a4;
 	int a5;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
 
@@ -61,10 +61,10 @@ rmalloc(a1, a2)
 	struct map *a1;
 	long a2;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return (0);
 }
 
@@ -73,9 +73,9 @@ rmfree(a1, a2, a3)
 	struct map *a1;
 	long a2, a3;
 {
-
 	/*
 	 * Body deleted.
 	 */
+        printf("%s: not implemented yet\n", __func__);
 	return;
 }
