@@ -16,10 +16,16 @@
 #
 # -DTRACE	compile in kernel tracing hooks
 # -DQUOTA	compile in file system quotas
-
-
+#
 # DEBUG is set to -g by config if debugging is requested (config -g).
 # PROF is set to -pg by config if profiling is requested (config -p).
+
+.if exists(${MIPS_GCC_ROOT}/bin/mips-sde-elf-gcc)
+MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
+.endif
+.if exists(${MIPS_GCC_ROOT}/bin/mips-elf-gcc)
+MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-elf-
+.endif
 AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
 CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
