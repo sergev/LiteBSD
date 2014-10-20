@@ -198,6 +198,8 @@ SECTIONS
   }
   .lit8           : { *(.lit8) }
   .lit4           : { *(.lit4) }
+  /* Align the end of data segment to page boundary. */
+  . = ALIGN(. != 0 ? 4096 : 1);
   _edata = .; PROVIDE (edata = .);
   . = .;
   __bss_start = .;
