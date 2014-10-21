@@ -3,8 +3,8 @@
  * The minimal symbol table is copied, but the debugging symbols and
  * other informational sections are not.
  *
+ * Copyright (c) 2011-2014 Serge Vakulenko
  * Copyright (c) 1995 Ted Lemon (hereinafter referred to as the author)
- * Copyright (c) 2011 Serge Vakulenko
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -47,6 +47,7 @@
 struct  exec {
     unsigned a_magic;           /* magic number */
 #define OMAGIC  0407            /* old impure format */
+#define ZMAGIC  0413            /* demand load format */
 
     unsigned a_text;            /* size of text segment */
     unsigned a_data;            /* size of initialized data */
@@ -55,16 +56,6 @@ struct  exec {
     unsigned a_reldata;         /* size of data relocation info */
     unsigned a_syms;            /* size of symbol table */
     unsigned a_entry;           /* entry point */
-};
-
-struct  nlist {
-    union {
-        char *n_name;           /* In memory address of symbol name */
-        unsigned n_strx;        /* String table offset (file) */
-    } n_un;
-    u_char  n_type;             /* Type of symbol - see below */
-    char    n_ovly;             /* Overlay number */
-    u_int   n_value;            /* Symbol value */
 };
 
 /*
@@ -141,18 +132,6 @@ typedef struct
      uint32_t       sh_entsize;         /* Entry size if section holds table */
 } Elf32_Shdr;
 
-/* Symbol table entry.  */
-
-typedef struct
-{
-     uint32_t       st_name;            /* Symbol name (string tbl index) */
-     uint32_t       st_value;           /* Symbol value */
-     uint32_t       st_size;            /* Symbol size */
-     unsigned char  st_info;            /* Symbol type and binding */
-     unsigned char  st_other;           /* Symbol visibility */
-     uint16_t       st_shndx;           /* Section index */
-} Elf32_Sym;
-
 /* Legal values for p_type (segment type).  */
 
 #define PT_NULL         0               /* Program header table entry unused */
@@ -190,60 +169,10 @@ typedef struct
 #define PF_MASKOS       0x0ff00000      /* OS-specific */
 #define PF_MASKPROC     0xf0000000      /* Processor-specific */
 
-/* How to extract and insert information held in the st_info field.  */
-
-#define ELF32_ST_BIND(val)              (((unsigned char) (val)) >> 4)
-#define ELF32_ST_TYPE(val)              ((val) & 0xf)
-#define ELF32_ST_INFO(bind, type)       (((bind) << 4) + ((type) & 0xf))
-
-/* Legal values for ST_TYPE subfield of st_info (symbol type).  */
-
-#define STT_NOTYPE      0               /* Symbol type is unspecified */
-#define STT_OBJECT      1               /* Symbol is a data object */
-#define STT_FUNC        2               /* Symbol is a code object */
-#define STT_SECTION     3               /* Symbol associated with a section */
-#define STT_FILE        4               /* Symbol's name is file name */
-#define STT_COMMON      5               /* Symbol is a common data object */
-#define STT_TLS         6               /* Symbol is thread-local data object*/
-#define STT_NUM         7               /* Number of defined types.  */
-#define STT_LOOS        10              /* Start of OS-specific */
-#define STT_GNU_IFUNC   10              /* Symbol is indirect code object */
-#define STT_HIOS        12              /* End of OS-specific */
-#define STT_LOPROC      13              /* Start of processor-specific */
-#define STT_HIPROC      15              /* End of processor-specific */
-
-/* Special section indices.  */
-
-#define SHN_UNDEF       0               /* Undefined section */
-#define SHN_LORESERVE   0xff00          /* Start of reserved indices */
-#define SHN_LOPROC      0xff00          /* Start of processor-specific */
-#define SHN_BEFORE      0xff00          /* Order section before all others (Solaris). */
-#define SHN_AFTER       0xff01          /* Order section after all others (Solaris). */
-#define SHN_HIPROC      0xff1f          /* End of processor-specific */
-#define SHN_LOOS        0xff20          /* Start of OS-specific */
-#define SHN_HIOS        0xff3f          /* End of OS-specific */
-#define SHN_ABS         0xfff1          /* Associated symbol is absolute */
-#define SHN_COMMON      0xfff2          /* Associated symbol is common */
-#define SHN_XINDEX      0xffff          /* Index is in extra table.  */
-#define SHN_HIRESERVE   0xffff          /* End of reserved indices */
-
-/* Legal values for ST_BIND subfield of st_info (symbol binding).  */
-
-#define STB_LOCAL       0               /* Local symbol */
-#define STB_GLOBAL      1               /* Global symbol */
-#define STB_WEAK        2               /* Weak symbol */
-#define STB_NUM         3               /* Number of defined types.  */
-#define STB_LOOS        10              /* Start of OS-specific */
-#define STB_GNU_UNIQUE  10              /* Unique symbol.  */
-#define STB_HIOS        12              /* End of OS-specific */
-#define STB_LOPROC      13              /* Start of processor-specific */
-#define STB_HIPROC      15              /* End of processor-specific */
-
 void    combine (struct sect *, struct sect *, int);
 int     phcmp (const void *, const void *);
 char   *save_read (int file, off_t offset, off_t len, const char *name);
 void    copy (int, int, off_t, off_t);
-void    translate_syms (int, int, off_t, off_t, off_t, off_t);
 
 int    *symTypeTable;
 
@@ -253,34 +182,27 @@ main(int argc, char **argv)
     Elf32_Ehdr ex;
     Elf32_Phdr *ph;
     Elf32_Shdr *sh;
-    char *shstrtab;
-    int strtabix, symtabix;
     int i;
     struct sect text, data, bss;
     struct exec aex;
     int infile, outfile;
     uint32_t cur_vma = UINT32_MAX;
     int verbose = 0;
-    int symflag = 0;
 
-    strtabix = symtabix = 0;
     text.len = data.len = bss.len = 0;
     text.vaddr = data.vaddr = bss.vaddr = 0;
 
     /* Check args... */
     for (;;) {
-        switch (getopt (argc, argv, "sv")) {
+        switch (getopt (argc, argv, "v")) {
         case EOF:
             break;
         case 'v':
             ++verbose;
             continue;
-        case 's':
-            ++symflag;
-            continue;
         default:
 usage:      fprintf(stderr,
-                "usage: elf2aout [-v] [-s] <elf executable> <a.out executable>\n");
+                "usage: elf2aout [-v] input.elf output.aout\n");
             exit(1);
         }
         break;
@@ -291,7 +213,8 @@ usage:      fprintf(stderr,
         goto usage;
 
     /* Try the input file... */
-    if ((infile = open(argv[0], O_RDONLY)) < 0) {
+    infile = open(argv[0], O_RDONLY);
+    if (infile < 0) {
         fprintf(stderr, "Can't open %s for read: %s\n",
             argv[0], strerror(errno));
         exit(1);
@@ -311,40 +234,6 @@ usage:      fprintf(stderr,
     sh = (Elf32_Shdr *) save_read(infile, ex.e_shoff,
         ex.e_shnum * sizeof(Elf32_Shdr), "sh");
 
-    /* Read in the section string table. */
-    shstrtab = save_read(infile, sh[ex.e_shstrndx].sh_offset,
-        sh[ex.e_shstrndx].sh_size, "shstrtab");
-
-    /* Find space for a table matching ELF section indices to a.out symbol
-     * types. */
-    symTypeTable = malloc(ex.e_shnum * sizeof(int));
-    if (symTypeTable == NULL) {
-        fprintf(stderr, "symTypeTable: can't allocate.\n");
-        exit(1);
-    }
-    memset(symTypeTable, 0, ex.e_shnum * sizeof(int));
-
-    /* Look for the symbol table and string table... Also map section
-     * indices to symbol types for a.out */
-    for (i = 0; i < ex.e_shnum; i++) {
-        char   *name = shstrtab + sh[i].sh_name;
-        if (!strcmp(name, ".symtab"))
-            symtabix = i;
-
-        else if (!strcmp(name, ".strtab"))
-            strtabix = i;
-
-        else if (!strcmp(name, ".text") || !strcmp(name, ".rodata"))
-            symTypeTable[i] = N_TEXT;
-
-        else if (!strcmp(name, ".data") || !strcmp(name, ".sdata") ||
-             !strcmp(name, ".lit4") || !strcmp(name, ".lit8"))
-            symTypeTable[i] = N_DATA;
-
-        else if (!strcmp(name, ".bss") || !strcmp(name, ".sbss"))
-            symTypeTable[i] = N_BSS;
-    }
-
     /* Figure out if we can cram the program header into an a.out
      * header... Basically, we can't handle anything but loadable
      * segments, but we can ignore some kinds of segments.   We can't
@@ -363,6 +252,7 @@ usage:      fprintf(stderr,
         if (verbose)
             printf ("Section type=%x flags=%x vaddr=%x filesz=%x\n",
                 ph[i].p_type, ph[i].p_flags, ph[i].p_vaddr, ph[i].p_filesz);
+
         /* Section types we can't handle... */
         if (ph[i].p_type != PT_LOAD && ph[i].p_type != PT_GNU_EH_FRAME) {
             fprintf(stderr, "Program header %d type %x can't be converted.\n",
@@ -393,13 +283,12 @@ usage:      fprintf(stderr,
         if (ph[i].p_vaddr < cur_vma)
             cur_vma = ph[i].p_vaddr;
     }
-    if (! symflag) {
-        /* Sections must be in order to be converted... */
-        if (text.vaddr > data.vaddr || data.vaddr > bss.vaddr ||
-            text.vaddr + text.len > data.vaddr || data.vaddr + data.len > bss.vaddr) {
-            fprintf(stderr, "Sections ordering prevents a.out conversion.\n");
-            exit(1);
-        }
+
+    /* Sections must be in order to be converted... */
+    if (text.vaddr > data.vaddr || data.vaddr > bss.vaddr ||
+        text.vaddr + text.len > data.vaddr || data.vaddr + data.len > bss.vaddr) {
+        fprintf(stderr, "Sections ordering prevents a.out conversion.\n");
+        exit(1);
     }
 
     /* If there's a data section but no text section, then the loader
@@ -425,21 +314,12 @@ usage:      fprintf(stderr,
     }
 
     /* We now have enough information to cons up an a.out header... */
-    aex.a_magic = OMAGIC;
-    if (! symflag) {
-        aex.a_text = text.len;
-        aex.a_data = data.len;
-        aex.a_bss = bss.len;
-        aex.a_entry = ex.e_entry;
-        aex.a_syms = 0;
-    } else {
-        aex.a_text = 0;
-        aex.a_data = 0;
-        aex.a_bss = 0;
-        aex.a_entry = 0;
-        aex.a_syms = (sizeof(struct nlist) * (symtabix != -1 ?
-            sh[symtabix].sh_size / sizeof(Elf32_Sym) : 0));
-    }
+    aex.a_magic = ZMAGIC;
+    aex.a_text = text.len;
+    aex.a_data = data.len;
+    aex.a_bss = bss.len;
+    aex.a_entry = ex.e_entry;
+    aex.a_syms = 0;
     aex.a_reltext = 0;
     aex.a_reldata = 0;
     if (verbose) {
@@ -454,183 +334,63 @@ usage:      fprintf(stderr,
     }
 
     /* Make the output file... */
-    if ((outfile = open(argv[1], O_WRONLY | O_CREAT, 0777)) < 0) {
+    outfile = open(argv[1], O_WRONLY | O_CREAT, 0777);
+    if (outfile < 0) {
         fprintf(stderr, "Unable to create %s: %s\n", argv[1], strerror(errno));
         exit(1);
     }
+
     /* Truncate file... */
     if (ftruncate(outfile, 0)) {
         fprintf(stderr, "Warning: cannot truncate %s\n", argv[1]);
     }
+
     /* Write the header... */
     i = write(outfile, &aex, sizeof aex);
     if (i != sizeof aex) {
         perror("aex: write");
         exit(1);
     }
-    if (! symflag) {
-        /* Copy the loadable sections.   Zero-fill any gaps less than 64k;
-         * complain about any zero-filling, and die if we're asked to
-         * zero-fill more than 64k. */
-        for (i = 0; i < ex.e_phnum; i++) {
-            /* Unprocessable sections were handled above, so just verify
-             * that the section can be loaded before copying. */
-            if (ph[i].p_type == PT_LOAD && ph[i].p_filesz) {
-                if (cur_vma != ph[i].p_vaddr) {
-                    uint32_t gap = ph[i].p_vaddr - cur_vma;
-                    char    obuf[1024];
-                    if (gap > 65536) {
-                        fprintf(stderr, "Intersegment gap (%ld bytes) too large.\n",
-                            (long) gap);
+
+    /* Copy the loadable sections.   Zero-fill any gaps less than 64k;
+     * complain about any zero-filling, and die if we're asked to
+     * zero-fill more than 64k. */
+    for (i = 0; i < ex.e_phnum; i++) {
+
+        /* Unprocessable sections were handled above, so just verify
+         * that the section can be loaded before copying. */
+        if (ph[i].p_type == PT_LOAD && ph[i].p_filesz) {
+
+            if (cur_vma != ph[i].p_vaddr) {
+                char obuf[1024];
+                uint32_t gap = ph[i].p_vaddr - cur_vma;
+
+                if (gap > 65536) {
+                    fprintf(stderr, "Intersegment gap (%ld bytes) too large.\n",
+                        (long) gap);
+                    exit(1);
+                }
+#ifdef DEBUG
+                fprintf(stderr, "Warning: %ld byte intersegment gap.\n",
+                    (long)gap);
+#endif
+                memset(obuf, 0, sizeof obuf);
+                while (gap) {
+                    int count = (gap > sizeof obuf) ? sizeof obuf : gap;
+
+                    if (write(outfile, obuf, count) < 0) {
+                        fprintf(stderr, "Error writing gap: %s\n",
+                            strerror(errno));
                         exit(1);
                     }
-#ifdef DEBUG
-                    fprintf(stderr, "Warning: %ld byte intersegment gap.\n",
-                        (long)gap);
-#endif
-                    memset(obuf, 0, sizeof obuf);
-                    while (gap) {
-                        int     count = write(outfile, obuf, (gap > sizeof obuf
-                            ? sizeof obuf : gap));
-                        if (count < 0) {
-                            fprintf(stderr, "Error writing gap: %s\n",
-                                strerror(errno));
-                            exit(1);
-                        }
-                        gap -= count;
-                    }
+                    gap -= count;
                 }
-                copy(outfile, infile, ph[i].p_offset, ph[i].p_filesz);
-                cur_vma = ph[i].p_vaddr + ph[i].p_filesz;
             }
+            copy(outfile, infile, ph[i].p_offset, ph[i].p_filesz);
+            cur_vma = ph[i].p_vaddr + ph[i].p_filesz;
         }
-    } else {
-        /* Copy and translate the symbol table... */
-        translate_syms(outfile, infile,
-            sh[symtabix].sh_offset, sh[symtabix].sh_size,
-            sh[strtabix].sh_offset, sh[strtabix].sh_size);
     }
-    /* Looks like we won... */
     return 0;
-}
-
-/*
- * translate_syms (out, in, offset, size)
- *
- * Read the ELF symbol table from in at offset; translate it into a.out
- * nlist format and write it to out.
- */
-void
-translate_syms(int out, int in, off_t symoff, off_t symsize,
-    off_t stroff, off_t strsize)
-{
-#define SYMS_PER_PASS   64
-    Elf32_Sym inbuf[64];
-    struct nlist outbuf[64];
-    int     i, remaining, cur;
-    char   *oldstrings;
-    char   *newstrings, *nsp;
-    int     newstringsize, stringsizebuf;
-
-    /* Zero the unused fields in the output buffer.. */
-    memset(outbuf, 0, sizeof outbuf);
-
-    /* Find number of symbols to process... */
-    remaining = symsize / sizeof(Elf32_Sym);
-
-    /* Suck in the old string table... */
-    oldstrings = save_read(in, stroff, strsize, "string table");
-
-    /* Allocate space for the new one.   XXX We make the wild assumption
-     * that no two symbol table entries will point at the same place in
-     * the string table - if that assumption is bad, this could easily
-     * blow up. */
-    newstringsize = strsize + remaining;
-    newstrings = malloc(newstringsize);
-    if (newstrings == NULL) {
-        fprintf(stderr, "No memory for new string table!\n");
-        exit(1);
-    }
-    /* Initialize the table pointer... */
-    nsp = newstrings;
-
-    /* Go the start of the ELF symbol table... */
-    if (lseek(in, symoff, SEEK_SET) < 0) {
-        perror("translate_syms: lseek");
-        exit(1);
-    }
-    /* Translate and copy symbols... */
-    while (remaining) {
-        cur = remaining;
-        if (cur > SYMS_PER_PASS)
-            cur = SYMS_PER_PASS;
-        remaining -= cur;
-        if ((i = read(in, inbuf, cur * sizeof(Elf32_Sym)))
-            != cur * (ssize_t)sizeof(Elf32_Sym)) {
-            if (i < 0)
-                perror("translate_syms");
-            else
-                fprintf(stderr, "translate_syms: premature end of file.\n");
-            exit(1);
-        }
-        /* Do the translation... */
-        for (i = 0; i < cur; i++) {
-            int     binding, type;
-
-            /* Copy the symbol into the new table, but prepend an
-             * underscore. */
-            *nsp = '_';
-            strcpy(nsp + 1, oldstrings + inbuf[i].st_name);
-            outbuf[i].n_un.n_strx = nsp - newstrings + 4;
-            nsp += strlen(nsp) + 1;
-
-            type = ELF32_ST_TYPE(inbuf[i].st_info);
-            binding = ELF32_ST_BIND(inbuf[i].st_info);
-
-            /* Convert ELF symbol type/section/etc info into a.out
-             * type info. */
-            if (type == STT_FILE)
-                outbuf[i].n_type = N_FN;
-
-            else if (inbuf[i].st_shndx == SHN_UNDEF)
-                outbuf[i].n_type = N_UNDF;
-
-            else if (inbuf[i].st_shndx == SHN_ABS)
-                outbuf[i].n_type = N_ABS;
-
-            else if (inbuf[i].st_shndx == SHN_COMMON)
-                outbuf[i].n_type = N_ABS /*N_COMM*/;
-
-            else
-                outbuf[i].n_type = symTypeTable[inbuf[i].st_shndx];
-
-            if (binding == STB_GLOBAL)
-                outbuf[i].n_type |= N_EXT;
-
-            /* Symbol values in executables should be compatible. */
-            outbuf[i].n_value = inbuf[i].st_value;
-        }
-        /* Write out the symbols... */
-        if ((i = write(out, outbuf, cur * sizeof(struct nlist)))
-            != cur * (ssize_t)sizeof(struct nlist)) {
-            fprintf(stderr, "translate_syms: write: %s\n",
-                strerror(errno));
-            exit(1);
-        }
-    }
-    /* Write out the string table length... */
-    stringsizebuf = newstringsize;
-    if (write(out, &stringsizebuf, sizeof stringsizebuf)
-        != sizeof stringsizebuf) {
-        fprintf(stderr, "translate_syms: newstringsize: %s\n",
-            strerror(errno));
-        exit(1);
-    }
-    /* Write out the string table... */
-    if (write(out, newstrings, newstringsize) != newstringsize) {
-        fprintf(stderr, "translate_syms: newstrings: %s\n", strerror(errno));
-        exit(1);
-    }
 }
 
 void
@@ -650,12 +410,14 @@ copy(int out, int in, off_t offset, off_t size)
         if (cur > (int)sizeof ibuf)
             cur = sizeof ibuf;
         remaining -= cur;
-        if ((count = read(in, ibuf, cur)) != cur) {
+        count = read(in, ibuf, cur);
+        if (count != cur) {
             fprintf(stderr, "copy: read: %s\n",
                 count ? strerror(errno) : "premature end of file");
             exit(1);
         }
-        if ((count = write(out, ibuf, cur)) != cur) {
+        count = write(out, ibuf, cur);
+        if (count != cur) {
             perror("copy: write");
             exit(1);
         }
@@ -671,18 +433,19 @@ combine(struct sect *base, struct sect *new, int pad)
 {
     if (base->len == 0)
         *base = *new;
-    else
+    else {
         if (new->len) {
             if (base->vaddr + base->len != new->vaddr) {
-                if (pad)
+                if (pad) {
                     base->len = new->vaddr - base->vaddr;
-                else {
+                } else {
                     fprintf(stderr, "Non-contiguous data can't be converted.\n");
                     exit(1);
                 }
             }
             base->len += new->len;
         }
+    }
 }
 
 int
