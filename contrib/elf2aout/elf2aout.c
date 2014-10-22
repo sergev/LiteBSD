@@ -1,7 +1,6 @@
 /*
  * This program converts an elf executable to a BSD a.out executable.
- * The minimal symbol table is copied, but the debugging symbols and
- * other informational sections are not.
+ * Using a demand paged format.
  *
  * Copyright (c) 2011-2014 Serge Vakulenko
  * Copyright (c) 1995 Ted Lemon (hereinafter referred to as the author)
@@ -42,6 +41,11 @@
 #include <getopt.h>
 
 /*
+ * Assume 4k target page size.
+ */
+#define PAGESIZE 4096
+
+/*
  * Header prepended to each a.out file.
  */
 struct  exec {
@@ -76,6 +80,8 @@ struct sect {
     /* should be unsigned long, but assume no a.out binaries on LP64 */
     uint32_t vaddr;
     uint32_t len;
+    uint32_t offset;
+    uint32_t filesz;
 };
 
 /*
@@ -116,22 +122,6 @@ typedef struct {
      uint32_t       p_align;            /* Segment alignment */
 } Elf32_Phdr;
 
-/* Section header.  */
-
-typedef struct
-{
-     uint32_t       sh_name;            /* Section name (string tbl index) */
-     uint32_t       sh_type;            /* Section type */
-     uint32_t       sh_flags;           /* Section flags */
-     uint32_t       sh_addr;            /* Section virtual addr at execution */
-     uint32_t       sh_offset;          /* Section file offset */
-     uint32_t       sh_size;            /* Section size in bytes */
-     uint32_t       sh_link;            /* Link to another section */
-     uint32_t       sh_info;            /* Additional section information */
-     uint32_t       sh_addralign;       /* Section alignment */
-     uint32_t       sh_entsize;         /* Entry size if section holds table */
-} Elf32_Shdr;
-
 /* Legal values for p_type (segment type).  */
 
 #define PT_NULL         0               /* Program header table entry unused */
@@ -169,230 +159,65 @@ typedef struct
 #define PF_MASKOS       0x0ff00000      /* OS-specific */
 #define PF_MASKPROC     0xf0000000      /* Processor-specific */
 
-void    combine (struct sect *, struct sect *, int);
-int     phcmp (const void *, const void *);
-char   *save_read (int file, off_t offset, off_t len, const char *name);
-void    copy (int, int, off_t, off_t);
-
-int    *symTypeTable;
-
-int
-main(int argc, char **argv)
+/*
+ * Align the length on page boundary.
+ */
+uint32_t
+page_align(uint32_t len)
 {
-    Elf32_Ehdr ex;
-    Elf32_Phdr *ph;
-    Elf32_Shdr *sh;
-    int i;
-    struct sect text, data, bss;
-    struct exec aex;
-    int infile, outfile;
-    uint32_t cur_vma = UINT32_MAX;
-    int verbose = 0;
+    return (len + PAGESIZE - 1) & ~(PAGESIZE - 1);
+}
 
-    text.len = data.len = bss.len = 0;
-    text.vaddr = data.vaddr = bss.vaddr = 0;
+/*
+ * Read data from file into a freshly allocated buffer.
+ */
+char *
+read_alloc(int file, off_t offset, off_t len)
+{
+    char   *tmp;
+    int     count;
+    off_t   off;
 
-    /* Check args... */
-    for (;;) {
-        switch (getopt (argc, argv, "v")) {
-        case EOF:
-            break;
-        case 'v':
-            ++verbose;
-            continue;
-        default:
-usage:      fprintf(stderr,
-                "usage: elf2aout [-v] input.elf output.aout\n");
-            exit(1);
-        }
-        break;
-    }
-    argc -= optind;
-    argv += optind;
-    if (argc != 2)
-        goto usage;
-
-    /* Try the input file... */
-    infile = open(argv[0], O_RDONLY);
-    if (infile < 0) {
-        fprintf(stderr, "Can't open %s for read: %s\n",
-            argv[0], strerror(errno));
+    off = lseek(file, offset, SEEK_SET);
+    if (off < 0) {
+        perror("lseek");
         exit(1);
     }
-    /* Read the header, which is at the beginning of the file... */
-    i = read(infile, &ex, sizeof ex);
-    if (i != sizeof ex) {
-        fprintf(stderr, "ex: %s: %s.\n",
-            argv[0], i ? strerror(errno) : "End of file reached");
+    tmp = malloc(len);
+    if (! tmp) {
+        fprintf(stderr, "Can't allocate %ld bytes.\n", (long)len);
         exit(1);
     }
-    /* Read the program headers... */
-    ph = (Elf32_Phdr *) save_read(infile, ex.e_phoff,
-        ex.e_phnum * sizeof(Elf32_Phdr), "ph");
-
-    /* Read the section headers... */
-    sh = (Elf32_Shdr *) save_read(infile, ex.e_shoff,
-        ex.e_shnum * sizeof(Elf32_Shdr), "sh");
-
-    /* Figure out if we can cram the program header into an a.out
-     * header... Basically, we can't handle anything but loadable
-     * segments, but we can ignore some kinds of segments.   We can't
-     * handle holes in the address space, and we handle start addresses
-     * other than 0x1000 by hoping that the loader will know where to load
-     * - a.out doesn't have an explicit load address.   Segments may be
-     * out of order, so we sort them first. */
-    qsort(ph, ex.e_phnum, sizeof(Elf32_Phdr), phcmp);
-    for (i = 0; i < ex.e_phnum; i++) {
-        /* Section types we can ignore... */
-        if (ph[i].p_type == PT_NULL || ph[i].p_type == PT_NOTE ||
-            ph[i].p_type == PT_PHDR || ph[i].p_type == PT_MIPS_REGINFO ||
-            ph[i].p_type == PT_GNU_EH_FRAME)
-            continue;
-
-        if (verbose)
-            printf ("Section type=%x flags=%x vaddr=%x filesz=%x\n",
-                ph[i].p_type, ph[i].p_flags, ph[i].p_vaddr, ph[i].p_filesz);
-
-        /* Section types we can't handle... */
-        if (ph[i].p_type != PT_LOAD && ph[i].p_type != PT_GNU_EH_FRAME) {
-            fprintf(stderr, "Program header %d type %x can't be converted.\n",
-                i, ph[i].p_type);
-            exit(1);
-        }
-
-        /* Writable (data) segment? */
-        if (ph[i].p_flags & PF_W) {
-            struct sect ndata, nbss;
-
-            ndata.vaddr = ph[i].p_vaddr;
-            ndata.len = ph[i].p_filesz;
-            nbss.vaddr = ph[i].p_vaddr + ph[i].p_filesz;
-            nbss.len = ph[i].p_memsz - ph[i].p_filesz;
-
-            combine(&data, &ndata, 0);
-            combine(&bss, &nbss, 1);
-        } else {
-            struct sect ntxt;
-
-            ntxt.vaddr = ph[i].p_vaddr;
-            ntxt.len = ph[i].p_filesz;
-
-            combine(&text, &ntxt, 0);
-        }
-        /* Remember the lowest segment start address. */
-        if (ph[i].p_vaddr < cur_vma)
-            cur_vma = ph[i].p_vaddr;
-    }
-
-    /* Sections must be in order to be converted... */
-    if (text.vaddr > data.vaddr || data.vaddr > bss.vaddr ||
-        text.vaddr + text.len > data.vaddr || data.vaddr + data.len > bss.vaddr) {
-        fprintf(stderr, "Sections ordering prevents a.out conversion.\n");
+    count = read(file, tmp, len);
+    if (count != len) {
+        fprintf(stderr, "read: %s.\n",
+            count ? strerror(errno) : "End of file reached");
         exit(1);
     }
+    return tmp;
+}
 
-    /* If there's a data section but no text section, then the loader
-     * combined everything into one section.   That needs to be the text
-     * section, so just make the data section zero length following text. */
-    if (data.len && text.len == 0) {
-        text = data;
-        data.vaddr = text.vaddr + text.len;
-        data.len = 0;
-    }
-    if (verbose)
-        printf ("Text vaddr = %x, data vaddr = %x\n", text.vaddr, data.vaddr);
+/*
+ * Compare two program segment headers, for qsort().
+ */
+int
+phcmp(const void *vh1, const void *vh2)
+{
+    const Elf32_Phdr *h1 = (const Elf32_Phdr*) vh1;
+    const Elf32_Phdr *h2 = (const Elf32_Phdr*) vh2;
 
-    /* If there is a gap between text and data, we'll fill it when we copy
-     * the data, so update the length of the text segment as represented
-     * in a.out to reflect that, since a.out doesn't allow gaps in the
-     * program address space. */
-    if (text.vaddr + text.len < data.vaddr) {
-        if (verbose)
-            printf ("Update text len = %x (was %x)\n",
-                data.vaddr - text.vaddr, text.len);
-        text.len = data.vaddr - text.vaddr;
-    }
-
-    /* We now have enough information to cons up an a.out header... */
-    aex.a_magic = ZMAGIC;
-    aex.a_text = text.len;
-    aex.a_data = data.len;
-    aex.a_bss = bss.len;
-    aex.a_entry = ex.e_entry;
-    aex.a_syms = 0;
-    aex.a_reltext = 0;
-    aex.a_reldata = 0;
-    if (verbose) {
-        printf ("  magic: %#o\n", aex.a_magic);
-        printf ("   text: %#x\n", aex.a_text);
-        printf ("   data: %#x\n", aex.a_data);
-        printf ("    bss: %#x\n", aex.a_bss);
-        printf ("reltext: %#x\n", aex.a_reltext);
-        printf ("reldata: %#x\n", aex.a_reldata);
-        printf ("  entry: %#x\n", aex.a_entry);
-        printf ("   syms: %u\n", aex.a_syms);
-    }
-
-    /* Make the output file... */
-    outfile = open(argv[1], O_WRONLY | O_CREAT, 0777);
-    if (outfile < 0) {
-        fprintf(stderr, "Unable to create %s: %s\n", argv[1], strerror(errno));
-        exit(1);
-    }
-
-    /* Truncate file... */
-    if (ftruncate(outfile, 0)) {
-        fprintf(stderr, "Warning: cannot truncate %s\n", argv[1]);
-    }
-
-    /* Write the header... */
-    i = write(outfile, &aex, sizeof aex);
-    if (i != sizeof aex) {
-        perror("aex: write");
-        exit(1);
-    }
-
-    /* Copy the loadable sections.   Zero-fill any gaps less than 64k;
-     * complain about any zero-filling, and die if we're asked to
-     * zero-fill more than 64k. */
-    for (i = 0; i < ex.e_phnum; i++) {
-
-        /* Unprocessable sections were handled above, so just verify
-         * that the section can be loaded before copying. */
-        if (ph[i].p_type == PT_LOAD && ph[i].p_filesz) {
-
-            if (cur_vma != ph[i].p_vaddr) {
-                char obuf[1024];
-                uint32_t gap = ph[i].p_vaddr - cur_vma;
-
-                if (gap > 65536) {
-                    fprintf(stderr, "Intersegment gap (%ld bytes) too large.\n",
-                        (long) gap);
-                    exit(1);
-                }
-#ifdef DEBUG
-                fprintf(stderr, "Warning: %ld byte intersegment gap.\n",
-                    (long)gap);
-#endif
-                memset(obuf, 0, sizeof obuf);
-                while (gap) {
-                    int count = (gap > sizeof obuf) ? sizeof obuf : gap;
-
-                    if (write(outfile, obuf, count) < 0) {
-                        fprintf(stderr, "Error writing gap: %s\n",
-                            strerror(errno));
-                        exit(1);
-                    }
-                    gap -= count;
-                }
-            }
-            copy(outfile, infile, ph[i].p_offset, ph[i].p_filesz);
-            cur_vma = ph[i].p_vaddr + ph[i].p_filesz;
-        }
-    }
+    if (h1->p_vaddr > h2->p_vaddr)
+        return 1;
+    if (h1->p_vaddr < h2->p_vaddr)
+        return -1;
     return 0;
 }
 
+
+
+/*
+ * Copy a chunk of data from `in' file to `out' file.
+ */
 void
 copy(int out, int in, off_t offset, off_t size)
 {
@@ -424,66 +249,195 @@ copy(int out, int in, off_t offset, off_t size)
     }
 }
 
-/*
- * Combine two segments, which must be contiguous.
- * If pad is true, it's okay for there to be padding between.
- */
-void
-combine(struct sect *base, struct sect *new, int pad)
+int
+main(int argc, char **argv)
 {
-    if (base->len == 0)
-        *base = *new;
-    else {
-        if (new->len) {
-            if (base->vaddr + base->len != new->vaddr) {
-                if (pad) {
-                    base->len = new->vaddr - base->vaddr;
-                } else {
-                    fprintf(stderr, "Non-contiguous data can't be converted.\n");
-                    exit(1);
-                }
+    Elf32_Ehdr ex;
+    Elf32_Phdr *ph;
+    int i;
+    struct sect text = {0}, data = {0}, bss = {0};
+    struct exec aex;
+    int infile, outfile;
+    uint32_t cur_vma = UINT32_MAX;
+    int verbose = 0;
+    static char zeroes[PAGESIZE];
+
+    /* Check args... */
+    for (;;) {
+        switch (getopt (argc, argv, "v")) {
+        case EOF:
+            break;
+        case 'v':
+            ++verbose;
+            continue;
+        default:
+usage:      fprintf(stderr,
+                "usage: elf2aout [-v] input.elf output.aout\n");
+            exit(1);
+        }
+        break;
+    }
+    argc -= optind;
+    argv += optind;
+    if (argc != 2)
+        goto usage;
+
+    /* Try the input file... */
+    infile = open(argv[0], O_RDONLY);
+    if (infile < 0) {
+        fprintf(stderr, "Can't open %s for read: %s\n",
+            argv[0], strerror(errno));
+        exit(1);
+    }
+
+    /* Read the header, which is at the beginning of the file... */
+    i = read(infile, &ex, sizeof ex);
+    if (i != sizeof ex) {
+        fprintf(stderr, "ex: %s: %s.\n",
+            argv[0], i ? strerror(errno) : "End of file reached");
+        exit(1);
+    }
+
+    /* Read the program headers... */
+    ph = (Elf32_Phdr *) read_alloc(infile, ex.e_phoff,
+        ex.e_phnum * sizeof(Elf32_Phdr));
+
+    /* Figure out if we can cram the program header into an a.out
+     * header... Basically, we can't handle anything but loadable
+     * segments, but we can ignore some kinds of segments.   We can't
+     * handle holes in the address space, and we handle non-standard
+     * start addresses by hoping that the loader will know where to load
+     * - a.out doesn't have an explicit load address. */
+    qsort(ph, ex.e_phnum, sizeof(Elf32_Phdr), phcmp);
+    for (i = 0; i < ex.e_phnum; i++) {
+        /* Search for LOAD segments. */
+        if (ph[i].p_type != PT_LOAD)
+            continue;
+
+        if (verbose)
+            printf ("Segment type=%x flags=%x vaddr=%x filesz=%x\n",
+                ph[i].p_type, ph[i].p_flags, ph[i].p_vaddr, ph[i].p_filesz);
+
+        if (ph[i].p_flags & PF_W) {
+            /* Writable segment: data and bss. */
+            if (data.len != 0) {
+                fprintf(stderr, "Can't handle more than one .data segment: %s\n",
+                    argv[0]);
+                exit(1);
             }
-            base->len += new->len;
+            data.vaddr  = ph[i].p_vaddr;
+            data.len    = page_align (ph[i].p_filesz);
+            data.offset = ph[i].p_offset;
+            data.filesz = ph[i].p_filesz;
+
+            bss.vaddr = ph[i].p_vaddr + data.len;
+            bss.len   = ph[i].p_memsz - data.len;
+        } else {
+            /* Read-only segment: text. */
+            if (text.len != 0) {
+                fprintf(stderr, "Can't handle more than one .text segment: %s\n",
+                    argv[0]);
+                exit(1);
+            }
+            text.vaddr  = ph[i].p_vaddr;
+            text.len    = page_align (ph[i].p_filesz);
+            text.offset = ph[i].p_offset;
+        }
+        /* Remember the lowest segment start address. */
+        if (ph[i].p_vaddr < cur_vma)
+            cur_vma = ph[i].p_vaddr;
+    }
+
+    if (verbose)
+        printf ("Text %x-%x, data %x-%x, bss %x-%x\n",
+            text.vaddr, text.vaddr + text.len - 1,
+            data.vaddr, data.vaddr + data.len - 1,
+            bss.vaddr,  bss.vaddr  + bss.len -  1);
+
+    /* Check start of .text segment. */
+    if (text.vaddr != 0x400000) {
+        fprintf(stderr, "Invalid start of .text segment: %s\n",
+            argv[0]);
+        exit(1);
+    }
+
+    /* Sections must be in order to be converted... */
+    if (text.vaddr > data.vaddr || data.vaddr > bss.vaddr ||
+        text.vaddr + text.len > data.vaddr || data.vaddr + data.len > bss.vaddr) {
+        fprintf(stderr, "Sections ordering prevents a.out conversion.\n");
+        exit(1);
+    }
+
+    /* There should be no gap between text and data. */
+    if (text.vaddr + text.len != data.vaddr) {
+        fprintf(stderr, "Unexpected gap between .text and .data segments: %s\n",
+            argv[0]);
+        exit(1);
+    }
+
+    /* We now have enough information to cons up an a.out header... */
+    aex.a_magic = ZMAGIC;
+    aex.a_text = text.len;
+    aex.a_data = data.len;
+    aex.a_bss = bss.len;
+    aex.a_entry = ex.e_entry;
+    aex.a_syms = 0;
+    aex.a_reltext = 0;
+    aex.a_reldata = 0;
+    if (verbose) {
+        printf ("  magic: %#o\n", aex.a_magic);
+        printf ("   text: %#x\n", aex.a_text);
+        printf ("   data: %#x\n", aex.a_data);
+        printf ("    bss: %#x\n", aex.a_bss);
+        printf ("reltext: %#x\n", aex.a_reltext);
+        printf ("reldata: %#x\n", aex.a_reldata);
+        printf ("  entry: %#x\n", aex.a_entry);
+        printf ("   syms: %u\n", aex.a_syms);
+    }
+
+    /* Sections must be aligned on a page boundary. */
+    if (text.vaddr % PAGESIZE || data.vaddr % PAGESIZE ||
+        text.len % PAGESIZE || data.len % PAGESIZE) {
+        fprintf(stderr, "Sections must be page aligned.\n");
+        exit(1);
+    }
+
+    /* Make the output file... */
+    outfile = open(argv[1], O_WRONLY | O_CREAT, 0777);
+    if (outfile < 0) {
+        fprintf(stderr, "Unable to create %s: %s\n", argv[1], strerror(errno));
+        exit(1);
+    }
+
+    /* Truncate file... */
+    if (ftruncate(outfile, 0)) {
+        fprintf(stderr, "Warning: cannot truncate %s\n", argv[1]);
+    }
+
+    /* Write the header and alignment. */
+    i = write(outfile, &aex, sizeof aex);
+    if (i != sizeof aex) {
+        perror("aex: write");
+        exit(1);
+    }
+    i = write(outfile, zeroes, PAGESIZE - sizeof aex);
+    if (i != PAGESIZE - sizeof aex) {
+        perror("aex alignment: write");
+        exit(1);
+    }
+
+    /* Copy text section. */
+    copy(outfile, infile, text.offset, text.len);
+
+    /* Copy data section. */
+    copy(outfile, infile, data.offset, data.filesz);
+    if (data.len != data.filesz) {
+        i = write(outfile, zeroes, data.len - data.filesz);
+        if (i != data.len - data.filesz) {
+            perror("data alignment: write");
+            exit(1);
         }
     }
-}
 
-int
-phcmp(const void *vh1, const void *vh2)
-{
-    const Elf32_Phdr *h1 = (const Elf32_Phdr*) vh1;
-    const Elf32_Phdr *h2 = (const Elf32_Phdr*) vh2;
-
-    if (h1->p_vaddr > h2->p_vaddr)
-        return 1;
-    if (h1->p_vaddr < h2->p_vaddr)
-        return -1;
     return 0;
-}
-
-char *
-save_read(int file, off_t offset, off_t len, const char *name)
-{
-    char   *tmp;
-    int     count;
-    off_t   off;
-
-    off = lseek(file, offset, SEEK_SET);
-    if (off < 0) {
-        fprintf(stderr, "%s: fseek: %s\n", name, strerror(errno));
-        exit(1);
-    }
-    tmp = malloc(len);
-    if (! tmp) {
-        fprintf(stderr, "%s: Can't allocate %ld bytes.\n",
-            name, (long)len);
-        exit(1);
-    }
-    count = read(file, tmp, len);
-    if (count != len) {
-        fprintf(stderr, "%s: read: %s.\n",
-            name, count ? strerror(errno) : "End of file reached");
-        exit(1);
-    }
-    return tmp;
 }

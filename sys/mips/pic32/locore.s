@@ -79,13 +79,13 @@
         .type   start, @function
 start:
         mtc0    zero, MACH_C0_Count     # Clear cp0 Count (Used to measure boot time.)
-
+#if 0
 check_nmi:                              # Check whether we are here due to a reset or NMI.
         mfc0    s1, MACH_C0_Status      # Read Status
         ext     s1, s1, 19, 1           # extract NMI
         beqz    s1, init_gpr            # Branch if this is NOT an NMI exception.
         nop
-#if 0
+
         # Call nmi_exception().
         la      sp, _eram - 16          # Set up stack base.
         la      gp, _gp                 # GP register value defined by linker script.
