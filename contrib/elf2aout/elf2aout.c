@@ -361,6 +361,13 @@ usage:      fprintf(stderr,
         exit(1);
     }
 
+    /* Sections must be aligned on a page boundary. */
+    if (text.vaddr % PAGESIZE || data.vaddr % PAGESIZE ||
+        text.len % PAGESIZE || data.len % PAGESIZE) {
+        fprintf(stderr, "Sections must be page aligned.\n");
+        exit(1);
+    }
+
     /* Sections must be in order to be converted... */
     if (text.vaddr > data.vaddr || data.vaddr > bss.vaddr ||
         text.vaddr + text.len > data.vaddr || data.vaddr + data.len > bss.vaddr) {
@@ -393,13 +400,6 @@ usage:      fprintf(stderr,
         printf ("reldata: %#x\n", aex.a_reldata);
         printf ("  entry: %#x\n", aex.a_entry);
         printf ("   syms: %u\n", aex.a_syms);
-    }
-
-    /* Sections must be aligned on a page boundary. */
-    if (text.vaddr % PAGESIZE || data.vaddr % PAGESIZE ||
-        text.len % PAGESIZE || data.len % PAGESIZE) {
-        fprintf(stderr, "Sections must be page aligned.\n");
-        exit(1);
     }
 
     /* Make the output file... */

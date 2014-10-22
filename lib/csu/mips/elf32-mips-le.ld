@@ -113,9 +113,8 @@ SECTIONS
   .exception_ranges   : ONLY_IF_RO { *(.exception_ranges .exception_ranges*) }
   .plt            : { *(.plt) }
   .iplt           : { *(.iplt) }
-  /* Adjust the address for the data segment.  We want to adjust up to
-     the same address within the page on the next page up.  */
-  . = ALIGN (CONSTANT (MAXPAGESIZE)) - ((CONSTANT (MAXPAGESIZE) - .) & (CONSTANT (MAXPAGESIZE) - 1));
+  /* Align the end of data segment to page boundary. */
+  . = ALIGN(. != 0 ? 4096 : 1);
   . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE));
 
   /* Exception handling  */

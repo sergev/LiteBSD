@@ -10,6 +10,7 @@ build:
 	(cd etc && ${MAKE} distribution)
 	(cd include && ${MAKE} install)
 	${MAKE} cleandir
+	${MAKE} -C contrib/elf2aout all
 	(cd lib && ${MAKE} depend && ${MAKE} && ${MAKE} install)
 	${MAKE} depend && ${MAKE} && ${MAKE} install
 
