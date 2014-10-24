@@ -14,4 +14,19 @@ build:
 	(cd lib && ${MAKE} depend && ${MAKE} && ${MAKE} install)
 	${MAKE} depend && ${MAKE} && ${MAKE} install
 
+fsimage: sdcard.img
+
+# Filesystem and swap sizes.
+ROOT_MBYTES = 200
+SWAP_MBYTES = 32
+U_MBYTES    = 100
+UFSTOOL     = contrib/ufstool/ufstool
+
+.PHONY: sdcard.img
+sdcard.img: ${UFSTOOL} etc/rootfs.manifest
+	rm -f $@
+	${UFSTOOL} --repartition=fs=${ROOT_MBYTES}M:swap=${SWAP_MBYTES}M:fs=${U_MBYTES}M $@
+	${UFSTOOL} --new --partition=1 --manifest=etc/rootfs.manifest $@ ${DESTDIR}
+	${UFSTOOL} --new --partition=3 $@
+
 .include <bsd.subdir.mk>
