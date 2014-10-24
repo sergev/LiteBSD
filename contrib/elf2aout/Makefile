@@ -1,18 +1,5 @@
-CFLAGS		= -O -g -Wall
-LDFLAGS         = -g
-DESTDIR		= /usr/local
-OBJS		= elf2aout.o
-PROG		= elf2aout
+PROG    = elf2aout
+NOMAN   =
+COPTS   = -Wall -O
 
-# For Mac OS X
-#LIBS		= -largp
-
-all:		$(PROG)
-
-install:	$(PROG)
-		install -s $(PROG) ${DESTDIR}/bin/$(PROG)
-clean:
-		rm -f *~ *.o *.lst *.dis $(PROG)
-
-$(PROG):	$(OBJS)
-		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+.include <local.prog.mk>
