@@ -490,11 +490,13 @@ vnthrottle(vn, vp)
 	register struct vn_softc *vn;
 	struct vnode *vp;
 {
+#ifdef NFS
 	extern int (**nfsv2_vnodeop_p)();
 
 	if (vp->v_op == nfsv2_vnodeop_p)
 		vn->sc_maxactive = 2;
 	else
+#endif
 		vn->sc_maxactive = 8;
 
 	if (vn->sc_maxactive < 1)

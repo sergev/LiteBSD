@@ -1,6 +1,12 @@
 #
 # PIC32MZ target: chipKIT Wi-Fire board
 #
+# To build the kernel, use:
+#   ../../../usr.sbin/config/config WIFIRE.pic32
+#   cd ../../compile/WIFIRE.pic32
+#   bmake depend
+#   bmake
+#
 machine		"pic32"
 
 cpu		"PIC32MZ"
@@ -67,3 +73,4 @@ pseudo-device	pty		4	# pseudo ptys
 pseudo-device	bpfilter	1	# packet filter ports
 pseudo-device	loop
 pseudo-device	ether
+pseudo-device	vn                      # block/character interface to a vnode
