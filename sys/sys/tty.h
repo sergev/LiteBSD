@@ -42,13 +42,21 @@
 #include <sys/select.h>		/* For struct selinfo. */
 
 /*
- * Clists are character lists, which is a variable length linked list
- * of cblocks, with a count of the number of characters in the list.
+ * Clists are actually ring buffers. The c_cc, c_cf, c_cl fields have
+ * exactly the same behaviour as in true clists.
+ * if c_cq is NULL, the ring buffer has no TTY_QUOTE functionality
+ * (but, saves memory and cpu time)
+ *
+ * *DON'T* play with c_cs, c_ce, c_cq, or c_cl outside tty_subr.c!!!
  */
 struct clist {
-	int	c_cc;		/* Number of characters in the clist. */
-	char	*c_cf;		/* Pointer to the first cblock. */
-	char	*c_cl;		/* Pointer to the last cblock. */
+	int	c_cc;		/* count of characters in queue */
+	int	c_cn;		/* total ring buffer length */
+	char	*c_cf;		/* points to first character */
+	char	*c_cl;		/* points to next open character */
+	char	*c_cs;		/* start of ring buffer */
+	char	*c_ce;		/* c_ce + c_len */
+	char	*c_cq;		/* N bits/bytes long, see tty_subr.c */
 };
 
 /*

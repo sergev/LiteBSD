@@ -38,8 +38,11 @@ LFLAGS		?=
 
 LD		?= ${GCC_PREFIX}ld -mips32r2 -EL
 LDFLAGS		?= -nostdlib -nostartfiles -L${DESTDIR}/usr/lib \
-                   -T ${DESTDIR}/usr/lib/elf32-mips-le.ld -Wl,--oformat=elf32-littlemips \
+                   -T ${DESTDIR}/usr/lib/elf32-mips-le.ld \
                    -Wl,-z,max-page-size=4096 ${DESTDIR}/usr/lib/crt0.o
+.if exists(${MIPS_GCC_ROOT}/bin/mips-elf-gcc)
+LDFLAGS		+= -Wl,--oformat=elf32-littlemips
+.endif
 
 LINT		?=	lint
 LINTFLAGS	?=	-chapbx

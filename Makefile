@@ -14,7 +14,7 @@ build:
 	(cd lib && ${MAKE} depend && ${MAKE} && ${MAKE} install)
 	${MAKE} depend && ${MAKE} && ${MAKE} install
 
-fsimage: sdcard.img
+fs:     sdcard.img
 
 # Filesystem and swap sizes.
 ROOT_MBYTES = 200
