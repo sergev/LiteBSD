@@ -77,6 +77,11 @@
  */
         .globl  start
         .type   start, @function
+        //
+        // CPU initialization code copied from MIPS MD00901 Application Note
+        // "Boot-MIPS: Example Boot Code for MIPS Cores"
+        // http://www.imgtec.com/downloads/app-notes/MD00901-2B-CPS-APP-01.03.zip
+        //
 start:
         mtc0    zero, MACH_C0_Count     # Clear cp0 Count (Used to measure boot time.)
 #if 0
