@@ -53,7 +53,9 @@ options		INET		# Internet protocols
 #options	MULTICAST	# Multicast support
 #options	MROUTING	# Multicast routing support
 
-config		vmunix root on sd0a swap on sd0b dumps on sd0b
+config		vmunix  root on major0 minor1
+                        swap on major0 minor2
+                        dumps on major0 minor2
 
 device		uart1   flags 0x4e4f    # pins rx=RD14, tx=RD15 - logical 39/40
 device		uart4   flags 0x6268    # pins rx=RF2,  tx=RF8  - serial-to-USB converter

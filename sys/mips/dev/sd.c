@@ -64,6 +64,11 @@ struct disk {
 static struct disk sddrives[NSD];       /* Table of units */
 static int sd_type[NSD];                /* Card type */
 
+#define TYPE_UNKNOWN    0
+#define TYPE_I          1
+#define TYPE_II         2
+#define TYPE_SDHC       3
+
 #define TIMO_WAIT_WDONE 400000
 #define TIMO_WAIT_WIDLE 200000
 #define TIMO_WAIT_CMD   100000
@@ -215,7 +220,7 @@ static int card_init(int unit)
     /* Slow speed: 250 kHz */
     spi_set_speed(io, 250);
 
-    sd_type[unit] = 0;
+    sd_type[unit] = TYPE_UNKNOWN;
 
     do {
         /* Unselect the card. */
@@ -246,7 +251,7 @@ static int card_init(int unit)
     {
         /* Illegal command: card type 1. */
         sd_deselect(io);
-        sd_type[unit] = 1;
+        sd_type[unit] = TYPE_I;
     } else {
         response[0] = spi_transfer(io, 0xFF);
         response[1] = spi_transfer(io, 0xFF);
@@ -259,7 +264,7 @@ static int card_init(int unit)
                 unit, response[0], response[1], response[2], response[3]);
             return 0;
         }
-        sd_type[unit] = 2;
+        sd_type[unit] = TYPE_II;
     }
 
 
@@ -269,7 +274,7 @@ static int card_init(int unit)
         spi_select(io);
         card_cmd(unit,CMD_APP, 0);
         reply = card_cmd(unit,CMD_SEND_OP_SDC,
-                        (sd_type[unit] == 2) ? 0x40000000 : 0);
+                         (sd_type[unit] == TYPE_II) ? 0x40000000 : 0);
         spi_select(io);
         if (reply == 0)
             break;
@@ -284,7 +289,7 @@ static int card_init(int unit)
         sd_timo_send_op = i;
 
     /* If SD2 read OCR register to check for SDHC card. */
-    if (sd_type[unit] == 2)
+    if (sd_type[unit] == TYPE_II)
     {
         spi_select(io);
         reply = card_cmd(unit, CMD_READ_OCR, 0);
@@ -301,7 +306,7 @@ static int card_init(int unit)
         sd_deselect(io);
         if ((response[0] & 0xC0) == 0xC0)
         {
-            sd_type[unit] = 3;
+            sd_type[unit] = TYPE_SDHC;
         }
     }
 
@@ -388,16 +393,19 @@ card_read(int unit, unsigned int offset, char *data, unsigned int bcount)
 {
     struct spiio *io = &sddrives[unit].spiio;
     int reply, i;
+//printf("%s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
 
     /* Send read-multiple command. */
     spi_select(io);
-    if (sd_type[unit] != 3) offset <<= 9;
-    reply = card_cmd(unit, CMD_READ_MULTIPLE, offset<<1);
+    if (sd_type[unit] != TYPE_SDHC)
+        offset <<= 9;
+//printf("%s: sd_type = %u, offset = %08x\n", __func__, sd_type[unit], offset);
+    reply = card_cmd(unit, CMD_READ_MULTIPLE, offset);
     if (reply != 0)
     {
         /* Command rejected. */
         printf ("sd%d: card_read: bad READ_MULTIPLE reply = %d, offset = %08x\n",
-            unit, reply, offset<<1);
+            unit, reply, offset);
         sd_deselect(io);
         return 0;
     }
@@ -426,10 +434,15 @@ again:
     /* Read data. */
     if (bcount >= SECTSIZE)
     {
-        spi_bulk_read32_be(io, SECTSIZE/4, (int*)data);
+//        spi_bulk_read32_be(io, SECTSIZE/4, (int*)data);
+        spi_bulk_read(io, SECTSIZE, (unsigned char *)data);
+//printf ("    %08x %08x %08x %08x ...\n",
+//((int*)data)[0], ((int*)data)[1], ((int*)data)[2], ((int*)data)[3]);
         data += SECTSIZE;
     } else {
         spi_bulk_read(io, bcount, (unsigned char *)data);
+//printf ("    %08x %08x %08x %08x ...\n",
+//((int*)data)[0], ((int*)data)[1], ((int*)data)[2], ((int*)data)[3]);
         data += bcount;
         for (i=bcount; i<SECTSIZE; i++)
             spi_transfer(io, 0xFF);
@@ -475,8 +488,9 @@ card_write (int unit, unsigned offset, char *data, unsigned bcount)
     }
 
     /* Send write-multiple command. */
-    if (sd_type[unit] != 3) offset <<= 9;
-    reply = card_cmd(unit, CMD_WRITE_MULTIPLE, offset<<1);
+    if (sd_type[unit] != TYPE_SDHC)
+        offset <<= 9;
+    reply = card_cmd(unit, CMD_WRITE_MULTIPLE, offset);
     if (reply != 0)
     {
         /* Command rejected. */
@@ -577,7 +591,8 @@ sdopen(dev, flags, mode, p)
             return ENODEV;
         }
         printf ("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
-            sd_type[unit]==3 ? "SDHC" : sd_type[unit]==2 ? "II" : "I",
+            sd_type[unit]==TYPE_SDHC ? "SDHC" :
+            sd_type[unit]==TYPE_II ? "II" : "I",
             u->dk_part[RAWPART].lba_length, spi_get_speed(io) / 1000);
 
         /* Read partition table. */
@@ -657,7 +672,8 @@ sdstrategy(bp)
     struct disk *u;    /* Disk unit to do the IO.  */
     int unit = sdunit(bp->b_dev);
     int s;
-    unsigned offset = 0;
+    unsigned offset;
+//printf("%s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, bp->b_blkno, bp->b_bcount);
 
     if (unit >= NSD || bp->b_blkno < 0) {
         printf("sdstrategy: unit = %d, blkno = %d, bcount = %d\n",
@@ -666,6 +682,7 @@ sdstrategy(bp)
         goto bad;
     }
     u = &sddrives[unit];
+    offset = bp->b_blkno;
     if (u->dk_open) {
         /*
          * Determine the size of the transfer, and make sure it is
@@ -675,18 +692,20 @@ sdstrategy(bp)
         long maxsz = p->lba_length;
         long sz = (bp->b_bcount + DEV_BSIZE - 1) >> DEV_BSHIFT;
 
-        offset = p->lba_start;
-        if (bp->b_blkno + offset == 0 &&
+        offset += p->lba_start;
+//printf("%s: sdpart=%u, offset=%u, maxsz=%u, sz=%u\n", __func__, sdpart(bp->b_dev), offset, maxsz, sz);
+        if (offset == 0 &&
             ! (bp->b_flags & B_READ) && ! u->dk_wlabel) {
                 /* Write to partition table not allowed. */
                 bp->b_error = EROFS;
                 goto bad;
         }
-        if (bp->b_blkno < 0 || bp->b_blkno + sz > maxsz) {
+        if (bp->b_blkno + sz > maxsz) {
                 /* if exactly at end of disk, return an EOF */
                 if (bp->b_blkno == maxsz) {
                         bp->b_resid = bp->b_bcount;
                         biodone(bp);
+//printf("%s: done EOF\n", __func__);
                         return;
                 }
                 /* or truncate if part of it fits */
@@ -697,6 +716,8 @@ sdstrategy(bp)
         }
     } else {
         /* Reading the partition table. */
+//printf("%s: reading the partition table\n", __func__);
+        offset = 0;
     }
 
     s = splbio();
@@ -707,11 +728,13 @@ sdstrategy(bp)
     }
     biodone(bp);
     splx(s);
+//printf("%s: done OK\n", __func__);
     return;
 
 bad:
     bp->b_error = EINVAL;
     biodone(bp);
+//printf("%s: failed \n", __func__);
 }
 
 int

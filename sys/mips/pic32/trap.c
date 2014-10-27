@@ -492,6 +492,7 @@ exception(statusReg, causeReg, vadr, pc, args)
 
     default:
     err:
+        printf("kernel fault at pc=%08x, badvaddr=%08x\n", pc, vadr);
         panic("trap");
     }
     trapsignal(p, i, ucode);

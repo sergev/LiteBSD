@@ -1157,28 +1157,32 @@ void tlb_update (unsigned hi, unsigned lo)
 
     if (hi & (1 << PGSHIFT)) {
         /* Odd page. */
-        mtc0_EntryLo1(lo);              /* Init low entry 0 */
         if (index >= 0) {
             /* Entry found - update EntryLo1. */
+            asm volatile ("tlbr");      /* Read old entry */
+            mtc0_EntryLo1(lo);          /* Setup low entry 1 */
             asm volatile ("ehb");       /* Hazard barrier */
             asm volatile ("tlbwi");     /* Write the TLB entry */
         } else {
             /* Not found - install new entry. */
             mtc0_EntryHi(hi);           /* Restore high reg */
             mtc0_EntryLo0(lo & PG_G);   /* Clear low entry 0 */
+            mtc0_EntryLo1(lo);          /* Setup low entry 1 */
             asm volatile ("ehb");       /* Hazard barrier */
             asm volatile ("tlbwr");     /* Enter into a random slot */
         }
     } else {
         /* Even page. */
-        mtc0_EntryLo0(lo);              /* Init low entry 0 */
         if (index >= 0) {
             /* Entry found - update EntryLo0. */
+            asm volatile ("tlbr");      /* Read old entry */
+            mtc0_EntryLo0(lo);          /* Setup low entry 0 */
             asm volatile ("ehb");       /* Hazard barrier */
             asm volatile ("tlbwi");     /* Write the TLB entry */
         } else {
             /* Not found - install new entry. */
             mtc0_EntryHi(hi);           /* Restore high reg */
+            mtc0_EntryLo0(lo);          /* Setup low entry 0 */
             mtc0_EntryLo1(lo & PG_G);   /* Clear low entry 1 */
             asm volatile ("ehb");       /* Hazard barrier */
             asm volatile ("tlbwr");     /* Enter into a random slot */
