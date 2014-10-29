@@ -659,7 +659,6 @@ setregs(p, entry, retval)
     bzero((caddr_t)p->p_md.md_regs, (FSR + 1) * sizeof(int));
     p->p_md.md_regs[SP] = sp;
     p->p_md.md_regs[PC] = entry & ~3;
-    p->p_md.md_regs[PS] = PSL_USERSET;
     p->p_md.md_flags & ~MDP_FPUSED;
 }
 

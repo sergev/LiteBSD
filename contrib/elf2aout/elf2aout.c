@@ -48,18 +48,18 @@
 /*
  * Header prepended to each a.out file.
  */
-struct  exec {
-    unsigned a_magic;           /* magic number */
+struct exec {
+    uint32_t a_magic;           /* magic number */
 #define OMAGIC  0407            /* old impure format */
 #define ZMAGIC  0413            /* demand load format */
 
-    unsigned a_text;            /* size of text segment */
-    unsigned a_data;            /* size of initialized data */
-    unsigned a_bss;             /* size of uninitialized data */
-    unsigned a_reltext;         /* size of text relocation info */
-    unsigned a_reldata;         /* size of data relocation info */
-    unsigned a_syms;            /* size of symbol table */
-    unsigned a_entry;           /* entry point */
+    uint32_t a_text;            /* text segment size */
+    uint32_t a_data;            /* initialized data size */
+    uint32_t a_bss;             /* uninitialized data size */
+    uint32_t a_syms;            /* symbol table size */
+    uint32_t a_entry;           /* entry point */
+    uint32_t a_trsize;          /* text relocation size */
+    uint32_t a_drsize;          /* data relocation size */
 };
 
 /*
@@ -389,17 +389,17 @@ usage:      fprintf(stderr,
     aex.a_bss = bss.len;
     aex.a_entry = ex.e_entry;
     aex.a_syms = 0;
-    aex.a_reltext = 0;
-    aex.a_reldata = 0;
+    aex.a_trsize = 0;
+    aex.a_drsize = 0;
     if (verbose) {
         printf ("  magic: %#o\n", aex.a_magic);
         printf ("   text: %#x\n", aex.a_text);
         printf ("   data: %#x\n", aex.a_data);
         printf ("    bss: %#x\n", aex.a_bss);
-        printf ("reltext: %#x\n", aex.a_reltext);
-        printf ("reldata: %#x\n", aex.a_reldata);
         printf ("  entry: %#x\n", aex.a_entry);
         printf ("   syms: %u\n", aex.a_syms);
+        printf (" trsize: %#x\n", aex.a_trsize);
+        printf (" drsize: %#x\n", aex.a_drsize);
     }
 
     /* Make the output file... */

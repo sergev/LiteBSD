@@ -219,6 +219,7 @@ again:
                 ndp->ni_segflg = UIO_SYSSPACE;
                 goto again;
 	}
+//printf("%s: text=%u, data=%u, bss=%u, entry=%08x\n", __func__, exdata.ex_hdr.a_text, exdata.ex_hdr.a_data, exdata.ex_hdr.a_bss, exdata.ex_hdr.a_entry);
 
 	/* sanity check  "ain't not such thing as a sanity clause" -groucho */
 	rv = ENOMEM;
@@ -240,7 +241,7 @@ again:
 	if (exdata.ex_hdr.a_data + exdata.ex_hdr.a_bss > p->p_rlimit[RLIMIT_DATA].rlim_cur)
 		goto exec_fail;
 
-	if (exdata.ex_hdr.a_entry > exdata.ex_hdr.a_text + exdata.ex_hdr.a_data)
+	if (exdata.ex_hdr.a_entry > virtual_offset + exdata.ex_hdr.a_text + exdata.ex_hdr.a_data)
 		goto exec_fail;
 
 	/*

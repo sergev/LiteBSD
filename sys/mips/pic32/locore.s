@@ -365,11 +365,8 @@ init_unix:
 enter_user_mode:
         li      v0, PSL_USERSET | MACH_Status_EXL
         mtc0    v0, MACH_C0_Status              # switch to user mode
-#if 0
-        lw      a0, UADDR+U_PCB_REGS+(SR * 4)
-#endif
         lw      v0, UADDR+U_PCB_REGS+(PC * 4)
-        mtc0    v0, MACH_C0_EPC
+        mtc0    v0, MACH_C0_EPC                 # entry address
         lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
         lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
         mtlo    t0
@@ -400,7 +397,7 @@ enter_user_mode:
         lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
         lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
         lw      gp, UADDR+U_PCB_REGS+(GP * 4)
-        lw      sp, UADDR+U_PCB_REGS+(SP * 4)
+        lw      sp, UADDR+U_PCB_REGS+(SP * 4)   # stack pointer
         lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
         lw      ra, UADDR+U_PCB_REGS+(RA * 4)
         eret
@@ -1569,16 +1566,30 @@ kern_tlb_refill:
         lw      k1, Sysmapsize                  # index within range?
         sltu    k1, k0, k1
         beqz    k1, check_stack                 # No. check for valid stack
-        ins     k0, zero, 0, 1                  # clear bit 0
+        andi    k1, k0, 1                       # check for odd page
+        bnez    k1, odd_page
         sll     k0, 2                           # compute offset from index
+even_page:
         lw      k1, Sysmap
         addu    k1, k0
         lw      k0, 0(k1)                       # get even page PTE
         lw      k1, 4(k1)                       # get odd page PTE
         mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
-        and     k0, PG_V                        # check for valid entry --TODO: check Lo1
+        and     k0, PG_V                        # check for valid entry
         beqz    k0, kern_exception              # PTE invalid
         mtc0    k1, MACH_C0_EntryLo1
+        ehb
+        tlbwr                                   # update TLB
+        eret
+odd_page:
+        lw      k1, Sysmap
+        addu    k1, k0
+        lw      k0, -4(k1)                      # get even page PTE
+        lw      k1, 0(k1)                       # get odd page PTE
+        mtc0    k1, MACH_C0_EntryLo1
+        and     k1, PG_V                        # check for valid entry
+        beqz    k1, kern_exception              # PTE invalid
+        mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
         ehb
         tlbwr                                   # update TLB
         eret
@@ -1629,7 +1640,7 @@ _exception_vector:
         .type   _exception_vector, @function
         mfc0    k0, MACH_C0_Status              # Get the status register
         and     k0, MACH_Status_UM              # test for user mode
-        beqz    k0, user_exception
+        bnez    k0, user_exception
         nop
         j       kern_exception
         nop
@@ -1643,7 +1654,7 @@ _interrupt_vector:
         .type   _interrupt_vector, @function
         mfc0    k0, MACH_C0_Status              # Get the status register
         and     k0, MACH_Status_UM              # test for user mode
-        beqz    k0, user_interrupt
+        bnez    k0, user_interrupt
         nop
         j       kern_interrupt
         nop
