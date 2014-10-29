@@ -231,6 +231,7 @@ vnode_pager_getpage(pager, mlist, npages, sync)
 	int npages;
 	boolean_t sync;
 {
+//printf("%s: pager=%08x, mlist=%08x, npages=%u, sync=%u\n", __func__, pager, mlist, npages, sync);
 
 #ifdef DEBUG
 	if (vpagerdebug & VDB_FOLLOW)
@@ -502,6 +503,7 @@ vnode_pager_io(vnp, mlist, npages, sync, rw)
 	vm_offset_t kva, foff;
 	int error, size;
 	struct proc *p = curproc;		/* XXX */
+//printf("%s: vnp=%08x, mlist=%08x, npages=%u, sync=%u, rw=%u\n", __func__, vnp, mlist, npages, sync, rw);
 
 	/* XXX */
 	vm_page_t m;

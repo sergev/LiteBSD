@@ -86,8 +86,8 @@
 #define MACH_Cause_WP           0x00400000      /* Watch exception pending */
 #define MACH_Cause_FDCI         0x00200000      /* Fast debug channel interrupt */
 #define MACH_Cause_RIPL(r)      ((r)>>10 & 63)  /* Requested interrupt priority level */
-#define MACH_Cause_IP1          0x00020000      /* Request software interrupt 1 */
-#define MACH_Cause_IP0          0x00010000      /* Request software interrupt 0 */
+#define MACH_Cause_IP1          0x00000200      /* Request software interrupt 1 */
+#define MACH_Cause_IP0          0x00000100      /* Request software interrupt 0 */
 #define MACH_Cause_ExcCode      0x0000007c      /* Exception code */
 #define MACH_Cause_ExcCode_SHIFT	2
 

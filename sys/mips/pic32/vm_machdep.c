@@ -178,6 +178,7 @@ pagemove(from, to, size)
     int size;
 {
     register pt_entry_t *fpte, *tpte;
+//printf("%s: from=%08x, to=%08x, size=%u\n", __func__, from, to, size);
 
     if (size % CLBYTES)
         panic("pagemove");

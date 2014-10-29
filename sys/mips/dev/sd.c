@@ -414,9 +414,7 @@ again:
     /* Wait for a response. */
     for (i=0; ; i++)
     {
-        int x = spl0();
         reply = spi_transfer(io, 0xFF);
-        splx(x);
         if (reply == DATA_START_BLOCK)
             break;
         if (i >= TIMO_READ)
@@ -434,8 +432,7 @@ again:
     /* Read data. */
     if (bcount >= SECTSIZE)
     {
-//        spi_bulk_read32_be(io, SECTSIZE/4, (int*)data);
-        spi_bulk_read(io, SECTSIZE, (unsigned char *)data);
+        spi_bulk_read32_be(io, SECTSIZE/4, (int*)data);
 //printf ("    %08x %08x %08x %08x ...\n",
 //((int*)data)[0], ((int*)data)[1], ((int*)data)[2], ((int*)data)[3]);
         data += SECTSIZE;
@@ -461,6 +458,7 @@ again:
     /* Stop a read-multiple sequence. */
     card_cmd(unit, CMD_STOP, 0);
     sd_deselect(io);
+//printf("%s: done\n", __func__);
     return 1;
 }
 
@@ -531,9 +529,7 @@ again:
     }
 
     /* Wait for write completion. */
-    int x = spl0();
     spi_wait_ready(unit, TIMO_WAIT_WDONE, &sd_timo_wait_wdone);
-    splx(x);
     sd_deselect(io);
 
     if (bcount > SECTSIZE)

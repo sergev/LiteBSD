@@ -1118,6 +1118,7 @@ void tlb_flush()
  */
 void tlb_flush_addr(unsigned hi)
 {
+//printf("%s: %08x\n", __func__, hi);
     int x = mips_di();                  /* Disable interrupts */
     int pid = mfc0_EntryHi();           /* Save the current PID */
     int index;
@@ -1128,8 +1129,9 @@ void tlb_flush_addr(unsigned hi)
 
     index = mfc0_Index();               /* See what we got */
     if (index >= 0) {
-        /* Entry found - mark it as invalid. */
-        mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR);  /* Use invalid memory address */
+        /* Entry found - mark it as invalid.
+         * Use invalid memory address, unique for every entry */
+        mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR ^ 0x3c000 ^ (index << 14));
         mtc0_EntryLo0(0);               /* Zero out low entry 0 */
         mtc0_EntryLo1(0);               /* Zero out low entry 1 */
         asm volatile ("ehb");           /* Hazard barrier */
@@ -1145,6 +1147,7 @@ void tlb_flush_addr(unsigned hi)
  */
 void tlb_update (unsigned hi, unsigned lo)
 {
+//printf("%s: hi=%08x, lo=%08x\n", __func__, hi, lo);
     int x = mips_di();                  /* Disable interrupts */
     int pid = mfc0_EntryHi();           /* Save the current PID */
     int index;

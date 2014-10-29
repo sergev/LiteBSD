@@ -496,6 +496,7 @@ dont_bother:
 	if (p->p_flag & P_TRACED)
 		psignal(p, SIGTRAP);
 	p->p_acflag &= ~AFORK;		/* remove fork, but no exec flag */
+//printf("%s: text=%u, data=%u, bss=%u, entry=%08x\n", __func__, exdata.ex_hdr.a_text, exdata.ex_hdr.a_data, exdata.ex_hdr.a_bss, exdata.ex_hdr.a_entry);
 	return 0;
 
 exec_dealloc:

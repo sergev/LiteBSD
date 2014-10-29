@@ -280,6 +280,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         int rval[2];
         struct sysent *systab;
         extern int nsysent;
+//printf ("--- %s() syscall code=%u, RA=%08x \n", __func__, locr0[V0], locr0[RA]);
 
         cnt.v_syscall++;
         /* Compute next PC after syscall instruction.
@@ -561,7 +562,7 @@ interrupt(statusReg, pc)
         /* Increment COMPARE register. */
         IFSCLR(0) = 1 << PIC32_IRQ_CT;
         int c = mfc0_Compare();
-        c += (CPU_KHZ * 1000 / HZ + 1) / 2;
+        c += (CPU_KHZ * 1000 / hz + 1) / 2;
         mtc0_Compare (c);
 
         cf.pc = pc;

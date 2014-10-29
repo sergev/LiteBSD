@@ -92,6 +92,7 @@ READ(ap)
 		panic("%s: type %d", READ_S, vp->v_type);
 #endif
 	fs = ip->I_FS;
+//printf("%s: vp=%08x, offset=%u, maxfilesize=%u\n", __func__, vp, (unsigned)uio->uio_offset, fs->fs_maxfilesize);
 	if ((u_int64_t)uio->uio_offset > fs->fs_maxfilesize)
 		return (EFBIG);
 
@@ -107,6 +108,7 @@ READ(ap)
 			xfersize = uio->uio_resid;
 		if (bytesinfile < xfersize)
 			xfersize = bytesinfile;
+//printf("-- bytesinfile=%u, lbn=%u, size=%u, blkoffset=%u, xfersize=%u\n", (unsigned)bytesinfile, lbn, size, blkoffset, xfersize);
 
 #ifdef LFS_READWRITE
 		(void)lfs_check(vp, lbn);

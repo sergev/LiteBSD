@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -40,17 +40,17 @@
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -113,6 +113,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
 	boolean_t		page_exists;
 	vm_page_t		old_m;
 	vm_object_t		next_object;
+//printf("%s: map=%08x, vaddr=%08x, fault_type=%u, change_wiring=%u\n", __func__, map, vaddr, fault_type, change_wiring);
 
 	cnt.v_faults++;		/* needs lock XXX */
 /*
@@ -234,6 +235,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
 	 */
 
 	while (TRUE) {
+//printf("<lookup object=%08x, offset=%08x>\n", object, offset);
 		m = vm_page_lookup(object, offset);
 		if (m != NULL) {
 			/*
@@ -273,7 +275,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
 				m->flags &= ~PG_INACTIVE;
 				cnt.v_inactive_count--;
 				cnt.v_reactivated++;
-			} 
+			}
 
 			if (m->flags & PG_ACTIVE) {
 				TAILQ_REMOVE(&vm_page_queue_active, m, pageq);
@@ -288,6 +290,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
 			m->flags |= PG_BUSY;
 			break;
 		}
+//printf("=object->pager = %08x=\n", object->pager);
 
 		if (((object->pager != NULL) &&
 				(!change_wiring || wired))
