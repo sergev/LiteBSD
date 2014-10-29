@@ -48,6 +48,7 @@
 #include <sys/syscall.h>
 #include <sys/user.h>
 #include <sys/buf.h>
+#include <sys/wait.h>
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
@@ -81,6 +82,7 @@ exception(statusReg, causeReg, vadr, pc, args)
 {
     register int type, i;
     unsigned ucode = 0;
+    unsigned pc_next = pc;
     register struct proc *p = curproc;
     u_quad_t sticks;
     vm_prot_t ftype;
@@ -283,9 +285,14 @@ exception(statusReg, causeReg, vadr, pc, args)
 //printf ("--- %s() syscall code=%u, RA=%08x \n", __func__, locr0[V0], locr0[RA]);
 
         cnt.v_syscall++;
-        /* Compute next PC after syscall instruction.
-         * Don't use syscall in branch delay slot. */
-        locr0[PC] += 4;
+
+        /* Don't use syscall in branch delay slot. */
+        if ((int)causeReg < 0) {
+            exit1(p, W_EXITCODE(0, SIGABRT));
+        }
+        /* Compute next PC after syscall instruction. */
+        pc_next += 4;
+
         systab = sysent;
         numsys = nsysent;
         code = locr0[V0];
@@ -399,19 +406,23 @@ exception(statusReg, causeReg, vadr, pc, args)
 
         switch (i) {
         case 0:
+//printf ("--- syscall succeded, return %u \n", rval[0]);
             locr0[V0] = rval[0];
             locr0[V1] = rval[1];
             locr0[A3] = 0;
             break;
 
         case ERESTART:
-            locr0[PC] = pc;
+//printf ("--- syscall restarted \n");
+            pc_next = pc;
             break;
 
         case EJUSTRETURN:
+//printf ("--- syscall just return \n");
             break;  /* nothing to do */
 
         default:
+//printf ("--- syscall failed, error %u \n", i);
             locr0[V0] = i;
             locr0[A3] = 1;
         }
@@ -536,7 +547,7 @@ out:
     }
 
     curpriority = p->p_priority;
-    return (pc);
+    return pc_next;
 }
 
 /*
