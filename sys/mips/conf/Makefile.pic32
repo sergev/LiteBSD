@@ -26,15 +26,20 @@ MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
 .if exists(${MIPS_GCC_ROOT}/bin/mips-elf-gcc)
 MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-elf-
 .endif
+
 AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
 CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin
 LOCALCC= gcc -m32 ${DEBUG}
-CPP=	cpp
+CPP=	${MIPS_GCC_PREFIX}cpp
 LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
 SIZE=	${MIPS_GCC_PREFIX}size
 OBJCOPY= ${MIPS_GCC_PREFIX}objcopy
 OBJDUMP= ${MIPS_GCC_PREFIX}objdump
+
+.if exists(${MIPS_GCC_ROOT}/bin/mips-elf-gcc)
+LDFLAGS+= -Wl,--oformat=elf32-littlemips
+.endif
 
 # source tree is located via $S relative to the compilation directory
 S=	../..
