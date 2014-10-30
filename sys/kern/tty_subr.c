@@ -1,5 +1,3 @@
-/*	$NetBSD: tty_subr.c,v 1.8.2.2 1994/10/02 04:12:17 cgd Exp $	*/
-
 /*
  * Copyright (c) 1993, 1994 Theo de Raadt
  * All rights reserved.
