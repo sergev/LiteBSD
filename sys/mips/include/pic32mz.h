@@ -1568,7 +1568,7 @@ mips_bswap (unsigned x)
 /*
  * Interrupt Status register.
  */
-#define PIC32_INTSTAT_VEC(s)	((s) & 0x3f)	/* Interrupt vector */
+#define PIC32_INTSTAT_VEC(s)	((s) & 0xff)	/* Interrupt vector */
 #define PIC32_INTSTAT_SRIPL(s)	((s) >> 8 & 7)	/* Requested priority level */
 #define PIC32_INTSTAT_SRIPL_MASK 0x0700
 

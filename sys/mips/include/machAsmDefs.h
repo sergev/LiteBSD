@@ -153,7 +153,7 @@ x: ; \
 	MSG(msg)
 
 #define	MSG(msg) \
-	.pushsection .rdata; \
+	.pushsection .rodata; \
 9:	.asciiz	msg; \
 	.popsection
 

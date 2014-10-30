@@ -88,6 +88,9 @@ NON_LEAF(setjmp, SETJMP_FRAME_SIZE, ra)
 	sw	gp, ((GP + 3) * 4)(a0)
 	sw	sp, ((SP + 3) * 4)(a0)
 	sw	s8, ((S8 + 3) * 4)(a0)
+#if 1
+	sw	zero, (37 * 4)(a0)		# sc_fpused = 0
+#else
 	li	v0, 1				# be nice if we could tell
 	sw	v0, (37 * 4)(a0)		# sc_fpused = 1
 	cfc1	v0, $31
@@ -104,6 +107,7 @@ NON_LEAF(setjmp, SETJMP_FRAME_SIZE, ra)
 	swc1	$f30, ((30 + 38) * 4)(a0)
 	swc1	$f31, ((31 + 38) * 4)(a0)
 	sw	v0, ((32 + 38) * 4)(a0)
+#endif
 	move	v0, zero
 	j	ra
 END(setjmp)

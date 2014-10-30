@@ -1615,14 +1615,14 @@ check_stack:
         la      a0, _eram - START_FRAME - 8     # set sp to a valid place
         sw      sp, 24(a0)
         move    sp, a0
+        la      gp, _gp
         la      a0, 9f
-        MSG("ktlbmiss: PC %x RA %x ADR %x\nSR %x CR %x SP %x\n")
+        MSG("kern_tlb_refill: EPC %x, RA %x, BadVAddr %x, Status %x, Cause %x, SP %x\n")
         mfc0    a2, MACH_C0_Status
         mfc0    a3, MACH_C0_Cause
         mfc0    a1, MACH_C0_EPC
         sw      a2, 16(sp)
         sw      a3, 20(sp)
-        sw      sp, 24(sp)
         move    a2, ra
         jal     printf
         mfc0    a3, MACH_C0_BadVAddr

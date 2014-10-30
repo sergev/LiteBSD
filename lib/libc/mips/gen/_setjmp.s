@@ -68,6 +68,7 @@ LEAF(_setjmp)
 	sw	s7, ((S7 + 3) * 4)(a0)
 	sw	sp, ((SP + 3) * 4)(a0)
 	sw	s8, ((S8 + 3) * 4)(a0)
+#if 0
 	cfc1	v0, $31				# too bad cant check if FP used
 	swc1	$f20, ((20 + 38) * 4)(a0)
 	swc1	$f21, ((21 + 38) * 4)(a0)
@@ -82,6 +83,7 @@ LEAF(_setjmp)
 	swc1	$f30, ((30 + 38) * 4)(a0)
 	swc1	$f31, ((31 + 38) * 4)(a0)
 	sw	v0, ((32 + 38) * 4)(a0)
+#endif
 	j	ra
 	move	v0, zero
 END(_setjmp)
@@ -98,9 +100,10 @@ LEAF(_longjmp)
 	lw	s5, ((S5 + 3) * 4)(a0)
 	lw	s6, ((S6 + 3) * 4)(a0)
 	lw	s7, ((S7 + 3) * 4)(a0)
-	lw	v0, ((32 + 38) * 4)(a0)		# get fpu status
 	lw	sp, ((SP + 3) * 4)(a0)
 	lw	s8, ((S8 + 3) * 4)(a0)
+#if 0
+	lw	v0, ((32 + 38) * 4)(a0)		# get fpu status
 	ctc1	v0, $31
 	lwc1	$f20, ((20 + 38) * 4)(a0)
 	lwc1	$f21, ((21 + 38) * 4)(a0)
@@ -114,6 +117,7 @@ LEAF(_longjmp)
 	lwc1	$f29, ((29 + 38) * 4)(a0)
 	lwc1	$f30, ((30 + 38) * 4)(a0)
 	lwc1	$f31, ((31 + 38) * 4)(a0)
+#endif
 	j	ra
 	move	v0, a1
 botch:

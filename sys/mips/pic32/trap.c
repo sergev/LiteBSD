@@ -410,6 +410,10 @@ exception(statusReg, causeReg, vadr, pc, args)
             locr0[V0] = rval[0];
             locr0[V1] = rval[1];
             locr0[A3] = 0;
+            if (code == SYS_execve) {
+                /* Entry to a new process image. */
+                pc_next = locr0[PC];
+            }
             break;
 
         case ERESTART:
@@ -566,6 +570,7 @@ interrupt(statusReg, pc)
     /* Get the current irq number */
     int intstat = INTSTAT;
     int irq = PIC32_INTSTAT_VEC (intstat);
+//printf("%s: irq %u\n", __func__, irq);
 
     /* Handle the interrupt. */
     switch (irq) {
@@ -602,13 +607,24 @@ interrupt(statusReg, pc)
 #endif
         break;
 
-#ifdef UART1_ENABLED
-    case PIC32_IRQ_U1E:                 /* UART1 */
-    case PIC32_IRQ_U1RX:                /* UART1 */
-    case PIC32_IRQ_U1TX:                /* UART1 */
-        uartintr(makedev(UART_MAJOR,0));
+    case PIC32_IRQ_U1E: case PIC32_IRQ_U1RX: case PIC32_IRQ_U1TX: /* UART1 */
+        uartintr(0);
         break;
-#endif
+    case PIC32_IRQ_U2E: case PIC32_IRQ_U2RX: case PIC32_IRQ_U2TX: /* UART2 */
+        uartintr(1);
+        break;
+    case PIC32_IRQ_U3E: case PIC32_IRQ_U3RX: case PIC32_IRQ_U3TX: /* UART3 */
+        uartintr(2);
+        break;
+    case PIC32_IRQ_U4E: case PIC32_IRQ_U4RX: case PIC32_IRQ_U4TX: /* UART4 */
+        uartintr(3);
+        break;
+    case PIC32_IRQ_U5E: case PIC32_IRQ_U5RX: case PIC32_IRQ_U5TX: /* UART5 */
+        uartintr(4);
+        break;
+    case PIC32_IRQ_U6E: case PIC32_IRQ_U6RX: case PIC32_IRQ_U6TX: /* UART6 */
+        uartintr(5);
+        break;
     }
 }
 

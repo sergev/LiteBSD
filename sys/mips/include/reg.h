@@ -80,8 +80,7 @@
 #define MULLO	32
 #define MULHI	33
 #define	PC	34
-#define	SR	35
-#define	PS	35	/* alias for SR */
+#define	SR	35      /* COP0 Status */
 #define	F0	36
 #define	F1	37
 #define	F2	38
