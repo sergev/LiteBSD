@@ -1,8 +1,7 @@
 /*
  * Copyright (c) 1992, 1993
  *      The Regents of the University of California.  All rights reserved.
- * Portions Copyright (c) 2014 by
- *      Serge Vakulenko
+ * Copyright (c) 2014 Serge Vakulenko
  *
  * This code is derived from software contributed to Berkeley by
  * Digital Equipment Corporation and Ralph Campbell.

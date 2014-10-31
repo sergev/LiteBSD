@@ -40,39 +40,10 @@
  *	@(#)pte.h	8.1 (Berkeley) 6/10/93
  */
 
-/*
- * R2000 hardware page table entry
- */
-
 #ifndef LOCORE
-struct pte {
-#if BYTE_ORDER == BIG_ENDIAN
-unsigned int	pg_pfnum:20,		/* HW: core page frame number or 0 */
-		pg_n:1,			/* HW: non-cacheable bit */
-		pg_m:1,			/* HW: modified (dirty) bit */
-		pg_v:1,			/* HW: valid bit */
-		pg_g:1,			/* HW: ignore pid bit */
-		:4,
-		pg_swapm:1,		/* SW: page must be forced to swap */
-		pg_fod:1,		/* SW: is fill on demand (=0) */
-		pg_prot:2;		/* SW: access control */
-#endif
-#if BYTE_ORDER == LITTLE_ENDIAN
-unsigned int	pg_prot:2,		/* SW: access control */
-		pg_fod:1,		/* SW: is fill on demand (=0) */
-		pg_swapm:1,		/* SW: page must be forced to swap */
-		:4,
-		pg_g:1,			/* HW: ignore pid bit */
-		pg_v:1,			/* HW: valid bit */
-		pg_m:1,			/* HW: modified (dirty) bit */
-		pg_n:1,			/* HW: non-cacheable bit */
-		pg_pfnum:20;		/* HW: core page frame number or 0 */
-#endif
-};
-
 typedef union pt_entry {
 	unsigned int	pt_entry;	/* for copying, etc. */
-	struct pte	pt_pte;		/* for getting to bits by name */
+//	struct pte	pt_pte;		/* for getting to bits by name */
 } pt_entry_t;	/* Mach page table entry */
 #endif /* LOCORE */
 
