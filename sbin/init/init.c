@@ -82,11 +82,21 @@ extern void logwtmp __P((const char *, const char *, const char *));
 /*
  * Sleep times; used to prevent thrashing.
  */
+#if 0
 #define	GETTY_SPACING		 5	/* N secs minimum getty spacing */
 #define	GETTY_SLEEP		30	/* sleep N secs after spacing problem */
 #define	WINDOW_WAIT		 3	/* wait N secs after starting window */
 #define	STALL_TIMEOUT		30	/* wait N secs after warning */
 #define	DEATH_WATCH		10	/* wait N secs for procs to die */
+#define	DTR_SLEEP		 2	/* sleep N secs after line open */
+#else
+#define	GETTY_SPACING		 0	/* N secs minimum getty spacing */
+#define	GETTY_SLEEP		 1	/* sleep N secs after spacing problem */
+#define	WINDOW_WAIT		 0	/* wait N secs after starting window */
+#define	STALL_TIMEOUT		 1	/* wait N secs after warning */
+#define	DEATH_WATCH		 1	/* wait N secs for procs to die */
+#define	DTR_SLEEP		 0	/* sleep N secs after line open */
+#endif
 
 void handle __P((sig_t, ...));
 void delset __P((sigset_t *, ...));
@@ -525,7 +535,7 @@ setctty(name)
 	int fd;
 
 	(void) revoke(name);
-	sleep (2);			/* leave DTR low */
+	sleep(DTR_SLEEP);			/* leave DTR low */
 	if ((fd = open(name, O_RDWR)) == -1) {
 		stall("can't open %s: %m", name);
 		_exit(1);
@@ -663,14 +673,14 @@ single_user()
 		return (state_func_t) requested_transition;
 
 	if (!WIFEXITED(status)) {
-		if (WTERMSIG(status) == SIGKILL) { 
-			/* 
-			 *  reboot(8) killed shell? 
+		if (WTERMSIG(status) == SIGKILL) {
+			/*
+			 *  reboot(8) killed shell?
 			 */
 			warning("single user shell terminated.");
 			sleep(STALL_TIMEOUT);
 			_exit(0);
-		} else {	
+		} else {
 			warning("single user shell terminated, restarting");
 			return (state_func_t) single_user;
 		}
@@ -782,7 +792,7 @@ start_session_db()
 		return (1);
 	}
 	return (0);
-		
+
 }
 
 /*
@@ -1156,7 +1166,7 @@ multi_user()
 	/*
 	 * If the administrator has not set the security level to -1
 	 * to indicate that the kernel should not run multiuser in secure
-	 * mode, and the run script has not set a higher level of security 
+	 * mode, and the run script has not set a higher level of security
 	 * than level 1, then put the kernel into secure mode.
 	 */
 	if (getsecuritylevel() == 0)

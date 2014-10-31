@@ -157,15 +157,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         if (!(entry & PG_V) || (entry & PG_D))
             panic("trap: utlbmod: invalid pte");
 #endif
-        if (! (entry & PG_D)) {
-            /* write to read only page */
-            ftype = VM_PROT_WRITE;
-            goto dofault;
-        }
-        entry |= PG_D;
-        pte->pt_entry = entry;
-        vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
-        tlb_update(vadr, entry);
+        /* Mark page as dirty. */
         pa = PG_FRAME(entry);
 #ifdef ATTR
         pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
@@ -174,6 +166,13 @@ exception(statusReg, causeReg, vadr, pc, args)
             panic("trap: utlbmod: unmanaged page");
         PHYS_TO_VM_PAGE(pa)->flags &= ~PG_CLEAN;
 #endif
+        if (! (entry & PG_D)) {
+            /* write to read only page */
+            ftype = VM_PROT_WRITE;
+            goto dofault;
+        }
+        vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
+        tlb_update(vadr, entry);
         if (!USERMODE(statusReg))
             return (pc);
         goto out;

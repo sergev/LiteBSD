@@ -1868,6 +1868,8 @@ kern_interrupt:
         mfc0    k0, MACH_C0_Cause               # Get Cause.
         ext     k1, k0, 10, 6                   # Extract Cause.IPL.
         move    k0, a0
+#TODO: something wrong with nested interrupts
+li k1, 7
         ins     k0, k1, 10, 6                   # Raise Status.IPL,
         ins     k0, zero, 1, 1                  # Clear EXL.
         mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
@@ -1955,6 +1957,8 @@ user_interrupt:
         mfc0    k0, MACH_C0_Cause               # Get Cause.
         ext     k1, k0, 10, 6                   # Extract Cause.IPL.
         move    k0, a0
+#TODO: something wrong with nested interrupts
+li k1, 7
         ins     k0, k1, 10, 6                   # Raise Status.IPL,
         ins     k0, zero, 1, 4                  # Clear UM and EXL.
         mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
