@@ -195,7 +195,7 @@ pmap_bootstrap_alloc(size)
     if (vm_page_startup_initialized)
         panic("pmap_bootstrap_alloc: called after startup initialized");
 
-    val = MACH_PHYS_TO_CACHED(avail_start);
+    val = MACH_PHYS_TO_UNCACHED(avail_start);
     size = round_page(size);
     avail_start += size;
 
@@ -277,7 +277,7 @@ pmap_pinit(pmap)
         mem = vm_page_alloc1();
         pmap_zero_page(VM_PAGE_TO_PHYS(mem));
         pmap->pm_segtab = stp = (struct segtab *)
-            MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
+            MACH_PHYS_TO_UNCACHED(VM_PAGE_TO_PHYS(mem));
         i = NBPG / sizeof(struct segtab);
         s = splimp();
         while (--i != 0) {
@@ -763,7 +763,7 @@ pmap_enter(pmap, va, pa, prot, wired)
      * NOTE: we only support cache flush for read only text.
      */
     if (prot == (VM_PROT_READ | VM_PROT_EXECUTE))
-        mips_flush_icache(MACH_PHYS_TO_CACHED(pa), PAGE_SIZE);
+        mips_flush_icache(MACH_PHYS_TO_UNCACHED(pa), PAGE_SIZE);
 
     if (!pmap->pm_segtab) {
         /* enter entries into kernel pmap */
@@ -800,7 +800,7 @@ pmap_enter(pmap, va, pa, prot, wired)
     if (! pte) {
         mem = vm_page_alloc1();
         pmap_zero_page(VM_PAGE_TO_PHYS(mem));
-        pte = (pt_entry_t *) MACH_PHYS_TO_CACHED(VM_PAGE_TO_PHYS(mem));
+        pte = (pt_entry_t *) MACH_PHYS_TO_UNCACHED(VM_PAGE_TO_PHYS(mem));
         pmap_segmap(pmap, va) = pte;
     }
     pte += (va >> PGSHIFT) & (NPTEPG - 1);
@@ -960,7 +960,7 @@ pmap_zero_page(phys)
 {
     register int *p, *end;
 
-    p = (int *)MACH_PHYS_TO_CACHED(phys);
+    p = (int *)MACH_PHYS_TO_UNCACHED(phys);
     end = p + PAGE_SIZE / sizeof(int);
     do {
         p[0] = 0;
@@ -982,8 +982,8 @@ pmap_copy_page(src, dst)
     register int *s, *d, *end;
     register int tmp0, tmp1, tmp2, tmp3;
 
-    s = (int *)MACH_PHYS_TO_CACHED(src);
-    d = (int *)MACH_PHYS_TO_CACHED(dst);
+    s = (int *)MACH_PHYS_TO_UNCACHED(src);
+    d = (int *)MACH_PHYS_TO_UNCACHED(dst);
     end = s + PAGE_SIZE / sizeof(int);
     do {
         tmp0 = s[0];

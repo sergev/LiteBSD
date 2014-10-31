@@ -224,7 +224,7 @@ mach_init()
      * Initialize error message buffer (at end of core).
      */
     maxmem -= btoc(sizeof (struct msgbuf));
-    msgbufp = (struct msgbuf *)(MACH_PHYS_TO_CACHED(maxmem << PGSHIFT));
+    msgbufp = (struct msgbuf *)(MACH_PHYS_TO_UNCACHED(maxmem << PGSHIFT));
     msgbufmapped = 1;
 
     /*

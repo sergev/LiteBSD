@@ -10,7 +10,7 @@ ENTRY(start)
 MEMORY
 {
   flash                (rx)  : ORIGIN = 0x9d000000, LENGTH = 2M
-  ram                  (rw!x): ORIGIN = 0x80000000, LENGTH = 512K
+  ram                  (rw!x): ORIGIN = 0xA0000000, LENGTH = 512K
 
   /* Required by Microchip C32 linker */
   kseg0_program_mem    (rx)  : ORIGIN = 0x9D000000, LENGTH = 0x80000
