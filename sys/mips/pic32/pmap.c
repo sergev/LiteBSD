@@ -421,7 +421,7 @@ pmap_remove(pmap, sva, eva)
 #ifdef ATTR
             pmap_attributes[atop(PG_FRAME(entry))] = 0;
 #endif
-            pte->pt_entry = 0;
+            pte->pt_entry = PG_G;
             /*
              * Flush the TLB for the given address.
              */
