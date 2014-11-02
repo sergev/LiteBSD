@@ -684,6 +684,7 @@ pmap_enter(pmap, va, pa, prot, wired)
                 !(mem->flags & PG_CLEAN)) {
 
                 npte = PG_D;
+                mem->flags &= ~PG_CLEAN;
             }
         }
 
@@ -775,7 +776,7 @@ pmap_enter(pmap, va, pa, prot, wired)
         }
         if (!(pte->pt_entry & PG_V)) {
             pmap->pm_stats.resident_count++;
-        } else {
+        } else if (npte != pte->pt_entry) {
 #ifdef DIAGNOSTIC
             if (pte->pt_entry & PG_WIRED)
                 panic("pmap_enter: kernel wired");

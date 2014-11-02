@@ -212,7 +212,7 @@
 /*
  * The number of process id entries.
  */
-#define	VMMACH_NUM_PIDS			64
+#define	VMMACH_NUM_PIDS			256
 
 /*
  * TLB probe return codes.

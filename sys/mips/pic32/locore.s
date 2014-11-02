@@ -1674,6 +1674,7 @@ _interrupt_vector:
 
 kern_exception:
         subu    sp, sp, KERN_EXC_FRAME_SIZE
+        la      gp, _gp                         # switch to kernel GP
 /*
  * Save the relevant kernel registers onto the stack.
  * We do not need to save s0 - s8, sp and gp because
@@ -1833,10 +1834,10 @@ user_exception:
         lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
         lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
         lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
         lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
         lw      ra, UADDR+U_PCB_REGS+(RA * 4)
         di                                      # Disable interrupts.
+        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
         mtc0    v0, MACH_C0_EPC                 # Restore EPC.
         lw      v0, UADDR+U_PCB_REGS+(V0 * 4)
         lw      k0, UADDR+U_PCB_REGS+(SR * 4)
@@ -1859,6 +1860,7 @@ user_exception:
 
 kern_interrupt:
         subu    sp, sp, KINTR_FRAME_SIZE        # allocate stack frame
+        la      gp, _gp                         # switch to kernel GP
         sw      a0, KINTR_REG_OFFSET + 12(sp)
         mfc0    a0, MACH_C0_Status              # First arg is the status reg.
         sw      a1, KINTR_REG_OFFSET + 16(sp)
@@ -1953,6 +1955,9 @@ user_interrupt:
         sw      a1, UADDR+U_PCB_REGS+(A1 * 4)
         mfc0    a1, MACH_C0_EPC                 # Second arg is the pc.
 
+        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
+        la      gp, _gp                         # switch to kernel GP
+
         mfc0    k0, MACH_C0_Cause               # Get Cause.
         ext     k1, k0, 10, 6                   # Extract Cause.IPL.
         move    k0, a0
@@ -1986,11 +1991,9 @@ li k1, 7
         sw      t7, UADDR+U_PCB_REGS+(T7 * 4)
         sw      t8, UADDR+U_PCB_REGS+(T8 * 4)
         sw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        sw      gp, UADDR+U_PCB_REGS+(GP * 4)
         sw      ra, UADDR+U_PCB_REGS+(RA * 4)
         sw      v0, UADDR+U_PCB_REGS+(MULLO * 4)
         sw      v1, UADDR+U_PCB_REGS+(MULHI * 4)
-        la      gp, _gp                         # switch to kernel GP
 /*
  * Call the interrupt handler.
  */
@@ -2085,10 +2088,10 @@ li k1, 7
         lw      s7, UADDR+U_PCB_REGS+(S7 * 4)
         lw      t8, UADDR+U_PCB_REGS+(T8 * 4)
         lw      t9, UADDR+U_PCB_REGS+(T9 * 4)
-        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
         lw      s8, UADDR+U_PCB_REGS+(S8 * 4)
         lw      ra, UADDR+U_PCB_REGS+(RA * 4)
         di                                      # Disable interrupts.
+        lw      gp, UADDR+U_PCB_REGS+(GP * 4)
         lw      sp, UADDR+U_PCB_REGS+(SP * 4)
         lw      k0, UADDR+U_PCB_REGS+(SR * 4)
         mtc0    k0, MACH_C0_Status              # Restore Status.
