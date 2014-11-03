@@ -90,7 +90,7 @@ ffs_mountroot()
 	struct ufsmount *ump;
 	u_int size;
 	int error;
-	
+
 	/*
 	 * Get vnodes for swapdev and rootdev.
 	 */
@@ -242,7 +242,7 @@ ffs_mount(mp, path, data, ndp, p)
 	bzero(fs->fs_fsmnt + size, sizeof(fs->fs_fsmnt) - size);
 	bcopy((caddr_t)fs->fs_fsmnt, (caddr_t)mp->mnt_stat.f_mntonname,
 	    MNAMELEN);
-	(void) copyinstr(args.fspec, mp->mnt_stat.f_mntfromname, MNAMELEN - 1, 
+	(void) copyinstr(args.fspec, mp->mnt_stat.f_mntfromname, MNAMELEN - 1,
 	    &size);
 	bzero(mp->mnt_stat.f_mntfromname + size, MNAMELEN - size);
 	(void)ffs_statfs(mp, &mp->mnt_stat, p);
@@ -434,6 +434,10 @@ ffs_mountfs(devvp, mp, p)
 		error = EINVAL;		/* XXX needs translation */
 		goto out;
 	}
+	if (fs->fs_inodefmt < FS_44INODEFMT) {
+		error = EINVAL;		/* incompatible format */
+		goto out;
+	}
 	/* XXX updating 4.2 FFS superblocks trashes rotational layout tables */
 	if (fs->fs_postblformat == FS_42POSTBLFMT && !ronly) {
 		error = EROFS;          /* needs translation */
@@ -524,17 +528,6 @@ ffs_oldfscompat(fs)
 	fs->fs_interleave = max(fs->fs_interleave, 1);		/* XXX */
 	if (fs->fs_postblformat == FS_42POSTBLFMT)		/* XXX */
 		fs->fs_nrpos = 8;				/* XXX */
-	if (fs->fs_inodefmt < FS_44INODEFMT) {			/* XXX */
-		u_int64_t sizepb = fs->fs_bsize;		/* XXX */
-								/* XXX */
-		fs->fs_maxfilesize = fs->fs_bsize * NDADDR - 1;	/* XXX */
-		for (i = 0; i < NIADDR; i++) {			/* XXX */
-			sizepb *= NINDIR(fs);			/* XXX */
-			fs->fs_maxfilesize += sizepb;		/* XXX */
-		}						/* XXX */
-		fs->fs_qbmask = ~fs->fs_bmask;			/* XXX */
-		fs->fs_qfmask = ~fs->fs_fmask;			/* XXX */
-	}							/* XXX */
 	return (0);
 }
 
@@ -819,14 +812,6 @@ ffs_vget(mp, ino, vpp)
 		if ((vp->v_mount->mnt_flag & MNT_RDONLY) == 0)
 			ip->i_flag |= IN_MODIFIED;
 	}
-	/*
-	 * Ensure that uid and gid are correct. This is a temporary
-	 * fix until fsck has been changed to do the update.
-	 */
-	if (fs->fs_inodefmt < FS_44INODEFMT) {		/* XXX */
-		ip->i_uid = ip->i_din.di_ouid;		/* XXX */
-		ip->i_gid = ip->i_din.di_ogid;		/* XXX */
-	}						/* XXX */
 
 	*vpp = vp;
 	return (0);
@@ -973,15 +958,6 @@ ffs_sbupdate(mp, waitfor)
 	dfs = (struct fs *)bp->b_data;				/* XXX */
 	if (fs->fs_postblformat == FS_42POSTBLFMT)		/* XXX */
 		dfs->fs_nrpos = -1;				/* XXX */
-	if (fs->fs_inodefmt < FS_44INODEFMT) {			/* XXX */
-		int32_t *lp, tmp;				/* XXX */
-								/* XXX */
-		lp = (int32_t *)&dfs->fs_qbmask;		/* XXX */
-		tmp = lp[4];					/* XXX */
-		for (i = 4; i > 0; i--)				/* XXX */
-			lp[i] = lp[i-1];			/* XXX */
-		lp[0] = tmp;					/* XXX */
-	}							/* XXX */
 	dfs->fs_maxfilesize = mp->um_savedmaxfilesize;		/* XXX */
 	if (waitfor != MNT_WAIT)
 		bawrite(bp);

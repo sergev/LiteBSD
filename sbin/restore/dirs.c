@@ -208,7 +208,7 @@ skipdirs()
 }
 
 /*
- *	Recursively find names and inumbers of all files in subtree 
+ *	Recursively find names and inumbers of all files in subtree
  *	pname and pass them off to be processed.
  */
 void
@@ -351,16 +351,6 @@ putdir(buf, size)
 			dp = (struct direct *)(buf + loc);
 			if (Bcvt)
 				swabst((u_char *)"ls", (u_char *) dp);
-			if (oldinofmt && dp->d_ino != 0) {
-#				if BYTE_ORDER == BIG_ENDIAN
-					if (Bcvt)
-						dp->d_namlen = dp->d_type;
-#				else
-					if (!Bcvt)
-						dp->d_namlen = dp->d_type;
-#				endif
-				dp->d_type = DT_UNKNOWN;
-			}
 			i = DIRBLKSIZ - (loc & (DIRBLKSIZ - 1));
 			if ((dp->d_reclen & 0x3) != 0 ||
 			    dp->d_reclen > i ||
@@ -477,7 +467,7 @@ rst_readdir(dirp)
 
 	for (;;) {
 		if (dirp->dd_loc == 0) {
-			dirp->dd_size = read(dirp->dd_fd, dirp->dd_buf, 
+			dirp->dd_size = read(dirp->dd_fd, dirp->dd_buf,
 			    DIRBLKSIZ);
 			if (dirp->dd_size <= 0) {
 				dprintf(stderr, "error reading directory\n");
@@ -583,7 +573,7 @@ setdirmodes(flags)
 	struct modeinfo node;
 	struct entry *ep;
 	char *cp;
-	
+
 	vprintf(stdout, "Set directory mode, owner, and times.\n");
 	(void) sprintf(modefile, "%s/rstmode%d", _PATH_TMP, dumpdate);
 	mf = fopen(modefile, "r");

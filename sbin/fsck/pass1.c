@@ -143,24 +143,6 @@ checkinode(inumber, idesc)
 	if (mode == IFBLK || mode == IFCHR)
 		ndb++;
 	if (mode == IFLNK) {
-		if (doinglevel2 &&
-		    dp->di_size > 0 && dp->di_size < MAXSYMLINKLEN &&
-		    dp->di_blocks != 0) {
-			symbuf = alloca(secsize);
-			if (bread(fsreadfd, symbuf,
-			    fsbtodb(&sblock, dp->di_db[0]),
-			    (long)secsize) != 0)
-				errx(EEXIT, "cannot read symlink");
-			if (debug) {
-				symbuf[dp->di_size] = 0;
-				printf("convert symlink %d(%s) of size %d\n",
-					inumber, symbuf, (long)dp->di_size);
-			}
-			dp = ginode(inumber);
-			memmove(dp->di_shortlink, symbuf, (long)dp->di_size);
-			dp->di_blocks = 0;
-			inodirty();
-		}
 		/*
 		 * Fake ndb value so direct/indirect block checks below
 		 * will detect any garbage after symlink string.
@@ -215,15 +197,6 @@ checkinode(inumber, idesc)
 	} else
 		statemap[inumber] = FSTATE;
 	typemap[inumber] = IFTODT(mode);
-	if (doinglevel2 &&
-	    (dp->di_ouid != (u_short)-1 || dp->di_ogid != (u_short)-1)) {
-		dp = ginode(inumber);
-		dp->di_uid = dp->di_ouid;
-		dp->di_ouid = -1;
-		dp->di_gid = dp->di_ogid;
-		dp->di_ogid = -1;
-		inodirty();
-	}
 	badblk = dupblk = 0;
 	idesc->id_number = inumber;
 	(void)ckinode(dp, idesc);

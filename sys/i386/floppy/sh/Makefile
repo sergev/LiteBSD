@@ -19,7 +19,7 @@ CLEANFILES+=\
 token.def: mktokens
 	sh ${ORIG}/mktokens
 
-builtins.h builtins.c: ${ORIG}/mkbuiltins ${ORIG}/builtins
+builtins.h builtins.c: ${ORIG}/mkbuiltins ${ORIG}/bltin
 	cd ${.CURDIR}; sh mkbuiltins
 
 init.c: mkinit ${SRCS}

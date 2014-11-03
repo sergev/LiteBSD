@@ -211,13 +211,6 @@ pass2check(idesc)
 	char pathbuf[MAXPATHLEN + 1];
 
 	/*
-	 * If converting, set directory entry type.
-	 */
-	if (doinglevel2 && dirp->d_ino > 0 && dirp->d_ino < maxino) {
-		dirp->d_type = typemap[dirp->d_ino];
-		ret |= ALTERED;
-	}
-	/* 
 	 * check for "."
 	 */
 	if (idesc->id_entryno != 0)

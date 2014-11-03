@@ -1,1 +1,1 @@
-../../mips/pmax/pmap.c
+../../pmax/pmax/pmap.c

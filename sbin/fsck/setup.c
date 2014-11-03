@@ -166,7 +166,7 @@ setup(dev)
 			sbdirty();
 		}
 	}
-	if (sblock.fs_interleave < 1 || 
+	if (sblock.fs_interleave < 1 ||
 	    sblock.fs_interleave > sblock.fs_nsect) {
 		pwarn("IMPOSSIBLE INTERLEAVE=%d IN SUPERBLOCK",
 			sblock.fs_interleave);
@@ -178,7 +178,7 @@ setup(dev)
 			dirty(&asblk);
 		}
 	}
-	if (sblock.fs_npsect < sblock.fs_nsect || 
+	if (sblock.fs_npsect < sblock.fs_nsect ||
 	    sblock.fs_npsect > sblock.fs_nsect*2) {
 		pwarn("IMPOSSIBLE NPSECT=%d IN SUPERBLOCK",
 			sblock.fs_npsect);
@@ -201,23 +201,8 @@ setup(dev)
 	 * Convert to new inode format.
 	 */
 	if (cvtlevel >= 2 && sblock.fs_inodefmt < FS_44INODEFMT) {
-		if (preen)
-			pwarn("CONVERTING TO NEW INODE FORMAT\n");
-		else if (!reply("CONVERT TO NEW INODE FORMAT"))
-			return(0);
-		doinglevel2++;
-		sblock.fs_inodefmt = FS_44INODEFMT;
-		sizepb = sblock.fs_bsize;
-		sblock.fs_maxfilesize = sblock.fs_bsize * NDADDR - 1;
-		for (i = 0; i < NIADDR; i++) {
-			sizepb *= NINDIR(&sblock);
-			sblock.fs_maxfilesize += sizepb;
-		}
-		sblock.fs_maxsymlinklen = MAXSYMLINKLEN;
-		sblock.fs_qbmask = ~sblock.fs_bmask;
-		sblock.fs_qfmask = ~sblock.fs_fmask;
-		sbdirty();
-		dirty(&asblk);
+		printf("converting to new inode format not supported\n");
+		return(0);
 	}
 	/*
 	 * Convert to new cylinder group format.
@@ -285,7 +270,7 @@ setup(dev)
 	}
 	lncntp = (short *)calloc((unsigned)(maxino + 1), sizeof(short));
 	if (lncntp == NULL) {
-		printf("cannot alloc %u bytes for lncntp\n", 
+		printf("cannot alloc %u bytes for lncntp\n",
 		    (unsigned)(maxino + 1) * sizeof(short));
 		goto badsb;
 	}
@@ -297,7 +282,7 @@ setup(dev)
 	inphead = (struct inoinfo **)calloc((unsigned)numdirs,
 	    sizeof(struct inoinfo *));
 	if (inpsort == NULL || inphead == NULL) {
-		printf("cannot alloc %u bytes for inphead\n", 
+		printf("cannot alloc %u bytes for inphead\n",
 		    (unsigned)numdirs * sizeof(struct inoinfo *));
 		goto badsb;
 	}

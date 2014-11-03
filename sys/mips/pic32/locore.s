@@ -1109,13 +1109,13 @@ END(switch_exit)
 LEAF(idle)
         li      t0, MACH_Status_IE
         di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
+        or      t0, v0                          # set IE
         ins     t0, zero, 10, 9                 # clear IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all interrupts
         sw      zero, curproc                   # set curproc NULL for stats
 1:
+        wait
         lw      t0, whichqs                     # look for non-empty queue
-        nop
         beq     t0, zero, 1b
         nop
         mtc0    v0, MACH_C0_Status              # Restore interrupt mask

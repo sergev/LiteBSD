@@ -463,8 +463,7 @@ void
 catch(sig)
 	int sig;
 {
-	if (!doinglevel2)
-		ckfini(0);
+	ckfini(0);
 	exit(12);
 }
 

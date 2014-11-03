@@ -80,7 +80,6 @@ static char	*map;
 static char	lnkbuf[MAXPATHLEN + 1];
 static int	pathlen;
 
-int		oldinofmt;	/* old inode format conversion required */
 int		Bcvt;		/* Swap Bytes (for CCI or sun) */
 static int	Qcvt;		/* Swap quads (for sun) */
 
@@ -269,8 +268,7 @@ setup()
 	 * whiteout inode exists, so that the whiteout entries can be
 	 * extracted.
 	 */
-	if (oldinofmt == 0)
-		SETINO(WINO, dumpmap);
+	SETINO(WINO, dumpmap);
 }
 
 /*
@@ -307,7 +305,7 @@ again:
 	if (command == 'R' || command == 'r' || curfile.action != SKIP) {
 		newvol = nextvol;
 		wantnext = 1;
-	} else { 
+	} else {
 		newvol = 0;
 		wantnext = 0;
 	}
@@ -405,7 +403,7 @@ gethdr:
  	 * If coming to this volume at random, skip to the beginning
  	 * of the next record.
  	 */
-	dprintf(stdout, "read %ld recs, tape starts with %ld\n", 
+	dprintf(stdout, "read %ld recs, tape starts with %ld\n",
 		tpblksread, tmpbuf.c_firstrec);
  	if (tmpbuf.c_type == TS_TAPE && (tmpbuf.c_flags & DR_NEWHEADER)) {
  		if (!wantnext) {
@@ -484,7 +482,7 @@ setdumpnum()
 #ifdef RRESTORE
 	if (host)
 		rmtioctl(MTFSF, dumpnum - 1);
-	else 
+	else
 #endif
 		if (ioctl(mt, (int)MTIOCTOP, (char *)&tcom) < 0)
 			fprintf(stderr, "ioctl MTFSF: %s\n", strerror(errno));
@@ -1096,7 +1094,7 @@ good:
 
 	case TS_TAPE:
 		if ((buf->c_flags & DR_NEWINODEFMT) == 0)
-			oldinofmt = 1;
+                    panic("gethead: old inode format not supported\n");
 		/* fall through */
 	case TS_END:
 		buf->c_inumber = 0;
@@ -1109,14 +1107,6 @@ good:
 	default:
 		panic("gethead: unknown inode type %d\n", buf->c_type);
 		break;
-	}
-	/*
-	 * If we are restoring a filesystem with old format inodes, 
-	 * copy the uid/gid to the new location.
-	 */
-	if (oldinofmt) {
-		buf->c_dinode.di_uid = buf->c_dinode.di_ouid;
-		buf->c_dinode.di_gid = buf->c_dinode.di_ogid;
 	}
 	if (dflag)
 		accthdr(buf);
@@ -1136,8 +1126,7 @@ accthdr(header)
 	long blks, i;
 
 	if (header->c_type == TS_TAPE) {
-		fprintf(stderr, "Volume header (%s inode format) ",
-		    oldinofmt ? "old" : "new");
+		fprintf(stderr, "Volume header ");
  		if (header->c_firstrec)
  			fprintf(stderr, "begins with record %d",
  				header->c_firstrec);
@@ -1264,11 +1253,11 @@ checksum(buf)
 	} else {
 		/* What happens if we want to read restore tapes
 			for a 16bit int machine??? */
-		do 
+		do
 			i += swabl(*buf++);
 		while (--j);
 	}
-			
+
 	if (i != CHECKSUM) {
 		fprintf(stderr, "Checksum error %o, inode %d file %s\n", i,
 			curfile.ino, curfile.name);
@@ -1345,7 +1334,7 @@ swabst(cp, sp)
 		case '5': case '6': case '7': case '8': case '9':
 			n = (n * 10) + (*cp++ - '0');
 			continue;
-		
+
 		case 's': case 'w': case 'h':
 			if (n == 0)
 				n = 1;

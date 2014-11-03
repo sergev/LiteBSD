@@ -856,7 +856,10 @@ boot(howto)
          */
         resettodr();
     }
-    (void) splhigh();               /* extreme priority */
+
+    /* Disable interrupts. */
+    mips_di();
+
     if (! (howto & RB_HALT)) {
         if (howto & RB_DUMP)
             dumpsys();

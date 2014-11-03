@@ -68,10 +68,7 @@ typedef int32_t ufs_daddr_t;
 struct dinode {
 	u_int16_t	di_mode;	/*   0: IFMT, permissions; see below. */
 	int16_t		di_nlink;	/*   2: File link count. */
-	union {
-		u_int16_t oldids[2];	/*   4: Ffs: old user and group ids. */
-		int32_t	  inumber;	/*   4: Lfs: inode number. */
-	} di_u;
+	int32_t         di_inumber;	/*   4: Lfs: inode number. */
 	u_int64_t	di_size;	/*   8: File byte count. */
 	int32_t		di_atime;	/*  16: Last access time. */
 	int32_t		di_atimensec;	/*  20: Last access time. */
@@ -96,9 +93,6 @@ struct dinode {
  * dev_t value. Short symbolic links place their path in the
  * di_db area.
  */
-#define	di_inumber	di_u.inumber
-#define	di_ogid		di_u.oldids[1]
-#define	di_ouid		di_u.oldids[0]
 #define	di_rdev		di_db[0]
 #define	di_shortlink	di_db
 #define	MAXSYMLINKLEN	((NDADDR + NIADDR) * sizeof(ufs_daddr_t))

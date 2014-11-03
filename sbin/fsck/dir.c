@@ -134,7 +134,7 @@ dirscan(idesc)
 		idesc->id_dirp = (struct direct *)dbuf;
 		if ((n = (*idesc->id_func)(idesc)) & ALTERED) {
 #			if (BYTE_ORDER == LITTLE_ENDIAN)
-				if (!newinofmt && !doinglevel2) {
+				if (!newinofmt) {
 					struct direct *tdp;
 					u_char tmp;
 
@@ -150,7 +150,7 @@ dirscan(idesc)
 			dirty(bp);
 			sbdirty();
 		}
-		if (n & STOP) 
+		if (n & STOP)
 			return (n);
 	}
 	return (idesc->id_filesize > 0 ? KEEPON : STOP);
@@ -363,7 +363,7 @@ mkentry(idesc)
 		 * writing it back out.  So, we reverse the byte order here if
 		 * necessary.
 		 */
-		if (oldlen != 0 && !newinofmt && !doinglevel2) {
+		if (oldlen != 0 && !newinofmt) {
 			u_char tmp;
 
 			tmp = dirp->d_namlen;
@@ -527,7 +527,7 @@ makeentry(parent, ino, name)
 	struct dinode *dp;
 	struct inodesc idesc;
 	char pathbuf[MAXPATHLEN + 1];
-	
+
 	if (parent < ROOTINO || parent >= maxino ||
 	    ino < ROOTINO || ino >= maxino)
 		return (0);
