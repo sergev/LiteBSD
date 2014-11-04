@@ -83,7 +83,6 @@ exception(statusReg, causeReg, vadr, pc, args)
 {
     register int type, i;
     unsigned ucode = 0;
-    unsigned pc_next = pc;
     register struct proc *p = curproc;
     u_quad_t sticks;
     vm_prot_t ftype;
@@ -260,6 +259,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         }
         ucode = vadr;
         i = (rv == KERN_PROTECTION_FAILURE) ? SIGBUS : SIGSEGV;
+//printf ("--- %s(pid=%u) protection fault PC=%08x, Cause=%08x \n", __func__, p->p_pid, pc, causeReg);
         break;
         }
 
@@ -267,6 +267,7 @@ exception(statusReg, causeReg, vadr, pc, args)
     case T_ADDR_ERR_ST+T_USER:      /* misaligned or kseg access */
     case T_BUS_ERR_IFETCH+T_USER:   /* BERR asserted to cpu */
     case T_BUS_ERR_LD_ST+T_USER:    /* BERR asserted to cpu */
+//printf ("--- %s(pid=%u) address error at PC=%08x, Cause=%08x \n", __func__, p->p_pid, pc, causeReg);
         i = SIGSEGV;
         break;
 
@@ -282,7 +283,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         int rval[2];
         struct sysent *systab;
         extern int nsysent;
-//printf ("--- %s() syscall code=%u, RA=%08x \n", __func__, locr0[V0], locr0[RA]);
+//printf ("--- %s(pid=%u) syscall code=%u, RA=%08x \n", __func__, p->p_pid, locr0[V0], locr0[RA]);
 
         cnt.v_syscall++;
 
@@ -291,7 +292,7 @@ exception(statusReg, causeReg, vadr, pc, args)
             exit1(p, W_EXITCODE(0, SIGABRT));
         }
         /* Compute next PC after syscall instruction. */
-        pc_next += 4;
+        locr0[PC] += 4;
 
         systab = sysent;
         numsys = nsysent;
@@ -406,27 +407,22 @@ exception(statusReg, causeReg, vadr, pc, args)
 
         switch (i) {
         case 0:
-//printf ("--- syscall succeded, return %u \n", rval[0]);
+//printf ("--- (%u) syscall succeded, return %u \n", p->p_pid, rval[0]);
             locr0[V0] = rval[0];
             locr0[V1] = rval[1];
             locr0[A3] = 0;
-            if (code == SYS_execve) {
-                /* Entry to a new process image. */
-                pc_next = locr0[PC];
-            }
             break;
 
         case ERESTART:
-//printf ("--- syscall restarted \n");
-            pc_next = pc;
+//printf ("--- (%u) syscall restarted \n", p->p_pid);
             break;
 
         case EJUSTRETURN:
-//printf ("--- syscall just return \n");
+//printf ("--- (%u) syscall just return \n", p->p_pid);
             break;  /* nothing to do */
 
         default:
-//printf ("--- syscall failed, error %u \n", i);
+//printf ("--- (%u) syscall failed, error %u \n", p->p_pid, i);
             locr0[V0] = i;
             locr0[A3] = 1;
         }
@@ -551,7 +547,7 @@ out:
     }
 
     curpriority = p->p_priority;
-    return pc_next;
+    return p->p_md.md_regs[PC];
 }
 
 /*
