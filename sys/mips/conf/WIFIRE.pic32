@@ -23,12 +23,12 @@ options		DEVPAGER		# device pager (mapped devices)
 options		DIAGNOSTIC		# extra kernel debugging checks
 #options	DEBUG			# extra kernel debugging support
 #options	"COMPAT_43"		# compatibility with 4.3BSD binaries
-options		KTRACE			# system call tracing support
+#options	KTRACE			# system call tracing support
 options		"NKMEMCLUSTERS=40"	# 4K pages in kernel malloc pool, default 128 pages
                                         # 40 pages is enough for pic32mz
 options		"NMBCLUSTERS=16"	# 4K pages in network mbuf pool, default 256/512 pages
 options		"CPU_KHZ=200000"	# Oscillator frequency of CPU core
-options		"HZ=100"		# Frequency of clock interrupt
+options		"HZ=20"			# Frequency of clock interrupt
 
 # Console options
 options		"CONS_MAJOR=17"		# UART device

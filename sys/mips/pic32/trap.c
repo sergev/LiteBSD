@@ -259,7 +259,12 @@ exception(statusReg, causeReg, vadr, pc, args)
         }
         ucode = vadr;
         i = (rv == KERN_PROTECTION_FAILURE) ? SIGBUS : SIGSEGV;
-//printf ("--- %s(pid=%u) protection fault PC=%08x, Cause=%08x \n", __func__, p->p_pid, pc, causeReg);
+#if 1
+        // Terminate the process.
+        printf("PID %d (%s) protection violation at %x: BadVAddr = %08x \n",
+            p->p_comm, p->p_pid, pc, vadr);
+        exit1(p, W_EXITCODE(0, i));
+#endif
         break;
         }
 
@@ -267,8 +272,13 @@ exception(statusReg, causeReg, vadr, pc, args)
     case T_ADDR_ERR_ST+T_USER:      /* misaligned or kseg access */
     case T_BUS_ERR_IFETCH+T_USER:   /* BERR asserted to cpu */
     case T_BUS_ERR_LD_ST+T_USER:    /* BERR asserted to cpu */
-//printf ("--- %s(pid=%u) address error at PC=%08x, Cause=%08x \n", __func__, p->p_pid, pc, causeReg);
         i = SIGSEGV;
+#if 1
+        // Terminate the process.
+        printf("PID %d (%s) address error at %x: BadVAddr = %08x \n",
+            p->p_comm, p->p_pid, pc, vadr);
+        exit1(p, W_EXITCODE(0, i));
+#endif
         break;
 
     case T_SYSCALL+T_USER:
