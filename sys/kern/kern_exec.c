@@ -266,16 +266,16 @@ copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
                 /* Copy environment strings. */
                 for (;;) {
                         char *ptr = (char*) fuword(vectp++);
-                        if (ptr == 0) {
-                                *argp++ = 0;
+                        if (ptr == 0)
                                 break;
-                        }
+
                         *argp++ = user_stringp + arglen;
                         rv = countinstr(ptr, stringp + arglen, &envc, &arglen);
                         if (rv)
                                 return rv;
                 }
         }
+        *argp = 0;
 	arginfo->ps_nenvstr = envc;
 
 	/* copy the process's signal trapoline code */

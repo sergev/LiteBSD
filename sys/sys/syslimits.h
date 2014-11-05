@@ -33,7 +33,7 @@
  *	@(#)syslimits.h	8.1 (Berkeley) 6/2/93
  */
 
-#define	ARG_MAX			20480	/* max bytes for an exec function */
+#define	ARG_MAX			 4096	/* max bytes for an exec function */
 #define	CHILD_MAX		   40	/* max simultaneous processes */
 #define	LINK_MAX		32767	/* max file link count */
 #define	MAX_CANON		  255	/* max bytes in term canon input line */
