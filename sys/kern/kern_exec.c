@@ -35,6 +35,7 @@
 #include <sys/acct.h>
 #include <sys/wait.h>
 #include <sys/filedesc.h>
+#include <sys/malloc.h>
 #include <vm/vm.h>
 #include <machine/reg.h>
 
@@ -46,6 +47,9 @@ struct execve_args {
 	char	**argp;
 	char	**envp;
 };
+
+extern char sigcode[], esigcode[];
+#define SZSIGCODE (esigcode - sigcode)
 
 /*
  * Close any files on exec?
@@ -76,10 +80,10 @@ fdcloseexec(p)
 }
 
 /*
- * Copy string to user space and count the length.
+ * Copy string and count the length.
  */
 static int
-countoutstr(str, buf, argc, arglen)
+countstr(str, buf, argc, arglen)
         char *str, *buf;
         int *argc, *arglen;
 {
@@ -89,7 +93,7 @@ countoutstr(str, buf, argc, arglen)
         if (*arglen >= ARG_MAX)
                 return E2BIG;
 
-        rv = copyoutstr(str, buf, NBPG, &stringlen);
+        rv = copystr(str, buf, ARG_MAX - *arglen, &stringlen);
         if (rv)
                 return (rv == ENAMETOOLONG) ? E2BIG : rv;
         *argc += 1;
@@ -111,7 +115,7 @@ countinstr(str, buf, argc, arglen)
         if (*arglen >= ARG_MAX)
                 return E2BIG;
 
-        rv = copyinstr(str, buf, NBPG, &stringlen);
+        rv = copyinstr(str, buf, ARG_MAX - *arglen, &stringlen);
         if (rv)
                 return (rv == ENAMETOOLONG) ? E2BIG : rv;
         *argc += 1;
@@ -123,19 +127,18 @@ countinstr(str, buf, argc, arglen)
  * Copy arguments and environment.
  */
 static int
-copyargs (uap, newframe, framep, indir, shellname, shellargs)
-	register struct execve_args *uap;
-	vm_offset_t newframe, *framep;
+copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
+	struct execve_args *uap;
+	char *framebuf;
+	unsigned *framesz;
 	int indir;
 	char *shellname, *shellargs;
 {
-	char *stackp, **vectp, *stringp;
-	int argc, envc, rv, *argbuf, *argp;
+	char **vectp, *stringp;
+	int argc, envc, rv, *argbuf, *argp, user_stringp;
+	struct ps_strings *arginfo;
 
-        /* Use the first stack page as buffer. */
-	stackp = (char*) (newframe + MAXSSIZ - NBPG);
-
-        /*
+	/*----------------------------------------------------------------
          * Pass 1: compute arg count and size.
          */
         u_int arglen;
@@ -144,126 +147,140 @@ copyargs (uap, newframe, framep, indir, shellname, shellargs)
         arglen = 0;
 	vectp = uap->argp;
 	if (indir) {
-	    /* Count shell parameters. */
-            rv = countoutstr(shellname, stackp, &argc, &arglen);
-            if (rv)
-                return rv;
-
-            if (shellargs) {
-                rv = countoutstr(shellargs, stackp, &argc, &arglen);
+                /* Count shell parameters. */
+                rv = countstr(shellname, framebuf, &argc, &arglen);
                 if (rv)
-                    return rv;
-            }
+                        return rv;
 
-            rv = countoutstr(uap->fname, stackp, &argc, &arglen);
-            if (rv)
-                return rv;
+                if (shellargs) {
+                        rv = countstr(shellargs, framebuf, &argc, &arglen);
+                        if (rv)
+                                return rv;
+                }
 
-            if (vectp)
-                vectp++;
+                rv = countstr(uap->fname, framebuf, &argc, &arglen);
+                if (rv)
+                        return rv;
+
+                if (vectp)
+                        vectp++;
         }
 
 	if (vectp) {
-	    /* Count arguments. */
-            for (;;) {
-		char *ptr = (char*) fuword(vectp++);
-		if (ptr == 0) {
-                    argc++;
-                    break;
+                /* Count arguments. */
+                for (;;) {
+                        char *ptr = (char*) fuword(vectp++);
+                        if (ptr == 0) {
+                                argc++;
+                                break;
+                        }
+                        rv = countinstr(ptr, framebuf, &argc, &arglen);
+                        if (rv)
+                                return rv;
                 }
-                rv = countinstr(ptr, stackp, &argc, &arglen);
-                if (rv)
-                    return rv;
-            }
         }
 
         vectp = uap->envp;
         envc = 0;
 	if (vectp) {
-	    /* Count environment strings. */
-            for (;;) {
-		char *ptr = (char*) fuword(vectp++);
+                /* Count environment strings. */
+                for (;;) {
+                        char *ptr = (char*) fuword(vectp++);
+                        if (ptr == 0)
+                                break;
 
-		if (ptr == 0) {
-                    break;
+                        rv = countinstr(ptr, framebuf, &envc, &arglen);
+                        if (rv)
+                                return rv;
                 }
-                rv = countinstr(ptr, stackp, &envc, &arglen);
-                if (rv)
-                    return rv;
-            }
         }
         envc++;
-	arglen += (argc + envc + 1) * sizeof(int);
 
-        /*
+	/*----------------------------------------------------------------
          * Pass 2: copy arguments to user stack.
          */
-#define QALIGN(ptr) ((vm_offset_t) (ptr) & ~(sizeof(quad_t) - 1))
+
+        /* Now we have argc, argv and arglen: compute the frame size */
+	arglen += (argc + envc + 1) * sizeof(int);
+	arglen += sizeof(*arginfo) + SZSIGCODE;
+	arglen = ALIGN(arglen);
+        if (arglen > ARG_MAX)
+                return E2BIG;
+        *framesz = arglen;
 
 	/* allocate string buffer and arg buffer */
-	argbuf = (int*) QALIGN(newframe + MAXSSIZ - arglen);
-	stringp = (char*) (argbuf + argc + envc + 1);
+	argbuf = (int*) framebuf;
         argp = argbuf + 1;
+	stringp = (char*) (argbuf + argc + envc + 1);
+	user_stringp = USRSTACK - arglen + (argc + envc + 1) * sizeof(int);
+	arginfo = (struct ps_strings*) (framebuf + arglen - sizeof(*arginfo));
 
         argc = 0;
         arglen = 0;
 	vectp = uap->argp;
+	arginfo->ps_argvstr = (char*)user_stringp; /* remember location of argv */
 	if (indir) {
-	    /* Copy shell parameters. */
-            suword(argp++, stringp);
-            rv = countoutstr(shellname, stringp, &argc, &arglen);
-            if (rv)
-                return rv;
-
-            if (shellargs) {
-                suword(argp++, stringp+arglen);
-                rv = countoutstr(shellargs, stringp+arglen, &argc, &arglen);
+                /* Copy shell parameters. */
+                *argp++ = user_stringp;
+                rv = countstr(shellname, stringp, &argc, &arglen);
                 if (rv)
-                    return rv;
-            }
+                        return rv;
 
-            suword(argp++, stringp+arglen);
-            rv = countoutstr(uap->fname, stringp+arglen, &argc, &arglen);
-            if (rv)
-                return rv;
+                if (shellargs) {
+                        *argp++ = user_stringp + arglen;
+                        rv = countstr(shellargs, stringp + arglen, &argc, &arglen);
+                        if (rv)
+                                return rv;
+                }
 
-            if (vectp)
-                vectp++;
+                *argp++ = user_stringp + arglen;
+                rv = countstr(uap->fname, stringp + arglen, &argc, &arglen);
+                if (rv)
+                        return rv;
+
+                if (vectp)
+                        vectp++;
         }
 
 	if (vectp) {
-	    /* Count arguments. */
-            for (;;) {
-		char *ptr = (char*) fuword(vectp++);
-		if (ptr == 0) {
-                    suword(argp++, 0);
-                    break;
+                /* Copy arguments. */
+                for (;;) {
+                        char *ptr = (char*) fuword(vectp++);
+                        if (ptr == 0) {
+                                *argp++ = 0;
+                                break;
+                        }
+                        *argp++ = user_stringp + arglen;
+                        rv = countinstr(ptr, stringp + arglen, &argc, &arglen);
+                        if (rv)
+                                return rv;
                 }
-                suword(argp++, stringp+arglen);
-                rv = countinstr(ptr, stringp+arglen, &argc, &arglen);
-                if (rv)
-                    return rv;
-            }
         }
+        argbuf[0] = argc;
+	arginfo->ps_nargvstr = argc;
 
         vectp = uap->envp;
         envc = 0;
+	arginfo->ps_envstr = (char*)user_stringp + arglen; /* remember location of env */
 	if (vectp) {
-	    /* Count environment strings. */
-            for (;;) {
-		char *ptr = (char*) fuword(vectp++);
-		if (ptr == 0) {
-                    suword(argp++, 0);
-                    break;
+                /* Copy environment strings. */
+                for (;;) {
+                        char *ptr = (char*) fuword(vectp++);
+                        if (ptr == 0) {
+                                *argp++ = 0;
+                                break;
+                        }
+                        *argp++ = user_stringp + arglen;
+                        rv = countinstr(ptr, stringp + arglen, &envc, &arglen);
+                        if (rv)
+                                return rv;
                 }
-                suword(argp++, stringp+arglen);
-                rv = countinstr(ptr, stringp+arglen, &envc, &arglen);
-                if (rv)
-                    return rv;
-            }
         }
-        argbuf[0] = argc;
-        *framep = (vm_offset_t) argbuf;
+	arginfo->ps_nenvstr = envc;
+
+	/* copy the process's signal trapoline code */
+        bcopy((char*)sigcode, (char*)arginfo - SZSIGCODE, SZSIGCODE);
+//printf("%s: framesz=%u, sigcode at %08x\n", __func__, *framesz, (char*)arginfo - SZSIGCODE);
         return 0;
 }
 
@@ -278,16 +295,17 @@ execve(p, uap, retval)
         int rv, amt, file_offset, virtual_offset, tsize, dsize, bsize, len;
 	struct vattr attr;
 	struct vmspace *vs;
-	vm_offset_t addr, newframe, framep;
+	vm_offset_t addr;
 	char shellname[MAXINTERP];			/* 05 Aug 92*/
- 	char *shellargs;
+ 	char *shellargs, *argbuf = 0;
+	unsigned framesz;
 	union {
 		char	ex_shell[MAXINTERP];	/* #! and interpreter name */
 		struct	exec ex_hdr;
 	} exdata;
 	int indir = 0;
 
-	/*
+	/*----------------------------------------------------------------
 	 * Step 1. Lookup filename to see if we have something to execute.
 	 */
 	ndp = &nd;
@@ -322,7 +340,7 @@ again:
 		goto exec_fail;
 	}
 
-	/*
+	/*----------------------------------------------------------------
 	 * Step 2. Does the file contain a format we can
 	 * understand and execute
 	 *
@@ -432,61 +450,35 @@ again:
 	if (exdata.ex_hdr.a_entry > virtual_offset + exdata.ex_hdr.a_text + exdata.ex_hdr.a_data)
 		goto exec_fail;
 
-	/*
+	/*----------------------------------------------------------------
 	 * Step 3.  File and header are valid. Now, dig out the strings
 	 * out of the old process image.
 	 */
-
-	/*
-	 * We implement a single-pass algorithm that builds a new stack
-	 * frame within the address space of the "old" process image,
-	 * avoiding the second pass entirely. Thus, the new frame is
-	 * in position to be run. This consumes much virtual address space,
-	 * and two pages more of 'real' memory, such are the costs.
-	 * [Also, note the cache wipe that's avoided!]
-	 */
-
-	/* create anonymous memory region for new stack */
-	vs = p->p_vmspace;
-        if ((unsigned)vs->vm_maxsaddr + MAXSSIZ < USRSTACK)
-               newframe = (vm_offset_t) USRSTACK - MAXSSIZ;
-        else {
-               newframe = (vm_offset_t) USRSTACK - 2*MAXSSIZ;
-               vs->vm_maxsaddr = (caddr_t) newframe;
+	/* get space for argv & environment */
+	MALLOC(argbuf, char *, ARG_MAX, M_EXEC, M_WAITOK);
+	if (! argbuf) {
+                /* can't allocate ARG_MAX */
+                rv = ENOMEM;
+                goto exec_fail;
         }
-	rv = vm_allocate(&vs->vm_map, &newframe, MAXSSIZ, FALSE);
+
+        rv = copyargs (uap, argbuf, &framesz, indir, shellname, shellargs);
 	if (rv)
                 goto exec_fail;
 
-        rv = copyargs (uap, newframe, &framep, indir, shellname, shellargs);
-	if (rv) {
-                goto exec_dealloc;
-        }
-
-	/*
+	/*----------------------------------------------------------------
 	 * Step 4. Build the new processes image.
 	 *
 	 * At this point, we are committed -- destroy old executable!
 	 */
+	vs = p->p_vmspace;
 
-	/* blow away all address space, except the stack */
-	rv = vm_deallocate(&vs->vm_map, 0, USRSTACK - 2*MAXSSIZ);
+	/* blow away all address space */
+	rv = vm_deallocate(&vs->vm_map, 0, USRSTACK);
 	if (rv)
 		goto exec_abort;
 
-	/* destroy "old" stack */
-	if ((unsigned)newframe < USRSTACK - MAXSSIZ) {
-		rv = vm_deallocate(&vs->vm_map, USRSTACK - MAXSSIZ, MAXSSIZ);
-		if (rv)
-			goto exec_abort;
-	} else {
-		rv = vm_deallocate(&vs->vm_map, USRSTACK - 2*MAXSSIZ, MAXSSIZ);
-		if (rv)
-			goto exec_abort;
-	}
-
 	/* build a new address space */
-
 	/* treat text, data, and bss in terms of integral page size */
 	tsize = roundup(exdata.ex_hdr.a_text, NBPG);
 	dsize = roundup(exdata.ex_hdr.a_data, NBPG);
@@ -517,17 +509,28 @@ again:
 	if (rv)
 		goto exec_abort;
 
-	/*
+	/* create anonymous memory region for new stack */
+        addr = (vm_offset_t) USRSTACK - MAXSSIZ;
+	rv = vm_allocate(&vs->vm_map, &addr, MAXSSIZ, FALSE);
+	if (rv)
+                goto exec_abort;
+
+        /* copy out the stack contents */
+        rv = copyout(argbuf, (char*)USRSTACK - framesz, framesz);
+	if (rv)
+                goto exec_abort;
+
+	/*----------------------------------------------------------------
 	 * Step 5. Prepare process for execution.
 	 */
 
 	/* touchup process information -- vm system is unfinished! */
-	vs->vm_tsize = tsize/NBPG;		/* text size (pages) XXX */
-	vs->vm_dsize = (dsize+bsize)/NBPG;	/* data size (pages) XXX */
-	vs->vm_taddr = (caddr_t) virtual_offset; /* virtual address of text */
-	vs->vm_daddr = (caddr_t) virtual_offset + tsize; /* virtual address of data */
-	vs->vm_maxsaddr = (caddr_t) newframe;	/* user VA at max stack growth XXX */
-	vs->vm_ssize = (newframe + MAXSSIZ - framep - 1) / NBPG + 1;	/* stack size (pages) */
+	vs->vm_tsize = tsize / NBPG;                        /* text size (pages) */
+	vs->vm_dsize = (dsize + bsize) / NBPG;              /* data size (pages) */
+	vs->vm_taddr = (caddr_t) virtual_offset;            /* virtual address of text */
+	vs->vm_daddr = (caddr_t) virtual_offset + tsize;    /* virtual address of data */
+	vs->vm_maxsaddr = (caddr_t) USRSTACK - MAXSSIZ;     /* user VA at max stack growth */
+	vs->vm_ssize = (framesz + NBPG - 1) / NBPG;         /* stack size (pages) */
 
 	/* close files on exec, fixup signals */
 	fdcloseexec(p);
@@ -544,22 +547,23 @@ again:
 	 * it that it now has it's own resources back */
 	p->p_flag |= P_EXEC;
 	if (p->p_pptr && (p->p_flag & P_PPWAIT)) {
-	    p->p_flag &= ~P_PPWAIT;
-	    wakeup(p->p_pptr);
+                p->p_flag &= ~P_PPWAIT;
+                wakeup(p->p_pptr);
 	}
 
 	/* implement set userid/groupid */
 	if ((attr.va_mode&VSUID) && (p->p_flag & P_TRACED) == 0) {
-	    p->p_ucred = crcopy(p->p_ucred);
-	    p->p_cred->p_svuid = p->p_ucred->cr_uid = attr.va_uid;
+                p->p_ucred = crcopy(p->p_ucred);
+                p->p_cred->p_svuid = p->p_ucred->cr_uid = attr.va_uid;
 	}
 	if ((attr.va_mode&VSGID) && (p->p_flag & P_TRACED) == 0) {
-	    p->p_ucred = crcopy(p->p_ucred);
-	    p->p_cred->p_svgid = p->p_ucred->cr_groups[0] = attr.va_gid;
+                p->p_ucred = crcopy(p->p_ucred);
+                p->p_cred->p_svgid = p->p_ucred->cr_groups[0] = attr.va_gid;
 	}
+	FREE(argbuf, M_EXEC);
 
 	/* setup initial register state */
-	p->p_md.md_regs[SP] = framep;
+	p->p_md.md_regs[SP] = USRSTACK - framesz;
 	setregs(p, exdata.ex_hdr.a_entry);
 
  	ndp->ni_vp->v_flag |= VTEXT;		/* mark vnode pure text */
@@ -573,17 +577,16 @@ again:
 //printf("%s: succeeded\n", __func__);
 	return 0;
 
-exec_dealloc:
-	/* remove interim "new" stack frame we were building */
-	vm_deallocate(&vs->vm_map, newframe, MAXSSIZ);
-
 exec_fail:
+        if (argbuf)
+                FREE(argbuf, M_EXEC);
 	vput(ndp->ni_vp);
 	return rv;
 
 exec_abort:
 	/* sorry, no more process anymore. exit gracefully */
-	vm_deallocate(&vs->vm_map, newframe, MAXSSIZ);
+        if (argbuf)
+                FREE(argbuf, M_EXEC);
 	vput(ndp->ni_vp);
 	exit1(p, W_EXITCODE(0, SIGABRT));
 

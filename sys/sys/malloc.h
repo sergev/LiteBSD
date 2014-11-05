@@ -110,6 +110,7 @@
 #define M_NFSDIROFF	60	/* NFS directory offset data */
 #define M_NFSBIGFH	61	/* NFS version 3 file handle */
 #define M_TTYS          62      /* allocated tty structures */
+#define M_EXEC          63      /* argument lists & other mem used by exec */
 #define	M_TEMP		74	/* misc temporary data buffers */
 #define	M_LAST		75	/* Must be last type + 1 */
 
