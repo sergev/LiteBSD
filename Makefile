@@ -46,4 +46,17 @@ installfs:
 	@echo "Error: No SDCARD defined."
 .endif
 
+#
+# Build kernel.
+#
+ARCH    = mips
+BOARD   = WIFIRE.pic32
+
+kernel: sys/compile/${BOARD}/Makefile
+	${MAKE} -C sys/compile/${BOARD}
+
+sys/compile/${BOARD}/Makefile: sys/${ARCH}/conf/${BOARD}
+	(cd sys/${ARCH}/conf; ../../../usr.sbin/config/config -g ${BOARD})
+	${MAKE} -C sys/compile/${BOARD} depend
+
 .include <bsd.subdir.mk>
