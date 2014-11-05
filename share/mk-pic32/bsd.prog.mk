@@ -126,6 +126,7 @@ afterinstall:
 realinstall: _PROGSUBDIR
 .if defined(PROG)
 	install -d ${DESTDIR}${BINDIR}
+	@rm -f ${DESTDIR}${BINDIR}/${PROG}
 	install ${STRIP} -m ${BINMODE} \
 	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROG}
 .endif
@@ -136,10 +137,8 @@ realinstall: _PROGSUBDIR
 .if defined(LINKS) && !empty(LINKS)
 	@set ${LINKS}; \
 	while test $$# -ge 2; do \
-		l=${DESTDIR}$$1; \
-		shift; \
-		t=${DESTDIR}$$1; \
-		shift; \
+		l=$$1; shift; \
+		t=$$1; shift; \
 		echo $$t -\> $$l; \
 		rm -f $$t; \
 		ln $$l $$t; \

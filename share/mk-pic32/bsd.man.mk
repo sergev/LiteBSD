@@ -53,12 +53,9 @@ maninstall:
 .if defined(MLINKS) && !empty(MLINKS)
 	@set ${MLINKS}; \
 	while test $$# -ge 2; do \
-		name=$$1; \
-		shift; \
-		dir=${DESTDIR}${MANDIR}`expr $$name : '[^\.]*\.\(.*\)'`; \
-		l=$${dir}${MANSUBDIR}/`expr $$name : '\([^\.]*\)'`.0; \
-		name=$$1; \
-		shift; \
+		name=$$1; shift; \
+		l=`expr $$name : '\([^\.]*\)'`.0; \
+		name=$$1; shift; \
 		dir=${DESTDIR}${MANDIR}`expr $$name : '[^\.]*\.\(.*\)'`; \
 		t=$${dir}${MANSUBDIR}/`expr $$name : '\([^\.]*\)'`.0; \
 		echo $$t -\> $$l; \
