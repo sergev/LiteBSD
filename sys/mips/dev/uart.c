@@ -189,7 +189,7 @@ uartparam(tp, t)
 
     /* Setup the line. */
     reg->sta = 0;
-    reg->brg = PIC32_BRG_BAUD (CPU_KHZ * 1000, tp->t_ospeed);
+    reg->brg = PIC32_BRG_BAUD (CPU_KHZ * 500, tp->t_ospeed);
     reg->mode = mode;
     reg->staset = PIC32_USTA_URXEN | PIC32_USTA_UTXEN;
 
