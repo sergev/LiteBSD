@@ -315,12 +315,16 @@ mach_init()
     /* Interrupt Priority Control */
     unsigned ipc = PIC32_IPC_IP0(1) | PIC32_IPC_IP1(1) |
                    PIC32_IPC_IP2(1) | PIC32_IPC_IP3(1);
+#define LSPI    3
+#define LETH    4
+#define LUART   5
+#define LTMR    6
 
     /* 0 - Core Timer Interrupt
      * 1 - Core Software Interrupt 0
      * 2 - Core Software Interrupt 1
      * 3 - External Interrupt 0 */
-    IPC(0) = PIC32_IPC_IP0(6) | PIC32_IPC_IP1(1) | PIC32_IPC_IP2(2) | PIC32_IPC_IP3(0);
+    IPC(0) = PIC32_IPC_IP0(LTMR) | PIC32_IPC_IP1(1) | PIC32_IPC_IP2(2) | PIC32_IPC_IP3(0);
     IPC(1) = 0;
     IPC(2) = 0;
     IPC(3) = 0;
@@ -352,13 +356,13 @@ mach_init()
      * 109 - SPI1 Fault
      * 110 - SPI1 Receive Done
      * 111 - SPI1 Transfer Done */
-    IPC(27) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+    IPC(27) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(LSPI) | PIC32_IPC_IP2(LSPI) | PIC32_IPC_IP3(LSPI);
 
     /* 112 - UART1 Fault
      * 113 - UART1 Receive Done
      * 114 - UART1 Transfer Done
      * 115 - I2C1 Bus Collision Event */
-    IPC(28) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(0);
+    IPC(28) = PIC32_IPC_IP0(LUART) | PIC32_IPC_IP1(LUART) | PIC32_IPC_IP2(LUART) | PIC32_IPC_IP3(0);
     IPC(29) = 0;
     IPC(30) = 0;
     IPC(31) = 0;
@@ -370,13 +374,13 @@ mach_init()
      * 141 - DMA Channel 7
      * 142 - SPI2 Fault
      * 143 - SPI2 Receive Done */
-    IPC(35) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+    IPC(35) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(LSPI) | PIC32_IPC_IP3(LSPI);
 
     /* 144 - SPI2 Transfer Done
      * 145 - UART2 Fault
      * 146 - UART2 Receive Done
      * 147 - UART2 Transfer Done */
-    IPC(36) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+    IPC(36) = PIC32_IPC_IP0(LSPI) | PIC32_IPC_IP1(LUART) | PIC32_IPC_IP2(LUART) | PIC32_IPC_IP3(LUART);
 
     IPC(37) = 0;
 
@@ -384,61 +388,61 @@ mach_init()
      * 153 - Ethernet Interrupt
      * 154 - SPI3 Fault
      * 155 - SPI3 Receive Done */
-    IPC(38) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(4) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+    IPC(38) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(LETH) | PIC32_IPC_IP2(LSPI) | PIC32_IPC_IP3(LSPI);
 
     /* 156 - SPI3 Transfer Done
      * 157 - UART3 Fault
      * 158 - UART3 Receive Done
      * 159 - UART3 Transfer Done */
-    IPC(39) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+    IPC(39) = PIC32_IPC_IP0(LSPI) | PIC32_IPC_IP1(LUART) | PIC32_IPC_IP2(LUART) | PIC32_IPC_IP3(LUART);
 
     /* 160 - I2C3 Bus Collision Event
      * 161 - I2C3 Slave Event
      * 162 - I2C3 Master Event
      * 163 - SPI4 Fault */
-    IPC(40) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(3);
+    IPC(40) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(LSPI);
 
     /* 164 - SPI4 Receive Done
      * 165 - SPI4 Transfer Done
      * 166 - Real Time Clock
      * 167 - Flash Control Event */
-    IPC(41) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(6) | PIC32_IPC_IP3(0);
+    IPC(41) = PIC32_IPC_IP0(LSPI) | PIC32_IPC_IP1(LSPI) | PIC32_IPC_IP2(LTMR) | PIC32_IPC_IP3(0);
 
     /* 168 - Prefetch Module SEC Event
      * 169 - SQI1 Event
      * 170 - UART4 Fault
      * 171 - UART4 Receive Done */
-    IPC(42) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(5);
+    IPC(42) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(LUART) | PIC32_IPC_IP3(LUART);
 
     /* 172 - UART4 Transfer Done
      * 173 - I2C4 Bus Collision Event
      * 174 - I2C4 Slave Event
      * 175 - I2C4 Master Event */
-    IPC(43) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
+    IPC(43) = PIC32_IPC_IP0(LUART) | PIC32_IPC_IP1(0) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
 
     /* 176 - SPI5 Fault
      * 177 - SPI5 Receive Done
      * 178 - SPI5 Transfer Done
      * 179 - UART5 Fault */
-    IPC(44) = PIC32_IPC_IP0(3) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(5);
+    IPC(44) = PIC32_IPC_IP0(LSPI) | PIC32_IPC_IP1(LSPI) | PIC32_IPC_IP2(LSPI) | PIC32_IPC_IP3(LUART);
 
     /* 180 - UART5 Receive Done
      * 181 - UART5 Transfer Done
      * 182 - I2C5 Bus Collision Event
      * 183 - I2C5 Slave Event */
-    IPC(45) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
+    IPC(45) = PIC32_IPC_IP0(LUART) | PIC32_IPC_IP1(LUART) | PIC32_IPC_IP2(0) | PIC32_IPC_IP3(0);
 
     /* 184 - I2C5 Master Event
      * 185 - SPI6 Fault
      * 186 - SPI6 Receive Done
      * 187 - SPI6 Transfer Done */
-    IPC(46) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(3) | PIC32_IPC_IP2(3) | PIC32_IPC_IP3(3);
+    IPC(46) = PIC32_IPC_IP0(0) | PIC32_IPC_IP1(LSPI) | PIC32_IPC_IP2(LSPI) | PIC32_IPC_IP3(LSPI);
 
     /* 188 - UART6 Fault
      * 189 - UART6 Receive Done
      * 190 - UART6 Transfer Done
      * 191 - Reserved */
-    IPC(47) = PIC32_IPC_IP0(5) | PIC32_IPC_IP1(5) | PIC32_IPC_IP2(5) | PIC32_IPC_IP3(0);
+    IPC(47) = PIC32_IPC_IP0(LUART) | PIC32_IPC_IP1(LUART) | PIC32_IPC_IP2(LUART) | PIC32_IPC_IP3(0);
 
     /* Read processor ID register. */
     cpu.cpuprid = mfc0_PRId();
@@ -454,7 +458,6 @@ initcpu()
     c->regb = REGB_DATA_MODE | REGB_HOURS_FORMAT;
     (void) c->regc;
 #endif
-    spl0();         /* safe to turn interrupts on now */
 }
 
 static void identify_cpu()
@@ -650,10 +653,9 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
  * Set registers on exec.
  * Clear all registers except sp, pc.
  */
-setregs(p, entry, retval)
+setregs(p, entry)
     register struct proc *p;
     u_long entry;
-    register_t retval[2];
 {
     int sp = p->p_md.md_regs[SP];
 

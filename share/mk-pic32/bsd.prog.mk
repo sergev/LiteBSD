@@ -49,8 +49,7 @@ CLEANFILES+=strings
 OBJS+=  ${SRCS:R:S/$/.o/g}
 
 ${PROG}: ${OBJS} ${LIBC} ${DPADD}
-	${CC} ${LDFLAGS} -o ${.TARGET}.elf ${OBJS} ${LDADD} -lc -lgcc
-	${BSDSRC}/contrib/elf2aout/elf2aout ${.TARGET}.elf ${.TARGET}
+	${CC} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD} -lc -lgcc
 
 .else defined(SRCS)
 
@@ -58,8 +57,7 @@ SRCS= ${PROG}.c
 
 ${PROG}: ${SRCS} ${LIBC} ${DPADD}
 	${CC} ${CFLAGS} ${LDFLAGS} \
-            -o ${.TARGET}.elf ${.CURDIR}/${SRCS} ${LDADD} -lc -lgcc
-	${BSDSRC}/contrib/elf2aout/elf2aout ${.TARGET}.elf ${.TARGET}
+            -o ${.TARGET} ${.CURDIR}/${SRCS} ${LDADD} -lc -lgcc
 
 MKDEP=	-p
 

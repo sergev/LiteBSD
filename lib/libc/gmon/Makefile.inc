@@ -9,3 +9,5 @@ MAN3+=	moncontrol.0
 # mcount cannot be compiled with profiling
 mcount.po: mcount.o
 	cp mcount.o mcount.po
+
+MLINKS+=moncontrol.3 monstartup.3

@@ -36,6 +36,7 @@
 #include <sys/wait.h>
 #include <sys/filedesc.h>
 #include <sys/malloc.h>
+#include <sys/exec_elf.h>
 #include <vm/vm.h>
 #include <machine/reg.h>
 
@@ -124,15 +125,29 @@ countinstr(str, buf, argc, arglen)
 }
 
 /*
+ * Structure holding information about the executable file.
+ */
+struct exec_hdr {
+        int indir;
+        char shellname[MAXINTERP];
+        char *shellargs;
+        unsigned file_offset;
+        unsigned virtual_offset;
+        unsigned text;
+        unsigned data;
+        unsigned bss;
+        unsigned entry;
+};
+
+/*
  * Copy arguments and environment.
  */
 static int
-copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
+copyargs (uap, hdr, framebuf, framesz)
 	struct execve_args *uap;
+	struct exec_hdr *hdr;
 	char *framebuf;
 	unsigned *framesz;
-	int indir;
-	char *shellname, *shellargs;
 {
 	char **vectp, *stringp;
 	int argc, envc, rv, *argbuf, *argp, user_stringp;
@@ -146,14 +161,14 @@ copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
         argc = 0;
         arglen = 0;
 	vectp = uap->argp;
-	if (indir) {
+	if (hdr->indir) {
                 /* Count shell parameters. */
-                rv = countstr(shellname, framebuf, &argc, &arglen);
+                rv = countstr(hdr->shellname, framebuf, &argc, &arglen);
                 if (rv)
                         return rv;
 
-                if (shellargs) {
-                        rv = countstr(shellargs, framebuf, &argc, &arglen);
+                if (hdr->shellargs) {
+                        rv = countstr(hdr->shellargs, framebuf, &argc, &arglen);
                         if (rv)
                                 return rv;
                 }
@@ -219,16 +234,16 @@ copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
         arglen = 0;
 	vectp = uap->argp;
 	arginfo->ps_argvstr = (char*)user_stringp; /* remember location of argv */
-	if (indir) {
+	if (hdr->indir) {
                 /* Copy shell parameters. */
                 *argp++ = user_stringp;
-                rv = countstr(shellname, stringp, &argc, &arglen);
+                rv = countstr(hdr->shellname, stringp, &argc, &arglen);
                 if (rv)
                         return rv;
 
-                if (shellargs) {
+                if (hdr->shellargs) {
                         *argp++ = user_stringp + arglen;
-                        rv = countstr(shellargs, stringp + arglen, &argc, &arglen);
+                        rv = countstr(hdr->shellargs, stringp + arglen, &argc, &arglen);
                         if (rv)
                                 return rv;
                 }
@@ -284,6 +299,186 @@ copyargs (uap, framebuf, framesz, indir, shellname, shellargs)
         return 0;
 }
 
+/*
+ * Read in first few bytes of file for segment sizes, magic number:
+ *      ZMAGIC = demand paged RO text
+ * Also an ASCII line beginning with #! is
+ * the file name of a ``shell'' and arguments may be prepended
+ * to the argument list if given here.
+ */
+static int
+getheader(p, ndp, file_size, hdr)
+	struct proc *p;
+	struct nameidata *ndp;
+	unsigned file_size;
+	struct exec_hdr *hdr;
+{
+        int rv, amt;
+	union {
+		char	ex_shell[MAXINTERP];	/* #! and interpreter name */
+		int     magic;                  /* first word: magic tag */
+		struct	exec aout_hdr;          /* a.out header */
+		struct	elf_ehdr elf_hdr;       /* ELF header */
+	} exdata;
+        struct elf_phdr segment[2];
+
+	exdata.ex_shell[0] = '\0';	/* for zero length files */
+
+	rv = vn_rdwr(UIO_READ, ndp->ni_vp, (caddr_t)&exdata, sizeof(exdata),
+		0, UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred, &amt, p);
+
+	/* big enough to hold a header? */
+	if (rv)
+		return rv;
+
+	switch (exdata.magic) {
+	case ZMAGIC:
+	        /* A.out demand paged format. */
+                hdr->text  = exdata.aout_hdr.a_text;
+                hdr->data  = exdata.aout_hdr.a_data;
+                hdr->bss   = exdata.aout_hdr.a_bss;
+                hdr->entry = exdata.aout_hdr.a_entry;
+
+		hdr->virtual_offset = 0x400000;
+		hdr->file_offset    = NBPG;
+		break;
+
+        case ELFMAG0 | ELFMAG1<<8 | ELFMAG2 << 16 | ELFMAG3 << 24:
+	        /* ELF format. */
+		if (exdata.elf_hdr.e_ident[4] != ELFCLASS32 ||
+                    exdata.elf_hdr.e_ident[5] != ELFDATA2LSB ||
+                    exdata.elf_hdr.e_ident[6] != EV_CURRENT ||
+                    exdata.elf_hdr.e_ident[7] != ELFOSABI_SYSV)
+			return ENOEXEC;
+                if (exdata.elf_hdr.e_type != ET_EXEC)
+                        return ENOEXEC;
+                if (exdata.elf_hdr.e_machine != EM_MIPS ||
+                    exdata.elf_hdr.e_version != EV_CURRENT)
+                        return ENOEXEC;
+                if (exdata.elf_hdr.e_phentsize != sizeof(struct elf_phdr) ||
+                    exdata.elf_hdr.e_phoff == 0 ||
+                    exdata.elf_hdr.e_phnum == 0)
+                        return ENOEXEC;
+                if (exdata.elf_hdr.e_shnum == 0 ||
+                    exdata.elf_hdr.e_shentsize != sizeof(struct elf_shdr))
+                        return ENOEXEC;
+
+                if (exdata.elf_hdr.e_phnum != 2) {
+                        /* At the current moment we handle only 2-segment ELF binaries.
+                         * The rest of the code is implemented as need arise. */
+                        return ENOEXEC;
+                }
+
+                /* Read headers of program segments. */
+                rv = vn_rdwr(UIO_READ, ndp->ni_vp, (caddr_t)segment, sizeof(segment),
+                        exdata.elf_hdr.e_phoff, UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred, &amt, p);
+                if (rv)
+                        return ENOEXEC;
+//printf("%s: elf segment 0: type=%x flags=%x, segment 1: type=%x flags=%x\n", __func__, segment[0].p_type, segment[0].p_flags, segment[1].p_type, segment[1].p_flags);
+
+                /* Two loadable segments expected:
+                 * segment 0: read/execute,
+                 * segment 1: read/write. */
+                if (segment[0].p_type != PT_LOAD ||
+                    segment[0].p_flags != (PF_R | PF_X) ||
+                    segment[1].p_type != PT_LOAD ||
+                    segment[1].p_flags != (PF_R | PF_W))
+                        return ENOEXEC;
+
+                hdr->text  = roundup(segment[0].p_filesz, NBPG);
+                hdr->data  = roundup(segment[1].p_filesz, NBPG);
+                hdr->bss   = segment[1].p_memsz - hdr->data;
+                hdr->entry = exdata.elf_hdr.e_entry;
+
+		hdr->virtual_offset = segment[0].p_vaddr;
+		hdr->file_offset    = segment[0].p_offset;
+//printf("%s: virtual_offset=%08x, file_offset=%u\n", __func__, hdr->virtual_offset, hdr->file_offset);
+		break;
+
+	default:
+                /* Check for shell bang '#!'. */
+		if (exdata.ex_shell[0] != '#' || exdata.ex_shell[1] != '!')
+			return ENOEXEC;
+
+                /* Only one level of indirection is allowed. */
+                if (hdr->indir)
+                        return ENOEXEC;
+
+                char *cp, *sp;
+                for (cp = &exdata.ex_shell[2];; ++cp) {
+                        if (cp >= &exdata.ex_shell[MAXINTERP])
+                                return ENOEXEC;
+
+                        if (*cp == '\n') {
+                                *cp = '\0';
+                                break;
+                        }
+                        if (*cp == '\t')
+                                *cp = ' ';
+                }
+                cp = &exdata.ex_shell[2]; /* get shell interpreter name */
+                while (*cp == ' ')
+                        cp++;
+
+                sp = hdr->shellname;
+                while (*cp && *cp != ' ')
+                        *sp++ = *cp++;
+                *sp = '\0';
+
+                /* copy the args in the #! line */
+                while (*cp == ' ')
+                        cp++;
+                if (*cp) {
+                        sp++;
+                        hdr->shellargs = sp;
+                        while (*cp)
+                            *sp++ = *cp++;
+                        *sp = '\0';
+                } else {
+                        hdr->shellargs = 0;
+                }
+
+                hdr->indir = 1;                 /* indicate this is a script file */
+                vput(ndp->ni_vp);
+
+                ndp->ni_dirp = hdr->shellname;  /* find shell interpreter */
+                ndp->ni_segflg = UIO_SYSSPACE;
+                return -1;
+	}
+//printf("%s: text=%u, data=%u, bss=%u, entry=%08x\n", __func__, hdr->text, hdr->data, hdr->bss, hdr->entry);
+
+        if (hdr->text != 0 && (ndp->ni_vp->v_flag & VTEXT) == 0 &&
+            ndp->ni_vp->v_writecount != 0)
+                return ETXTBSY;
+
+	/* sanity check  "ain't not such thing as a sanity clause" -groucho */
+	if (hdr->text == 0 ||
+            hdr->text > MAXTSIZ ||
+	    hdr->text % NBPG ||
+            hdr->text > file_size)
+		return ENOMEM;
+
+	if (hdr->data == 0 ||
+            hdr->data > DFLDSIZ ||
+            hdr->data > file_size ||
+            hdr->data + hdr->text > file_size)
+		return ENOMEM;
+
+	if (hdr->bss > MAXDSIZ)
+		return ENOMEM;
+
+	if (hdr->text + hdr->data + hdr->bss > MAXTSIZ + MAXDSIZ)
+		return ENOMEM;
+
+	if (hdr->data + hdr->bss > p->p_rlimit[RLIMIT_DATA].rlim_cur)
+		return ENOMEM;
+
+	if (hdr->entry > hdr->text + hdr->data + hdr->virtual_offset)
+		return ENOMEM;
+
+        return 0;
+}
+
 /* ARGSUSED */
 execve(p, uap, retval)
 	struct proc *p;
@@ -292,23 +487,19 @@ execve(p, uap, retval)
 {
 	register struct nameidata *ndp;
 	struct nameidata nd;
-        int rv, amt, file_offset, virtual_offset, tsize, dsize, bsize, len;
+        int rv, tsize, dsize, bsize, len;
 	struct vattr attr;
+        struct exec_hdr hdr;
 	struct vmspace *vs;
 	vm_offset_t addr;
-	char shellname[MAXINTERP];			/* 05 Aug 92*/
- 	char *shellargs, *argbuf = 0;
+ 	char *argbuf = 0;
 	unsigned framesz;
-	union {
-		char	ex_shell[MAXINTERP];	/* #! and interpreter name */
-		struct	exec ex_hdr;
-	} exdata;
-	int indir = 0;
 
 	/*----------------------------------------------------------------
 	 * Step 1. Lookup filename to see if we have something to execute.
 	 */
 	ndp = &nd;
+	hdr.indir = 0;
 again:
 	NDINIT(ndp, LOOKUP, LOCKLEAF | FOLLOW | SAVENAME, UIO_USERSPACE,
 	    uap->fname, p);
@@ -343,112 +534,12 @@ again:
 	/*----------------------------------------------------------------
 	 * Step 2. Does the file contain a format we can
 	 * understand and execute
-	 *
-	 * XXX 05 Aug 92
-	 * Read in first few bytes of file for segment sizes, magic number:
-	 *      ZMAGIC = demand paged RO text
-	 * Also an ASCII line beginning with #! is
-	 * the file name of a ``shell'' and arguments may be prepended
-	 * to the argument list if given here.
 	 */
-	exdata.ex_shell[0] = '\0';	/* for zero length files */
-
-	rv = vn_rdwr(UIO_READ, ndp->ni_vp, (caddr_t)&exdata, sizeof(exdata),
-		0, UIO_SYSSPACE, IO_NODELOCKED, p->p_ucred, &amt, p);
-
-	/* big enough to hold a header? */
-	if (rv)
+        rv = getheader(p, ndp, attr.va_size, &hdr);
+	if (rv > 0)
 		goto exec_fail;
-
-        if (exdata.ex_hdr.a_text != 0 && (ndp->ni_vp->v_flag & VTEXT) == 0 &&
-	    ndp->ni_vp->v_writecount != 0) {
-		rv = ETXTBSY;
-		goto exec_fail;
-	}
-
-#define SHELLMAGIC	0x2123 /* #! */
-
-	switch (exdata.ex_hdr.a_magic) {
-	case ZMAGIC:
-		virtual_offset = 0x400000;
-		file_offset = NBPG;
-		break;
-	default:
-		if ((exdata.ex_hdr.a_magic & 0xffff) != SHELLMAGIC) {
-			rv = ENOEXEC;
-			goto exec_fail;
-		}
-                if (indir) {
-                        rv = ENOEXEC;
-                        goto exec_fail;
-                }
-
-                char *cp, *sp;
-                for (cp = &exdata.ex_shell[2];; ++cp) {
-                        if (cp >= &exdata.ex_shell[MAXINTERP]) {
-                                rv = ENOEXEC;
-                                goto exec_fail;
-                        }
-                        if (*cp == '\n') {
-                                *cp = '\0';
-                                break;
-                        }
-                        if (*cp == '\t')
-                                *cp = ' ';
-                }
-                cp = &exdata.ex_shell[2]; /* get shell interpreter name */
-                while (*cp == ' ')
-                        cp++;
-
-                sp = shellname;
-                while (*cp && *cp != ' ')
-                        *sp++ = *cp++;
-                *sp = '\0';
-
-                /* copy the args in the #! line */
-                while (*cp == ' ')
-                        cp++;
-                if (*cp) {
-                        sp++;
-                        shellargs = sp;
-                        while (*cp)
-                            *sp++ = *cp++;
-                        *sp = '\0';
-                } else {
-                        shellargs = 0;
-                }
-
-                indir = 1;              /* indicate this is a script file */
-                vput(ndp->ni_vp);
-
-                ndp->ni_dirp = shellname;       /* find shell interpreter */
-                ndp->ni_segflg = UIO_SYSSPACE;
+	if (rv < 0)
                 goto again;
-	}
-//printf("%s: text=%u, data=%u, bss=%u, entry=%08x\n", __func__, exdata.ex_hdr.a_text, exdata.ex_hdr.a_data, exdata.ex_hdr.a_bss, exdata.ex_hdr.a_entry);
-
-	/* sanity check  "ain't not such thing as a sanity clause" -groucho */
-	rv = ENOMEM;
-	if (exdata.ex_hdr.a_text == 0 || exdata.ex_hdr.a_text > MAXTSIZ ||
-	    exdata.ex_hdr.a_text % NBPG || exdata.ex_hdr.a_text > attr.va_size)
-		goto exec_fail;
-
-	if (exdata.ex_hdr.a_data == 0 || exdata.ex_hdr.a_data > DFLDSIZ
-		|| exdata.ex_hdr.a_data > attr.va_size
-		|| exdata.ex_hdr.a_data + exdata.ex_hdr.a_text > attr.va_size)
-		goto exec_fail;
-
-	if (exdata.ex_hdr.a_bss > MAXDSIZ)
-		goto exec_fail;
-
-	if (exdata.ex_hdr.a_text + exdata.ex_hdr.a_data + exdata.ex_hdr.a_bss > MAXTSIZ + MAXDSIZ)
-		goto exec_fail;
-
-	if (exdata.ex_hdr.a_data + exdata.ex_hdr.a_bss > p->p_rlimit[RLIMIT_DATA].rlim_cur)
-		goto exec_fail;
-
-	if (exdata.ex_hdr.a_entry > virtual_offset + exdata.ex_hdr.a_text + exdata.ex_hdr.a_data)
-		goto exec_fail;
 
 	/*----------------------------------------------------------------
 	 * Step 3.  File and header are valid. Now, dig out the strings
@@ -462,7 +553,7 @@ again:
                 goto exec_fail;
         }
 
-        rv = copyargs (uap, argbuf, &framesz, indir, shellname, shellargs);
+        rv = copyargs (uap, &hdr, argbuf, &framesz);
 	if (rv)
                 goto exec_fail;
 
@@ -480,31 +571,31 @@ again:
 
 	/* build a new address space */
 	/* treat text, data, and bss in terms of integral page size */
-	tsize = roundup(exdata.ex_hdr.a_text, NBPG);
-	dsize = roundup(exdata.ex_hdr.a_data, NBPG);
-	bsize = roundup(exdata.ex_hdr.a_bss, NBPG);
+	tsize = roundup(hdr.text, NBPG);
+	dsize = roundup(hdr.data, NBPG);
+	bsize = roundup(hdr.bss, NBPG);
 
-	addr = virtual_offset;
+	addr = hdr.virtual_offset;
 
 	/* map text as being read/execute only and demand paged */
 	rv = vm_mmap(&vs->vm_map, &addr, tsize, VM_PROT_READ|VM_PROT_EXECUTE,
 		VM_PROT_DEFAULT, MAP_FILE|MAP_PRIVATE|MAP_FIXED,
-		(caddr_t)ndp->ni_vp, file_offset);
+		(caddr_t)ndp->ni_vp, hdr.file_offset);
 	if (rv)
 		goto exec_abort;
 
-	addr = virtual_offset + tsize;
+	addr = hdr.virtual_offset + tsize;
 
 	/* map data as being read/write and demand paged */
 	rv = vm_mmap(&vs->vm_map, &addr, dsize,
 		VM_PROT_READ | VM_PROT_WRITE | (tsize ? 0 : VM_PROT_EXECUTE),
 		VM_PROT_DEFAULT, MAP_FILE|MAP_PRIVATE|MAP_FIXED,
-		(caddr_t)ndp->ni_vp, file_offset + tsize);
+		(caddr_t)ndp->ni_vp, hdr.file_offset + tsize);
 	if (rv)
 		goto exec_abort;
 
 	/* create anonymous memory region for bss */
-	addr = virtual_offset + tsize + dsize;
+	addr = hdr.virtual_offset + tsize + dsize;
 	rv = vm_allocate(&vs->vm_map, &addr, bsize, FALSE);
 	if (rv)
 		goto exec_abort;
@@ -527,8 +618,8 @@ again:
 	/* touchup process information -- vm system is unfinished! */
 	vs->vm_tsize = tsize / NBPG;                        /* text size (pages) */
 	vs->vm_dsize = (dsize + bsize) / NBPG;              /* data size (pages) */
-	vs->vm_taddr = (caddr_t) virtual_offset;            /* virtual address of text */
-	vs->vm_daddr = (caddr_t) virtual_offset + tsize;    /* virtual address of data */
+	vs->vm_taddr = (caddr_t) hdr.virtual_offset;        /* virtual address of text */
+	vs->vm_daddr = (caddr_t) hdr.virtual_offset + tsize; /* virtual address of data */
 	vs->vm_maxsaddr = (caddr_t) USRSTACK - MAXSSIZ;     /* user VA at max stack growth */
 	vs->vm_ssize = (framesz + NBPG - 1) / NBPG;         /* stack size (pages) */
 
@@ -564,7 +655,7 @@ again:
 
 	/* setup initial register state */
 	p->p_md.md_regs[SP] = USRSTACK - framesz;
-	setregs(p, exdata.ex_hdr.a_entry);
+	setregs(p, hdr.entry);
 
  	ndp->ni_vp->v_flag |= VTEXT;		/* mark vnode pure text */
 	vput(ndp->ni_vp);

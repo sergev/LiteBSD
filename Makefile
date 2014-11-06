@@ -10,11 +10,10 @@ afterinstall:
 # Build the whole DESTDIR tree.
 #
 build:
-	${MAKE} -C etc distribution
-	${MAKE} -C include install
+	${MAKE} -Cetc distribution
+	${MAKE} -Cinclude install
 	${MAKE} cleandir
-	${MAKE} -C contrib/elf2aout all
-	${MAKE} -C lib depend all install
+	${MAKE} -Clib depend all install
 	${MAKE} depend all install
 
 # Filesystem and swap sizes.
@@ -53,10 +52,16 @@ ARCH    = mips
 BOARD   = WIFIRE.pic32
 
 kernel: sys/compile/${BOARD}/Makefile
-	${MAKE} -C sys/compile/${BOARD}
+	${MAKE} -Csys/compile/${BOARD}
 
 sys/compile/${BOARD}/Makefile: sys/${ARCH}/conf/${BOARD}
 	(cd sys/${ARCH}/conf; ../../../usr.sbin/config/config -g ${BOARD})
-	${MAKE} -C sys/compile/${BOARD} depend
+	${MAKE} -Csys/compile/${BOARD} depend
+
+#
+# Upload the kernel to chipKIT Wi-Fire board.
+#
+load:   kernel
+	sudo pic32prog -d /dev/ttyUSB0 sys/compile/${BOARD}/vmunix.hex
 
 .include <bsd.subdir.mk>

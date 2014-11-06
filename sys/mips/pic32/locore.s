@@ -155,7 +155,7 @@ next_shadow_set:                        # set PSS to shadow set to be initialize
         //
 init_cp0:
         # Initialize Status
-        li      v1, 0x00400404          # (M_StatusIM | M_StatusERL | M_StatusBEV)
+        li      v1, MACH_Status_BEV | MACH_Status_ERL
         mtc0    v1, MACH_C0_Status      # write Status
 
         # Initialize Watch registers if implemented.
@@ -1428,68 +1428,62 @@ END(spl0)
 
 LEAF(spl1)
         li      t1, 1                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl1)
 
 LEAF(spl2)
         li      t1, 2                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl2)
 
 LEAF(spl3)
         li      t1, 3                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl3)
 
 LEAF(spl4)
         li      t1, 4                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl4)
 
 LEAF(spl5)
         li      t1, 5                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl5)
 
 LEAF(spl6)
         li      t1, 6                           # new IPL value
-        li      t0, MACH_Status_IE
-        di      v0                              # read Status and disable interrupts
-        or      t0, v0, t0                      # set IE
-        ins     t0, t1, 10, 9                   # set IPL
+        di      t0                              # read Status and disable interrupts
+        and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
+        ins     t0, t0, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
-        and     v0, v0, (MACH_Status_IPL_MASK | MACH_Status_IE)
+        nop
 END(spl6)
 
 /*
@@ -1509,10 +1503,11 @@ END(splhigh)
 LEAF(splx)
 ALEAF(_splx)
         and     t1, a0, MACH_Status_IPL_MASK | MACH_Status_IE
+        xor     t1, MACH_Status_IPL_MASK | MACH_Status_IE
         di      v0                              # read Status and disable interrupts
-        and     t0, v0, ~(MACH_Status_IPL_MASK | MACH_Status_IE)
-        or      t0, t1
-        jr.hb   ra
+        or      t0, v0, MACH_Status_IPL_MASK | MACH_Status_IE
+        xor     t0, t1
+        jr      ra
         mtc0    t0, MACH_C0_Status              # restore interrupt mask
 END(splx)
 

@@ -171,8 +171,8 @@ uartparam(tp, t)
     }
 
     /* Reset line. */
+    reg->sta = 0;
     reg->mode = 0;
-    reg->staset = 0;
     udelay(25);
 
     /* Compute mode bits. */
@@ -188,7 +188,6 @@ uartparam(tp, t)
     }
 
     /* Setup the line. */
-    reg->sta = 0;
     reg->brg = PIC32_BRG_BAUD (CPU_KHZ * 500, tp->t_ospeed);
     reg->mode = mode;
     reg->staset = PIC32_USTA_URXEN | PIC32_USTA_UTXEN;
@@ -680,6 +679,7 @@ uartprobe(config)
     int unit = config->sd_unit - 1;
     int rx = config->sd_flags >> 8 & 0xFF;
     int tx = config->sd_flags & 0xFF;
+    int is_console = (CONS_MAJOR == 17 && CONS_MINOR == unit);
 
     if (unit < 0 || unit >= NUART)
         return 0;
@@ -692,15 +692,16 @@ uartprobe(config)
     printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u",
         unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
         uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
-    if (CONS_MAJOR == 17 && CONS_MINOR == unit)
+    if (is_console)
         printf(", console");
     printf("\n");
 
-    /* Reset chip. */
-    reg->brg = 0;
-    reg->sta = 0;
-    reg->mode = PIC32_UMODE_PDSEL_8NPAR | PIC32_UMODE_ON;
-    reg->staset = 0;
+    if (! is_console) {
+        /* Reset chip. */
+        reg->sta = 0;
+        reg->brg = 0;
+        reg->mode = PIC32_UMODE_PDSEL_8NPAR | PIC32_UMODE_ON;
+    }
 
     /* Assign RX and TX pins. */
     assign_rx (unit, rx);
