@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tape.c	8.1 (Berkeley) 6/10/93
+ *  @(#)tape.c  8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -52,34 +52,34 @@ u_char buff[512];
 
 int
 tape(argc, argv)
-	int   argc;
-	char *argv[];
+    int   argc;
+    char *argv[];
 {
-	int size, count;
-	u_long *p = (u_long *) buff;
+    int size, count;
+    u_long *p = (u_long *) buff;
 
-	if (!strcmp(argv[1], "read")) {
-		count = 0;
-		while ((size = stread(rst0, buff, 512)) == 512)
-			count++;
-		printf("tape: size  = %d\n", size);
-		printf("tape: count = %d\n", count);
-	} else if (!strcmp(argv[1], "write")) {
-		for (count = 0; count < 500; count++) {
-			if ((size = stwrite(rst0, buff, 512)) != 512)
-				break;
-		}
-		printf("tape: size  = %d\n", size);
-		printf("tape: count = %d\n", count);
-	} else if (!strcmp(argv[1], "rewind")) {
-		st_rewind(rst0);
-	} else if (!strcmp(argv[1], "weof")) {
-		st_write_EOF(rst0);
-	} else if (!strcmp(argv[1], "skip")) {
-		st_skip(rst0);
-	} else {
-		return(ST_ERROR);
-	}
+    if (!strcmp(argv[1], "read")) {
+        count = 0;
+        while ((size = stread(rst0, buff, 512)) == 512)
+            count++;
+        printf("tape: size  = %d\n", size);
+        printf("tape: count = %d\n", count);
+    } else if (!strcmp(argv[1], "write")) {
+        for (count = 0; count < 500; count++) {
+            if ((size = stwrite(rst0, buff, 512)) != 512)
+                break;
+        }
+        printf("tape: size  = %d\n", size);
+        printf("tape: count = %d\n", count);
+    } else if (!strcmp(argv[1], "rewind")) {
+        st_rewind(rst0);
+    } else if (!strcmp(argv[1], "weof")) {
+        st_write_EOF(rst0);
+    } else if (!strcmp(argv[1], "skip")) {
+        st_skip(rst0);
+    } else {
+        return(ST_ERROR);
+    }
 
-	return(ST_NORMAL);
+    return(ST_NORMAL);
 }

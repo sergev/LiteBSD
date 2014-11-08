@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ppiioctl.h	8.1 (Berkeley) 6/10/93
+ *  @(#)ppiioctl.h  8.1 (Berkeley) 6/10/93
  */
 
 #ifndef _IOCTL_
@@ -38,25 +38,25 @@
 #endif
 
 struct ppiparam {
-	int	burst;	/* chars to send/recv in one call */
-	int	timo;	/* timeout: -1 blocking, 0 non-blocking, >0 msec */
-	int	delay;	/* delay between polls (msec) */
+    int burst;  /* chars to send/recv in one call */
+    int timo;   /* timeout: -1 blocking, 0 non-blocking, >0 msec */
+    int delay;  /* delay between polls (msec) */
 };
 
-#define PPI_BLOCK	-1
-#define PPI_NOBLOCK	0
+#define PPI_BLOCK   -1
+#define PPI_NOBLOCK 0
 
 /* default values */
-#define	PPI_BURST	1024
-#define PPI_TIMO	PPI_BLOCK
-#define PPI_DELAY	10
+#define PPI_BURST   1024
+#define PPI_TIMO    PPI_BLOCK
+#define PPI_DELAY   10
 
 /* limits */
-#define	PPI_BURST_MIN	1
-#define	PPI_BURST_MAX	1024
-#define PPI_DELAY_MIN	0
-#define PPI_DELAY_MAX	30000
+#define PPI_BURST_MIN   1
+#define PPI_BURST_MAX   1024
+#define PPI_DELAY_MIN   0
+#define PPI_DELAY_MAX   30000
 
-#define PPIIOCSPARAM	_IOW('P', 0x1, struct ppiparam)
-#define PPIIOCGPARAM	_IOR('P', 0x2, struct ppiparam)
-#define PPIIOCSSEC	_IOW('P', 0x3, int)
+#define PPIIOCSPARAM    _IOW('P', 0x1, struct ppiparam)
+#define PPIIOCGPARAM    _IOR('P', 0x2, struct ppiparam)
+#define PPIIOCSSEC      _IOW('P', 0x3, int)

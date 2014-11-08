@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # Copyright (c) 1992, 1993
-#	The Regents of the University of California.  All rights reserved.
+#   The Regents of the University of California.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -13,8 +13,8 @@
 #    documentation and/or other materials provided with the distribution.
 # 3. All advertising materials mentioning features or use of this software
 #    must display the following acknowledgement:
-#	This product includes software developed by the University of
-#	California, Berkeley and its contributors.
+#   This product includes software developed by the University of
+#   California, Berkeley and its contributors.
 # 4. Neither the name of the University nor the names of its contributors
 #    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
@@ -31,10 +31,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	@(#)systags.sh	8.1 (Berkeley) 6/10/93
+#   @(#)systags.sh  8.1 (Berkeley) 6/10/93
 #
 # systags.sh - construct a system tags file using dependence relations
-#	in a .depend file
+#   in a .depend file
 #
 # First written May 16, 1992 by Van Jacobson, Lawrence Berkeley Laboratory.
 #
@@ -43,29 +43,29 @@
 rm -f tags tags.tmp tags.cfiles tags.sfiles tags.hfiles
 MACHINE=`machine`
 sed -e "s,\./machine/,../../$MACHINE/include/,g" \
-    -e 's,[a-z][^/ 	]*/\.\./,,g' .depend | awk   '{
-		for (i = 1; i <= NF; ++i) {
-			t = substr($i, length($i) - 1)
-			if (t == ".c")
-				cfiles[$i] = 1;
-			else if (t == ".h")
-				hfiles[$i] = 1;
-			else if (t == ".s")
-				sfiles[$i] = 1;
-		}
-	};
-	END {
-		for (i in cfiles)
-			print i > "tags.cfiles";
-		for (i in sfiles)
-			print i > "tags.sfiles";
-		for (i in hfiles)
-			print i > "tags.hfiles";
-	}'
+    -e 's,[a-z][^/  ]*/\.\./,,g' .depend | awk   '{
+        for (i = 1; i <= NF; ++i) {
+            t = substr($i, length($i) - 1)
+            if (t == ".c")
+                cfiles[$i] = 1;
+            else if (t == ".h")
+                hfiles[$i] = 1;
+            else if (t == ".s")
+                sfiles[$i] = 1;
+        }
+    };
+    END {
+        for (i in cfiles)
+            print i > "tags.cfiles";
+        for (i in sfiles)
+            print i > "tags.sfiles";
+        for (i in hfiles)
+            print i > "tags.hfiles";
+    }'
 
 ctags -t -d -w `cat tags.cfiles tags.hfiles tags.sfiles`
 egrep -o "^ENTRY\(.*\)|^ALTENTRY\(.*\)" `cat tags.sfiles` | \
-    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3	\1	/^\2(\3\4$/;" >> tags
+    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3 \1  /^\2(\3\4$/;" >> tags
 
 mv tags tags.tmp
 sort -u tags.tmp > tags

@@ -1,23 +1,23 @@
-#	@(#)files.newconf	8.10 (Berkeley) 5/1/94
+#       @(#)files.newconf       8.10 (Berkeley) 5/1/94
 
 # generic attributes
-define	disk
-define	tape
-define	ifnet
-define	tty
+define  disk
+define  tape
+define  ifnet
+define  tty
 
 # net device attributes - we have generic code for ether.
-define	ether
+define  ether
 
 # scsi driver and associated stuff
-define	scsi { target = -1 }
-device	tg at scsi { drive = -1 }
-file	dev/scsi/scsi_subr.c	scsi
+define  scsi { target = -1 }
+device  tg at scsi { drive = -1 }
+file    dev/scsi/scsi_subr.c    scsi
 
-device	sd at tg: disk
-file	dev/scsi/sd.c		sd needs-flag
+device  sd at tg: disk
+file    dev/scsi/sd.c           sd needs-flag
 
-# device st at tg: tape	-- not yet
+# device st at tg: tape -- not yet
 
 # legitimate pseudo-devices
 pseudo-device bpfilter
@@ -28,176 +28,176 @@ pseudo-device sl
 pseudo-device vn: disk
 
 # kernel sources
-file	isofs/cd9660/cd9660_bmap.c	cd9660
-file	isofs/cd9660/cd9660_lookup.c	cd9660
-file	isofs/cd9660/cd9660_node.c	cd9660
-file	isofs/cd9660/cd9660_rrip.c	cd9660
-file	isofs/cd9660/cd9660_util.c	cd9660
-file	isofs/cd9660/cd9660_vfsops.c	cd9660
-file	isofs/cd9660/cd9660_vnops.c	cd9660
-file	kern/init_main.c
-file	kern/init_sysent.c
-file	kern/kern_acct.c
-file	kern/kern_clock.c
-file	kern/kern_descrip.c
-file	kern/kern_exec.c
-file	kern/kern_exit.c
-file	kern/kern_fork.c
-file	kern/kern_ktrace.c	ktrace
-file	kern/kern_malloc.c
-file	kern/kern_physio.c
-file	kern/kern_proc.c
-file	kern/kern_prot.c
-file	kern/kern_resource.c
-file	kern/kern_sig.c
-file	kern/kern_subr.c
-file	kern/kern_synch.c
-file	kern/kern_sysctl.c
-file	kern/kern_time.c
-file	kern/kern_xxx.c
-file	kern/subr_autoconf.c
-file	kern/subr_log.c
-file	kern/subr_prf.c
-file	kern/subr_prof.c
-file	kern/subr_rmap.c
-file	kern/subr_xxx.c
-file	kern/sys_generic.c
-file	kern/sys_process.c
-file	kern/sys_socket.c
-file	kern/sysv_shm.c		sysvshm
-file	kern/tty.c
-file	kern/tty_compat.c
-file	kern/tty_conf.c
-file	kern/tty_pty.c		pty needs-count
-file	kern/tty_subr.c
-file	kern/tty_tb.c		tb needs-flag
-file	kern/tty_tty.c
-file	kern/uipc_domain.c
-file	kern/uipc_mbuf.c
-file	kern/uipc_proto.c
-file	kern/uipc_socket.c
-file	kern/uipc_socket2.c
-file	kern/uipc_syscalls.c
-file	kern/uipc_usrreq.c
-file	kern/vfs_bio.c
-file	kern/vfs_cache.c
-file	kern/vfs_cluster.c
-file	kern/vfs_conf.c
-file	kern/vfs_init.c
-file	kern/vfs_lookup.c
-file	kern/vfs_subr.c
-file	kern/vfs_syscalls.c
-file	kern/vfs_vnops.c
-file	miscfs/deadfs/dead_vnops.c
-file	miscfs/fdesc/fdesc_vfsops.c	fdesc
-file	miscfs/fdesc/fdesc_vnops.c	fdesc
-file	miscfs/fifofs/fifo_vnops.c	fifo
-file	miscfs/kernfs/kernfs_vfsops.c	kernfs
-file	miscfs/kernfs/kernfs_vnops.c	kernfs
-file	miscfs/nullfs/null_subr.c	nullfs
-file	miscfs/nullfs/null_vfsops.c	nullfs
-file	miscfs/nullfs/null_vnops.c	nullfs
-file	miscfs/portal/portal_vfsops.c	portal
-file	miscfs/portal/portal_vnops.c	portal
-file	miscfs/procfs/procfs_subr.c	procfs
-file	miscfs/procfs/procfs_vnops.c	procfs
-file	miscfs/procfs/procfs_vfsops.c	procfs
-file	miscfs/procfs/procfs_note.c	procfs
-file	miscfs/procfs/procfs_mem.c	procfs
-file	miscfs/procfs/procfs_ctl.c	procfs
-file	miscfs/procfs/procfs_status.c	procfs
-file	miscfs/procfs/procfs_regs.c	procfs
-file	miscfs/procfs/procfs_fpregs.c	procfs
-file	miscfs/specfs/spec_vnops.c
-file	miscfs/umapfs/umap_subr.c	umapfs
-file	miscfs/umapfs/umap_vfsops.c	umapfs
-file	miscfs/umapfs/umap_vnops.c	umapfs
-file	miscfs/union/union_subr.c	union
-file	miscfs/union/union_vfsops.c	union
-file	miscfs/union/union_vnops.c	union
-file	net/bpf.c		bpfilter needs-count
-file	net/bpf_filter.c	bpfilter needs-count
-file	net/if.c
-file	net/if_ethersubr.c	ether needs-flag
-file	net/if_loop.c		loop needs-count
-file	net/if_sl.c		sl needs-count
-file	net/radix.c
-file	net/raw_cb.c
-file	net/raw_usrreq.c
-file	net/route.c
-file	net/rtsock.c
-file	net/slcompress.c	sl
-file	netinet/if_ether.c	ether
-file	netinet/igmp.c		inet
-file	netinet/in.c		inet
-file	netinet/in_pcb.c	inet
-file	netinet/in_proto.c	inet
-file	netinet/ip_icmp.c	inet
-file	netinet/ip_input.c	inet
-file	netinet/ip_mroute.c	inet
-file	netinet/ip_output.c	inet
-file	netinet/raw_ip.c	inet
-file	netinet/tcp_debug.c	inet
-file	netinet/tcp_input.c	inet
-file	netinet/tcp_output.c	inet
-file	netinet/tcp_subr.c	inet
-file	netinet/tcp_timer.c	inet
-file	netinet/tcp_usrreq.c	inet
-file	netinet/udp_usrreq.c	inet
-file	nfs/nfs_bio.c		nfs
-file	nfs/nfs_node.c		nfs
-file	nfs/nfs_nqlease.c	nfs
-file	nfs/nfs_serv.c		nfs
-file	nfs/nfs_socket.c	nfs
-file	nfs/nfs_srvcache.c	nfs
-file	nfs/nfs_subs.c		nfs
-file	nfs/nfs_syscalls.c	nfs
-file	nfs/nfs_vfsops.c	nfs
-file	nfs/nfs_vnops.c		nfs
-file	ufs/ffs/ffs_alloc.c	ffs mfs
-file	ufs/ffs/ffs_balloc.c	ffs mfs
-file	ufs/ffs/ffs_inode.c	ffs mfs
-file	ufs/ffs/ffs_subr.c	ffs mfs
-file	ufs/ffs/ffs_tables.c	ffs mfs
-file	ufs/ffs/ffs_vfsops.c	ffs mfs
-file	ufs/ffs/ffs_vnops.c	ffs mfs
-file	ufs/lfs/lfs_alloc.c	lfs
-file	ufs/lfs/lfs_bio.c	lfs
-file	ufs/lfs/lfs_balloc.c	lfs
-file	ufs/lfs/lfs_cksum.c	lfs
-file	ufs/lfs/lfs_debug.c	lfs
-file	ufs/lfs/lfs_inode.c	lfs
-file	ufs/lfs/lfs_segment.c	lfs
-file	ufs/lfs/lfs_subr.c	lfs
-file	ufs/lfs/lfs_syscalls.c	lfs
-file	ufs/lfs/lfs_vfsops.c	lfs
-file	ufs/lfs/lfs_vnops.c	lfs
-file	ufs/mfs/mfs_vfsops.c	mfs
-file	ufs/mfs/mfs_vnops.c	mfs
-file	ufs/ufs/ufs_bmap.c	ffs lfs mfs
-file	ufs/ufs/ufs_disksubr.c	ffs lfs mfs
-file	ufs/ufs/ufs_ihash.c	ffs lfs mfs
-file	ufs/ufs/ufs_inode.c	ffs lfs mfs
-file	ufs/ufs/ufs_lockf.c	ffs lfs mfs
-file	ufs/ufs/ufs_lookup.c	ffs lfs mfs
-file	ufs/ufs/ufs_quota.c	ffs lfs mfs
-file	ufs/ufs/ufs_vfsops.c	ffs lfs mfs
-file	ufs/ufs/ufs_vnops.c	ffs lfs mfs
-file	vm/device_pager.c	devpager
-file	vm/kern_lock.c
-file	vm/swap_pager.c		swappager
-file	vm/vm_fault.c
-file	vm/vm_glue.c
-file	vm/vm_init.c
-file	vm/vm_kern.c
-file	vm/vm_map.c
-file	vm/vm_meter.c
-file	vm/vm_mmap.c
-file	vm/vm_object.c
-file	vm/vm_page.c
-file	vm/vm_pageout.c
-file	vm/vm_pager.c
-file	vm/vm_swap.c
-file	vm/vm_unix.c
-file	vm/vm_user.c
-file	vm/vnode_pager.c	vnodepager
+file    isofs/cd9660/cd9660_bmap.c      cd9660
+file    isofs/cd9660/cd9660_lookup.c    cd9660
+file    isofs/cd9660/cd9660_node.c      cd9660
+file    isofs/cd9660/cd9660_rrip.c      cd9660
+file    isofs/cd9660/cd9660_util.c      cd9660
+file    isofs/cd9660/cd9660_vfsops.c    cd9660
+file    isofs/cd9660/cd9660_vnops.c     cd9660
+file    kern/init_main.c
+file    kern/init_sysent.c
+file    kern/kern_acct.c
+file    kern/kern_clock.c
+file    kern/kern_descrip.c
+file    kern/kern_exec.c
+file    kern/kern_exit.c
+file    kern/kern_fork.c
+file    kern/kern_ktrace.c      ktrace
+file    kern/kern_malloc.c
+file    kern/kern_physio.c
+file    kern/kern_proc.c
+file    kern/kern_prot.c
+file    kern/kern_resource.c
+file    kern/kern_sig.c
+file    kern/kern_subr.c
+file    kern/kern_synch.c
+file    kern/kern_sysctl.c
+file    kern/kern_time.c
+file    kern/kern_xxx.c
+file    kern/subr_autoconf.c
+file    kern/subr_log.c
+file    kern/subr_prf.c
+file    kern/subr_prof.c
+file    kern/subr_rmap.c
+file    kern/subr_xxx.c
+file    kern/sys_generic.c
+file    kern/sys_process.c
+file    kern/sys_socket.c
+file    kern/sysv_shm.c         sysvshm
+file    kern/tty.c
+file    kern/tty_compat.c
+file    kern/tty_conf.c
+file    kern/tty_pty.c          pty needs-count
+file    kern/tty_subr.c
+file    kern/tty_tb.c           tb needs-flag
+file    kern/tty_tty.c
+file    kern/uipc_domain.c
+file    kern/uipc_mbuf.c
+file    kern/uipc_proto.c
+file    kern/uipc_socket.c
+file    kern/uipc_socket2.c
+file    kern/uipc_syscalls.c
+file    kern/uipc_usrreq.c
+file    kern/vfs_bio.c
+file    kern/vfs_cache.c
+file    kern/vfs_cluster.c
+file    kern/vfs_conf.c
+file    kern/vfs_init.c
+file    kern/vfs_lookup.c
+file    kern/vfs_subr.c
+file    kern/vfs_syscalls.c
+file    kern/vfs_vnops.c
+file    miscfs/deadfs/dead_vnops.c
+file    miscfs/fdesc/fdesc_vfsops.c     fdesc
+file    miscfs/fdesc/fdesc_vnops.c      fdesc
+file    miscfs/fifofs/fifo_vnops.c      fifo
+file    miscfs/kernfs/kernfs_vfsops.c   kernfs
+file    miscfs/kernfs/kernfs_vnops.c    kernfs
+file    miscfs/nullfs/null_subr.c       nullfs
+file    miscfs/nullfs/null_vfsops.c     nullfs
+file    miscfs/nullfs/null_vnops.c      nullfs
+file    miscfs/portal/portal_vfsops.c   portal
+file    miscfs/portal/portal_vnops.c    portal
+file    miscfs/procfs/procfs_subr.c     procfs
+file    miscfs/procfs/procfs_vnops.c    procfs
+file    miscfs/procfs/procfs_vfsops.c   procfs
+file    miscfs/procfs/procfs_note.c     procfs
+file    miscfs/procfs/procfs_mem.c      procfs
+file    miscfs/procfs/procfs_ctl.c      procfs
+file    miscfs/procfs/procfs_status.c   procfs
+file    miscfs/procfs/procfs_regs.c     procfs
+file    miscfs/procfs/procfs_fpregs.c   procfs
+file    miscfs/specfs/spec_vnops.c
+file    miscfs/umapfs/umap_subr.c       umapfs
+file    miscfs/umapfs/umap_vfsops.c     umapfs
+file    miscfs/umapfs/umap_vnops.c      umapfs
+file    miscfs/union/union_subr.c       union
+file    miscfs/union/union_vfsops.c     union
+file    miscfs/union/union_vnops.c      union
+file    net/bpf.c               bpfilter needs-count
+file    net/bpf_filter.c        bpfilter needs-count
+file    net/if.c
+file    net/if_ethersubr.c      ether needs-flag
+file    net/if_loop.c           loop needs-count
+file    net/if_sl.c             sl needs-count
+file    net/radix.c
+file    net/raw_cb.c
+file    net/raw_usrreq.c
+file    net/route.c
+file    net/rtsock.c
+file    net/slcompress.c        sl
+file    netinet/if_ether.c      ether
+file    netinet/igmp.c          inet
+file    netinet/in.c            inet
+file    netinet/in_pcb.c        inet
+file    netinet/in_proto.c      inet
+file    netinet/ip_icmp.c       inet
+file    netinet/ip_input.c      inet
+file    netinet/ip_mroute.c     inet
+file    netinet/ip_output.c     inet
+file    netinet/raw_ip.c        inet
+file    netinet/tcp_debug.c     inet
+file    netinet/tcp_input.c     inet
+file    netinet/tcp_output.c    inet
+file    netinet/tcp_subr.c      inet
+file    netinet/tcp_timer.c     inet
+file    netinet/tcp_usrreq.c    inet
+file    netinet/udp_usrreq.c    inet
+file    nfs/nfs_bio.c           nfs
+file    nfs/nfs_node.c          nfs
+file    nfs/nfs_nqlease.c       nfs
+file    nfs/nfs_serv.c          nfs
+file    nfs/nfs_socket.c        nfs
+file    nfs/nfs_srvcache.c      nfs
+file    nfs/nfs_subs.c          nfs
+file    nfs/nfs_syscalls.c      nfs
+file    nfs/nfs_vfsops.c        nfs
+file    nfs/nfs_vnops.c         nfs
+file    ufs/ffs/ffs_alloc.c     ffs mfs
+file    ufs/ffs/ffs_balloc.c    ffs mfs
+file    ufs/ffs/ffs_inode.c     ffs mfs
+file    ufs/ffs/ffs_subr.c      ffs mfs
+file    ufs/ffs/ffs_tables.c    ffs mfs
+file    ufs/ffs/ffs_vfsops.c    ffs mfs
+file    ufs/ffs/ffs_vnops.c     ffs mfs
+file    ufs/lfs/lfs_alloc.c     lfs
+file    ufs/lfs/lfs_bio.c       lfs
+file    ufs/lfs/lfs_balloc.c    lfs
+file    ufs/lfs/lfs_cksum.c     lfs
+file    ufs/lfs/lfs_debug.c     lfs
+file    ufs/lfs/lfs_inode.c     lfs
+file    ufs/lfs/lfs_segment.c   lfs
+file    ufs/lfs/lfs_subr.c      lfs
+file    ufs/lfs/lfs_syscalls.c  lfs
+file    ufs/lfs/lfs_vfsops.c    lfs
+file    ufs/lfs/lfs_vnops.c     lfs
+file    ufs/mfs/mfs_vfsops.c    mfs
+file    ufs/mfs/mfs_vnops.c     mfs
+file    ufs/ufs/ufs_bmap.c      ffs lfs mfs
+file    ufs/ufs/ufs_disksubr.c  ffs lfs mfs
+file    ufs/ufs/ufs_ihash.c     ffs lfs mfs
+file    ufs/ufs/ufs_inode.c     ffs lfs mfs
+file    ufs/ufs/ufs_lockf.c     ffs lfs mfs
+file    ufs/ufs/ufs_lookup.c    ffs lfs mfs
+file    ufs/ufs/ufs_quota.c     ffs lfs mfs
+file    ufs/ufs/ufs_vfsops.c    ffs lfs mfs
+file    ufs/ufs/ufs_vnops.c     ffs lfs mfs
+file    vm/device_pager.c       devpager
+file    vm/kern_lock.c
+file    vm/swap_pager.c         swappager
+file    vm/vm_fault.c
+file    vm/vm_glue.c
+file    vm/vm_init.c
+file    vm/vm_kern.c
+file    vm/vm_map.c
+file    vm/vm_meter.c
+file    vm/vm_mmap.c
+file    vm/vm_object.c
+file    vm/vm_page.c
+file    vm/vm_pageout.c
+file    vm/vm_pager.c
+file    vm/vm_swap.c
+file    vm/vm_unix.c
+file    vm/vm_user.c
+file    vm/vnode_pager.c        vnodepager

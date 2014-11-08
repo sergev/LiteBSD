@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)uipc_domain.c	8.3 (Berkeley) 2/14/95
+ *  @(#)uipc_domain.c   8.3 (Berkeley) 2/14/95
  */
 
 #include <sys/param.h>
@@ -45,175 +45,175 @@
 #include <vm/vm.h>
 #include <sys/sysctl.h>
 
-void	pffasttimo __P((void *));
-void	pfslowtimo __P((void *));
+void    pffasttimo __P((void *));
+void    pfslowtimo __P((void *));
 
-#define	ADDDOMAIN(x)	{ \
-	extern struct domain __CONCAT(x,domain); \
-	__CONCAT(x,domain.dom_next) = domains; \
-	domains = &__CONCAT(x,domain); \
+#define ADDDOMAIN(x)    { \
+    extern struct domain __CONCAT(x,domain); \
+    __CONCAT(x,domain.dom_next) = domains; \
+    domains = &__CONCAT(x,domain); \
 }
 
 void
 domaininit()
 {
-	register struct domain *dp;
-	register struct protosw *pr;
+    register struct domain *dp;
+    register struct protosw *pr;
 
 #undef unix
 #ifndef lint
-	ADDDOMAIN(unix);
-	ADDDOMAIN(route);
+    ADDDOMAIN(unix);
+    ADDDOMAIN(route);
 #ifdef INET
-	ADDDOMAIN(inet);
+    ADDDOMAIN(inet);
 #endif
 #ifdef NS
-	ADDDOMAIN(ns);
+    ADDDOMAIN(ns);
 #endif
 #ifdef ISO
-	ADDDOMAIN(iso);
+    ADDDOMAIN(iso);
 #endif
 #ifdef CCITT
-	ADDDOMAIN(ccitt);
+    ADDDOMAIN(ccitt);
 #endif
 #endif
 
-	for (dp = domains; dp; dp = dp->dom_next) {
-		if (dp->dom_init)
-			(*dp->dom_init)();
-		for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-			if (pr->pr_init)
-				(*pr->pr_init)();
-	}
+    for (dp = domains; dp; dp = dp->dom_next) {
+        if (dp->dom_init)
+            (*dp->dom_init)();
+        for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+            if (pr->pr_init)
+                (*pr->pr_init)();
+    }
 
-if (max_linkhdr < 16)		/* XXX */
+if (max_linkhdr < 16)       /* XXX */
 max_linkhdr = 16;
-	max_hdr = max_linkhdr + max_protohdr;
-	max_datalen = MHLEN - max_hdr;
-	timeout(pffasttimo, NULL, 1);
-	timeout(pfslowtimo, NULL, 1);
+    max_hdr = max_linkhdr + max_protohdr;
+    max_datalen = MHLEN - max_hdr;
+    timeout(pffasttimo, NULL, 1);
+    timeout(pfslowtimo, NULL, 1);
 }
 
 struct protosw *
 pffindtype(family, type)
-	int family, type;
+    int family, type;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
+    register struct domain *dp;
+    register struct protosw *pr;
 
-	for (dp = domains; dp; dp = dp->dom_next)
-		if (dp->dom_family == family)
-			goto found;
-	return (0);
+    for (dp = domains; dp; dp = dp->dom_next)
+        if (dp->dom_family == family)
+            goto found;
+    return (0);
 found:
-	for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-		if (pr->pr_type && pr->pr_type == type)
-			return (pr);
-	return (0);
+    for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+        if (pr->pr_type && pr->pr_type == type)
+            return (pr);
+    return (0);
 }
 
 struct protosw *
 pffindproto(family, protocol, type)
-	int family, protocol, type;
+    int family, protocol, type;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
-	struct protosw *maybe = 0;
+    register struct domain *dp;
+    register struct protosw *pr;
+    struct protosw *maybe = 0;
 
-	if (family == 0)
-		return (0);
-	for (dp = domains; dp; dp = dp->dom_next)
-		if (dp->dom_family == family)
-			goto found;
-	return (0);
+    if (family == 0)
+        return (0);
+    for (dp = domains; dp; dp = dp->dom_next)
+        if (dp->dom_family == family)
+            goto found;
+    return (0);
 found:
-	for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++) {
-		if ((pr->pr_protocol == protocol) && (pr->pr_type == type))
-			return (pr);
+    for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++) {
+        if ((pr->pr_protocol == protocol) && (pr->pr_type == type))
+            return (pr);
 
-		if (type == SOCK_RAW && pr->pr_type == SOCK_RAW &&
-		    pr->pr_protocol == 0 && maybe == (struct protosw *)0)
-			maybe = pr;
-	}
-	return (maybe);
+        if (type == SOCK_RAW && pr->pr_type == SOCK_RAW &&
+            pr->pr_protocol == 0 && maybe == (struct protosw *)0)
+            maybe = pr;
+    }
+    return (maybe);
 }
 
 int
 net_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
-	int *name;
-	u_int namelen;
-	void *oldp;
-	size_t *oldlenp;
-	void *newp;
-	size_t newlen;
-	struct proc *p;
+    int *name;
+    u_int namelen;
+    void *oldp;
+    size_t *oldlenp;
+    void *newp;
+    size_t newlen;
+    struct proc *p;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
-	int family, protocol;
+    register struct domain *dp;
+    register struct protosw *pr;
+    int family, protocol;
 
-	/*
-	 * All sysctl names at this level are nonterminal;
-	 * next two components are protocol family and protocol number,
-	 * then at least one addition component.
-	 */
-	if (namelen < 3)
-		return (EISDIR);		/* overloaded */
-	family = name[0];
-	protocol = name[1];
+    /*
+     * All sysctl names at this level are nonterminal;
+     * next two components are protocol family and protocol number,
+     * then at least one addition component.
+     */
+    if (namelen < 3)
+        return (EISDIR);        /* overloaded */
+    family = name[0];
+    protocol = name[1];
 
-	if (family == 0)
-		return (0);
-	for (dp = domains; dp; dp = dp->dom_next)
-		if (dp->dom_family == family)
-			goto found;
-	return (ENOPROTOOPT);
+    if (family == 0)
+        return (0);
+    for (dp = domains; dp; dp = dp->dom_next)
+        if (dp->dom_family == family)
+            goto found;
+    return (ENOPROTOOPT);
 found:
-	for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-		if (pr->pr_protocol == protocol && pr->pr_sysctl)
-			return ((*pr->pr_sysctl)(name + 2, namelen - 2,
-			    oldp, oldlenp, newp, newlen));
-	return (ENOPROTOOPT);
+    for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+        if (pr->pr_protocol == protocol && pr->pr_sysctl)
+            return ((*pr->pr_sysctl)(name + 2, namelen - 2,
+                oldp, oldlenp, newp, newlen));
+    return (ENOPROTOOPT);
 }
 
 void
 pfctlinput(cmd, sa)
-	int cmd;
-	struct sockaddr *sa;
+    int cmd;
+    struct sockaddr *sa;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
+    register struct domain *dp;
+    register struct protosw *pr;
 
-	for (dp = domains; dp; dp = dp->dom_next)
-		for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-			if (pr->pr_ctlinput)
-				(*pr->pr_ctlinput)(cmd, sa, (caddr_t)0);
+    for (dp = domains; dp; dp = dp->dom_next)
+        for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+            if (pr->pr_ctlinput)
+                (*pr->pr_ctlinput)(cmd, sa, (caddr_t)0);
 }
 
 void
 pfslowtimo(arg)
-	void *arg;
+    void *arg;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
+    register struct domain *dp;
+    register struct protosw *pr;
 
-	for (dp = domains; dp; dp = dp->dom_next)
-		for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-			if (pr->pr_slowtimo)
-				(*pr->pr_slowtimo)();
-	timeout(pfslowtimo, NULL, hz/2);
+    for (dp = domains; dp; dp = dp->dom_next)
+        for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+            if (pr->pr_slowtimo)
+                (*pr->pr_slowtimo)();
+    timeout(pfslowtimo, NULL, hz/2);
 }
 
 void
 pffasttimo(arg)
-	void *arg;
+    void *arg;
 {
-	register struct domain *dp;
-	register struct protosw *pr;
+    register struct domain *dp;
+    register struct protosw *pr;
 
-	for (dp = domains; dp; dp = dp->dom_next)
-		for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
-			if (pr->pr_fasttimo)
-				(*pr->pr_fasttimo)();
-	timeout(pffasttimo, NULL, hz/5);
+    for (dp = domains; dp; dp = dp->dom_next)
+        for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+            if (pr->pr_fasttimo)
+                (*pr->pr_fasttimo)();
+    timeout(pffasttimo, NULL, hz/5);
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,17 +30,17 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)profile.h	8.1 (Berkeley) 6/10/93
+ *  @(#)profile.h   8.1 (Berkeley) 6/10/93
  */
 
-#define	_MCOUNT_DECL static inline void _mcount
+#define _MCOUNT_DECL static inline void _mcount
 
-#define	MCOUNT \
+#define MCOUNT \
 extern void mcount() asm("mcount"); void mcount() { \
-	int selfpc, frompcindex; \
-	asm("movl a6@(4),%0" : "=r" (selfpc)); \
-	asm("movl a6@(0)@(4),%0" : "=r" (frompcindex)); \
-	_mcount(frompcindex, selfpc); \
+    int selfpc, frompcindex; \
+    asm("movl a6@(4),%0" : "=r" (selfpc)); \
+    asm("movl a6@(0)@(4),%0" : "=r" (frompcindex)); \
+    _mcount(frompcindex, selfpc); \
 }
 
 #ifdef KERNEL
@@ -51,9 +51,9 @@ extern void mcount() asm("mcount"); void mcount() { \
  * recursively.
  */
 #define MCOUNT_ENTER \
-	asm("movw	sr,%0" : "=g" (s)); \
-	asm("movw	#0x2700,sr")
+    asm("movw   sr,%0" : "=g" (s)); \
+    asm("movw   #0x2700,sr")
 
 #define MCOUNT_EXIT \
-	asm("movw	%0,sr" : : "g" (s))
+    asm("movw   %0,sr" : : "g" (s))
 #endif /* KERNEL */

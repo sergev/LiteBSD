@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)if_nereg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)if_nereg.h  8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -41,10 +41,10 @@
    its i/o space */
 #include <i386/isa/ic/ds8390.h>
 
-#define ne_data		0x10	/* Data Transfer port */
-#define ne_reset	0x1f	/* Card Reset port */
+#define ne_data     0x10    /* Data Transfer port */
+#define ne_reset    0x1f    /* Card Reset port */
 
-#define	PKTSZ	3*512
-#define	TBUF	(16*1024)	/* Starting location of Transmit Buffer */
-#define	RBUF	(16*1024+PKTSZ)	/* Starting location of Receive Buffer */
-#define	RBUFEND	(32*1024)	/* Ending location of Transmit Buffer */
+#define PKTSZ   3*512
+#define TBUF    (16*1024)       /* Starting location of Transmit Buffer */
+#define RBUF    (16*1024+PKTSZ) /* Starting location of Receive Buffer */
+#define RBUFEND (32*1024)       /* Ending location of Transmit Buffer */

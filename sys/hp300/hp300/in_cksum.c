@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  *
  * from: Utah $Hdr: in_cksum.c 1.1 90/07/09$
  *
- *	@(#)in_cksum.c	8.1 (Berkeley) 6/10/93
+ *  @(#)in_cksum.c  8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -56,43 +56,43 @@ extern int oc_cksum();
  * their job, we should never do the hairy code inside the "if".
  */
 in_cksum(m, len)
-	register struct mbuf *m;
-	register int len;
+    register struct mbuf *m;
+    register int len;
 {
-	register int sum = 0;
-	register int i;
+    register int sum = 0;
+    register int i;
 
-	while (len > m->m_len) {
-		sum = oc_cksum(mtod(m, u_char *), i = m->m_len, sum);
-		m = m->m_next;
-		len -= i;
-		if (i & 1) {
-			/*
-			 * ouch - we ended on an odd byte with more
-			 * to do.  This xfer is obviously not interested
-			 * in performance so finish things slowly.
-			 */
-			register u_char *cp;
+    while (len > m->m_len) {
+        sum = oc_cksum(mtod(m, u_char *), i = m->m_len, sum);
+        m = m->m_next;
+        len -= i;
+        if (i & 1) {
+            /*
+             * ouch - we ended on an odd byte with more
+             * to do.  This xfer is obviously not interested
+             * in performance so finish things slowly.
+             */
+            register u_char *cp;
 
-			while (len > m->m_len) {
-				cp = mtod(m, u_char *);
-				if (i & 1) {
-					i = m->m_len - 1;
-					--len;
-					sum += *cp++;
-				} else
-					i = m->m_len;
+            while (len > m->m_len) {
+                cp = mtod(m, u_char *);
+                if (i & 1) {
+                    i = m->m_len - 1;
+                    --len;
+                    sum += *cp++;
+                } else
+                    i = m->m_len;
 
-				sum = oc_cksum(cp, i, sum);
-				m = m->m_next;
-				len -= i;
-			}
-			if (i & 1) {
-				cp =  mtod(m, u_char *);
-				sum += *cp++;
-				return (0xffff & ~oc_cksum(cp, len - 1, sum));
-			}
-		}
-	}
-	return (0xffff & ~oc_cksum(mtod(m, u_char *), len, sum));
+                sum = oc_cksum(cp, i, sum);
+                m = m->m_next;
+                len -= i;
+            }
+            if (i & 1) {
+                cp =  mtod(m, u_char *);
+                sum += *cp++;
+                return (0xffff & ~oc_cksum(cp, len - 1, sum));
+            }
+        }
+    }
+    return (0xffff & ~oc_cksum(mtod(m, u_char *), len, sum));
 }

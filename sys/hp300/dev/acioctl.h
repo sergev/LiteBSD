@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1991 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,50 +37,50 @@
  *
  * from: Utah $Hdr: acioctl.h 1.1 91/06/19$
  *
- *	@(#)acioctl.h	8.1 (Berkeley) 6/10/93
+ *  @(#)acioctl.h   8.1 (Berkeley) 6/10/93
  */
 
 struct acinfo {
-	short	fmte;		/* 1st medium transport elt (picker) */
-	short	nmte;		/* # medium transport elts */
-	short	fse;		/* 1st storage elt (slot) */
-	short	nse;		/* # storage elts */
-	short	fiee;		/* 1st import/export elt (mailslot) */
-	short	niee;		/* # import/export elts */
-	short	fdte;		/* 1st data transport elt (drive) */
-	short	ndte;		/* # data transport elts */
+    short   fmte;       /* 1st medium transport elt (picker) */
+    short   nmte;       /* # medium transport elts */
+    short   fse;        /* 1st storage elt (slot) */
+    short   nse;        /* # storage elts */
+    short   fiee;       /* 1st import/export elt (mailslot) */
+    short   niee;       /* # import/export elts */
+    short   fdte;       /* 1st data transport elt (drive) */
+    short   ndte;       /* # data transport elts */
 };
 
 struct aceltstat {
-	short	eaddr;		/* element adress */
-	char	type;		/* type of element */
-	char	flags;		/* flags */
+    short   eaddr;      /* element adress */
+    char    type;       /* type of element */
+    char    flags;      /* flags */
 };
 
 /* types */
-#define AC_MTE		0x01	/* picker */
-#define AC_SE		0x02	/* slot */
-#define AC_IEE		0x03	/* mailslot */
-#define AC_DTE		0x04	/* drive */
+#define AC_MTE      0x01    /* picker */
+#define AC_SE       0x02    /* slot */
+#define AC_IEE      0x03    /* mailslot */
+#define AC_DTE      0x04    /* drive */
 /* flags */
-#define AC_FULL		0x01	/* media present */
-#define	AC_ERROR	0x04	/* error accessing element */
-#define AC_ACCESS	0x08	/* element accessible */
-#define AC_INVERT	0x80	/* media inverted prior to insertion */
+#define AC_FULL     0x01    /* media present */
+#define AC_ERROR    0x04    /* error accessing element */
+#define AC_ACCESS   0x08    /* element accessible */
+#define AC_INVERT   0x80    /* media inverted prior to insertion */
 
 struct acmove {
-	short	srcelem;
-	short	dstelem;
-	short	flags;
+    short   srcelem;
+    short   dstelem;
+    short   flags;
 };
 
 struct acbuffer {
-	char	*bufptr;
-	int	buflen;
+    char    *bufptr;
+    int     buflen;
 };
 
-#define ACIOCINIT	_IO('A', 0x1)			/* init elt status */
-#define ACIOCGINFO	_IOR('A', 0x2, struct acinfo)	/* mode sense */
-#define ACIOCGSTAT	_IOW('A', 0x3, struct acbuffer)	/* read elem status */
-#define ACIOCMOVE	_IOW('A', 0x4, struct acmove)	/* move elem */
-#define ACIOCRAWES	_IOW('A', 0x5, struct acbuffer)	/* raw element stat */
+#define ACIOCINIT   _IO('A', 0x1)                   /* init elt status */
+#define ACIOCGINFO  _IOR('A', 0x2, struct acinfo)   /* mode sense */
+#define ACIOCGSTAT  _IOW('A', 0x3, struct acbuffer) /* read elem status */
+#define ACIOCMOVE   _IOW('A', 0x4, struct acmove)   /* move elem */
+#define ACIOCRAWES  _IOW('A', 0x5, struct acbuffer) /* raw element stat */

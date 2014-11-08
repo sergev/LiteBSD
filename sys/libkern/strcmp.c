@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)strcmp.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)strcmp.c    8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include <sys/cdefs.h>
@@ -46,10 +46,10 @@ static char sccsid[] = "@(#)strcmp.c	8.1 (Berkeley) 6/4/93";
  */
 int
 strcmp(s1, s2)
-	register const char *s1, *s2;
+    register const char *s1, *s2;
 {
-	while (*s1 == *s2++)
-		if (*s1++ == 0)
-			return (0);
-	return (*(unsigned char *)s1 - *(unsigned char *)--s2);
+    while (*s1 == *s2++)
+        if (*s1++ == 0)
+            return (0);
+    return (*(unsigned char *)s1 - *(unsigned char *)--s2);
 }

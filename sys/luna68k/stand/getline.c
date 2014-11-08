@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,51 +34,51 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)getline.c	8.1 (Berkeley) 6/10/93
+ *  @(#)getline.c   8.1 (Berkeley) 6/10/93
  */
 
 /*
  * getline -- simple getline function
- * 	by A.Fujita, Dec-11-1992
+ *  by A.Fujita, Dec-11-1992
  */
 
 int
 getline(prompt, buff)
-	char *prompt, *buff;
+    char *prompt, *buff;
 {
-	register int c;
-	register char *p = buff;
+    register int c;
+    register char *p = buff;
 
-	printf("%s", prompt);
+    printf("%s", prompt);
 
-	for(;;) {
-		c = cngetc() & 0x7F;
+    for(;;) {
+        c = cngetc() & 0x7F;
 
-		switch (c) {
-		case 0x0a:
-		case 0x0d:
-			cnputc('\r');
-			cnputc('\n');
-			*p = '\0';
-			goto outloop;
+        switch (c) {
+        case 0x0a:
+        case 0x0d:
+            cnputc('\r');
+            cnputc('\n');
+            *p = '\0';
+            goto outloop;
 
-		case 0x08:
-		case 0x7f:
-			if (p > buff) {
-				cnputc(0x08);
-				cnputc(' ');
-				cnputc(0x08);
-				p--;
-			}
-			break;
+        case 0x08:
+        case 0x7f:
+            if (p > buff) {
+                cnputc(0x08);
+                cnputc(' ');
+                cnputc(0x08);
+                p--;
+            }
+            break;
 
-		default:
-			*p++ = c;
-			cnputc(c);
-			break;
-		}
-	}
+        default:
+            *p++ = c;
+            cnputc(c);
+            break;
+        }
+    }
 
  outloop:
-	return(strlen(buff));
+    return(strlen(buff));
 }

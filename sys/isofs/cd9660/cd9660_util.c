@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley
  * by Pace Willisson (pace@blitz.com).  The Rock Ridge Extension
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)cd9660_util.c	8.3 (Berkeley) 12/5/94
+ *  @(#)cd9660_util.c   8.3 (Berkeley) 12/5/94
  */
 
 #include <sys/param.h>
@@ -63,57 +63,57 @@
  */
 int
 isofncmp(fn, fnlen, isofn, isolen)
-	u_char *fn, *isofn;
-	int fnlen, isolen;
+    u_char *fn, *isofn;
+    int fnlen, isolen;
 {
-	int i, j;
-	char c;
-	
-	while (--fnlen >= 0) {
-		if (--isolen < 0)
-			return *fn;
-		if ((c = *isofn++) == ';') {
-			switch (*fn++) {
-			default:
-				return *--fn;
-			case 0:
-				return 0;
-			case ';':
-				break;
-			}
-			for (i = 0; --fnlen >= 0; i = i * 10 + *fn++ - '0') {
-				if (*fn < '0' || *fn > '9') {
-					return -1;
-				}
-			}
-			for (j = 0; --isolen >= 0; j = j * 10 + *isofn++ - '0');
-			return i - j;
-		}
-		if (c != *fn) {
-			if (c >= 'A' && c <= 'Z') {
-				if (c + ('a' - 'A') != *fn) {
-					if (*fn >= 'a' && *fn <= 'z')
-						return *fn - ('a' - 'A') - c;
-					else
-						return *fn - c;
-				}
-			} else
-				return *fn - c;
-		}
-		fn++;
-	}
-	if (isolen > 0) {
-		switch (*isofn) {
-		default:
-			return -1;
-		case '.':
-			if (isofn[1] != ';')
-				return -1;
-		case ';':
-			return 0;
-		}
-	}
-	return 0;
+    int i, j;
+    char c;
+    
+    while (--fnlen >= 0) {
+        if (--isolen < 0)
+            return *fn;
+        if ((c = *isofn++) == ';') {
+            switch (*fn++) {
+            default:
+                return *--fn;
+            case 0:
+                return 0;
+            case ';':
+                break;
+            }
+            for (i = 0; --fnlen >= 0; i = i * 10 + *fn++ - '0') {
+                if (*fn < '0' || *fn > '9') {
+                    return -1;
+                }
+            }
+            for (j = 0; --isolen >= 0; j = j * 10 + *isofn++ - '0');
+            return i - j;
+        }
+        if (c != *fn) {
+            if (c >= 'A' && c <= 'Z') {
+                if (c + ('a' - 'A') != *fn) {
+                    if (*fn >= 'a' && *fn <= 'z')
+                        return *fn - ('a' - 'A') - c;
+                    else
+                        return *fn - c;
+                }
+            } else
+                return *fn - c;
+        }
+        fn++;
+    }
+    if (isolen > 0) {
+        switch (*isofn) {
+        default:
+            return -1;
+        case '.':
+            if (isofn[1] != ';')
+                return -1;
+        case ';':
+            return 0;
+        }
+    }
+    return 0;
 }
 
 /*
@@ -121,30 +121,30 @@ isofncmp(fn, fnlen, isofn, isolen)
  */
 void
 isofntrans(infn, infnlen, outfn, outfnlen, original, assoc)
-	u_char *infn, *outfn;
-	int infnlen;
-	u_short *outfnlen;
-	int original;
-	int assoc;
+    u_char *infn, *outfn;
+    int infnlen;
+    u_short *outfnlen;
+    int original;
+    int assoc;
 {
-	int fnidx = 0;
-	
-	if (assoc) {
-		*outfn++ = ASSOCCHAR;
-		fnidx++;
-		infnlen++;
-	}
-	for (; fnidx < infnlen; fnidx++) {
-		char c = *infn++;
-		
-		if (!original && c >= 'A' && c <= 'Z')
-			*outfn++ = c + ('a' - 'A');
-		else if (!original && c == '.' && *infn == ';')
-			break;
-		else if (!original && c == ';')
-			break;
-		else
-			*outfn++ = c;
-	}
-	*outfnlen = fnidx;
+    int fnidx = 0;
+    
+    if (assoc) {
+        *outfn++ = ASSOCCHAR;
+        fnidx++;
+        infnlen++;
+    }
+    for (; fnidx < infnlen; fnidx++) {
+        char c = *infn++;
+        
+        if (!original && c >= 'A' && c <= 'Z')
+            *outfn++ = c + ('a' - 'A');
+        else if (!original && c == '.' && *infn == ';')
+            break;
+        else if (!original && c == ';')
+            break;
+        else
+            *outfn++ = c;
+    }
+    *outfnlen = fnidx;
 }

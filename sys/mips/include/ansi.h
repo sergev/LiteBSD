@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,27 +30,27 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ansi.h	8.2 (Berkeley) 1/4/94
+ *      @(#)ansi.h      8.2 (Berkeley) 1/4/94
  */
 
-#ifndef	_ANSI_H_
-#define	_ANSI_H_
+#ifndef _ANSI_H_
+#define _ANSI_H_
 
 /*
  * Types which are fundamental to the implementation and may appear in
  * more than one standard header are defined here.  Standard headers
  * then use:
- *	#ifdef	_BSD_SIZE_T_
- *	typedef	_BSD_SIZE_T_ size_t;
- *	#undef	_BSD_SIZE_T_
- *	#endif
+ *      #ifdef  _BSD_SIZE_T_
+ *      typedef _BSD_SIZE_T_ size_t;
+ *      #undef  _BSD_SIZE_T_
+ *      #endif
  */
-#define	_BSD_CLOCK_T_	unsigned long		/* clock() */
-#define	_BSD_PTRDIFF_T_	int			/* ptr1 - ptr2 */
-#define	_BSD_SIZE_T_	unsigned int		/* sizeof() */
-#define	_BSD_SSIZE_T_	int			/* byte count or error */
-#define	_BSD_TIME_T_	long			/* time() */
-#define	_BSD_VA_LIST_	char *			/* va_list */
+#define _BSD_CLOCK_T_   unsigned long           /* clock() */
+#define _BSD_PTRDIFF_T_ int                     /* ptr1 - ptr2 */
+#define _BSD_SIZE_T_    unsigned int            /* sizeof() */
+#define _BSD_SSIZE_T_   int                     /* byte count or error */
+#define _BSD_TIME_T_    long                    /* time() */
+#define _BSD_VA_LIST_   char *                  /* va_list */
 
 /*
  * Runes (wchar_t) is declared to be an ``int'' instead of the more natural
@@ -66,7 +66,7 @@
  * and rune_t are typedef'd, _WCHAR_T_ will be undef'd, but _RUNE_T remains
  * defined for ctype.h.
  */
-#define	_BSD_WCHAR_T_	int			/* wchar_t */
-#define	_BSD_RUNE_T_	int			/* rune_t */
+#define _BSD_WCHAR_T_   int                     /* wchar_t */
+#define _BSD_RUNE_T_    int                     /* rune_t */
 
-#endif	/* _ANSI_H_ */
+#endif  /* _ANSI_H_ */

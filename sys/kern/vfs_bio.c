@@ -1,7 +1,7 @@
 /*-
  * Copyright (c) 1994 Christopher G. Demetriou
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -18,8 +18,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -36,7 +36,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)vfs_bio.c	8.6 (Berkeley) 1/11/94
+ *  from: @(#)vfs_bio.c 8.6 (Berkeley) 1/11/94
  */
 
 #include <sys/param.h>
@@ -50,33 +50,33 @@
 #include <sys/resourcevar.h>
 
 /* Macros to clear/set/test flags. */
-#define	SET(t, f)	(t) |= (f)
-#define	CLR(t, f)	(t) &= ~(f)
-#define	ISSET(t, f)	((t) & (f))
+#define SET(t, f)   (t) |= (f)
+#define CLR(t, f)   (t) &= ~(f)
+#define ISSET(t, f) ((t) & (f))
 
 /*
  * Definitions for the buffer hash lists.
  */
-#define	BUFHASH(dvp, lbn)	\
-	(&bufhashtbl[((int)(dvp) / sizeof(*(dvp)) + (int)(lbn)) & bufhash])
+#define BUFHASH(dvp, lbn)   \
+    (&bufhashtbl[((int)(dvp) / sizeof(*(dvp)) + (int)(lbn)) & bufhash])
 LIST_HEAD(bufhashhdr, buf) *bufhashtbl, invalhash;
-u_long	bufhash;
+u_long  bufhash;
 
 /*
  * Insq/Remq for the buffer hash lists.
  */
-#define	binshash(bp, dp)	LIST_INSERT_HEAD(dp, bp, b_hash)
-#define	bremhash(bp)		LIST_REMOVE(bp, b_hash)
+#define binshash(bp, dp)    LIST_INSERT_HEAD(dp, bp, b_hash)
+#define bremhash(bp)        LIST_REMOVE(bp, b_hash)
 
 /*
  * Definitions for the buffer free lists.
  */
-#define	BQUEUES		4		/* number of free buffer queues */
+#define BQUEUES     4       /* number of free buffer queues */
 
-#define	BQ_LOCKED	0		/* super-blocks &c */
-#define	BQ_LRU		1		/* lru, useful buffers */
-#define	BQ_AGE		2		/* rubbish */
-#define	BQ_EMPTY	3		/* buffer headers with no memory */
+#define BQ_LOCKED   0       /* super-blocks &c */
+#define BQ_LRU      1       /* lru, useful buffers */
+#define BQ_AGE      2       /* rubbish */
+#define BQ_EMPTY    3       /* buffer headers with no memory */
 
 TAILQ_HEAD(bqueues, buf) bufqueues[BQUEUES];
 int needbuffer;
@@ -84,30 +84,30 @@ int needbuffer;
 /*
  * Insq/Remq for the buffer free lists.
  */
-#define	binsheadfree(bp, dp)	TAILQ_INSERT_HEAD(dp, bp, b_freelist)
-#define	binstailfree(bp, dp)	TAILQ_INSERT_TAIL(dp, bp, b_freelist)
+#define binsheadfree(bp, dp)    TAILQ_INSERT_HEAD(dp, bp, b_freelist)
+#define binstailfree(bp, dp)    TAILQ_INSERT_TAIL(dp, bp, b_freelist)
 
 void
 bremfree(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	struct bqueues *dp = NULL;
+    struct bqueues *dp = NULL;
 
-	/*
-	 * We only calculate the head of the freelist when removing
-	 * the last element of the list as that is the only time that
-	 * it is needed (e.g. to reset the tail pointer).
-	 *
-	 * NB: This makes an assumption about how tailq's are implemented.
-	 */
-	if (bp->b_freelist.tqe_next == NULL) {
-		for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
-			if (dp->tqh_last == &bp->b_freelist.tqe_next)
-				break;
-		if (dp == &bufqueues[BQUEUES])
-			panic("bremfree: lost tail");
-	}
-	TAILQ_REMOVE(dp, bp, b_freelist);
+    /*
+     * We only calculate the head of the freelist when removing
+     * the last element of the list as that is the only time that
+     * it is needed (e.g. to reset the tail pointer).
+     *
+     * NB: This makes an assumption about how tailq's are implemented.
+     */
+    if (bp->b_freelist.tqe_next == NULL) {
+        for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
+            if (dp->tqh_last == &bp->b_freelist.tqe_next)
+                break;
+        if (dp == &bufqueues[BQUEUES])
+            panic("bremfree: lost tail");
+    }
+    TAILQ_REMOVE(dp, bp, b_freelist);
 }
 
 /*
@@ -116,33 +116,33 @@ bremfree(bp)
 void
 bufinit()
 {
-	register struct buf *bp;
-	struct bqueues *dp;
-	register int i;
-	int base, residual;
+    register struct buf *bp;
+    struct bqueues *dp;
+    register int i;
+    int base, residual;
 
-	for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
-		TAILQ_INIT(dp);
-	bufhashtbl = hashinit(nbuf, M_CACHE, &bufhash);
-	base = bufpages / nbuf;
-	residual = bufpages % nbuf;
-	for (i = 0; i < nbuf; i++) {
-		bp = &buf[i];
-		bzero((char *)bp, sizeof *bp);
-		bp->b_dev = NODEV;
-		bp->b_rcred = NOCRED;
-		bp->b_wcred = NOCRED;
-		bp->b_vnbufs.le_next = NOLIST;
-		bp->b_data = buffers + i * MAXBSIZE;
-		if (i < residual)
-			bp->b_bufsize = (base + 1) * CLBYTES;
-		else
-			bp->b_bufsize = base * CLBYTES;
-		bp->b_flags = B_INVAL;
-		dp = bp->b_bufsize ? &bufqueues[BQ_AGE] : &bufqueues[BQ_EMPTY];
-		binsheadfree(bp, dp);
-		binshash(bp, &invalhash);
-	}
+    for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
+        TAILQ_INIT(dp);
+    bufhashtbl = hashinit(nbuf, M_CACHE, &bufhash);
+    base = bufpages / nbuf;
+    residual = bufpages % nbuf;
+    for (i = 0; i < nbuf; i++) {
+        bp = &buf[i];
+        bzero((char *)bp, sizeof *bp);
+        bp->b_dev = NODEV;
+        bp->b_rcred = NOCRED;
+        bp->b_wcred = NOCRED;
+        bp->b_vnbufs.le_next = NOLIST;
+        bp->b_data = buffers + i * MAXBSIZE;
+        if (i < residual)
+            bp->b_bufsize = (base + 1) * CLBYTES;
+        else
+            bp->b_bufsize = base * CLBYTES;
+        bp->b_flags = B_INVAL;
+        dp = bp->b_bufsize ? &bufqueues[BQ_AGE] : &bufqueues[BQ_EMPTY];
+        binsheadfree(bp, dp);
+        binshash(bp, &invalhash);
+    }
 }
 
 /*
@@ -150,38 +150,38 @@ bufinit()
  * This algorithm described in Bach (p.54).
  */
 bread(vp, blkno, size, cred, bpp)
-	struct vnode *vp;
-	daddr_t blkno;
-	int size;
-	struct ucred *cred;
-	struct buf **bpp;
+    struct vnode *vp;
+    daddr_t blkno;
+    int size;
+    struct ucred *cred;
+    struct buf **bpp;
 {
-	register struct buf *bp;
+    register struct buf *bp;
 
-	/* Get buffer for block. */
-	bp = *bpp = getblk(vp, blkno, size, 0, 0);
+    /* Get buffer for block. */
+    bp = *bpp = getblk(vp, blkno, size, 0, 0);
 
-	/*
-	 * If buffer data valid, return it.
-	 * Note that if buffer is B_INVAL, getblk() won't return it.
-	 * Therefore, it's valid if it's I/O has completed or been delayed.
-	 */
-	if (ISSET(bp->b_flags, (B_DONE | B_DELWRI)))
-		return (0);
+    /*
+     * If buffer data valid, return it.
+     * Note that if buffer is B_INVAL, getblk() won't return it.
+     * Therefore, it's valid if it's I/O has completed or been delayed.
+     */
+    if (ISSET(bp->b_flags, (B_DONE | B_DELWRI)))
+        return (0);
 
-	/* Start some I/O for the buffer (keeping credentials, if needed). */
-	SET(bp->b_flags, B_READ);
-	if (cred != NOCRED && bp->b_rcred == NOCRED) {
-		crhold(cred);
-		bp->b_rcred = cred;
-	}
-	VOP_STRATEGY(bp);
+    /* Start some I/O for the buffer (keeping credentials, if needed). */
+    SET(bp->b_flags, B_READ);
+    if (cred != NOCRED && bp->b_rcred == NOCRED) {
+        crhold(cred);
+        bp->b_rcred = cred;
+    }
+    VOP_STRATEGY(bp);
 
-	/* Pay for the read. */
-	curproc->p_stats->p_ru.ru_inblock++;		/* XXX */
+    /* Pay for the read. */
+    curproc->p_stats->p_ru.ru_inblock++;        /* XXX */
 
-	/* Wait for the read to complete, and return result. */
-	return (biowait(bp));
+    /* Wait for the read to complete, and return result. */
+    return (biowait(bp));
 }
 
 /*
@@ -189,147 +189,147 @@ bread(vp, blkno, size, cred, bpp)
  * Trivial modification to the breada algorithm presented in Bach (p.55).
  */
 breadn(vp, blkno, size, rablks, rasizes, nrablks, cred, bpp)
-	struct vnode *vp;
-	daddr_t blkno; int size;
-	daddr_t rablks[]; int rasizes[];
-	int nrablks;
-	struct ucred *cred;
-	struct buf **bpp;
+    struct vnode *vp;
+    daddr_t blkno; int size;
+    daddr_t rablks[]; int rasizes[];
+    int nrablks;
+    struct ucred *cred;
+    struct buf **bpp;
 {
-	struct buf *bp, *rabp;
-	int i;
+    struct buf *bp, *rabp;
+    int i;
 
-	bp = NULL;		/* We don't have a buffer yet. */
+    bp = NULL;      /* We don't have a buffer yet. */
 
-	/* If first block not in cache, get buffer for it and read it in. */
-	if (!incore(vp, blkno)) {
-		bp = *bpp = getblk(vp, blkno, size, 0, 0);
+    /* If first block not in cache, get buffer for it and read it in. */
+    if (!incore(vp, blkno)) {
+        bp = *bpp = getblk(vp, blkno, size, 0, 0);
 
-		/*
-	 	 * If buffer data not valid, we have to read it in.
-		 * If it is valid, just hold on to the buffer pointer.
-	 	 */
-		if (!ISSET(bp->b_flags, (B_DONE | B_DELWRI))) {
-			/* Start I/O for the buffer (keeping credentials). */
-			SET(bp->b_flags, B_READ);
-			if (cred != NOCRED && bp->b_rcred == NOCRED) {
-				crhold(cred);
-				bp->b_rcred = cred;
-			}
-			VOP_STRATEGY(bp);
+        /*
+         * If buffer data not valid, we have to read it in.
+         * If it is valid, just hold on to the buffer pointer.
+         */
+        if (!ISSET(bp->b_flags, (B_DONE | B_DELWRI))) {
+            /* Start I/O for the buffer (keeping credentials). */
+            SET(bp->b_flags, B_READ);
+            if (cred != NOCRED && bp->b_rcred == NOCRED) {
+                crhold(cred);
+                bp->b_rcred = cred;
+            }
+            VOP_STRATEGY(bp);
 
-			/* Pay for the read. */
-			curproc->p_stats->p_ru.ru_inblock++;	/* XXX */
-		}
-	}
+            /* Pay for the read. */
+            curproc->p_stats->p_ru.ru_inblock++;    /* XXX */
+        }
+    }
 
-	/*
-	 * For each of the read-ahead blocks, start a read, if necessary.
-	 */
-	for (i = 0; i < nrablks; i++) {
-		/* If it's in the cache, just go on to next one. */
-		if (incore(vp, rablks[i]))
-			continue;
+    /*
+     * For each of the read-ahead blocks, start a read, if necessary.
+     */
+    for (i = 0; i < nrablks; i++) {
+        /* If it's in the cache, just go on to next one. */
+        if (incore(vp, rablks[i]))
+            continue;
 
-		/* Get a buffer for the read-ahead block */
-		rabp = getblk(vp, rablks[i], rasizes[i], 0, 0);
+        /* Get a buffer for the read-ahead block */
+        rabp = getblk(vp, rablks[i], rasizes[i], 0, 0);
 
-		/*
-	 	 * If buffer data valid, just release the buffer back into
-		 * the cache.  If it's not valid, we have to read it in.
-	 	 */
-		if (ISSET(rabp->b_flags, (B_DONE | B_DELWRI)))
-			brelse(rabp);
-		else {
-			/* Start I/O for the buffer (keeping credentials). */
-			SET(rabp->b_flags, (B_READ | B_ASYNC));
-			if (cred != NOCRED && rabp->b_rcred == NOCRED) {
-				crhold(cred);
-				rabp->b_rcred = cred;
-			}
-			VOP_STRATEGY(rabp);
+        /*
+         * If buffer data valid, just release the buffer back into
+         * the cache.  If it's not valid, we have to read it in.
+         */
+        if (ISSET(rabp->b_flags, (B_DONE | B_DELWRI)))
+            brelse(rabp);
+        else {
+            /* Start I/O for the buffer (keeping credentials). */
+            SET(rabp->b_flags, (B_READ | B_ASYNC));
+            if (cred != NOCRED && rabp->b_rcred == NOCRED) {
+                crhold(cred);
+                rabp->b_rcred = cred;
+            }
+            VOP_STRATEGY(rabp);
 
-			/* Pay for the read. */
-			curproc->p_stats->p_ru.ru_inblock++;	/* XXX */
-		}
-	}
+            /* Pay for the read. */
+            curproc->p_stats->p_ru.ru_inblock++;    /* XXX */
+        }
+    }
 
-	/*
-	 * If first block was originally in the cache (i.e. we *still* don't
-	 * have buffer), use bread to get and return it.
-	 */
-	if (bp == NULL)
-		return (bread(vp, blkno, size, cred, bpp));
+    /*
+     * If first block was originally in the cache (i.e. we *still* don't
+     * have buffer), use bread to get and return it.
+     */
+    if (bp == NULL)
+        return (bread(vp, blkno, size, cred, bpp));
 
-	/* Otherwise, we had to start a read for it; wait until it's valid. */
-	return (biowait(bp));
+    /* Otherwise, we had to start a read for it; wait until it's valid. */
+    return (biowait(bp));
 }
 
 /*
  * Block write.  Described in Bach (p.56)
  */
 bwrite(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	int rv, s, sync, wasdelayed;
+    int rv, s, sync, wasdelayed;
 
-	rv = 0;
+    rv = 0;
 
-	/* Remember buffer type, to switch on it later. */
-	sync = !ISSET(bp->b_flags, B_ASYNC);
-	wasdelayed = ISSET(bp->b_flags, B_DELWRI);
-	CLR(bp->b_flags, (B_READ | B_DONE | B_ERROR | B_DELWRI));
+    /* Remember buffer type, to switch on it later. */
+    sync = !ISSET(bp->b_flags, B_ASYNC);
+    wasdelayed = ISSET(bp->b_flags, B_DELWRI);
+    CLR(bp->b_flags, (B_READ | B_DONE | B_ERROR | B_DELWRI));
 
-	/*
-	 * If not synchronous, pay for the I/O operation and make
-	 * sure the buf is on the correct vnode queue.  We have
-	 * to do this now, because if we don't, the vnode may not
-	 * be properly notified that it's i/o has completed.
-	 */
-	if (!sync)
-		if (wasdelayed)
-			reassignbuf(bp, bp->b_vp);
-		else
-			curproc->p_stats->p_ru.ru_oublock++;
+    /*
+     * If not synchronous, pay for the I/O operation and make
+     * sure the buf is on the correct vnode queue.  We have
+     * to do this now, because if we don't, the vnode may not
+     * be properly notified that it's i/o has completed.
+     */
+    if (!sync)
+        if (wasdelayed)
+            reassignbuf(bp, bp->b_vp);
+        else
+            curproc->p_stats->p_ru.ru_oublock++;
 
-	/* Initiate disk write.  Make sure the appropriate party is charged. */
-	SET(bp->b_flags, B_WRITEINPROG);
-	bp->b_vp->v_numoutput++;
-	VOP_STRATEGY(bp);
+    /* Initiate disk write.  Make sure the appropriate party is charged. */
+    SET(bp->b_flags, B_WRITEINPROG);
+    bp->b_vp->v_numoutput++;
+    VOP_STRATEGY(bp);
 
-	/*
-	 * If I/O was synchronous, wait for it to complete.
-	 */
-	if (sync)
-		rv = biowait(bp);
+    /*
+     * If I/O was synchronous, wait for it to complete.
+     */
+    if (sync)
+        rv = biowait(bp);
 
-	/*
-	 * Pay for the I/O operation, if it's not been paid for, and
-	 * make sure it's on the correct vnode queue. (async operatings
-	 * were payed for above.)
-	 */
-	if (sync)
-		if (wasdelayed)
-			reassignbuf(bp, bp->b_vp);
-		else
-			curproc->p_stats->p_ru.ru_oublock++;
+    /*
+     * Pay for the I/O operation, if it's not been paid for, and
+     * make sure it's on the correct vnode queue. (async operatings
+     * were payed for above.)
+     */
+    if (sync)
+        if (wasdelayed)
+            reassignbuf(bp, bp->b_vp);
+        else
+            curproc->p_stats->p_ru.ru_oublock++;
 
-	/* Release the buffer, or, if async, make sure it gets reused ASAP. */
-	if (sync)
-		brelse(bp);
-	else if (wasdelayed) {
-		s = splbio();
-		SET(bp->b_flags, B_AGE);
-		splx(s);
-	}
-	return (rv);
+    /* Release the buffer, or, if async, make sure it gets reused ASAP. */
+    if (sync)
+        brelse(bp);
+    else if (wasdelayed) {
+        s = splbio();
+        SET(bp->b_flags, B_AGE);
+        splx(s);
+    }
+    return (rv);
 }
 
 int
 vn_bwrite(ap)
-	struct vop_bwrite_args *ap;
+    struct vop_bwrite_args *ap;
 {
-	return (bwrite(ap->a_bp));
+    return (bwrite(ap->a_bp));
 }
 
 /*
@@ -347,30 +347,30 @@ vn_bwrite(ap)
  */
 void
 bdwrite(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
 
-	/*
-	 * If the block hasn't been seen before:
-	 *	(1) Mark it as having been seen,
-	 *	(2) Charge for the write.
-	 *	(3) Make sure it's on its vnode's correct block list,
-	 */
-	if (!ISSET(bp->b_flags, B_DELWRI)) {
-		SET(bp->b_flags, B_DELWRI);
-		curproc->p_stats->p_ru.ru_oublock++;	/* XXX */
-		reassignbuf(bp, bp->b_vp);
-	}
+    /*
+     * If the block hasn't been seen before:
+     *  (1) Mark it as having been seen,
+     *  (2) Charge for the write.
+     *  (3) Make sure it's on its vnode's correct block list,
+     */
+    if (!ISSET(bp->b_flags, B_DELWRI)) {
+        SET(bp->b_flags, B_DELWRI);
+        curproc->p_stats->p_ru.ru_oublock++;    /* XXX */
+        reassignbuf(bp, bp->b_vp);
+    }
 
-	/* If this is a tape block, write it the block now. */
-	if (ISSET(bp->b_flags, B_TAPE)) {
-		bwrite(bp);
-		return;
-	}
+    /* If this is a tape block, write it the block now. */
+    if (ISSET(bp->b_flags, B_TAPE)) {
+        bwrite(bp);
+        return;
+    }
 
-	/* Otherwise, the "write" is done, so mark and release the buffer. */
-	SET(bp->b_flags, B_DONE);
-	brelse(bp);
+    /* Otherwise, the "write" is done, so mark and release the buffer. */
+    SET(bp->b_flags, B_DONE);
+    brelse(bp);
 }
 
 /*
@@ -378,10 +378,10 @@ bdwrite(bp)
  */
 void
 bawrite(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	SET(bp->b_flags, B_ASYNC);
-	VOP_BWRITE(bp);
+    SET(bp->b_flags, B_ASYNC);
+    VOP_BWRITE(bp);
 }
 
 /*
@@ -390,75 +390,75 @@ bawrite(bp)
  */
 void
 brelse(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	struct bqueues *bufq;
-	int s;
+    struct bqueues *bufq;
+    int s;
 
-	/* Wake up any processes waiting for any buffer to become free. */
-	if (needbuffer) {
-		needbuffer = 0;
-		wakeup(&needbuffer);
-	}
+    /* Wake up any processes waiting for any buffer to become free. */
+    if (needbuffer) {
+        needbuffer = 0;
+        wakeup(&needbuffer);
+    }
 
-	/* Wake up any proceeses waiting for _this_ buffer to become free. */
-	if (ISSET(bp->b_flags, B_WANTED)) {
-		CLR(bp->b_flags, B_WANTED);
-		wakeup(bp);
-	}
+    /* Wake up any proceeses waiting for _this_ buffer to become free. */
+    if (ISSET(bp->b_flags, B_WANTED)) {
+        CLR(bp->b_flags, B_WANTED);
+        wakeup(bp);
+    }
 
-	/* Block disk interrupts. */
-	s = splbio();
+    /* Block disk interrupts. */
+    s = splbio();
 
-	/*
-	 * Determine which queue the buffer should be on, then put it there.
-	 */
+    /*
+     * Determine which queue the buffer should be on, then put it there.
+     */
 
-	/* If it's locked, don't report an error; try again later. */
-	if (ISSET(bp->b_flags, (B_LOCKED|B_ERROR)) == (B_LOCKED|B_ERROR))
-		CLR(bp->b_flags, B_ERROR);
+    /* If it's locked, don't report an error; try again later. */
+    if (ISSET(bp->b_flags, (B_LOCKED|B_ERROR)) == (B_LOCKED|B_ERROR))
+        CLR(bp->b_flags, B_ERROR);
 
-	/* If it's not cacheable, or an error, mark it invalid. */
-	if (ISSET(bp->b_flags, (B_NOCACHE|B_ERROR)))
-		SET(bp->b_flags, B_INVAL);
+    /* If it's not cacheable, or an error, mark it invalid. */
+    if (ISSET(bp->b_flags, (B_NOCACHE|B_ERROR)))
+        SET(bp->b_flags, B_INVAL);
 
-	if ((bp->b_bufsize <= 0) || ISSET(bp->b_flags, B_INVAL)) {
-		/*
-		 * If it's invalid or empty, dissociate it from its vnode
-		 * and put on the head of the appropriate queue.
-		 */
-		if (bp->b_vp)
-			brelvp(bp);
-		CLR(bp->b_flags, B_DELWRI);
-		if (bp->b_bufsize <= 0)
-			/* no data */
-			bufq = &bufqueues[BQ_EMPTY];
-		else
-			/* invalid data */
-			bufq = &bufqueues[BQ_AGE];
-		binsheadfree(bp, bufq);
-	} else {
-		/*
-		 * It has valid data.  Put it on the end of the appropriate
-		 * queue, so that it'll stick around for as long as possible.
-		 */
-		if (ISSET(bp->b_flags, B_LOCKED))
-			/* locked in core */
-			bufq = &bufqueues[BQ_LOCKED];
-		else if (ISSET(bp->b_flags, B_AGE))
-			/* stale but valid data */
-			bufq = &bufqueues[BQ_AGE];
-		else
-			/* valid data */
-			bufq = &bufqueues[BQ_LRU];
-		binstailfree(bp, bufq);
-	}
+    if ((bp->b_bufsize <= 0) || ISSET(bp->b_flags, B_INVAL)) {
+        /*
+         * If it's invalid or empty, dissociate it from its vnode
+         * and put on the head of the appropriate queue.
+         */
+        if (bp->b_vp)
+            brelvp(bp);
+        CLR(bp->b_flags, B_DELWRI);
+        if (bp->b_bufsize <= 0)
+            /* no data */
+            bufq = &bufqueues[BQ_EMPTY];
+        else
+            /* invalid data */
+            bufq = &bufqueues[BQ_AGE];
+        binsheadfree(bp, bufq);
+    } else {
+        /*
+         * It has valid data.  Put it on the end of the appropriate
+         * queue, so that it'll stick around for as long as possible.
+         */
+        if (ISSET(bp->b_flags, B_LOCKED))
+            /* locked in core */
+            bufq = &bufqueues[BQ_LOCKED];
+        else if (ISSET(bp->b_flags, B_AGE))
+            /* stale but valid data */
+            bufq = &bufqueues[BQ_AGE];
+        else
+            /* valid data */
+            bufq = &bufqueues[BQ_LRU];
+        binstailfree(bp, bufq);
+    }
 
-	/* Unlock the buffer. */
-	CLR(bp->b_flags, (B_AGE | B_ASYNC | B_BUSY | B_NOCACHE));
+    /* Unlock the buffer. */
+    CLR(bp->b_flags, (B_AGE | B_ASYNC | B_BUSY | B_NOCACHE));
 
-	/* Allow disk interrupts. */
-	splx(s);
+    /* Allow disk interrupts. */
+    splx(s);
 }
 
 /*
@@ -470,21 +470,21 @@ brelse(bp)
  */
 struct buf *
 incore(vp, blkno)
-	struct vnode *vp;
-	daddr_t blkno;
+    struct vnode *vp;
+    daddr_t blkno;
 {
-	struct buf *bp;
+    struct buf *bp;
 
-	bp = BUFHASH(vp, blkno)->lh_first;
+    bp = BUFHASH(vp, blkno)->lh_first;
 
-	/* Search hash chain */
-	for (; bp != NULL; bp = bp->b_hash.le_next) {
-		if (bp->b_lblkno == blkno && bp->b_vp == vp &&
-		    !ISSET(bp->b_flags, B_INVAL))
-		return (bp);
-	}
+    /* Search hash chain */
+    for (; bp != NULL; bp = bp->b_hash.le_next) {
+        if (bp->b_lblkno == blkno && bp->b_vp == vp &&
+            !ISSET(bp->b_flags, B_INVAL))
+        return (bp);
+    }
 
-	return (0);
+    return (0);
 }
 
 /*
@@ -497,42 +497,42 @@ incore(vp, blkno)
  */
 struct buf *
 getblk(vp, blkno, size, slpflag, slptimeo)
-	register struct vnode *vp;
-	daddr_t blkno;
-	int size, slpflag, slptimeo;
+    register struct vnode *vp;
+    daddr_t blkno;
+    int size, slpflag, slptimeo;
 {
-	struct buf *bp;
-	int s, err;
+    struct buf *bp;
+    int s, err;
 
 start:
-	s = splbio();
-	if (bp = incore(vp, blkno)) {	/* XXX NFS VOP_BWRITE foolishness */
-		if (ISSET(bp->b_flags, B_BUSY)) {
-			SET(bp->b_flags, B_WANTED);
-			err = tsleep(bp, slpflag | (PRIBIO + 1), "getblk",
-			    slptimeo);
-			splx(s);
-			if (err)
-				return (NULL);
-			goto start;
-		}
-		SET(bp->b_flags, (B_BUSY | B_CACHE));
-		bremfree(bp);
-		splx(s);
-		allocbuf(bp, size);
-	} else {
-		splx(s);
-		if ((bp = getnewbuf(slpflag, slptimeo)) == NULL)
-			goto start;
-		allocbuf(bp, size);
-		bp->b_blkno = bp->b_lblkno = blkno;
-		s = splbio();
-		bgetvp(vp, bp);
-		splx(s);
-		bremhash(bp);
-		binshash(bp, BUFHASH(vp, blkno));
-	}
-	return (bp);
+    s = splbio();
+    if (bp = incore(vp, blkno)) {   /* XXX NFS VOP_BWRITE foolishness */
+        if (ISSET(bp->b_flags, B_BUSY)) {
+            SET(bp->b_flags, B_WANTED);
+            err = tsleep(bp, slpflag | (PRIBIO + 1), "getblk",
+                slptimeo);
+            splx(s);
+            if (err)
+                return (NULL);
+            goto start;
+        }
+        SET(bp->b_flags, (B_BUSY | B_CACHE));
+        bremfree(bp);
+        splx(s);
+        allocbuf(bp, size);
+    } else {
+        splx(s);
+        if ((bp = getnewbuf(slpflag, slptimeo)) == NULL)
+            goto start;
+        allocbuf(bp, size);
+        bp->b_blkno = bp->b_lblkno = blkno;
+        s = splbio();
+        bgetvp(vp, bp);
+        splx(s);
+        bremhash(bp);
+        binshash(bp, BUFHASH(vp, blkno));
+    }
+    return (bp);
 }
 
 /*
@@ -540,21 +540,21 @@ start:
  */
 struct buf *
 geteblk(size)
-	int size;
+    int size;
 {
-	struct buf *bp;
+    struct buf *bp;
 
-	while ((bp = getnewbuf(0, 0)) == 0)
-		;
-	SET(bp->b_flags, B_INVAL);
-	bremhash(bp);
-	binshash(bp, &invalhash);
-	allocbuf(bp, size);
-	bp->b_bcount = 0;
-	bp->b_error = 0;
-	bp->b_resid = 0;
+    while ((bp = getnewbuf(0, 0)) == 0)
+        ;
+    SET(bp->b_flags, B_INVAL);
+    bremhash(bp);
+    binshash(bp, &invalhash);
+    allocbuf(bp, size);
+    bp->b_bcount = 0;
+    bp->b_error = 0;
+    bp->b_resid = 0;
 
-	return (bp);
+    return (bp);
 }
 
 /*
@@ -566,88 +566,88 @@ geteblk(size)
  * responsibility to fill out the buffer's additional contents.
  */
 allocbuf(bp, size)
-	struct buf *bp;
-	int size;
+    struct buf *bp;
+    int size;
 {
-	struct buf      *nbp;
-	vm_size_t       desired_size;
-	int	     s;
+    struct buf      *nbp;
+    vm_size_t       desired_size;
+    int      s;
 
-	desired_size = roundup(size, CLBYTES);
-	if (desired_size > MAXBSIZE)
-		panic("allocbuf: buffer larger than MAXBSIZE requested");
+    desired_size = roundup(size, CLBYTES);
+    if (desired_size > MAXBSIZE)
+        panic("allocbuf: buffer larger than MAXBSIZE requested");
 
-	if (bp->b_bufsize == desired_size)
-		goto out;
+    if (bp->b_bufsize == desired_size)
+        goto out;
 
-	/*
-	 * If the buffer is smaller than the desired size, we need to snarf
-	 * it from other buffers.  Get buffers (via getnewbuf()), and
-	 * steal their pages.
-	 */
-	while (bp->b_bufsize < desired_size) {
-		int amt;
+    /*
+     * If the buffer is smaller than the desired size, we need to snarf
+     * it from other buffers.  Get buffers (via getnewbuf()), and
+     * steal their pages.
+     */
+    while (bp->b_bufsize < desired_size) {
+        int amt;
 
-		/* find a buffer */
-		while ((nbp = getnewbuf(0, 0)) == NULL)
-			;
+        /* find a buffer */
+        while ((nbp = getnewbuf(0, 0)) == NULL)
+            ;
 
-		/* and steal its pages, up to the amount we need */
-		amt = min(nbp->b_bufsize, (desired_size - bp->b_bufsize));
-		pagemove((nbp->b_data + nbp->b_bufsize - amt),
-			bp->b_data + bp->b_bufsize, amt);
-		bp->b_bufsize += amt;
-		nbp->b_bufsize -= amt;
+        /* and steal its pages, up to the amount we need */
+        amt = min(nbp->b_bufsize, (desired_size - bp->b_bufsize));
+        pagemove((nbp->b_data + nbp->b_bufsize - amt),
+            bp->b_data + bp->b_bufsize, amt);
+        bp->b_bufsize += amt;
+        nbp->b_bufsize -= amt;
 
-		/* reduce transfer count if we stole some data */
-		if (nbp->b_bcount > nbp->b_bufsize)
-			nbp->b_bcount = nbp->b_bufsize;
+        /* reduce transfer count if we stole some data */
+        if (nbp->b_bcount > nbp->b_bufsize)
+            nbp->b_bcount = nbp->b_bufsize;
 
 #ifdef DIAGNOSTIC
-		if (nbp->b_bufsize < 0)
-			panic("allocbuf: negative bufsize");
+        if (nbp->b_bufsize < 0)
+            panic("allocbuf: negative bufsize");
 #endif
-		if (nbp->b_bufsize == 0) {
-			bremhash(nbp);
-			binshash(nbp, &invalhash);
-			SET(nbp->b_flags, B_INVAL);
-			nbp->b_error = 0;
-			nbp->b_dev = NODEV;
-		}
-		brelse(nbp);
-	}
+        if (nbp->b_bufsize == 0) {
+            bremhash(nbp);
+            binshash(nbp, &invalhash);
+            SET(nbp->b_flags, B_INVAL);
+            nbp->b_error = 0;
+            nbp->b_dev = NODEV;
+        }
+        brelse(nbp);
+    }
 
-	/*
-	 * If we want a buffer smaller than the current size,
-	 * shrink this buffer.  Grab a buf head from the EMPTY queue,
-	 * move a page onto it, and put it on front of the AGE queue.
-	 * If there are no free buffer headers, leave the buffer alone.
-	 */
-	if (bp->b_bufsize > desired_size) {
-		s = splbio();
-		if ((nbp = bufqueues[BQ_EMPTY].tqh_first) == NULL) {
-			/* No free buffer head */
-			splx(s);
-			goto out;
-		}
-		bremfree(nbp);
-		SET(nbp->b_flags, B_BUSY);
-		splx(s);
+    /*
+     * If we want a buffer smaller than the current size,
+     * shrink this buffer.  Grab a buf head from the EMPTY queue,
+     * move a page onto it, and put it on front of the AGE queue.
+     * If there are no free buffer headers, leave the buffer alone.
+     */
+    if (bp->b_bufsize > desired_size) {
+        s = splbio();
+        if ((nbp = bufqueues[BQ_EMPTY].tqh_first) == NULL) {
+            /* No free buffer head */
+            splx(s);
+            goto out;
+        }
+        bremfree(nbp);
+        SET(nbp->b_flags, B_BUSY);
+        splx(s);
 
-		/* move the page to it and note this change */
-		pagemove(bp->b_data + desired_size,
-		    nbp->b_data, bp->b_bufsize - desired_size);
-		nbp->b_bufsize = bp->b_bufsize - desired_size;
-		bp->b_bufsize = desired_size;
-		nbp->b_bcount = 0;
-		SET(nbp->b_flags, B_INVAL);
+        /* move the page to it and note this change */
+        pagemove(bp->b_data + desired_size,
+            nbp->b_data, bp->b_bufsize - desired_size);
+        nbp->b_bufsize = bp->b_bufsize - desired_size;
+        bp->b_bufsize = desired_size;
+        nbp->b_bcount = 0;
+        SET(nbp->b_flags, B_INVAL);
 
-		/* release the newly-filled buffer and leave */
-		brelse(nbp);
-	}
+        /* release the newly-filled buffer and leave */
+        brelse(nbp);
+    }
 
 out:
-	bp->b_bcount = size;
+    bp->b_bcount = size;
 }
 
 /*
@@ -657,62 +657,62 @@ out:
  */
 struct buf *
 getnewbuf(slpflag, slptimeo)
-	int slpflag, slptimeo;
+    int slpflag, slptimeo;
 {
-	register struct buf *bp;
-	int s;
+    register struct buf *bp;
+    int s;
 
 start:
-	s = splbio();
-	if ((bp = bufqueues[BQ_AGE].tqh_first) != NULL ||
-	    (bp = bufqueues[BQ_LRU].tqh_first) != NULL) {
-		bremfree(bp);
-	} else {
-		/* wait for a free buffer of any kind */
-		needbuffer = 1;
-		tsleep(&needbuffer, slpflag|(PRIBIO+1), "getnewbuf", slptimeo);
-		splx(s);
-		return (0);
-	}
+    s = splbio();
+    if ((bp = bufqueues[BQ_AGE].tqh_first) != NULL ||
+        (bp = bufqueues[BQ_LRU].tqh_first) != NULL) {
+        bremfree(bp);
+    } else {
+        /* wait for a free buffer of any kind */
+        needbuffer = 1;
+        tsleep(&needbuffer, slpflag|(PRIBIO+1), "getnewbuf", slptimeo);
+        splx(s);
+        return (0);
+    }
 
-	/* Buffer is no longer on free lists. */
-	SET(bp->b_flags, B_BUSY);
-	splx(s);
+    /* Buffer is no longer on free lists. */
+    SET(bp->b_flags, B_BUSY);
+    splx(s);
 
-	/* If buffer was a delayed write, start it, and go back to the top. */
-	if (ISSET(bp->b_flags, B_DELWRI)) {
-		bawrite (bp);
-		goto start;
-	}
+    /* If buffer was a delayed write, start it, and go back to the top. */
+    if (ISSET(bp->b_flags, B_DELWRI)) {
+        bawrite (bp);
+        goto start;
+    }
 
-	/* disassociate us from our vnode, if we had one... */
-	s = splbio();
-	if (bp->b_vp)
-		brelvp(bp);
-	splx(s);
+    /* disassociate us from our vnode, if we had one... */
+    s = splbio();
+    if (bp->b_vp)
+        brelvp(bp);
+    splx(s);
 
-	/* clear out various other fields */
-	bp->b_flags = B_BUSY;
-	bp->b_dev = NODEV;
-	bp->b_blkno = bp->b_lblkno = 0;
-	bp->b_iodone = 0;
-	bp->b_error = 0;
-	bp->b_resid = 0;
-	bp->b_bcount = 0;
-	bp->b_dirtyoff = bp->b_dirtyend = 0;
-	bp->b_validoff = bp->b_validend = 0;
+    /* clear out various other fields */
+    bp->b_flags = B_BUSY;
+    bp->b_dev = NODEV;
+    bp->b_blkno = bp->b_lblkno = 0;
+    bp->b_iodone = 0;
+    bp->b_error = 0;
+    bp->b_resid = 0;
+    bp->b_bcount = 0;
+    bp->b_dirtyoff = bp->b_dirtyend = 0;
+    bp->b_validoff = bp->b_validend = 0;
 
-	/* nuke any credentials we were holding */
-	if (bp->b_rcred != NOCRED) {
-		crfree(bp->b_rcred);
-		bp->b_rcred = NOCRED;
-	}
-	if (bp->b_wcred != NOCRED) {
-		crfree(bp->b_wcred);
-		bp->b_wcred = NOCRED;
-	}
+    /* nuke any credentials we were holding */
+    if (bp->b_rcred != NOCRED) {
+        crfree(bp->b_rcred);
+        bp->b_rcred = NOCRED;
+    }
+    if (bp->b_wcred != NOCRED) {
+        crfree(bp->b_wcred);
+        bp->b_wcred = NOCRED;
+    }
 
-	return (bp);
+    return (bp);
 }
 
 /*
@@ -721,23 +721,23 @@ start:
  */
 int
 biowait(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	int s;
+    int s;
 
-	s = splbio();
-	while (!ISSET(bp->b_flags, B_DONE))
-		tsleep(bp, PRIBIO + 1, "biowait", 0);
-	splx(s);
+    s = splbio();
+    while (!ISSET(bp->b_flags, B_DONE))
+        tsleep(bp, PRIBIO + 1, "biowait", 0);
+    splx(s);
 
-	/* check for interruption of I/O (e.g. via NFS), then errors. */
-	if (ISSET(bp->b_flags, B_EINTR)) {
-		CLR(bp->b_flags, B_EINTR);
-		return (EINTR);
-	} else if (ISSET(bp->b_flags, B_ERROR))
-		return (bp->b_error ? bp->b_error : EIO);
-	else
-		return (0);
+    /* check for interruption of I/O (e.g. via NFS), then errors. */
+    if (ISSET(bp->b_flags, B_EINTR)) {
+        CLR(bp->b_flags, B_EINTR);
+        return (EINTR);
+    } else if (ISSET(bp->b_flags, B_ERROR))
+        return (bp->b_error ? bp->b_error : EIO);
+    else
+        return (0);
 }
 
 /*
@@ -747,9 +747,9 @@ biowait(bp)
  * daemon, do so. Otherwise, awaken waiting processes.
  *
  * [ Leffler, et al., says on p.247:
- *	"This routine wakes up the blocked process, frees the buffer
- *	for an asynchronous write, or, for a request by the pagedaemon
- *	process, invokes a procedure specified in the buffer structure" ]
+ *  "This routine wakes up the blocked process, frees the buffer
+ *  for an asynchronous write, or, for a request by the pagedaemon
+ *  process, invokes a procedure specified in the buffer structure" ]
  *
  * In real life, the pagedaemon (or other system processes) wants
  * to do async stuff to, and doesn't want the buffer brelse()'d.
@@ -758,24 +758,24 @@ biowait(bp)
  */
 void
 biodone(bp)
-	struct buf *bp;
+    struct buf *bp;
 {
-	if (ISSET(bp->b_flags, B_DONE))
-		panic("biodone already");
-	SET(bp->b_flags, B_DONE);		/* note that it's done */
+    if (ISSET(bp->b_flags, B_DONE))
+        panic("biodone already");
+    SET(bp->b_flags, B_DONE);       /* note that it's done */
 
-	if (!ISSET(bp->b_flags, B_READ))	/* wake up reader */
-		vwakeup(bp);
+    if (!ISSET(bp->b_flags, B_READ))    /* wake up reader */
+        vwakeup(bp);
 
-	if (ISSET(bp->b_flags, B_CALL)) {	/* if necessary, call out */
-		CLR(bp->b_flags, B_CALL);	/* but note callout done */
-		(*bp->b_iodone)(bp);
-	} else if (ISSET(bp->b_flags, B_ASYNC))	/* if async, release it */
-		brelse(bp);
-	else {					/* or just wakeup the buffer */
-		CLR(bp->b_flags, B_WANTED);
-		wakeup(bp);
-	}
+    if (ISSET(bp->b_flags, B_CALL)) {   /* if necessary, call out */
+        CLR(bp->b_flags, B_CALL);   /* but note callout done */
+        (*bp->b_iodone)(bp);
+    } else if (ISSET(bp->b_flags, B_ASYNC)) /* if async, release it */
+        brelse(bp);
+    else {                  /* or just wakeup the buffer */
+        CLR(bp->b_flags, B_WANTED);
+        wakeup(bp);
+    }
 }
 
 /*
@@ -784,13 +784,13 @@ biodone(bp)
 int
 count_lock_queue()
 {
-	register struct buf *bp;
-	register int n = 0;
+    register struct buf *bp;
+    register int n = 0;
 
-	for (bp = bufqueues[BQ_LOCKED].tqh_first; bp;
-	    bp = bp->b_freelist.tqe_next)
-		n++;
-	return (n);
+    for (bp = bufqueues[BQ_LOCKED].tqh_first; bp;
+        bp = bp->b_freelist.tqe_next)
+        n++;
+    return (n);
 }
 
 #ifdef DIAGNOSTIC
@@ -802,27 +802,27 @@ count_lock_queue()
 void
 vfs_bufstats()
 {
-	int s, i, j, count;
-	register struct buf *bp;
-	register struct bqueues *dp;
-	int counts[MAXBSIZE/CLBYTES+1];
-	static char *bname[BQUEUES] = { "LOCKED", "LRU", "AGE", "EMPTY" };
+    int s, i, j, count;
+    register struct buf *bp;
+    register struct bqueues *dp;
+    int counts[MAXBSIZE/CLBYTES+1];
+    static char *bname[BQUEUES] = { "LOCKED", "LRU", "AGE", "EMPTY" };
 
-	for (dp = bufqueues, i = 0; dp < &bufqueues[BQUEUES]; dp++, i++) {
-		count = 0;
-		for (j = 0; j <= MAXBSIZE/CLBYTES; j++)
-			counts[j] = 0;
-		s = splbio();
-		for (bp = dp->tqh_first; bp; bp = bp->b_freelist.tqe_next) {
-			counts[bp->b_bufsize/CLBYTES]++;
-			count++;
-		}
-		splx(s);
-		printf("%s: total-%d", bname[i], count);
-		for (j = 0; j <= MAXBSIZE/CLBYTES; j++)
-			if (counts[j] != 0)
-				printf(", %d-%d", j * CLBYTES, counts[j]);
-		printf("\n");
-	}
+    for (dp = bufqueues, i = 0; dp < &bufqueues[BQUEUES]; dp++, i++) {
+        count = 0;
+        for (j = 0; j <= MAXBSIZE/CLBYTES; j++)
+            counts[j] = 0;
+        s = splbio();
+        for (bp = dp->tqh_first; bp; bp = bp->b_freelist.tqe_next) {
+            counts[bp->b_bufsize/CLBYTES]++;
+            count++;
+        }
+        splx(s);
+        printf("%s: total-%d", bname[i], count);
+        for (j = 0; j <= MAXBSIZE/CLBYTES; j++)
+            if (counts[j] != 0)
+                printf(", %d-%d", j * CLBYTES, counts[j]);
+        printf("\n");
+    }
 }
 #endif /* DIAGNOSTIC */

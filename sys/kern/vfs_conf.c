@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1989, 1993, 1995
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vfs_conf.c	8.11 (Berkeley) 5/10/95
+ *  @(#)vfs_conf.c  8.11 (Berkeley) 5/10/95
  */
 
 #include <sys/param.h>
@@ -47,105 +47,105 @@ int (*mountroot)() = NULL;
 /*
  * Set up the initial array of known filesystem types.
  */
-extern	struct vfsops ufs_vfsops;
-extern	int ffs_mountroot();
-extern	struct vfsops lfs_vfsops;
-extern	int lfs_mountroot();
-extern	struct vfsops mfs_vfsops;
-extern	int mfs_mountroot();
-extern	struct vfsops cd9660_vfsops;
-extern	int cd9660_mountroot();
-extern	struct vfsops msdos_vfsops;
-extern	struct vfsops adosfs_vfsops;
-extern	struct vfsops nfs_vfsops;
-extern	int nfs_mountroot();
-extern	struct vfsops afs_vfsops;
-extern	struct vfsops procfs_vfsops;
-extern	struct vfsops null_vfsops;
-extern	struct vfsops union_vfsops;
-extern	struct vfsops umap_vfsops;
-extern	struct vfsops portal_vfsops;
-extern	struct vfsops fdesc_vfsops;
-extern	struct vfsops kernfs_vfsops;
+extern  struct vfsops ufs_vfsops;
+extern  int ffs_mountroot();
+extern  struct vfsops lfs_vfsops;
+extern  int lfs_mountroot();
+extern  struct vfsops mfs_vfsops;
+extern  int mfs_mountroot();
+extern  struct vfsops cd9660_vfsops;
+extern  int cd9660_mountroot();
+extern  struct vfsops msdos_vfsops;
+extern  struct vfsops adosfs_vfsops;
+extern  struct vfsops nfs_vfsops;
+extern  int nfs_mountroot();
+extern  struct vfsops afs_vfsops;
+extern  struct vfsops procfs_vfsops;
+extern  struct vfsops null_vfsops;
+extern  struct vfsops union_vfsops;
+extern  struct vfsops umap_vfsops;
+extern  struct vfsops portal_vfsops;
+extern  struct vfsops fdesc_vfsops;
+extern  struct vfsops kernfs_vfsops;
 
 /*
  * Set up the filesystem operations for vnodes.
  */
 static struct vfsconf vfsconflist[] = {
 
-	/* Fast Filesystem */
+    /* Fast Filesystem */
 #ifdef FFS
-	{ &ufs_vfsops, "ufs", 1, 0, MNT_LOCAL, ffs_mountroot, NULL },
+    { &ufs_vfsops, "ufs", 1, 0, MNT_LOCAL, ffs_mountroot, NULL },
 #endif
 
-	/* Log-based Filesystem */
+    /* Log-based Filesystem */
 #ifdef LFS
-	{ &lfs_vfsops, "lfs", 5, 0, MNT_LOCAL, lfs_mountroot, NULL },
+    { &lfs_vfsops, "lfs", 5, 0, MNT_LOCAL, lfs_mountroot, NULL },
 #endif
 
-	/* Memory-based Filesystem */
+    /* Memory-based Filesystem */
 #ifdef MFS
-	{ &mfs_vfsops, "mfs", 3, 0, MNT_LOCAL, mfs_mountroot, NULL },
+    { &mfs_vfsops, "mfs", 3, 0, MNT_LOCAL, mfs_mountroot, NULL },
 #endif
 
-	/* ISO9660 (aka CDROM) Filesystem */
+    /* ISO9660 (aka CDROM) Filesystem */
 #ifdef CD9660
-	{ &cd9660_vfsops, "cd9660", 14, 0, MNT_LOCAL, cd9660_mountroot, NULL },
+    { &cd9660_vfsops, "cd9660", 14, 0, MNT_LOCAL, cd9660_mountroot, NULL },
 #endif
 
-	/* MSDOS Filesystem */
+    /* MSDOS Filesystem */
 #ifdef MSDOS
-	{ &msdos_vfsops, "msdos", 4, 0, MNT_LOCAL, NULL, NULL },
+    { &msdos_vfsops, "msdos", 4, 0, MNT_LOCAL, NULL, NULL },
 #endif
 
-	/* AmigaDOS Filesystem */
+    /* AmigaDOS Filesystem */
 #ifdef ADOSFS
-	{ &adosfs_vfsops, "adosfs", 16, 0, MNT_LOCAL, NULL, NULL },
+    { &adosfs_vfsops, "adosfs", 16, 0, MNT_LOCAL, NULL, NULL },
 #endif
 
-	/* Sun-compatible Network Filesystem */
+    /* Sun-compatible Network Filesystem */
 #ifdef NFS
-	{ &nfs_vfsops, "nfs", 2, 0, 0, nfs_mountroot, NULL },
+    { &nfs_vfsops, "nfs", 2, 0, 0, nfs_mountroot, NULL },
 #endif
 
-	/* Andrew Filesystem */
+    /* Andrew Filesystem */
 #ifdef AFS
-	{ &afs_vfsops, "andrewfs", 13, 0, 0, afs_mountroot, NULL },
+    { &afs_vfsops, "andrewfs", 13, 0, 0, afs_mountroot, NULL },
 #endif
 
-	/* /proc Filesystem */
+    /* /proc Filesystem */
 #ifdef PROCFS
-	{ &procfs_vfsops, "procfs", 12, 0, 0, NULL, NULL },
+    { &procfs_vfsops, "procfs", 12, 0, 0, NULL, NULL },
 #endif
 
-	/* Loopback (Minimal) Filesystem Layer */
+    /* Loopback (Minimal) Filesystem Layer */
 #ifdef NULLFS
-	{ &null_vfsops, "loopback", 9, 0, 0, NULL, NULL },
+    { &null_vfsops, "loopback", 9, 0, 0, NULL, NULL },
 #endif
 
-	/* Union (translucent) Filesystem */
+    /* Union (translucent) Filesystem */
 #ifdef UNION
-	{ &union_vfsops, "union", 15, 0, 0, NULL, NULL },
+    { &union_vfsops, "union", 15, 0, 0, NULL, NULL },
 #endif
 
-	/* User/Group Identifer Remapping Filesystem */
+    /* User/Group Identifer Remapping Filesystem */
 #ifdef UMAPFS
-	{ &umap_vfsops, "umap", 10, 0, 0, NULL, NULL },
+    { &umap_vfsops, "umap", 10, 0, 0, NULL, NULL },
 #endif
 
-	/* Portal Filesystem */
+    /* Portal Filesystem */
 #ifdef PORTAL
-	{ &portal_vfsops, "portal", 8, 0, 0, NULL, NULL },
+    { &portal_vfsops, "portal", 8, 0, 0, NULL, NULL },
 #endif
 
-	/* File Descriptor Filesystem */
+    /* File Descriptor Filesystem */
 #ifdef FDESC
-	{ &fdesc_vfsops, "fdesc", 7, 0, 0, NULL, NULL },
+    { &fdesc_vfsops, "fdesc", 7, 0, 0, NULL, NULL },
 #endif
 
-	/* Kernel Information Filesystem */
+    /* Kernel Information Filesystem */
 #ifdef KERNFS
-	{ &kernfs_vfsops, "kernfs", 11, 0, 0, NULL, NULL },
+    { &kernfs_vfsops, "kernfs", 11, 0, 0, NULL, NULL },
 #endif
 
 };
@@ -189,60 +189,60 @@ extern struct vnodeopv_desc cd9660_fifoop_opv_desc;
 extern struct vnodeopv_desc union_vnodeop_opv_desc;
 
 struct vnodeopv_desc *vfs_opv_descs[] = {
-	&ffs_vnodeop_opv_desc,
-	&ffs_specop_opv_desc,
+    &ffs_vnodeop_opv_desc,
+    &ffs_specop_opv_desc,
 #ifdef FIFO
-	&ffs_fifoop_opv_desc,
+    &ffs_fifoop_opv_desc,
 #endif
-	&dead_vnodeop_opv_desc,
+    &dead_vnodeop_opv_desc,
 #ifdef FIFO
-	&fifo_vnodeop_opv_desc,
+    &fifo_vnodeop_opv_desc,
 #endif
-	&spec_vnodeop_opv_desc,
+    &spec_vnodeop_opv_desc,
 #ifdef LFS
-	&lfs_vnodeop_opv_desc,
-	&lfs_specop_opv_desc,
+    &lfs_vnodeop_opv_desc,
+    &lfs_specop_opv_desc,
 #ifdef FIFO
-	&lfs_fifoop_opv_desc,
+    &lfs_fifoop_opv_desc,
 #endif
 #endif
 #ifdef MFS
-	&mfs_vnodeop_opv_desc,
+    &mfs_vnodeop_opv_desc,
 #endif
 #ifdef NFS
-	&nfsv2_vnodeop_opv_desc,
-	&spec_nfsv2nodeop_opv_desc,
+    &nfsv2_vnodeop_opv_desc,
+    &spec_nfsv2nodeop_opv_desc,
 #ifdef FIFO
-	&fifo_nfsv2nodeop_opv_desc,
+    &fifo_nfsv2nodeop_opv_desc,
 #endif
 #endif
 #ifdef FDESC
-	&fdesc_vnodeop_opv_desc,
+    &fdesc_vnodeop_opv_desc,
 #endif
 #ifdef PORTAL
-	&portal_vnodeop_opv_desc,
+    &portal_vnodeop_opv_desc,
 #endif
 #ifdef NULLFS
-	&null_vnodeop_opv_desc,
+    &null_vnodeop_opv_desc,
 #endif
 #ifdef UMAPFS
-	&umap_vnodeop_opv_desc,
+    &umap_vnodeop_opv_desc,
 #endif
 #ifdef KERNFS
-	&kernfs_vnodeop_opv_desc,
+    &kernfs_vnodeop_opv_desc,
 #endif
 #ifdef PROCFS
-	&procfs_vnodeop_opv_desc,
+    &procfs_vnodeop_opv_desc,
 #endif
 #ifdef CD9660
-	&cd9660_vnodeop_opv_desc,
-	&cd9660_specop_opv_desc,
+    &cd9660_vnodeop_opv_desc,
+    &cd9660_specop_opv_desc,
 #ifdef FIFO
-	&cd9660_fifoop_opv_desc,
+    &cd9660_fifoop_opv_desc,
 #endif
 #endif
 #ifdef UNION
-	&union_vnodeop_opv_desc,
+    &union_vnodeop_opv_desc,
 #endif
-	NULL
+    NULL
 };

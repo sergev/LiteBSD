@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -20,8 +20,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -38,13 +38,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)confxx.c	8.2 (Berkeley) 1/21/94
+ *  @(#)confxx.c    8.2 (Berkeley) 1/21/94
  */
 
-int	xxstrategy(), xxopen(), xxioctl();
+int xxstrategy(), xxopen(), xxioctl();
 
 struct devsw devsw[] = {
-	{ "XX",	xxstrategy,	xxopen,		nullsys,	noioctl },
+    { "XX", xxstrategy, xxopen,     nullsys,    noioctl },
 };
 
-int	ndevs = (sizeof(devsw) / sizeof(devsw[0]));
+int ndevs = (sizeof(devsw) / sizeof(devsw[0]));

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kbdreg.h	8.1 (Berkeley) 6/10/93
+ *  @(#)kbdreg.h    8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -43,16 +43,16 @@
  */
 
 struct kbd_keymap {
-	int	km_type;
-	int	km_code[2];
+    int km_type;
+    int km_code[2];
 };
 
-#define KC_CHAR		0x000000FF
-#define KC_TYPE		0x0000FF00
-#define	KC_CODE		0x00000000
-#define	KC_SHIFT	0x00000100
-#define	KC_IGNORE	0x0000FF00
+#define KC_CHAR     0x000000FF
+#define KC_TYPE     0x0000FF00
+#define KC_CODE     0x00000000
+#define KC_SHIFT    0x00000100
+#define KC_IGNORE   0x0000FF00
 
-#define KS_SHIFT	0
-#define KS_CTRL		1
-#define KS_META		2
+#define KS_SHIFT    0
+#define KS_CTRL     1
+#define KS_META     2

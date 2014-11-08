@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -36,7 +36,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)ashrdi3.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)ashrdi3.c   8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include "quad.h"
@@ -46,30 +46,30 @@ static char sccsid[] = "@(#)ashrdi3.c	8.1 (Berkeley) 6/4/93";
  */
 quad_t
 __ashrdi3(a, shift)
-	quad_t a;
-	qshift_t shift;
+    quad_t a;
+    qshift_t shift;
 {
-	union uu aa;
+    union uu aa;
 
-	aa.q = a;
-	if (shift >= LONG_BITS) {
-		long s;
+    aa.q = a;
+    if (shift >= LONG_BITS) {
+        long s;
 
-		/*
-		 * Smear bits rightward using the machine's right-shift
-		 * method, whether that is sign extension or zero fill,
-		 * to get the `sign word' s.  Note that shifting by
-		 * LONG_BITS is undefined, so we shift (LONG_BITS-1),
-		 * then 1 more, to get our answer.
-		 */
-		s = (aa.sl[H] >> (LONG_BITS - 1)) >> 1;
-		aa.ul[L] = shift >= QUAD_BITS ? s :
-		    aa.sl[H] >> (shift - LONG_BITS);
-		aa.ul[H] = s;
-	} else if (shift > 0) {
-		aa.ul[L] = (aa.ul[L] >> shift) |
-		    (aa.ul[H] << (LONG_BITS - shift));
-		aa.sl[H] >>= shift;
-	}
-	return (aa.q);
+        /*
+         * Smear bits rightward using the machine's right-shift
+         * method, whether that is sign extension or zero fill,
+         * to get the `sign word' s.  Note that shifting by
+         * LONG_BITS is undefined, so we shift (LONG_BITS-1),
+         * then 1 more, to get our answer.
+         */
+        s = (aa.sl[H] >> (LONG_BITS - 1)) >> 1;
+        aa.ul[L] = shift >= QUAD_BITS ? s :
+            aa.sl[H] >> (shift - LONG_BITS);
+        aa.ul[H] = s;
+    } else if (shift > 0) {
+        aa.ul[L] = (aa.ul[L] >> shift) |
+            (aa.ul[H] << (LONG_BITS - shift));
+        aa.sl[H] >>= shift;
+    }
+    return (aa.q);
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,18 +37,18 @@
  *
  * from: Utah $Hdr: fdioctl.h 1.1 90/07/09$
  *
- *	@(#)vnioctl.h	8.1 (Berkeley) 6/10/93
+ *  @(#)vnioctl.h   8.1 (Berkeley) 6/10/93
  */
 
 /*
  * Ioctl definitions for file (vnode) disk pseudo-device.
  */
 
-#define FDISKFILE	"/etc/fdisks"	/* default config file */
+#define FDISKFILE   "/etc/fdisks"   /* default config file */
 
 struct vn_ioctl {
-	char	*vn_file;	/* pathname of file to mount */
-	int	vn_size;	/* (returned) size of disk */
+    char    *vn_file;   /* pathname of file to mount */
+    int     vn_size;    /* (returned) size of disk */
 };
 
 /*
@@ -57,5 +57,5 @@ struct vn_ioctl {
  * an VNIOCCLR must be used to reset a configuration.  An attempt to
  * VNIOCSET an already active unit will return EBUSY.
  */
-#define VNIOCSET	_IOWR('F', 0, struct vn_ioctl)	/* enable disk */
-#define VNIOCCLR	_IOW('F', 1, struct vn_ioctl)	/* disable disk */
+#define VNIOCSET    _IOWR('F', 0, struct vn_ioctl)  /* enable disk */
+#define VNIOCCLR    _IOW('F', 1, struct vn_ioctl)   /* disable disk */

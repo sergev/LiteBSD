@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,15 +34,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vectors.h	8.1 (Berkeley) 6/10/93
+ *  @(#)vectors.h   8.1 (Berkeley) 6/10/93
  */
 
 /* vectors.h */
 /* by A.Fujita, Nov-18-1991 */
 
-#define	NVECTBL		0x400	/* size of vector table */
+#define NVECTBL     0x400   /* size of vector table */
 
-#define ILLGINST	0x010	/* Illegal Instruction */
-#define TRACEVEC	0x024	/* Trace Vector offset */
-#define	NMIVEC		0x07c	/* Level 7 Interrupt Auto Vector (NMI) offset */
-#define	EVTRAPF		0x0bc	/* Trap #15 Instraction Vector */
+#define ILLGINST    0x010   /* Illegal Instruction */
+#define TRACEVEC    0x024   /* Trace Vector offset */
+#define NMIVEC      0x07c   /* Level 7 Interrupt Auto Vector (NMI) offset */
+#define EVTRAPF     0x0bc   /* Trap #15 Instraction Vector */

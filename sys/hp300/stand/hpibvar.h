@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,30 +30,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)hpibvar.h	8.1 (Berkeley) 6/10/93
+ *  @(#)hpibvar.h   8.1 (Berkeley) 6/10/93
  */
 
-#define	HPIBA		32
-#define	HPIBB		1
-#define	HPIBC		8
-#define	HPIBA_BA	21
-#define	HPIBC_BA	30
+#define HPIBA       32
+#define HPIBB       1
+#define HPIBC       8
+#define HPIBA_BA    21
+#define HPIBC_BA    30
 
-#define	CSA_BA		0x1F
+#define CSA_BA      0x1F
 
-#define	C_DCL		20
-#define	C_LAG		32
-#define	C_UNL		63
-#define	C_TAG		64
-#define	C_UNA		94
-#define	C_UNT		95
-#define	C_SCG		96
+#define C_DCL       20
+#define C_LAG       32
+#define C_UNL       63
+#define C_TAG       64
+#define C_UNA       94
+#define C_UNT       95
+#define C_SCG       96
 
-struct	hpib_softc {
-	char	sc_alive;
-	char	sc_type;
-	int	sc_ba;
-	char	*sc_addr;
+struct  hpib_softc {
+    char    sc_alive;
+    char    sc_type;
+    int     sc_ba;
+    char    *sc_addr;
 };
 
-extern	struct hpib_softc hpib_softc[];
+extern  struct hpib_softc hpib_softc[];

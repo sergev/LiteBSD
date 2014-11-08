@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,22 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dmavar.h	8.1 (Berkeley) 6/10/93
+ *  @(#)dmavar.h    8.1 (Berkeley) 6/10/93
  */
 
 /* dmago flags */
-#define	DMAGO_BYTE	0x00	/* do byte (8 bit) transfers */
-#define	DMAGO_WORD	0x01	/* do word (16 bit) transfers */
-#define	DMAGO_LWORD	0x02	/* do longword (32 bit) transfers */
-#define	DMAGO_PRI	0x04	/* do "priority" DMA */
-#define	DMAGO_READ	0x08	/* transfer is a read */
-#define	DMAGO_NOINT	0x80	/* don't interrupt on completion */
+#define DMAGO_BYTE  0x00    /* do byte (8 bit) transfers */
+#define DMAGO_WORD  0x01    /* do word (16 bit) transfers */
+#define DMAGO_LWORD 0x02    /* do longword (32 bit) transfers */
+#define DMAGO_PRI   0x04    /* do "priority" DMA */
+#define DMAGO_READ  0x08    /* transfer is a read */
+#define DMAGO_NOINT 0x80    /* don't interrupt on completion */
 
 /* dma "controllers" (channels) */
-#define	DMA0		0x1
-#define	DMA1		0x2
+#define DMA0        0x1
+#define DMA1        0x2
 
 #ifdef KERNEL
-extern void	dmago(), dmafree();
-extern int	dmareq();
+extern void dmago(), dmafree();
+extern int  dmareq();
 #endif

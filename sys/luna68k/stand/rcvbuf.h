@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,30 +34,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)rcvbuf.h	8.1 (Berkeley) 6/10/93
+ *  @(#)rcvbuf.h    8.1 (Berkeley) 6/10/93
  */
 
 /*
  * rcvbuf.h -- receive buffer control structure definition
- *	by A.Fujita, Dec-12-1992
+ *  by A.Fujita, Dec-12-1992
  */
 
-#define	RBUF_SIZE	128
+#define RBUF_SIZE   128
 
 struct rcvbuf {
-	u_char	*rb_push;
-	u_char	*rb_pop;
-	u_char	 rb_buf[RBUF_SIZE+4];
+    u_char  *rb_push;
+    u_char  *rb_pop;
+    u_char   rb_buf[RBUF_SIZE+4];
 };
 
-#define RBUF_INIT(n)	rcvbuf[n].rb_pop = rcvbuf[n].rb_push = &rcvbuf[n].rb_buf[RBUF_SIZE]
+#define RBUF_INIT(n)    rcvbuf[n].rb_pop = rcvbuf[n].rb_push = &rcvbuf[n].rb_buf[RBUF_SIZE]
 
-#define PUSH_RBUF(n, c)	*(--rcvbuf[n].rb_push) = c ; \
-			if (rcvbuf[n].rb_push == rcvbuf[n].rb_buf) \
-				rcvbuf[n].rb_push = &rcvbuf[n].rb_buf[RBUF_SIZE]
+#define PUSH_RBUF(n, c) *(--rcvbuf[n].rb_push) = c ; \
+            if (rcvbuf[n].rb_push == rcvbuf[n].rb_buf) \
+                rcvbuf[n].rb_push = &rcvbuf[n].rb_buf[RBUF_SIZE]
 
-#define POP_RBUF(n, c)	c= *(--rcvbuf[n].rb_pop); \
-			if (rcvbuf[n].rb_pop == rcvbuf[n].rb_buf) \
-				rcvbuf[n].rb_pop = &rcvbuf[n].rb_buf[RBUF_SIZE]
+#define POP_RBUF(n, c)  c= *(--rcvbuf[n].rb_pop); \
+            if (rcvbuf[n].rb_pop == rcvbuf[n].rb_buf) \
+                rcvbuf[n].rb_pop = &rcvbuf[n].rb_buf[RBUF_SIZE]
 
-#define RBUF_EMPTY(n)	(rcvbuf[n].rb_push == rcvbuf[n].rb_pop ? 1: 0)
+#define RBUF_EMPTY(n)   (rcvbuf[n].rb_push == rcvbuf[n].rb_pop ? 1: 0)

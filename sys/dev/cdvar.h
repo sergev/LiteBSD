@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,33 +37,33 @@
  *
  * from: Utah $Hdr: cdvar.h 1.1 90/07/09$
  *
- *	@(#)cdvar.h	8.1 (Berkeley) 6/10/93
+ *  @(#)cdvar.h 8.1 (Berkeley) 6/10/93
  */
 
-#define	NCDISKS	8			/* max # of component disks */
+#define NCDISKS 8           /* max # of component disks */
 
 /*
  * A concatenated disk is described at config time by this structure.
  */
 struct cddevice {
-	int	cd_unit;		/* logical unit of this cd */
-	int	cd_interleave;		/* interleave (DEV_BSIZE blocks) */
-	int	cd_flags;		/* misc. information */
-	int	cd_dk;			/* disk number */
-	dev_t	cd_dev[NCDISKS];	/* component devices */
+    int     cd_unit;            /* logical unit of this cd */
+    int     cd_interleave;      /* interleave (DEV_BSIZE blocks) */
+    int     cd_flags;           /* misc. information */
+    int     cd_dk;              /* disk number */
+    dev_t   cd_dev[NCDISKS];    /* component devices */
 };
 
 /* cd_flags */
-#define	CDF_SWAP	0x01	/* interleave should be dmmax */
-#define CDF_UNIFORM	0x02	/* use LCD of sizes for uniform interleave */
+#define CDF_SWAP    0x01    /* interleave should be dmmax */
+#define CDF_UNIFORM 0x02    /* use LCD of sizes for uniform interleave */
 
 /*
  * Component info table.
  * Describes a single component of a concatenated disk.
  */
 struct cdcinfo {
-	dev_t		ci_dev;	 /* devno */
-	size_t		ci_size; /* size */
+    dev_t   ci_dev;     /* devno */
+    size_t  ci_size;    /* size */
 };
 
 /*
@@ -80,11 +80,11 @@ struct cdcinfo {
  * three components of 5, 3, and 7 DEV_BSIZE blocks interleaved at
  * DEV_BSIZE (1), the table would have three entries:
  *
- *	ndisk	startblk	startoff	dev
- *	3	0		0		0, 1, 2
- *	2	9		3		0, 2
- *	1	13		5		2
- *	0	-		-		-
+ *  ndisk   startblk    startoff    dev
+ *  3   0       0       0, 1, 2
+ *  2   9       3       0, 2
+ *  1   13      5       2
+ *  0   -       -       -
  *
  * which says that the first nine blocks (0-8) are interleaved over
  * 3 disks (0, 1, 2) starting at block offset 0 on any component disk,
@@ -93,12 +93,12 @@ struct cdcinfo {
  * 2 starting at offset 5.
  */
 struct cdiinfo {
-	int	ii_ndisk;	/* # of disks range is interleaved over */
-	daddr_t	ii_startblk;	/* starting scaled block # for range */
-	daddr_t	ii_startoff;	/* starting component offset (block #) */
-	char	ii_index[NCDISKS];/* ordered list of components in range */
+    int     ii_ndisk;           /* # of disks range is interleaved over */
+    daddr_t ii_startblk;        /* starting scaled block # for range */
+    daddr_t ii_startoff;        /* starting component offset (block #) */
+    char    ii_index[NCDISKS];  /* ordered list of components in range */
 };
 
 #ifdef KERNEL
-extern	struct cddevice cddevice[];
+extern  struct cddevice cddevice[];
 #endif

@@ -1,6 +1,6 @@
 /*
 | Copyright (c) 1988, 1993
-|	The Regents of the University of California.  All rights reserved.
+|       The Regents of the University of California.  All rights reserved.
 |
 | Redistribution and use in source and binary forms, with or without
 | modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
 |    documentation and/or other materials provided with the distribution.
 | 3. All advertising materials mentioning features or use of this software
 |    must display the following acknowledgement:
-|	This product includes software developed by the University of
-|	California, Berkeley and its contributors.
+|       This product includes software developed by the University of
+|       California, Berkeley and its contributors.
 | 4. Neither the name of the University nor the names of its contributors
 |    may be used to endorse or promote products derived from this software
 |    without specific prior written permission.
@@ -30,7 +30,7 @@
 | OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 | SUCH DAMAGE.
 |
-|	@(#)oc_cksum.s	8.3 (Berkeley) 1/21/94
+|       @(#)oc_cksum.s  8.3 (Berkeley) 1/21/94
 |
 |
 | oc_cksum: ones complement 16 bit checksum for MC68020.
@@ -75,10 +75,10 @@
 | 
 | The processors tested and their average time to checksum 1024 bytes
 | of random data were:
-| 	Sun 3/50 (15MHz)	190 us/KB
-| 	Sun 3/180 (16.6MHz)	175 us/KB
-| 	Sun 3/60 (20MHz)	134 us/KB
-| 	Sun 3/280 (25MHz)	 95 us/KB
+|       Sun 3/50 (15MHz)        190 us/KB
+|       Sun 3/180 (16.6MHz)     175 us/KB
+|       Sun 3/60 (20MHz)        134 us/KB
+|       Sun 3/280 (25MHz)        95 us/KB
 | 
 | The cost of calling this routine was typically 10% of the per-
 | kilobyte cost.  E.g., checksumming zero bytes on a 3/60 cost 9us
@@ -90,100 +90,100 @@
 | enough gain to be worth the effort.
 */
 
-	.data
-	.asciz	"@(#)$Header: oc_cksum.s,v 1.1 90/07/09 16:04:43 mike Exp $"
-	.even
-	.text
+        .data
+        .asciz  "@(#)$Header: oc_cksum.s,v 1.1 90/07/09 16:04:43 mike Exp $"
+        .even
+        .text
 
-	.globl	_oc_cksum
+        .globl  _oc_cksum
 _oc_cksum:
-	movl	sp@(4),a0	| get buffer ptr
-	movl	sp@(8),d1	| get byte count
-	movl	sp@(12),d0	| get starting value
-	movl	d2,sp@-		| free a reg
+        movl    sp@(4),a0       | get buffer ptr
+        movl    sp@(8),d1       | get byte count
+        movl    sp@(12),d0      | get starting value
+        movl    d2,sp@-         | free a reg
 
-	| test for possible 1, 2 or 3 bytes of excess at end
-	| of buffer.  The usual case is no excess (the usual
-	| case is header checksums) so we give that the faster
-	| 'not taken' leg of the compare.  (We do the excess
-	| first because we are about the trash the low order
-	| bits of the count in d1.)
+        | test for possible 1, 2 or 3 bytes of excess at end
+        | of buffer.  The usual case is no excess (the usual
+        | case is header checksums) so we give that the faster
+        | 'not taken' leg of the compare.  (We do the excess
+        | first because we are about the trash the low order
+        | bits of the count in d1.)
 
-	btst	#0,d1
-	jne	L5		| if one or three bytes excess
-	btst	#1,d1
-	jne	L7		| if two bytes excess
+        btst    #0,d1
+        jne     L5              | if one or three bytes excess
+        btst    #1,d1
+        jne     L7              | if two bytes excess
 L1:
-	movl	d1,d2
-	lsrl	#6,d1		| make cnt into # of 64 byte chunks
-	andl	#0x3c,d2	| then find fractions of a chunk
-	negl	d2
-	andb	#0xf,cc		| clear X
-	jmp	pc@(L3-.-2:b,d2)
+        movl    d1,d2
+        lsrl    #6,d1           | make cnt into # of 64 byte chunks
+        andl    #0x3c,d2        | then find fractions of a chunk
+        negl    d2
+        andb    #0xf,cc         | clear X
+        jmp     pc@(L3-.-2:b,d2)
 L2:
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
-	movl	a0@+,d2
-	addxl	d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
+        movl    a0@+,d2
+        addxl   d2,d0
 L3:
-	dbra	d1,L2		| (NB- dbra does not affect X)
+        dbra    d1,L2           | (NB- dbra does not affect X)
 
-	movl	d0,d1		| fold 32 bit sum to 16 bits
-	swap	d1		| (NB- swap does not affect X)
-	addxw	d1,d0
-	jcc	L4
-	addw	#1,d0
+        movl    d0,d1           | fold 32 bit sum to 16 bits
+        swap    d1              | (NB- swap does not affect X)
+        addxw   d1,d0
+        jcc     L4
+        addw    #1,d0
 L4:
-	andl	#0xffff,d0
-	movl	sp@+,d2
-	rts
+        andl    #0xffff,d0
+        movl    sp@+,d2
+        rts
 
-L5:	| deal with 1 or 3 excess bytes at the end of the buffer.
-	btst	#1,d1
-	jeq	L6		| if 1 excess
+L5:     | deal with 1 or 3 excess bytes at the end of the buffer.
+        btst    #1,d1
+        jeq     L6              | if 1 excess
 
-	| 3 bytes excess
-	clrl	d2
-	movw	a0@(-3,d1:l),d2	| add in last full word then drop
-	addl	d2,d0		|  through to pick up last byte
+        | 3 bytes excess
+        clrl    d2
+        movw    a0@(-3,d1:l),d2 | add in last full word then drop
+        addl    d2,d0           |  through to pick up last byte
 
-L6:	| 1 byte excess
-	clrl	d2
-	movb	a0@(-1,d1:l),d2
-	lsll	#8,d2
-	addl	d2,d0
-	jra	L1
+L6:     | 1 byte excess
+        clrl    d2
+        movb    a0@(-1,d1:l),d2
+        lsll    #8,d2
+        addl    d2,d0
+        jra     L1
 
-L7:	| 2 bytes excess
-	clrl	d2
-	movw	a0@(-2,d1:l),d2
-	addl	d2,d0
-	jra	L1
+L7:     | 2 bytes excess
+        clrl    d2
+        movw    a0@(-2,d1:l),d2
+        addl    d2,d0
+        jra     L1

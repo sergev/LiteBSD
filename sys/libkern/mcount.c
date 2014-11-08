@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1983, 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  */
 
 #if !defined(lint) && !defined(KERNEL) && defined(LIBC_SCCS)
-static char sccsid[] = "@(#)mcount.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)mcount.c    8.1 (Berkeley) 6/4/93";
 #endif
 
 #include <sys/param.h>
@@ -53,122 +53,122 @@ static char sccsid[] = "@(#)mcount.c	8.1 (Berkeley) 6/4/93";
  * both frompcindex and frompc.  Any reasonable, modern compiler will
  * perform this optimization.
  */
-_MCOUNT_DECL(frompc, selfpc)	/* _mcount; may be static, inline, etc */
-	register u_long frompc, selfpc;
+_MCOUNT_DECL(frompc, selfpc)    /* _mcount; may be static, inline, etc */
+    register u_long frompc, selfpc;
 {
-	register u_short *frompcindex;
-	register struct tostruct *top, *prevtop;
-	register struct gmonparam *p;
-	register long toindex;
+    register u_short *frompcindex;
+    register struct tostruct *top, *prevtop;
+    register struct gmonparam *p;
+    register long toindex;
 #ifdef KERNEL
-	register int s;
+    register int s;
 #endif
 
-	p = &_gmonparam;
-	/*
-	 * check that we are profiling
-	 * and that we aren't recursively invoked.
-	 */
-	if (p->state != GMON_PROF_ON)
-		return;
+    p = &_gmonparam;
+    /*
+     * check that we are profiling
+     * and that we aren't recursively invoked.
+     */
+    if (p->state != GMON_PROF_ON)
+        return;
 #ifdef KERNEL
-	MCOUNT_ENTER;
+    MCOUNT_ENTER;
 #else
-	p->state = GMON_PROF_BUSY;
+    p->state = GMON_PROF_BUSY;
 #endif
-	/*
-	 * check that frompcindex is a reasonable pc value.
-	 * for example:	signal catchers get called from the stack,
-	 *		not from text space.  too bad.
-	 */
-	frompc -= p->lowpc;
-	if (frompc > p->textsize)
-		goto done;
+    /*
+     * check that frompcindex is a reasonable pc value.
+     * for example: signal catchers get called from the stack,
+     *      not from text space.  too bad.
+     */
+    frompc -= p->lowpc;
+    if (frompc > p->textsize)
+        goto done;
 
-	frompcindex = &p->froms[frompc / (p->hashfraction * sizeof(*p->froms))];
-	toindex = *frompcindex;
-	if (toindex == 0) {
-		/*
-		 *	first time traversing this arc
-		 */
-		toindex = ++p->tos[0].link;
-		if (toindex >= p->tolimit)
-			/* halt further profiling */
-			goto overflow;
+    frompcindex = &p->froms[frompc / (p->hashfraction * sizeof(*p->froms))];
+    toindex = *frompcindex;
+    if (toindex == 0) {
+        /*
+         *  first time traversing this arc
+         */
+        toindex = ++p->tos[0].link;
+        if (toindex >= p->tolimit)
+            /* halt further profiling */
+            goto overflow;
 
-		*frompcindex = toindex;
-		top = &p->tos[toindex];
-		top->selfpc = selfpc;
-		top->count = 1;
-		top->link = 0;
-		goto done;
-	}
-	top = &p->tos[toindex];
-	if (top->selfpc == selfpc) {
-		/*
-		 * arc at front of chain; usual case.
-		 */
-		top->count++;
-		goto done;
-	}
-	/*
-	 * have to go looking down chain for it.
-	 * top points to what we are looking at,
-	 * prevtop points to previous top.
-	 * we know it is not at the head of the chain.
-	 */
-	for (; /* goto done */; ) {
-		if (top->link == 0) {
-			/*
-			 * top is end of the chain and none of the chain
-			 * had top->selfpc == selfpc.
-			 * so we allocate a new tostruct
-			 * and link it to the head of the chain.
-			 */
-			toindex = ++p->tos[0].link;
-			if (toindex >= p->tolimit)
-				goto overflow;
+        *frompcindex = toindex;
+        top = &p->tos[toindex];
+        top->selfpc = selfpc;
+        top->count = 1;
+        top->link = 0;
+        goto done;
+    }
+    top = &p->tos[toindex];
+    if (top->selfpc == selfpc) {
+        /*
+         * arc at front of chain; usual case.
+         */
+        top->count++;
+        goto done;
+    }
+    /*
+     * have to go looking down chain for it.
+     * top points to what we are looking at,
+     * prevtop points to previous top.
+     * we know it is not at the head of the chain.
+     */
+    for (; /* goto done */; ) {
+        if (top->link == 0) {
+            /*
+             * top is end of the chain and none of the chain
+             * had top->selfpc == selfpc.
+             * so we allocate a new tostruct
+             * and link it to the head of the chain.
+             */
+            toindex = ++p->tos[0].link;
+            if (toindex >= p->tolimit)
+                goto overflow;
 
-			top = &p->tos[toindex];
-			top->selfpc = selfpc;
-			top->count = 1;
-			top->link = *frompcindex;
-			*frompcindex = toindex;
-			goto done;
-		}
-		/*
-		 * otherwise, check the next arc on the chain.
-		 */
-		prevtop = top;
-		top = &p->tos[top->link];
-		if (top->selfpc == selfpc) {
-			/*
-			 * there it is.
-			 * increment its count
-			 * move it to the head of the chain.
-			 */
-			top->count++;
-			toindex = prevtop->link;
-			prevtop->link = top->link;
-			top->link = *frompcindex;
-			*frompcindex = toindex;
-			goto done;
-		}
-		
-	}
+            top = &p->tos[toindex];
+            top->selfpc = selfpc;
+            top->count = 1;
+            top->link = *frompcindex;
+            *frompcindex = toindex;
+            goto done;
+        }
+        /*
+         * otherwise, check the next arc on the chain.
+         */
+        prevtop = top;
+        top = &p->tos[top->link];
+        if (top->selfpc == selfpc) {
+            /*
+             * there it is.
+             * increment its count
+             * move it to the head of the chain.
+             */
+            top->count++;
+            toindex = prevtop->link;
+            prevtop->link = top->link;
+            top->link = *frompcindex;
+            *frompcindex = toindex;
+            goto done;
+        }
+        
+    }
 done:
 #ifdef KERNEL
-	MCOUNT_EXIT;
+    MCOUNT_EXIT;
 #else
-	p->state = GMON_PROF_ON;
+    p->state = GMON_PROF_ON;
 #endif
-	return;
+    return;
 overflow:
-	p->state = GMON_PROF_ERROR;
+    p->state = GMON_PROF_ERROR;
 #ifdef KERNEL
-	MCOUNT_EXIT;
+    MCOUNT_EXIT;
 #endif
-	return;
+    return;
 }
 
 /*

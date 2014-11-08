@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ioconf.c	8.1 (Berkeley) 6/10/93
+ *  @(#)ioconf.c    8.1 (Berkeley) 6/10/93
  */
 
 #include <sys/param.h>
@@ -51,15 +51,15 @@ extern struct driver sddriver;
 extern struct driver stdriver;
 
 struct hp_ctlr hp_cinit[] = {
-/*	driver,		unit,	alive,	addr,	flags */
-	{ &scdriver,	0,	0,	C 0x0,	0x0 },
-	0
+/*  driver,      unit,  alive,   addr,   flags */
+    { &scdriver,    0,  0,      C 0x0,   0x0 },
+    0
 };
 
 struct hp_device hp_dinit[] = {
-/*driver,	cdriver,	unit,	ctlr,	slave,	addr,	dk,	flags*/
-{ &sddriver,	&scdriver,	0,	0,	6,	C 0x0,	1,	0x0 },
-{ &sddriver,	&scdriver,	1,	0,	5,	C 0x0,	1,	0x0 },
-{ &stdriver,	&scdriver,	0,	0,	4,	C 0x0,	0,	0x0 },
+/*driver,       cdriver, unit, ctlr, slave,  addr, dk, flags*/
+{ &sddriver,    &scdriver,  0,  0,      6,  C 0x0,  1,  0x0 },
+{ &sddriver,    &scdriver,  1,  0,      5,  C 0x0,  1,  0x0 },
+{ &stdriver,    &scdriver,  0,  0,      4,  C 0x0,  0,  0x0 },
 0
 };

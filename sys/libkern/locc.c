@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,21 +30,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)locc.c	8.1 (Berkeley) 6/10/93
+ *  @(#)locc.c  8.1 (Berkeley) 6/10/93
  */
 
 #include <libkern/libkern.h>
 
 int
 locc(mask0, cp0, size)
-	int mask0;
-	char *cp0;
-	u_int size;
+    int mask0;
+    char *cp0;
+    u_int size;
 {
-	register u_char *cp, *end, mask;
+    register u_char *cp, *end, mask;
 
-	mask = mask0;
-	cp = (u_char *)cp0;
-	for (end = &cp[size]; cp < end && *cp != mask; ++cp);
-	return (end - cp);
+    mask = mask0;
+    cp = (u_char *)cp0;
+    for (end = &cp[size]; cp < end && *cp != mask; ++cp);
+    return (end - cp);
 }

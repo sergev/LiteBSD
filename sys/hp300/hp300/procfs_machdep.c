@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * Copyright (c) 1993 Jan-Simon Pendry
  *
  * This code is derived from software contributed to Berkeley by
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,34 +34,34 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)procfs_machdep.c	8.4 (Berkeley) 6/15/94
+ *  @(#)procfs_machdep.c    8.4 (Berkeley) 6/15/94
  *
  * From:
- *	$Id: procfs_i386.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
+ *  $Id: procfs_i386.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
  */
 
 /*
  * Functions to be implemented here are:
  *
  * procfs_read_regs(proc, regs)
- *	Get the current user-visible register set from the process
- *	and copy it into the regs structure (<machine/reg.h>).
- *	The process is stopped at the time read_regs is called.
+ *  Get the current user-visible register set from the process
+ *  and copy it into the regs structure (<machine/reg.h>).
+ *  The process is stopped at the time read_regs is called.
  *
  * procfs_write_regs(proc, regs)
- *	Update the current register set from the passed in regs
- *	structure.  Take care to avoid clobbering special CPU
- *	registers or privileged bits in the PSL.
- *	The process is stopped at the time write_regs is called.
+ *  Update the current register set from the passed in regs
+ *  structure.  Take care to avoid clobbering special CPU
+ *  registers or privileged bits in the PSL.
+ *  The process is stopped at the time write_regs is called.
  *
  * procfs_read_fpregs, procfs_write_fpregs
- *	deal with the floating point register set, otherwise as above.
+ *  deal with the floating point register set, otherwise as above.
  *
  * procfs_sstep(proc)
- *	Arrange for the process to trap after executing a single instruction.
+ *  Arrange for the process to trap after executing a single instruction.
  *
  * procfs_fix_sstep(proc)
- *	Cleanup process state after executing a single-step instruction.
+ *  Cleanup process state after executing a single-step instruction.
  */
 
 #include <sys/param.h>
@@ -78,20 +78,20 @@
 
 int
 procfs_read_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+    struct proc *p;
+    struct reg *regs;
 {
-	struct frame *f;
+    struct frame *f;
 
-	if ((p->p_flag & P_INMEM) == 0)
-		return (EIO);
+    if ((p->p_flag & P_INMEM) == 0)
+        return (EIO);
 
-	f = (struct frame *) p->p_md.md_regs;
-	bcopy((void *) f->f_regs, (void *) regs->r_regs, sizeof(regs->r_regs));
-	regs->r_pc = f->f_pc;
-	regs->r_sr = f->f_sr;
+    f = (struct frame *) p->p_md.md_regs;
+    bcopy((void *) f->f_regs, (void *) regs->r_regs, sizeof(regs->r_regs));
+    regs->r_pc = f->f_pc;
+    regs->r_sr = f->f_sr;
 
-	return (0);
+    return (0);
 }
 
 /*
@@ -102,63 +102,63 @@ procfs_read_regs(p, regs)
  */
 int
 procfs_write_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+    struct proc *p;
+    struct reg *regs;
 {
-	struct frame *f;
+    struct frame *f;
 
-	if ((p->p_flag & P_INMEM) == 0)
-		return (EIO);
+    if ((p->p_flag & P_INMEM) == 0)
+        return (EIO);
 
-	f = (struct frame *) p->p_md.md_regs;
-	bcopy((void *) regs->r_regs, (void *) f->f_regs, sizeof(f->f_regs));
-	f->f_pc = regs->r_pc;
-	f->f_sr = regs->r_sr;
+    f = (struct frame *) p->p_md.md_regs;
+    bcopy((void *) regs->r_regs, (void *) f->f_regs, sizeof(f->f_regs));
+    f->f_pc = regs->r_pc;
+    f->f_sr = regs->r_sr;
 
-	return (0);
+    return (0);
 }
 
 int
 procfs_read_fpregs(p, fpregs)
-	struct proc *p;
-	struct fpreg *fpregs;
+    struct proc *p;
+    struct fpreg *fpregs;
 {
 
-	return (EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 int
 procfs_write_fpregs(p, fpregs)
-	struct proc *p;
-	struct fpreg *fpregs;
+    struct proc *p;
+    struct fpreg *fpregs;
 {
 
-	return (EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 
 int
 procfs_sstep(p, sstep)
-	struct proc *p;
-	int sstep;
+    struct proc *p;
+    int sstep;
 {
-	int error;
-	struct reg r;
+    int error;
+    struct reg r;
 
-	error = procfs_read_regs(p, &r);
-	if (error == 0) {
-		if (sstep)
-			r.r_sr |= PSL_T;
-		else
-			r.r_sr |= PSL_T;
-		error = procfs_write_regs(p, &r);
-	}
+    error = procfs_read_regs(p, &r);
+    if (error == 0) {
+        if (sstep)
+            r.r_sr |= PSL_T;
+        else
+            r.r_sr |= PSL_T;
+        error = procfs_write_regs(p, &r);
+    }
 
-	return (error);
+    return (error);
 }
 
 void
 procfs_fix_sstep(p)
-	struct proc *p;
+    struct proc *p;
 {
 }

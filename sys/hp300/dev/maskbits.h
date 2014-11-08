@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)maskbits.h	8.2 (Berkeley) 3/21/94
+ *  @(#)maskbits.h  8.2 (Berkeley) 3/21/94
  */
 
 /*
@@ -38,17 +38,17 @@
  */
 
 /* the following notes use the following conventions:
-SCREEN LEFT				SCREEN RIGHT
+SCREEN LEFT             SCREEN RIGHT
 in this file and maskbits.c, left and right refer to screen coordinates,
 NOT bit numbering in registers.
 
 starttab[n]
-	bits[0,n-1] = 0	bits[n,31] = 1
+    bits[0,n-1] = 0 bits[n,31] = 1
 endtab[n] =
-	bits[0,n-1] = 1	bits[n,31] = 0
+    bits[0,n-1] = 1 bits[n,31] = 0
 
 maskbits(x, w, startmask, endmask, nlw)
-	for a span of width w starting at position x, returns
+    for a span of width w starting at position x, returns
 a mask for ragged bits at start, mask for ragged bits at end,
 and the number of whole longwords between the ends.
 
@@ -58,9 +58,9 @@ and the number of whole longwords between the ends.
     startmask = starttab[(x)&0x1f]; \
     endmask = endtab[((x)+(w)) & 0x1f]; \
     if (startmask) \
-	nlw = (((w) - (32 - ((x)&0x1f))) >> 5); \
+    nlw = (((w) - (32 - ((x)&0x1f))) >> 5); \
     else \
-	nlw = (w) >> 5;
+    nlw = (w) >> 5;
 
 #define FASTGETBITS(psrc, x, w, dst) \
     asm ("bfextu %3{%1:%2},%0" \
@@ -68,8 +68,8 @@ and the number of whole longwords between the ends.
 
 #define FASTPUTBITS(src, x, w, pdst) \
     asm ("bfins %3,%0{%1:%2}" \
-	 : "=o" (*(char *)(pdst)) \
-	 : "di" (x), "di" (w), "d" (src), "0" (*(char *) (pdst)))
+     : "=o" (*(char *)(pdst)) \
+     : "di" (x), "di" (w), "d" (src), "0" (*(char *) (pdst)))
 
 #define getandputrop(psrc, srcbit, dstbit, width, pdst, rop) \
 { \
@@ -81,12 +81,12 @@ and the number of whole longwords between the ends.
 }
 
 #define getandputrop0(psrc, srcbit, width, pdst, rop) \
-    	getandputrop(psrc, srcbit, 0, width, pdst, rop)
+    getandputrop(psrc, srcbit, 0, width, pdst, rop)
 
 #define getunalignedword(psrc, x, dst) { \
-        register int _tmp; \
-        FASTGETBITS(psrc, x, 32, _tmp); \
-        dst = _tmp; \
+    register int _tmp; \
+    FASTGETBITS(psrc, x, 32, _tmp); \
+    dst = _tmp; \
 }
 
 #define fnCLEAR(src, dst)       (0)
@@ -97,18 +97,18 @@ and the number of whole longwords between the ends.
 #define DoRop(result, alu, src, dst) \
 { \
     if (alu == RR_COPY) \
-        result = fnCOPY (src, dst); \
+    result = fnCOPY (src, dst); \
     else \
-        switch (alu) \
-        { \
-          case RR_CLEAR: \
-            result = fnCLEAR (src, dst); \
-            break; \
-          case RR_XOR: \
-            result = fnXOR (src, dst); \
-            break; \
-          case RR_COPYINVERTED: \
-            result = fnCOPYINVERTED (src, dst); \
-            break; \
-        } \
+    switch (alu) \
+    { \
+      case RR_CLEAR: \
+        result = fnCLEAR (src, dst); \
+        break; \
+      case RR_XOR: \
+        result = fnXOR (src, dst); \
+        break; \
+      case RR_COPYINVERTED: \
+        result = fnCOPYINVERTED (src, dst); \
+        break; \
+    } \
 }

@@ -13,7 +13,7 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by TooLs GmbH.
+ *  This product includes software developed by TooLs GmbH.
  * 4. The name of TooLs GmbH may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
@@ -50,26 +50,26 @@
  */
 void
 rminit(mp, size, addr, name, nelem)
-	struct map *mp;
-	long size, addr;
-	char *name;
-	int nelem;
+    struct map *mp;
+    long size, addr;
+    char *name;
+    int nelem;
 {
-	struct mapent *ep;
+    struct mapent *ep;
 
-	/* mapsize had better be at least 2 */
-	if (nelem < 2 || addr <= 0 || size < 0)
-		panic("rminit %s",name);
-	mp->m_name = name;
-	mp->m_limit = (struct mapent *)mp + nelem;
+    /* mapsize had better be at least 2 */
+    if (nelem < 2 || addr <= 0 || size < 0)
+        panic("rminit %s",name);
+    mp->m_name = name;
+    mp->m_limit = (struct mapent *)mp + nelem;
 
-	/* initially the first entry describes all free space */
-	ep = (struct mapent *)mp + 1;
-	ep->m_size = size;
-	ep->m_addr = addr;
-	/* the remaining slots are unused (indicated by m_addr == 0) */
-	while (++ep < mp->m_limit)
-		ep->m_addr = 0;
+    /* initially the first entry describes all free space */
+    ep = (struct mapent *)mp + 1;
+    ep->m_size = size;
+    ep->m_addr = addr;
+    /* the remaining slots are unused (indicated by m_addr == 0) */
+    while (++ep < mp->m_limit)
+        ep->m_addr = 0;
 }
 
 /*
@@ -79,49 +79,49 @@ rminit(mp, size, addr, name, nelem)
  */
 long
 rmalloc(mp, size)
-	struct map *mp;
-	long size;
+    struct map *mp;
+    long size;
 {
-	struct mapent *ep, *fp;
-	long addr;
+    struct mapent *ep, *fp;
+    long addr;
 
-	/* first check arguments */
-	if (size < 0)
-		panic("rmalloc %s", mp->m_name);
-	if (!size)
-		return 0;
+    /* first check arguments */
+    if (size < 0)
+        panic("rmalloc %s", mp->m_name);
+    if (!size)
+        return 0;
 
-	fp = 0;
-	/* try to find the smallest fit */
-	for (ep = (struct mapent *)mp + 1; ep < mp->m_limit; ep++) {
-		if (!ep->m_addr) {
-			/* unused slots terminate the list */
-			break;
-		}
-		if (ep->m_size == size) {
-			/* found exact match, use it, ... */
-			addr = ep->m_addr;
-			/* copy over the remaining slots ... */
-			ovbcopy(ep + 1,ep,(char *)mp->m_limit - (char *)(ep + 1));
-			/* and mark the last slot as unused */
-			mp->m_limit[-1].m_addr = 0;
-			return addr;
-		}
-		if (ep->m_size > size
-		    && (!fp
-			|| fp->m_size > ep->m_size)) {
-			/* found a larger slot, remember the smallest of these */
-			fp = ep;
-		}
-	}
-	if (fp) {
-		/* steal requested size from a larger slot */
-		addr = fp->m_addr;
-		fp->m_addr += size;
-		fp->m_size -= size;
-		return addr;
-	}
-	return 0;
+    fp = 0;
+    /* try to find the smallest fit */
+    for (ep = (struct mapent *)mp + 1; ep < mp->m_limit; ep++) {
+        if (!ep->m_addr) {
+            /* unused slots terminate the list */
+            break;
+        }
+        if (ep->m_size == size) {
+            /* found exact match, use it, ... */
+            addr = ep->m_addr;
+            /* copy over the remaining slots ... */
+            ovbcopy(ep + 1,ep,(char *)mp->m_limit - (char *)(ep + 1));
+            /* and mark the last slot as unused */
+            mp->m_limit[-1].m_addr = 0;
+            return addr;
+        }
+        if (ep->m_size > size
+            && (!fp
+            || fp->m_size > ep->m_size)) {
+            /* found a larger slot, remember the smallest of these */
+            fp = ep;
+        }
+    }
+    if (fp) {
+        /* steal requested size from a larger slot */
+        addr = fp->m_addr;
+        fp->m_addr += size;
+        fp->m_size -= size;
+        return addr;
+    }
+    return 0;
 }
 
 /*
@@ -131,89 +131,89 @@ rmalloc(mp, size)
  */
 void
 rmfree(mp, size, addr)
-	struct map *mp;
-	long size, addr;
+    struct map *mp;
+    long size, addr;
 {
-	struct mapent *ep, *fp;
+    struct mapent *ep, *fp;
 
-	/* first check arguments */
-	if (size <= 0 || addr <= 0)
-		panic("rmfree %s", mp->m_name);
+    /* first check arguments */
+    if (size <= 0 || addr <= 0)
+        panic("rmfree %s", mp->m_name);
 
-	while (1) {
-		fp = 0;
+    while (1) {
+        fp = 0;
 
-		for (ep = (struct mapent *)mp + 1; ep < mp->m_limit; ep++) {
-			if (!ep->m_addr) {
-				/* unused slots terminate the list */
-				break;
-			}
-			if (ep->m_addr + ep->m_size == addr) {
-				/* this slot ends just with the address to free */
-				ep->m_size += size; /* increase size of slot */
-				if (ep < mp->m_limit
-				    && ep[1].m_addr
-				    && (addr += size) >= ep[1].m_addr) {
-					if (addr > ep[1].m_addr) /* overlapping frees? */
-						panic("rmfree %s", mp->m_name);
-					/* the next slot is now contiguous, so join ... */
-					ep->m_size += ep[1].m_size;
-					ovbcopy(ep + 2, ep + 1,
-						(char *)mp->m_limit - (char *)(ep + 2));
-					/* and mark the last slot as unused */
-					mp->m_limit[-1].m_addr = 0;
-				}
-				return;
-			}
-			if (addr + size == ep->m_addr) {
-				/* range to free is contiguous to this slot */
-				ep->m_addr = addr;
-				ep->m_size += size;
-				return;
-			}
-			if (addr < ep->m_addr
-			    && !mp->m_limit[-1].m_addr) {
-				/* insert entry into list keeping it sorted on m_addr */
-				ovbcopy(ep,ep + 1,(char *)(mp->m_limit - 1) - (char *)ep);
-				ep->m_addr = addr;
-				ep->m_size = size;
-				return;
-			}
-			if (!fp || fp->m_size > ep->m_size) {
-				/* find the slot with the smallest size to drop */
-				fp = ep;
-			}
-		}
-		if (ep != (struct mapent *)mp + 1
-		    && ep[-1].m_addr + ep[-1].m_size == addr) {
-			/* range to free is contiguous to the last used slot */
-			(--ep)->m_size += size;
-			return;
-		}
-		if (ep != mp->m_limit) {
-			/* use empty slot for range to free */
-			ep->m_addr = addr;
-			ep->m_size = size;
-			return;
-		}
-		/*
-		 * The range to free isn't contiguous to any free space,
-		 * and there is no free slot available, so we are sorry,
-		 * but we have to loose some space.
-		 * fp points to the slot with the smallest size
-		 */
-		if (fp->m_size > size) {
-			/* range to free is smaller, so drop that */
-			printf("rmfree: map '%s' loses space (%d)\n", mp->m_name,
-			       size);
-			return;
-		} else {
-			/* drop the smallest slot in the list */
-			printf("rmfree: map '%s' loses space (%d)\n", mp->m_name,
-			       fp->m_size);
-			ovbcopy(fp + 1,fp,(char *)(mp->m_limit - 1) - (char *)fp);
-			mp->m_limit[-1].m_addr = 0;
-			/* now retry */
-		}
-	}
+        for (ep = (struct mapent *)mp + 1; ep < mp->m_limit; ep++) {
+            if (!ep->m_addr) {
+                /* unused slots terminate the list */
+                break;
+            }
+            if (ep->m_addr + ep->m_size == addr) {
+                /* this slot ends just with the address to free */
+                ep->m_size += size; /* increase size of slot */
+                if (ep < mp->m_limit
+                    && ep[1].m_addr
+                    && (addr += size) >= ep[1].m_addr) {
+                    if (addr > ep[1].m_addr) /* overlapping frees? */
+                        panic("rmfree %s", mp->m_name);
+                    /* the next slot is now contiguous, so join ... */
+                    ep->m_size += ep[1].m_size;
+                    ovbcopy(ep + 2, ep + 1,
+                        (char *)mp->m_limit - (char *)(ep + 2));
+                    /* and mark the last slot as unused */
+                    mp->m_limit[-1].m_addr = 0;
+                }
+                return;
+            }
+            if (addr + size == ep->m_addr) {
+                /* range to free is contiguous to this slot */
+                ep->m_addr = addr;
+                ep->m_size += size;
+                return;
+            }
+            if (addr < ep->m_addr
+                && !mp->m_limit[-1].m_addr) {
+                /* insert entry into list keeping it sorted on m_addr */
+                ovbcopy(ep,ep + 1,(char *)(mp->m_limit - 1) - (char *)ep);
+                ep->m_addr = addr;
+                ep->m_size = size;
+                return;
+            }
+            if (!fp || fp->m_size > ep->m_size) {
+                /* find the slot with the smallest size to drop */
+                fp = ep;
+            }
+        }
+        if (ep != (struct mapent *)mp + 1
+            && ep[-1].m_addr + ep[-1].m_size == addr) {
+            /* range to free is contiguous to the last used slot */
+            (--ep)->m_size += size;
+            return;
+        }
+        if (ep != mp->m_limit) {
+            /* use empty slot for range to free */
+            ep->m_addr = addr;
+            ep->m_size = size;
+            return;
+        }
+        /*
+         * The range to free isn't contiguous to any free space,
+         * and there is no free slot available, so we are sorry,
+         * but we have to loose some space.
+         * fp points to the slot with the smallest size
+         */
+        if (fp->m_size > size) {
+            /* range to free is smaller, so drop that */
+            printf("rmfree: map '%s' loses space (%d)\n", mp->m_name,
+                   size);
+            return;
+        } else {
+            /* drop the smallest slot in the list */
+            printf("rmfree: map '%s' loses space (%d)\n", mp->m_name,
+                   fp->m_size);
+            ovbcopy(fp + 1,fp,(char *)(mp->m_limit - 1) - (char *)fp);
+            mp->m_limit[-1].m_addr = 0;
+            /* now retry */
+        }
+    }
 }

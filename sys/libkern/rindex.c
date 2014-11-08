@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)rindex.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)rindex.c    8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stddef.h>
@@ -44,16 +44,16 @@ strrchr(p, ch)
 #else
 rindex(p, ch)
 #endif
-	register const char *p;
-	register int ch;
+    register const char *p;
+    register int ch;
 {
-	register char *save;
+    register char *save;
 
-	for (save = NULL;; ++p) {
-		if (*p == ch)
-			save = (char *)p;
-		if (!*p)
-			return(save);
-	}
-	/* NOTREACHED */
+    for (save = NULL;; ++p) {
+        if (*p == ch)
+            save = (char *)p;
+        if (!*p)
+            return(save);
+    }
+    /* NOTREACHED */
 }

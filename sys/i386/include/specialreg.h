@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,16 +30,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)specialreg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)specialreg.h    8.1 (Berkeley) 6/11/93
  */
 
 /*
  * 386 Special registers:
  */
 
-#define	CR0_PE	0x00000001	/* Protected mode Enable */
-#define	CR0_MP	0x00000002	/* "Math" Present (e.g. npx), wait for it */
-#define	CR0_EM	0x00000004	/* EMulate NPX, e.g. trap, don't execute code */
-#define	CR0_TS	0x00000008	/* Process has done Task Switch, do NPX save */
-#define	CR0_ET	0x00000010	/* 32 bit (if set) vs 16 bit (387 vs 287) */
-#define	CR0_PG	0x80000000	/* Paging Enable */
+#define CR0_PE  0x00000001  /* Protected mode Enable */
+#define CR0_MP  0x00000002  /* "Math" Present (e.g. npx), wait for it */
+#define CR0_EM  0x00000004  /* EMulate NPX, e.g. trap, don't execute code */
+#define CR0_TS  0x00000008  /* Process has done Task Switch, do NPX save */
+#define CR0_ET  0x00000010  /* 32 bit (if set) vs 16 bit (387 vs 287) */
+#define CR0_PG  0x80000000  /* Paging Enable */

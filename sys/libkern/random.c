@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)random.c	8.1 (Berkeley) 6/10/93
+ *  @(#)random.c    8.1 (Berkeley) 6/10/93
  */
 
 #include <libkern/libkern.h>
@@ -43,21 +43,21 @@
 u_long
 random()
 {
-	static u_long randseed = 1;
-	register long x, hi, lo, t;
+    static u_long randseed = 1;
+    register long x, hi, lo, t;
 
-	/*
-	 * Compute x[n + 1] = (7^5 * x[n]) mod (2^31 - 1).
-	 * From "Random number generators: good ones are hard to find",
-	 * Park and Miller, Communications of the ACM, vol. 31, no. 10,
-	 * October 1988, p. 1195.
-	 */
-	x = randseed;
-	hi = x / 127773;
-	lo = x % 127773;
-	t = 16807 * lo - 2836 * hi;
-	if (t <= 0)
-		t += 0x7fffffff;
-	randseed = t;
-	return (t);
+    /*
+     * Compute x[n + 1] = (7^5 * x[n]) mod (2^31 - 1).
+     * From "Random number generators: good ones are hard to find",
+     * Park and Miller, Communications of the ACM, vol. 31, no. 10,
+     * October 1988, p. 1195.
+     */
+    x = randseed;
+    hi = x / 127773;
+    lo = x % 127773;
+    t = 16807 * lo - 2836 * hi;
+    if (t <= 0)
+        t += 0x7fffffff;
+    randseed = t;
+    return (t);
 }

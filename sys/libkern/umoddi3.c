@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -36,7 +36,7 @@
  */
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)umoddi3.c	8.1 (Berkeley) 6/4/93";
+static char sccsid[] = "@(#)umoddi3.c   8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include "quad.h"
@@ -46,10 +46,10 @@ static char sccsid[] = "@(#)umoddi3.c	8.1 (Berkeley) 6/4/93";
  */
 u_quad_t
 __umoddi3(a, b)
-	u_quad_t a, b;
+    u_quad_t a, b;
 {
-	u_quad_t r;
+    u_quad_t r;
 
-	(void)__qdivrem(a, b, &r);
-	return (r);
+    (void)__qdivrem(a, b, &r);
+    return (r);
 }

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley
  * by Pace Willisson (pace@blitz.com).  The Rock Ridge Extension
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)cd9660_node.h	8.6 (Berkeley) 5/14/95
+ *  @(#)cd9660_node.h   8.6 (Berkeley) 5/14/95
  */
 
 /*
@@ -45,17 +45,17 @@
  * lookup on a 32-bit machine. If you are porting to a 64-bit
  * architecture, you should make doff_t the same as off_t.
  */
-#define doff_t	long
+#define doff_t  long
 
-typedef	struct	{
-	struct timespec	iso_atime;	/* time of last access */
-	struct timespec	iso_mtime;	/* time of last modification */
-	struct timespec	iso_ctime;	/* time file changed */
-	u_short		iso_mode;	/* files access mode and type */
-	uid_t		iso_uid;	/* owner user id */
-	gid_t		iso_gid;	/* owner group id */
-	short		iso_links;	/* links of file */
-	dev_t		iso_rdev;	/* Major/Minor number for special */
+typedef struct  {
+    struct timespec iso_atime;  /* time of last access */
+    struct timespec iso_mtime;  /* time of last modification */
+    struct timespec iso_ctime;  /* time file changed */
+    u_short     iso_mode;       /* files access mode and type */
+    uid_t       iso_uid;        /* owner user id */
+    gid_t       iso_gid;        /* owner group id */
+    short       iso_links;      /* links of file */
+    dev_t       iso_rdev;       /* Major/Minor number for special */
 } ISO_RRIP_INODE;
 
 #ifdef ISODEVMAP
@@ -63,41 +63,41 @@ typedef	struct	{
  * FOr device# (major,minor) translation table
  */
 struct iso_dnode {
-	struct iso_dnode *d_next, **d_prev;	/* hash chain */
-	dev_t		i_dev;		/* device where dnode resides */
-	ino_t		i_number;	/* the identity of the inode */
-	dev_t		d_dev;		/* device # for translation */
+    struct iso_dnode *d_next, **d_prev; /* hash chain */
+    dev_t  i_dev;               /* device where dnode resides */
+    ino_t  i_number;            /* the identity of the inode */
+    dev_t  d_dev;               /* device # for translation */
 };
 #endif
 
 struct iso_node {
-	struct	iso_node *i_next, **i_prev;	/* hash chain */
-	struct	vnode *i_vnode;	/* vnode associated with this inode */
-	struct	vnode *i_devvp;	/* vnode for block I/O */
-	u_long	i_flag;		/* see below */
-	dev_t	i_dev;		/* device where inode resides */
-	ino_t	i_number;	/* the identity of the inode */
-				/* we use the actual starting block of the file */
-	struct	iso_mnt *i_mnt;	/* filesystem associated with this inode */
-	struct	lockf *i_lockf;	/* head of byte-level lock list */
-	doff_t	i_endoff;	/* end of useful stuff in directory */
-	doff_t	i_diroff;	/* offset in dir, where we found last entry */
-	doff_t	i_offset;	/* offset of free space in directory */
-	ino_t	i_ino;		/* inode number of found directory */
-	struct	lock i_lock;	/* node lock */
+    struct  iso_node *i_next, **i_prev; /* hash chain */
+    struct  vnode *i_vnode;     /* vnode associated with this inode */
+    struct  vnode *i_devvp;     /* vnode for block I/O */
+    u_long  i_flag;             /* see below */
+    dev_t   i_dev;              /* device where inode resides */
+    ino_t   i_number;           /* the identity of the inode */
+                                /* we use the actual starting block of the file */
+    struct  iso_mnt *i_mnt;     /* filesystem associated with this inode */
+    struct  lockf *i_lockf;     /* head of byte-level lock list */
+    doff_t  i_endoff;           /* end of useful stuff in directory */
+    doff_t  i_diroff;           /* offset in dir, where we found last entry */
+    doff_t  i_offset;           /* offset of free space in directory */
+    ino_t   i_ino;              /* inode number of found directory */
+    struct  lock i_lock;        /* node lock */
 
-	long iso_extent;	/* extent of file */
-	long i_size;
-	long iso_start;		/* actual start of data of file (may be different */
-				/* from iso_extent, if file has extended attributes) */
-	ISO_RRIP_INODE  inode;
+    long iso_extent;            /* extent of file */
+    long i_size;
+    long iso_start;             /* actual start of data of file (may be different */
+                                /* from iso_extent, if file has extended attributes) */
+    ISO_RRIP_INODE  inode;
 };
 
-#define	i_forw		i_chain[0]
-#define	i_back		i_chain[1]
+#define i_forw      i_chain[0]
+#define i_back      i_chain[1]
 
 /* flags */
-#define	IN_ACCESS	0x0020		/* inode access time to be updated */
+#define IN_ACCESS   0x0020      /* inode access time to be updated */
 
 #define VTOI(vp) ((struct iso_node *)(vp)->v_data)
 #define ITOV(ip) ((ip)->i_vnode)
@@ -130,16 +130,16 @@ int cd9660_blkatoff __P((struct vop_blkatoff_args *));
 #define cd9660_revoke vop_revoke
 
 void cd9660_defattr __P((struct iso_directory_record *,
-			struct iso_node *, struct buf *));
+            struct iso_node *, struct buf *));
 void cd9660_deftstamp __P((struct iso_directory_record *,
-			struct iso_node *, struct buf *));
+            struct iso_node *, struct buf *));
 struct vnode *cd9660_ihashget __P((dev_t, ino_t));
 void cd9660_ihashins __P((struct iso_node *));
 void cd9660_ihashrem __P((struct iso_node *));
 int cd9660_tstamp_conv7 __P((u_char *, struct timespec *));
 int cd9660_tstamp_conv17 __P((u_char *, struct timespec *));
 ino_t isodirino __P((struct iso_directory_record *, struct iso_mnt *));
-#ifdef	ISODEVMAP
+#ifdef  ISODEVMAP
 struct iso_dnode *iso_dmap __P((dev_t, ino_t, int));
 void iso_dunmap __P((dev_t));
 #endif

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,23 +34,23 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)pioreg.h	8.1 (Berkeley) 6/10/93
+ *  @(#)pioreg.h    8.1 (Berkeley) 6/10/93
  */
 
 /*
  * PIO definitions
  * OMRON: $Id: pioreg.h,v 1.1 92/05/27 14:33:18 moti Exp $
- * by Shigeto Mochida 
+ * by Shigeto Mochida
  */
 
-#define	PIO0_ADDR      	0x49000000	/* pio0 address */
-#define	PIO1_ADDR	0x4D000000	/* pio1 address */
+#define PIO0_ADDR   0x49000000  /* pio0 address */
+#define PIO1_ADDR   0x4D000000  /* pio1 address */
 
-#define	PIO_MODED	0xB6		/* pio mode set */
+#define PIO_MODED   0xB6        /* pio mode set */
 
 struct pio {
-    unsigned char	a_port;
-    unsigned char	b_port;
-    unsigned char	c_port;
-    unsigned char	control_port;
+    unsigned char   a_port;
+    unsigned char   b_port;
+    unsigned char   c_port;
+    unsigned char   control_port;
 };

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,36 +33,36 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)profile.h	8.1 (Berkeley) 6/10/93
+ *      @(#)profile.h   8.1 (Berkeley) 6/10/93
  */
 
-#define	_MCOUNT_DECL static void __mcount
+#define _MCOUNT_DECL static void __mcount
 
-#define	MCOUNT \
-	asm(".globl _mcount;" \
-	"_mcount:;" \
-	".set noreorder;" \
-	".set noat;" \
-	"sw $4,8($29);" \
-	"sw $5,12($29);" \
-	"sw $6,16($29);" \
-	"sw $7,20($29);" \
-	"sw $1,0($29);" \
-	"sw $31,4($29);" \
-	"move $5,$31;" \
-	"jal __mcount;" \
-	"move $4,$1;" \
-	"lw $4,8($29);" \
-	"lw $5,12($29);" \
-	"lw $6,16($29);" \
-	"lw $7,20($29);" \
-	"lw $31,4($29);" \
-	"lw $1,0($29);" \
-	"addu $29,$29,8;" \
-	"j $31;" \
-	"move $31,$1;" \
-	".set reorder;" \
-	".set at");
+#define MCOUNT \
+        asm(".globl _mcount;" \
+        "_mcount:;" \
+        ".set noreorder;" \
+        ".set noat;" \
+        "sw $4,8($29);" \
+        "sw $5,12($29);" \
+        "sw $6,16($29);" \
+        "sw $7,20($29);" \
+        "sw $1,0($29);" \
+        "sw $31,4($29);" \
+        "move $5,$31;" \
+        "jal __mcount;" \
+        "move $4,$1;" \
+        "lw $4,8($29);" \
+        "lw $5,12($29);" \
+        "lw $6,16($29);" \
+        "lw $7,20($29);" \
+        "lw $31,4($29);" \
+        "lw $1,0($29);" \
+        "addu $29,$29,8;" \
+        "j $31;" \
+        "move $31,$1;" \
+        ".set reorder;" \
+        ".set at");
 
 #ifdef KERNEL
 /*
@@ -71,7 +71,7 @@
  * functions on MIPS, and we do not want to invoke mcount
  * recursively.
  */
-#define	MCOUNT_ENTER	s = _splhigh()
+#define MCOUNT_ENTER    s = _splhigh()
 
-#define	MCOUNT_EXIT	_splx(s)
+#define MCOUNT_EXIT     _splx(s)
 #endif /* KERNEL */

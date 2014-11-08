@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)parse.c	8.1 (Berkeley) 6/10/93
+ *  @(#)parse.c 8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -75,64 +75,64 @@ int screen();
 
 int
 check_args(argc, argv)
-	int   argc;
-	char *argv[];
+    int   argc;
+    char *argv[];
 {
-	register int i;
+    register int i;
 
-	for ( i = 0; i < argc; i++)
-		printf("argv[%d] = \"%s\"\n", i, argv[i]);
+    for ( i = 0; i < argc; i++)
+        printf("argv[%d] = \"%s\"\n", i, argv[i]);
 
-	return(ST_NORMAL);
+    return(ST_NORMAL);
 }
 
 int
 exit_program(argc, argv)
-	int   argc;
-	char *argv[];
+    int   argc;
+    char *argv[];
 {
-	return(ST_EXIT);
+    return(ST_EXIT);
 }
 
 struct command_entry {
-	char *name;
-	int (*func)();
+    char *name;
+    int (*func)();
 };
 
 struct command_entry entries[] = {
-{ "b",		boot         },
-{ "boot",	boot         },
-{ "chkargs",	check_args   },
-{ "disklabel",	disklabel    },
-{ "exit",	exit_program },
-{ "fsdump",	fsdump       },
-{ "fsrestore",	fsrestore    },
-{ "howto",	how_to_boot  },
+{ "b",          boot         },
+{ "boot",       boot         },
+{ "chkargs",    check_args   },
+{ "disklabel",  disklabel    },
+{ "exit",       exit_program },
+{ "fsdump",     fsdump       },
+{ "fsrestore",  fsrestore    },
+{ "howto",      how_to_boot  },
 { "load",       load         },
-{ "screen",	screen	     },
-{ "tape",	tape	     },
-{ "tp",		tape	     },
-{ "scsi",	scsi         },
-{ "quit",	exit_program },
+{ "screen",     screen       },
+{ "tape",       tape         },
+{ "tp",         tape         },
+{ "scsi",       scsi         },
+{ "quit",       exit_program },
 { 0, 0 }
 };
 
 
-int 
+int
 parse(argc, argv)
-	int   argc;
-	char *argv[];
+    int   argc;
+    char *argv[];
 {
-	register int i, status = ST_NOTFOUND;
+    register int i, status = ST_NOTFOUND;
 
-	for (i = 0; entries[i].name != (char *) 0; i++) {
-		if (!strcmp(argv[0], entries[i].name)) {
-			status = (*entries[i].func)(argc, argv);
-			break;
-		}
-	}
+    for (i = 0; entries[i].name != (char *) 0; i++) {
+        if (!strcmp(argv[0], entries[i].name)) {
+            status = (*entries[i].func)(argc, argv);
+            break;
+        }
+    }
 
-	return(status);
+    return(status);
 }
 
 
@@ -142,22 +142,22 @@ parse(argc, argv)
  */
 
 getargs(buffer, argv, maxargs)
-	char buffer[], *argv[];
-	int  maxargs;
+    char buffer[], *argv[];
+    int  maxargs;
 {
-	register int   n = 0;
-	register char *p = buffer;
+    register int   n = 0;
+    register char *p = buffer;
 
-	argv[n++] = p;
-	while (*p != '\0') {
-		if ( *p == ' ' ) {
-			*p = '\0';
-		} else if (p != buffer && *(p-1) == '\0') {
-			if ( n < maxargs )
-				argv[n++] = p;
-		}
-		p++;
-	}
+    argv[n++] = p;
+    while (*p != '\0') {
+        if ( *p == ' ' ) {
+            *p = '\0';
+        } else if (p != buffer && *(p-1) == '\0') {
+            if ( n < maxargs )
+                argv[n++] = p;
+        }
+        p++;
+    }
 
-	return(n);
+    return(n);
 }

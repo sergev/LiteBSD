@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: pcb.h 1.14 91/03/25$
  *
- *	@(#)pcb.h	8.1 (Berkeley) 6/10/93
+ *  @(#)pcb.h   8.1 (Berkeley) 6/10/93
  */
 
 #include <machine/frame.h>
@@ -47,13 +47,13 @@
  */
 struct pcb
 {
-	short	pcb_flags;	/* misc. process flags */
-	short	pcb_ps; 	/* processor status word */
-	int	pcb_ustp;	/* user segment table pointer */
-	int	pcb_usp;	/* user stack pointer */
-	int	pcb_regs[12];	/* D2-D7, A2-A7 */
-	caddr_t	pcb_onfault;	/* for copyin/out faults */
-	struct	fpframe pcb_fpregs; /* 68881/2 context save area */
+    short   pcb_flags;          /* misc. process flags */
+    short   pcb_ps;             /* processor status word */
+    int     pcb_ustp;           /* user segment table pointer */
+    int     pcb_usp;            /* user stack pointer */
+    int     pcb_regs[12];       /* D2-D7, A2-A7 */
+    caddr_t pcb_onfault;        /* for copyin/out faults */
+    struct  fpframe pcb_fpregs; /* 68881/2 context save area */
 };
 
 /*
@@ -62,5 +62,5 @@ struct pcb
  * which is dumped for HP-UX processes.
  */
 struct md_coredump {
-	int	md_exec[16];	/* exec structure for HP-UX core dumps */
+    int md_exec[16];    /* exec structure for HP-UX core dumps */
 };

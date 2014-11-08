@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dca.c	8.1 (Berkeley) 6/10/93
+ *  @(#)dca.c   8.1 (Berkeley) 6/10/93
  */
 
 #ifdef DCACONSOLE
@@ -47,83 +47,83 @@
 struct dcadevice *dcacnaddr = 0;
 
 dcaprobe(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
-	register struct dcadevice *dca;
+    register struct dcadevice *dca;
 
-	dcacnaddr = (struct dcadevice *) sctoaddr(CONSCODE);
-	if (badaddr((char *)dcacnaddr)) {
-		cp->cn_pri = CN_DEAD;
-		return;
-	}
+    dcacnaddr = (struct dcadevice *) sctoaddr(CONSCODE);
+    if (badaddr((char *)dcacnaddr)) {
+        cp->cn_pri = CN_DEAD;
+        return;
+    }
 #ifdef FORCEDCACONSOLE
-	cp->cn_pri = CN_REMOTE;
+    cp->cn_pri = CN_REMOTE;
 #else
-	dca = dcacnaddr;
-	switch (dca->dca_id) {
-	case DCAID0:
-	case DCAID1:
-		cp->cn_pri = CN_NORMAL;
-		break;
-	case DCAREMID0:
-	case DCAREMID1:
-		cp->cn_pri = CN_REMOTE;
-		break;
-	default:
-		cp->cn_pri = CN_DEAD;
-		break;
-	}
+    dca = dcacnaddr;
+    switch (dca->dca_id) {
+    case DCAID0:
+    case DCAID1:
+        cp->cn_pri = CN_NORMAL;
+        break;
+    case DCAREMID0:
+    case DCAREMID1:
+        cp->cn_pri = CN_REMOTE;
+        break;
+    default:
+        cp->cn_pri = CN_DEAD;
+        break;
+    }
 #endif
 }
 
 dcainit(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
-	register struct dcadevice *dca = dcacnaddr;
+    register struct dcadevice *dca = dcacnaddr;
 
-	dca->dca_reset = 0xFF;
-	DELAY(100);
-	dca->dca_ic = 0;
-	dca->dca_cfcr = CFCR_DLAB;
-	dca->dca_data = DCABRD(9600) & 0xFF;
-	dca->dca_ier = DCABRD(9600) >> 8;
-	dca->dca_cfcr = CFCR_8BITS;
+    dca->dca_reset = 0xFF;
+    DELAY(100);
+    dca->dca_ic = 0;
+    dca->dca_cfcr = CFCR_DLAB;
+    dca->dca_data = DCABRD(9600) & 0xFF;
+    dca->dca_ier = DCABRD(9600) >> 8;
+    dca->dca_cfcr = CFCR_8BITS;
 }
 
 #ifndef SMALL
 dcagetchar()
 {
-	register struct dcadevice *dca = dcacnaddr;
-	short stat;
-	int c;
+    register struct dcadevice *dca = dcacnaddr;
+    short stat;
+    int c;
 
-	if (((stat = dca->dca_lsr) & LSR_RXRDY) == 0)
-		return(0);
-	c = dca->dca_data;
-	return(c);
+    if (((stat = dca->dca_lsr) & LSR_RXRDY) == 0)
+        return(0);
+    c = dca->dca_data;
+    return(c);
 }
 #else
 dcagetchar()
 {
-	return(0);
+    return(0);
 }
 #endif
 
 dcaputchar(c)
-	register int c;
+    register int c;
 {
-	register struct dcadevice *dca = dcacnaddr;
-	register int timo;
-	short stat;
+    register struct dcadevice *dca = dcacnaddr;
+    register int timo;
+    short stat;
 
-	/* wait a reasonable time for the transmitter to come ready */
-	timo = 50000;
-	while (((stat = dca->dca_lsr) & LSR_TXRDY) == 0 && --timo)
-		;
-	dca->dca_data = c;
-	/* wait for this transmission to complete */
-	timo = 1000000;
-	while (((stat = dca->dca_lsr) & LSR_TXRDY) == 0 && --timo)
-		;
+    /* wait a reasonable time for the transmitter to come ready */
+    timo = 50000;
+    while (((stat = dca->dca_lsr) & LSR_TXRDY) == 0 && --timo)
+        ;
+    dca->dca_data = c;
+    /* wait for this transmission to complete */
+    timo = 1000000;
+    while (((stat = dca->dca_lsr) & LSR_TXRDY) == 0 && --timo)
+        ;
 }
 #endif

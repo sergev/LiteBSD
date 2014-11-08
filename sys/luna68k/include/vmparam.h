@@ -2,7 +2,7 @@
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1982, 1986, 1990, 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -18,8 +18,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,9 +37,9 @@
  * SUCH DAMAGE.
  *
  * from: Utah $Hdr: vmparam.h 1.16 91/01/18$
- * from: hp300/include/vmparam.h	8.1 (Berkeley) 6/10/93
+ * from: hp300/include/vmparam.h    8.1 (Berkeley) 6/10/93
  *
- *	@(#)vmparam.h	8.3 (Berkeley) 4/22/94
+ *  @(#)vmparam.h   8.3 (Berkeley) 4/22/94
  */
 
 /*
@@ -57,38 +57,38 @@
  * have the user's stack hard-wired at FFF00000 for post-mortems,
  * and we must be compatible...
  */
-#define	USRTEXT		0
-#define	USRSTACK	(-HIGHPAGES*NBPG)	/* Start of user stack */
-#define	BTOPUSRSTACK	(0x100000-HIGHPAGES)	/* btop(USRSTACK) */
-#define P1PAGES		0x100000
-#define	LOWPAGES	0
-#define HIGHPAGES	(0x100000/NBPG)
+#define USRTEXT         0
+#define USRSTACK        (-HIGHPAGES*NBPG)       /* Start of user stack */
+#define BTOPUSRSTACK    (0x100000-HIGHPAGES)    /* btop(USRSTACK) */
+#define P1PAGES         0x100000
+#define LOWPAGES        0
+#define HIGHPAGES       (0x100000/NBPG)
 
-/* 
- * In kernel address space, user stack and user structure is mapped at 
- * KERNELSTACK(LUNA only). Because LUNA has only 0x80000000 kernel 
+/*
+ * In kernel address space, user stack and user structure is mapped at
+ * KERNELSTACK(LUNA only). Because LUNA has only 0x80000000 kernel
  * address space and last 1G(0x40000000-0x7FFFFFFF) is IO mapping space.
  * See below VM_MAX_KERNEL_ADDRESS define.
  */
-#define	KERNELSTACK	0x3FF00000		
+#define KERNELSTACK 0x3FF00000
 
 /*
  * Virtual memory related constants, all in bytes
  */
 #ifndef MAXTSIZ
-#define	MAXTSIZ		(8*1024*1024)		/* max text size */
+#define MAXTSIZ     (8*1024*1024)       /* max text size */
 #endif
 #ifndef DFLDSIZ
-#define	DFLDSIZ		(16*1024*1024)		/* initial data size limit */
+#define DFLDSIZ     (16*1024*1024)      /* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(64*1024*1024)		/* max data size */
+#define MAXDSIZ     (64*1024*1024)      /* max data size */
 #endif
-#ifndef	DFLSSIZ
-#define	DFLSSIZ		(512*1024)		/* initial stack size limit */
+#ifndef DFLSSIZ
+#define DFLSSIZ     (512*1024)          /* initial stack size limit */
 #endif
-#ifndef	MAXSSIZ
-#define	MAXSSIZ		MAXDSIZ			/* max stack size */
+#ifndef MAXSSIZ
+#define MAXSSIZ     MAXDSIZ             /* max stack size */
 #endif
 
 /*
@@ -98,22 +98,22 @@
  * DMMIN should be at least ctod(1) so that vtod() works.
  * vminit() insures this.
  */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	4096			/* largest potential swap allocation */
+#define DMMIN   32              /* smallest swap allocation */
+#define DMMAX   4096            /* largest potential swap allocation */
 
 /*
  * Sizes of the system and user portions of the system page table.
  */
 /* SYSPTSIZE IS SILLY; IT SHOULD BE COMPUTED AT BOOT TIME */
-#define	SYSPTSIZE	(2 * NPTEPG)	/* 8mb */
-#define	USRPTSIZE 	(1 * NPTEPG)	/* 4mb */
+#define SYSPTSIZE   (2 * NPTEPG)    /* 8mb */
+#define USRPTSIZE   (1 * NPTEPG)    /* 4mb */
 
 /*
  * PTEs for mapping user space into the kernel for phyio operations.
  * One page is enough to handle 4Mb of simultaneous raw IO operations.
  */
 #ifndef USRIOSIZE
-#define USRIOSIZE	(1 * NPTEPG)	/* 4mb */
+#define USRIOSIZE   (1 * NPTEPG)    /* 4mb */
 #endif
 
 /*
@@ -121,7 +121,7 @@
  * This is basically slop for kmempt which we actually allocate (malloc) from.
  */
 #ifndef SHMMAXPGS
-#define SHMMAXPGS	1024		/* 4mb */
+#define SHMMAXPGS   1024            /* 4mb */
 #endif
 
 /*
@@ -129,12 +129,12 @@
  * specified.  Should be a power of two.  This allows some slop for
  * the data segment to grow underneath the first mapped segment.
  */
-#define MMSEG		0x200000
+#define MMSEG       0x200000
 
 /*
  * The size of the clock loop.
  */
-#define	LOOPPAGES	(maxfree - firstfree)
+#define LOOPPAGES   (maxfree - firstfree)
 
 /*
  * The time for a process to be blocked before being very swappable.
@@ -145,7 +145,7 @@
  * It is related to human patience and other factors which don't really
  * change over time.
  */
-#define	MAXSLP 		20
+#define MAXSLP      20
 
 /*
  * A swapped in process is given a small amount of core without being bothered
@@ -160,14 +160,14 @@
  * that we don't consider it worthwhile and swap it out to disk which costs
  * $30/mb or about $0.75.
  */
-#define	SAFERSS		4		/* nominal ``small'' resident set size
-					   protected against replacement */
+#define SAFERSS     4       /* nominal ``small'' resident set size
+                               protected against replacement */
 
 /*
  * DISKRPM is used to estimate the number of paging i/o operations
  * which one can expect from a single disk controller.
  */
-#define	DISKRPM		60
+#define DISKRPM     60
 
 /*
  * Klustering constants.  Klustering is the gathering
@@ -181,28 +181,28 @@
  * unless you like "big push" panics.
  */
 
-#define	KLMAX	(4/CLSIZE)
-#define	KLSEQL	(2/CLSIZE)		/* in klust if vadvise(VA_SEQL) */
-#define	KLIN	(4/CLSIZE)		/* default data/stack in klust */
-#define	KLTXT	(4/CLSIZE)		/* default text in klust */
-#define	KLOUT	(4/CLSIZE)
+#define KLMAX   (4/CLSIZE)
+#define KLSEQL  (2/CLSIZE)      /* in klust if vadvise(VA_SEQL) */
+#define KLIN    (4/CLSIZE)      /* default data/stack in klust */
+#define KLTXT   (4/CLSIZE)      /* default text in klust */
+#define KLOUT   (4/CLSIZE)
 
 /*
  * KLSDIST is the advance or retard of the fifo reclaim for sequential
  * processes data space.
  */
-#define	KLSDIST	3		/* klusters advance/retard for seq. fifo */
+#define KLSDIST 3       /* klusters advance/retard for seq. fifo */
 
 /*
  * Paging thresholds (see vm_sched.c).
  * Strategy of 1/19/85:
- *	lotsfree is 512k bytes, but at most 1/4 of memory
- *	desfree is 200k bytes, but at most 1/8 of memory
+ *  lotsfree is 512k bytes, but at most 1/4 of memory
+ *  desfree is 200k bytes, but at most 1/8 of memory
  */
-#define	LOTSFREE	(512 * 1024)
-#define	LOTSFREEFRACT	4
-#define	DESFREE		(200 * 1024)
-#define	DESFREEFRACT	8
+#define LOTSFREE        (512 * 1024)
+#define LOTSFREEFRACT   4
+#define DESFREE         (200 * 1024)
+#define DESFREEFRACT    8
 
 /*
  * There are two clock hands, initially separated by HANDSPREAD bytes
@@ -210,38 +210,38 @@
  * a page once the pageout process examines it increases with this
  * distance and decreases as the scan rate rises.
  */
-#define	HANDSPREAD	(2 * 1024 * 1024)
+#define HANDSPREAD      (2 * 1024 * 1024)
 
 /*
  * The number of times per second to recompute the desired paging rate
  * and poke the pagedaemon.
  */
-#define	RATETOSCHEDPAGING	4
+#define RATETOSCHEDPAGING   4
 
 /*
  * Believed threshold (in megabytes) for which interleaved
  * swapping area is desirable.
  */
-#define	LOTSOFMEM	2
+#define LOTSOFMEM   2
 
 /*
  * Mach derived constants
  */
 
 /* user/kernel map constants */
-#define VM_MIN_ADDRESS		((vm_offset_t)0)
-#define VM_MAXUSER_ADDRESS	((vm_offset_t)0xFFF00000)
-#define VM_MAX_ADDRESS		((vm_offset_t)0xFFF00000)
-#define VM_MIN_KERNEL_ADDRESS	((vm_offset_t)0)
-#define VM_MAX_KERNEL_ADDRESS	((vm_offset_t)0x7FFFF000)
+#define VM_MIN_ADDRESS          ((vm_offset_t)0)
+#define VM_MAXUSER_ADDRESS      ((vm_offset_t)0xFFF00000)
+#define VM_MAX_ADDRESS          ((vm_offset_t)0xFFF00000)
+#define VM_MIN_KERNEL_ADDRESS   ((vm_offset_t)0)
+#define VM_MAX_KERNEL_ADDRESS   ((vm_offset_t)0x7FFFF000)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*CLBYTES)
-#define VM_PHYS_SIZE		(USRIOSIZE*CLBYTES)
+#define VM_MBUF_SIZE    (NMBCLUSTERS*MCLBYTES)
+#define VM_KMEM_SIZE    (NKMEMCLUSTERS*CLBYTES)
+#define VM_PHYS_SIZE    (USRIOSIZE*CLBYTES)
 
 /* # of kernel PT pages (initial only, can grow dynamically) */
-#define VM_KERNEL_PT_PAGES	((vm_size_t)2)		/* XXX: SYSPTSIZE */
+#define VM_KERNEL_PT_PAGES  ((vm_size_t)2)      /* XXX: SYSPTSIZE */
 
 /* pcb base */
-#define	pcbb(p)		((u_int)(p)->p_addr)
+#define pcbb(p)         ((u_int)(p)->p_addr)

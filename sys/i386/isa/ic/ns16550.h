@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,21 +30,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ns16550.h	8.1 (Berkeley) 6/11/93
+ *  @(#)ns16550.h   8.1 (Berkeley) 6/11/93
  */
 
 /*
  * NS16550 UART registers
  */
 
-#define	com_data	0	/* data register (R/W) */
-#define	com_dlbl	0	/* divisor latch low (W) */
-#define	com_dlbh	1	/* divisor latch high (W) */
-#define	com_ier		1	/* interrupt enable (W) */
-#define	com_iir		2	/* interrupt identification (R) */
-#define	com_fifo	2	/* FIFO control (W) */
-#define	com_lctl	3	/* line control register (R/W) */
-#define	com_cfcr	3	/* line control register (R/W) */
-#define	com_mcr		4	/* modem control register (R/W) */
-#define	com_lsr		5	/* line status register (R/W) */
-#define	com_msr		6	/* modem status register (R/W) */
+#define com_data    0   /* data register (R/W) */
+#define com_dlbl    0   /* divisor latch low (W) */
+#define com_dlbh    1   /* divisor latch high (W) */
+#define com_ier     1   /* interrupt enable (W) */
+#define com_iir     2   /* interrupt identification (R) */
+#define com_fifo    2   /* FIFO control (W) */
+#define com_lctl    3   /* line control register (R/W) */
+#define com_cfcr    3   /* line control register (R/W) */
+#define com_mcr     4   /* modem control register (R/W) */
+#define com_lsr     5   /* line status register (R/W) */
+#define com_msr     6   /* modem status register (R/W) */

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * William Jolitz.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)reg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)reg.h   8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -45,49 +45,49 @@
 
 /* When referenced during a trap/exception, registers are at these offsets */
 
-#define	tES	(0)
-#define	tDS	(1)
-#define	tEDI	(2)
-#define	tESI	(3)
-#define	tEBP	(4)
+#define tES     (0)
+#define tDS     (1)
+#define tEDI    (2)
+#define tESI    (3)
+#define tEBP    (4)
 
-#define	tEBX	(6)
-#define	tEDX	(7)
-#define	tECX	(8)
-#define	tEAX	(9)
+#define tEBX    (6)
+#define tEDX    (7)
+#define tECX    (8)
+#define tEAX    (9)
 
-#define	tEIP	(12)
-#define	tCS	(13)
-#define	tEFLAGS	(14)
-#define	tESP	(15)
-#define	tSS	(16)
+#define tEIP    (12)
+#define tCS     (13)
+#define tEFLAGS (14)
+#define tESP    (15)
+#define tSS     (16)
 
 /* During a system call, registers are at these offsets instead of above. */
 
-#define	sEDI	(0)
-#define	sESI	(1)
-#define	sEBP	(2)
+#define sEDI    (0)
+#define sESI    (1)
+#define sEBP    (2)
 
-#define	sEBX	(4)
-#define	sEDX	(5)
-#define	sECX	(6)
-#define	sEAX	(7)
-#define	sEFLAGS	(8)
-#define	sEIP	(9)
-#define	sCS	(10)
-#define	sESP	(11)
-#define	sSS	(12)
+#define sEBX    (4)
+#define sEDX    (5)
+#define sECX    (6)
+#define sEAX    (7)
+#define sEFLAGS (8)
+#define sEIP    (9)
+#define sCS     (10)
+#define sESP    (11)
+#define sSS     (12)
 
-#define	PC	sEIP
-#define	SP	sESP
-#define	PS	sEFLAGS
-#define	R0	sEDX
-#define	R1	sECX
+#define PC      sEIP
+#define SP      sESP
+#define PS      sEFLAGS
+#define R0      sEDX
+#define R1      sECX
 /*
  * Registers accessible to ptrace(2) syscall for debugger
  */
 #ifdef IPCREG
-#define	NIPCREG 14
+#define NIPCREG 14
 int ipcreg[NIPCREG] =
   { tES,tDS,tEDI,tESI,tEBP,tEBX,tEDX,tECX,tEAX,tEIP,tCS,tEFLAGS,tESP,tSS };
 #endif

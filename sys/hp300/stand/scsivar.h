@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Van Jacobson of Lawrence Berkeley Laboratory and the Systems
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,16 +34,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)scsivar.h	8.1 (Berkeley) 6/10/93
+ *  @(#)scsivar.h   8.1 (Berkeley) 6/10/93
  */
 
-struct	scsi_softc {
-	int	sc_ba;
-	char	*sc_addr;
-	char	sc_alive;
-	char	sc_scsi_addr;
-	char	sc_stat;
-	char	sc_msg[7];
+struct  scsi_softc {
+    int     sc_ba;
+    char    *sc_addr;
+    char    sc_alive;
+    char    sc_scsi_addr;
+    char    sc_stat;
+    char    sc_msg[7];
 };
 
-extern	struct scsi_softc scsi_softc[];
+extern  struct scsi_softc scsi_softc[];

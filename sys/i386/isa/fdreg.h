@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)fdreg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)fdreg.h 8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -41,23 +41,23 @@
 #include <i386/isa/ic/nec765.h>
 
 /* registers */
-#define	fdout	2	/* Digital Output Register (W) */
-#define	FDO_FDSEL	0x01	/*  floppy device select */
-#define	FDO_FRST	0x04	/*  floppy controller reset */
-#define	FDO_FDMAEN	0x08	/*  enable floppy DMA and Interrupt */
-#define	FDO_MOEN0	0x10	/*  motor enable drive 0 */
-#define	FDO_MOEN1	0x20	/*  motor enable drive 1 */
+#define fdout   2   /* Digital Output Register (W) */
+#define FDO_FDSEL   0x01    /*  floppy device select */
+#define FDO_FRST    0x04    /*  floppy controller reset */
+#define FDO_FDMAEN  0x08    /*  enable floppy DMA and Interrupt */
+#define FDO_MOEN0   0x10    /*  motor enable drive 0 */
+#define FDO_MOEN1   0x20    /*  motor enable drive 1 */
 
-#define	fdsts	4	/* NEC 765 Main Status Register (R) */
-#define	fddata	5	/* NEC 765 Data Register (R/W) */
+#define fdsts   4   /* NEC 765 Main Status Register (R) */
+#define fddata  5   /* NEC 765 Data Register (R/W) */
 
-#define	fdctl	7	/* Control Register (W) */
-#define	FDC_500KBPS	0x00	/* 500KBPS MFM drive transfer rate */
-#define	FDC_300KBPS	0x01	/* 300KBPS MFM drive transfer rate */
-#define	FDC_250KBPS	0x02	/* 250KBPS MFM drive transfer rate */
-#define	FDC_125KBPS	0x03	/* 125KBPS FM drive transfer rate */
+#define fdctl   7   /* Control Register (W) */
+#define FDC_500KBPS 0x00    /* 500KBPS MFM drive transfer rate */
+#define FDC_300KBPS 0x01    /* 300KBPS MFM drive transfer rate */
+#define FDC_250KBPS 0x02    /* 250KBPS MFM drive transfer rate */
+#define FDC_125KBPS 0x03    /* 125KBPS FM drive transfer rate */
 
-#define	fdin	7	/* Digital Input Register (R) */
-#define	FDI_DCHG	0x80	/* diskette has been changed */
+#define fdin    7   /* Digital Input Register (R) */
+#define FDI_DCHG    0x80    /* diskette has been changed */
 
 

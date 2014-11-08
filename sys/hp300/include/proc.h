@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,21 +30,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)proc.h	8.1 (Berkeley) 6/10/93
+ *  @(#)proc.h  8.1 (Berkeley) 6/10/93
  */
 
 /*
  * Machine-dependent part of the proc structure for hp300.
  */
 struct mdproc {
-	int	*md_regs;		/* registers on current frame */
-	int	md_flags;		/* machine-dependent flags */
+    int *md_regs;       /* registers on current frame */
+    int md_flags;       /* machine-dependent flags */
 };
 
 /* md_flags */
-#define	MDP_AST		0x0001	/* async trap pending */
-#define	MDP_HPUX	0x0002	/* HP-UX process */
-#define	MDP_HPUXTRACE	0x0004	/* being traced by HP-UX process */
-#define	MDP_HPUXMMAP	0x0008	/* VA space is multiply mapped */
-#define MDP_CCBDATA	0x0010	/* copyback caching of data (68040) */
-#define MDP_CCBSTACK	0x0020	/* copyback caching of stack (68040) */
+#define MDP_AST         0x0001  /* async trap pending */
+#define MDP_HPUX        0x0002  /* HP-UX process */
+#define MDP_HPUXTRACE   0x0004  /* being traced by HP-UX process */
+#define MDP_HPUXMMAP    0x0008  /* VA space is multiply mapped */
+#define MDP_CCBDATA     0x0010  /* copyback caching of data (68040) */
+#define MDP_CCBSTACK    0x0020  /* copyback caching of stack (68040) */

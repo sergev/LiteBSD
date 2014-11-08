@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -40,17 +40,17 @@
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -212,7 +212,7 @@ vm_pageout_scan()
 		if (next && (next->flags & PG_INACTIVE) == 0)
 			next = vm_page_queue_inactive.tqh_first;
 	}
-	
+
 	/*
 	 *	Compute the page shortage.  If we are still very low on memory
 	 *	be sure that we will move a minimal amount of pages from active
@@ -555,6 +555,7 @@ vm_pageout()
 			(cnt.v_active_count + cnt.v_inactive_count) / 3;
 		if (cnt.v_inactive_target <= cnt.v_free_target)
 			cnt.v_inactive_target = cnt.v_free_target + 1;
+//printf("--- %s: free=%u/%u, inactive=%u/%u\n", __func__, cnt.v_free_count, cnt.v_free_target, cnt.v_inactive_count, cnt.v_inactive_target);
 
 		/*
 		 * Only make a scan if we are likely to do something.

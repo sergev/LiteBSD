@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,29 +30,29 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)stdarg.h	8.1 (Berkeley) 6/10/93
+ *  @(#)stdarg.h    8.1 (Berkeley) 6/10/93
  */
 
 #ifndef _STDARG_H_
-#define	_STDARG_H_
+#define _STDARG_H_
 
 typedef char *va_list;
 
-#define	__va_promote(type) \
-	(((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
+#define __va_promote(type) \
+    (((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
 
-#define	va_start(ap, last) \
-	(ap = ((char *)&(last) + __va_promote(last)))
+#define va_start(ap, last) \
+    (ap = ((char *)&(last) + __va_promote(last)))
 
 #ifdef KERNEL
-#define	va_arg(ap, type) \
-	((type *)(ap += sizeof(type)))[-1]
+#define va_arg(ap, type) \
+    ((type *)(ap += sizeof(type)))[-1]
 #else
-#define	va_arg(ap, type) \
-	((type *)(ap += sizeof(type) < sizeof(int) ? \
-		(abort(), 0) : sizeof(type)))[-1]
+#define va_arg(ap, type) \
+    ((type *)(ap += sizeof(type) < sizeof(int) ? \
+        (abort(), 0) : sizeof(type)))[-1]
 #endif
 
-#define	va_end(ap)
+#define va_end(ap)
 
 #endif /* !_STDARG_H_ */

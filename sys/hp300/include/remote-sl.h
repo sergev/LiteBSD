@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Steven McCanne of Lawrence Berkeley Laboratory.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)remote-sl.h	8.1 (Berkeley) 6/10/93
+ *  @(#)remote-sl.h 8.1 (Berkeley) 6/10/93
  *
  * $Header: remote-sl.h,v 1.2 92/07/23 19:38:20 mccanne Exp $ (LBL)
  */
 
-#define FRAME_START		0xc1		/* Frame End */
-#define FRAME_END		0xc0		/* Frame End */
-#define FRAME_ESCAPE		0xdb		/* Frame Esc */
-#define TRANS_FRAME_START	0xde		/* transposed frame start */
-#define TRANS_FRAME_END		0xdc		/* transposed frame esc */
-#define TRANS_FRAME_ESCAPE	0xdd		/* transposed frame esc */
+#define FRAME_START         0xc1        /* Frame End */
+#define FRAME_END           0xc0        /* Frame End */
+#define FRAME_ESCAPE        0xdb        /* Frame Esc */
+#define TRANS_FRAME_START   0xde        /* transposed frame start */
+#define TRANS_FRAME_END     0xdc        /* transposed frame esc */
+#define TRANS_FRAME_ESCAPE  0xdd        /* transposed frame esc */
 
 /*
  * Message limits.  SL_MAXDATA is the maximum number of bytes that can
  * be read or written.  SL_RPCSIZE is the maximum message size for
  * the serial link.  The actual MTU is two times the max message (since
- * each byte might be escaped), plus the two framing bytes.  We add two 
+ * each byte might be escaped), plus the two framing bytes.  We add two
  * to the message length to account for the type byte and checksum.
  */
-#define SL_MAXDATA 62			/* max data that can be read */
-#define SL_RPCSIZE (1 + SL_MAXDATA)	/* errno byte + data */
-#define SL_MTU ((2 * (SL_RPCSIZE + 2) + 2))
-
+#define SL_MAXDATA  62                  /* max data that can be read */
+#define SL_RPCSIZE  (1 + SL_MAXDATA)    /* errno byte + data */
+#define SL_MTU      ((2 * (SL_RPCSIZE + 2) + 2))

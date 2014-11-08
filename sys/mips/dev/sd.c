@@ -413,7 +413,7 @@ card_read(int unit, unsigned int offset, char *data, unsigned int bcount)
 {
     struct spiio *io = &sddrives[unit].spiio;
     int reply, i;
-//printf("%s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
+//printf("--- %s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
 
     /* Send read-multiple command. */
     spi_select(io);
@@ -491,6 +491,7 @@ card_write (int unit, unsigned offset, char *data, unsigned bcount)
 {
     struct spiio *io = &sddrives[unit].spiio;
     unsigned reply, i;
+//printf("--- %s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
 
     /* Send pre-erase count. */
     spi_select(io);

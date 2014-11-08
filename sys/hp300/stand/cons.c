@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: cons.c 1.7 92/02/28$
  *
- *	@(#)cons.c	8.1 (Berkeley) 6/10/93
+ *  @(#)cons.c  8.1 (Berkeley) 6/10/93
  */
 
 #include <sys/param.h>
@@ -45,26 +45,26 @@
 #include <hp/dev/cons.h>
 
 #ifdef ITECONSOLE
-int	iteprobe(), iteinit(), itegetchar(), iteputchar();
+int iteprobe(), iteinit(), itegetchar(), iteputchar();
 #endif
 #ifdef DCACONSOLE
-int	dcaprobe(), dcainit(), dcagetchar(), dcaputchar();
+int dcaprobe(), dcainit(), dcagetchar(), dcaputchar();
 #endif
 #ifdef DCMCONSOLE
-int	dcmprobe(), dcminit(), dcmgetchar(), dcmputchar();
+int dcmprobe(), dcminit(), dcmgetchar(), dcmputchar();
 #endif
 
 struct consdev constab[] = {
 #ifdef ITECONSOLE
-	{ iteprobe,	iteinit,	itegetchar,	iteputchar },
+    { iteprobe, iteinit,    itegetchar, iteputchar },
 #endif
 #ifdef DCACONSOLE
-	{ dcaprobe,	dcainit,	dcagetchar,	dcaputchar },
+    { dcaprobe, dcainit,    dcagetchar, dcaputchar },
 #endif
 #ifdef DCMCONSOLE
-	{ dcmprobe,	dcminit,	dcmgetchar,	dcmputchar },
+    { dcmprobe, dcminit,    dcmgetchar, dcmputchar },
 #endif
-	{ 0 },
+    { 0 },
 };
 
 struct consdev *cn_tab;
@@ -72,39 +72,39 @@ int noconsole;
 
 cninit()
 {
-	register struct consdev *cp;
+    register struct consdev *cp;
 
-	cn_tab = NULL;
-	noconsole = 1;
-	for (cp = constab; cp->cn_probe; cp++) {
-		(*cp->cn_probe)(cp);
-		if (cp->cn_pri > CN_DEAD &&
-		    (cn_tab == NULL || cp->cn_pri > cn_tab->cn_pri))
-			cn_tab = cp;
-	}
-	if (cn_tab) {
-		(*cn_tab->cn_init)(cn_tab);
-		noconsole = 0;
-	}
+    cn_tab = NULL;
+    noconsole = 1;
+    for (cp = constab; cp->cn_probe; cp++) {
+        (*cp->cn_probe)(cp);
+        if (cp->cn_pri > CN_DEAD &&
+            (cn_tab == NULL || cp->cn_pri > cn_tab->cn_pri))
+            cn_tab = cp;
+    }
+    if (cn_tab) {
+        (*cn_tab->cn_init)(cn_tab);
+        noconsole = 0;
+    }
 }
 
 cngetc()
 {
-	if (cn_tab)
-		return((*cn_tab->cn_getc)());
-	return(0);
+    if (cn_tab)
+        return((*cn_tab->cn_getc)());
+    return(0);
 }
 
 cnputc(c)
-	int c;
+    int c;
 {
 #ifdef ROMPRF
-	extern int userom;
+    extern int userom;
 
-	if (userom)
-		romputchar(c);
-	else
+    if (userom)
+        romputchar(c);
+    else
 #endif
-	if (cn_tab)
-		(*cn_tab->cn_putc)(c);
+    if (cn_tab)
+        (*cn_tab->cn_putc)(c);
 }

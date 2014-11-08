@@ -1,7 +1,7 @@
 #!/bin/sh -
 #
 # Copyright (c) 1994
-#	The Regents of the University of California.  All rights reserved.
+#   The Regents of the University of California.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -13,8 +13,8 @@
 #    documentation and/or other materials provided with the distribution.
 # 3. All advertising materials mentioning features or use of this software
 #    must display the following acknowledgement:
-#	This product includes software developed by the University of
-#	California, Berkeley and its contributors.
+#   This product includes software developed by the University of
+#   California, Berkeley and its contributors.
 # 4. Neither the name of the University nor the names of its contributors
 #    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
@@ -31,26 +31,26 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	@(#)installboot.sh	8.2 (Berkeley) 3/21/94
+#   @(#)installboot.sh  8.2 (Berkeley) 3/21/94
 #
 # compatibility with old installboot program
 #
 if [ $# != 2 ]
 then
-	echo "Usage: installboot bootprog device"
-	exit 1
+    echo "Usage: installboot bootprog device"
+    exit 1
 fi
 if [ ! -f $1 ]
 then
-	echo "Usage: installboot bootprog device"
-	echo "${1}: bootprog must be a regular file"
-	exit 1
+    echo "Usage: installboot bootprog device"
+    echo "${1}: bootprog must be a regular file"
+    exit 1
 fi
 if [ ! -c $2 ]
 then
-	echo "Usage: installboot bootprog device"
-	echo "${2}: device must be a char special file"
-	exit 1
+    echo "Usage: installboot bootprog device"
+    echo "${2}: device must be a char special file"
+    exit 1
 fi
 /sbin/disklabel -B -b $1 $2
 exit $?

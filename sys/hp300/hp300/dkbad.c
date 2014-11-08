@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dkbad.c	8.2 (Berkeley) 1/12/94
+ *  @(#)dkbad.c 8.2 (Berkeley) 1/12/94
  */
 
 #ifndef NOBADSECT
@@ -45,20 +45,20 @@
  */
 
 isbad(bt, cyl, trk, sec)
-	register struct dkbad *bt;
-	int cyl, trk, sec;
+    register struct dkbad *bt;
+    int cyl, trk, sec;
 {
-	register int i;
-	register long blk, bblk;
+    register int i;
+    register long blk, bblk;
 
-	blk = ((long)cyl << 16) + (trk << 8) + sec;
-	for (i = 0; i < 126; i++) {
-		bblk = ((long)bt->bt_bad[i].bt_cyl << 16) + bt->bt_bad[i].bt_trksec;
-		if (blk == bblk)
-			return (i);
-		if (blk < bblk || bblk < 0)
-			break;
-	}
-	return (-1);
+    blk = ((long)cyl << 16) + (trk << 8) + sec;
+    for (i = 0; i < 126; i++) {
+        bblk = ((long)bt->bt_bad[i].bt_cyl << 16) + bt->bt_bad[i].bt_trksec;
+        if (blk == bblk)
+            return (i);
+        if (blk < bblk || bblk < 0)
+            break;
+    }
+    return (-1);
 }
 #endif

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)preset.h	8.1 (Berkeley) 6/10/93
+ *  @(#)preset.h    8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -46,14 +46,13 @@
  * DIP SW-1
  */
 
-#define	PS_AUTOBOOT	0x01				/* 1: PROM auto-boot */
-#define	PS_BMC_CONS	0x02				/* 2: use bitmap display as console */
-#define	PS_BW_DISP	0x04				/* 3: use B&W display (unused) */
-							/* 4: HD write verify (???) */
-#define	PS_COFF		0x10				/* 5: boot COFF format kernel */
-#define	PS_PLAIN	0x20				/* 6: number of bitmap plain (unused) */
-							/* NOTE: it has 4 plain, if turn it on, else 1 */
-							/* 7: boot device (unused) */
-							/* NOTE: it should be net-booting, if turn it on */
-							/* 8: load diagnostic program (unused) */
-
+#define PS_AUTOBOOT 0x01    /* 1: PROM auto-boot */
+#define PS_BMC_CONS 0x02    /* 2: use bitmap display as console */
+#define PS_BW_DISP  0x04    /* 3: use B&W display (unused) */
+                            /* 4: HD write verify (???) */
+#define PS_COFF     0x10    /* 5: boot COFF format kernel */
+#define PS_PLAIN    0x20    /* 6: number of bitmap plain (unused) */
+                            /* NOTE: it has 4 plain, if turn it on, else 1 */
+                            /* 7: boot device (unused) */
+                            /* NOTE: it should be net-booting, if turn it on */
+                            /* 8: load diagnostic program (unused) */

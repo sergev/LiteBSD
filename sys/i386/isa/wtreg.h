@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)wtreg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)wtreg.h 8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -63,14 +63,14 @@
 
 /* 
  * HISTORY
- * $Log:	wtreg.h,v $
+ * $Log:    wtreg.h,v $
  * Revision 2.2.1.1  90/01/08  13:29:25  rvb
- * 	Add Intel copyright.
- * 	[90/01/08            rvb]
+ *  Add Intel copyright.
+ *  [90/01/08            rvb]
  * 
  * Revision 2.2  89/09/25  12:33:09  rvb
- * 	Driver was provided by Intel 9/18/89.
- * 	[89/09/23            rvb]
+ *  Driver was provided by Intel 9/18/89.
+ *  [89/09/23            rvb]
  * 
  */
 
@@ -85,11 +85,11 @@
  *   defines ioctl parameters for direct QIC commands
  */
 
-#define	WTIOC	('W'<<8)
-#define	WTQICMD	(WTIOC|0)
+#define WTIOC   ('W'<<8)
+#define WTQICMD (WTIOC|0)
 
 /* QIC commands allowed */
-#define	SELECT	0x01
-#define	REWIND	0x21
-#define	ERASE	0x22
-#define	RETENS	0x24
+#define SELECT  0x01
+#define REWIND  0x21
+#define ERASE   0x22
+#define RETENS  0x24

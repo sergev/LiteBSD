@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1991 University of Utah.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,19 +37,19 @@
  *
  * from: Utah $Hdr: iotypes.h 1.1 91/12/12$
  *
- *	@(#)iotypes.h	8.1 (Berkeley) 6/10/93
+ *  @(#)iotypes.h   8.1 (Berkeley) 6/10/93
  */
 
 #ifndef _IOTYPES_
-#define	_IOTYPES_
+#define _IOTYPES_
 
 /*
  * Where do these really belong?
  */
-typedef volatile char			v_char;
-typedef volatile unsigned char		vu_char;
-typedef volatile short			v_short;
-typedef volatile unsigned short		vu_short;
-typedef volatile int			v_int;
-typedef volatile unsigned int		vu_int;
+typedef volatile char           v_char;
+typedef volatile unsigned char  vu_char;
+typedef volatile short          v_short;
+typedef volatile unsigned short vu_short;
+typedef volatile int            v_int;
+typedef volatile unsigned int   vu_int;
 #endif

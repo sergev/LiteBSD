@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bmc.c	8.1 (Berkeley) 6/10/93
+ *  @(#)bmc.c   8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -47,10 +47,10 @@
 #include <luna68k/stand/rcvbuf.h>
 #include <luna68k/stand/preset.h>
 
-extern	int dipsw1;
-extern	int nplane;
+extern  int dipsw1;
+extern  int nplane;
 
-extern	struct rcvbuf	rcvbuf[];
+extern  struct rcvbuf   rcvbuf[];
 
 bmcintr()
 {
@@ -62,52 +62,52 @@ bmcintr()
 #include <luna68k/luna68k/cons.h>
 
 bmccnprobe(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
-	if ((dipsw1 & PS_BMC_CONS) == 0) {
-		cp->cn_pri = CN_DEAD;
-		return;
-	}
+    if ((dipsw1 & PS_BMC_CONS) == 0) {
+        cp->cn_pri = CN_DEAD;
+        return;
+    }
 
-	if (nplane == 0) {
-		cp->cn_pri = CN_DEAD;
-		return;
-	}
+    if (nplane == 0) {
+        cp->cn_pri = CN_DEAD;
+        return;
+    }
 
-	/* initialize required fields */
-	cp->cn_dev = 1;
-	cp->cn_tp  = 0;
-	cp->cn_pri = CN_NORMAL;
+    /* initialize required fields */
+    cp->cn_dev = 1;
+    cp->cn_tp  = 0;
+    cp->cn_pri = CN_NORMAL;
 }
 
 bmccninit(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
-	sioinit();
-	bmdinit();
+    sioinit();
+    bmdinit();
 }
 
 bmccngetc(dev)
-	dev_t dev;
+    dev_t dev;
 {
-	register int c;
-	register int unit = 1;
+    register int c;
+    register int unit = 1;
 
-	while (RBUF_EMPTY(unit)) {
-		DELAY(10);
-	}
+    while (RBUF_EMPTY(unit)) {
+        DELAY(10);
+    }
 
-	POP_RBUF(unit, c);
+    POP_RBUF(unit, c);
 
-	return(c);
+    return(c);
 /*
-	return(siocngetc(dev));
+    return(siocngetc(dev));
  */
 }
 
 bmccnputc(dev, c)
-	dev_t dev;
-	int c;
+    dev_t dev;
+    int c;
 {
-	bmdputc(c);
+    bmdputc(c);
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,52 +34,52 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)trap.c	8.1 (Berkeley) 6/10/93
+ *  @(#)trap.c  8.1 (Berkeley) 6/10/93
  */
 
 #include <sys/param.h>
 #include <machine/frame.h>
 #include <luna68k/stand/romvec.h>
 
-#define	USER	040		/* user-mode flag added to type */
+#define USER    040     /* user-mode flag added to type */
 
-char	*trap_type[] = {
-	"Bus error",
-	"Address error",
-	"Illegal instruction",
-	"Zero divide",
-	"CHK instruction",
-	"TRAPV instruction",
-	"Privilege violation",
-	"Trace trap",
-	"MMU fault",
-	"SSIR trap",
-	"Format error",
-	"68881 exception",
-	"Coprocessor violation",
-	"Async system trap"
+char    *trap_type[] = {
+    "Bus error",
+    "Address error",
+    "Illegal instruction",
+    "Zero divide",
+    "CHK instruction",
+    "TRAPV instruction",
+    "Privilege violation",
+    "Trace trap",
+    "MMU fault",
+    "SSIR trap",
+    "Format error",
+    "68881 exception",
+    "Coprocessor violation",
+    "Async system trap"
 };
-#define	TRAP_TYPES	(sizeof trap_type / sizeof trap_type[0])
+#define TRAP_TYPES  (sizeof trap_type / sizeof trap_type[0])
 
 /*
  * Called from the trap handler when a processor trap occurs.
  */
 /*ARGSUSED*/
 trap(type, code, v, frame)
-	int type;
-	unsigned code;
-	register unsigned v;
-	struct frame frame;
+    int type;
+    unsigned code;
+    register unsigned v;
+    struct frame frame;
 {
-	switch (type) {
+    switch (type) {
 
-	default:
+    default:
 dopanic:
-		printf("trap type %d, code = %x, v = %x\n", type, code, v);
-		regdump(frame.f_regs, 128);
-		type &= ~USER;
-		if ((unsigned)type < TRAP_TYPES)
-			panic(trap_type[type]);
-		panic("trap");
-	}
+        printf("trap type %d, code = %x, v = %x\n", type, code, v);
+        regdump(frame.f_regs, 128);
+        type &= ~USER;
+        if ((unsigned)type < TRAP_TYPES)
+            panic(trap_type[type]);
+        panic("trap");
+    }
 }

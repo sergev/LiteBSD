@@ -458,6 +458,7 @@ initcpu()
     c->regb = REGB_DATA_MODE | REGB_HOURS_FORMAT;
     (void) c->regc;
 #endif
+    spl0();         /* safe to turn interrupts on now */
 }
 
 static void identify_cpu()

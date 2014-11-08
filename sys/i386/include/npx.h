@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * William Jolitz.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)npx.h	8.1 (Berkeley) 6/11/93
+ *  @(#)npx.h   8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -41,39 +41,39 @@
  * W. Jolitz 1/90
  */
 
-#ifndef	___NPX87___
-#define	___NPX87___
+#ifndef ___NPX87___
+#define ___NPX87___
 
 /* Environment information of floating point unit */
-struct	env87 {
-	long	en_cw;		/* control word (16bits) */
-	long	en_sw;		/* status word (16bits) */
-	long	en_tw;		/* tag word (16bits) */
-	long	en_fip;		/* floating point instruction pointer */
-	u_short	en_fcs;		/* floating code segment selector */
-	u_short	en_opcode;	/* opcode last executed (11 bits ) */
-	long	en_foo;		/* floating operand offset */
-	long	en_fos;		/* floating operand segment selector */
+struct  env87 {
+    long    en_cw;      /* control word (16bits) */
+    long    en_sw;      /* status word (16bits) */
+    long    en_tw;      /* tag word (16bits) */
+    long    en_fip;     /* floating point instruction pointer */
+    u_short en_fcs;     /* floating code segment selector */
+    u_short en_opcode;  /* opcode last executed (11 bits ) */
+    long    en_foo;     /* floating operand offset */
+    long    en_fos;     /* floating operand segment selector */
 };
 
 /* Contents of each floating point accumulator */
-struct	fpacc87 {
-	u_long	fp_mantlo;	/* mantissa low (31:0) */
-	u_long	fp_manthi;	/* mantissa high (63:32) */
-	int	fp_exp:15;	/* exponent */
-	int	fp_sgn:1;	/* mantissa sign */
+struct  fpacc87 {
+    u_long  fp_mantlo;  /* mantissa low (31:0) */
+    u_long  fp_manthi;  /* mantissa high (63:32) */
+    int     fp_exp:15;  /* exponent */
+    int     fp_sgn:1;   /* mantissa sign */
 };
 
 /* Floating point context */
-struct	save87 {
-	struct	env87 sv_env;		/* floating point control/status */
-	struct	fpacc87	sv_ac[8];	/* accumulator contents, 0-7 */
+struct  save87 {
+    struct  env87 sv_env;       /* floating point control/status */
+    struct  fpacc87 sv_ac[8];   /* accumulator contents, 0-7 */
 };
 
 /* Cyrix EMC memory - mapped coprocessor context switch information */
-struct	emcsts {
-	long	em_msw;		/* memory mapped status register when swtched */
-	long	em_tar;		/* memory mapped temp A register when swtched */
-	long	em_dl;		/* memory mapped D low register when swtched */
+struct  emcsts {
+    long    em_msw;     /* memory mapped status register when swtched */
+    long    em_tar;     /* memory mapped temp A register when swtched */
+    long    em_dl;      /* memory mapped D low register when swtched */
 };
-#endif	___NPX87___
+#endif  ___NPX87___

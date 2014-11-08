@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2014 Serge Vakulenko
  *
  * This code is derived from software contributed to Berkeley by
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,44 +34,44 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)machConst.h	8.1 (Berkeley) 6/10/93
+ *      @(#)machConst.h 8.1 (Berkeley) 6/10/93
  *
  * machConst.h --
  *
- *	Machine dependent constants.
+ *      Machine dependent constants.
  *
- *	Copyright (C) 1989 Digital Equipment Corporation.
- *	Permission to use, copy, modify, and distribute this software and
- *	its documentation for any purpose and without fee is hereby granted,
- *	provided that the above copyright notice appears in all copies.
- *	Digital Equipment Corporation makes no representations about the
- *	suitability of this software for any purpose.  It is provided "as is"
- *	without express or implied warranty.
+ *      Copyright (C) 1989 Digital Equipment Corporation.
+ *      Permission to use, copy, modify, and distribute this software and
+ *      its documentation for any purpose and without fee is hereby granted,
+ *      provided that the above copyright notice appears in all copies.
+ *      Digital Equipment Corporation makes no representations about the
+ *      suitability of this software for any purpose.  It is provided "as is"
+ *      without express or implied warranty.
  *
  * from: $Header: /sprite/src/kernel/mach/ds3100.md/RCS/machConst.h,
- *	v 9.2 89/10/21 15:55:22 jhh Exp $ SPRITE (DECWRL)
+ *      v 9.2 89/10/21 15:55:22 jhh Exp $ SPRITE (DECWRL)
  * from: $Header: /sprite/src/kernel/mach/ds3100.md/RCS/machAddrs.h,
- *	v 1.2 89/08/15 18:28:21 rab Exp $ SPRITE (DECWRL)
+ *      v 1.2 89/08/15 18:28:21 rab Exp $ SPRITE (DECWRL)
  * from: $Header: /sprite/src/kernel/vm/ds3100.md/RCS/vmPmaxConst.h,
- *	v 9.1 89/09/18 17:33:00 shirriff Exp $ SPRITE (DECWRL)
+ *      v 9.1 89/09/18 17:33:00 shirriff Exp $ SPRITE (DECWRL)
  */
 
 #ifndef _MACHCONST
 #define _MACHCONST
 
-#define MACH_KUSEG_ADDR			0x0
-#define MACH_CACHED_MEMORY_ADDR		0x80000000
-#define MACH_UNCACHED_MEMORY_ADDR	0xa0000000
-#define MACH_KSEG2_ADDR			0xc0000000
-#define MACH_MAX_MEM_ADDR		0xbe000000
-#define	MACH_RESERVED_ADDR		0xbfc80000
+#define MACH_KUSEG_ADDR                 0x0
+#define MACH_CACHED_MEMORY_ADDR         0x80000000
+#define MACH_UNCACHED_MEMORY_ADDR       0xa0000000
+#define MACH_KSEG2_ADDR                 0xc0000000
+#define MACH_MAX_MEM_ADDR               0xbe000000
+#define MACH_RESERVED_ADDR              0xbfc80000
 
-#define	MACH_CACHED_TO_PHYS(x)	((unsigned)(x) & 0x1fffffff)
-#define	MACH_PHYS_TO_CACHED(x)	((unsigned)(x) | MACH_CACHED_MEMORY_ADDR)
-#define	MACH_UNCACHED_TO_PHYS(x) ((unsigned)(x) & 0x1fffffff)
-#define	MACH_PHYS_TO_UNCACHED(x) ((unsigned)(x) | MACH_UNCACHED_MEMORY_ADDR)
+#define MACH_CACHED_TO_PHYS(x)  ((unsigned)(x) & 0x1fffffff)
+#define MACH_PHYS_TO_CACHED(x)  ((unsigned)(x) | MACH_CACHED_MEMORY_ADDR)
+#define MACH_UNCACHED_TO_PHYS(x) ((unsigned)(x) & 0x1fffffff)
+#define MACH_PHYS_TO_UNCACHED(x) ((unsigned)(x) | MACH_UNCACHED_MEMORY_ADDR)
 
-#define MACH_CODE_START			0x80030000
+#define MACH_CODE_START                 0x80030000
 
 /*
  * The bits in the cause register.
@@ -90,7 +90,7 @@
 #define MACH_Cause_IP1          0x00000200      /* Request software interrupt 1 */
 #define MACH_Cause_IP0          0x00000100      /* Request software interrupt 0 */
 #define MACH_Cause_ExcCode      0x0000007c      /* Exception code */
-#define MACH_Cause_ExcCode_SHIFT	2
+#define MACH_Cause_ExcCode_SHIFT        2
 
 /*
  * The bits in the status register.
@@ -114,22 +114,22 @@
 /*
  * Coprocessor 0 registers.
  */
-#define MACH_C0_Index		$0      /* TLB index */
-#define MACH_C0_Random		$1      /* TLB random */
-#define MACH_C0_EntryLo0	$2      /* TLB entry low 0 */
-#define MACH_C0_EntryLo1	$3      /* TLB entry low 1 */
-#define MACH_C0_Context		$4      /* TLB context */
+#define MACH_C0_Index           $0      /* TLB index */
+#define MACH_C0_Random          $1      /* TLB random */
+#define MACH_C0_EntryLo0        $2      /* TLB entry low 0 */
+#define MACH_C0_EntryLo1        $3      /* TLB entry low 1 */
+#define MACH_C0_Context         $4      /* TLB context */
 #define MACH_C0_PageMask        $5
 #define MACH_C0_Wired           $6
-#define MACH_C0_BadVAddr	$8      /* Bad virtual address */
+#define MACH_C0_BadVAddr        $8      /* Bad virtual address */
 #define MACH_C0_Count           $9
-#define MACH_C0_EntryHi		$10     /* TLB entry high */
+#define MACH_C0_EntryHi         $10     /* TLB entry high */
 #define MACH_C0_Compare         $11
-#define MACH_C0_Status		$12     /* Status register */
+#define MACH_C0_Status          $12     /* Status register */
 #define MACH_C0_SRSCtl          $12,2
-#define MACH_C0_Cause		$13     /* Exception cause register */
-#define MACH_C0_EPC		$14     /* Exception PC */
-#define MACH_C0_PRId		$15     /* Processor revision identifier */
+#define MACH_C0_Cause           $13     /* Exception cause register */
+#define MACH_C0_EPC             $14     /* Exception PC */
+#define MACH_C0_PRId            $15     /* Processor revision identifier */
 #define MACH_C0_Config          $16
 #define MACH_C0_Config1         $16,1
 #define MACH_C0_Config7         $16,7
@@ -142,91 +142,91 @@
 /*
  * Values for the code field in a break instruction.
  */
-#define MACH_BREAK_INSTR	0x0000000d
-#define MACH_BREAK_VAL_MASK	0x03ff0000
-#define MACH_BREAK_VAL_SHIFT	16
-#define MACH_BREAK_KDB_VAL	512
-#define MACH_BREAK_SSTEP_VAL	513
-#define MACH_BREAK_BRKPT_VAL	514
-#define MACH_BREAK_KDB		(MACH_BREAK_INSTR | \
-				(MACH_BREAK_KDB_VAL << MACH_BREAK_VAL_SHIFT))
-#define MACH_BREAK_SSTEP	(MACH_BREAK_INSTR | \
-				(MACH_BREAK_SSTEP_VAL << MACH_BREAK_VAL_SHIFT))
-#define MACH_BREAK_BRKPT	(MACH_BREAK_INSTR | \
-				(MACH_BREAK_BRKPT_VAL << MACH_BREAK_VAL_SHIFT))
+#define MACH_BREAK_INSTR        0x0000000d
+#define MACH_BREAK_VAL_MASK     0x03ff0000
+#define MACH_BREAK_VAL_SHIFT    16
+#define MACH_BREAK_KDB_VAL      512
+#define MACH_BREAK_SSTEP_VAL    513
+#define MACH_BREAK_BRKPT_VAL    514
+#define MACH_BREAK_KDB          (MACH_BREAK_INSTR | \
+                                (MACH_BREAK_KDB_VAL << MACH_BREAK_VAL_SHIFT))
+#define MACH_BREAK_SSTEP        (MACH_BREAK_INSTR | \
+                                (MACH_BREAK_SSTEP_VAL << MACH_BREAK_VAL_SHIFT))
+#define MACH_BREAK_BRKPT        (MACH_BREAK_INSTR | \
+                                (MACH_BREAK_BRKPT_VAL << MACH_BREAK_VAL_SHIFT))
 
 /*
  * Mininum and maximum cache sizes.
  */
-#define MACH_MIN_CACHE_SIZE	(16 * 1024)
-#define MACH_MAX_CACHE_SIZE	(256 * 1024)
+#define MACH_MIN_CACHE_SIZE     (16 * 1024)
+#define MACH_MAX_CACHE_SIZE     (256 * 1024)
 
 /*
  * The floating point version and status registers.
  */
-#define	MACH_FPC_ID	$0
-#define	MACH_FPC_CSR	$31
+#define MACH_FPC_ID     $0
+#define MACH_FPC_CSR    $31
 
 /*
  * The floating point coprocessor status register bits.
  */
-#define MACH_FPC_ROUNDING_BITS		0x00000003
-#define MACH_FPC_ROUND_RN		0x00000000
-#define MACH_FPC_ROUND_RZ		0x00000001
-#define MACH_FPC_ROUND_RP		0x00000002
-#define MACH_FPC_ROUND_RM		0x00000003
-#define MACH_FPC_STICKY_BITS		0x0000007c
-#define MACH_FPC_STICKY_INEXACT		0x00000004
-#define MACH_FPC_STICKY_UNDERFLOW	0x00000008
-#define MACH_FPC_STICKY_OVERFLOW	0x00000010
-#define MACH_FPC_STICKY_DIV0		0x00000020
-#define MACH_FPC_STICKY_INVALID		0x00000040
-#define MACH_FPC_ENABLE_BITS		0x00000f80
-#define MACH_FPC_ENABLE_INEXACT		0x00000080
-#define MACH_FPC_ENABLE_UNDERFLOW	0x00000100
-#define MACH_FPC_ENABLE_OVERFLOW	0x00000200
-#define MACH_FPC_ENABLE_DIV0		0x00000400
-#define MACH_FPC_ENABLE_INVALID		0x00000800
-#define MACH_FPC_EXCEPTION_BITS		0x0003f000
-#define MACH_FPC_EXCEPTION_INEXACT	0x00001000
-#define MACH_FPC_EXCEPTION_UNDERFLOW	0x00002000
-#define MACH_FPC_EXCEPTION_OVERFLOW	0x00004000
-#define MACH_FPC_EXCEPTION_DIV0		0x00008000
-#define MACH_FPC_EXCEPTION_INVALID	0x00010000
-#define MACH_FPC_EXCEPTION_UNIMPL	0x00020000
-#define MACH_FPC_COND_BIT		0x00800000
-#define MACH_FPC_MBZ_BITS		0xff7c0000
+#define MACH_FPC_ROUNDING_BITS          0x00000003
+#define MACH_FPC_ROUND_RN               0x00000000
+#define MACH_FPC_ROUND_RZ               0x00000001
+#define MACH_FPC_ROUND_RP               0x00000002
+#define MACH_FPC_ROUND_RM               0x00000003
+#define MACH_FPC_STICKY_BITS            0x0000007c
+#define MACH_FPC_STICKY_INEXACT         0x00000004
+#define MACH_FPC_STICKY_UNDERFLOW       0x00000008
+#define MACH_FPC_STICKY_OVERFLOW        0x00000010
+#define MACH_FPC_STICKY_DIV0            0x00000020
+#define MACH_FPC_STICKY_INVALID         0x00000040
+#define MACH_FPC_ENABLE_BITS            0x00000f80
+#define MACH_FPC_ENABLE_INEXACT         0x00000080
+#define MACH_FPC_ENABLE_UNDERFLOW       0x00000100
+#define MACH_FPC_ENABLE_OVERFLOW        0x00000200
+#define MACH_FPC_ENABLE_DIV0            0x00000400
+#define MACH_FPC_ENABLE_INVALID         0x00000800
+#define MACH_FPC_EXCEPTION_BITS         0x0003f000
+#define MACH_FPC_EXCEPTION_INEXACT      0x00001000
+#define MACH_FPC_EXCEPTION_UNDERFLOW    0x00002000
+#define MACH_FPC_EXCEPTION_OVERFLOW     0x00004000
+#define MACH_FPC_EXCEPTION_DIV0         0x00008000
+#define MACH_FPC_EXCEPTION_INVALID      0x00010000
+#define MACH_FPC_EXCEPTION_UNIMPL       0x00020000
+#define MACH_FPC_COND_BIT               0x00800000
+#define MACH_FPC_MBZ_BITS               0xff7c0000
 
 /*
  * Constants to determine if have a floating point instruction.
  */
-#define MACH_OPCODE_SHIFT	26
-#define MACH_OPCODE_C1		0x11
+#define MACH_OPCODE_SHIFT       26
+#define MACH_OPCODE_C1          0x11
 
 /*
  * The number of TLB entries and the first one that write random hits.
  */
-#define VMMACH_NUM_TLB_ENTRIES		16
-#define VMMACH_FIRST_RAND_ENTRY 	1
+#define VMMACH_NUM_TLB_ENTRIES          16
+#define VMMACH_FIRST_RAND_ENTRY         1
 
 /*
  * The number of process id entries.
  */
-#define	VMMACH_NUM_PIDS			256
+#define VMMACH_NUM_PIDS                 256
 
 /*
  * TLB probe return codes.
  */
-#define VMMACH_TLB_NOT_FOUND		0
-#define VMMACH_TLB_FOUND		1
-#define VMMACH_TLB_FOUND_WITH_PATCH	2
-#define VMMACH_TLB_PROBE_ERROR		3
+#define VMMACH_TLB_NOT_FOUND            0
+#define VMMACH_TLB_FOUND                1
+#define VMMACH_TLB_FOUND_WITH_PATCH     2
+#define VMMACH_TLB_PROBE_ERROR          3
 
 /*
  * Kernel virtual address for user page table entries
  * (i.e., the address for the context register).
  */
-#define VMMACH_PTE_BASE		0xFFC00000
+#define VMMACH_PTE_BASE         0xFFC00000
 
 /*
  * Empty memory write buffer.

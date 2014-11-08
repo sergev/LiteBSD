@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Van Jacobson of Lawrence Berkeley Laboratory.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,25 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)scsivar.h	8.1 (Berkeley) 6/10/93
+ *  @(#)scsivar.h   8.1 (Berkeley) 6/10/93
  */
 
-struct	scsi_softc {
-	struct	hp_ctlr *sc_hc;
-	struct	devqueue sc_dq;
-	struct	devqueue sc_sq;
-	u_char	sc_flags;
-	u_char	sc_sync;
-	u_char	sc_scsi_addr;
-	u_char	sc_stat[2];
-	u_char	sc_msg[7];
+struct  scsi_softc {
+    struct  hp_ctlr *sc_hc;
+    struct  devqueue sc_dq;
+    struct  devqueue sc_sq;
+    u_char  sc_flags;
+    u_char  sc_sync;
+    u_char  sc_scsi_addr;
+    u_char  sc_stat[2];
+    u_char  sc_msg[7];
 };
 
 /* sc_flags */
-#define	SCSI_IO		0x80	/* DMA I/O in progress */
-#define	SCSI_DMA32	0x40	/* 32-bit DMA should be used */
-#define	SCSI_HAVEDMA	0x04	/* controller has DMA channel */
+#define SCSI_IO         0x80    /* DMA I/O in progress */
+#define SCSI_DMA32      0x40    /* 32-bit DMA should be used */
+#define SCSI_HAVEDMA    0x04    /* controller has DMA channel */
 #ifdef DEBUG
-#define	SCSI_PAD	0x02	/* 'padded' transfer in progress */
+#define SCSI_PAD        0x02    /* 'padded' transfer in progress */
 #endif
-#define	SCSI_ALIVE	0x01	/* controller initialized */
+#define SCSI_ALIVE      0x01    /* controller initialized */

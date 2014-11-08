@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2014 Serge Vakulenko
  *
  * This code is derived from software contributed to Berkeley by
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,19 +34,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)psl.h	8.1 (Berkeley) 6/10/93
+ *      @(#)psl.h       8.1 (Berkeley) 6/10/93
  */
 
 #include <machine/machConst.h>
 
-#define	PSL_LOWIPL	(MACH_Status_IE)
+#define PSL_LOWIPL      (MACH_Status_IE)
 
-#define	PSL_USERSET 	(MACH_Status_IE | MACH_Status_UM)
+#define PSL_USERSET     (MACH_Status_IE | MACH_Status_UM)
 
 /*
  * Macros to decode processor status word.
  */
-#define	USERMODE(ps)	((ps) & MACH_Status_UM)
-#define	BASEPRI(ps)	(((ps) & (MACH_Status_IPL_MASK | MACH_Status_IE)) \
-			== MACH_Status_IE)
-#define	CURPRI(ps)	(((ps) & MACH_Status_IPL_MASK) >> MACH_Status_IPL_SHIFT)
+#define USERMODE(ps)    ((ps) & MACH_Status_UM)
+#define BASEPRI(ps)     (((ps) & (MACH_Status_IPL_MASK | MACH_Status_IE)) \
+                        == MACH_Status_IE)
+#define CURPRI(ps)      (((ps) & MACH_Status_IPL_MASK) >> MACH_Status_IPL_SHIFT)

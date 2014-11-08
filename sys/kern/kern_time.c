@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kern_time.c	8.4 (Berkeley) 5/26/95
+ *  @(#)kern_time.c 8.4 (Berkeley) 5/26/95
  */
 
 #include <sys/param.h>
@@ -58,142 +58,142 @@
 /* ARGSUSED */
 int
 gettimeofday(p, uap, retval)
-	struct proc *p;
-	register struct gettimeofday_args /* {
-		syscallarg(struct timeval *) tp;
-		syscallarg(struct timezone *) tzp;
-	} */ *uap;
-	register_t *retval;
+    struct proc *p;
+    register struct gettimeofday_args /* {
+        syscallarg(struct timeval *) tp;
+        syscallarg(struct timezone *) tzp;
+    } */ *uap;
+    register_t *retval;
 {
-	struct timeval atv;
-	int error = 0;
+    struct timeval atv;
+    int error = 0;
 
-	if (SCARG(uap, tp)) {
-		microtime(&atv);
-		if (error = copyout((caddr_t)&atv, (caddr_t)SCARG(uap, tp),
-		    sizeof (atv)))
-			return (error);
-	}
-	if (SCARG(uap, tzp))
-		error = copyout((caddr_t)&tz, (caddr_t)SCARG(uap, tzp),
-		    sizeof (tz));
-	return (error);
+    if (SCARG(uap, tp)) {
+        microtime(&atv);
+        if (error = copyout((caddr_t)&atv, (caddr_t)SCARG(uap, tp),
+            sizeof (atv)))
+            return (error);
+    }
+    if (SCARG(uap, tzp))
+        error = copyout((caddr_t)&tz, (caddr_t)SCARG(uap, tzp),
+            sizeof (tz));
+    return (error);
 }
 
 /* ARGSUSED */
 int
 settimeofday(p, uap, retval)
-	struct proc *p;
-	struct settimeofday_args /* {
-		syscallarg(struct timeval *) tv;
-		syscallarg(struct timezone *) tzp;
-	} */ *uap;
-	register_t *retval;
+    struct proc *p;
+    struct settimeofday_args /* {
+        syscallarg(struct timeval *) tv;
+        syscallarg(struct timezone *) tzp;
+    } */ *uap;
+    register_t *retval;
 {
-	struct timeval atv, delta;
-	struct timezone atz;
-	int error, s;
+    struct timeval atv, delta;
+    struct timezone atz;
+    int error, s;
 
-	if (error = suser(p->p_ucred, &p->p_acflag))
-		return (error);
-	/* Verify all parameters before changing time. */
-	if (SCARG(uap, tv) && (error = copyin((caddr_t)SCARG(uap, tv),
-	    (caddr_t)&atv, sizeof(atv))))
-		return (error);
-	if (SCARG(uap, tzp) && (error = copyin((caddr_t)SCARG(uap, tzp),
-	    (caddr_t)&atz, sizeof(atz))))
-		return (error);
-	if (SCARG(uap, tv)) {
-		/*
-		 * If the system is secure, we do not allow the time to be 
-		 * set to an earlier value (it may be slowed using adjtime,
-		 * but not set back). This feature prevent interlopers from
-		 * setting arbitrary time stamps on files.
-		 */
-		if (securelevel > 0 && timercmp(&atv, &time, <))
-			return (EPERM);
-		/* WHAT DO WE DO ABOUT PENDING REAL-TIME TIMEOUTS??? */
-		s = splclock();
-		/* nb. delta.tv_usec may be < 0, but this is OK here */
-		delta.tv_sec = atv.tv_sec - time.tv_sec;
-		delta.tv_usec = atv.tv_usec - time.tv_usec;
-		time = atv;
-		(void) splsoftclock();
-		timevaladd(&boottime, &delta);
-		timevalfix(&boottime);
-		timevaladd(&runtime, &delta);
-		timevalfix(&runtime);
-#		ifdef NFS
-			lease_updatetime(delta.tv_sec);
-#		endif
-		splx(s);
-		resettodr();
-	}
-	if (SCARG(uap, tzp))
-		tz = atz;
-	return (0);
+    if (error = suser(p->p_ucred, &p->p_acflag))
+        return (error);
+    /* Verify all parameters before changing time. */
+    if (SCARG(uap, tv) && (error = copyin((caddr_t)SCARG(uap, tv),
+        (caddr_t)&atv, sizeof(atv))))
+        return (error);
+    if (SCARG(uap, tzp) && (error = copyin((caddr_t)SCARG(uap, tzp),
+        (caddr_t)&atz, sizeof(atz))))
+        return (error);
+    if (SCARG(uap, tv)) {
+        /*
+         * If the system is secure, we do not allow the time to be 
+         * set to an earlier value (it may be slowed using adjtime,
+         * but not set back). This feature prevent interlopers from
+         * setting arbitrary time stamps on files.
+         */
+        if (securelevel > 0 && timercmp(&atv, &time, <))
+            return (EPERM);
+        /* WHAT DO WE DO ABOUT PENDING REAL-TIME TIMEOUTS??? */
+        s = splclock();
+        /* nb. delta.tv_usec may be < 0, but this is OK here */
+        delta.tv_sec = atv.tv_sec - time.tv_sec;
+        delta.tv_usec = atv.tv_usec - time.tv_usec;
+        time = atv;
+        (void) splsoftclock();
+        timevaladd(&boottime, &delta);
+        timevalfix(&boottime);
+        timevaladd(&runtime, &delta);
+        timevalfix(&runtime);
+#       ifdef NFS
+            lease_updatetime(delta.tv_sec);
+#       endif
+        splx(s);
+        resettodr();
+    }
+    if (SCARG(uap, tzp))
+        tz = atz;
+    return (0);
 }
 
-extern	int tickadj;			/* "standard" clock skew, us./tick */
-int	tickdelta;			/* current clock skew, us. per tick */
-long	timedelta;			/* unapplied time correction, us. */
-long	bigadj = 1000000;		/* use 10x skew above bigadj us. */
+extern  int tickadj;            /* "standard" clock skew, us./tick */
+int tickdelta;          /* current clock skew, us. per tick */
+long    timedelta;          /* unapplied time correction, us. */
+long    bigadj = 1000000;       /* use 10x skew above bigadj us. */
 
 /* ARGSUSED */
 int
 adjtime(p, uap, retval)
-	struct proc *p;
-	register struct adjtime_args /* {
-		syscallarg(struct timeval *) delta;
-		syscallarg(struct timeval *) olddelta;
-	} */ *uap;
-	register_t *retval;
+    struct proc *p;
+    register struct adjtime_args /* {
+        syscallarg(struct timeval *) delta;
+        syscallarg(struct timeval *) olddelta;
+    } */ *uap;
+    register_t *retval;
 {
-	struct timeval atv;
-	register long ndelta, ntickdelta, odelta;
-	int s, error;
+    struct timeval atv;
+    register long ndelta, ntickdelta, odelta;
+    int s, error;
 
-	if (error = suser(p->p_ucred, &p->p_acflag))
-		return (error);
-	if (error = copyin((caddr_t)SCARG(uap, delta), (caddr_t)&atv,
-	    sizeof(struct timeval)))
-		return (error);
+    if (error = suser(p->p_ucred, &p->p_acflag))
+        return (error);
+    if (error = copyin((caddr_t)SCARG(uap, delta), (caddr_t)&atv,
+        sizeof(struct timeval)))
+        return (error);
 
-	/*
-	 * Compute the total correction and the rate at which to apply it.
-	 * Round the adjustment down to a whole multiple of the per-tick
-	 * delta, so that after some number of incremental changes in
-	 * hardclock(), tickdelta will become zero, lest the correction
-	 * overshoot and start taking us away from the desired final time.
-	 */
-	ndelta = atv.tv_sec * 1000000 + atv.tv_usec;
-	if (ndelta > bigadj)
-		ntickdelta = 10 * tickadj;
-	else
-		ntickdelta = tickadj;
-	if (ndelta % ntickdelta)
-		ndelta = ndelta / ntickdelta * ntickdelta;
+    /*
+     * Compute the total correction and the rate at which to apply it.
+     * Round the adjustment down to a whole multiple of the per-tick
+     * delta, so that after some number of incremental changes in
+     * hardclock(), tickdelta will become zero, lest the correction
+     * overshoot and start taking us away from the desired final time.
+     */
+    ndelta = atv.tv_sec * 1000000 + atv.tv_usec;
+    if (ndelta > bigadj)
+        ntickdelta = 10 * tickadj;
+    else
+        ntickdelta = tickadj;
+    if (ndelta % ntickdelta)
+        ndelta = ndelta / ntickdelta * ntickdelta;
 
-	/*
-	 * To make hardclock()'s job easier, make the per-tick delta negative
-	 * if we want time to run slower; then hardclock can simply compute
-	 * tick + tickdelta, and subtract tickdelta from timedelta.
-	 */
-	if (ndelta < 0)
-		ntickdelta = -ntickdelta;
-	s = splclock();
-	odelta = timedelta;
-	timedelta = ndelta;
-	tickdelta = ntickdelta;
-	splx(s);
+    /*
+     * To make hardclock()'s job easier, make the per-tick delta negative
+     * if we want time to run slower; then hardclock can simply compute
+     * tick + tickdelta, and subtract tickdelta from timedelta.
+     */
+    if (ndelta < 0)
+        ntickdelta = -ntickdelta;
+    s = splclock();
+    odelta = timedelta;
+    timedelta = ndelta;
+    tickdelta = ntickdelta;
+    splx(s);
 
-	if (SCARG(uap, olddelta)) {
-		atv.tv_sec = odelta / 1000000;
-		atv.tv_usec = odelta % 1000000;
-		(void) copyout((caddr_t)&atv, (caddr_t)SCARG(uap, olddelta),
-		    sizeof(struct timeval));
-	}
-	return (0);
+    if (SCARG(uap, olddelta)) {
+        atv.tv_sec = odelta / 1000000;
+        atv.tv_usec = odelta % 1000000;
+        (void) copyout((caddr_t)&atv, (caddr_t)SCARG(uap, olddelta),
+            sizeof(struct timeval));
+    }
+    return (0);
 }
 
 /*
@@ -220,80 +220,80 @@ adjtime(p, uap, retval)
 /* ARGSUSED */
 int
 getitimer(p, uap, retval)
-	struct proc *p;
-	register struct getitimer_args /* {
-		syscallarg(u_int) which;
-		syscallarg(struct itimerval *) itv;
-	} */ *uap;
-	register_t *retval;
+    struct proc *p;
+    register struct getitimer_args /* {
+        syscallarg(u_int) which;
+        syscallarg(struct itimerval *) itv;
+    } */ *uap;
+    register_t *retval;
 {
-	struct itimerval aitv;
-	int s;
+    struct itimerval aitv;
+    int s;
 
-	if (SCARG(uap, which) > ITIMER_PROF)
-		return (EINVAL);
-	s = splclock();
-	if (SCARG(uap, which) == ITIMER_REAL) {
-		/*
-		 * Convert from absolute to relative time in .it_value
-		 * part of real time timer.  If time for real time timer
-		 * has passed return 0, else return difference between
-		 * current time and time for the timer to go off.
-		 */
-		aitv = p->p_realtimer;
-		if (timerisset(&aitv.it_value))
-			if (timercmp(&aitv.it_value, &time, <))
-				timerclear(&aitv.it_value);
-			else
-				timevalsub(&aitv.it_value,
-				    (struct timeval *)&time);
-	} else
-		aitv = p->p_stats->p_timer[SCARG(uap, which)];
-	splx(s);
-	return (copyout((caddr_t)&aitv, (caddr_t)SCARG(uap, itv),
-	    sizeof (struct itimerval)));
+    if (SCARG(uap, which) > ITIMER_PROF)
+        return (EINVAL);
+    s = splclock();
+    if (SCARG(uap, which) == ITIMER_REAL) {
+        /*
+         * Convert from absolute to relative time in .it_value
+         * part of real time timer.  If time for real time timer
+         * has passed return 0, else return difference between
+         * current time and time for the timer to go off.
+         */
+        aitv = p->p_realtimer;
+        if (timerisset(&aitv.it_value))
+            if (timercmp(&aitv.it_value, &time, <))
+                timerclear(&aitv.it_value);
+            else
+                timevalsub(&aitv.it_value,
+                    (struct timeval *)&time);
+    } else
+        aitv = p->p_stats->p_timer[SCARG(uap, which)];
+    splx(s);
+    return (copyout((caddr_t)&aitv, (caddr_t)SCARG(uap, itv),
+        sizeof (struct itimerval)));
 }
 
 /* ARGSUSED */
 int
 setitimer(p, uap, retval)
-	struct proc *p;
-	register struct setitimer_args /* {
-		syscallarg(u_int) which;
-		syscallarg(struct itimerval *) itv;
-		syscallarg(struct itimerval *) oitv;
-	} */ *uap;
-	register_t *retval;
+    struct proc *p;
+    register struct setitimer_args /* {
+        syscallarg(u_int) which;
+        syscallarg(struct itimerval *) itv;
+        syscallarg(struct itimerval *) oitv;
+    } */ *uap;
+    register_t *retval;
 {
-	struct itimerval aitv;
-	register struct itimerval *itvp;
-	int s, error;
+    struct itimerval aitv;
+    register struct itimerval *itvp;
+    int s, error;
 
-	if (SCARG(uap, which) > ITIMER_PROF)
-		return (EINVAL);
-	itvp = SCARG(uap, itv);
-	if (itvp && (error = copyin((caddr_t)itvp, (caddr_t)&aitv,
-	    sizeof(struct itimerval))))
-		return (error);
-	if ((SCARG(uap, itv) = SCARG(uap, oitv)) &&
-	    (error = getitimer(p, uap, retval)))
-		return (error);
-	if (itvp == 0)
-		return (0);
-	if (itimerfix(&aitv.it_value) || itimerfix(&aitv.it_interval))
-		return (EINVAL);
-	s = splclock();
-	if (SCARG(uap, which) == ITIMER_REAL) {
-		untimeout(realitexpire, (caddr_t)p);
-		if (timerisset(&aitv.it_value)) {
-			timevaladd(&aitv.it_value, (struct timeval *)&time);
-			timeout(realitexpire, (caddr_t)p, hzto(&aitv.it_value));
-		}
-		p->p_realtimer = aitv;
-	} else
-		p->p_stats->p_timer[SCARG(uap, which)] = aitv;
-	splx(s);
-	return (0);
+    if (SCARG(uap, which) > ITIMER_PROF)
+        return (EINVAL);
+    itvp = SCARG(uap, itv);
+    if (itvp && (error = copyin((caddr_t)itvp, (caddr_t)&aitv,
+        sizeof(struct itimerval))))
+        return (error);
+    if ((SCARG(uap, itv) = SCARG(uap, oitv)) &&
+        (error = getitimer(p, uap, retval)))
+        return (error);
+    if (itvp == 0)
+        return (0);
+    if (itimerfix(&aitv.it_value) || itimerfix(&aitv.it_interval))
+        return (EINVAL);
+    s = splclock();
+    if (SCARG(uap, which) == ITIMER_REAL) {
+        untimeout(realitexpire, (caddr_t)p);
+        if (timerisset(&aitv.it_value)) {
+            timevaladd(&aitv.it_value, (struct timeval *)&time);
+            timeout(realitexpire, (caddr_t)p, hzto(&aitv.it_value));
+        }
+        p->p_realtimer = aitv;
+    } else
+        p->p_stats->p_timer[SCARG(uap, which)] = aitv;
+    splx(s);
+    return (0);
 }
 
 /*
@@ -306,29 +306,29 @@ setitimer(p, uap, retval)
  */
 void
 realitexpire(arg)
-	void *arg;
+    void *arg;
 {
-	register struct proc *p;
-	int s;
+    register struct proc *p;
+    int s;
 
-	p = (struct proc *)arg;
-	psignal(p, SIGALRM);
-	if (!timerisset(&p->p_realtimer.it_interval)) {
-		timerclear(&p->p_realtimer.it_value);
-		return;
-	}
-	for (;;) {
-		s = splclock();
-		timevaladd(&p->p_realtimer.it_value,
-		    &p->p_realtimer.it_interval);
-		if (timercmp(&p->p_realtimer.it_value, &time, >)) {
-			timeout(realitexpire, (caddr_t)p,
-			    hzto(&p->p_realtimer.it_value));
-			splx(s);
-			return;
-		}
-		splx(s);
-	}
+    p = (struct proc *)arg;
+    psignal(p, SIGALRM);
+    if (!timerisset(&p->p_realtimer.it_interval)) {
+        timerclear(&p->p_realtimer.it_value);
+        return;
+    }
+    for (;;) {
+        s = splclock();
+        timevaladd(&p->p_realtimer.it_value,
+            &p->p_realtimer.it_interval);
+        if (timercmp(&p->p_realtimer.it_value, &time, >)) {
+            timeout(realitexpire, (caddr_t)p,
+                hzto(&p->p_realtimer.it_value));
+            splx(s);
+            return;
+        }
+        splx(s);
+    }
 }
 
 /*
@@ -339,15 +339,15 @@ realitexpire(arg)
  */
 int
 itimerfix(tv)
-	struct timeval *tv;
+    struct timeval *tv;
 {
 
-	if (tv->tv_sec < 0 || tv->tv_sec > 100000000 ||
-	    tv->tv_usec < 0 || tv->tv_usec >= 1000000)
-		return (EINVAL);
-	if (tv->tv_sec == 0 && tv->tv_usec != 0 && tv->tv_usec < tick)
-		tv->tv_usec = tick;
-	return (0);
+    if (tv->tv_sec < 0 || tv->tv_sec > 100000000 ||
+        tv->tv_usec < 0 || tv->tv_usec >= 1000000)
+        return (EINVAL);
+    if (tv->tv_sec == 0 && tv->tv_usec != 0 && tv->tv_usec < tick)
+        tv->tv_usec = tick;
+    return (0);
 }
 
 /*
@@ -362,35 +362,35 @@ itimerfix(tv)
  */
 int
 itimerdecr(itp, usec)
-	register struct itimerval *itp;
-	int usec;
+    register struct itimerval *itp;
+    int usec;
 {
 
-	if (itp->it_value.tv_usec < usec) {
-		if (itp->it_value.tv_sec == 0) {
-			/* expired, and already in next interval */
-			usec -= itp->it_value.tv_usec;
-			goto expire;
-		}
-		itp->it_value.tv_usec += 1000000;
-		itp->it_value.tv_sec--;
-	}
-	itp->it_value.tv_usec -= usec;
-	usec = 0;
-	if (timerisset(&itp->it_value))
-		return (1);
-	/* expired, exactly at end of interval */
+    if (itp->it_value.tv_usec < usec) {
+        if (itp->it_value.tv_sec == 0) {
+            /* expired, and already in next interval */
+            usec -= itp->it_value.tv_usec;
+            goto expire;
+        }
+        itp->it_value.tv_usec += 1000000;
+        itp->it_value.tv_sec--;
+    }
+    itp->it_value.tv_usec -= usec;
+    usec = 0;
+    if (timerisset(&itp->it_value))
+        return (1);
+    /* expired, exactly at end of interval */
 expire:
-	if (timerisset(&itp->it_interval)) {
-		itp->it_value = itp->it_interval;
-		itp->it_value.tv_usec -= usec;
-		if (itp->it_value.tv_usec < 0) {
-			itp->it_value.tv_usec += 1000000;
-			itp->it_value.tv_sec--;
-		}
-	} else
-		itp->it_value.tv_usec = 0;		/* sec is already 0 */
-	return (0);
+    if (timerisset(&itp->it_interval)) {
+        itp->it_value = itp->it_interval;
+        itp->it_value.tv_usec -= usec;
+        if (itp->it_value.tv_usec < 0) {
+            itp->it_value.tv_usec += 1000000;
+            itp->it_value.tv_sec--;
+        }
+    } else
+        itp->it_value.tv_usec = 0;      /* sec is already 0 */
+    return (0);
 }
 
 /*
@@ -401,33 +401,33 @@ expire:
  * Caveat emptor.
  */
 timevaladd(t1, t2)
-	struct timeval *t1, *t2;
+    struct timeval *t1, *t2;
 {
 
-	t1->tv_sec += t2->tv_sec;
-	t1->tv_usec += t2->tv_usec;
-	timevalfix(t1);
+    t1->tv_sec += t2->tv_sec;
+    t1->tv_usec += t2->tv_usec;
+    timevalfix(t1);
 }
 
 timevalsub(t1, t2)
-	struct timeval *t1, *t2;
+    struct timeval *t1, *t2;
 {
 
-	t1->tv_sec -= t2->tv_sec;
-	t1->tv_usec -= t2->tv_usec;
-	timevalfix(t1);
+    t1->tv_sec -= t2->tv_sec;
+    t1->tv_usec -= t2->tv_usec;
+    timevalfix(t1);
 }
 
 timevalfix(t1)
-	struct timeval *t1;
+    struct timeval *t1;
 {
 
-	if (t1->tv_usec < 0) {
-		t1->tv_sec--;
-		t1->tv_usec += 1000000;
-	}
-	if (t1->tv_usec >= 1000000) {
-		t1->tv_sec++;
-		t1->tv_usec -= 1000000;
-	}
+    if (t1->tv_usec < 0) {
+        t1->tv_sec--;
+        t1->tv_usec += 1000000;
+    }
+    if (t1->tv_usec >= 1000000) {
+        t1->tv_sec++;
+        t1->tv_usec -= 1000000;
+    }
 }

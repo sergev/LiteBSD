@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)prf.c	8.1 (Berkeley) 6/10/93
+ *  @(#)prf.c   8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -40,39 +40,39 @@
  */
 scankbd()
 {
-	register int c;
+    register int c;
 
-	c = cngetc();
-	if (c == ('c'&037)) {
-		printf("^C");
-		_stop("");
-		/* NOTREACHED */
-	}
-	return(0);
+    c = cngetc();
+    if (c == ('c'&037)) {
+        printf("^C");
+        _stop("");
+        /* NOTREACHED */
+    }
+    return(0);
 }
 
 getchar()
 {
-	register int c;
+    register int c;
 
-	while((c = cngetc()) == 0)
-		;
-	if (c == '\r')
-		c = '\n';
-	else if (c == ('c'&037)) {
-		printf("^C");
-		_stop("");
-		/* NOTREACHED */
-	}
-	if (c != '\b' && c != '\177')
-		putchar(c);
-	return(c);
+    while((c = cngetc()) == 0)
+        ;
+    if (c == '\r')
+        c = '\n';
+    else if (c == ('c'&037)) {
+        printf("^C");
+        _stop("");
+        /* NOTREACHED */
+    }
+    if (c != '\b' && c != '\177')
+        putchar(c);
+    return(c);
 }
 
 putchar(c)
-	register int c;
+    register int c;
 {
-	cnputc(c);
-	if (c == '\n')
-		cnputc('\r');
+    cnputc(c);
+    if (c == '\n')
+        cnputc('\r');
 }

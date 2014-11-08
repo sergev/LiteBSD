@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)sys_process.c	8.1 (Berkeley) 6/10/93
+ *  from: @(#)sys_process.c 8.1 (Berkeley) 6/10/93
  */
 
 #include <sys/param.h>
@@ -46,30 +46,30 @@
  * Process debugging system call.
  */
 struct ptrace_args {
-	int	req;
-	pid_t	pid;
-	caddr_t	addr;
-	int	data;
+    int req;
+    pid_t   pid;
+    caddr_t addr;
+    int data;
 };
 
 ptrace(a1, a2, a3)
-	struct proc *a1;
-	struct ptrace_args *a2;
-	int *a3;
+    struct proc *a1;
+    struct ptrace_args *a2;
+    int *a3;
 {
-	/*
-	 * Body deleted.
-	 */
-        printf("%s: not implemented yet\n", __func__);
-	return (ENOSYS);
+    /*
+     * Body deleted.
+     */
+    printf("%s: not implemented yet\n", __func__);
+    return (ENOSYS);
 }
 
 trace_req(a1)
-	struct proc *a1;
+    struct proc *a1;
 {
-	/*
-	 * Body deleted.
-	 */
-        printf("%s: not implemented yet\n", __func__);
-	return (0);
+    /*
+     * Body deleted.
+     */
+    printf("%s: not implemented yet\n", __func__);
+    return (0);
 }

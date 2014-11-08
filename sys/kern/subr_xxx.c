@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)subr_xxx.c	8.3 (Berkeley) 3/29/95
+ *  @(#)subr_xxx.c  8.3 (Berkeley) 3/29/95
  */
 
 /*
@@ -49,7 +49,7 @@ int
 enodev()
 {
 
-	return (ENODEV);
+    return (ENODEV);
 }
 
 /*
@@ -59,7 +59,7 @@ int
 enxio()
 {
 
-	return (ENXIO);
+    return (ENXIO);
 }
 
 /*
@@ -69,7 +69,7 @@ int
 enoioctl()
 {
 
-	return (ENOTTY);
+    return (ENOTTY);
 }
 
 /*
@@ -81,7 +81,7 @@ int
 enosys()
 {
 
-	return (ENOSYS);
+    return (ENOSYS);
 }
 
 /*
@@ -92,7 +92,7 @@ int
 eopnotsupp()
 {
 
-	return (EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 /*
@@ -103,7 +103,7 @@ int
 einval()
 {
 
-	return (EINVAL);
+    return (EINVAL);
 }
 
 /*
@@ -113,5 +113,5 @@ int
 nullop()
 {
 
-	return (0);
+    return (0);
 }

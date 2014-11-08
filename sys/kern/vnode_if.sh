@@ -2,7 +2,7 @@
 copyright='
 /*
  * Copyright (c) 1992, 1993, 1994, 1995
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,8 +14,8 @@ copyright='
 #    documentation and/or other materials provided with the distribution.
 # 3. All advertising materials mentioning features or use of this software
 #    must display the following acknowledgement:
-#	This product includes software developed by the University of
-#	California, Berkeley and its contributors.
+#   This product includes software developed by the University of
+#   California, Berkeley and its contributors.
 # 4. Neither the name of the University nor the names of its contributors
 #    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
@@ -35,17 +35,17 @@ copyright='
  * from: NetBSD: vnode_if.sh,v 1.7 1994/08/25 03:04:28 cgd Exp $
  */
 '
-SCRIPT_ID='@(#)vnode_if.sh	8.7 (Berkeley) 5/11/95'
+SCRIPT_ID='@(#)vnode_if.sh  8.7 (Berkeley) 5/11/95'
 
 # Script to produce VFS front-end sugar.
 #
 # usage: vnode_if.sh srcfile
-#	(where srcfile is currently /sys/kern/vnode_if.src)
+#   (where srcfile is currently /sys/kern/vnode_if.src)
 #
 
 if [ $# -ne 1 ] ; then
-	echo 'usage: vnode_if.sh srcfile'
-	exit 1
+    echo 'usage: vnode_if.sh srcfile'
+    exit 1
 fi
 
 # Name of the source file.
@@ -64,63 +64,63 @@ isgawk=`$awk 'BEGIN { print toupper("true"); exit; }' 2>/dev/null`
 
 # If this awk does not define "toupper" then define our own.
 if [ "$isgawk" = TRUE ] ; then
-	# GNU awk provides it.
-	toupper=
+    # GNU awk provides it.
+    toupper=
 else
-	# Provide our own toupper()
-	toupper='
+    # Provide our own toupper()
+    toupper='
 function toupper(str) {
-	_toupper_cmd = "echo "str" |tr a-z A-Z"
-	_toupper_cmd | getline _toupper_str;
-	close(_toupper_cmd);
-	return _toupper_str;
+    _toupper_cmd = "echo "str" |tr a-z A-Z"
+    _toupper_cmd | getline _toupper_str;
+    close(_toupper_cmd);
+    return _toupper_str;
 }'
 fi
 
 #
 # This is the common part of all awk programs that read $src
 # This parses the input for one function into the arrays:
-#	argdir, argtype, argname, willrele
+#   argdir, argtype, argname, willrele
 # and calls "doit()" to generate output for the function.
 #
 # Input to this parser is pre-processed slightly by sed
 # so this awk parser doesn't have to work so hard.  The
 # changes done by the sed pre-processing step are:
-#	insert a space beween * and pointer name
-#	replace semicolons with spaces
+#   insert a space beween * and pointer name
+#   replace semicolons with spaces
 #
 sed_prep='s:\*\([^\*/]\):\* \1:g
 s/;/ /'
 awk_parser='
 # Comment line
-/^#/	{ next; }
+/^#/    { next; }
 # First line of description
-/^vop_/	{
-	name=$1;
-	argc=0;
-	next;
+/^vop_/ {
+    name=$1;
+    argc=0;
+    next;
 }
 # Last line of description
-/^}/	{
-	doit();
-	next;
+/^}/    {
+    doit();
+    next;
 }
 # Middle lines of description
 {
-	argdir[argc] = $1; i=2;
-	if ($2 == "WILLRELE") {
-		willrele[argc] = 1;
-		i++;
-	} else
-		willrele[argc] = 0;
-	argtype[argc] = $i; i++;
-	while (i < NF) {
-		argtype[argc] = argtype[argc]" "$i;
-		i++;
-	}
-	argname[argc] = $i;
-	argc++;
-	next;
+    argdir[argc] = $1; i=2;
+    if ($2 == "WILLRELE") {
+        willrele[argc] = 1;
+        i++;
+    } else
+        willrele[argc] = 0;
+    argtype[argc] = $i; i++;
+    while (i < NF) {
+        argtype[argc] = argtype[argc]" "$i;
+        i++;
+    }
+    argname[argc] = $i;
+    argc++;
+    next;
 }
 '
 
@@ -131,7 +131,7 @@ warning="
  * (Modifications made here may easily be lost!)
  *
  * Created by the script:
- *	${SCRIPT_ID}
+ *  ${SCRIPT_ID}
  */
 "
 
@@ -155,56 +155,56 @@ extern struct vnodeop_desc vop_default_desc;
 # This awk program needs toupper() so define it if necessary.
 sed -e "$sed_prep" $src | $awk "$toupper"'
 function doit() {
-	# Declare arg struct, descriptor.
-	printf("\nstruct %s_args {\n", name);
-	printf("\tstruct vnodeop_desc * a_desc;\n");
-	for (i=0; i<argc; i++) {
-		printf("\t%s a_%s;\n", argtype[i], argname[i]);
-	}
-	printf("};\n");
-	printf("extern struct vnodeop_desc %s_desc;\n", name);
-	# Define inline function.
-	printf("#define %s(", toupper(name));
-	for (i=0; i<argc; i++) {
-		printf("%s", argname[i]);
-		if (i < (argc-1)) printf(", ");
-	}
-	printf(") _%s(", toupper(name));
-	for (i=0; i<argc; i++) {
-		printf("%s", argname[i]);
-		if (i < (argc-1)) printf(", ");
-	}
-	printf(")\n");
-	printf("static __inline int _%s(", toupper(name));
-	for (i=0; i<argc; i++) {
-		printf("%s", argname[i]);
-		if (i < (argc-1)) printf(", ");
-	}
-	printf(")\n");
-	for (i=0; i<argc; i++) {
-		printf("\t%s %s;\n", argtype[i], argname[i]);
-	}
-	printf("{\n\tstruct %s_args a;\n", name);
-	printf("\ta.a_desc = VDESC(%s);\n", name);
-	for (i=0; i<argc; i++) {
-		printf("\ta.a_%s = %s;\n", argname[i], argname[i]);
-	}
-	printf("\treturn (VCALL(%s%s, VOFFSET(%s), &a));\n}\n",
-		argname[0], arg0special, name);
+    # Declare arg struct, descriptor.
+    printf("\nstruct %s_args {\n", name);
+    printf("\tstruct vnodeop_desc * a_desc;\n");
+    for (i=0; i<argc; i++) {
+        printf("\t%s a_%s;\n", argtype[i], argname[i]);
+    }
+    printf("};\n");
+    printf("extern struct vnodeop_desc %s_desc;\n", name);
+    # Define inline function.
+    printf("#define %s(", toupper(name));
+    for (i=0; i<argc; i++) {
+        printf("%s", argname[i]);
+        if (i < (argc-1)) printf(", ");
+    }
+    printf(") _%s(", toupper(name));
+    for (i=0; i<argc; i++) {
+        printf("%s", argname[i]);
+        if (i < (argc-1)) printf(", ");
+    }
+    printf(")\n");
+    printf("static __inline int _%s(", toupper(name));
+    for (i=0; i<argc; i++) {
+        printf("%s", argname[i]);
+        if (i < (argc-1)) printf(", ");
+    }
+    printf(")\n");
+    for (i=0; i<argc; i++) {
+        printf("\t%s %s;\n", argtype[i], argname[i]);
+    }
+    printf("{\n\tstruct %s_args a;\n", name);
+    printf("\ta.a_desc = VDESC(%s);\n", name);
+    for (i=0; i<argc; i++) {
+        printf("\ta.a_%s = %s;\n", argname[i], argname[i]);
+    }
+    printf("\treturn (VCALL(%s%s, VOFFSET(%s), &a));\n}\n",
+        argname[0], arg0special, name);
 }
-BEGIN	{
-	arg0special="";
+BEGIN   {
+    arg0special="";
 }
-END	{
-	printf("\n/* Special cases: */\n#include <sys/buf.h>\n");
-	argc=1;
-	argtype[0]="struct buf *";
-	argname[0]="bp";
-	arg0special="->b_vp";
-	name="vop_strategy";
-	doit();
-	name="vop_bwrite";
-	doit();
+END {
+    printf("\n/* Special cases: */\n#include <sys/buf.h>\n");
+    argc=1;
+    argtype[0]="struct buf *";
+    argname[0]="bp";
+    arg0special="->b_vp";
+    name="vop_strategy";
+    doit();
+    name="vop_bwrite";
+    doit();
 }
 '"$awk_parser" | sed -e "$space_elim"
 
@@ -228,87 +228,87 @@ echo '
 #include <sys/vnode.h>
 
 struct vnodeop_desc vop_default_desc = {
-	0,
-	"default",
-	0,
-	NULL,
-	VDESC_NO_OFFSET,
-	VDESC_NO_OFFSET,
-	VDESC_NO_OFFSET,
-	VDESC_NO_OFFSET,
-	NULL,
+    0,
+    "default",
+    0,
+    NULL,
+    VDESC_NO_OFFSET,
+    VDESC_NO_OFFSET,
+    VDESC_NO_OFFSET,
+    VDESC_NO_OFFSET,
+    NULL,
 };
 '
 
 # Body stuff
 sed -e "$sed_prep" $src | $awk '
 function do_offset(typematch) {
-	for (i=0; i<argc; i++) {
-		if (argtype[i] == typematch) {
-			printf("\tVOPARG_OFFSETOF(struct %s_args, a_%s),\n",
-				name, argname[i]);
-			return i;
-		};
-	};
-	print "\tVDESC_NO_OFFSET,";
-	return -1;
+    for (i=0; i<argc; i++) {
+        if (argtype[i] == typematch) {
+            printf("\tVOPARG_OFFSETOF(struct %s_args, a_%s),\n",
+                name, argname[i]);
+            return i;
+        };
+    };
+    print "\tVDESC_NO_OFFSET,";
+    return -1;
 }
 
 function doit() {
-	# Define offsets array
-	printf("\nint %s_vp_offsets[] = {\n", name);
-	for (i=0; i<argc; i++) {
-		if (argtype[i] == "struct vnode *") {
-			printf ("\tVOPARG_OFFSETOF(struct %s_args,a_%s),\n",
-				name, argname[i]);
-		}
-	}
-	print "\tVDESC_NO_OFFSET";
-	print "};";
-	# Define F_desc
-	printf("struct vnodeop_desc %s_desc = {\n", name);
-	# offset
-	printf ("\t0,\n");
-	# printable name
-	printf ("\t\"%s\",\n", name);
-	# flags
-	printf("\t0");
-	vpnum = 0;
-	for (i=0; i<argc; i++) {
-		if (willrele[i]) {
-			if (argdir[i] ~ /OUT/) {
-				printf(" | VDESC_VPP_WILLRELE");
-			} else {
-				printf(" | VDESC_VP%s_WILLRELE", vpnum);
-			};
-			vpnum++;
-		}
-	}
-	print ",";
-	# vp offsets
-	printf ("\t%s_vp_offsets,\n", name);
-	# vpp (if any)
-	do_offset("struct vnode **");
-	# cred (if any)
-	do_offset("struct ucred *");
-	# proc (if any)
-	do_offset("struct proc *");
-	# componentname
-	do_offset("struct componentname *");
-	# transport layer information
-	printf ("\tNULL,\n};\n");
+    # Define offsets array
+    printf("\nint %s_vp_offsets[] = {\n", name);
+    for (i=0; i<argc; i++) {
+        if (argtype[i] == "struct vnode *") {
+            printf ("\tVOPARG_OFFSETOF(struct %s_args,a_%s),\n",
+                name, argname[i]);
+        }
+    }
+    print "\tVDESC_NO_OFFSET";
+    print "};";
+    # Define F_desc
+    printf("struct vnodeop_desc %s_desc = {\n", name);
+    # offset
+    printf ("\t0,\n");
+    # printable name
+    printf ("\t\"%s\",\n", name);
+    # flags
+    printf("\t0");
+    vpnum = 0;
+    for (i=0; i<argc; i++) {
+        if (willrele[i]) {
+            if (argdir[i] ~ /OUT/) {
+                printf(" | VDESC_VPP_WILLRELE");
+            } else {
+                printf(" | VDESC_VP%s_WILLRELE", vpnum);
+            };
+            vpnum++;
+        }
+    }
+    print ",";
+    # vp offsets
+    printf ("\t%s_vp_offsets,\n", name);
+    # vpp (if any)
+    do_offset("struct vnode **");
+    # cred (if any)
+    do_offset("struct ucred *");
+    # proc (if any)
+    do_offset("struct proc *");
+    # componentname
+    do_offset("struct componentname *");
+    # transport layer information
+    printf ("\tNULL,\n};\n");
 }
-END	{
-	printf("\n/* Special cases: */\n");
-	argc=1;
-	argdir[0]="IN";
-	argtype[0]="struct buf *";
-	argname[0]="bp";
-	willrele[0]=0;
-	name="vop_strategy";
-	doit();
-	name="vop_bwrite";
-	doit();
+END {
+    printf("\n/* Special cases: */\n");
+    argc=1;
+    argdir[0]="IN";
+    argtype[0]="struct buf *";
+    argname[0]="bp";
+    willrele[0]=0;
+    name="vop_strategy";
+    doit();
+    name="vop_bwrite";
+    doit();
 }
 '"$awk_parser" | sed -e "$space_elim"
 
@@ -320,20 +320,20 @@ echo '
 # Begin stuff
 echo '
 struct vnodeop_desc *vfs_op_descs[] = {
-	&vop_default_desc,	/* MUST BE FIRST */
-	&vop_strategy_desc,	/* XXX: SPECIAL CASE */
-	&vop_bwrite_desc,	/* XXX: SPECIAL CASE */
+    &vop_default_desc,  /* MUST BE FIRST */
+    &vop_strategy_desc, /* XXX: SPECIAL CASE */
+    &vop_bwrite_desc,   /* XXX: SPECIAL CASE */
 '
 
 # Body stuff
 sed -e "$sed_prep" $src | $awk '
 function doit() {
-	printf("\t&%s_desc,\n", name);
+    printf("\t&%s_desc,\n", name);
 }
 '"$awk_parser"
 
 # End stuff
-echo '	NULL
+echo '  NULL
 };
 '
 

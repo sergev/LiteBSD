@@ -1487,8 +1487,9 @@ LEAF(spl6)
 END(spl6)
 
 /*
- * We define an alternate entry point after mcount is called so it
- * can be used in mcount without causing a recursive loop.
+ * Disable all interrupts.
+ *      Status.IE = 0
+ *      Status.IPL = unchanged
  */
 LEAF(splhigh)
 ALEAF(_splhigh)

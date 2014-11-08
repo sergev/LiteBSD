@@ -2,13 +2,13 @@
 log=/var/log/messages
 kernel=/sys/compile/VANGOGH/vmunix.gdb
 if [ $# -ge 3 ]; then
-	echo Usage: $0 [ log kernel ]
+    echo Usage: $0 [ log kernel ]
 fi
 if [ $# -ge 2 ]; then
-	kernel=$2
+    kernel=$2
 fi
 if [ $# -ge 1 ]; then
-	log=$1
+    log=$1
 fi
 echo checking $log using kernel $kernel
 egrep 'simple_|Function|Process' <$log | sed 's/^.* vmunix: //' >/tmp/$$.out

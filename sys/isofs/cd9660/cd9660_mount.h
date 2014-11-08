@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1995
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley
  * by Pace Willisson (pace@blitz.com).  The Rock Ridge Extension
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,17 +35,17 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)cd9660_mount.h	8.1 (Berkeley) 5/24/95
+ *  @(#)cd9660_mount.h  8.1 (Berkeley) 5/24/95
  */
 
 /*
  * Arguments to mount ISO 9660 filesystems.
  */
 struct iso_args {
-	char	*fspec;			/* block special device to mount */
-	struct	export_args export;	/* network export info */
-	int	flags;			/* mounting flags, see below */
+    char    *fspec;             /* block special device to mount */
+    struct  export_args export; /* network export info */
+    int     flags;              /* mounting flags, see below */
 };
-#define	ISOFSMNT_NORRIP	0x00000001	/* disable Rock Ridge Ext.*/
-#define	ISOFSMNT_GENS	0x00000002	/* enable generation numbers */
-#define	ISOFSMNT_EXTATT	0x00000004	/* enable extended attributes */
+#define ISOFSMNT_NORRIP 0x00000001  /* disable Rock Ridge Ext.*/
+#define ISOFSMNT_GENS   0x00000002  /* enable generation numbers */
+#define ISOFSMNT_EXTATT 0x00000004  /* enable extended attributes */

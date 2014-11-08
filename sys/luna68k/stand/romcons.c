@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)romcons.c	8.1 (Berkeley) 6/10/93
+ *  @(#)romcons.c   8.1 (Berkeley) 6/10/93
  */
 
 /* romcons.c   OCT-21-1991 */
@@ -44,33 +44,33 @@
 #include <luna68k/stand/romvec.h>
 
 romcnprobe(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
-	cp->cn_tp  = 0;
-	cp->cn_dev = 0;
-	cp->cn_pri = CN_NORMAL;
+    cp->cn_tp  = 0;
+    cp->cn_dev = 0;
+    cp->cn_pri = CN_NORMAL;
 }
 
 romcninit(cp)
-	struct consdev *cp;
+    struct consdev *cp;
 {
 }
 
 romcngetc(dev)
-	dev_t dev;
+    dev_t dev;
 {
-	int c;
+    int c;
 
-	for (;;)
-		if ((c = ROM_getchar()) != -1)
-			break;
+    for (;;)
+        if ((c = ROM_getchar()) != -1)
+            break;
 
-	return(c);
+    return(c);
 }
 
 romcnputc(dev, c)
-	dev_t dev;
-	int c;
+    dev_t dev;
+    int c;
 {
-	ROM_putchar(c);
+    ROM_putchar(c);
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 University of Utah.
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,17 +37,17 @@
  *
  * from: Utah $Hdr: led.h 1.2 92/08/27$
  *
- *	@(#)led.h	8.1 (Berkeley) 6/10/93
+ *  @(#)led.h   8.1 (Berkeley) 6/10/93
  */
 
-#define	LED_ADDR	0x1FFFF		/* a ROM address--strange but true */
+#define LED_ADDR    0x1FFFF     /* a ROM address--strange but true */
 
-#define	LED_LANXMT	0x80		/* for LAN transmit activity */
-#define	LED_LANRCV	0x40		/* for LAN receive activity */
-#define	LED_DISK	0x20		/* for disk activity */
-#define	LED_PULSE	0x10		/* heartbeat */
+#define LED_LANXMT  0x80        /* for LAN transmit activity */
+#define LED_LANRCV  0x40        /* for LAN receive activity */
+#define LED_DISK    0x20        /* for disk activity */
+#define LED_PULSE   0x10        /* heartbeat */
 
 #ifdef KERNEL
-extern	char *ledaddr;
-extern	int inledcontrol;
+extern  char *ledaddr;
+extern  int inledcontrol;
 #endif

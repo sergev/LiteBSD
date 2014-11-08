@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,19 +34,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)romvec.h	8.1 (Berkeley) 6/10/93
+ *  @(#)romvec.h    8.1 (Berkeley) 6/10/93
  */
 
 /* romvec.h Oct-22-1991 */
 
 
-#define RVPtr	((struct romvec *) 0x41000000)
+#define RVPtr   ((struct romvec *) 0x41000000)
 
-#define ROM_memsize	(*((int *) *RVPtr->vec03))
-#define	ROM_getchar	(*RVPtr->vec06)
-#define	ROM_putchar	(*RVPtr->vec07)
-#define	ROM_abort	(*RVPtr->vec25)
-#define ROM_plane	(*((int *) *RVPtr->vec46))
+#define ROM_memsize (*((int *) *RVPtr->vec03))
+#define ROM_getchar (*RVPtr->vec06)
+#define ROM_putchar (*RVPtr->vec07)
+#define ROM_abort   (*RVPtr->vec25)
+#define ROM_plane   (*((int *) *RVPtr->vec46))
 
 struct romvec {
     int     (*vec00)();    /* 00 [00] - Cold Boot Entry */
@@ -55,8 +55,8 @@ struct romvec {
     int     (*vec03)();    /* 03 [0C] - memsize : Memory Size */
     int     (*vec04)();    /* 04 [10] */
     int     (*vec05)();    /* 05 [14] */
-    int     (*vec06)();    /* 06 [18] - getchar : get 1 charactor from console	*/
-    int     (*vec07)();    /* 07 [1C] - putchar : put 1 charactor to console		*/
+    int     (*vec06)();    /* 06 [18] - getchar : get 1 charactor from console  */
+    int     (*vec07)();    /* 07 [1C] - putchar : put 1 charactor to console        */
     int     (*vec08)();    /* 08 [20] */
     int     (*vec09)();    /* 09 [24] */
     int     (*vec10)();    /* 10 [28] */

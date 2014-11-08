@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1992 OMRON Corporation.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * OMRON Corporation.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)init_main.c	8.2 (Berkeley) 8/15/93
+ *  @(#)init_main.c 8.2 (Berkeley) 8/15/93
  */
 
 #include <sys/param.h>
@@ -49,7 +49,7 @@ extern int dipsw1, dipsw2;
 
 extern char default_file[];
 
-#define	VERS_LOCAL	"Phase-31"
+#define VERS_LOCAL  "Phase-31"
 
 extern int howto;
 extern int devtype;
@@ -74,102 +74,102 @@ char  prompt[16];
 
 main()
 {
-	int i, status;
-	int *p;
+    int i, status;
+    int *p;
 
-	/*
-	 * Initialize the console before we print anything out.
-	 */
-	cpuspeed = MHZ_25;				/* for DELAY() macro */
+    /*
+     * Initialize the console before we print anything out.
+     */
+    cpuspeed = MHZ_25;              /* for DELAY() macro */
 
-	nplane   = get_plane_numbers();
+    nplane   = get_plane_numbers();
 
-	cninit();
+    cninit();
 
-	printf("\n\nStinger ver 0.0 [%s]\n\n", VERS_LOCAL);
+    printf("\n\nStinger ver 0.0 [%s]\n\n", VERS_LOCAL);
 
-	kiff->maxaddr = (caddr_t) (ROM_memsize -1);
-	kiff->dipsw   = ~((dipsw2 << 8) | dipsw1) & 0xFFFF;
-	kiff->plane   = nplane;
+    kiff->maxaddr = (caddr_t) (ROM_memsize -1);
+    kiff->dipsw   = ~((dipsw2 << 8) | dipsw1) & 0xFFFF;
+    kiff->plane   = nplane;
 
-	i = (int) kiff->maxaddr + 1;
-	printf("Physical Memory = 0x%x  ", i);
-	i >>= 20;
-	printf("(%d MB)\n", i);
-	printf("\n");
+    i = (int) kiff->maxaddr + 1;
+    printf("Physical Memory = 0x%x  ", i);
+    i >>= 20;
+    printf("(%d MB)\n", i);
+    printf("\n");
 
-	bcopy(VERS_LOCAL, prompt, sizeof(VERS_LOCAL));
-	prompt[sizeof(VERS_LOCAL) - 1]	= '>';
-	prompt[sizeof(VERS_LOCAL)]	= ' ';
-	prompt[sizeof(VERS_LOCAL) + 1]	= 0;
+    bcopy(VERS_LOCAL, prompt, sizeof(VERS_LOCAL));
+    prompt[sizeof(VERS_LOCAL) - 1]  = '>';
+    prompt[sizeof(VERS_LOCAL)]  = ' ';
+    prompt[sizeof(VERS_LOCAL) + 1]  = 0;
 
-	/*
-	 * IO configuration
-	 */
+    /*
+     * IO configuration
+     */
 
-	find_devs();
-	configure();
-	printf("\n");
+    find_devs();
+    configure();
+    printf("\n");
 
-	howto = reorder_dipsw(dipsw2);
+    howto = reorder_dipsw(dipsw2);
 
-	if ((howto & 0xFE) == 0) {
-		printf("auto-boot %s\n", default_file);
-		
-		i = open(default_file, 0);
-		if (i >= 0) {
-			bootunix(howto, devtype, i);
-			close(i);
-		}
-	}
+    if ((howto & 0xFE) == 0) {
+        printf("auto-boot %s\n", default_file);
+        
+        i = open(default_file, 0);
+        if (i >= 0) {
+            bootunix(howto, devtype, i);
+            close(i);
+        }
+    }
 
-	/*
-	 * Main Loop
-	 */
+    /*
+     * Main Loop
+     */
 
-	do {
-		bzero(buffer, BUFFSIZE);
-		if (getline(prompt, buffer) > 0) {
-			argc = getargs(buffer, argv, sizeof(argv)/sizeof(char *));
+    do {
+        bzero(buffer, BUFFSIZE);
+        if (getline(prompt, buffer) > 0) {
+            argc = getargs(buffer, argv, sizeof(argv)/sizeof(char *));
 
-			status = parse(argc, argv);
-			if (status == ST_NOTFOUND)
-				printf("Command \"%s\" is not found !!\n", argv[0]);
-		}
-	} while(status != ST_EXIT);
+            status = parse(argc, argv);
+            if (status == ST_NOTFOUND)
+                printf("Command \"%s\" is not found !!\n", argv[0]);
+        }
+    } while(status != ST_EXIT);
 
-	exit();
+    exit();
 }
 
 int
 get_plane_numbers()
 {
-	register int r = ROM_plane;
-	register int n = 0;
+    register int r = ROM_plane;
+    register int n = 0;
 
-	for (; r ; r >>= 1)
-		if (r & 0x1)
-			n++;
+    for (; r ; r >>= 1)
+        if (r & 0x1)
+            n++;
 
-	return(n);
+    return(n);
 }
 
 int
 reorder_dipsw(dipsw)
-	int dipsw;
+    int dipsw;
 {
-	int i, sw = 0;
+    int i, sw = 0;
 
-	for (i = 0; i < 8; i++) {
-		if ((dipsw & 0x01) == 0)
-			sw += 1;
+    for (i = 0; i < 8; i++) {
+        if ((dipsw & 0x01) == 0)
+            sw += 1;
 
-		if (i == 7)
-			break;
+        if (i == 7)
+            break;
 
-		sw <<= 1;
-		dipsw >>= 1;
-	}
+        sw <<= 1;
+        dipsw >>= 1;
+    }
 
-	return(sw);
+    return(sw);
 }

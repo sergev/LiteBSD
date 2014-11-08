@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 University of Utah.
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -37,7 +37,7 @@
  *
  * from: Utah $Hdr: cons_conf.c 1.1 92/01/21
  *
- *	@(#)cons_conf.c	8.1 (Berkeley) 6/10/93
+ *  @(#)cons_conf.c 8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -58,21 +58,21 @@
 extern int itecnprobe(), itecninit(), itecngetc(), itecnputc();
 #endif
 #if NDCA > 0
-extern	int dcacnprobe(), dcacninit(), dcacngetc(), dcacnputc();
+extern  int dcacnprobe(), dcacninit(), dcacngetc(), dcacnputc();
 #endif
 #if NDCM > 0
-extern	int dcmcnprobe(), dcmcninit(), dcmcngetc(), dcmcnputc();
+extern  int dcmcnprobe(), dcmcninit(), dcmcngetc(), dcmcnputc();
 #endif
 
-struct	consdev constab[] = {
+struct  consdev constab[] = {
 #if NITE > 0
-	{ itecnprobe,	itecninit,	itecngetc,	itecnputc },
+    { itecnprobe,   itecninit,  itecngetc,  itecnputc },
 #endif
 #if NDCA > 0
-	{ dcacnprobe,	dcacninit,	dcacngetc,	dcacnputc },
+    { dcacnprobe,   dcacninit,  dcacngetc,  dcacnputc },
 #endif
 #if NDCM > 0
-	{ dcmcnprobe,	dcmcninit,	dcmcngetc,	dcmcnputc },
+    { dcmcnprobe,   dcmcninit,  dcmcngetc,  dcmcnputc },
 #endif
-	{ 0 },
+    { 0 },
 };

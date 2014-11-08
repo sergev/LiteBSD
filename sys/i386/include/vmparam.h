@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * William Jolitz.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vmparam.h	8.2 (Berkeley) 4/22/94
+ *  @(#)vmparam.h   8.2 (Berkeley) 4/22/94
  */
 
 
@@ -52,27 +52,27 @@
  * Immediately after the user structure is the page table map, and then
  * kernal address space.
  */
-#define	USRTEXT		0
-#define	USRSTACK	0xFDBFE000
-#define	BTOPUSRSTACK	(0xFDC00-(UPAGES))	/* btop(USRSTACK) */
-#define	LOWPAGES	0
-#define HIGHPAGES	UPAGES
+#define USRTEXT         0
+#define USRSTACK        0xFDBFE000
+#define BTOPUSRSTACK    (0xFDC00-(UPAGES))  /* btop(USRSTACK) */
+#define LOWPAGES        0
+#define HIGHPAGES       UPAGES
 
 /*
  * Virtual memory related constants, all in bytes
  */
-#define	MAXTSIZ		(6*1024*1024)		/* max text size */
+#define MAXTSIZ     (6*1024*1024)   /* max text size */
 #ifndef DFLDSIZ
-#define	DFLDSIZ		(6*1024*1024)		/* initial data size limit */
+#define DFLDSIZ     (6*1024*1024)   /* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(32*1024*1024)		/* max data size */
+#define MAXDSIZ     (32*1024*1024)  /* max data size */
 #endif
-#ifndef	DFLSSIZ
-#define	DFLSSIZ		(512*1024)		/* initial stack size limit */
+#ifndef DFLSSIZ
+#define DFLSSIZ     (512*1024)      /* initial stack size limit */
 #endif
-#ifndef	MAXSSIZ
-#define	MAXSSIZ		MAXDSIZ			/* max stack size */
+#ifndef MAXSSIZ
+#define MAXSSIZ     MAXDSIZ         /* max stack size */
 #endif
 
 /*
@@ -80,25 +80,25 @@
  * The actual values may be changed in vminit() based on MAXDSIZ.
  * With MAXDSIZ of 16Mb and NDMAP of 38, dmmax will be 1024.
  */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	4096			/* largest potential swap allocation */
-#define	DMTEXT	1024			/* swap allocation for text */
+#define DMMIN   32          /* smallest swap allocation */
+#define DMMAX   4096        /* largest potential swap allocation */
+#define DMTEXT  1024        /* swap allocation for text */
 
 /*
  * Sizes of the system and user portions of the system page table.
  */
-#define	SYSPTSIZE 	(2*NPTEPG)
-#define	USRPTSIZE 	(2*NPTEPG)
+#define SYSPTSIZE   (2*NPTEPG)
+#define USRPTSIZE   (2*NPTEPG)
 
 /*
  * Size of User Raw I/O map
  */
-#define	USRIOSIZE 	300
+#define USRIOSIZE   300
 
 /*
  * The size of the clock loop.
  */
-#define	LOOPPAGES	(maxfree - firstfree)
+#define LOOPPAGES   (maxfree - firstfree)
 
 /*
  * The time for a process to be blocked before being very swappable.
@@ -109,7 +109,7 @@
  * It is related to human patience and other factors which don't really
  * change over time.
  */
-#define	MAXSLP 		20
+#define MAXSLP      20
 
 /*
  * A swapped in process is given a small amount of core without being bothered
@@ -126,14 +126,14 @@
  * { wfj 6/16/89: Retail AT memory expansion $800/megabyte, loan of $17
  *   on disk costing $7/mb or $0.18 (in memory still 100:1 in cost!) }
  */
-#define	SAFERSS		8		/* nominal ``small'' resident set size
-					   protected against replacement */
+#define SAFERSS     8       /* nominal ``small'' resident set size
+                               protected against replacement */
 
 /*
  * DISKRPM is used to estimate the number of paging i/o operations
  * which one can expect from a single disk controller.
  */
-#define	DISKRPM		60
+#define DISKRPM     60
 
 /*
  * Klustering constants.  Klustering is the gathering
@@ -145,28 +145,28 @@
  * units.  Note that KLMAX*CLSIZE must be <= DMMIN in dmap.h.
  */
 
-#define	KLMAX	(4/CLSIZE)
-#define	KLSEQL	(2/CLSIZE)		/* in klust if vadvise(VA_SEQL) */
-#define	KLIN	(4/CLSIZE)		/* default data/stack in klust */
-#define	KLTXT	(4/CLSIZE)		/* default text in klust */
-#define	KLOUT	(4/CLSIZE)
+#define KLMAX   (4/CLSIZE)
+#define KLSEQL  (2/CLSIZE)      /* in klust if vadvise(VA_SEQL) */
+#define KLIN    (4/CLSIZE)      /* default data/stack in klust */
+#define KLTXT   (4/CLSIZE)      /* default text in klust */
+#define KLOUT   (4/CLSIZE)
 
 /*
  * KLSDIST is the advance or retard of the fifo reclaim for sequential
  * processes data space.
  */
-#define	KLSDIST	3		/* klusters advance/retard for seq. fifo */
+#define KLSDIST 3       /* klusters advance/retard for seq. fifo */
 
 /*
  * Paging thresholds (see vm_sched.c).
  * Strategy of 1/19/85:
- *	lotsfree is 512k bytes, but at most 1/4 of memory
- *	desfree is 200k bytes, but at most 1/8 of memory
+ *  lotsfree is 512k bytes, but at most 1/4 of memory
+ *  desfree is 200k bytes, but at most 1/8 of memory
  */
-#define	LOTSFREE	(512 * 1024)
-#define	LOTSFREEFRACT	4
-#define	DESFREE		(200 * 1024)
-#define	DESFREEFRACT	8
+#define LOTSFREE        (512 * 1024)
+#define LOTSFREEFRACT   4
+#define DESFREE         (200 * 1024)
+#define DESFREEFRACT    8
 
 /*
  * There are two clock hands, initially separated by HANDSPREAD bytes
@@ -174,80 +174,80 @@
  * a page once the pageout process examines it increases with this
  * distance and decreases as the scan rate rises.
  */
-#define	HANDSPREAD	(2 * 1024 * 1024)
+#define HANDSPREAD  (2 * 1024 * 1024)
 
 /*
  * The number of times per second to recompute the desired paging rate
  * and poke the pagedaemon.
  */
-#define	RATETOSCHEDPAGING	4
+#define RATETOSCHEDPAGING   4
 
 /*
  * Believed threshold (in megabytes) for which interleaved
  * swapping area is desirable.
  */
-#define	LOTSOFMEM	2
+#define LOTSOFMEM   2
 
-#define	mapin(pte, v, pfnum, prot) \
-	{(*(int *)(pte) = ((pfnum)<<PGSHIFT) | (prot)) ; }
+#define mapin(pte, v, pfnum, prot) \
+    {(*(int *)(pte) = ((pfnum)<<PGSHIFT) | (prot)) ; }
 
 /*
  * Mach derived constants
  */
 
 /* user/kernel map constants */
-#define VM_MIN_ADDRESS		((vm_offset_t)0)
-#define VM_MAXUSER_ADDRESS	((vm_offset_t)0xFDBFD000)
-#define UPT_MIN_ADDRESS		((vm_offset_t)0xFDC00000)
-#define UPT_MAX_ADDRESS		((vm_offset_t)0xFDFF7000)
-#define VM_MAX_ADDRESS		UPT_MAX_ADDRESS
-#define VM_MIN_KERNEL_ADDRESS	((vm_offset_t)0xFDFF7000)
-#define UPDT			VM_MIN_KERNEL_ADDRESS
-#define KPT_MIN_ADDRESS		((vm_offset_t)0xFDFF8000)
-#define KPT_MAX_ADDRESS		((vm_offset_t)0xFDFFF000)
-#define VM_MAX_KERNEL_ADDRESS	((vm_offset_t)0xFF7FF000)
+#define VM_MIN_ADDRESS          ((vm_offset_t)0)
+#define VM_MAXUSER_ADDRESS      ((vm_offset_t)0xFDBFD000)
+#define UPT_MIN_ADDRESS         ((vm_offset_t)0xFDC00000)
+#define UPT_MAX_ADDRESS         ((vm_offset_t)0xFDFF7000)
+#define VM_MAX_ADDRESS          UPT_MAX_ADDRESS
+#define VM_MIN_KERNEL_ADDRESS   ((vm_offset_t)0xFDFF7000)
+#define UPDT                    VM_MIN_KERNEL_ADDRESS
+#define KPT_MIN_ADDRESS         ((vm_offset_t)0xFDFF8000)
+#define KPT_MAX_ADDRESS         ((vm_offset_t)0xFDFFF000)
+#define VM_MAX_KERNEL_ADDRESS   ((vm_offset_t)0xFF7FF000)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*CLBYTES)
-#define VM_PHYS_SIZE		(USRIOSIZE*CLBYTES)
+#define VM_MBUF_SIZE    (NMBCLUSTERS*MCLBYTES)
+#define VM_KMEM_SIZE    (NKMEMCLUSTERS*CLBYTES)
+#define VM_PHYS_SIZE    (USRIOSIZE*CLBYTES)
 
 /* # of kernel PT pages (initial only, can grow dynamically) */
-#define VM_KERNEL_PT_PAGES	((vm_size_t)2)		/* XXX: SYSPTSIZE */
+#define VM_KERNEL_PT_PAGES  ((vm_size_t)2)      /* XXX: SYSPTSIZE */
 
 /* pcb base */
-#define	pcbb(p)		((u_int)(p)->p_addr)
+#define pcbb(p)     ((u_int)(p)->p_addr)
 
 /*
  * Flush MMU TLB
  */
 
 #ifndef I386_CR3PAT
-#define	I386_CR3PAT	0x0
+#define I386_CR3PAT 0x0
 #endif
 
 #ifdef notyet
 #define _cr3() ({u_long rtn; \
-	asm (" movl %%cr3,%%eax; movl %%eax,%0 " \
-		: "=g" (rtn) \
-		: \
-		: "ax"); \
-	rtn; \
+    asm (" movl %%cr3,%%eax; movl %%eax,%0 " \
+        : "=g" (rtn) \
+        : \
+        : "ax"); \
+    rtn; \
 })
 
 #define load_cr3(s) ({ u_long val; \
-	val = (s) | I386_CR3PAT; \
-	asm ("movl %0,%%eax; movl %%eax,%%cr3" \
-		:  \
-		: "g" (val) \
-		: "ax"); \
+    val = (s) | I386_CR3PAT; \
+    asm ("movl %0,%%eax; movl %%eax,%%cr3" \
+        :  \
+        : "g" (val) \
+        : "ax"); \
 })
 
 #define tlbflush() ({ u_long val; \
-	val = u.u_pcb.pcb_ptd | I386_CR3PAT; \
-	asm ("movl %0,%%eax; movl %%eax,%%cr3" \
-		:  \
-		: "g" (val) \
-		: "ax"); \
+    val = u.u_pcb.pcb_ptd | I386_CR3PAT; \
+    asm ("movl %0,%%eax; movl %%eax,%%cr3" \
+        :  \
+        : "g" (val) \
+        : "ax"); \
 })
 #endif

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Van Jacobson of Lawrence Berkeley Laboratory.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)sd_compat.c	8.1 (Berkeley) 6/10/93
+ *  @(#)sd_compat.c 8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -62,62 +62,62 @@
  * H starts after D and is what ever is left (i.e. combo of E and F).
  */
 struct partition sddefaultpart[] = {
-	{  16384,   1024, 1024, FS_BSDFFS, 8 },
-	{  65536,  17408,    0, FS_SWAP,   0 },
-	{      0,      0,    0, FS_BOOT,   0 },
-	{  98304,  17408,    0, FS_SWAP,   0 },
-	{ 102400, 115712, 1024, FS_BSDFFS, 8 },
-	{      0, 218112, 1024, FS_BSDFFS, 8 },
-	{      0,  82944, 1024, FS_BSDFFS, 8 },
-	{      0, 115712, 1024, FS_BSDFFS, 8 }
+    {  16384,   1024, 1024, FS_BSDFFS, 8 },
+    {  65536,  17408,    0, FS_SWAP,   0 },
+    {      0,      0,    0, FS_BOOT,   0 },
+    {  98304,  17408,    0, FS_SWAP,   0 },
+    { 102400, 115712, 1024, FS_BSDFFS, 8 },
+    {      0, 218112, 1024, FS_BSDFFS, 8 },
+    {      0,  82944, 1024, FS_BSDFFS, 8 },
+    {      0, 115712, 1024, FS_BSDFFS, 8 }
 };
 int sdnumdefaultpart = sizeof(sddefaultpart)/sizeof(sddefaultpart[0]);
 
 extern struct sd_softc sd_softc[];
 
 sdmakedisklabel(unit, lp)
-	int unit;
-	register struct disklabel *lp;
+    int unit;
+    register struct disklabel *lp;
 {
-	register struct sd_softc *sc = &sd_softc[unit];
-	register struct partition *pi, *dpi;
-	register int dcount;
-	
-	lp->d_secperunit = sc->sc_blks;
-	lp->d_rpm = 3600;
-	lp->d_interleave = 1;
-	if (sc->sc_flags & SDF_RMEDIA)
-		lp->d_flags |= D_REMOVABLE;
-	lp->d_npartitions = sdnumdefaultpart;
+    register struct sd_softc *sc = &sd_softc[unit];
+    register struct partition *pi, *dpi;
+    register int dcount;
+    
+    lp->d_secperunit = sc->sc_blks;
+    lp->d_rpm = 3600;
+    lp->d_interleave = 1;
+    if (sc->sc_flags & SDF_RMEDIA)
+        lp->d_flags |= D_REMOVABLE;
+    lp->d_npartitions = sdnumdefaultpart;
 
-	pi = lp->d_partitions;
-	dpi = sddefaultpart;
-	dcount = sdnumdefaultpart;
-	while (dcount-- > 0)
-		*pi++ = *dpi++;
+    pi = lp->d_partitions;
+    dpi = sddefaultpart;
+    dcount = sdnumdefaultpart;
+    while (dcount-- > 0)
+        *pi++ = *dpi++;
 
-	pi = lp->d_partitions;
+    pi = lp->d_partitions;
 
-	/*
-	 * C gets everything
-	 */
-	pi[2].p_size = sc->sc_blks;
-	/*
-	 * G gets from end of B to end of disk
-	 */
-	pi[6].p_size = sc->sc_blks - pi[6].p_offset;
-	/*
-	 * H gets from end of D to end of disk
-	 */
-	pi[7].p_size = sc->sc_blks - pi[7].p_offset;
-	/*
-	 * If disk is big enough, define E and F
-	 */
-	if (sc->sc_blks > pi[5].p_offset)
-		pi[5].p_size = sc->sc_blks - pi[5].p_offset;
-	else {
-		pi[4].p_offset = pi[4].p_size = 0;
-		pi[5].p_offset = pi[5].p_size = 0;
-	}
+    /*
+     * C gets everything
+     */
+    pi[2].p_size = sc->sc_blks;
+    /*
+     * G gets from end of B to end of disk
+     */
+    pi[6].p_size = sc->sc_blks - pi[6].p_offset;
+    /*
+     * H gets from end of D to end of disk
+     */
+    pi[7].p_size = sc->sc_blks - pi[7].p_offset;
+    /*
+     * If disk is big enough, define E and F
+     */
+    if (sc->sc_blks > pi[5].p_offset)
+        pi[5].p_size = sc->sc_blks - pi[5].p_offset;
+    else {
+        pi[4].p_offset = pi[4].p_size = 0;
+        pi[5].p_offset = pi[5].p_size = 0;
+    }
 }
 #endif

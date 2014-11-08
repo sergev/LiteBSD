@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,49 +30,49 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)conf.c	8.1 (Berkeley) 6/10/93
+ *  @(#)conf.c  8.1 (Berkeley) 6/10/93
  */
 
 #include <sys/param.h>
 #include <stand.att/saio.h>
 
-extern int	nullsys(), nodev(), noioctl();
+extern int  nullsys(), nodev(), noioctl();
 
 #ifdef BOOT
-#define	ctstrategy	nullsys
-#define	ctopen		nodev
-#define	ctclose		nullsys
+#define ctstrategy  nullsys
+#define ctopen      nodev
+#define ctclose     nullsys
 #else
-int	ctstrategy(), ctopen(), ctclose();
+int ctstrategy(), ctopen(), ctclose();
 #endif
-#define	ctioctl	noioctl
+#define ctioctl noioctl
 
-int	rdstrategy(), rdopen();
-#define	rdioctl	noioctl
+int rdstrategy(), rdopen();
+#define rdioctl noioctl
 
-int	sdstrategy(), sdopen();
-#define	sdioctl	noioctl
+int sdstrategy(), sdopen();
+#define sdioctl noioctl
 
 
 struct devsw devsw[] = {
-	{ "ct",	ctstrategy,	ctopen,	ctclose,	ctioctl }, /*0*/
-	{ "??",	nullsys,	nodev,	nullsys,	noioctl }, /*1*/
-	{ "rd",	rdstrategy,	rdopen,	nullsys,	rdioctl }, /*2*/
-	{ "??",	nullsys,	nodev,	nullsys,	noioctl }, /*3*/
-	{ "sd",	sdstrategy,	sdopen,	nullsys,	sdioctl }, /*4*/
+    { "ct", ctstrategy, ctopen, ctclose,    ctioctl }, /*0*/
+    { "??", nullsys,    nodev,  nullsys,    noioctl }, /*1*/
+    { "rd", rdstrategy, rdopen, nullsys,    rdioctl }, /*2*/
+    { "??", nullsys,    nodev,  nullsys,    noioctl }, /*3*/
+    { "sd", sdstrategy, sdopen, nullsys,    sdioctl }, /*4*/
 };
 
-int	ndevs = (sizeof(devsw)/sizeof(devsw[0]));
+int ndevs = (sizeof(devsw)/sizeof(devsw[0]));
 
 /*
  * Convert old style unit syntax into adaptor/controller/unit
  */
 devconvert(io)
-	register struct iob *io;
+    register struct iob *io;
 {
-	if (io->i_unit == 0 || io->i_adapt || io->i_ctlr)
-		return;
-	io->i_adapt = io->i_unit / 8;
-	io->i_ctlr = io->i_unit % 8;
-	io->i_unit = 0;
+    if (io->i_unit == 0 || io->i_adapt || io->i_ctlr)
+        return;
+    io->i_adapt = io->i_unit / 8;
+    io->i_ctlr = io->i_unit % 8;
+    io->i_unit = 0;
 }
