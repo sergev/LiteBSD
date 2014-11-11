@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * Copyright (c) 1994 Jan-Simon Pendry
  *
  * This code is derived from software contributed to Berkeley by
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,33 +35,33 @@
  * SUCH DAMAGE.
  *
  * From:
- *	$Id: procfs_i386.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
+ *  $Id: procfs_i386.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
  *
- *	@(#)procfs_machdep.c	8.2 (Berkeley) 10/9/94
+ *  @(#)procfs_machdep.c    8.2 (Berkeley) 10/9/94
  */
 
 /*
  * Functions to be implemented here are:
  *
  * procfs_read_regs(proc, regs)
- *	Get the current user-visible register set from the process
- *	and copy it into the regs structure (<machine/reg.h>).
- *	The process is stopped at the time read_regs is called.
+ *  Get the current user-visible register set from the process
+ *  and copy it into the regs structure (<machine/reg.h>).
+ *  The process is stopped at the time read_regs is called.
  *
  * procfs_write_regs(proc, regs)
- *	Update the current register set from the passed in regs
- *	structure.  Take care to avoid clobbering special CPU
- *	registers or privileged bits in the PSL.
- *	The process is stopped at the time write_regs is called.
+ *  Update the current register set from the passed in regs
+ *  structure.  Take care to avoid clobbering special CPU
+ *  registers or privileged bits in the PSL.
+ *  The process is stopped at the time write_regs is called.
  *
  * procfs_read_fpregs, procfs_write_fpregs
- *	deal with the floating point register set, otherwise as above.
+ *  deal with the floating point register set, otherwise as above.
  *
  * procfs_sstep(proc)
- *	Arrange for the process to trap after executing a single instruction.
+ *  Arrange for the process to trap after executing a single instruction.
  *
  * procfs_fix_sstep(proc)
- *	Cleanup process state after executing a single-step instruction.
+ *  Cleanup process state after executing a single-step instruction.
  */
 
 #include <sys/param.h>
@@ -77,17 +77,17 @@
 
 int
 procfs_read_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+    struct proc *p;
+    struct reg *regs;
 {
 
-	if ((p->p_flag & P_INMEM) == 0)
-		return (EIO);
+    if ((p->p_flag & P_INMEM) == 0)
+        return (EIO);
 
-	bcopy((void *) p->p_md.md_regs, (void *) regs->r_regs,
-		sizeof(regs->r_regs));
+    bcopy((void *) p->p_md.md_regs, (void *) regs->r_regs,
+        sizeof(regs->r_regs));
 
-	return (0);
+    return (0);
 }
 
 /*
@@ -96,55 +96,55 @@ procfs_read_regs(p, regs)
  */
 int
 procfs_write_regs(p, regs)
-	struct proc *p;
-	struct reg *regs;
+    struct proc *p;
+    struct reg *regs;
 {
-	int oldsr;
+    int oldsr;
 
-	if ((p->p_flag & P_INMEM) == 0)
-		return (EIO);
+    if ((p->p_flag & P_INMEM) == 0)
+        return (EIO);
 
-	/* no user modifiable bits in the SR register */
-	oldsr = p->p_md.md_regs[SR];
-	bcopy((void *) regs->r_regs, (void *) p->p_md.md_regs,
-		sizeof(regs->r_regs));
-	p->p_md.md_regs[SR] = oldsr;
+    /* no user modifiable bits in the SR register */
+    oldsr = p->p_md.md_regs[SR];
+    bcopy((void *) regs->r_regs, (void *) p->p_md.md_regs,
+        sizeof(regs->r_regs));
+    p->p_md.md_regs[SR] = oldsr;
 
-	return (0);
+    return (0);
 }
 
 int
 procfs_read_fpregs(p, fpregs)
-	struct proc *p;
-	struct fpreg *fpregs;
+    struct proc *p;
+    struct fpreg *fpregs;
 {
 
-	return (EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 int
 procfs_write_fpregs(p, fpregs)
-	struct proc *p;
-	struct fpreg *fpregs;
+    struct proc *p;
+    struct fpreg *fpregs;
 {
 
-	return (EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 int
 procfs_sstep(p, sstep)
-	struct proc *p;
-	int sstep;
+    struct proc *p;
+    int sstep;
 {
 
-	if (sstep && cpu_singlestep(p))
-		return (EIO);
+    if (sstep && cpu_singlestep(p))
+        return (EIO);
 
-	return (0);
+    return (0);
 }
 
 void
 procfs_fix_sstep(p)
-	struct proc *p;
+    struct proc *p;
 {
 }

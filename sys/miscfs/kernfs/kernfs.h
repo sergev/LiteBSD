@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software donated to Berkeley by
  * Jan-Simon Pendry.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,33 +33,33 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kernfs.h	8.6 (Berkeley) 3/29/95
+ *  @(#)kernfs.h    8.6 (Berkeley) 3/29/95
  */
 
-#define	_PATH_KERNFS	"/kern"		/* Default mountpoint */
+#define _PATH_KERNFS    "/kern"     /* Default mountpoint */
 
 #ifdef KERNEL
 struct kernfs_mount {
-	struct vnode	*kf_root;	/* Root node */
+    struct vnode    *kf_root;   /* Root node */
 };
 
 struct kernfs_node {
-	struct kern_target *kf_kt;
+    struct kern_target *kf_kt;
 };
 
-#define VFSTOKERNFS(mp)	((struct kernfs_mount *)((mp)->mnt_data))
-#define	VTOKERN(vp) ((struct kernfs_node *)(vp)->v_data)
+#define VFSTOKERNFS(mp) ((struct kernfs_mount *)((mp)->mnt_data))
+#define VTOKERN(vp) ((struct kernfs_node *)(vp)->v_data)
 
 #define kernfs_fhtovp ((int (*) __P((struct mount *, struct fid *, \
-	    struct mbuf *, struct vnode **, int *, struct ucred **)))eopnotsupp)
+        struct mbuf *, struct vnode **, int *, struct ucred **)))eopnotsupp)
 #define kernfs_quotactl ((int (*) __P((struct mount *, int, uid_t, caddr_t, \
-	    struct proc *)))eopnotsupp)
+        struct proc *)))eopnotsupp)
 #define kernfs_sync ((int (*) __P((struct mount *, int, struct ucred *, \
-	    struct proc *)))nullop)
+        struct proc *)))nullop)
 #define kernfs_sysctl ((int (*) __P((int *, u_int, void *, size_t *, void *, \
-	    size_t, struct proc *)))eopnotsupp)
+        size_t, struct proc *)))eopnotsupp)
 #define kernfs_vget ((int (*) __P((struct mount *, ino_t, struct vnode **))) \
-	    eopnotsupp)
+        eopnotsupp)
 #define kernfs_vptofh ((int (*) __P((struct vnode *, struct fid *)))eopnotsupp)
 extern int (**kernfs_vnodeop_p)();
 extern struct vfsops kernfs_vfsops;

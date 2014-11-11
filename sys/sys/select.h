@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,27 +30,27 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)select.h	8.2 (Berkeley) 1/4/94
+ *  @(#)select.h    8.2 (Berkeley) 1/4/94
  */
 
 #ifndef _SYS_SELECT_H_
-#define	_SYS_SELECT_H_
+#define _SYS_SELECT_H_
 
 /*
  * Used to maintain information about processes that wish to be
  * notified when I/O becomes possible.
  */
 struct selinfo {
-	pid_t	si_pid;		/* process to be notified */
-	short	si_flags;	/* see below */
+    pid_t   si_pid;         /* process to be notified */
+    short   si_flags;       /* see below */
 };
-#define	SI_COLL	0x0001		/* collision occurred */
+#define SI_COLL 0x0001      /* collision occurred */
 
 #ifdef KERNEL
 struct proc;
 
-void	selrecord __P((struct proc *selector, struct selinfo *));
-void	selwakeup __P((struct selinfo *));
+void    selrecord __P((struct proc *selector, struct selinfo *));
+void    selwakeup __P((struct selinfo *));
 #endif
 
 #endif /* !_SYS_SELECT_H_ */

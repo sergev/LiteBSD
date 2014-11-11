@@ -1,6 +1,6 @@
 /* 
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vm_kern.h	8.1 (Berkeley) 6/11/93
+ *  @(#)vm_kern.h   8.1 (Berkeley) 6/11/93
  *
  *
  * Copyright (c) 1987, 1990 Carnegie-Mellon University.
@@ -64,9 +64,9 @@
 
 /* Kernel memory management definitions. */
 
-vm_map_t	buffer_map;
-vm_map_t	exec_map;
-vm_map_t	kernel_map;
-vm_map_t	kmem_map;
-vm_map_t	mb_map;
-vm_map_t	phys_map;
+vm_map_t    buffer_map;
+vm_map_t    exec_map;
+vm_map_t    kernel_map;
+vm_map_t    kmem_map;
+vm_map_t    mb_map;
+vm_map_t    phys_map;

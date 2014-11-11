@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)unpcb.h	8.1 (Berkeley) 6/2/93
+ *  @(#)unpcb.h 8.1 (Berkeley) 6/2/93
  */
 
 /*
@@ -58,16 +58,16 @@
  * so that changes in the sockbuf may be computed to modify
  * back pressure on the sender accordingly.
  */
-struct	unpcb {
-	struct	socket *unp_socket;	/* pointer back to socket */
-	struct	vnode *unp_vnode;	/* if associated with file */
-	ino_t	unp_ino;		/* fake inode number */
-	struct	unpcb *unp_conn;	/* control block of connected socket */
-	struct	unpcb *unp_refs;	/* referencing socket linked list */
-	struct 	unpcb *unp_nextref;	/* link in unp_refs list */
-	struct	mbuf *unp_addr;		/* bound address of socket */
-	int	unp_cc;			/* copy of rcv.sb_cc */
-	int	unp_mbcnt;		/* copy of rcv.sb_mbcnt */
+struct  unpcb {
+    struct  socket *unp_socket; /* pointer back to socket */
+    struct  vnode *unp_vnode;   /* if associated with file */
+    ino_t   unp_ino;            /* fake inode number */
+    struct  unpcb *unp_conn;    /* control block of connected socket */
+    struct  unpcb *unp_refs;    /* referencing socket linked list */
+    struct  unpcb *unp_nextref; /* link in unp_refs list */
+    struct  mbuf *unp_addr;     /* bound address of socket */
+    int     unp_cc;             /* copy of rcv.sb_cc */
+    int     unp_mbcnt;          /* copy of rcv.sb_mbcnt */
 };
 
-#define	sotounpcb(so)	((struct unpcb *)((so)->so_pcb))
+#define sotounpcb(so)   ((struct unpcb *)((so)->so_pcb))

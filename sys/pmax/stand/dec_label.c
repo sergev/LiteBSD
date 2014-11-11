@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dec_label.c	8.1 (Berkeley) 6/10/93
+ *  @(#)dec_label.c 8.1 (Berkeley) 6/10/93
  */
 
 #include <stdio.h>
@@ -45,8 +45,8 @@
 
 #include <pmax/stand/dec_boot.h>
 
-struct	disklabel label;
-struct	Dec_DiskLabel dec_label;
+struct  disklabel label;
+struct  Dec_DiskLabel dec_label;
 
 /*
  * This program creates or updates the DEC label after 'disklabel'
@@ -58,33 +58,33 @@ struct	Dec_DiskLabel dec_label;
  */
 
 main(argc, argv)
-	int argc;
-	char *argv[];
+    int argc;
+    char *argv[];
 {
-	register int i;
-	int fd;
+    register int i;
+    int fd;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: dec_label <disk>\n");
-		exit(1);
-	}
-	if ((fd = open(argv[1], O_RDWR, 0)) < 0)
-		err(1, "%s", argv[1]);
-	if (ioctl(fd, DIOCGDINFO, &label) < 0)
-		err(1, "ioctl DIOCGDINFO");
+    if (argc != 2) {
+        fprintf(stderr, "Usage: dec_label <disk>\n");
+        exit(1);
+    }
+    if ((fd = open(argv[1], O_RDWR, 0)) < 0)
+        err(1, "%s", argv[1]);
+    if (ioctl(fd, DIOCGDINFO, &label) < 0)
+        err(1, "ioctl DIOCGDINFO");
 
-	/* fill in DEC label */
-	dec_label.magic = DEC_LABEL_MAGIC;
-	dec_label.isPartitioned = 1;
-	for (i = 0; i < DEC_NUM_DISK_PARTS; i++) {
-		dec_label.map[i].numBlocks = label.d_partitions[i].p_size;
-		dec_label.map[i].startBlock = label.d_partitions[i].p_offset;
-		printf("%d: start %d size %d\n", i, dec_label.map[i].startBlock,
-			dec_label.map[i].numBlocks);
-	}
-	if (lseek(fd, (off_t)DEC_LABEL_SECTOR * label.d_secsize, SEEK_SET) == -1)
-		err(1, "lseek");
-	if (write(fd, &dec_label, sizeof(dec_label)) != sizeof(dec_label))
-		err(1, "write label");
-	return (0);
+    /* fill in DEC label */
+    dec_label.magic = DEC_LABEL_MAGIC;
+    dec_label.isPartitioned = 1;
+    for (i = 0; i < DEC_NUM_DISK_PARTS; i++) {
+        dec_label.map[i].numBlocks = label.d_partitions[i].p_size;
+        dec_label.map[i].startBlock = label.d_partitions[i].p_offset;
+        printf("%d: start %d size %d\n", i, dec_label.map[i].startBlock,
+            dec_label.map[i].numBlocks);
+    }
+    if (lseek(fd, (off_t)DEC_LABEL_SECTOR * label.d_secsize, SEEK_SET) == -1)
+        err(1, "lseek");
+    if (write(fd, &dec_label, sizeof(dec_label)) != sizeof(dec_label))
+        err(1, "write label");
+    return (0);
 }

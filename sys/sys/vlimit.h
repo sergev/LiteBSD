@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,20 +30,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vlimit.h	8.1 (Berkeley) 6/2/93
+ *  @(#)vlimit.h    8.1 (Berkeley) 6/2/93
  */
 
 /*
  * Limits for u.u_limit[i], per process, inherited.
  */
-#define	LIM_NORAISE	0	/* if <> 0, can't raise limits */
-#define	LIM_CPU		1	/* max secs cpu time */
-#define	LIM_FSIZE	2	/* max size of file created */
-#define	LIM_DATA	3	/* max growth of data space */
-#define	LIM_STACK	4	/* max growth of stack */
-#define	LIM_CORE	5	/* max size of ``core'' file */
-#define	LIM_MAXRSS	6	/* max desired data+stack core usage */
+#define LIM_NORAISE 0   /* if <> 0, can't raise limits */
+#define LIM_CPU     1   /* max secs cpu time */
+#define LIM_FSIZE   2   /* max size of file created */
+#define LIM_DATA    3   /* max growth of data space */
+#define LIM_STACK   4   /* max growth of stack */
+#define LIM_CORE    5   /* max size of ``core'' file */
+#define LIM_MAXRSS  6   /* max desired data+stack core usage */
 
-#define	NLIMITS		6
+#define NLIMITS     6
 
-#define	INFINITY	0x7fffffff
+#define INFINITY    0x7fffffff

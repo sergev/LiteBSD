@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)cache.h	8.1 (Berkeley) 6/11/93
+ *  @(#)cache.h 8.1 (Berkeley) 6/11/93
  *
  * from: $Header: cache.h,v 1.7 93/04/27 14:31:16 torek Exp $
  */
@@ -58,32 +58,32 @@
  */
 enum vactype { VAC_NONE, VAC_WRITETHROUGH, VAC_WRITEBACK };
 
-extern enum vactype vactype;	/* XXX  move into cacheinfo struct */
+extern enum vactype vactype;    /* XXX  move into cacheinfo struct */
 
 /*
  * Cache tags can be written in control space, and must be set to 0
  * (or invalid anyway) before turning on the cache.  The tags are
  * addressed as an array of 32-bit structures of the form:
  *
- *	struct cache_tag {
- *		u_int	:7,		(unused; must be zero)
- *			ct_cid:3,	(context ID)
- *			ct_w:1,		(write flag from PTE)
- *			ct_s:1,		(supervisor flag from PTE)
- *			ct_v:1,		(set => cache entry is valid)
- *			:3,		(unused; must be zero)
- *			ct_tid:14,	(cache tag ID)
- *			:2;		(unused; must be zero)
- *	};
+ *  struct cache_tag {
+ *      u_int   :7,     (unused; must be zero)
+ *          ct_cid:3,   (context ID)
+ *          ct_w:1,     (write flag from PTE)
+ *          ct_s:1,     (supervisor flag from PTE)
+ *          ct_v:1,     (set => cache entry is valid)
+ *          :3,     (unused; must be zero)
+ *          ct_tid:14,  (cache tag ID)
+ *          :2;     (unused; must be zero)
+ *  };
  *
  * The SPARCstation 1 cache sees virtual addresses as:
  *
- *	struct cache_va {
- *		u_int	:2,		(unused; probably copies of va_tid<13>)
- *			cva_tid:14,	(tag ID)
- *			cva_line:12,	(cache line number)
- *			cva_byte:4;	(byte in cache line)
- *	};
+ *  struct cache_va {
+ *      u_int   :2,     (unused; probably copies of va_tid<13>)
+ *          cva_tid:14, (tag ID)
+ *          cva_line:12,    (cache line number)
+ *          cva_byte:4; (byte in cache line)
+ *  };
  *
  * (The SS2 cache is similar but has half as many lines, each twice as long.)
  *
@@ -108,31 +108,31 @@ extern enum vactype vactype;	/* XXX  move into cacheinfo struct */
  * ADDRESSES ... THIS MUST BE FIXED!
  */
 
-#define	CACHE_ALIAS_DISTANCE	(256 * 1024)	/* 256 kbytes */
+#define CACHE_ALIAS_DISTANCE    (256 * 1024)    /* 256 kbytes */
 
 /*
  * True iff a1 and a2 are `bad' aliases (will cause cache duplication).
  */
-#define	BADALIAS(a1, a2) (((int)(a1) ^ (int)(a2)) & 0xf000)
+#define BADALIAS(a1, a2) (((int)(a1) ^ (int)(a2)) & 0xf000)
 
 /*
  * Routines for dealing with the cache.
  */
-void	cache_enable __P((void));		/* turn it on */
-void	cache_flush_context __P((void));	/* flush current context */
-void	cache_flush_segment __P((int vseg));	/* flush seg in cur ctx */
-void	cache_flush_page __P((int va));		/* flush page in cur ctx */
-void	cache_flush __P((caddr_t base, u_int len));/* flush region */
+void    cache_enable __P((void));               /* turn it on */
+void    cache_flush_context __P((void));        /* flush current context */
+void    cache_flush_segment __P((int vseg));    /* flush seg in cur ctx */
+void    cache_flush_page __P((int va));         /* flush page in cur ctx */
+void    cache_flush __P((caddr_t base, u_int len));/* flush region */
 
 /*
  * Cache control information.
  */
 struct cacheinfo {
-	int	c_totalsize;		/* total size, in bytes */
-	int	c_enabled;		/* true => cache is enabled */
-	int	c_hwflush;		/* true => have hardware flush */
-	int	c_linesize;		/* line size, in bytes */
-	int	c_l2linesize;		/* log2(linesize) */
+    int c_totalsize;        /* total size, in bytes */
+    int c_enabled;          /* true => cache is enabled */
+    int c_hwflush;          /* true => have hardware flush */
+    int c_linesize;         /* line size, in bytes */
+    int c_l2linesize;       /* log2(linesize) */
 };
 extern struct cacheinfo cacheinfo;
 
@@ -140,11 +140,11 @@ extern struct cacheinfo cacheinfo;
  * Cache control statistics.
  */
 struct cachestats {
-	int	cs_npgflush;		/* # page flushes */
-	int	cs_nsgflush;		/* # seg flushes */
-	int	cs_ncxflush;		/* # context flushes */
-	int	cs_nraflush;		/* # range flushes */
+    int cs_npgflush;        /* # page flushes */
+    int cs_nsgflush;        /* # seg flushes */
+    int cs_ncxflush;        /* # context flushes */
+    int cs_nraflush;        /* # range flushes */
 #ifdef notyet
-	int	cs_ra[65];		/* pages/range */
+    int cs_ra[65];          /* pages/range */
 #endif
 };

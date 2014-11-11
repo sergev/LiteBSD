@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Jan-Simon Pendry.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bsd_openprom.h	8.1 (Berkeley) 6/11/93
+ *  @(#)bsd_openprom.h  8.1 (Berkeley) 6/11/93
  *
  * from: $Header: bsd_openprom.h,v 1.3 92/09/09 00:41:33 leres Exp $
  */
@@ -49,10 +49,10 @@
  * conflicts, but the v2 interface fails to do so, and we must `magically'
  * know where the OPENPROM lives in virtual space.
  */
-#define	OPENPROM_STARTVADDR	0xffd00000
-#define	OPENPROM_ENDVADDR	0xfff00000
+#define OPENPROM_STARTVADDR 0xffd00000
+#define OPENPROM_ENDVADDR   0xfff00000
 
-#define	OPENPROM_MAGIC 0x10010407
+#define OPENPROM_MAGIC      0x10010407
 
 /*
  * Version 0 PROM vector device operations (collected here to emphasise that
@@ -68,15 +68,15 @@
  * and so forth).
  */
 struct v0devops {
-	int	(*v0_open)(char *dev);
-	int	(*v0_close)(int d);
-	int	(*v0_rbdev)(int d, int nblks, int blkno, caddr_t addr);	
-	int	(*v0_wbdev)(int d, int nblks, int blkno, caddr_t addr);	
-	int	(*v0_wnet)(int d, int nbytes, caddr_t addr);
-	int	(*v0_rnet)(int d, int nbytes, caddr_t addr);
-	int	(*v0_rcdev)(int d, int nbytes, int, caddr_t addr);
-	int	(*v0_wcdev)(int d, int nbytes, int, caddr_t addr);
-	int	(*v0_seek)(int d, long offset, int whence);
+    int (*v0_open)(char *dev);
+    int (*v0_close)(int d);
+    int (*v0_rbdev)(int d, int nblks, int blkno, caddr_t addr);
+    int (*v0_wbdev)(int d, int nblks, int blkno, caddr_t addr);
+    int (*v0_wnet)(int d, int nbytes, caddr_t addr);
+    int (*v0_rnet)(int d, int nbytes, caddr_t addr);
+    int (*v0_rcdev)(int d, int nbytes, int, caddr_t addr);
+    int (*v0_wcdev)(int d, int nbytes, int, caddr_t addr);
+    int (*v0_seek)(int d, long offset, int whence);
 };
 
 /*
@@ -90,25 +90,25 @@ struct v0devops {
  * the device state).
  */
 struct v2devops {
-	int	(*v2_xxx1)(int d);	/* ??? convert fd to something */
+    int (*v2_xxx1)(int d);  /* ??? convert fd to something */
 
-	/* Memory allocation and release. */
-	caddr_t	(*v2_malloc)(caddr_t va, u_int sz);
-	void	(*v2_free)(caddr_t va, u_int sz);
+    /* Memory allocation and release. */
+    caddr_t (*v2_malloc)(caddr_t va, u_int sz);
+    void    (*v2_free)(caddr_t va, u_int sz);
 
-	/* Device memory mapper. */
-	caddr_t	(*v2_mmap)(caddr_t va, int asi, u_int pa, u_int sz);
-	void	(*v2_munmap)(caddr_t va, u_int sz);
+    /* Device memory mapper. */
+    caddr_t (*v2_mmap)(caddr_t va, int asi, u_int pa, u_int sz);
+    void    (*v2_munmap)(caddr_t va, u_int sz);
 
-	/* Device open, close, etc. */
-	int	(*v2_open)(char *devpath);
-	void	(*v2_close)(int d);
-	int	(*v2_read)(int d, caddr_t buf, int nbytes);
-	int	(*v2_write)(int d, caddr_t buf, int nbytes);
-	void	(*v2_seek)(int d, int hi, int lo);
+    /* Device open, close, etc. */
+    int     (*v2_open)(char *devpath);
+    void    (*v2_close)(int d);
+    int     (*v2_read)(int d, caddr_t buf, int nbytes);
+    int     (*v2_write)(int d, caddr_t buf, int nbytes);
+    void    (*v2_seek)(int d, int hi, int lo);
 
-	void	(*v2_xxx2)();		/* ??? */
-	void	(*v2_xxx3)();		/* ??? */
+    void    (*v2_xxx2)();       /* ??? */
+    void    (*v2_xxx3)();       /* ??? */
 };
 
 /*
@@ -117,9 +117,9 @@ struct v2devops {
  * have to extract them into local temporary memory and reinterpret them.)
  */
 struct v0mlist {
-	struct	v0mlist *next;
-	caddr_t	addr;
-	u_int	nbytes;
+    struct  v0mlist *next;
+    caddr_t addr;
+    u_int   nbytes;
 };
 
 /*
@@ -131,9 +131,9 @@ struct v0mlist {
  * addresses.
  */
 struct v0mem {
-	struct	v0mlist **v0_phystot;	/* physical memory */
-	struct	v0mlist **v0_vmprom;	/* VM used by PROM */
-	struct	v0mlist **v0_physavail;	/* available physical memory */
+    struct  v0mlist **v0_phystot;   /* physical memory */
+    struct  v0mlist **v0_vmprom;    /* VM used by PROM */
+    struct  v0mlist **v0_physavail; /* available physical memory */
 };
 
 /*
@@ -141,14 +141,14 @@ struct v0mem {
  * leaves the decoded version behind.
  */
 struct v0bootargs {
-	char	*ba_argv[8];		/* argv format for boot string */
-	char	ba_args[100];		/* string space */
-	char	ba_bootdev[2];		/* e.g., "sd" for `b sd(...' */
-	int	ba_ctlr;		/* controller # */
-	int	ba_unit;		/* unit # */
-	int	ba_part;		/* partition # */
-	char	*ba_kernel;		/* kernel to boot, e.g., "vmunix" */
-	void	*ba_spare0;		/* not decoded here	XXX */
+    char    *ba_argv[8];        /* argv format for boot string */
+    char    ba_args[100];       /* string space */
+    char    ba_bootdev[2];      /* e.g., "sd" for `b sd(...' */
+    int     ba_ctlr;            /* controller # */
+    int     ba_unit;            /* unit # */
+    int     ba_part;            /* partition # */
+    char    *ba_kernel;         /* kernel to boot, e.g., "vmunix" */
+    void    *ba_spare0;         /* not decoded here XXX */
 };
 
 /*
@@ -158,10 +158,10 @@ struct v0bootargs {
  * with the v2 device ops.
  */
 struct v2bootargs {
-	char	**v2_bootpath;		/* V2: Path to boot device */
-	char	**v2_bootargs;		/* V2: Boot args */
-	int	*v2_fd0;		/* V2: Stdin descriptor */
-	int	*v2_fd1;		/* V2: Stdout descriptor */
+    char    **v2_bootpath;      /* V2: Path to boot device */
+    char    **v2_bootargs;      /* V2: Boot args */
+    int     *v2_fd0;            /* V2: Stdin descriptor */
+    int     *v2_fd1;            /* V2: Stdout descriptor */
 };
 
 /*
@@ -170,83 +170,83 @@ struct v2bootargs {
  * There are numerous substructures defined below.
  */
 struct promvec {
-	/* Version numbers. */
-	u_int	pv_magic;		/* Magic number */
-	u_int	pv_romvec_vers;		/* interface version (0, 2) */
-	u_int	pv_plugin_vers;		/* ??? */
-	u_int	pv_printrev;		/* PROM rev # (* 10, e.g 1.9 = 19) */
+    /* Version numbers. */
+    u_int   pv_magic;           /* Magic number */
+    u_int   pv_romvec_vers;     /* interface version (0, 2) */
+    u_int   pv_plugin_vers;     /* ??? */
+    u_int   pv_printrev;        /* PROM rev # (* 10, e.g 1.9 = 19) */
 
-	/* Version 0 memory descriptors (see below). */
-	struct	v0mem pv_v0mem;		/* V0: Memory description lists. */
+    /* Version 0 memory descriptors (see below). */
+    struct  v0mem pv_v0mem;     /* V0: Memory description lists. */
 
-	/* Node operations (see below). */
-	struct	nodeops *pv_nodeops;	/* node functions */
+    /* Node operations (see below). */
+    struct  nodeops *pv_nodeops;    /* node functions */
 
-	char	**pv_bootstr;		/* Boot command, eg sd(0,0,0)vmunix */
+    char    **pv_bootstr;       /* Boot command, eg sd(0,0,0)vmunix */
 
-	struct	v0devops pv_v0devops;	/* V0: device ops */
+    struct  v0devops pv_v0devops;   /* V0: device ops */
 
-	/*
-	 * PROMDEV_* cookies.  I fear these may vanish in lieu of fd0/fd1
-	 * (see below) in future PROMs, but for now they work fine.
-	 */
-	char	*pv_stdin;		/* stdin cookie */
-	char	*pv_stdout;		/* stdout cookie */
-#define	PROMDEV_KBD	0		/* input from keyboard */
-#define	PROMDEV_SCREEN	0		/* output to screen */
-#define	PROMDEV_TTYA	1		/* in/out to ttya */
-#define	PROMDEV_TTYB	2		/* in/out to ttyb */
+    /*
+     * PROMDEV_* cookies.  I fear these may vanish in lieu of fd0/fd1
+     * (see below) in future PROMs, but for now they work fine.
+     */
+    char    *pv_stdin;          /* stdin cookie */
+    char    *pv_stdout;         /* stdout cookie */
+#define PROMDEV_KBD 0           /* input from keyboard */
+#define PROMDEV_SCREEN  0       /* output to screen */
+#define PROMDEV_TTYA    1       /* in/out to ttya */
+#define PROMDEV_TTYB    2       /* in/out to ttyb */
 
-	/* Blocking getchar/putchar.  NOT REENTRANT! (grr) */
-	int	(*pv_getchar)(void);
-	void	(*pv_putchar)(int ch);
+    /* Blocking getchar/putchar.  NOT REENTRANT! (grr) */
+    int     (*pv_getchar)(void);
+    void    (*pv_putchar)(int ch);
 
-	/* Non-blocking variants that return -1 on error. */
-	int	(*pv_nbgetchar)(void);
-	int	(*pv_nbputchar)(int ch);
+    /* Non-blocking variants that return -1 on error. */
+    int (*pv_nbgetchar)(void);
+    int (*pv_nbputchar)(int ch);
 
-	/* Put counted string (can be very slow). */
-	void	(*pv_putstr)(char *str, int len);
+    /* Put counted string (can be very slow). */
+    void    (*pv_putstr)(char *str, int len);
 
-	/* Miscellany. */
-	void	(*pv_reboot)(char *bootstr);
-	void	(*pv_printf)(const char *fmt, ...);
-	void	(*pv_abort)(void);	/* L1-A abort */
-	int	*pv_ticks;		/* Ticks since last reset */
-	__dead void (*pv_halt)(void);	/* Halt! */
-	void	(**pv_synchook)(void);	/* "sync" command hook */
+    /* Miscellany. */
+    void    (*pv_reboot)(char *bootstr);
+    void    (*pv_printf)(const char *fmt, ...);
+    void    (*pv_abort)(void);  /* L1-A abort */
+    int *pv_ticks;      /* Ticks since last reset */
+    __dead void (*pv_halt)(void);   /* Halt! */
+    void    (**pv_synchook)(void);  /* "sync" command hook */
 
-	/*
-	 * This eval's a FORTH string.  Unfortunately, its interface
-	 * changed between V0 and V2, which gave us much pain.
-	 */
-	union {
-		void	(*v0_eval)(int len, char *str);
-		void	(*v2_eval)(char *str);
-	} pv_fortheval;
+    /*
+     * This eval's a FORTH string.  Unfortunately, its interface
+     * changed between V0 and V2, which gave us much pain.
+     */
+    union {
+        void    (*v0_eval)(int len, char *str);
+        void    (*v2_eval)(char *str);
+    } pv_fortheval;
 
-	struct	v0bootargs **pv_v0bootargs;	/* V0: Boot args */
+    struct  v0bootargs **pv_v0bootargs; /* V0: Boot args */
 
-	/* Extract Ethernet address from network device. */
-	u_int	(*pv_enaddr)(int d, char *enaddr);
+    /* Extract Ethernet address from network device. */
+    u_int   (*pv_enaddr)(int d, char *enaddr);
 
-	struct	v2bootargs pv_v2bootargs;	/* V2: Boot args + std in/out */
-	struct	v2devops pv_v2devops;	/* V2: device operations */
+    struct  v2bootargs pv_v2bootargs;   /* V2: Boot args + std in/out */
+    struct  v2devops pv_v2devops;       /* V2: device operations */
 
-	int	pv_spare[15];
+    int pv_spare[15];
 
-	/*
-	 * The following is machine-dependent.
-	 *
-	 * The sun4c needs a PROM function to set a PMEG for another
-	 * context, so that the kernel can map itself in all contexts.
-	 * It is not possible simply to set the context register, because
-	 * contexts 1 through N may have invalid translations for the
-	 * current program counter.  The hardware has a mode in which
-	 * all memory references go to the PROM, so the PROM can do it
-	 * easily.
-	 */
-	void	(*pv_setctxt)(int ctxt, caddr_t va, int pmeg);
+    /*
+     * The following is machine-dependent.
+     *
+     * The sun4c needs a PROM function to set a PMEG for another
+     * context, so that the kernel can map itself in all contexts.
+     * It is not possible simply to set the context register, because
+     * contexts 1 through N may have invalid translations for the
+     * current program counter.  The hardware has a mode in which
+     * all memory references go to the PROM, so the PROM can do it
+     * easily.
+     */
+    void    (*pv_setctxt)(int ctxt, caddr_t va, int pmeg);
 };
 
 /*
@@ -274,25 +274,25 @@ struct promvec {
  * there.  So the taste balances out.
  */
 struct openprom_addr {
-	int	oa_space;		/* address space (may be relative) */
-	u_int	oa_base;		/* address within space */
-	u_int	oa_size;		/* extent (number of bytes) */
+    int     oa_space;       /* address space (may be relative) */
+    u_int   oa_base;        /* address within space */
+    u_int   oa_size;        /* extent (number of bytes) */
 };
 
 struct nodeops {
-	/*
-	 * Tree traversal.
-	 */
-	int	(*no_nextnode)(int node);	/* next(node) */
-	int	(*no_child)(int node);	/* first child */
+    /*
+     * Tree traversal.
+     */
+    int (*no_nextnode)(int node);   /* next(node) */
+    int (*no_child)(int node);      /* first child */
 
-	/*
-	 * Property functions.  Proper use of getprop requires calling
-	 * proplen first to make sure it fits.  Kind of a pain, but no
-	 * doubt more convenient for the PROM coder.
-	 */
-	int	(*no_proplen)(int node, caddr_t name);
-	int	(*no_getprop)(int node, caddr_t name, caddr_t val);
-	int	(*no_setprop)(int node, caddr_t name, caddr_t val, int len);
-	caddr_t	(*no_nextprop)(int node, caddr_t name);
+    /*
+     * Property functions.  Proper use of getprop requires calling
+     * proplen first to make sure it fits.  Kind of a pain, but no
+     * doubt more convenient for the PROM coder.
+     */
+    int (*no_proplen)(int node, caddr_t name);
+    int (*no_getprop)(int node, caddr_t name, caddr_t val);
+    int (*no_setprop)(int node, caddr_t name, caddr_t val, int len);
+    caddr_t (*no_nextprop)(int node, caddr_t name);
 };

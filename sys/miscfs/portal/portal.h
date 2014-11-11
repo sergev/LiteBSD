@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software donated to Berkeley by
  * Jan-Simon Pendry.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,39 +33,39 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)portal.h	8.4 (Berkeley) 1/21/94
+ *  @(#)portal.h    8.4 (Berkeley) 1/21/94
  *
  * $Id: portal.h,v 1.3 1992/05/30 10:05:24 jsp Exp jsp $
  */
 
 struct portal_args {
-	char		*pa_config;	/* Config file */
-	int		pa_socket;	/* Socket to server */
+    char    *pa_config;     /* Config file */
+    int     pa_socket;      /* Socket to server */
 };
 
 struct portal_cred {
-	int		pcr_flag;		/* File open mode */
-	uid_t		pcr_uid;		/* From ucred */
-	short		pcr_ngroups;		/* From ucred */
-	gid_t		pcr_groups[NGROUPS];	/* From ucred */
+    int     pcr_flag;               /* File open mode */
+    uid_t   pcr_uid;                /* From ucred */
+    short   pcr_ngroups;            /* From ucred */
+    gid_t   pcr_groups[NGROUPS];    /* From ucred */
 };
 
 #ifdef KERNEL
 struct portalmount {
-	struct vnode	*pm_root;	/* Root node */
-	struct file	*pm_server;	/* Held reference to server socket */
+    struct vnode    *pm_root;   /* Root node */
+    struct file     *pm_server; /* Held reference to server socket */
 };
 
 struct portalnode {
-	int		pt_size;	/* Length of Arg */
-	char		*pt_arg;	/* Arg to send to server */
-	int		pt_fileid;	/* cookie */
+    int     pt_size;    /* Length of Arg */
+    char    *pt_arg;    /* Arg to send to server */
+    int     pt_fileid;  /* cookie */
 };
 
-#define VFSTOPORTAL(mp)	((struct portalmount *)((mp)->mnt_data))
-#define	VTOPORTAL(vp) ((struct portalnode *)(vp)->v_data)
+#define VFSTOPORTAL(mp) ((struct portalmount *)((mp)->mnt_data))
+#define VTOPORTAL(vp) ((struct portalnode *)(vp)->v_data)
 
-#define PORTAL_ROOTFILEID	2
+#define PORTAL_ROOTFILEID   2
 
 extern int (**portal_vnodeop_p)();
 extern struct vfsops portal_vfsops;

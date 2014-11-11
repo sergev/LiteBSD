@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,17 +35,17 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)callout.h	8.2 (Berkeley) 1/21/94
+ *  @(#)callout.h   8.2 (Berkeley) 1/21/94
  */
 
 struct callout {
-	struct	callout *c_next;		/* next callout in queue */
-	void	*c_arg;				/* function argument */
-	void	(*c_func) __P((void *));	/* function to call */
-	int	c_time;				/* ticks to the event */
+    struct  callout *c_next;            /* next callout in queue */
+    void    *c_arg;                     /* function argument */
+    void    (*c_func) __P((void *));    /* function to call */
+    int     c_time;                     /* ticks to the event */
 };
 
 #ifdef KERNEL
-struct	callout *callfree, *callout, calltodo;
-int	ncallout;
+struct  callout *callfree, *callout, calltodo;
+int     ncallout;
 #endif

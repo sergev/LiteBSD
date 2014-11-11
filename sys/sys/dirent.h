@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,11 +30,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dirent.h	8.3 (Berkeley) 8/10/94
+ *  @(#)dirent.h    8.3 (Berkeley) 8/10/94
  */
 
 /*
- * The dirent structure defines the format of directory entries returned by 
+ * The dirent structure defines the format of directory entries returned by
  * the getdirentries(2) system call.
  *
  * A directory entry has a struct dirent at the front of it, containing its
@@ -45,33 +45,33 @@
  */
 
 struct dirent {
-	u_int32_t d_fileno;		/* file number of entry */
-	u_int16_t d_reclen;		/* length of this record */
-	u_int8_t  d_type; 		/* file type, see below */
-	u_int8_t  d_namlen;		/* length of string in d_name */
+    u_int32_t d_fileno;             /* file number of entry */
+    u_int16_t d_reclen;             /* length of this record */
+    u_int8_t  d_type;               /* file type, see below */
+    u_int8_t  d_namlen;             /* length of string in d_name */
 #ifdef _POSIX_SOURCE
-	char	d_name[255 + 1];	/* name must be no longer than this */
+    char    d_name[255 + 1];        /* name must be no longer than this */
 #else
-#define	MAXNAMLEN	255
-	char	d_name[MAXNAMLEN + 1];	/* name must be no longer than this */
+#define MAXNAMLEN   255
+    char    d_name[MAXNAMLEN + 1];  /* name must be no longer than this */
 #endif
 };
 
 /*
  * File types
  */
-#define	DT_UNKNOWN	 0
-#define	DT_FIFO		 1
-#define	DT_CHR		 2
-#define	DT_DIR		 4
-#define	DT_BLK		 6
-#define	DT_REG		 8
-#define	DT_LNK		10
-#define	DT_SOCK		12
-#define	DT_WHT		14
+#define DT_UNKNOWN   0
+#define DT_FIFO      1
+#define DT_CHR       2
+#define DT_DIR       4
+#define DT_BLK       6
+#define DT_REG       8
+#define DT_LNK      10
+#define DT_SOCK     12
+#define DT_WHT      14
 
 /*
  * Convert between stat structure types and directory types.
  */
-#define	IFTODT(mode)	(((mode) & 0170000) >> 12)
-#define	DTTOIF(dirtype)	((dirtype) << 12)
+#define IFTODT(mode)    (((mode) & 0170000) >> 12)
+#define DTTOIF(dirtype) ((dirtype) << 12)

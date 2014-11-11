@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)pcb.h	8.2 (Berkeley) 9/23/93
+ *  @(#)pcb.h   8.2 (Berkeley) 9/23/93
  *
  * from: $Header: pcb.h,v 1.6 92/11/26 02:04:39 torek Exp $
  */
@@ -47,9 +47,9 @@
 #include <machine/reg.h>
 
 #ifdef notyet
-#define	PCB_MAXWIN	32	/* architectural limit */
+#define PCB_MAXWIN  32  /* architectural limit */
 #else
-#define	PCB_MAXWIN	8	/* worried about u area sizes ... */
+#define PCB_MAXWIN  8   /* worried about u area sizes ... */
 #endif
 
 /*
@@ -87,24 +87,24 @@
  * trap returns, and it can never persist across entry to user code.
  */
 struct pcb {
-	int	pcb_sp;		/* sp (%o6) when switch() was called */
-	int	pcb_pc;		/* pc (%o7) when switch() was called */
-	int	pcb_psr;	/* %psr when switch() was called */
+    int     pcb_sp;         /* sp (%o6) when switch() was called */
+    int     pcb_pc;         /* pc (%o7) when switch() was called */
+    int     pcb_psr;        /* %psr when switch() was called */
 
-	caddr_t	pcb_onfault;	/* for copyin/out */
+    caddr_t pcb_onfault;    /* for copyin/out */
 
-	int	pcb_uw;		/* user windows inside CPU */
-	int	pcb_wim;	/* log2(%wim) */
-	int	pcb_nsaved;	/* number of windows saved in pcb */
+    int     pcb_uw;         /* user windows inside CPU */
+    int     pcb_wim;        /* log2(%wim) */
+    int     pcb_nsaved;     /* number of windows saved in pcb */
 
 #ifdef notdef
-	int	pcb_winof;	/* number of window overflow traps */
-	int	pcb_winuf;	/* number of window underflow traps */
+    int     pcb_winof;      /* number of window overflow traps */
+    int     pcb_winuf;      /* number of window underflow traps */
 #endif
-	int	pcb_pad;	/* pad to doubleword boundary */
+    int     pcb_pad;        /* pad to doubleword boundary */
 
-	/* the following MUST be aligned on a doubleword boundary */
-	struct	rwindow pcb_rw[PCB_MAXWIN];	/* saved windows */
+    /* the following MUST be aligned on a doubleword boundary */
+    struct  rwindow pcb_rw[PCB_MAXWIN]; /* saved windows */
 };
 
 /*
@@ -114,8 +114,8 @@ struct pcb {
  * stack itself need not be dumped).
  */
 struct md_coredump {
-	struct	trapframe md_tf;
-	struct	fpstate md_fpstate;
+    struct  trapframe md_tf;
+    struct  fpstate md_fpstate;
 };
 
 #ifdef KERNEL

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)printf.c	8.1 (Berkeley) 6/11/93
+ *  @(#)printf.c    8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -41,7 +41,7 @@
  * The format %b is supported to decode error registers.
  * Its usage is:
  *
- *	printf("reg=%b\n", regval, "<base><arg>*");
+ *  printf("reg=%b\n", regval, "<base><arg>*");
  *
  * where <base> is the output base expressed as a control character, e.g.
  * \10 gives octal; \20 gives hex.  Each arg is a sequence of characters,
@@ -49,11 +49,11 @@
  * the next characters (up to a control character, i.e. a character <= 32),
  * give the name of the register.  Thus:
  *
- *	printf("reg=%b\n", 3, "\10\2BITTWO\1BITONE\n");
+ *  printf("reg=%b\n", 3, "\10\2BITTWO\1BITONE\n");
  *
  * would produce output:
  *
- *	reg=3<BITTWO,BITONE>
+ *  reg=3<BITTWO,BITONE>
  */
 
 #include <sys/cdefs.h>
@@ -74,103 +74,103 @@ void
 printf(const char *fmt, ...)
 #else
 printf(fmt /* , va_alist */)
-	char *fmt;
+    char *fmt;
 #endif
 {
-	register char *p;
-	register int ch, n;
-	unsigned long ul;
-	int lflag, set;
-	va_list ap;
+    register char *p;
+    register int ch, n;
+    unsigned long ul;
+    int lflag, set;
+    va_list ap;
 
-	va_start(ap, fmt);
-	for (;;) {
-		while ((ch = *fmt++) != '%') {
-			if (ch == '\0')
-				return;
-			putchar(ch);
-		}
-		lflag = 0;
-reswitch:	switch (ch = *fmt++) {
-		case 'l':
-			lflag = 1;
-			goto reswitch;
-		case 'b':
-			ul = va_arg(ap, int);
-			p = va_arg(ap, char *);
-			kprintn(ul, *p++);
+    va_start(ap, fmt);
+    for (;;) {
+        while ((ch = *fmt++) != '%') {
+            if (ch == '\0')
+                return;
+            putchar(ch);
+        }
+        lflag = 0;
+reswitch:   switch (ch = *fmt++) {
+        case 'l':
+            lflag = 1;
+            goto reswitch;
+        case 'b':
+            ul = va_arg(ap, int);
+            p = va_arg(ap, char *);
+            kprintn(ul, *p++);
 
-			if (!ul)
-				break;
+            if (!ul)
+                break;
 
-			for (set = 0; n = *p++;) {
-				if (ul & (1 << (n - 1))) {
-					putchar(set ? ',' : '<');
-					for (; (n = *p) > ' '; ++p)
-						putchar(n);
-					set = 1;
-				} else
-					for (; *p > ' '; ++p);
-			}
-			if (set)
-				putchar('>');
-			break;
-		case 'c':
-			ch = va_arg(ap, int);
-				putchar(ch & 0x7f);
-			break;
-		case 's':
-			p = va_arg(ap, char *);
-			while (ch = *p++)
-				putchar(ch);
-			break;
-		case 'd':
-			ul = lflag ?
-			    va_arg(ap, long) : va_arg(ap, int);
-			if ((long)ul < 0) {
-				putchar('-');
-				ul = -(long)ul;
-			}
-			kprintn(ul, 10);
-			break;
-		case 'o':
-			ul = lflag ?
-			    va_arg(ap, u_long) : va_arg(ap, u_int);
-			kprintn(ul, 8);
-			break;
-		case 'u':
-			ul = lflag ?
-			    va_arg(ap, u_long) : va_arg(ap, u_int);
-			kprintn(ul, 10);
-			break;
-		case 'x':
-			ul = lflag ?
-			    va_arg(ap, u_long) : va_arg(ap, u_int);
-			kprintn(ul, 16);
-			break;
-		default:
-			putchar('%');
-			if (lflag)
-				putchar('l');
-			putchar(ch);
-		}
-	}
-	va_end(ap);
+            for (set = 0; n = *p++;) {
+                if (ul & (1 << (n - 1))) {
+                    putchar(set ? ',' : '<');
+                    for (; (n = *p) > ' '; ++p)
+                        putchar(n);
+                    set = 1;
+                } else
+                    for (; *p > ' '; ++p);
+            }
+            if (set)
+                putchar('>');
+            break;
+        case 'c':
+            ch = va_arg(ap, int);
+                putchar(ch & 0x7f);
+            break;
+        case 's':
+            p = va_arg(ap, char *);
+            while (ch = *p++)
+                putchar(ch);
+            break;
+        case 'd':
+            ul = lflag ?
+                va_arg(ap, long) : va_arg(ap, int);
+            if ((long)ul < 0) {
+                putchar('-');
+                ul = -(long)ul;
+            }
+            kprintn(ul, 10);
+            break;
+        case 'o':
+            ul = lflag ?
+                va_arg(ap, u_long) : va_arg(ap, u_int);
+            kprintn(ul, 8);
+            break;
+        case 'u':
+            ul = lflag ?
+                va_arg(ap, u_long) : va_arg(ap, u_int);
+            kprintn(ul, 10);
+            break;
+        case 'x':
+            ul = lflag ?
+                va_arg(ap, u_long) : va_arg(ap, u_int);
+            kprintn(ul, 16);
+            break;
+        default:
+            putchar('%');
+            if (lflag)
+                putchar('l');
+            putchar(ch);
+        }
+    }
+    va_end(ap);
 }
 
 static void
 kprintn(ul, base)
-	unsigned long ul;
-	int base;
+    unsigned long ul;
+    int base;
 {
-					/* hold a long in base 8 */
-	char *p, buf[(sizeof(long) * NBBY / 3) + 1];
+                    /* hold a long in base 8 */
+    char *p, buf[(sizeof(long) * NBBY / 3) + 1];
 
-	p = buf;
-	do {
-		*p++ = "0123456789abcdef"[ul % base];
-	} while (ul /= base);
-	do {
-		putchar(*--p);
-	} while (p > buf);
+    p = buf;
+    do {
+        *p++ = "0123456789abcdef"[ul % base];
+    } while (ul /= base);
+    do {
+        putchar(*--p);
+    } while (p > buf);
 }

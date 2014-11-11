@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,31 +35,31 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)times.h	8.4 (Berkeley) 1/21/94
+ *  @(#)times.h 8.4 (Berkeley) 1/21/94
  */
 
-#ifndef	_SYS_TIMES_H_
-#define	_SYS_TIMES_H_
+#ifndef _SYS_TIMES_H_
+#define _SYS_TIMES_H_
 
 #include <machine/ansi.h>
 
-#ifdef	_BSD_CLOCK_T_
-typedef	_BSD_CLOCK_T_	clock_t;
-#undef	_BSD_CLOCK_T_
+#ifdef  _BSD_CLOCK_T_
+typedef _BSD_CLOCK_T_   clock_t;
+#undef  _BSD_CLOCK_T_
 #endif
 
 struct tms {
-	clock_t tms_utime;	/* User CPU time */
-	clock_t tms_stime;	/* System CPU time */
-	clock_t tms_cutime;	/* User CPU time of terminated child procs */
-	clock_t tms_cstime;	/* System CPU time of terminated child procs */
+    clock_t tms_utime;  /* User CPU time */
+    clock_t tms_stime;  /* System CPU time */
+    clock_t tms_cutime; /* User CPU time of terminated child procs */
+    clock_t tms_cstime; /* System CPU time of terminated child procs */
 };
 
 #ifndef KERNEL
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-clock_t	times __P((struct tms *));
+clock_t times __P((struct tms *));
 __END_DECLS
 #endif
 #endif /* !_SYS_TIMES_H_ */

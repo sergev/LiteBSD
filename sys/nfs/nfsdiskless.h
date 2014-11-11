@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Rick Macklem at The University of Guelph.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)nfsdiskless.h	8.2 (Berkeley) 3/30/95
+ *  @(#)nfsdiskless.h   8.2 (Berkeley) 3/30/95
  */
 
 
@@ -62,39 +62,39 @@
  * still Version 2 anyhow.)
  */
 struct nfsv3_diskless {
-	struct ifaliasreq myif;			/* Default interface */
-	struct sockaddr_in mygateway;		/* Default gateway */
-	struct nfs_args	swap_args;		/* Mount args for swap file */
-	int		swap_fhsize;		/* Size of file handle */
-	u_char		swap_fh[NFSX_V3FHMAX];	/* Swap file's file handle */
-	struct sockaddr_in swap_saddr;		/* Address of swap server */
-	char		swap_hostnam[MNAMELEN];	/* Host name for mount pt */
-	int		swap_nblks;		/* Size of server swap file */
-	struct ucred	swap_ucred;		/* Swap credentials */
-	struct nfs_args	root_args;		/* Mount args for root fs */
-	int		root_fhsize;		/* Size of root file handle */
-	u_char		root_fh[NFSX_V3FHMAX];	/* File handle of root dir */
-	struct sockaddr_in root_saddr;		/* Address of root server */
-	char		root_hostnam[MNAMELEN];	/* Host name for mount pt */
-	long		root_time;		/* Timestamp of root fs */
-	char		my_hostnam[MAXHOSTNAMELEN]; /* Client host name */
+    struct ifaliasreq myif;                 /* Default interface */
+    struct sockaddr_in mygateway;           /* Default gateway */
+    struct nfs_args swap_args;              /* Mount args for swap file */
+    int             swap_fhsize;            /* Size of file handle */
+    u_char          swap_fh[NFSX_V3FHMAX];  /* Swap file's file handle */
+    struct sockaddr_in swap_saddr;          /* Address of swap server */
+    char            swap_hostnam[MNAMELEN]; /* Host name for mount pt */
+    int             swap_nblks;             /* Size of server swap file */
+    struct ucred    swap_ucred;             /* Swap credentials */
+    struct nfs_args root_args;              /* Mount args for root fs */
+    int             root_fhsize;            /* Size of root file handle */
+    u_char          root_fh[NFSX_V3FHMAX];  /* File handle of root dir */
+    struct sockaddr_in root_saddr;          /* Address of root server */
+    char            root_hostnam[MNAMELEN]; /* Host name for mount pt */
+    long            root_time;              /* Timestamp of root fs */
+    char            my_hostnam[MAXHOSTNAMELEN]; /* Client host name */
 };
 
 struct nfs_diskless {
-	struct ifaliasreq myif;			/* Default interface */
-	struct sockaddr_in mygateway;		/* Default gateway */
-	struct nfs_args	swap_args;		/* Mount args for swap file */
-	u_char		swap_fh[NFSX_V2FH];	/* Swap file's file handle */
-	struct sockaddr_in swap_saddr;		/* Address of swap server */
-	char		swap_hostnam[MNAMELEN];	/* Host name for mount pt */
-	int		swap_nblks;		/* Size of server swap file */
-	struct ucred	swap_ucred;		/* Swap credentials */
-	struct nfs_args	root_args;		/* Mount args for root fs */
-	u_char		root_fh[NFSX_V2FH];	/* File handle of root dir */
-	struct sockaddr_in root_saddr;		/* Address of root server */
-	char		root_hostnam[MNAMELEN];	/* Host name for mount pt */
-	long		root_time;		/* Timestamp of root fs */
-	char		my_hostnam[MAXHOSTNAMELEN]; /* Client host name */
+    struct ifaliasreq myif;                 /* Default interface */
+    struct sockaddr_in mygateway;           /* Default gateway */
+    struct nfs_args swap_args;              /* Mount args for swap file */
+    u_char          swap_fh[NFSX_V2FH];     /* Swap file's file handle */
+    struct sockaddr_in swap_saddr;          /* Address of swap server */
+    char            swap_hostnam[MNAMELEN]; /* Host name for mount pt */
+    int             swap_nblks;             /* Size of server swap file */
+    struct ucred    swap_ucred;             /* Swap credentials */
+    struct nfs_args root_args;              /* Mount args for root fs */
+    u_char          root_fh[NFSX_V2FH];     /* File handle of root dir */
+    struct sockaddr_in root_saddr;          /* Address of root server */
+    char            root_hostnam[MNAMELEN]; /* Host name for mount pt */
+    long            root_time;              /* Timestamp of root fs */
+    char            my_hostnam[MAXHOSTNAMELEN]; /* Client host name */
 };
 
 #endif

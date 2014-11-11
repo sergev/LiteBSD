@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,20 +34,20 @@
 #ifndef lint
 static char copyright[] =
 "@(#) Copyright (c) 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
+    The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
 
 #ifndef lint
-static char sccsid[] = "@(#)cat.c	8.1 (Berkeley) 6/11/93";
+static char sccsid[] = "@(#)cat.c   8.1 (Berkeley) 6/11/93";
 #endif /* not lint */
 
 main()
 {
-	register int c, fd;
-	char c;
+    register int c, fd;
+    char c;
 
-	fd = getfile("File", 0);
-	while (read(fd, &c, 1) == 1)
-		putchar(c);
-	exit(0);
+    fd = getfile("File", 0);
+    while (read(fd, &c, 1) == 1)
+        putchar(c);
+    exit(0);
 }

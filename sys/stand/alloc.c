@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)alloc.c	8.1 (Berkeley) 6/11/93
+ *  @(#)alloc.c 8.1 (Berkeley) 6/11/93
  *  
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
@@ -63,11 +63,11 @@
  */
 
 /*
- *	Dynamic memory allocator
+ *  Dynamic memory allocator
  */
 struct fl {
-	struct fl	*next;
-	unsigned	size;
+    struct fl   *next;
+    unsigned    size;
 } *freelist = (struct fl *)0;
 
 extern char end[];
@@ -75,31 +75,31 @@ static char *top = end;
 
 void *
 alloc(size)
-	unsigned size;
+    unsigned size;
 {
-	register struct fl *f = freelist, **prev;
+    register struct fl *f = freelist, **prev;
 
-	prev = &freelist;
-	while (f && f->size < size) {
-		prev = &f->next;
-		f = f->next;
-	}
-	if (f == (struct fl *)0) {
-		f = (struct fl *)top;
-		top += (size + 3) & ~3;
-	} else
-		*prev = f->next;
-	return ((void *)f);
+    prev = &freelist;
+    while (f && f->size < size) {
+        prev = &f->next;
+        f = f->next;
+    }
+    if (f == (struct fl *)0) {
+        f = (struct fl *)top;
+        top += (size + 3) & ~3;
+    } else
+        *prev = f->next;
+    return ((void *)f);
 }
 
 void
 free(ptr, size)
-	void *ptr;
-	unsigned size;
+    void *ptr;
+    unsigned size;
 {
-	register struct fl *f = (struct fl *)ptr;
+    register struct fl *f = (struct fl *)ptr;
 
-	f->size = (size + 3) & ~3;
-	f->next = freelist;
-	freelist = f;
+    f->size = (size + 3) & ~3;
+    f->next = freelist;
+    freelist = f;
 }

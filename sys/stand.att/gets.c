@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,50 +30,50 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)gets.c	8.1 (Berkeley) 6/11/93
+ *  @(#)gets.c  8.1 (Berkeley) 6/11/93
  */
 
 gets(buf)
-	char *buf;
+    char *buf;
 {
-	register int c;
-	register char *lp;
+    register int c;
+    register char *lp;
 
-	for (lp = buf;;)
-		switch(c = getchar() & 0177) {
-		case '\n':
-		case '\r':
-			*lp = '\0';
-			return;
-		case '\b':
-		case '\177':
-			if (lp > buf) {
-				lp--;
-				putchar('\b');
-				putchar(' ');
-				putchar('\b');
-			}
-			break;
-		case '#':
-			if (lp > buf)
-				--lp;
-			break;
-		case 'r'&037: {
-			register char *p;
+    for (lp = buf;;)
+        switch(c = getchar() & 0177) {
+        case '\n':
+        case '\r':
+            *lp = '\0';
+            return;
+        case '\b':
+        case '\177':
+            if (lp > buf) {
+                lp--;
+                putchar('\b');
+                putchar(' ');
+                putchar('\b');
+            }
+            break;
+        case '#':
+            if (lp > buf)
+                --lp;
+            break;
+        case 'r'&037: {
+            register char *p;
 
-			putchar('\n');
-			for (p = buf; p < lp; ++p)
-				putchar(*p);
-			break;
-		}
-		case '@':
-		case 'u'&037:
-		case 'w'&037:
-			lp = buf;
-			putchar('\n');
-			break;
-		default:
-			*lp++ = c;
-		}
-	/*NOTREACHED*/
+            putchar('\n');
+            for (p = buf; p < lp; ++p)
+                putchar(*p);
+            break;
+        }
+        case '@':
+        case 'u'&037:
+        case 'w'&037:
+            lp = buf;
+            putchar('\n');
+            break;
+        default:
+            *lp++ = c;
+        }
+    /*NOTREACHED*/
 }

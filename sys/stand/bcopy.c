@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bcopy.c	8.1 (Berkeley) 6/11/93
+ *  @(#)bcopy.c 8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -38,15 +38,15 @@
  */
 void
 bcopy(s1, s2, n)
-	const void *s1;
-	void *s2;
-	unsigned n;
+    const void *s1;
+    void *s2;
+    unsigned n;
 {
-	register const char *f = s1;
-	register char *t = s2;
+    register const char *f = s1;
+    register char *t = s2;
 
-	while (n != 0) {
-		*t++ = *f++;
-		n--;
-	}
+    while (n != 0) {
+        *t++ = *f++;
+        n--;
+    }
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,37 +35,37 @@
  *
  * from: $Hdr: ioptohb.h,v 4.300 91/06/09 06:38:04 root Rel41 $ SONY
  *
- *	@(#)ioptohb.h	8.1 (Berkeley) 6/11/93
+ *  @(#)ioptohb.h   8.1 (Berkeley) 6/11/93
  */
 
 #ifndef __IOPTOHB__
 #define __IOPTOHB__ 1
 
 #ifdef CPU_SINGLE
-# define	iop		hb
+# define    iop         hb
 
-# define	im_driver	hm_driver
-# define	im_ctlr		hm_ctlr
-# define	im_alive	hm_alive
-# define	im_addr		hm_addr
-# define	im_intr		hm_intr
-# define	im_scnum	hm_scnum
-# define	im_hd		hm_hd
-# define	im_tab		hm_tab
+# define    im_driver   hm_driver
+# define    im_ctlr     hm_ctlr
+# define    im_alive    hm_alive
+# define    im_addr     hm_addr
+# define    im_intr     hm_intr
+# define    im_scnum    hm_scnum
+# define    im_hd       hm_hd
+# define    im_tab      hm_tab
 
-# define	ii_driver	hi_driver
-# define	ii_unit		hi_unit
-# define	ii_ctlr		hi_ctlr
-# define	ii_slave	hi_slave
-# define	ii_addr		hi_addr
-# define	ii_intr		hi_intr
-# define	ii_dk		hi_dk
-# define	ii_flags	hi_flags
-# define	ii_alive	hi_alive
-# define	ii_type		hi_type
-# define	ii_forw		hi_forw
-# define	ii_mi		hi_mi
-# define	ii_hd		hi_hd
+# define    ii_driver   hi_driver
+# define    ii_unit     hi_unit
+# define    ii_ctlr     hi_ctlr
+# define    ii_slave    hi_slave
+# define    ii_addr     hi_addr
+# define    ii_intr     hi_intr
+# define    ii_dk       hi_dk
+# define    ii_flags    hi_flags
+# define    ii_alive    hi_alive
+# define    ii_type     hi_type
+# define    ii_forw     hi_forw
+# define    ii_mi       hi_mi
+# define    ii_hd       hi_hd
 #endif /* CPU_SINGLE */
 
 #endif /* !__IOPTOHB__ */

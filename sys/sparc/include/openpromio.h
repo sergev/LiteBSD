@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,22 +39,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)openpromio.h	8.1 (Berkeley) 6/11/93
+ *  @(#)openpromio.h    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: openpromio.h,v 1.2 93/04/20 11:14:46 torek Exp $
  */
 
 struct opiocdesc {
-	int	op_nodeid;		/* passed or returned node id */
-	int	op_namelen;		/* length of op_name */
-	char	*op_name;		/* pointer to field name */
-	int	op_buflen;		/* length of op_buf (value-result) */
-	char	*op_buf;		/* pointer to field value */
+    int     op_nodeid;      /* passed or returned node id */
+    int     op_namelen;     /* length of op_name */
+    char    *op_name;       /* pointer to field name */
+    int     op_buflen;      /* length of op_buf (value-result) */
+    char    *op_buf;        /* pointer to field value */
 };
 
-#define	OPIOCGET	_IOWR('O', 1, struct opiocdesc) /* get openprom field */
-#define	OPIOCSET	_IOW('O', 2, struct opiocdesc) /* set openprom field */
-#define	OPIOCNEXTPROP	_IOWR('O', 3, struct opiocdesc) /* get next property */
-#define	OPIOCGETOPTNODE	_IOR('O', 4, int)	/* get openprom field */
-#define	OPIOCGETNEXT	_IOWR('O', 5, int)	/* get next node of node */
-#define	OPIOCGETCHILD	_IOWR('O', 6, int)	/* get first child of node */
+#define OPIOCGET        _IOWR('O', 1, struct opiocdesc) /* get openprom field */
+#define OPIOCSET        _IOW('O', 2, struct opiocdesc) /* set openprom field */
+#define OPIOCNEXTPROP   _IOWR('O', 3, struct opiocdesc) /* get next property */
+#define OPIOCGETOPTNODE _IOR('O', 4, int)   /* get openprom field */
+#define OPIOCGETNEXT    _IOWR('O', 5, int)  /* get next node of node */
+#define OPIOCGETCHILD   _IOWR('O', 6, int)  /* get first child of node */

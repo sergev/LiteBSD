@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,26 +35,26 @@
  *
  * from: $Hdr: vt100esc.h,v 4.300 91/06/09 06:15:01 root Rel41 $ SONY
  *
- *	@(#)vt100esc.h	8.1 (Berkeley) 6/10/93
+ *  @(#)vt100esc.h  8.1 (Berkeley) 6/10/93
  */
 
 /*
  *  escape sequence structure
  */
 struct  esc_sequence {
-	char	command;
-	char	*terminators;
-	int	(*esc_func)();
+    char    command;
+    char    *terminators;
+    int     (*esc_func)();
 };
 
 /*
  *  key pad structure
  */
 
-struct	key_pad {
-	char	kpd_numeric;
-	char	kpd_applic;
+struct  key_pad {
+    char    kpd_numeric;
+    char    kpd_applic;
 };
 
-#define	NUMERIC	0
-#define	APPLIC	1
+#define NUMERIC 0
+#define APPLIC  1

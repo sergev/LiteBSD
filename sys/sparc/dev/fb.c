@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)fb.c	8.1 (Berkeley) 6/11/93
+ *  @(#)fb.c    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: fb.c,v 1.7 92/11/26 01:12:48 torek Exp $
  */
@@ -63,61 +63,61 @@ void
 fb_unblank()
 {
 
-	if (devfb)
-		(*devfb->fb_driver->fbd_unblank)(devfb->fb_device);
+    if (devfb)
+        (*devfb->fb_driver->fbd_unblank)(devfb->fb_device);
 }
 
 void
 fb_attach(fb)
-	struct fbdevice *fb;
+    struct fbdevice *fb;
 {
 
 if (devfb) panic("multiple /dev/fb declarers");
-	devfb = fb;
+    devfb = fb;
 }
 
 int
 fbopen(dev, flags, mode, p)
-	dev_t dev;
-	int flags, mode;
-	struct proc *p;
+    dev_t dev;
+    int flags, mode;
+    struct proc *p;
 {
 
-	if (devfb == NULL)
-		return (ENXIO);
-	return (cdevsw[devfb->fb_major].d_open(dev, flags, mode, p));
+    if (devfb == NULL)
+        return (ENXIO);
+    return (cdevsw[devfb->fb_major].d_open(dev, flags, mode, p));
 }
 
 int
 fbclose(dev, flags, mode, p)
-	dev_t dev;
-	int flags, mode;
-	struct proc *p;
+    dev_t dev;
+    int flags, mode;
+    struct proc *p;
 {
 
-	return (cdevsw[devfb->fb_major].d_close(dev, flags, mode, p));
+    return (cdevsw[devfb->fb_major].d_close(dev, flags, mode, p));
 }
 
 int
 fbioctl(dev, cmd, data, flags, p)
-	dev_t dev;
-	int cmd;
-	caddr_t data;
-	int flags;
-	struct proc *p;
+    dev_t dev;
+    int cmd;
+    caddr_t data;
+    int flags;
+    struct proc *p;
 {
 
-	return (cdevsw[devfb->fb_major].d_ioctl(dev, cmd, data, flags, p));
+    return (cdevsw[devfb->fb_major].d_ioctl(dev, cmd, data, flags, p));
 }
 
 int
 fbmap(dev, off, prot)
-	dev_t dev;
-	int off, prot;
+    dev_t dev;
+    int off, prot;
 {
-	int (*map)() = cdevsw[devfb->fb_major].d_mmap;
+    int (*map)() = cdevsw[devfb->fb_major].d_mmap;
 
-	if (map == NULL)
-		return (-1);
-	return (map(dev, off, prot));
+    if (map == NULL)
+        return (-1);
+    return (map(dev, off, prot));
 }

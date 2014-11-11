@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1989, 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)user.h	8.2 (Berkeley) 9/23/93
+ *  @(#)user.h  8.2 (Berkeley) 9/23/93
  */
 
 #include <machine/pcb.h>
@@ -44,7 +44,7 @@
 #endif
 #include <sys/resourcevar.h>
 #include <sys/signalvar.h>
-#include <vm/vm.h>		/* XXX */
+#include <vm/vm.h>      /* XXX */
 #include <sys/sysctl.h>
 
 
@@ -55,18 +55,18 @@
  * in all processes.
  */
  
-struct	user {
-	struct	pcb u_pcb;
+struct  user {
+    struct  pcb u_pcb;
 
-	struct	sigacts u_sigacts;	/* p_sigacts points here (use it!) */
-	struct	pstats u_stats;		/* p_stats points here (use it!) */
+    struct  sigacts u_sigacts;  /* p_sigacts points here (use it!) */
+    struct  pstats u_stats;     /* p_stats points here (use it!) */
 
-	/*
-	 * Remaining fields only for core dump and/or ptrace--
-	 * not valid at other times!
-	 */
-	struct	kinfo_proc u_kproc;	/* proc + eproc */
-	struct	md_coredump u_md;	/* machine dependent glop */
+    /*
+     * Remaining fields only for core dump and/or ptrace--
+     * not valid at other times!
+     */
+    struct  kinfo_proc u_kproc; /* proc + eproc */
+    struct  md_coredump u_md;   /* machine dependent glop */
 };
 
 /*
@@ -74,18 +74,18 @@ struct	user {
  * brought to you by coredump() and trace_req().  These fields are *only*
  * valid at those times!
  */
-#define	U_ar0	u_kproc.kp_proc.p_md.md_regs /* copy of curproc->p_md.md_regs */
-#define	U_tsize	u_kproc.kp_eproc.e_vm.vm_tsize
-#define	U_dsize	u_kproc.kp_eproc.e_vm.vm_dsize
-#define	U_ssize	u_kproc.kp_eproc.e_vm.vm_ssize
-#define	U_sig	u_sigacts.ps_sig
-#define	U_code	u_sigacts.ps_code
+#define U_ar0   u_kproc.kp_proc.p_md.md_regs /* copy of curproc->p_md.md_regs */
+#define U_tsize u_kproc.kp_eproc.e_vm.vm_tsize
+#define U_dsize u_kproc.kp_eproc.e_vm.vm_dsize
+#define U_ssize u_kproc.kp_eproc.e_vm.vm_ssize
+#define U_sig   u_sigacts.ps_sig
+#define U_code  u_sigacts.ps_code
 
 #ifndef KERNEL
-#define	u_ar0	U_ar0
-#define	u_tsize	U_tsize
-#define	u_dsize	U_dsize
-#define	u_ssize	U_ssize
-#define	u_sig	U_sig
-#define	u_code	U_code
+#define u_ar0   U_ar0
+#define u_tsize U_tsize
+#define u_dsize U_dsize
+#define u_ssize U_ssize
+#define u_sig   U_sig
+#define u_code  U_code
 #endif /* KERNEL */

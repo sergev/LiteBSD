@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)mfsnode.h	8.3 (Berkeley) 5/19/95
+ *  @(#)mfsnode.h   8.3 (Berkeley) 5/19/95
  */
 
 /*
@@ -38,19 +38,19 @@
  */
 
 struct mfsnode {
-	struct	vnode *mfs_vnode;	/* vnode associated with this mfsnode */
-	caddr_t	mfs_baseoff;		/* base of file system in memory */
-	long	mfs_size;		/* size of memory file system */
-	pid_t	mfs_pid;		/* supporting process pid */
-	struct	buf *mfs_buflist;	/* list of I/O requests */
-	long	mfs_spare[4];
+    struct  vnode *mfs_vnode;   /* vnode associated with this mfsnode */
+    caddr_t mfs_baseoff;        /* base of file system in memory */
+    long    mfs_size;           /* size of memory file system */
+    pid_t   mfs_pid;            /* supporting process pid */
+    struct  buf *mfs_buflist;   /* list of I/O requests */
+    long    mfs_spare[4];
 };
 
 /*
  * Convert between mfsnode pointers and vnode pointers
  */
-#define VTOMFS(vp)	((struct mfsnode *)(vp)->v_data)
-#define MFSTOV(mfsp)	((mfsp)->mfs_vnode)
+#define VTOMFS(vp)  ((struct mfsnode *)(vp)->v_data)
+#define MFSTOV(mfsp)    ((mfsp)->mfs_vnode)
 
 /* Prototypes for MFS operations on vnodes. */
 #define mfs_lookup ((int (*) __P((struct  vop_lookup_args *)))mfs_badop)

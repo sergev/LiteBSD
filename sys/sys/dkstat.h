@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,17 +35,17 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dkstat.h	8.2 (Berkeley) 1/21/94
+ *  @(#)dkstat.h    8.2 (Berkeley) 1/21/94
  */
 
-#define	CP_USER		0
-#define	CP_NICE		1
-#define	CP_SYS		2
-#define	CP_INTR		3
-#define	CP_IDLE		4
-#define	CPUSTATES	5
+#define CP_USER     0
+#define CP_NICE     1
+#define CP_SYS      2
+#define CP_INTR     3
+#define CP_IDLE     4
+#define CPUSTATES   5
 
-#define	DK_NDRIVE	8
+#define DK_NDRIVE   8
 #ifdef KERNEL
 long cp_time[CPUSTATES];
 long dk_seek[DK_NDRIVE];

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)frame.h	8.1 (Berkeley) 6/11/93
+ *  @(#)frame.h 8.1 (Berkeley) 6/11/93
  *
  * from: $Header: frame.h,v 1.5 92/11/26 02:04:35 torek Exp $
  */
@@ -53,15 +53,15 @@
  * windows to the stack.
  */
 struct frame {
-	int	fr_local[8];	/* space to save locals (%l0..%l7) */
-	int	fr_arg[6];	/* space to save arguments (%i0..%i5) */
-	struct	frame *fr_fp;	/* space to save frame pointer (%i6) */
-	int	fr_pc;		/* space to save return pc (%i7) */
-	/*
-	 * SunOS reserves another 8 words here; this is pointless
-	 * but we do it for compatibility.
-	 */
-	int	fr_xxx;		/* `structure return pointer' (unused) */
-	int	fr_argd[6];	/* `arg dump area' (lunacy) */
-	int	fr_argx[1];	/* arg extension (args 7..n; variable size) */
+    int     fr_local[8];    /* space to save locals (%l0..%l7) */
+    int     fr_arg[6];      /* space to save arguments (%i0..%i5) */
+    struct  frame *fr_fp;   /* space to save frame pointer (%i6) */
+    int     fr_pc;          /* space to save return pc (%i7) */
+    /*
+     * SunOS reserves another 8 words here; this is pointless
+     * but we do it for compatibility.
+     */
+    int     fr_xxx;         /* `structure return pointer' (unused) */
+    int     fr_argd[6];     /* `arg dump area' (lunacy) */
+    int     fr_argx[1];     /* arg extension (args 7..n; variable size) */
 };

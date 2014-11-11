@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)memreg.c	8.1 (Berkeley) 6/11/93
+ *  @(#)memreg.c    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: memreg.c,v 1.7 92/11/26 03:05:04 torek Exp $ (LBL)
  */
@@ -62,25 +62,25 @@ struct cfdriver memregcd =
  */
 static int
 memregmatch(parent, cf, aux)
-	struct device *parent;
-	struct cfdata *cf;
-	void *aux;
+    struct device *parent;
+    struct cfdata *cf;
+    void *aux;
 {
 
-	return (strcmp("memory-error", ((struct romaux *)aux)->ra_name) == 0);
+    return (strcmp("memory-error", ((struct romaux *)aux)->ra_name) == 0);
 }
 
 /* ARGSUSED */
 static void
 memregattach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+    struct device *parent, *self;
+    void *aux;
 {
-	struct romaux *ra = aux;
+    struct romaux *ra = aux;
 
-	par_err_reg = ra->ra_vaddr ? (volatile int *)ra->ra_vaddr :
-	    (volatile int *)mapiodev(ra->ra_paddr, sizeof(int));
-	printf("\n");
+    par_err_reg = ra->ra_vaddr ? (volatile int *)ra->ra_vaddr :
+        (volatile int *)mapiodev(ra->ra_paddr, sizeof(int));
+    printf("\n");
 }
 
 /*
@@ -91,16 +91,16 @@ memregattach(parent, self, aux)
  */
 void
 memerr(issync, ser, sva, aer, ava)
-	int issync, ser, sva, aer, ava;
+    int issync, ser, sva, aer, ava;
 {
 
-	printf("%ssync mem err: ser=%b sva=%x aer=%b ava=%x\n",
-	    issync ? "" : "a", ser, SER_BITS, sva, aer & 0xff, AER_BITS, ava);
-	if (par_err_reg)
-		printf("parity error register = %b\n", *par_err_reg, PER_BITS);
+    printf("%ssync mem err: ser=%b sva=%x aer=%b ava=%x\n",
+        issync ? "" : "a", ser, SER_BITS, sva, aer & 0xff, AER_BITS, ava);
+    if (par_err_reg)
+        printf("parity error register = %b\n", *par_err_reg, PER_BITS);
 #ifdef DEBUG
-	callrom();
+    callrom();
 #else
-	panic("memory error");		/* XXX */
+    panic("memory error");      /* XXX */
 #endif
 }

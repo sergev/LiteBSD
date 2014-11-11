@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University,
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,18 +34,18 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)pmaxtype.h	8.2 (Berkeley) 6/2/95
+ *  @(#)pmaxtype.h  8.2 (Berkeley) 6/2/95
  */
 
 /*
  * Mother board type byte of "systype" environment variable.
  */
-#define	DS_PMAX		0x1	/* DECstation 2100/3100 */
-#define	DS_3MAX		0x2	/* DECstation 5000/200 */
-#define	DS_3MIN		0x3	/* DECstation 5000/1xx */
-#define	DS_3MAXPLUS	0x4	/* DECstation 5000/240 */
-#define	DS_LSIS		0x5	/* DECsystem 5800 */
-#define	DS_MIPSFAIR	0x6	/* DECsystem 5400 */
-#define	DS_MAXINE	0x7	/* Personal DECstation 5000/xx */
-#define	DS_MIPSFAIR2	0xb	/* DECsystem 5500 */
-#define	DS_MIPSMATE	0xc	/* DECsystem 5100 */
+#define DS_PMAX         0x1 /* DECstation 2100/3100 */
+#define DS_3MAX         0x2 /* DECstation 5000/200 */
+#define DS_3MIN         0x3 /* DECstation 5000/1xx */
+#define DS_3MAXPLUS     0x4 /* DECstation 5000/240 */
+#define DS_LSIS         0x5 /* DECsystem 5800 */
+#define DS_MIPSFAIR     0x6 /* DECsystem 5400 */
+#define DS_MAXINE       0x7 /* Personal DECstation 5000/xx */
+#define DS_MIPSFAIR2    0xb /* DECsystem 5500 */
+#define DS_MIPSMATE     0xc /* DECsystem 5100 */

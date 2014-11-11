@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,19 +30,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp_timer.h	8.1 (Berkeley) 6/10/93
+ *  @(#)tcp_timer.h 8.1 (Berkeley) 6/10/93
  */
 
 /*
  * Definitions of the TCP timers.  These timers are counted
  * down PR_SLOWHZ times a second.
  */
-#define	TCPT_NTIMERS	4
+#define TCPT_NTIMERS    4
 
-#define	TCPT_REXMT	0		/* retransmit */
-#define	TCPT_PERSIST	1		/* retransmit persistance */
-#define	TCPT_KEEP	2		/* keep alive */
-#define	TCPT_2MSL	3		/* 2*msl quiet time timer */
+#define TCPT_REXMT      0       /* retransmit */
+#define TCPT_PERSIST    1       /* retransmit persistance */
+#define TCPT_KEEP       2       /* keep alive */
+#define TCPT_2MSL       3       /* 2*msl quiet time timer */
 
 /*
  * The TCPT_REXMT timer is used to force retransmissions.
@@ -73,7 +73,7 @@
  * is established, if the connection is idle for TCPTV_KEEP_IDLE time
  * (and keepalives have been enabled on the socket), we begin to probe
  * the connection.  We force the peer to send us a segment by sending:
- *	<SEQ=SND.UNA-1><ACK=RCV.NXT><CTL=ACK>
+ *  <SEQ=SND.UNA-1><ACK=RCV.NXT><CTL=ACK>
  * This segment is (deliberately) outside the window, and should elicit
  * an ack segment in response from the peer.  If, despite the TCPT_KEEP
  * initiated segments we cannot elicit a response from a peer in TCPT_MAXIDLE
@@ -83,27 +83,27 @@
 /*
  * Time constants.
  */
-#define	TCPTV_MSL	( 30*PR_SLOWHZ)		/* max seg lifetime (hah!) */
-#define	TCPTV_SRTTBASE	0			/* base roundtrip time;
-						   if 0, no idea yet */
-#define	TCPTV_SRTTDFLT	(  3*PR_SLOWHZ)		/* assumed RTT if no info */
+#define TCPTV_MSL       ( 30*PR_SLOWHZ)     /* max seg lifetime (hah!) */
+#define TCPTV_SRTTBASE  0           /* base roundtrip time;
+                           if 0, no idea yet */
+#define TCPTV_SRTTDFLT  (  3*PR_SLOWHZ)     /* assumed RTT if no info */
 
-#define	TCPTV_PERSMIN	(  5*PR_SLOWHZ)		/* retransmit persistance */
-#define	TCPTV_PERSMAX	( 60*PR_SLOWHZ)		/* maximum persist interval */
+#define TCPTV_PERSMIN   (  5*PR_SLOWHZ)     /* retransmit persistance */
+#define TCPTV_PERSMAX   ( 60*PR_SLOWHZ)     /* maximum persist interval */
 
-#define	TCPTV_KEEP_INIT	( 75*PR_SLOWHZ)		/* initial connect keep alive */
-#define	TCPTV_KEEP_IDLE	(120*60*PR_SLOWHZ)	/* dflt time before probing */
-#define	TCPTV_KEEPINTVL	( 75*PR_SLOWHZ)		/* default probe interval */
-#define	TCPTV_KEEPCNT	8			/* max probes before drop */
+#define TCPTV_KEEP_INIT ( 75*PR_SLOWHZ)     /* initial connect keep alive */
+#define TCPTV_KEEP_IDLE (120*60*PR_SLOWHZ)  /* dflt time before probing */
+#define TCPTV_KEEPINTVL ( 75*PR_SLOWHZ)     /* default probe interval */
+#define TCPTV_KEEPCNT   8           /* max probes before drop */
 
-#define	TCPTV_MIN	(  1*PR_SLOWHZ)		/* minimum allowable value */
-#define	TCPTV_REXMTMAX	( 64*PR_SLOWHZ)		/* max allowable REXMT value */
+#define TCPTV_MIN       (  1*PR_SLOWHZ)     /* minimum allowable value */
+#define TCPTV_REXMTMAX  ( 64*PR_SLOWHZ)     /* max allowable REXMT value */
 
-#define	TCP_LINGERTIME	120			/* linger at most 2 minutes */
+#define TCP_LINGERTIME  120         /* linger at most 2 minutes */
 
-#define	TCP_MAXRXTSHIFT	12			/* maximum retransmits */
+#define TCP_MAXRXTSHIFT 12          /* maximum retransmits */
 
-#ifdef	TCPTIMERS
+#ifdef  TCPTIMERS
 char *tcptimers[] =
     { "REXMT", "PERSIST", "KEEP", "2MSL" };
 #endif
@@ -111,18 +111,18 @@ char *tcptimers[] =
 /*
  * Force a time value to be in a certain range.
  */
-#define	TCPT_RANGESET(tv, value, tvmin, tvmax) { \
-	(tv) = (value); \
-	if ((tv) < (tvmin)) \
-		(tv) = (tvmin); \
-	else if ((tv) > (tvmax)) \
-		(tv) = (tvmax); \
+#define TCPT_RANGESET(tv, value, tvmin, tvmax) { \
+    (tv) = (value); \
+    if ((tv) < (tvmin)) \
+        (tv) = (tvmin); \
+    else if ((tv) > (tvmax)) \
+        (tv) = (tvmax); \
 }
 
 #ifdef KERNEL
-extern int tcp_keepidle;		/* time before keepalive probes begin */
-extern int tcp_keepintvl;		/* time between keepalive probes */
-extern int tcp_maxidle;			/* time to drop after starting probes */
-extern int tcp_ttl;			/* time to live for TCP segs */
+extern int tcp_keepidle;        /* time before keepalive probes begin */
+extern int tcp_keepintvl;       /* time between keepalive probes */
+extern int tcp_maxidle;         /* time to drop after starting probes */
+extern int tcp_ttl;             /* time to live for TCP segs */
 extern int tcp_backoff[];
 #endif

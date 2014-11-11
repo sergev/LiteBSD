@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vmparam.h	8.1 (Berkeley) 6/11/93
+ *  @(#)vmparam.h   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: vmparam.h,v 1.8 93/05/25 09:52:16 torek Exp $
  */
@@ -52,26 +52,26 @@
  * USRTEXT is the start of the user text/data space, while USRSTACK
  * is the top (end) of the user stack.
  */
-#define	USRTEXT		0x2000			/* Start of user text */
-#define	USRSTACK	KERNBASE		/* Start of user stack */
+#define USRTEXT     0x2000          /* Start of user text */
+#define USRSTACK    KERNBASE        /* Start of user stack */
 
 /*
  * Virtual memory related constants, all in bytes
  */
 #ifndef MAXTSIZ
-#define	MAXTSIZ		(8*1024*1024)		/* max text size */
+#define MAXTSIZ     (8*1024*1024)   /* max text size */
 #endif
 #ifndef DFLDSIZ
-#define	DFLDSIZ		(16*1024*1024)		/* initial data size limit */
+#define DFLDSIZ     (16*1024*1024)  /* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(64*1024*1024)		/* max data size */
+#define MAXDSIZ     (64*1024*1024)  /* max data size */
 #endif
-#ifndef	DFLSSIZ
-#define	DFLSSIZ		(512*1024)		/* initial stack size limit */
+#ifndef DFLSSIZ
+#define DFLSSIZ     (512*1024)      /* initial stack size limit */
 #endif
-#ifndef	MAXSSIZ
-#define	MAXSSIZ		MAXDSIZ			/* max stack size */
+#ifndef MAXSSIZ
+#define MAXSSIZ     MAXDSIZ         /* max stack size */
 #endif
 
 /*
@@ -81,9 +81,9 @@
  * DMMIN should be at least ctod(1) so that vtod() works.
  * vminit() insures this.
  */
-#define	DMMIN	32			/* smallest swap allocation */
-#define	DMMAX	4096			/* largest potential swap allocation */
-#define	DMTEXT	1024			/* swap allocation for text */
+#define DMMIN   32              /* smallest swap allocation */
+#define DMMAX   4096            /* largest potential swap allocation */
+#define DMTEXT  1024            /* swap allocation for text */
 
 /*
  * The time for a process to be blocked before being very swappable.
@@ -94,7 +94,7 @@
  * It is related to human patience and other factors which don't really
  * change over time.
  */
-#define	MAXSLP 		20
+#define MAXSLP      20
 
 /*
  * A swapped in process is given a small amount of core without being bothered
@@ -109,8 +109,8 @@
  * that we don't consider it worthwhile and swap it out to disk which costs
  * $30/mb or about $0.75.
  */
-#define	SAFERSS		4		/* nominal ``small'' resident set size
-					   protected against replacement */
+#define SAFERSS     4       /* nominal ``small'' resident set size
+                               protected against replacement */
 
 /*
  * Mach derived constants
@@ -121,12 +121,12 @@
  * IO space virtual base, which must be the same as VM_MAX_KERNEL_ADDRESS:
  * tread with care.
  */
-#define VM_MIN_ADDRESS		((vm_offset_t)0x2000)	/* texts start at 8K */
-#define VM_MAX_ADDRESS		((vm_offset_t)KERNBASE)
-#define VM_MAXUSER_ADDRESS	((vm_offset_t)KERNBASE)
-#define VM_MIN_KERNEL_ADDRESS	((vm_offset_t)KERNBASE)
-#define VM_MAX_KERNEL_ADDRESS	((vm_offset_t)0xfe000000)
+#define VM_MIN_ADDRESS          ((vm_offset_t)0x2000)   /* texts start at 8K */
+#define VM_MAX_ADDRESS          ((vm_offset_t)KERNBASE)
+#define VM_MAXUSER_ADDRESS      ((vm_offset_t)KERNBASE)
+#define VM_MIN_KERNEL_ADDRESS   ((vm_offset_t)KERNBASE)
+#define VM_MAX_KERNEL_ADDRESS   ((vm_offset_t)0xfe000000)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_MBUF_SIZE		(NMBCLUSTERS*MCLBYTES)
-#define VM_KMEM_SIZE		(NKMEMCLUSTERS*CLBYTES)
+#define VM_MBUF_SIZE        (NMBCLUSTERS*MCLBYTES)
+#define VM_KMEM_SIZE        (NKMEMCLUSTERS*CLBYTES)

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993, 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,54 +30,54 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)uio.h	8.5 (Berkeley) 2/22/94
+ *  @(#)uio.h   8.5 (Berkeley) 2/22/94
  */
 
 #ifndef _SYS_UIO_H_
-#define	_SYS_UIO_H_
+#define _SYS_UIO_H_
 
 /*
  * XXX
  * iov_base should be a void *.
  */
 struct iovec {
-	char	*iov_base;	/* Base address. */
-	size_t	 iov_len;	/* Length. */
+    char    *iov_base;  /* Base address. */
+    size_t   iov_len;   /* Length. */
 };
 
-enum	uio_rw { UIO_READ, UIO_WRITE };
+enum    uio_rw { UIO_READ, UIO_WRITE };
 
 /* Segment flag values. */
 enum uio_seg {
-	UIO_USERSPACE,		/* from user data space */
-	UIO_SYSSPACE,		/* from system space */
-	UIO_USERISPACE		/* from user I space */
+    UIO_USERSPACE,      /* from user data space */
+    UIO_SYSSPACE,       /* from system space */
+    UIO_USERISPACE      /* from user I space */
 };
 
 #ifdef KERNEL
 struct uio {
-	struct	iovec *uio_iov;
-	int	uio_iovcnt;
-	off_t	uio_offset;
-	int	uio_resid;
-	enum	uio_seg uio_segflg;
-	enum	uio_rw uio_rw;
-	struct	proc *uio_procp;
+    struct  iovec *uio_iov;
+    int     uio_iovcnt;
+    off_t   uio_offset;
+    int     uio_resid;
+    enum    uio_seg uio_segflg;
+    enum    uio_rw uio_rw;
+    struct  proc *uio_procp;
 };
 
 /*
  * Limits
  */
-#define UIO_MAXIOV	1024		/* max 1K of iov's */
-#define UIO_SMALLIOV	8		/* 8 on stack, else malloc */
+#define UIO_MAXIOV      1024    /* max 1K of iov's */
+#define UIO_SMALLIOV    8       /* 8 on stack, else malloc */
 #endif /* KERNEL */
 
-#ifndef	KERNEL
+#ifndef KERNEL
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-ssize_t	readv __P((int, const struct iovec *, int));
-ssize_t	writev __P((int, const struct iovec *, int));
+ssize_t readv __P((int, const struct iovec *, int));
+ssize_t writev __P((int, const struct iovec *, int));
 __END_DECLS
 #endif /* !KERNEL */
 #endif /* !_SYS_UIO_H_ */

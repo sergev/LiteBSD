@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,25 +30,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)saerrno.h	8.1 (Berkeley) 6/11/93
+ *  @(#)saerrno.h   8.1 (Berkeley) 6/11/93
  */
 
-extern	int errno;	/* just like unix */
+extern  int errno;  /* just like unix */
 
 /* error codes */
-#define	EADAPT	1	/* bad adaptor */
-#define	ECTLR	2	/* bad controller */
-#define	EUNIT	3	/* bad drive */
-#define	EPART	4	/* bad partition */
-#define	ERDLAB	5	/* can't read disk label */
-#define	EUNLAB	6	/* unlabeled disk */
-#define	ENXIO	7	/* bad device specification */
-#define	EBADF	8	/* bad file descriptor */
-#define	EOFFSET	9	/* relative seek not supported */
-#define	ESRCH	10	/* directory search for file failed */
-#define	EIO	11	/* generic error */
-#define	ECMD	12	/* undefined driver command */
-#define	EBSE	13	/* bad sector error */
-#define	EWCK	14	/* write check error */
-#define	EECC	15	/* uncorrectable ecc error */
-#define	EHER	16	/* hard error */
+#define EADAPT  1   /* bad adaptor */
+#define ECTLR   2   /* bad controller */
+#define EUNIT   3   /* bad drive */
+#define EPART   4   /* bad partition */
+#define ERDLAB  5   /* can't read disk label */
+#define EUNLAB  6   /* unlabeled disk */
+#define ENXIO   7   /* bad device specification */
+#define EBADF   8   /* bad file descriptor */
+#define EOFFSET 9   /* relative seek not supported */
+#define ESRCH   10  /* directory search for file failed */
+#define EIO     11  /* generic error */
+#define ECMD    12  /* undefined driver command */
+#define EBSE    13  /* bad sector error */
+#define EWCK    14  /* write check error */
+#define EECC    15  /* uncorrectable ecc error */
+#define EHER    16  /* hard error */

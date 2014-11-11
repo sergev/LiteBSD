@@ -1,6 +1,6 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vm_pageout.h	8.3 (Berkeley) 1/9/95
+ *  @(#)vm_pageout.h    8.3 (Berkeley) 1/9/95
  *
  *
  * Copyright (c) 1987, 1990 Carnegie-Mellon University.
  * All rights reserved.
  *
  * Author: Avadis Tevanian, Jr.
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -63,34 +63,34 @@
  */
 
 /*
- *	Header file for pageout daemon.
+ *  Header file for pageout daemon.
  */
 
 /*
- *	Exported data structures.
+ *  Exported data structures.
  */
 
-extern int	vm_pages_needed;	/* should be some "event" structure */
-simple_lock_data_t	vm_pages_needed_lock;
+extern int          vm_pages_needed;    /* should be some "event" structure */
+simple_lock_data_t  vm_pages_needed_lock;
 
 
 /*
- *	Exported routines.
+ *  Exported routines.
  */
 
 /*
- *	Signal pageout-daemon and wait for it.
+ *  Signal pageout-daemon and wait for it.
  */
 
-#define	VM_WAIT		{ \
-			simple_lock(&vm_pages_needed_lock); \
-			thread_wakeup(&vm_pages_needed); \
-			thread_sleep(&cnt.v_free_count, \
-				&vm_pages_needed_lock, FALSE); \
-			}
+#define VM_WAIT     { \
+            simple_lock(&vm_pages_needed_lock); \
+            thread_wakeup(&vm_pages_needed); \
+            thread_sleep(&cnt.v_free_count, \
+                &vm_pages_needed_lock, FALSE); \
+            }
 #ifdef KERNEL
-void		 vm_pageout __P((void));
-void		 vm_pageout_scan __P((void));
-void		 vm_pageout_page __P((vm_page_t, vm_object_t));
-void		 vm_pageout_cluster __P((vm_page_t, vm_object_t));
+void         vm_pageout __P((void));
+void         vm_pageout_scan __P((void));
+void         vm_pageout_page __P((vm_page_t, vm_object_t));
+void         vm_pageout_cluster __P((vm_page_t, vm_object_t));
 #endif

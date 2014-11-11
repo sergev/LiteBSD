@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)lfs_bio.c	8.10 (Berkeley) 6/10/95
+ *  @(#)lfs_bio.c   8.10 (Berkeley) 6/10/95
  */
 
 #include <sys/param.h>
@@ -55,71 +55,71 @@
  * No write cost accounting is done.
  * This is almost certainly wrong for synchronous operations and NFS.
  */
-int	lfs_allclean_wakeup;		/* Cleaner wakeup address. */
-int	locked_queue_count;		/* XXX Count of locked-down buffers. */
-int	lfs_writing;			/* Set if already kicked off a writer
-					   because of buffer space */
+int lfs_allclean_wakeup;    /* Cleaner wakeup address. */
+int locked_queue_count;     /* XXX Count of locked-down buffers. */
+int lfs_writing;            /* Set if already kicked off a writer
+                               because of buffer space */
 /*
-#define WRITE_THRESHHOLD	((nbuf >> 2) - 10)
-#define WAIT_THRESHHOLD		((nbuf >> 1) - 10)
+#define WRITE_THRESHHOLD    ((nbuf >> 2) - 10)
+#define WAIT_THRESHHOLD     ((nbuf >> 1) - 10)
 */
-#define WAIT_THRESHHOLD         (nbuf - (nbuf >> 2) - 10)
-#define WRITE_THRESHHOLD        ((nbuf >> 1) - 10)
-#define LFS_BUFWAIT	2
+#define WAIT_THRESHHOLD     (nbuf - (nbuf >> 2) - 10)
+#define WRITE_THRESHHOLD    ((nbuf >> 1) - 10)
+#define LFS_BUFWAIT         2
 
 int
 lfs_bwrite(ap)
-	struct vop_bwrite_args /* {
-		struct buf *a_bp;
-	} */ *ap;
+    struct vop_bwrite_args /* {
+        struct buf *a_bp;
+    } */ *ap;
 {
-	register struct buf *bp = ap->a_bp;
-	struct lfs *fs;
-	struct inode *ip;
-	int db, error, s;
+    register struct buf *bp = ap->a_bp;
+    struct lfs *fs;
+    struct inode *ip;
+    int db, error, s;
 
-	/*
-	 * Set the delayed write flag and use reassignbuf to move the buffer
-	 * from the clean list to the dirty one.
-	 *
-	 * Set the B_LOCKED flag and unlock the buffer, causing brelse to move
-	 * the buffer onto the LOCKED free list.  This is necessary, otherwise
-	 * getnewbuf() would try to reclaim the buffers using bawrite, which
-	 * isn't going to work.
-	 *
-	 * XXX we don't let meta-data writes run out of space because they can
-	 * come from the segment writer.  We need to make sure that there is
-	 * enough space reserved so that there's room to write meta-data
-	 * blocks.
-	 */
-	if (!(bp->b_flags & B_LOCKED)) {
-		fs = VFSTOUFS(bp->b_vp->v_mount)->um_lfs;
-		db = fragstodb(fs, numfrags(fs, bp->b_bcount));
-		while (!LFS_FITS(fs, db) && !IS_IFILE(bp) &&
-		    bp->b_lblkno > 0) {
-			/* Out of space, need cleaner to run */
-			wakeup(&lfs_allclean_wakeup);
-			wakeup(&fs->lfs_nextseg);
-			if (error = tsleep(&fs->lfs_avail, PCATCH | PUSER,
-			    "cleaner", NULL)) {
-				brelse(bp);
-				return (error);
-			}
-		}
-		ip = VTOI((bp)->b_vp);
-		if (!(ip->i_flag & IN_MODIFIED))
-			++fs->lfs_uinodes;
-		ip->i_flag |= IN_CHANGE | IN_MODIFIED | IN_UPDATE;
-		fs->lfs_avail -= db;
-		++locked_queue_count;
-		bp->b_flags |= B_DELWRI | B_LOCKED;
-		bp->b_flags &= ~(B_READ | B_ERROR);
-		s = splbio();
-		reassignbuf(bp, bp->b_vp);
-		splx(s);
-	}
-	brelse(bp);
-	return (0);
+    /*
+     * Set the delayed write flag and use reassignbuf to move the buffer
+     * from the clean list to the dirty one.
+     *
+     * Set the B_LOCKED flag and unlock the buffer, causing brelse to move
+     * the buffer onto the LOCKED free list.  This is necessary, otherwise
+     * getnewbuf() would try to reclaim the buffers using bawrite, which
+     * isn't going to work.
+     *
+     * XXX we don't let meta-data writes run out of space because they can
+     * come from the segment writer.  We need to make sure that there is
+     * enough space reserved so that there's room to write meta-data
+     * blocks.
+     */
+    if (!(bp->b_flags & B_LOCKED)) {
+        fs = VFSTOUFS(bp->b_vp->v_mount)->um_lfs;
+        db = fragstodb(fs, numfrags(fs, bp->b_bcount));
+        while (!LFS_FITS(fs, db) && !IS_IFILE(bp) &&
+            bp->b_lblkno > 0) {
+            /* Out of space, need cleaner to run */
+            wakeup(&lfs_allclean_wakeup);
+            wakeup(&fs->lfs_nextseg);
+            if (error = tsleep(&fs->lfs_avail, PCATCH | PUSER,
+                "cleaner", NULL)) {
+                brelse(bp);
+                return (error);
+            }
+        }
+        ip = VTOI((bp)->b_vp);
+        if (!(ip->i_flag & IN_MODIFIED))
+            ++fs->lfs_uinodes;
+        ip->i_flag |= IN_CHANGE | IN_MODIFIED | IN_UPDATE;
+        fs->lfs_avail -= db;
+        ++locked_queue_count;
+        bp->b_flags |= B_DELWRI | B_LOCKED;
+        bp->b_flags &= ~(B_READ | B_ERROR);
+        s = splbio();
+        reassignbuf(bp, bp->b_vp);
+        splx(s);
+    }
+    brelse(bp);
+    return (0);
 }
 
 /*
@@ -133,66 +133,66 @@ lfs_bwrite(ap)
 void
 lfs_flush()
 {
-	register struct mount *mp, *nmp;
-	struct proc *p = curproc;	/* XXX */
+    register struct mount *mp, *nmp;
+    struct proc *p = curproc;   /* XXX */
 
 #ifdef DOSTATS
-	++lfs_stats.write_exceeded;
+    ++lfs_stats.write_exceeded;
 #endif
-	if (lfs_writing)
-		return;
-	lfs_writing = 1;
-	simple_lock(&mountlist_slock);
-	for (mp = mountlist.cqh_first; mp != (void *)&mountlist; mp = nmp) {
-		if (vfs_busy(mp, LK_NOWAIT, &mountlist_slock, p)) {
-			nmp = mp->mnt_list.cqe_next;
-			continue;
-		}
-		if (mp->mnt_stat.f_type == lfs_mount_type &&
-		    (mp->mnt_flag & MNT_RDONLY) == 0 &&
-		    !((((struct ufsmount *)mp->mnt_data))->ufsmount_u.lfs)->lfs_dirops ) {
-			/*
-			 * We set the queue to 0 here because we are about to
-			 * write all the dirty buffers we have.  If more come
-			 * in while we're writing the segment, they may not
-			 * get written, so we want the count to reflect these
-			 * new writes after the segwrite completes.
-			 */
+    if (lfs_writing)
+        return;
+    lfs_writing = 1;
+    simple_lock(&mountlist_slock);
+    for (mp = mountlist.cqh_first; mp != (void *)&mountlist; mp = nmp) {
+        if (vfs_busy(mp, LK_NOWAIT, &mountlist_slock, p)) {
+            nmp = mp->mnt_list.cqe_next;
+            continue;
+        }
+        if (mp->mnt_stat.f_type == lfs_mount_type &&
+            (mp->mnt_flag & MNT_RDONLY) == 0 &&
+            !((((struct ufsmount *)mp->mnt_data))->ufsmount_u.lfs)->lfs_dirops ) {
+            /*
+             * We set the queue to 0 here because we are about to
+             * write all the dirty buffers we have.  If more come
+             * in while we're writing the segment, they may not
+             * get written, so we want the count to reflect these
+             * new writes after the segwrite completes.
+             */
 #ifdef DOSTATS
-			++lfs_stats.flush_invoked;
+            ++lfs_stats.flush_invoked;
 #endif
-			lfs_segwrite(mp, 0);
-		}
-		simple_lock(&mountlist_slock);
-		nmp = mp->mnt_list.cqe_next;
-		vfs_unbusy(mp, p);
-	}
-	simple_unlock(&mountlist_slock);
-	lfs_writing = 0;
+            lfs_segwrite(mp, 0);
+        }
+        simple_lock(&mountlist_slock);
+        nmp = mp->mnt_list.cqe_next;
+        vfs_unbusy(mp, p);
+    }
+    simple_unlock(&mountlist_slock);
+    lfs_writing = 0;
 }
 
 int
 lfs_check(vp, blkno)
-	struct vnode *vp;
-	ufs_daddr_t blkno;
+    struct vnode *vp;
+    ufs_daddr_t blkno;
 {
-	extern int lfs_allclean_wakeup;
-	int error;
+    extern int lfs_allclean_wakeup;
+    int error;
 
-	error = 0;
-	if (incore(vp, blkno))
-		return (0);
-	if (locked_queue_count > WRITE_THRESHHOLD)
-		lfs_flush();
+    error = 0;
+    if (incore(vp, blkno))
+        return (0);
+    if (locked_queue_count > WRITE_THRESHHOLD)
+        lfs_flush();
 
-	/* If out of buffers, wait on writer */
-	while (locked_queue_count > WAIT_THRESHHOLD) {
+    /* If out of buffers, wait on writer */
+    while (locked_queue_count > WAIT_THRESHHOLD) {
 #ifdef DOSTATS
-	    ++lfs_stats.wait_exceeded;
+        ++lfs_stats.wait_exceeded;
 #endif
-	    error = tsleep(&locked_queue_count, PCATCH | PUSER, "buffers",
-	        hz * LFS_BUFWAIT);
-	}
+        error = tsleep(&locked_queue_count, PCATCH | PUSER, "buffers",
+        hz * LFS_BUFWAIT);
+    }
 
-	return (error);
+    return (error);
 }

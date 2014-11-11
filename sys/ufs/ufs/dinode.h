@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dinode.h	8.9 (Berkeley) 3/29/95
+ *  @(#)dinode.h    8.9 (Berkeley) 3/29/95
  */
 
 /*
@@ -44,7 +44,7 @@
  * the root inode is 2.  (Inode 1 is no longer used for this purpose, however
  * numerous dump tapes make this assumption, so we are stuck with it).
  */
-#define	ROOTINO	((ino_t)2)
+#define ROOTINO ((ino_t)2)
 
 /*
  * The Whiteout inode# is a dummy non-zero inode number which will
@@ -52,7 +52,7 @@
  * in the directory entry which has been tagged as a DT_W entry.
  * See the comments about ROOTINO above.
  */
-#define	WINO	((ino_t)1)
+#define WINO    ((ino_t)1)
 
 /*
  * A dinode contains all the meta-data associated with a UFS file.
@@ -62,28 +62,28 @@
  */
 
 typedef int32_t ufs_daddr_t;
-#define	NDADDR	12			/* Direct addresses in inode. */
-#define	NIADDR	3			/* Indirect addresses in inode. */
+#define NDADDR  12          /* Direct addresses in inode. */
+#define NIADDR  3           /* Indirect addresses in inode. */
 
 struct dinode {
-	u_int16_t	di_mode;	/*   0: IFMT, permissions; see below. */
-	int16_t		di_nlink;	/*   2: File link count. */
-	int32_t         di_inumber;	/*   4: Lfs: inode number. */
-	u_int64_t	di_size;	/*   8: File byte count. */
-	int32_t		di_atime;	/*  16: Last access time. */
-	int32_t		di_atimensec;	/*  20: Last access time. */
-	int32_t		di_mtime;	/*  24: Last modified time. */
-	int32_t		di_mtimensec;	/*  28: Last modified time. */
-	int32_t		di_ctime;	/*  32: Last inode change time. */
-	int32_t		di_ctimensec;	/*  36: Last inode change time. */
-	ufs_daddr_t	di_db[NDADDR];	/*  40: Direct disk blocks. */
-	ufs_daddr_t	di_ib[NIADDR];	/*  88: Indirect disk blocks. */
-	u_int32_t	di_flags;	/* 100: Status flags (chflags). */
-	u_int32_t	di_blocks;	/* 104: Blocks actually held. */
-	int32_t		di_gen;		/* 108: Generation number. */
-	u_int32_t	di_uid;		/* 112: File owner. */
-	u_int32_t	di_gid;		/* 116: File group. */
-	int32_t		di_spare[2];	/* 120: Reserved; currently unused */
+    u_int16_t   di_mode;        /*   0: IFMT, permissions; see below. */
+    int16_t     di_nlink;       /*   2: File link count. */
+    int32_t     di_inumber;     /*   4: Lfs: inode number. */
+    u_int64_t   di_size;        /*   8: File byte count. */
+    int32_t     di_atime;       /*  16: Last access time. */
+    int32_t     di_atimensec;   /*  20: Last access time. */
+    int32_t     di_mtime;       /*  24: Last modified time. */
+    int32_t     di_mtimensec;   /*  28: Last modified time. */
+    int32_t     di_ctime;       /*  32: Last inode change time. */
+    int32_t     di_ctimensec;   /*  36: Last inode change time. */
+    ufs_daddr_t di_db[NDADDR];  /*  40: Direct disk blocks. */
+    ufs_daddr_t di_ib[NIADDR];  /*  88: Indirect disk blocks. */
+    u_int32_t   di_flags;       /* 100: Status flags (chflags). */
+    u_int32_t   di_blocks;      /* 104: Blocks actually held. */
+    int32_t     di_gen;         /* 108: Generation number. */
+    u_int32_t   di_uid;         /* 112: File owner. */
+    u_int32_t   di_gid;         /* 116: File group. */
+    int32_t     di_spare[2];    /* 120: Reserved; currently unused */
 };
 
 /*
@@ -93,25 +93,25 @@ struct dinode {
  * dev_t value. Short symbolic links place their path in the
  * di_db area.
  */
-#define	di_rdev		di_db[0]
-#define	di_shortlink	di_db
-#define	MAXSYMLINKLEN	((NDADDR + NIADDR) * sizeof(ufs_daddr_t))
+#define di_rdev         di_db[0]
+#define di_shortlink    di_db
+#define MAXSYMLINKLEN   ((NDADDR + NIADDR) * sizeof(ufs_daddr_t))
 
 /* File permissions. */
-#define	IEXEC		0000100		/* Executable. */
-#define	IWRITE		0000200		/* Writeable. */
-#define	IREAD		0000400		/* Readable. */
-#define	ISVTX		0001000		/* Sticky bit. */
-#define	ISGID		0002000		/* Set-gid. */
-#define	ISUID		0004000		/* Set-uid. */
+#define IEXEC       0000100     /* Executable. */
+#define IWRITE      0000200     /* Writeable. */
+#define IREAD       0000400     /* Readable. */
+#define ISVTX       0001000     /* Sticky bit. */
+#define ISGID       0002000     /* Set-gid. */
+#define ISUID       0004000     /* Set-uid. */
 
 /* File types. */
-#define	IFMT		0170000		/* Mask of file type. */
-#define	IFIFO		0010000		/* Named pipe (fifo). */
-#define	IFCHR		0020000		/* Character device. */
-#define	IFDIR		0040000		/* Directory file. */
-#define	IFBLK		0060000		/* Block device. */
-#define	IFREG		0100000		/* Regular file. */
-#define	IFLNK		0120000		/* Symbolic link. */
-#define	IFSOCK		0140000		/* UNIX domain socket. */
-#define	IFWHT		0160000		/* Whiteout. */
+#define IFMT        0170000     /* Mask of file type. */
+#define IFIFO       0010000     /* Named pipe (fifo). */
+#define IFCHR       0020000     /* Character device. */
+#define IFDIR       0040000     /* Directory file. */
+#define IFBLK       0060000     /* Block device. */
+#define IFREG       0100000     /* Regular file. */
+#define IFLNK       0120000     /* Symbolic link. */
+#define IFSOCK      0140000     /* UNIX domain socket. */
+#define IFWHT       0160000     /* Whiteout. */

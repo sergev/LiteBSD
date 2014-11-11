@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to the Computer Systems
  * Engineering Group at Lawrence Berkeley Laboratory and to the University
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)raster.h	8.1 (Berkeley) 6/11/93
+ *  @(#)raster.h    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: raster.h,v 1.14 92/06/17 08:14:43 torek Exp $
  */
@@ -81,11 +81,11 @@
 
 /* Raster struct. */
 struct raster {
-    int width, height;	/* size in pixels */
-    int depth;		/* bits per pixel - 1 or 8 */
-    int linelongs;	/* longs from one line to the next - for padding */
-    u_long* pixels;	/* pointer to the actual bits */
-    caddr_t data;	/* special pointer for frame buffers and subregions */
+    int width, height;  /* size in pixels */
+    int depth;          /* bits per pixel - 1 or 8 */
+    int linelongs;      /* longs from one line to the next - for padding */
+    u_long* pixels;     /* pointer to the actual bits */
+    caddr_t data;       /* special pointer for frame buffers and subregions */
     };
 
 /* Colormap struct. */
@@ -112,10 +112,10 @@ struct raster_fontcache {
 
 /* Font struct. */
 struct raster_font {
-    int width, height;	/* nominal character size */
+    int width, height;  /* nominal character size */
     int flags;
-#define RASFONT_FIXEDWIDTH		0x1
-#define RASFONT_NOVERTICALMOVEMENT	0x2
+#define RASFONT_FIXEDWIDTH          0x1
+#define RASFONT_NOVERTICALMOVEMENT  0x2
     struct raster_char chars[256];
 #ifdef COLORFONT_CACHE
     struct raster_fontcache* cache;
@@ -139,22 +139,22 @@ struct raster_font {
 
 #define RAS_NOT(op) ( 0xf & ( ~ (op) ) )
 
-#define RAS_CLEAR		0x0	/* 0 */
-#define RAS_NOTOR		0x1	/* !( src | dst ) */
-#define RAS_NOTSRC_AND_DST	0x2	/* !src & dst */
-#define RAS_INVERTSRC		0x3	/* !src */
-#define RAS_SRC_AND_NOTDST	0x4	/* src & !dst */
-#define RAS_INVERT		0x5	/* !dst */
-#define RAS_XOR			0x6	/* src ^ dst */
-#define RAS_NOTAND		0x7	/* !( src & dst ) */
-#define RAS_AND			0x8	/* src & dst */
-#define RAS_NOTXOR		0x9	/* !( src ^ dst ) */
-#define RAS_DST			0xa	/* dst */
-#define RAS_NOTSRC_OR_DST	0xb	/* !src | dst */
-#define RAS_SRC			0xc	/* src */
-#define RAS_SRC_OR_NOTDST	0xd	/* src | !dst */
-#define RAS_OR			0xe	/* src | dst */
-#define RAS_SET			0xf	/* 1 */
+#define RAS_CLEAR           0x0 /* 0 */
+#define RAS_NOTOR           0x1 /* !( src | dst ) */
+#define RAS_NOTSRC_AND_DST  0x2 /* !src & dst */
+#define RAS_INVERTSRC       0x3 /* !src */
+#define RAS_SRC_AND_NOTDST  0x4 /* src & !dst */
+#define RAS_INVERT          0x5 /* !dst */
+#define RAS_XOR             0x6 /* src ^ dst */
+#define RAS_NOTAND          0x7 /* !( src & dst ) */
+#define RAS_AND             0x8 /* src & dst */
+#define RAS_NOTXOR          0x9 /* !( src ^ dst ) */
+#define RAS_DST             0xa /* dst */
+#define RAS_NOTSRC_OR_DST   0xb /* !src | dst */
+#define RAS_SRC             0xc /* src */
+#define RAS_SRC_OR_NOTDST   0xd /* src | !dst */
+#define RAS_OR              0xe /* src | dst */
+#define RAS_SET             0xf /* 1 */
 
 #define RAS_COLOR(color) ( ( (color) & 0xff ) << 4 )
 

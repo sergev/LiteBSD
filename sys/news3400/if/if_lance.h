@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  *
  * from: $Hdr: if_lance.h,v 4.300 91/06/09 06:25:59 root Rel41 $ SONY
  *
- *	@(#)if_lance.h	8.1 (Berkeley) 6/11/93
+ *  @(#)if_lance.h  8.1 (Berkeley) 6/11/93
  */
 
 #undef VOLATILE
@@ -53,36 +53,36 @@ typedef VOLATILE struct xmit_msg_desc xmit_msg_desc;
  * Structure of statistics record
  */
 struct en_stats {
-	u_char	ens_addr[8];		/* Ethernet Address */
-	int	ens_frames;		/* Number of Frames Received */
-	int	ens_xmit;		/* Number of Frames Transmitted */
-	int	ens_xcollis;		/* Number of Excess Collisions */
-	int	ens_frag;		/* Number of Fragments Received */
-	int	ens_lost;		/* Number of Times Frames Lost */
-	int	ens_crc;		/* Number of CRC Errors */
-	int	ens_align;		/* Number of Alignment Errors */
-	int	ens_collis;		/* Number of Collisions */
-	int	ens_owcollis;		/* Number of Out-of-window Collisions */
+    u_char  ens_addr[8];    /* Ethernet Address */
+    int     ens_frames;     /* Number of Frames Received */
+    int     ens_xmit;       /* Number of Frames Transmitted */
+    int     ens_xcollis;    /* Number of Excess Collisions */
+    int     ens_frag;       /* Number of Fragments Received */
+    int     ens_lost;       /* Number of Times Frames Lost */
+    int     ens_crc;        /* Number of CRC Errors */
+    int     ens_align;      /* Number of Alignment Errors */
+    int     ens_collis;     /* Number of Collisions */
+    int     ens_owcollis;   /* Number of Out-of-window Collisions */
 };
 
 /*
- *	LANCE control block
+ *  LANCE control block
  */
-typedef	VOLATILE struct lance_chan {
-	Lance_reg	*lance_addr;	/* LANCE port address		*/
-	caddr_t 	lance_memory;	/* LANCE memory address		*/
-	caddr_t		lance_rom;	/* Ethernet address ROM		*/
-	struct init_block *lance_ib;	/* initialization block address	*/
-	int		lance_flags;	/* LANCE active flag		*/
-	recv_msg_desc	*lance_rmd;	/* recv. message desc. address	*/
-	xmit_msg_desc	*lance_tmd;	/* xmit. message desc. address	*/
-	recv_msg_desc	*lance_last_rmd;	/* last rmd		*/
-	xmit_msg_desc	*lance_last_tmd;	/* last tmd		*/
-	struct en_stats	lance_stats;	/* LANCE statistics		*/
+typedef VOLATILE struct lance_chan {
+    Lance_reg       *lance_addr;        /* LANCE port address */
+    caddr_t         lance_memory;       /* LANCE memory address */
+    caddr_t         lance_rom;          /* Ethernet address ROM */
+    struct init_block *lance_ib;        /* initialization block address */
+    int             lance_flags;        /* LANCE active flag */
+    recv_msg_desc   *lance_rmd;         /* recv. message desc. address */
+    xmit_msg_desc   *lance_tmd;         /* xmit. message desc. address */
+    recv_msg_desc   *lance_last_rmd;    /* last rmd */
+    xmit_msg_desc   *lance_last_tmd;    /* last tmd */
+    struct en_stats lance_stats;        /* LANCE statistics */
 } Lance_chan;
 
 #undef VOLATILE
 
-#define	LANCE_ACTIVE	1
-#define	LANCE_PROM	2
-#define	LANCE_IDON	8
+#define LANCE_ACTIVE    1
+#define LANCE_PROM      2
+#define LANCE_IDON      8

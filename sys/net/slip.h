@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,22 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)slip.h	8.1 (Berkeley) 2/12/94
+ *  @(#)slip.h  8.1 (Berkeley) 2/12/94
  */
 
 /* Ioctls operating on SLIP ttys. */
-#define	SLIOCGUNIT	_IOR('t', 88, int)	/* get slip unit number */
+#define SLIOCGUNIT  _IOR('t', 88, int)  /* get slip unit number */
 
 /*
  * Definitions of the pseudo-link-level header attached to slip
  * packets grabbed by the packet filter (bpf) traffic monitor.
  */
-#define	SLIP_HDRLEN	16		/* BPF SLIP header length */
+#define SLIP_HDRLEN 16      /* BPF SLIP header length */
 
 /* Offsets into BPF SLIP header. */
-#define	SLX_DIR		0		/* direction; see below */
-#define	SLX_CHDR	1		/* compressed header data */
-#define	CHDR_LEN	15		/* length of compressed header data */
+#define SLX_DIR     0       /* direction; see below */
+#define SLX_CHDR    1       /* compressed header data */
+#define CHDR_LEN    15      /* length of compressed header data */
 
-#define	SLIPDIR_IN	0		/* incoming */
-#define	SLIPDIR_OUT	1		/* outgoing */
+#define SLIPDIR_IN  0       /* incoming */
+#define SLIPDIR_OUT 1       /* outgoing */

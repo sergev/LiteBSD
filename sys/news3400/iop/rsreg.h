@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,22 +35,22 @@
  *
  * from: $Hdr: rsreg.h,v 4.300 91/06/09 06:43:04 root Rel41 $ SONY
  *
- *	@(#)rsreg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)rsreg.h 8.1 (Berkeley) 6/11/93
  */
 
 #ifndef __RSREG__
 #define __RSREG__ 1
 
 /* bits in dm lsr, copied from dh.c */
-#define	DML_USR		0001000		/* usr modem sig, not a real DM bit */
-#define	DML_DSR		0000400		/* data set ready, not a real DM bit */
-#define	DML_RNG		0000200		/* ring */
-#define	DML_CAR		0000100		/* carrier detect */
-#define	DML_CTS		0000040		/* clear to send */
-#define	DML_SR		0000020		/* secondary receive */
-#define	DML_ST		0000010		/* secondary transmit */
-#define	DML_RTS		0000004		/* request to send */
-#define	DML_DTR		0000002		/* data terminal ready */
-#define	DML_LE		0000001		/* line enable */
+#define DML_USR     0001000     /* usr modem sig, not a real DM bit */
+#define DML_DSR     0000400     /* data set ready, not a real DM bit */
+#define DML_RNG     0000200     /* ring */
+#define DML_CAR     0000100     /* carrier detect */
+#define DML_CTS     0000040     /* clear to send */
+#define DML_SR      0000020     /* secondary receive */
+#define DML_ST      0000010     /* secondary transmit */
+#define DML_RTS     0000004     /* request to send */
+#define DML_DTR     0000002     /* data terminal ready */
+#define DML_LE      0000001     /* line enable */
 
 #endif /* !__RSREG__ */

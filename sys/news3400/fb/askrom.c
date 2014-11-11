@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  *
  * from: $Hdr: askrom.c,v 4.300 91/06/09 06:32:39 root Rel41 $ SONY
  *
- *	@(#)askrom.c	8.1 (Berkeley) 6/10/93
+ *  @(#)askrom.c    8.1 (Berkeley) 6/10/93
  */
 
 #include "nwb514.h"
@@ -68,55 +68,55 @@ int krom_enable = 0;
 
 caddr_t
 autos_Krom_addr(fb, c, sr)
-	struct fbdev *fb;
-	register int c;
-	lRectangle *sr;
+    struct fbdev *fb;
+    register int c;
+    lRectangle *sr;
 {
-	unsigned int cvcode24();
+    unsigned int cvcode24();
 
-	if ((c >= 0x20) && (c <= 0x7e)) {
-		/*
-		 * ASCII char
-		 */
-		c -= ' ';
-		c = ((c & 0x1f) | ((c & 0xe0) << 2)) << 7;
-		return ((caddr_t)(c + QP_KJROM + (sr->extent.y > 16 ? 0 : 96)));
-	} else if ((c >= 0xa1) && (c <= 0xdf)) {
-		/*
-		 * KANA char
-		 */
-		if (sr->extent.y > 16)
-			return ((caddr_t)ext_fnt24_addr[c + 64]);
-		else
-			return ((caddr_t)ext_fnt_addr[c + 64]);
-	} else if ((c >= 0x2000) && (c <= 0x7fff)) {
-		/*
-		 * KANJI char
-		 */
-		switch (c & 0x7000) {
-		case 0x2000:
-			c = ((c & 0x1f)|((c & 0x60)<<5)|((c & 0x700)>>1))<<7;
-			break;
-		case 0x3000:
-		case 0x4000:
-			c = ((c & 0x7f)|((c & 0xf00)>>1)|((c & 0x4000)>>3))<<7;
-			break;
-		case 0x5000:
-		case 0x6000:
-			c = ((c & 0x7f)|((c & 0xf00)>>1)
-					|((c & 0x2000)>>2)|0x1000) << 7;
-			break;
-		case 0x7000:
-			c = ((c & 0x1f)|((c & 0x60)<<5)
-					| ((c & 0x700)>>1)|0x1000) << 7;
-			break;
-		}
-		return ((caddr_t)(c + QP_KJROM + (sr->extent.y > 16 ? 0 : 96)));
-	} else {
-		/*
-		 * UNKNOWN char
-		 */
-		return ((caddr_t)zero);
-	}
+    if ((c >= 0x20) && (c <= 0x7e)) {
+        /*
+         * ASCII char
+         */
+        c -= ' ';
+        c = ((c & 0x1f) | ((c & 0xe0) << 2)) << 7;
+        return ((caddr_t)(c + QP_KJROM + (sr->extent.y > 16 ? 0 : 96)));
+    } else if ((c >= 0xa1) && (c <= 0xdf)) {
+        /*
+         * KANA char
+         */
+        if (sr->extent.y > 16)
+            return ((caddr_t)ext_fnt24_addr[c + 64]);
+        else
+            return ((caddr_t)ext_fnt_addr[c + 64]);
+    } else if ((c >= 0x2000) && (c <= 0x7fff)) {
+        /*
+         * KANJI char
+         */
+        switch (c & 0x7000) {
+        case 0x2000:
+            c = ((c & 0x1f)|((c & 0x60)<<5)|((c & 0x700)>>1))<<7;
+            break;
+        case 0x3000:
+        case 0x4000:
+            c = ((c & 0x7f)|((c & 0xf00)>>1)|((c & 0x4000)>>3))<<7;
+            break;
+        case 0x5000:
+        case 0x6000:
+            c = ((c & 0x7f)|((c & 0xf00)>>1)
+                    |((c & 0x2000)>>2)|0x1000) << 7;
+            break;
+        case 0x7000:
+            c = ((c & 0x1f)|((c & 0x60)<<5)
+                    | ((c & 0x700)>>1)|0x1000) << 7;
+            break;
+        }
+        return ((caddr_t)(c + QP_KJROM + (sr->extent.y > 16 ? 0 : 96)));
+    } else {
+        /*
+         * UNKNOWN char
+         */
+        return ((caddr_t)zero);
+    }
 }
 #endif /* NNWB514 > 0 || NNWB251 > 0 || NNWB256 > 0 */

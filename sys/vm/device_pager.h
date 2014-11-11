@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1990 University of Utah.
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,19 +35,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)device_pager.h	8.3 (Berkeley) 12/13/93
+ *  @(#)device_pager.h  8.3 (Berkeley) 12/13/93
  */
 
-#ifndef	_DEVICE_PAGER_
-#define	_DEVICE_PAGER_	1
+#ifndef _DEVICE_PAGER_
+#define _DEVICE_PAGER_  1
 
 /*
  * Device pager private data.
  */
 struct devpager {
-	struct pglist	devp_pglist;	/* list of pages allocated */
-	vm_object_t	devp_object;	/* object representing this device */
+    struct pglist   devp_pglist;    /* list of pages allocated */
+    vm_object_t     devp_object;    /* object representing this device */
 };
-typedef struct devpager	*dev_pager_t;
+typedef struct devpager *dev_pager_t;
 
-#endif	/* _DEVICE_PAGER_ */
+#endif  /* _DEVICE_PAGER_ */

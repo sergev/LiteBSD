@@ -1,6 +1,6 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vm_prot.h	8.1 (Berkeley) 6/11/93
+ *  @(#)vm_prot.h   8.1 (Berkeley) 6/11/93
  *
  *
  * Copyright (c) 1987, 1990 Carnegie-Mellon University.
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -63,40 +63,40 @@
  */
 
 /*
- *	Virtual memory protection definitions.
+ *  Virtual memory protection definitions.
  */
 
-#ifndef	_VM_PROT_
-#define	_VM_PROT_
+#ifndef _VM_PROT_
+#define _VM_PROT_
 
 /*
- *	Types defined:
+ *  Types defined:
  *
- *	vm_prot_t		VM protection values.
+ *  vm_prot_t       VM protection values.
  */
 
-typedef int		vm_prot_t;
+typedef int     vm_prot_t;
 
 /*
- *	Protection values, defined as bits within the vm_prot_t type
+ *  Protection values, defined as bits within the vm_prot_t type
  */
 
-#define	VM_PROT_NONE	((vm_prot_t) 0x00)
+#define VM_PROT_NONE    ((vm_prot_t) 0x00)
 
-#define VM_PROT_READ	((vm_prot_t) 0x01)	/* read permission */
-#define VM_PROT_WRITE	((vm_prot_t) 0x02)	/* write permission */
-#define VM_PROT_EXECUTE	((vm_prot_t) 0x04)	/* execute permission */
+#define VM_PROT_READ    ((vm_prot_t) 0x01)  /* read permission */
+#define VM_PROT_WRITE   ((vm_prot_t) 0x02)  /* write permission */
+#define VM_PROT_EXECUTE ((vm_prot_t) 0x04)  /* execute permission */
 
 /*
- *	The default protection for newly-created virtual memory
+ *  The default protection for newly-created virtual memory
  */
 
-#define VM_PROT_DEFAULT	(VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
+#define VM_PROT_DEFAULT (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
 
 /*
- *	The maximum privileges possible, for parameter checking.
+ *  The maximum privileges possible, for parameter checking.
  */
 
-#define VM_PROT_ALL	(VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
+#define VM_PROT_ALL     (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
 
 #endif /* _VM_PROT_ */

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1988 Stephen Deering.
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Stephen Deering of Stanford University.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)igmp.h	8.1 (Berkeley) 6/10/93
+ *  @(#)igmp.h  8.1 (Berkeley) 6/10/93
  */
 
 /* Internet Group Management Protocol (IGMP) definitions. */
@@ -43,17 +43,17 @@
  * IGMP packet format.
  */
 struct igmp {
-	u_char		igmp_type;	/* version & type of IGMP message  */
-	u_char		igmp_code;	/* unused, should be zero          */
-	u_short		igmp_cksum;	/* IP-style checksum               */
-	struct in_addr	igmp_group;	/* group address being reported    */
-};					/*  (zero for queries)             */
+    u_char      igmp_type;      /* version & type of IGMP message  */
+    u_char      igmp_code;      /* unused, should be zero          */
+    u_short     igmp_cksum;     /* IP-style checksum               */
+    struct in_addr  igmp_group; /* group address being reported    */
+};                              /*  (zero for queries)             */
 
-#define IGMP_MINLEN		     8
+#define IGMP_MINLEN     8
 
-#define IGMP_HOST_MEMBERSHIP_QUERY   0x11  /* message types, incl. version */
-#define IGMP_HOST_MEMBERSHIP_REPORT  0x12
-#define IGMP_DVMRP		     0x13  /* for experimental multicast   */
-					   /*  routing protocol            */
+#define IGMP_HOST_MEMBERSHIP_QUERY  0x11    /* message types, incl. version */
+#define IGMP_HOST_MEMBERSHIP_REPORT 0x12
+#define IGMP_DVMRP                  0x13    /* for experimental multicast   */
+                                            /*  routing protocol            */
 
-#define IGMP_MAX_HOST_REPORT_DELAY   10    /* max delay for response to    */
+#define IGMP_MAX_HOST_REPORT_DELAY  10      /* max delay for response to    */

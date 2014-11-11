@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)asm.h	8.1 (Berkeley) 6/11/93
+ *  @(#)asm.h   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: asm.h,v 1.5 92/11/26 03:04:42 torek Exp $
  */
@@ -62,29 +62,29 @@
  */
 
 /* load byte from alternate address space */
-#define	lduba(loc, asi) ({ \
-	register int _lduba_v; \
-	__asm __volatile("lduba [%1]%2,%0" : "=r" (_lduba_v) : \
-	    "r" ((int)(loc)), "n" (asi)); \
-	_lduba_v; \
+#define lduba(loc, asi) ({ \
+    register int _lduba_v; \
+    __asm __volatile("lduba [%1]%2,%0" : "=r" (_lduba_v) : \
+        "r" ((int)(loc)), "n" (asi)); \
+    _lduba_v; \
 })
 
 /* load int from alternate address space */
-#define	lda(loc, asi) ({ \
-	register int _lda_v; \
-	__asm __volatile("lda [%1]%2,%0" : "=r" (_lda_v) : \
-	    "r" ((int)(loc)), "n" (asi)); \
-	_lda_v; \
+#define lda(loc, asi) ({ \
+    register int _lda_v; \
+    __asm __volatile("lda [%1]%2,%0" : "=r" (_lda_v) : \
+        "r" ((int)(loc)), "n" (asi)); \
+    _lda_v; \
 })
 
 /* store byte to alternate address space */
-#define	stba(loc, asi, value) ({ \
-	__asm __volatile("stba %0,[%1]%2" : : \
-	    "r" ((int)(value)), "r" ((int)(loc)), "n" (asi)); \
+#define stba(loc, asi, value) ({ \
+    __asm __volatile("stba %0,[%1]%2" : : \
+        "r" ((int)(value)), "r" ((int)(loc)), "n" (asi)); \
 })
 
 /* store int to alternate address space */
-#define	sta(loc, asi, value) ({ \
-	__asm __volatile("sta %0,[%1]%2" : : \
-	    "r" ((int)(value)), "r" ((int)(loc)), "n" (asi)); \
+#define sta(loc, asi, value) ({ \
+    __asm __volatile("sta %0,[%1]%2" : : \
+        "r" ((int)(value)), "r" ((int)(loc)), "n" (asi)); \
 })

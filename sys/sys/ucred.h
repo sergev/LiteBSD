@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,33 +30,33 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ucred.h	8.4 (Berkeley) 1/9/95
+ *  @(#)ucred.h 8.4 (Berkeley) 1/9/95
  */
 
 #ifndef _SYS_UCRED_H_
-#define	_SYS_UCRED_H_
+#define _SYS_UCRED_H_
 
 /*
  * Credentials.
  */
 struct ucred {
-	u_short	cr_ref;			/* reference count */
-	uid_t	cr_uid;			/* effective user id */
-	short	cr_ngroups;		/* number of groups */
-	gid_t	cr_groups[NGROUPS];	/* groups */
+    u_short cr_ref;             /* reference count */
+    uid_t   cr_uid;             /* effective user id */
+    short   cr_ngroups;         /* number of groups */
+    gid_t   cr_groups[NGROUPS]; /* groups */
 };
 #define cr_gid cr_groups[0]
-#define NOCRED ((struct ucred *)0)	/* no credential available */
-#define FSCRED ((struct ucred *)-1)	/* filesystem credential */
+#define NOCRED ((struct ucred *)0)  /* no credential available */
+#define FSCRED ((struct ucred *)-1) /* filesystem credential */
 
 #ifdef KERNEL
-#define	crhold(cr)	(cr)->cr_ref++
+#define crhold(cr)  (cr)->cr_ref++
 
-struct ucred	*crcopy __P((struct ucred *cr));
-struct ucred	*crdup __P((struct ucred *cr));
-void		crfree __P((struct ucred *cr));
-struct ucred	*crget __P((void));
-int		suser __P((struct ucred *cred, u_short *acflag));
+struct ucred    *crcopy __P((struct ucred *cr));
+struct ucred    *crdup __P((struct ucred *cr));
+void    crfree __P((struct ucred *cr));
+struct ucred    *crget __P((void));
+int     suser __P((struct ucred *cred, u_short *acflag));
 #endif /* KERNEL */
 
 #endif /* !_SYS_UCRED_H_ */

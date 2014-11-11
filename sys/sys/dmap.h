@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,22 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dmap.h	8.2 (Berkeley) 1/4/94
+ *  @(#)dmap.h  8.2 (Berkeley) 1/4/94
  */
 
 #ifndef _SYS_DMAP_H_
-#define	_SYS_DMAP_H_
+#define _SYS_DMAP_H_
 
 /*
  * Definitions for the mapping of vitual swap space to the physical swap
  * area - the disk map.
  */
-#define	NDMAP	38		/* size of the swap area map */
+#define NDMAP   38          /* size of the swap area map */
 
 struct dmap {
-	swblk_t dm_size;	/* current size used by process */
-	swblk_t dm_alloc;	/* amount of physical swap space allocated */
-	swblk_t dm_map[NDMAP];	/* first disk block number in each chunk */
+    swblk_t dm_size;        /* current size used by process */
+    swblk_t dm_alloc;       /* amount of physical swap space allocated */
+    swblk_t dm_map[NDMAP];  /* first disk block number in each chunk */
 };
 #ifdef KERNEL
 struct dmap zdmap;
@@ -54,7 +54,7 @@ int dmmin, dmmax, dmtext;
 
 /* The following structure is that ``returned'' from a call to vstodb(). */
 struct dblock {
-	swblk_t db_base;	/* base of physical contig drum block */
-	swblk_t db_size;	/* size of block */
+    swblk_t db_base;        /* base of physical contig drum block */
+    swblk_t db_size;        /* size of block */
 };
-#endif	/* !_SYS_DMAP_H_ */
+#endif  /* !_SYS_DMAP_H_ */

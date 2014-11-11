@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)mfs_extern.h	8.4 (Berkeley) 3/30/95
+ *  @(#)mfs_extern.h    8.4 (Berkeley) 3/30/95
  */
 
 struct buf;
@@ -43,20 +43,20 @@ struct vnode;
 struct vfsconf;
 
 __BEGIN_DECLS
-int	mfs_badop __P((void));
-int	mfs_bmap __P((struct vop_bmap_args *));
-int	mfs_close __P((struct vop_close_args *));
-void	mfs_doio __P((struct buf *bp, caddr_t base));
-int	mfs_inactive __P((struct vop_inactive_args *)); /* XXX */
-int	mfs_reclaim __P((struct vop_reclaim_args *));
-int	mfs_init __P((struct vfsconf *));
-int	mfs_ioctl __P((struct vop_ioctl_args *));
-int	mfs_mount __P((struct mount *mp,
-	    char *path, caddr_t data, struct nameidata *ndp, struct proc *p));
-int	mfs_open __P((struct vop_open_args *));
-int	mfs_print __P((struct vop_print_args *)); /* XXX */
-#define	mfs_revoke vop_revoke
-int	mfs_start __P((struct mount *mp, int flags, struct proc *p));
-int	mfs_statfs __P((struct mount *mp, struct statfs *sbp, struct proc *p));
-int	mfs_strategy __P((struct vop_strategy_args *)); /* XXX */
+int     mfs_badop __P((void));
+int     mfs_bmap __P((struct vop_bmap_args *));
+int     mfs_close __P((struct vop_close_args *));
+void    mfs_doio __P((struct buf *bp, caddr_t base));
+int     mfs_inactive __P((struct vop_inactive_args *)); /* XXX */
+int     mfs_reclaim __P((struct vop_reclaim_args *));
+int     mfs_init __P((struct vfsconf *));
+int     mfs_ioctl __P((struct vop_ioctl_args *));
+int     mfs_mount __P((struct mount *mp,
+                    char *path, caddr_t data, struct nameidata *ndp, struct proc *p));
+int     mfs_open __P((struct vop_open_args *));
+int     mfs_print __P((struct vop_print_args *)); /* XXX */
+#define mfs_revoke vop_revoke
+int     mfs_start __P((struct mount *mp, int flags, struct proc *p));
+int     mfs_statfs __P((struct mount *mp, struct statfs *sbp, struct proc *p));
+int     mfs_strategy __P((struct vop_strategy_args *)); /* XXX */
 __END_DECLS

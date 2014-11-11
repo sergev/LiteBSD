@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)open.c	8.1 (Berkeley) 6/11/93
+ *  @(#)open.c  8.1 (Berkeley) 6/11/93
  *  
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
@@ -66,60 +66,60 @@
 #include <stand/ufs.h>
 
 /*
- *	File primitives proper
+ *  File primitives proper
  */
 
 struct fs_ops file_system[] = {
-	{ ufs_open, ufs_close, ufs_read, ufs_write, ufs_seek, ufs_stat }
+    { ufs_open, ufs_close, ufs_read, ufs_write, ufs_seek, ufs_stat }
 };
-#define	NFSYS	(sizeof(file_system) / sizeof(struct fs_ops))
+#define NFSYS   (sizeof(file_system) / sizeof(struct fs_ops))
 
 struct open_file files[SOPEN_MAX];
 
 open(fname, mode)
-	char *fname;
-	int mode;
+    char *fname;
+    int mode;
 {
-	register struct open_file *f;
-	register int fd, i, error;
-	char *file;
+    register struct open_file *f;
+    register int fd, i, error;
+    char *file;
 
-	/* find a free file descriptor */
-	for (fd = 0, f = files; fd < SOPEN_MAX; fd++, f++)
-		if (f->f_flags == 0)
-			goto fnd;
-	return (-1);
+    /* find a free file descriptor */
+    for (fd = 0, f = files; fd < SOPEN_MAX; fd++, f++)
+        if (f->f_flags == 0)
+            goto fnd;
+    return (-1);
 fnd:
-	/*
-	 * Try to open the device.
-	 * Convert open mode (0,1,2) to F_READ, F_WRITE.
-	 */
-	f->f_flags = mode + 1;
-	f->f_dev = (struct devsw *)0;
-	file = (char *)0;
-	error = devopen(f, fname, &file);
-	if (error || f->f_dev == (struct devsw *)0)
-		goto err;
+    /*
+     * Try to open the device.
+     * Convert open mode (0,1,2) to F_READ, F_WRITE.
+     */
+    f->f_flags = mode + 1;
+    f->f_dev = (struct devsw *)0;
+    file = (char *)0;
+    error = devopen(f, fname, &file);
+    if (error || f->f_dev == (struct devsw *)0)
+        goto err;
 
-	/* see if we opened a raw device; otherwise, 'file' is the file name. */
-	if (file == (char *)0) {
-		f->f_flags |= F_RAW;
-		return (0);
-	}
+    /* see if we opened a raw device; otherwise, 'file' is the file name. */
+    if (file == (char *)0) {
+        f->f_flags |= F_RAW;
+        return (0);
+    }
 
-	/* pass file name to the different filesystem open routines */
-	for (i = 0; i < NFSYS; i++) {
-		/* convert mode (0,1,2) to FREAD, FWRITE. */
-		error = (file_system[i].open)(file, f);
-		if (error == 0) {
-			f->f_ops = &file_system[i];
-			return (fd);
-		}
-	}
-	if (!error)
-		error = ENOENT;
+    /* pass file name to the different filesystem open routines */
+    for (i = 0; i < NFSYS; i++) {
+        /* convert mode (0,1,2) to FREAD, FWRITE. */
+        error = (file_system[i].open)(file, f);
+        if (error == 0) {
+            f->f_ops = &file_system[i];
+            return (fd);
+        }
+    }
+    if (!error)
+        error = ENOENT;
 
 err:
-	errno = error;
-	return (-1);
+    errno = error;
+    return (-1);
 }

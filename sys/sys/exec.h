@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)exec.h	8.4 (Berkeley) 2/19/95
+ *  @(#)exec.h  8.4 (Berkeley) 2/19/95
  */
 
 #include <machine/exec.h>
@@ -49,14 +49,14 @@
  * are the equivalent for the environment.
  */
 struct ps_strings {
-	char	*ps_argvstr;	/* first of 0 or more argument strings */
-	int	ps_nargvstr;	/* the number of argument strings */
-	char	*ps_envstr;	/* first of 0 or more environment strings */
-	int	ps_nenvstr;	/* the number of environment strings */
+    char    *ps_argvstr;    /* first of 0 or more argument strings */
+    int     ps_nargvstr;    /* the number of argument strings */
+    char    *ps_envstr;     /* first of 0 or more environment strings */
+    int     ps_nenvstr;     /* the number of environment strings */
 };
 
 /*
  * Address of ps_strings structure (in user space).
  */
-#define	PS_STRINGS \
-	((struct ps_strings *)(USRSTACK - sizeof(struct ps_strings)))
+#define PS_STRINGS \
+    ((struct ps_strings *)(USRSTACK - sizeof(struct ps_strings)))

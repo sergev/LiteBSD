@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)btreg.h	8.2 (Berkeley) 1/21/94
+ *  @(#)btreg.h 8.2 (Berkeley) 1/21/94
  *
  * from: $Header: btreg.h,v 1.1 93/10/12 15:28:52 torek Exp $
  */
@@ -61,10 +61,10 @@
  * The colormap address register increments automatically, so the
  * above write is done as:
  *
- *	bt->bt_addr = 0;
- *	bt->bt_cmap = R0G0B0R1;
- *	bt->bt_cmap = G1B1R2G2;
- *	...
+ *  bt->bt_addr = 0;
+ *  bt->bt_cmap = R0G0B0R1;
+ *  bt->bt_cmap = G1B1R2G2;
+ *  ...
  *
  * Yow!
  *
@@ -73,8 +73,8 @@
  * bytes written to it.
  */
 struct bt_regs {
-	u_int	bt_addr;		/* map address register */
-	u_int	bt_cmap;		/* colormap data register */
-	u_int	bt_ctrl;		/* control register */
-	u_int	bt_omap;		/* overlay (cursor) map register */
+    u_int   bt_addr;        /* map address register */
+    u_int   bt_cmap;        /* colormap data register */
+    u_int   bt_ctrl;        /* control register */
+    u_int   bt_omap;        /* overlay (cursor) map register */
 };

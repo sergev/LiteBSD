@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)filedesc.h	8.1 (Berkeley) 6/2/93
+ *  @(#)filedesc.h  8.1 (Berkeley) 6/2/93
  */
 
 /*
@@ -47,19 +47,19 @@
  * should be selected to be the biggest multiple of OFILESIZE (see below)
  * that will fit in a power-of-two sized piece of memory.
  */
-#define NDFILE		20
-#define NDEXTENT	50		/* 250 bytes in 256-byte alloc. */ 
+#define NDFILE      20
+#define NDEXTENT    50      /* 250 bytes in 256-byte alloc. */
 
 struct filedesc {
-	struct	file **fd_ofiles;	/* file structures for open files */
-	char	*fd_ofileflags;		/* per-process open file flags */
-	struct	vnode *fd_cdir;		/* current directory */
-	struct	vnode *fd_rdir;		/* root directory */
-	int	fd_nfiles;		/* number of open files allocated */
-	u_short	fd_lastfile;		/* high-water mark of fd_ofiles */
-	u_short	fd_freefile;		/* approx. next free file */
-	u_short	fd_cmask;		/* mask for file creation */
-	u_short	fd_refcnt;		/* reference count */
+    struct  file **fd_ofiles;   /* file structures for open files */
+    char    *fd_ofileflags;     /* per-process open file flags */
+    struct  vnode *fd_cdir;     /* current directory */
+    struct  vnode *fd_rdir;     /* root directory */
+    int     fd_nfiles;          /* number of open files allocated */
+    u_short fd_lastfile;        /* high-water mark of fd_ofiles */
+    u_short fd_freefile;        /* approx. next free file */
+    u_short fd_cmask;           /* mask for file creation */
+    u_short fd_refcnt;          /* reference count */
 };
 
 /*
@@ -67,20 +67,20 @@ struct filedesc {
  * one of the above, plus arrays for NDFILE descriptors.
  */
 struct filedesc0 {
-	struct	filedesc fd_fd;
-	/*
-	 * These arrays are used when the number of open files is
-	 * <= NDFILE, and are then pointed to by the pointers above.
-	 */
-	struct	file *fd_dfiles[NDFILE];
-	char	fd_dfileflags[NDFILE];
+    struct  filedesc fd_fd;
+    /*
+     * These arrays are used when the number of open files is
+     * <= NDFILE, and are then pointed to by the pointers above.
+     */
+    struct  file *fd_dfiles[NDFILE];
+    char    fd_dfileflags[NDFILE];
 };
 
 /*
  * Per-process open flags.
  */
-#define	UF_EXCLOSE 	0x01		/* auto-close on exec */
-#define	UF_MAPPED 	0x02		/* mapped from device */
+#define UF_EXCLOSE  0x01        /* auto-close on exec */
+#define UF_MAPPED   0x02        /* mapped from device */
 
 /*
  * Storage required per open file descriptor.
@@ -91,9 +91,9 @@ struct filedesc0 {
 /*
  * Kernel global variables and routines.
  */
-int	fdalloc __P((struct proc *p, int want, int *result));
-int	fdavail __P((struct proc *p, int n));
-int	falloc __P((struct proc *p, struct file **resultfp, int *resultfd));
-struct	filedesc *fdcopy __P((struct proc *p));
-void	fdfree __P((struct proc *p));
+int     fdalloc __P((struct proc *p, int want, int *result));
+int     fdavail __P((struct proc *p, int n));
+int     falloc __P((struct proc *p, struct file **resultfp, int *resultfd));
+struct  filedesc *fdcopy __P((struct proc *p));
+void    fdfree __P((struct proc *p));
 #endif

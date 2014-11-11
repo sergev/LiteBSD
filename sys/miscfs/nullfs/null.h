@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software donated to Berkeley by
  * Jan-Simon Pendry.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,18 +33,18 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)null.h	8.3 (Berkeley) 8/20/94
+ *  @(#)null.h  8.3 (Berkeley) 8/20/94
  *
  * $Id: lofs.h,v 1.8 1992/05/30 10:05:43 jsp Exp jsp $
  */
 
 struct null_args {
-	char		*target;	/* Target of loopback  */
+    char        *target;    /* Target of loopback  */
 };
 
 struct null_mount {
-	struct mount	*nullm_vfs;
-	struct vnode	*nullm_rootvp;	/* Reference to root null_node */
+    struct mount    *nullm_vfs;
+    struct vnode    *nullm_rootvp;  /* Reference to root null_node */
 };
 
 #ifdef KERNEL
@@ -52,21 +52,21 @@ struct null_mount {
  * A cache of vnode references
  */
 struct null_node {
-	LIST_ENTRY(null_node)	null_hash;	/* Hash list */
-	struct vnode	        *null_lowervp;	/* VREFed once */
-	struct vnode		*null_vnode;	/* Back pointer */
+    LIST_ENTRY(null_node)   null_hash;  /* Hash list */
+    struct vnode        *null_lowervp;  /* VREFed once */
+    struct vnode        *null_vnode;    /* Back pointer */
 };
 
 extern int null_node_create __P((struct mount *mp, struct vnode *target, struct vnode **vpp));
 
-#define	MOUNTTONULLMOUNT(mp) ((struct null_mount *)((mp)->mnt_data))
-#define	VTONULL(vp) ((struct null_node *)(vp)->v_data)
-#define	NULLTOV(xp) ((xp)->null_vnode)
+#define MOUNTTONULLMOUNT(mp) ((struct null_mount *)((mp)->mnt_data))
+#define VTONULL(vp) ((struct null_node *)(vp)->v_data)
+#define NULLTOV(xp) ((xp)->null_vnode)
 #ifdef NULLFS_DIAGNOSTIC
 extern struct vnode *null_checkvp __P((struct vnode *vp, char *fil, int lno));
-#define	NULLVPTOLOWERVP(vp) null_checkvp((vp), __FILE__, __LINE__)
+#define NULLVPTOLOWERVP(vp) null_checkvp((vp), __FILE__, __LINE__)
 #else
-#define	NULLVPTOLOWERVP(vp) (VTONULL(vp)->null_lowervp)
+#define NULLVPTOLOWERVP(vp) (VTONULL(vp)->null_lowervp)
 #endif
 
 extern int (**null_vnodeop_p)();

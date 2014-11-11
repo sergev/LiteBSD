@@ -4,7 +4,7 @@
  * Author: Serge Vakulenko
  * (C) 2012 RetroBSD project
  */
-#ifndef	_SPI_H
+#ifndef _SPI_H
 #define _SPI_H
 
 #include <sys/ioctl.h>

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,26 +30,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp_debug.h	8.1 (Berkeley) 6/10/93
+ *  @(#)tcp_debug.h 8.1 (Berkeley) 6/10/93
  */
 
-struct	tcp_debug {
-	n_time	td_time;
-	short	td_act;
-	short	td_ostate;
-	caddr_t	td_tcb;
-	struct	tcpiphdr td_ti;
-	short	td_req;
-	struct	tcpcb td_cb;
+struct  tcp_debug {
+    n_time  td_time;
+    short   td_act;
+    short   td_ostate;
+    caddr_t td_tcb;
+    struct  tcpiphdr td_ti;
+    short   td_req;
+    struct  tcpcb td_cb;
 };
 
-#define	TA_INPUT 	0
-#define	TA_OUTPUT	1
-#define	TA_USER		2
-#define	TA_RESPOND	3
-#define	TA_DROP		4
+#define TA_INPUT    0
+#define TA_OUTPUT   1
+#define TA_USER     2
+#define TA_RESPOND  3
+#define TA_DROP     4
 
 #ifdef TANAMES
-char	*tanames[] =
+char    *tanames[] =
     { "input", "output", "user", "respond", "drop" };
 #endif

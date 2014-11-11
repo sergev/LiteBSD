@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  *
  * from: $Hdr: scu.h,v 4.300 91/07/02 16:38:38 root Rel41 $ SONY
  *
- *	@(#)scu.h	8.1 (Berkeley) 6/11/93
+ *  @(#)scu.h   8.1 (Berkeley) 6/11/93
  */
 
 /*
@@ -47,26 +47,26 @@
 
 #include <sys/ioctl.h>
 
-#define	RAWSCSI_USE_PIO		0
-#define	RAWSCSI_USE_DMA		1
+#define RAWSCSI_USE_PIO     0
+#define RAWSCSI_USE_DMA     1
 
-#define	SCSIIOCCMD		_IOWR('S', 0, struct sc_ureq)
-#define	SCSIIOCGTIMEO		_IOR('S', 1, int)
-#define	SCSIIOCSTIMEO		_IOW('S', 2, int)
+#define SCSIIOCCMD          _IOWR('S', 0, struct sc_ureq)
+#define SCSIIOCGTIMEO       _IOR('S', 1, int)
+#define SCSIIOCSTIMEO       _IOW('S', 2, int)
 
 /*
- *	scsi user request parameter block
+ *  scsi user request parameter block
  */
 struct sc_ureq {
-/*00*/	u_int	scu_istatus;
-/*04*/	u_int	scu_tstatus;
-/*08*/	u_int	scu_identify;
-/*0c*/	u_int	scu_message;
-/*10*/	u_int	scu_bytesec;
-/*14*/	u_char	scu_cdb[12];
-/*20*/	u_char	scu_param[20];
-/*34*/	u_char	*scu_addr;
-/*38*/	u_int	scu_count;
+/*00*/  u_int   scu_istatus;
+/*04*/  u_int   scu_tstatus;
+/*08*/  u_int   scu_identify;
+/*0c*/  u_int   scu_message;
+/*10*/  u_int   scu_bytesec;
+/*14*/  u_char  scu_cdb[12];
+/*20*/  u_char  scu_param[20];
+/*34*/  u_char  *scu_addr;
+/*38*/  u_int   scu_count;
 /*3c*/
 };
 

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,14 +30,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ufs.h	8.1 (Berkeley) 6/11/93
+ *  @(#)ufs.h   8.1 (Berkeley) 6/11/93
  */
 
-int	ufs_open __P((char *path, struct open_file *f));
-int	ufs_close __P((struct open_file *f));
-int	ufs_read __P((struct open_file *f, char *buf,
-		u_int size, u_int *resid));
-int	ufs_write __P((struct open_file *f, char *buf,
-		u_int size, u_int *resid));
-off_t	ufs_seek __P((struct open_file *f, off_t offset, int where));
-int	ufs_stat __P((struct open_file *f, struct stat *sb));
+int     ufs_open __P((char *path, struct open_file *f));
+int     ufs_close __P((struct open_file *f));
+int     ufs_read __P((struct open_file *f, char *buf,
+            u_int size, u_int *resid));
+int     ufs_write __P((struct open_file *f, char *buf,
+            u_int size, u_int *resid));
+off_t   ufs_seek __P((struct open_file *f, off_t offset, int where));
+int     ufs_stat __P((struct open_file *f, struct stat *sb));

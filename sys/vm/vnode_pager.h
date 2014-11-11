@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1990 University of Utah.
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * the Systems Programming Group of the University of Utah Computer
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,25 +35,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vnode_pager.h	8.1 (Berkeley) 6/11/93
+ *  @(#)vnode_pager.h   8.1 (Berkeley) 6/11/93
  */
 
-#ifndef	_VNODE_PAGER_
-#define	_VNODE_PAGER_	1
+#ifndef _VNODE_PAGER_
+#define _VNODE_PAGER_   1
 
 /*
  * VNODE pager private data.
  */
 struct vnpager {
-	int		vnp_flags;	/* flags */
-	struct vnode	*vnp_vp;	/* vnode */
-	vm_size_t	vnp_size;	/* vnode current size */
+    int             vnp_flags;  /* flags */
+    struct vnode    *vnp_vp;    /* vnode */
+    vm_size_t       vnp_size;   /* vnode current size */
 };
-typedef struct vnpager	*vn_pager_t;
+typedef struct vnpager  *vn_pager_t;
 
-#define VN_PAGER_NULL	((vn_pager_t)0)
+#define VN_PAGER_NULL   ((vn_pager_t)0)
 
-#define	VNP_PAGING	0x01		/* vnode used for pageout */
-#define VNP_CACHED	0x02		/* vnode is cached */
+#define VNP_PAGING  0x01        /* vnode used for pageout */
+#define VNP_CACHED  0x02        /* vnode is cached */
 
-#endif	/* _VNODE_PAGER_ */
+#endif  /* _VNODE_PAGER_ */

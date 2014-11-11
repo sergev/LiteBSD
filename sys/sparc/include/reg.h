@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,13 +39,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)reg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)reg.h   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: reg.h,v 1.8 92/11/26 02:04:44 torek Exp $
  */
 
 #ifndef _MACHINE_REG_H_
-#define	_MACHINE_REG_H_
+#define _MACHINE_REG_H_
 
 /*
  * Registers passed to trap/syscall/etc.
@@ -55,12 +55,12 @@
  * This is known as `cheating'.)
  */
 struct trapframe {
-	int	tf_psr;		/* psr */
-	int	tf_pc;		/* return pc */
-	int	tf_npc;		/* return npc */
-	int	tf_y;		/* %y register */
-	int	tf_global[8];	/* global registers in trap's caller */
-	int	tf_out[8];	/* output registers in trap's caller */
+    int tf_psr;         /* psr */
+    int tf_pc;          /* return pc */
+    int tf_npc;         /* return npc */
+    int tf_y;           /* %y register */
+    int tf_global[8];   /* global registers in trap's caller */
+    int tf_out[8];      /* output registers in trap's caller */
 };
 
 /*
@@ -72,8 +72,8 @@ struct trapframe {
  * performance penalty).
  */
 struct rwindow {
-	int	rw_local[8];		/* %l0..%l7 */
-	int	rw_in[8];		/* %i0..%i7 */
+    int rw_local[8];        /* %l0..%l7 */
+    int rw_in[8];           /* %i0..%i7 */
 };
 
 #include <machine/fsr.h>
@@ -87,17 +87,17 @@ struct rwindow {
  * size would be even better''.  Of course, we cannot do that; we
  * need to malloc these.
  */
-#define	FP_QSIZE	16
+#define FP_QSIZE    16
 
 struct fp_qentry {
-	int	*fq_addr;		/* the instruction's address */
-	int	fq_instr;		/* the instruction itself */
+    int     *fq_addr;           /* the instruction's address */
+    int     fq_instr;           /* the instruction itself */
 };
 struct fpstate {
-	u_int	fs_regs[32];		/* our view is 32 32-bit registers */
-	int	fs_fsr;			/* %fsr */
-	int	fs_qsize;		/* actual queue depth */
-	struct	fp_qentry fs_queue[FP_QSIZE];	/* queue contents */
+    u_int   fs_regs[32];        /* our view is 32 32-bit registers */
+    int     fs_fsr;             /* %fsr */
+    int     fs_qsize;           /* actual queue depth */
+    struct  fp_qentry fs_queue[FP_QSIZE];   /* queue contents */
 };
 
 #endif /* _MACHINE_REG_H_ */

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)swapgeneric.c	8.2 (Berkeley) 3/21/94
+ *  @(#)swapgeneric.c   8.2 (Berkeley) 3/21/94
  */
 
 /*
@@ -40,17 +40,17 @@
 #include <sys/param.h>
 #include <sys/conf.h>
 
-dev_t	rootdev = NODEV;
-dev_t	dumpdev = NODEV;
+dev_t   rootdev = NODEV;
+dev_t   dumpdev = NODEV;
 
-struct	swdevt swdevt[] = {
-	{ makedev(7, 1), 0, 0 },	/* sd0b */
-	{ makedev(7, 9), 0, 0 },	/* sd1b */
-	{ makedev(7, 17), 0, 0 },	/* sd2b */
-	{ makedev(7, 25), 0, 0 },	/* sd3b */
-	{ makedev(7, 33), 0, 0 },	/* sd4b */
-	{ makedev(7, 41), 0, 0 },	/* sd5b */
-	{ makedev(7, 49), 0, 0 },	/* sd6b */
-	{ makedev(7, 57), 0, 0 },	/* sd7b */
-	{ NODEV, 0, 0 }
+struct  swdevt swdevt[] = {
+    { makedev(7, 1),  0, 0 },   /* sd0b */
+    { makedev(7, 9),  0, 0 },   /* sd1b */
+    { makedev(7, 17), 0, 0 },   /* sd2b */
+    { makedev(7, 25), 0, 0 },   /* sd3b */
+    { makedev(7, 33), 0, 0 },   /* sd4b */
+    { makedev(7, 41), 0, 0 },   /* sd5b */
+    { makedev(7, 49), 0, 0 },   /* sd6b */
+    { makedev(7, 57), 0, 0 },   /* sd7b */
+    { NODEV, 0, 0 }
 };

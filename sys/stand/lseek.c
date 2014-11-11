@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)lseek.c	8.1 (Berkeley) 6/11/93
+ *  @(#)lseek.c 8.1 (Berkeley) 6/11/93
  *  
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
@@ -66,20 +66,20 @@
 
 off_t
 lseek(fd, offset, where)
-	int fd;
-	off_t offset;
-	int where;
+    int fd;
+    off_t offset;
+    int where;
 {
-	register struct open_file *f = &files[fd];
+    register struct open_file *f = &files[fd];
 
-	if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {
-		errno = EBADF;
-		return (-1);
-	}
+    if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {
+        errno = EBADF;
+        return (-1);
+    }
 
-	/* seek is not supported on raw devices */
-	if (f->f_flags & F_RAW)
-		return ((off_t)-1);
+    /* seek is not supported on raw devices */
+    if (f->f_flags & F_RAW)
+        return ((off_t)-1);
 
-	return (f->f_ops->seek)(f, offset, where);
+    return (f->f_ops->seek)(f, offset, where);
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)fpu_emu.h	8.1 (Berkeley) 6/11/93
+ *  @(#)fpu_emu.h   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: fpu_emu.h,v 1.3 92/11/26 01:30:54 torek Exp $
  */
@@ -50,10 +50,10 @@
  *
  * Floating point numbers are carried around internally in an `expanded'
  * or `unpacked' form consisting of:
- *	- sign
- *	- unbiased exponent
- *	- mantissa (`1.' + 112-bit fraction + guard + round)
- *	- sticky bit
+ *  - sign
+ *  - unbiased exponent
+ *  - mantissa (`1.' + 112-bit fraction + guard + round)
+ *  - sticky bit
  * Any implied `1' bit is inserted, giving a 113-bit mantissa that is
  * always nonzero.  Additional low-order `guard' and `round' bits are
  * scrunched in, making the entire mantissa 115 bits long.  This is divided
@@ -80,19 +80,19 @@
  * extra work where possible.
  */
 struct fpn {
-	int	fp_class;		/* see below */
-	int	fp_sign;		/* 0 => positive, 1 => negative */
-	int	fp_exp;			/* exponent (unbiased) */
-	int	fp_sticky;		/* nonzero bits lost at right end */
-	u_int	fp_mant[4];		/* 115-bit mantissa */
+    int     fp_class;       /* see below */
+    int     fp_sign;        /* 0 => positive, 1 => negative */
+    int     fp_exp;         /* exponent (unbiased) */
+    int     fp_sticky;      /* nonzero bits lost at right end */
+    u_int   fp_mant[4];     /* 115-bit mantissa */
 };
 
-#define	FP_NMANT	115		/* total bits in mantissa (incl g,r) */
-#define	FP_NG		2		/* number of low-order guard bits */
-#define	FP_LG		((FP_NMANT - 1) & 31)	/* log2(1.0) for fp_mant[0] */
-#define	FP_QUIETBIT	(1 << (FP_LG - 1))	/* Quiet bit in NaNs (0.5) */
-#define	FP_1		(1 << FP_LG)		/* 1.0 in fp_mant[0] */
-#define	FP_2		(1 << (FP_LG + 1))	/* 2.0 in fp_mant[0] */
+#define FP_NMANT    115                 /* total bits in mantissa (incl g,r) */
+#define FP_NG       2                   /* number of low-order guard bits */
+#define FP_LG       ((FP_NMANT - 1) & 31)   /* log2(1.0) for fp_mant[0] */
+#define FP_QUIETBIT (1 << (FP_LG - 1))  /* Quiet bit in NaNs (0.5) */
+#define FP_1        (1 << FP_LG)        /* 1.0 in fp_mant[0] */
+#define FP_2        (1 << (FP_LG + 1))  /* 2.0 in fp_mant[0] */
 
 /*
  * Number classes.  Since zero, Inf, and NaN cannot be represented using
@@ -100,50 +100,50 @@ struct fpn {
  * In addition, to make computation easier and to follow Appendix N of
  * the SPARC Version 8 standard, we give each kind of NaN a separate class.
  */
-#define	FPC_SNAN	-2		/* signalling NaN (sign irrelevant) */
-#define	FPC_QNAN	-1		/* quiet NaN (sign irrelevant) */
-#define	FPC_ZERO	0		/* zero (sign matters) */
-#define	FPC_NUM		1		/* number (sign matters) */
-#define	FPC_INF		2		/* infinity (sign matters) */
+#define FPC_SNAN    -2      /* signalling NaN (sign irrelevant) */
+#define FPC_QNAN    -1      /* quiet NaN (sign irrelevant) */
+#define FPC_ZERO    0       /* zero (sign matters) */
+#define FPC_NUM     1       /* number (sign matters) */
+#define FPC_INF     2       /* infinity (sign matters) */
 
-#define	ISNAN(fp)	((fp)->fp_class < 0)
-#define	ISZERO(fp)	((fp)->fp_class == 0)
-#define	ISINF(fp)	((fp)->fp_class == FPC_INF)
+#define ISNAN(fp)   ((fp)->fp_class < 0)
+#define ISZERO(fp)  ((fp)->fp_class == 0)
+#define ISINF(fp)   ((fp)->fp_class == FPC_INF)
 
 /*
  * ORDER(x,y) `sorts' a pair of `fpn *'s so that the right operand (y) points
  * to the `more significant' operand for our purposes.  Appendix N says that
  * the result of a computation involving two numbers are:
  *
- *	If both are SNaN: operand 2, converted to Quiet
- *	If only one is SNaN: the SNaN operand, converted to Quiet
- *	If both are QNaN: operand 2
- *	If only one is QNaN: the QNaN operand
+ *  If both are SNaN: operand 2, converted to Quiet
+ *  If only one is SNaN: the SNaN operand, converted to Quiet
+ *  If both are QNaN: operand 2
+ *  If only one is QNaN: the QNaN operand
  *
  * In addition, in operations with an Inf operand, the result is usually
  * Inf.  The class numbers are carefully arranged so that if
- *	(unsigned)class(op1) > (unsigned)class(op2)
+ *  (unsigned)class(op1) > (unsigned)class(op2)
  * then op1 is the one we want; otherwise op2 is the one we want.
  */
-#define	ORDER(x, y) { \
-	if ((u_int)(x)->fp_class > (u_int)(y)->fp_class) \
-		SWAP(x, y); \
+#define ORDER(x, y) { \
+    if ((u_int)(x)->fp_class > (u_int)(y)->fp_class) \
+        SWAP(x, y); \
 }
-#define	SWAP(x, y) { \
-	register struct fpn *swap; \
-	swap = (x), (x) = (y), (y) = swap; \
+#define SWAP(x, y) { \
+    register struct fpn *swap; \
+    swap = (x), (x) = (y), (y) = swap; \
 }
 
 /*
  * Emulator state.
  */
 struct fpemu {
-	struct	fpstate *fe_fpstate;	/* registers, etc */
-	int	fe_fsr;			/* fsr copy (modified during op) */
-	int	fe_cx;			/* exceptions */
-	struct	fpn fe_f1;		/* operand 1 */
-	struct	fpn fe_f2;		/* operand 2, if required */
-	struct	fpn fe_f3;		/* available storage for result */
+    struct  fpstate *fe_fpstate; /* registers, etc */
+    int     fe_fsr;             /* fsr copy (modified during op) */
+    int     fe_cx;              /* exceptions */
+    struct  fpn fe_f1;          /* operand 1 */
+    struct  fpn fe_f2;          /* operand 2, if required */
+    struct  fpn fe_f3;          /* available storage for result */
 };
 
 /*
@@ -151,39 +151,39 @@ struct fpemu {
  * Each of these may modify its inputs (f1,f2) and/or the temporary.
  * Each returns a pointer to the result and/or sets exceptions.
  */
-struct	fpn *fpu_add(struct fpemu *);
-#define	fpu_sub(fe) ((fe)->fe_f2.fp_sign ^= 1, fpu_add(fe))
-struct	fpn *fpu_mul(struct fpemu *);
-struct	fpn *fpu_div(struct fpemu *);
-struct	fpn *fpu_sqrt(struct fpemu *);
+struct  fpn *fpu_add(struct fpemu *);
+#define fpu_sub(fe) ((fe)->fe_f2.fp_sign ^= 1, fpu_add(fe))
+struct  fpn *fpu_mul(struct fpemu *);
+struct  fpn *fpu_div(struct fpemu *);
+struct  fpn *fpu_sqrt(struct fpemu *);
 
 /*
  * Other functions.
  */
 
 /* Perform a compare instruction (with or without unordered exception). */
-void	fpu_compare(struct fpemu *, int);
+void    fpu_compare(struct fpemu *, int);
 
 /* Build a new Quiet NaN (sign=0, frac=all 1's). */
-struct	fpn *fpu_newnan(struct fpemu *);
+struct  fpn *fpu_newnan(struct fpemu *);
 
 /*
  * Shift a number right some number of bits, taking care of round/sticky.
  * Note that the result is probably not a well-formed number (it will lack
  * the normal 1-bit mant[0]&FP_1).
  */
-int	fpu_shr(struct fpn *, int);
+int     fpu_shr(struct fpn *, int);
 
 /* Conversion to and from internal format -- note asymmetry. */
-int	fpu_itofpn(struct fpn *, u_int);
-int	fpu_stofpn(struct fpn *, u_int);
-int	fpu_dtofpn(struct fpn *, u_int, u_int);
-int	fpu_xtofpn(struct fpn *, u_int, u_int, u_int, u_int);
+int     fpu_itofpn(struct fpn *, u_int);
+int     fpu_stofpn(struct fpn *, u_int);
+int     fpu_dtofpn(struct fpn *, u_int, u_int);
+int     fpu_xtofpn(struct fpn *, u_int, u_int, u_int, u_int);
 
-u_int	fpu_fpntoi(struct fpemu *, struct fpn *);
-u_int	fpu_fpntos(struct fpemu *, struct fpn *);
-u_int	fpu_fpntod(struct fpemu *, struct fpn *);
-u_int	fpu_fpntox(struct fpemu *, struct fpn *);
+u_int   fpu_fpntoi(struct fpemu *, struct fpn *);
+u_int   fpu_fpntos(struct fpemu *, struct fpn *);
+u_int   fpu_fpntod(struct fpemu *, struct fpn *);
+u_int   fpu_fpntox(struct fpemu *, struct fpn *);
 
-void	fpu_explode(struct fpemu *, struct fpn *, int, int);
-void	fpu_implode(struct fpemu *, struct fpn *, int, u_int *);
+void    fpu_explode(struct fpemu *, struct fpn *, int, int);
+void    fpu_implode(struct fpemu *, struct fpn *, int, u_int *);

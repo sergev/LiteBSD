@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1993 Jan-Simon Pendry
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Jan-Simon Pendry.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,10 +34,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)procfs_note.c	8.2 (Berkeley) 1/21/94
+ *  @(#)procfs_note.c   8.2 (Berkeley) 1/21/94
  *
  * From:
- *	$Id: procfs_note.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
+ *  $Id: procfs_note.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
  */
 
 #include <sys/param.h>
@@ -51,23 +51,23 @@
 
 int
 procfs_donote(curp, p, pfs, uio)
-	struct proc *curp;
-	struct proc *p;
-	struct pfsnode *pfs;
-	struct uio *uio;
+    struct proc *curp;
+    struct proc *p;
+    struct pfsnode *pfs;
+    struct uio *uio;
 {
-	int xlen;
-	int error;
-	char note[PROCFS_NOTELEN+1];
+    int xlen;
+    int error;
+    char note[PROCFS_NOTELEN+1];
 
-	if (uio->uio_rw != UIO_WRITE)
-		return (EINVAL);
+    if (uio->uio_rw != UIO_WRITE)
+        return (EINVAL);
 
-	xlen = PROCFS_NOTELEN;
-	error = vfs_getuserstr(uio, note, &xlen);
-	if (error)
-		return (error);
+    xlen = PROCFS_NOTELEN;
+    error = vfs_getuserstr(uio, note, &xlen);
+    if (error)
+        return (error);
 
-	/* send to process's notify function */
-	return (EOPNOTSUPP);
+    /* send to process's notify function */
+    return (EOPNOTSUPP);
 }

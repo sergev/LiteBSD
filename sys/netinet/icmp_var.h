@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,39 +30,39 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)icmp_var.h	8.1 (Berkeley) 6/10/93
+ *  @(#)icmp_var.h  8.1 (Berkeley) 6/10/93
  */
 
 /*
  * Variables related to this implementation
  * of the internet control message protocol.
  */
-struct	icmpstat {
+struct  icmpstat {
 /* statistics related to icmp packets generated */
-	u_long	icps_error;		/* # of calls to icmp_error */
-	u_long	icps_oldshort;		/* no error 'cuz old ip too short */
-	u_long	icps_oldicmp;		/* no error 'cuz old was icmp */
-	u_long	icps_outhist[ICMP_MAXTYPE + 1];
+    u_long  icps_error;         /* # of calls to icmp_error */
+    u_long  icps_oldshort;      /* no error 'cuz old ip too short */
+    u_long  icps_oldicmp;       /* no error 'cuz old was icmp */
+    u_long  icps_outhist[ICMP_MAXTYPE + 1];
 /* statistics related to input messages processed */
- 	u_long	icps_badcode;		/* icmp_code out of range */
-	u_long	icps_tooshort;		/* packet < ICMP_MINLEN */
-	u_long	icps_checksum;		/* bad checksum */
-	u_long	icps_badlen;		/* calculated bound mismatch */
-	u_long	icps_reflect;		/* number of responses */
-	u_long	icps_inhist[ICMP_MAXTYPE + 1];
+    u_long  icps_badcode;       /* icmp_code out of range */
+    u_long  icps_tooshort;      /* packet < ICMP_MINLEN */
+    u_long  icps_checksum;      /* bad checksum */
+    u_long  icps_badlen;        /* calculated bound mismatch */
+    u_long  icps_reflect;       /* number of responses */
+    u_long  icps_inhist[ICMP_MAXTYPE + 1];
 };
 
 /*
  * Names for ICMP sysctl objects
  */
-#define	ICMPCTL_MASKREPL	1	/* allow replies to netmask requests */
-#define ICMPCTL_MAXID		2
+#define ICMPCTL_MASKREPL    1   /* allow replies to netmask requests */
+#define ICMPCTL_MAXID       2
 
 #define ICMPCTL_NAMES { \
-	{ 0, 0 }, \
-	{ "maskrepl", CTLTYPE_INT }, \
+    { 0, 0 }, \
+    { "maskrepl", CTLTYPE_INT }, \
 }
 
 #ifdef KERNEL
-struct	icmpstat icmpstat;
+struct  icmpstat icmpstat;
 #endif

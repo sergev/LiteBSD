@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to the Computer Systems
  * Engineering Group at Lawrence Berkeley Laboratory and to the University
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,7 +34,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)gallant19.h	8.1 (Berkeley) 6/11/93
+ *  @(#)gallant19.h 8.1 (Berkeley) 6/11/93
  *
  * from: $Header: gallant19.h,v 1.3 93/05/28 03:40:36 torek Exp $
  */
@@ -894,115 +894,115 @@ static u_long gallant19_126_pixels[] = {
 };
 static struct raster gallant19_126 = { 12, 22, 1, 1, gallant19_126_pixels, 0 };
 
-#define	null2 {0}, {0}
-#define	null4 null2, null2
-#define	null8 null4, null4
-#define	null16 null8, null8
-#define	null32 null16, null16
-#define	null64 null32, null32
-#define	null128 null64, null64
+#define null2 {0}, {0}
+#define null4 null2, null2
+#define null8 null4, null4
+#define null16 null8, null8
+#define null32 null16, null16
+#define null64 null32, null32
+#define null128 null64, null64
 
 struct raster_font gallant19 = {
     12, 22, RASFONT_FIXEDWIDTH|RASFONT_NOVERTICALMOVEMENT,
     {
-	null32,
-	{ &gallant19_32, 0, -15, 12, 0 },
-	{ &gallant19_33, 0, -15, 12, 0 },
-	{ &gallant19_34, 0, -15, 12, 0 },
-	{ &gallant19_35, 0, -15, 12, 0 },
-	{ &gallant19_36, 0, -15, 12, 0 },
-	{ &gallant19_37, 0, -15, 12, 0 },
-	{ &gallant19_38, 0, -15, 12, 0 },
-	{ &gallant19_39, 0, -15, 12, 0 },
-	{ &gallant19_40, 0, -15, 12, 0 },
-	{ &gallant19_41, 0, -15, 12, 0 },
-	{ &gallant19_42, 0, -15, 12, 0 },
-	{ &gallant19_43, 0, -15, 12, 0 },
-	{ &gallant19_44, 0, -15, 12, 0 },
-	{ &gallant19_45, 0, -15, 12, 0 },
-	{ &gallant19_46, 0, -15, 12, 0 },
-	{ &gallant19_47, 0, -15, 12, 0 },
-	{ &gallant19_48, 0, -15, 12, 0 },
-	{ &gallant19_49, 0, -15, 12, 0 },
-	{ &gallant19_50, 0, -15, 12, 0 },
-	{ &gallant19_51, 0, -15, 12, 0 },
-	{ &gallant19_52, 0, -15, 12, 0 },
-	{ &gallant19_53, 0, -15, 12, 0 },
-	{ &gallant19_54, 0, -15, 12, 0 },
-	{ &gallant19_55, 0, -15, 12, 0 },
-	{ &gallant19_56, 0, -15, 12, 0 },
-	{ &gallant19_57, 0, -15, 12, 0 },
-	{ &gallant19_58, 0, -15, 12, 0 },
-	{ &gallant19_59, 0, -15, 12, 0 },
-	{ &gallant19_60, 0, -15, 12, 0 },
-	{ &gallant19_61, 0, -15, 12, 0 },
-	{ &gallant19_62, 0, -15, 12, 0 },
-	{ &gallant19_63, 0, -15, 12, 0 },
-	{ &gallant19_64, 0, -15, 12, 0 },
-	{ &gallant19_65, 0, -15, 12, 0 },
-	{ &gallant19_66, 0, -15, 12, 0 },
-	{ &gallant19_67, 0, -15, 12, 0 },
-	{ &gallant19_68, 0, -15, 12, 0 },
-	{ &gallant19_69, 0, -15, 12, 0 },
-	{ &gallant19_70, 0, -15, 12, 0 },
-	{ &gallant19_71, 0, -15, 12, 0 },
-	{ &gallant19_72, 0, -15, 12, 0 },
-	{ &gallant19_73, 0, -15, 12, 0 },
-	{ &gallant19_74, 0, -15, 12, 0 },
-	{ &gallant19_75, 0, -15, 12, 0 },
-	{ &gallant19_76, 0, -15, 12, 0 },
-	{ &gallant19_77, 0, -15, 12, 0 },
-	{ &gallant19_78, 0, -15, 12, 0 },
-	{ &gallant19_79, 0, -15, 12, 0 },
-	{ &gallant19_80, 0, -15, 12, 0 },
-	{ &gallant19_81, 0, -15, 12, 0 },
-	{ &gallant19_82, 0, -15, 12, 0 },
-	{ &gallant19_83, 0, -15, 12, 0 },
-	{ &gallant19_84, 0, -15, 12, 0 },
-	{ &gallant19_85, 0, -15, 12, 0 },
-	{ &gallant19_86, 0, -15, 12, 0 },
-	{ &gallant19_87, 0, -15, 12, 0 },
-	{ &gallant19_88, 0, -15, 12, 0 },
-	{ &gallant19_89, 0, -15, 12, 0 },
-	{ &gallant19_90, 0, -15, 12, 0 },
-	{ &gallant19_91, 0, -15, 12, 0 },
-	{ &gallant19_92, 0, -15, 12, 0 },
-	{ &gallant19_93, 0, -15, 12, 0 },
-	{ &gallant19_94, 0, -15, 12, 0 },
-	{ &gallant19_95, 0, -15, 12, 0 },
-	{ &gallant19_96, 0, -15, 12, 0 },
-	{ &gallant19_97, 0, -15, 12, 0 },
-	{ &gallant19_98, 0, -15, 12, 0 },
-	{ &gallant19_99, 0, -15, 12, 0 },
-	{ &gallant19_100, 0, -15, 12, 0 },
-	{ &gallant19_101, 0, -15, 12, 0 },
-	{ &gallant19_102, 0, -15, 12, 0 },
-	{ &gallant19_103, 0, -15, 12, 0 },
-	{ &gallant19_104, 0, -15, 12, 0 },
-	{ &gallant19_105, 0, -15, 12, 0 },
-	{ &gallant19_106, 0, -15, 12, 0 },
-	{ &gallant19_107, 0, -15, 12, 0 },
-	{ &gallant19_108, 0, -15, 12, 0 },
-	{ &gallant19_109, 0, -15, 12, 0 },
-	{ &gallant19_110, 0, -15, 12, 0 },
-	{ &gallant19_111, 0, -15, 12, 0 },
-	{ &gallant19_112, 0, -15, 12, 0 },
-	{ &gallant19_113, 0, -15, 12, 0 },
-	{ &gallant19_114, 0, -15, 12, 0 },
-	{ &gallant19_115, 0, -15, 12, 0 },
-	{ &gallant19_116, 0, -15, 12, 0 },
-	{ &gallant19_117, 0, -15, 12, 0 },
-	{ &gallant19_118, 0, -15, 12, 0 },
-	{ &gallant19_119, 0, -15, 12, 0 },
-	{ &gallant19_120, 0, -15, 12, 0 },
-	{ &gallant19_121, 0, -15, 12, 0 },
-	{ &gallant19_122, 0, -15, 12, 0 },
-	{ &gallant19_123, 0, -15, 12, 0 },
-	{ &gallant19_124, 0, -15, 12, 0 },
-	{ &gallant19_125, 0, -15, 12, 0 },
-	{ &gallant19_126, 0, -15, 12, 0 },
-	{ 0 },
-	null128
+    null32,
+    { &gallant19_32, 0, -15, 12, 0 },
+    { &gallant19_33, 0, -15, 12, 0 },
+    { &gallant19_34, 0, -15, 12, 0 },
+    { &gallant19_35, 0, -15, 12, 0 },
+    { &gallant19_36, 0, -15, 12, 0 },
+    { &gallant19_37, 0, -15, 12, 0 },
+    { &gallant19_38, 0, -15, 12, 0 },
+    { &gallant19_39, 0, -15, 12, 0 },
+    { &gallant19_40, 0, -15, 12, 0 },
+    { &gallant19_41, 0, -15, 12, 0 },
+    { &gallant19_42, 0, -15, 12, 0 },
+    { &gallant19_43, 0, -15, 12, 0 },
+    { &gallant19_44, 0, -15, 12, 0 },
+    { &gallant19_45, 0, -15, 12, 0 },
+    { &gallant19_46, 0, -15, 12, 0 },
+    { &gallant19_47, 0, -15, 12, 0 },
+    { &gallant19_48, 0, -15, 12, 0 },
+    { &gallant19_49, 0, -15, 12, 0 },
+    { &gallant19_50, 0, -15, 12, 0 },
+    { &gallant19_51, 0, -15, 12, 0 },
+    { &gallant19_52, 0, -15, 12, 0 },
+    { &gallant19_53, 0, -15, 12, 0 },
+    { &gallant19_54, 0, -15, 12, 0 },
+    { &gallant19_55, 0, -15, 12, 0 },
+    { &gallant19_56, 0, -15, 12, 0 },
+    { &gallant19_57, 0, -15, 12, 0 },
+    { &gallant19_58, 0, -15, 12, 0 },
+    { &gallant19_59, 0, -15, 12, 0 },
+    { &gallant19_60, 0, -15, 12, 0 },
+    { &gallant19_61, 0, -15, 12, 0 },
+    { &gallant19_62, 0, -15, 12, 0 },
+    { &gallant19_63, 0, -15, 12, 0 },
+    { &gallant19_64, 0, -15, 12, 0 },
+    { &gallant19_65, 0, -15, 12, 0 },
+    { &gallant19_66, 0, -15, 12, 0 },
+    { &gallant19_67, 0, -15, 12, 0 },
+    { &gallant19_68, 0, -15, 12, 0 },
+    { &gallant19_69, 0, -15, 12, 0 },
+    { &gallant19_70, 0, -15, 12, 0 },
+    { &gallant19_71, 0, -15, 12, 0 },
+    { &gallant19_72, 0, -15, 12, 0 },
+    { &gallant19_73, 0, -15, 12, 0 },
+    { &gallant19_74, 0, -15, 12, 0 },
+    { &gallant19_75, 0, -15, 12, 0 },
+    { &gallant19_76, 0, -15, 12, 0 },
+    { &gallant19_77, 0, -15, 12, 0 },
+    { &gallant19_78, 0, -15, 12, 0 },
+    { &gallant19_79, 0, -15, 12, 0 },
+    { &gallant19_80, 0, -15, 12, 0 },
+    { &gallant19_81, 0, -15, 12, 0 },
+    { &gallant19_82, 0, -15, 12, 0 },
+    { &gallant19_83, 0, -15, 12, 0 },
+    { &gallant19_84, 0, -15, 12, 0 },
+    { &gallant19_85, 0, -15, 12, 0 },
+    { &gallant19_86, 0, -15, 12, 0 },
+    { &gallant19_87, 0, -15, 12, 0 },
+    { &gallant19_88, 0, -15, 12, 0 },
+    { &gallant19_89, 0, -15, 12, 0 },
+    { &gallant19_90, 0, -15, 12, 0 },
+    { &gallant19_91, 0, -15, 12, 0 },
+    { &gallant19_92, 0, -15, 12, 0 },
+    { &gallant19_93, 0, -15, 12, 0 },
+    { &gallant19_94, 0, -15, 12, 0 },
+    { &gallant19_95, 0, -15, 12, 0 },
+    { &gallant19_96, 0, -15, 12, 0 },
+    { &gallant19_97, 0, -15, 12, 0 },
+    { &gallant19_98, 0, -15, 12, 0 },
+    { &gallant19_99, 0, -15, 12, 0 },
+    { &gallant19_100, 0, -15, 12, 0 },
+    { &gallant19_101, 0, -15, 12, 0 },
+    { &gallant19_102, 0, -15, 12, 0 },
+    { &gallant19_103, 0, -15, 12, 0 },
+    { &gallant19_104, 0, -15, 12, 0 },
+    { &gallant19_105, 0, -15, 12, 0 },
+    { &gallant19_106, 0, -15, 12, 0 },
+    { &gallant19_107, 0, -15, 12, 0 },
+    { &gallant19_108, 0, -15, 12, 0 },
+    { &gallant19_109, 0, -15, 12, 0 },
+    { &gallant19_110, 0, -15, 12, 0 },
+    { &gallant19_111, 0, -15, 12, 0 },
+    { &gallant19_112, 0, -15, 12, 0 },
+    { &gallant19_113, 0, -15, 12, 0 },
+    { &gallant19_114, 0, -15, 12, 0 },
+    { &gallant19_115, 0, -15, 12, 0 },
+    { &gallant19_116, 0, -15, 12, 0 },
+    { &gallant19_117, 0, -15, 12, 0 },
+    { &gallant19_118, 0, -15, 12, 0 },
+    { &gallant19_119, 0, -15, 12, 0 },
+    { &gallant19_120, 0, -15, 12, 0 },
+    { &gallant19_121, 0, -15, 12, 0 },
+    { &gallant19_122, 0, -15, 12, 0 },
+    { &gallant19_123, 0, -15, 12, 0 },
+    { &gallant19_124, 0, -15, 12, 0 },
+    { &gallant19_125, 0, -15, 12, 0 },
+    { &gallant19_126, 0, -15, 12, 0 },
+    { 0 },
+    null128
     },
 #ifdef COLORFONT_CACHE
     (struct raster_fontcache*) -1

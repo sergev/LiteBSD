@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)stdarg.h	8.2 (Berkeley) 9/27/93
+ *  @(#)stdarg.h    8.2 (Berkeley) 9/27/93
  *
  * from: $Header: stdarg.h,v 1.9 93/09/27 21:12:38 torek Exp $
  */
@@ -60,16 +60,16 @@ typedef char *va_list;
  *
  * va_end cleans up after va_start.  There is nothing to do there.
  */
-#ifdef __GCC_NEW_VARARGS__	/* gcc 2.4.5 */
-#define va_start(ap, l)	((ap) = (char *)__builtin_saveregs())
-#else				/* gcc 2.3.3 */
-#define va_start(ap, l)	(__builtin_saveregs(), \
-			 (ap) = (char *)__builtin_next_arg())
+#ifdef __GCC_NEW_VARARGS__  /* gcc 2.4.5 */
+#define va_start(ap, l) ((ap) = (char *)__builtin_saveregs())
+#else               /* gcc 2.3.3 */
+#define va_start(ap, l) (__builtin_saveregs(), \
+             (ap) = (char *)__builtin_next_arg())
 #endif
-#define va_end(ap)	/* empty */
+#define va_end(ap)  /* empty */
 
 #if __GNUC__ == 1
-#define __extension__	/* hack for bootstrapping via gcc 1.x */
+#define __extension__   /* hack for bootstrapping via gcc 1.x */
 #endif
 
 /*
@@ -93,24 +93,24 @@ typedef char *va_list;
  * The extraneous casts through `void *' avoid gcc alignment warnings.
  */
 #ifdef __cplusplus
-#define	__va_8byte(ap, ty) ({ \
-	int __va_i[2]; \
-	__va_i[0] = ((int *)(void *)(ap))[0]; \
-	__va_i[1] = ((int *)(void *)(ap))[1]; \
-	(ap) += 8; *(ty *)(void *)__va_i; })
+#define __va_8byte(ap, ty) ({ \
+    int __va_i[2]; \
+    __va_i[0] = ((int *)(void *)(ap))[0]; \
+    __va_i[1] = ((int *)(void *)(ap))[1]; \
+    (ap) += 8; *(ty *)(void *)__va_i; })
 #else
-#define	__va_8byte(ap, ty) ({ \
-	union { ty __d; int __i[2]; } __va_u; \
-	__va_u.__i[0] = ((int *)(void *)(ap))[0]; \
-	__va_u.__i[1] = ((int *)(void *)(ap))[1]; \
-	(ap) += 8; __va_u.__d; })
+#define __va_8byte(ap, ty) ({ \
+    union { ty __d; int __i[2]; } __va_u; \
+    __va_u.__i[0] = ((int *)(void *)(ap))[0]; \
+    __va_u.__i[1] = ((int *)(void *)(ap))[1]; \
+    (ap) += 8; __va_u.__d; })
 #endif /* __cplusplus */
 
 #define va_arg(ap, ty) __extension__ ({ \
     ty __va_temp; /* to check for invisible-ptr struct-valued args */ \
     __builtin_classify_type(__va_temp) >= 12 ? \
-	((ty **)(void *)((ap) += sizeof(ty *)))[-1][0] : \
+    ((ty **)(void *)((ap) += sizeof(ty *)))[-1][0] : \
     sizeof(ty) == 8 ? __va_8byte(ap, ty) : \
-	((ty *)(void *)(ap += sizeof(ty)))[-1]; })
+    ((ty *)(void *)(ap += sizeof(ty)))[-1]; })
 
 #endif /* _MACHINE_STDARG_H */

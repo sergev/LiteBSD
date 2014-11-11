@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,7 +35,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)map.h	8.3 (Berkeley) 1/26/94
+ *  @(#)map.h   8.3 (Berkeley) 1/26/94
  */
 
 /*
@@ -62,21 +62,21 @@
  * as it is used internally by the resource map routines.
  */
 struct map {
-	struct	mapent *m_limit;	/* address of last slot in map */
-	char	*m_name;		/* name of resource, for messages */
+    struct  mapent *m_limit;    /* address of last slot in map */
+    char    *m_name;            /* name of resource, for messages */
 };
 
 struct mapent {
-	long	m_size;			/* size of this segment of the map */
-	long	m_addr;			/* start of segment */
+    long    m_size;             /* size of this segment of the map */
+    long    m_addr;             /* start of segment */
 };
 
 #ifdef KERNEL
-#define	ARGMAPSIZE	16
-struct	map *kmemmap, *mbmap, *swapmap;
-int	nswapmap;
+#define ARGMAPSIZE  16
+struct  map *kmemmap, *mbmap, *swapmap;
+int     nswapmap;
 
-long	rmalloc __P((struct map *, long));
-void	rmfree __P((struct map *, long, long));
-void	rminit __P((struct map *, long, long, char *, int));
+long    rmalloc __P((struct map *, long));
+void    rmfree __P((struct map *, long, long));
+void    rminit __P((struct map *, long, long, char *, int));
 #endif

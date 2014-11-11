@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software donated to Berkeley by
  * Jan-Simon Pendry.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,44 +33,44 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)fdesc.h	8.8 (Berkeley) 4/3/95
+ *  @(#)fdesc.h 8.8 (Berkeley) 4/3/95
  *
  * $Id: fdesc.h,v 1.8 1993/04/06 15:28:33 jsp Exp $
  */
 
 #ifdef KERNEL
 struct fdescmount {
-	struct vnode	*f_root;	/* Root node */
+    struct vnode    *f_root;    /* Root node */
 };
 
-#define FD_ROOT		2
-#define FD_DEVFD	3
-#define FD_STDIN	4
-#define FD_STDOUT	5
-#define FD_STDERR	6
-#define FD_CTTY		7
-#define FD_DESC		8
-#define FD_MAX		12
+#define FD_ROOT     2
+#define FD_DEVFD    3
+#define FD_STDIN    4
+#define FD_STDOUT   5
+#define FD_STDERR   6
+#define FD_CTTY     7
+#define FD_DESC     8
+#define FD_MAX      12
 
 typedef enum {
-	Froot,
-	Fdevfd,
-	Fdesc,
-	Flink,
-	Fctty
+    Froot,
+    Fdevfd,
+    Fdesc,
+    Flink,
+    Fctty
 } fdntype;
 
 struct fdescnode {
-	LIST_ENTRY(fdescnode) fd_hash;	/* Hash list */
-	struct vnode	*fd_vnode;	/* Back ptr to vnode */
-	fdntype		fd_type;	/* Type of this node */
-	unsigned	fd_fd;		/* Fd to be dup'ed */
-	char		*fd_link;	/* Link to fd/n */
-	int		fd_ix;		/* filesystem index */
+    LIST_ENTRY(fdescnode) fd_hash;  /* Hash list */
+    struct vnode    *fd_vnode;      /* Back ptr to vnode */
+    fdntype         fd_type;        /* Type of this node */
+    unsigned        fd_fd;          /* Fd to be dup'ed */
+    char            *fd_link;       /* Link to fd/n */
+    int             fd_ix;          /* filesystem index */
 };
 
-#define VFSTOFDESC(mp)	((struct fdescmount *)((mp)->mnt_data))
-#define	VTOFDESC(vp) ((struct fdescnode *)(vp)->v_data)
+#define VFSTOFDESC(mp)  ((struct fdescmount *)((mp)->mnt_data))
+#define VTOFDESC(vp)    ((struct fdescnode *)(vp)->v_data)
 
 extern dev_t devctty;
 extern int fdesc_init __P((struct vfsconf *));

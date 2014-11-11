@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bwtworeg.h	8.1 (Berkeley) 6/11/93
+ *  @(#)bwtworeg.h  8.1 (Berkeley) 6/11/93
  *
  * from: $Header: bwtworeg.h,v 1.4 92/11/26 02:28:05 torek Exp $
  */
@@ -53,30 +53,30 @@
  * the sparc addressing modes work well.
  */
 struct bwtworeg {
-	/*
-	 * The xxx0 range is all 0xff on my IPC but causes a screen glitch
-	 * on my SS1+, so it must do *some*thing... the xxx1 range is full
-	 * of values but I do not know what they are.  bw_ctl changes for
-	 * a blanked screen.
-	 */
-	char	bw_xxx0[16];
-	u_char	bw_ctl;			/* contains video enable */
-	char	bw_xxx1[15];
+    /*
+     * The xxx0 range is all 0xff on my IPC but causes a screen glitch
+     * on my SS1+, so it must do *some*thing... the xxx1 range is full
+     * of values but I do not know what they are.  bw_ctl changes for
+     * a blanked screen.
+     */
+    char    bw_xxx0[16];
+    u_char  bw_ctl;         /* contains video enable */
+    char    bw_xxx1[15];
 };
 
 /* bits in bw_ctl */
-#define	CTL_VE	0x40			/* video enable */
+#define CTL_VE  0x40            /* video enable */
 
 /* offsets */
-#define	BWREG_ID	0
-#define	BWREG_REG	0x400000
-#define	BWREG_MEM	0x800000
+#define BWREG_ID    0
+#define BWREG_REG   0x400000
+#define BWREG_MEM   0x800000
 
 /* same, but for gdb */
 struct bwtwo_all {
-	long	ba_id;			/* ID = 0xfe010104 on my IPC */
-	char	ba_xxx0[0x400000-4];
-	struct	bwtworeg ba_reg;	/* control registers */
-	char	ba_xxx1[0x400000-32];
-	char	ba_ram[4096];		/* actually larger */
+    long    ba_id;          /* ID = 0xfe010104 on my IPC */
+    char    ba_xxx0[0x400000-4];
+    struct  bwtworeg ba_reg;    /* control registers */
+    char    ba_xxx1[0x400000-32];
+    char    ba_ram[4096];       /* actually larger */
 };

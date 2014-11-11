@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,30 +33,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)conf.c	8.1 (Berkeley) 6/10/93
+ *  @(#)conf.c  8.1 (Berkeley) 6/10/93
  */
 
 #include <stand/stand.h>
 
-const	struct callback *callv;
-int	errno;
+const   struct callback *callv;
+int errno;
 
-extern int	nullsys(), nodev(), noioctl();
+extern int  nullsys(), nodev(), noioctl();
 
-int	rzstrategy(), rzopen(), rzclose();
-#define	rzioctl		noioctl
+int rzstrategy(), rzopen(), rzclose();
+#define rzioctl     noioctl
 
 #ifndef BOOT
-int	tzstrategy(), tzopen(), tzclose();
+int tzstrategy(), tzopen(), tzclose();
 #endif
-#define	tzioctl		noioctl
+#define tzioctl     noioctl
 
 
 struct devsw devsw[] = {
-	{ "rz",	rzstrategy,	rzopen,	rzclose,	rzioctl }, /*0*/
+    { "rz", rzstrategy, rzopen, rzclose,    rzioctl }, /*0*/
 #ifndef BOOT
-	{ "tz",	tzstrategy,	tzopen,	tzclose,	tzioctl }, /*1*/
+    { "tz", tzstrategy, tzopen, tzclose,    tzioctl }, /*1*/
 #endif
 };
 
-int	ndevs = (sizeof(devsw)/sizeof(devsw[0]));
+int ndevs = (sizeof(devsw)/sizeof(devsw[0]));

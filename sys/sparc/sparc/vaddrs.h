@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vaddrs.h	8.1 (Berkeley) 6/11/93
+ *  @(#)vaddrs.h    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: vaddrs.h,v 1.3 92/11/26 03:05:11 torek Exp $
  */
@@ -65,16 +65,16 @@
  */
 
 #ifndef IODEV_0
-#define	IODEV_0	0xfe000000	/* must match VM_MAX_KERNEL_ADDRESS */
+#define IODEV_0     0xfe000000      /* must match VM_MAX_KERNEL_ADDRESS */
 
-#define	TIMERREG_VA	(IODEV_0 + 0*NBPG)
-#define	ZS0_VA		(IODEV_0 + 1*NBPG)
-#define	ZS1_VA		(IODEV_0 + 2*NBPG)
-#define	AUXREG_VA	(IODEV_0 + 3*NBPG)
-#define	IODEV_BASE	(IODEV_0 + 4*NBPG)
-#define	IODEV_END	0xff000000		/* 16 MB of iospace */
+#define TIMERREG_VA (IODEV_0 + 0*NBPG)
+#define ZS0_VA      (IODEV_0 + 1*NBPG)
+#define ZS1_VA      (IODEV_0 + 2*NBPG)
+#define AUXREG_VA   (IODEV_0 + 3*NBPG)
+#define IODEV_BASE  (IODEV_0 + 4*NBPG)
+#define IODEV_END   0xff000000      /* 16 MB of iospace */
 
-#define	DVMA_BASE	0xfff00000
-#define	DVMA_END	0xfffc0000
+#define DVMA_BASE   0xfff00000
+#define DVMA_END    0xfffc0000
 
 #endif /* IODEV_0 */

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)auxreg.c	8.1 (Berkeley) 6/11/93
+ *  @(#)auxreg.c    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: auxreg.c,v 1.11 92/11/26 03:04:44 torek Exp $ (LBL)
  */
@@ -61,23 +61,23 @@ struct cfdriver auxregcd =
 #ifdef BLINK
 static int
 blink(zero)
-	void *zero;
+    void *zero;
 {
-	register int s;
-	register fixpt_t lav;
+    register int s;
+    register fixpt_t lav;
 
-	s = splhigh();
-	LED_FLIP;
-	splx(s);
-	/*
-	 * Blink rate is:
-	 *	full cycle every second if completely idle (loadav = 0)
-	 *	full cycle every 2 seconds if loadav = 1
-	 *	full cycle every 3 seconds if loadav = 2
-	 * etc.
-	 */
-	s = (((averunnable[0] + FSCALE) * hz) >> (FSHIFT + 1));
-	timeout(blink, (caddr_t)0, s);
+    s = splhigh();
+    LED_FLIP;
+    splx(s);
+    /*
+     * Blink rate is:
+     *  full cycle every second if completely idle (loadav = 0)
+     *  full cycle every 2 seconds if loadav = 1
+     *  full cycle every 3 seconds if loadav = 2
+     * etc.
+     */
+    s = (((averunnable[0] + FSCALE) * hz) >> (FSHIFT + 1));
+    timeout(blink, (caddr_t)0, s);
 }
 #endif
 
@@ -86,25 +86,25 @@ blink(zero)
  */
 static int
 auxregmatch(parent, cf, aux)
-	struct device *parent;
-	struct cfdata *cf;
-	void *aux;
+    struct device *parent;
+    struct cfdata *cf;
+    void *aux;
 {
 
-	return (strcmp("auxiliary-io", ((struct romaux *)aux)->ra_name) == 0);
+    return (strcmp("auxiliary-io", ((struct romaux *)aux)->ra_name) == 0);
 }
 
 /* ARGSUSED */
 static void
 auxregattach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+    struct device *parent, *self;
+    void *aux;
 {
-	struct romaux *ra = aux;
+    struct romaux *ra = aux;
 
-	(void)mapdev(ra->ra_paddr, AUXREG_VA, sizeof(long));
-	printf("\n");
+    (void)mapdev(ra->ra_paddr, AUXREG_VA, sizeof(long));
+    printf("\n");
 #ifdef BLINK
-	blink((caddr_t)0);
+    blink((caddr_t)0);
 #endif
 }

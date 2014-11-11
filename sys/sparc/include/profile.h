@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,20 +39,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)profile.h	8.1 (Berkeley) 6/11/93
+ *  @(#)profile.h   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: profile.h,v 1.8 92/11/26 02:04:41 torek Exp $
  */
 
 #define MCOUNT \
-        asm(".global mcount");\
-        asm("mcount:");\
-        asm("add %i7, 8, %o0");\
-        asm("sethi %hi(__mcount), %o2");\
-        asm("jmpl %o2 + %lo(__mcount), %g0");\
-        asm("add %o7, 8, %o1");
+    asm(".global mcount");\
+    asm("mcount:");\
+    asm("add %i7, 8, %o0");\
+    asm("sethi %hi(__mcount), %o2");\
+    asm("jmpl %o2 + %lo(__mcount), %g0");\
+    asm("add %o7, 8, %o1");
 
-#define	_MCOUNT_DECL	static void _mcount
+#define _MCOUNT_DECL    static void _mcount
 
 #ifdef KERNEL
 /*
@@ -60,6 +60,6 @@
  * counted (as soon as we get done with the current counting).  On the
  * SPARC, we just splhigh/splx as those do not recursively invoke mcount.
  */
-#define	MCOUNT_ENTER	s = splhigh()
-#define	MCOUNT_EXIT	splx(s)
+#define MCOUNT_ENTER    s = splhigh()
+#define MCOUNT_EXIT     splx(s)
 #endif /* KERNEL */

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1993 Jan-Simon Pendry
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Jan-Simon Pendry.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,10 +34,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)procfs_regs.c	8.4 (Berkeley) 6/15/94
+ *  @(#)procfs_regs.c   8.4 (Berkeley) 6/15/94
  *
  * From:
- *	$Id: procfs_regs.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
+ *  $Id: procfs_regs.c,v 3.2 1993/12/15 09:40:17 jsp Exp $
  */
 
 #include <sys/param.h>
@@ -51,45 +51,45 @@
 
 int
 procfs_doregs(curp, p, pfs, uio)
-	struct proc *curp;
-	struct proc *p;
-	struct pfsnode *pfs;
-	struct uio *uio;
+    struct proc *curp;
+    struct proc *p;
+    struct pfsnode *pfs;
+    struct uio *uio;
 {
-	int error;
-	struct reg r;
-	char *kv;
-	int kl;
+    int error;
+    struct reg r;
+    char *kv;
+    int kl;
 
-	kl = sizeof(r);
-	kv = (char *) &r;
+    kl = sizeof(r);
+    kv = (char *) &r;
 
-	kv += uio->uio_offset;
-	kl -= uio->uio_offset;
-	if (kl > uio->uio_resid)
-		kl = uio->uio_resid;
+    kv += uio->uio_offset;
+    kl -= uio->uio_offset;
+    if (kl > uio->uio_resid)
+        kl = uio->uio_resid;
 
-	if (kl < 0)
-		error = EINVAL;
-	else
-		error = procfs_read_regs(p, &r);
-	if (error == 0)
-		error = uiomove(kv, kl, uio);
-	if (error == 0 && uio->uio_rw == UIO_WRITE) {
-		if (p->p_stat != SSTOP)
-			error = EBUSY;
-		else
-			error = procfs_write_regs(p, &r);
-	}
+    if (kl < 0)
+        error = EINVAL;
+    else
+        error = procfs_read_regs(p, &r);
+    if (error == 0)
+        error = uiomove(kv, kl, uio);
+    if (error == 0 && uio->uio_rw == UIO_WRITE) {
+        if (p->p_stat != SSTOP)
+            error = EBUSY;
+        else
+            error = procfs_write_regs(p, &r);
+    }
 
-	uio->uio_offset = 0;
-	return (error);
+    uio->uio_offset = 0;
+    return (error);
 }
 
 int
 procfs_validregs(p)
-	struct proc *p;
+    struct proc *p;
 {
 
-	return ((p->p_flag & P_SYSTEM) == 0);
+    return ((p->p_flag & P_SYSTEM) == 0);
 }

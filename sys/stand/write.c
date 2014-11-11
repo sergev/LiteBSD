@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)write.c	8.1 (Berkeley) 6/11/93
+ *  @(#)write.c 8.1 (Berkeley) 6/11/93
  *  
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
@@ -65,26 +65,26 @@
 #include <stand/stand.h>
 
 write(fd, dest, bcount)
-	int fd;
-	char *dest;
-	u_int bcount;
+    int fd;
+    char *dest;
+    u_int bcount;
 {
-	register struct open_file *f = &files[fd];
-	u_int resid;
+    register struct open_file *f = &files[fd];
+    u_int resid;
 
-	if ((unsigned)fd >= SOPEN_MAX || !(f->f_flags & F_WRITE)) {
-		errno = EBADF;
-		return (-1);
-	}
-	if (f->f_flags & F_RAW) {
-		errno = (f->f_dev->dv_strategy)(f->f_devdata, F_WRITE,
-			(daddr_t)0, bcount, dest, &resid);
-		if (errno)
-			return (-1);
-		return (resid);
-	}
-	resid = bcount;
-	if (errno = (f->f_ops->write)(f, dest, bcount, &resid))
-		return (-1);
-	return (0);
+    if ((unsigned)fd >= SOPEN_MAX || !(f->f_flags & F_WRITE)) {
+        errno = EBADF;
+        return (-1);
+    }
+    if (f->f_flags & F_RAW) {
+        errno = (f->f_dev->dv_strategy)(f->f_devdata, F_WRITE,
+            (daddr_t)0, bcount, dest, &resid);
+        if (errno)
+            return (-1);
+        return (resid);
+    }
+    resid = bcount;
+    if (errno = (f->f_ops->write)(f, dest, bcount, &resid))
+        return (-1);
+    return (0);
 }

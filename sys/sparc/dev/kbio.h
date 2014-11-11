@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kbio.h	8.1 (Berkeley) 6/11/93
+ *  @(#)kbio.h  8.1 (Berkeley) 6/11/93
  *
  * from: $Header: kbio.h,v 1.4 92/11/26 01:16:32 torek Exp $ (LBL)
  */
@@ -67,20 +67,20 @@
  * real hardware commands and type numbers.
  */
 struct kiockey {
-	int	kio_tablemask;	/* whatever */
-	u_char	kio_station;	/* key number */
-	u_char	kio_entry;	/* HOLE if not present */
-	char	kio_text[10];	/* the silly escape sequences (unsupported) */
+    int     kio_tablemask;  /* whatever */
+    u_char  kio_station;    /* key number */
+    u_char  kio_entry;      /* HOLE if not present */
+    char    kio_text[10];   /* the silly escape sequences (unsupported) */
 };
 
-#define	HOLE	0x302		/* value for kio_entry to say `really type 3' */
+#define HOLE    0x302       /* value for kio_entry to say `really type 3' */
 
-#define	KIOCTRANS	_IOW('k', 0, int)	/* set translation mode */
-			/* (we only accept TR_UNTRANS_EVENT) */
-#define	KIOCGETKEY	_IOWR('k', 2, struct kiockey) /* fill in kio_entry */
-#define	KIOCGTRANS	_IOR('k', 5, int)	/* get translation mode */
-#define	KIOCCMD		_IOW('k', 8, int)	/* X uses this to ring bell */
-#define	KIOCTYPE	_IOR('k', 9, int)	/* get keyboard type */
-#define	KIOCSDIRECT	_IOW('k', 10, int)	/* keys to console? */
+#define KIOCTRANS   _IOW('k', 0, int)   /* set translation mode */
+            /* (we only accept TR_UNTRANS_EVENT) */
+#define KIOCGETKEY  _IOWR('k', 2, struct kiockey) /* fill in kio_entry */
+#define KIOCGTRANS  _IOR('k', 5, int)   /* get translation mode */
+#define KIOCCMD     _IOW('k', 8, int)   /* X uses this to ring bell */
+#define KIOCTYPE    _IOR('k', 9, int)   /* get keyboard type */
+#define KIOCSDIRECT _IOW('k', 10, int)  /* keys to console? */
 
-#define	TR_UNTRANS_EVENT	3
+#define TR_UNTRANS_EVENT    3

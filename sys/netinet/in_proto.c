@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)in_proto.c	8.2 (Berkeley) 2/9/95
+ *  @(#)in_proto.c  8.2 (Berkeley) 2/9/95
  */
 
 #include <sys/param.h>
@@ -64,78 +64,78 @@
  */
 
 #ifdef NSIP
-void	idpip_input(), nsip_ctlinput();
+void    idpip_input(), nsip_ctlinput();
 #endif
 
 #ifdef TPIP
-void	tpip_input(), tpip_ctlinput(), tp_init(), tp_slowtimo(), tp_drain();
-int	tp_ctloutput(), tp_usrreq();
+void    tpip_input(), tpip_ctlinput(), tp_init(), tp_slowtimo(), tp_drain();
+int     tp_ctloutput(), tp_usrreq();
 #endif
 
 #ifdef EON
-void	eoninput(), eonctlinput(), eonprotoinit();
+void    eoninput(), eonctlinput(), eonprotoinit();
 #endif /* EON */
 
-extern	struct domain inetdomain;
+extern  struct domain inetdomain;
 
 struct protosw inetsw[] = {
-{ 0,		&inetdomain,	0,		0,
-  0,		ip_output,	0,		0,
+{ 0,            &inetdomain,    0,              0,
+  0,            ip_output,      0,              0,
   0,
-  ip_init,	0,		ip_slowtimo,	ip_drain,	ip_sysctl
+  ip_init,      0,              ip_slowtimo,    ip_drain,   ip_sysctl
 },
-{ SOCK_DGRAM,	&inetdomain,	IPPROTO_UDP,	PR_ATOMIC|PR_ADDR,
-  udp_input,	0,		udp_ctlinput,	ip_ctloutput,
+{ SOCK_DGRAM,   &inetdomain,    IPPROTO_UDP,    PR_ATOMIC|PR_ADDR,
+  udp_input,    0,              udp_ctlinput,   ip_ctloutput,
   udp_usrreq,
-  udp_init,	0,		0,		0,		udp_sysctl
+  udp_init,     0,              0,              0,          udp_sysctl
 },
-{ SOCK_STREAM,	&inetdomain,	IPPROTO_TCP,	PR_CONNREQUIRED|PR_WANTRCVD,
-  tcp_input,	0,		tcp_ctlinput,	tcp_ctloutput,
+{ SOCK_STREAM,  &inetdomain,    IPPROTO_TCP,    PR_CONNREQUIRED|PR_WANTRCVD,
+  tcp_input,    0,              tcp_ctlinput,   tcp_ctloutput,
   tcp_usrreq,
-  tcp_init,	tcp_fasttimo,	tcp_slowtimo,	tcp_drain,
+  tcp_init,     tcp_fasttimo,   tcp_slowtimo,   tcp_drain,
 },
-{ SOCK_RAW,	&inetdomain,	IPPROTO_RAW,	PR_ATOMIC|PR_ADDR,
-  rip_input,	rip_output,	0,		rip_ctloutput,
+{ SOCK_RAW,     &inetdomain,    IPPROTO_RAW,    PR_ATOMIC|PR_ADDR,
+  rip_input,    rip_output,     0,              rip_ctloutput,
   rip_usrreq,
-  0,		0,		0,		0,
+  0,            0,              0,              0,
 },
-{ SOCK_RAW,	&inetdomain,	IPPROTO_ICMP,	PR_ATOMIC|PR_ADDR,
-  icmp_input,	rip_output,	0,		rip_ctloutput,
+{ SOCK_RAW,     &inetdomain,    IPPROTO_ICMP,   PR_ATOMIC|PR_ADDR,
+  icmp_input,   rip_output,     0,              rip_ctloutput,
   rip_usrreq,
-  0,		0,		0,		0,		icmp_sysctl
+  0,            0,              0,              0,      icmp_sysctl
 },
-{ SOCK_RAW,	&inetdomain,	IPPROTO_IGMP,	PR_ATOMIC|PR_ADDR,
-  igmp_input,	rip_output,	0,		rip_ctloutput,
+{ SOCK_RAW,     &inetdomain,    IPPROTO_IGMP,   PR_ATOMIC|PR_ADDR,
+  igmp_input,   rip_output,     0,              rip_ctloutput,
   rip_usrreq,
-  igmp_init,	igmp_fasttimo,	0,		0,
+  igmp_init,    igmp_fasttimo,  0,              0,
 },
 #ifdef TPIP
-{ SOCK_SEQPACKET,&inetdomain,	IPPROTO_TP,	PR_CONNREQUIRED|PR_WANTRCVD,
-  tpip_input,	0,		tpip_ctlinput,	tp_ctloutput,
+{ SOCK_SEQPACKET,&inetdomain,   IPPROTO_TP,     PR_CONNREQUIRED|PR_WANTRCVD,
+  tpip_input,   0,              tpip_ctlinput,  tp_ctloutput,
   tp_usrreq,
-  tp_init,	0,		tp_slowtimo,	tp_drain,
+  tp_init,      0,              tp_slowtimo,    tp_drain,
 },
 #endif
 /* EON (ISO CLNL over IP) */
 #ifdef EON
-{ SOCK_RAW,	&inetdomain,	IPPROTO_EON,	0,
-  eoninput,	0,		eonctlinput,		0,
+{ SOCK_RAW,     &inetdomain,    IPPROTO_EON,    0,
+  eoninput,     0,              eonctlinput,    0,
   0,
-  eonprotoinit,	0,		0,		0,
+  eonprotoinit, 0,              0,              0,
 },
 #endif
 #ifdef NSIP
-{ SOCK_RAW,	&inetdomain,	IPPROTO_IDP,	PR_ATOMIC|PR_ADDR,
-  idpip_input,	rip_output,	nsip_ctlinput,	0,
+{ SOCK_RAW,     &inetdomain,    IPPROTO_IDP,    PR_ATOMIC|PR_ADDR,
+  idpip_input,  rip_output,     nsip_ctlinput,  0,
   rip_usrreq,
-  0,		0,		0,		0,
+  0,            0,              0,              0,
 },
 #endif
-	/* raw wildcard */
-{ SOCK_RAW,	&inetdomain,	0,		PR_ATOMIC|PR_ADDR,
-  rip_input,	rip_output,	0,		rip_ctloutput,
+    /* raw wildcard */
+{ SOCK_RAW,     &inetdomain,    0,              PR_ATOMIC|PR_ADDR,
+  rip_input,    rip_output,     0,              rip_ctloutput,
   rip_usrreq,
-  rip_init,	0,		0,		0,
+  rip_init,     0,              0,              0,
 },
 };
 
@@ -149,14 +149,14 @@ struct domain inetdomain =
 /*
  * HYPERchannel protocol family: raw interface.
  */
-int	rhy_output();
-extern	struct domain hydomain;
+int rhy_output();
+extern  struct domain hydomain;
 
 struct protosw hysw[] = {
-{ SOCK_RAW,	&hydomain,	0,		PR_ATOMIC|PR_ADDR,
-  0,		rhy_output,	0,		0,
+{ SOCK_RAW,     &hydomain,      0,              PR_ATOMIC|PR_ADDR,
+  0,            rhy_output,     0,              0,
   rip_usrreq,
-  0,		0,		0,		0,
+  0,            0,              0,              0,
 },
 };
 

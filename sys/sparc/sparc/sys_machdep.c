@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)sys_machdep.c	8.1 (Berkeley) 6/11/93
+ *  @(#)sys_machdep.c   8.1 (Berkeley) 6/11/93
  *
  * from: $Header: sys_machdep.c,v 1.6 92/11/26 03:05:08 torek Exp $ (LBL)
  */
@@ -57,56 +57,56 @@
 #include <sys/buf.h>
 #include <sys/trace.h>
 
-int	nvualarm;
+int nvualarm;
 
 struct vtrace_args {
-	int	request;
-	int	value;
+    int request;
+    int value;
 };
 vtrace(p, uap, retval)
-	struct proc *p;
-	register struct vtrace_args *uap;
-	int *retval;
+    struct proc *p;
+    register struct vtrace_args *uap;
+    int *retval;
 {
-	int vdoualarm();
+    int vdoualarm();
 
-	switch (uap->request) {
+    switch (uap->request) {
 
-	case VTR_DISABLE:		/* disable a trace point */
-	case VTR_ENABLE:		/* enable a trace point */
-		if (uap->value < 0 || uap->value >= TR_NFLAGS)
-			return (EINVAL);
-		*retval = traceflags[uap->value];
-		traceflags[uap->value] = uap->request;
-		break;
+    case VTR_DISABLE:       /* disable a trace point */
+    case VTR_ENABLE:        /* enable a trace point */
+        if (uap->value < 0 || uap->value >= TR_NFLAGS)
+            return (EINVAL);
+        *retval = traceflags[uap->value];
+        traceflags[uap->value] = uap->request;
+        break;
 
-	case VTR_VALUE:		/* return a trace point setting */
-		if (uap->value < 0 || uap->value >= TR_NFLAGS)
-			return (EINVAL);
-		*retval = traceflags[uap->value];
-		break;
+    case VTR_VALUE:     /* return a trace point setting */
+        if (uap->value < 0 || uap->value >= TR_NFLAGS)
+            return (EINVAL);
+        *retval = traceflags[uap->value];
+        break;
 
-	case VTR_UALARM:	/* set a real-time ualarm, less than 1 min */
-		if (uap->value <= 0 || uap->value > 60 * hz || nvualarm > 5)
-			return (EINVAL);
-		nvualarm++;
-		timeout(vdoualarm, (caddr_t)p->p_pid, uap->value);
-		break;
+    case VTR_UALARM:    /* set a real-time ualarm, less than 1 min */
+        if (uap->value <= 0 || uap->value > 60 * hz || nvualarm > 5)
+            return (EINVAL);
+        nvualarm++;
+        timeout(vdoualarm, (caddr_t)p->p_pid, uap->value);
+        break;
 
-	case VTR_STAMP:
-		trace(TR_STAMP, uap->value, p->p_pid);
-		break;
-	}
-	return (0);
+    case VTR_STAMP:
+        trace(TR_STAMP, uap->value, p->p_pid);
+        break;
+    }
+    return (0);
 }
 
 vdoualarm(arg)
-	int arg;
+    int arg;
 {
-	register struct proc *p = pfind(arg);
+    register struct proc *p = pfind(arg);
 
-	if (p != NULL)
-		psignal(p, 16);
-	nvualarm--;
+    if (p != NULL)
+        psignal(p, 16);
+    nvualarm--;
 }
 #endif

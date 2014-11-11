@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Ralph Campbell.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)signal.h	8.2 (Berkeley) 5/3/95
+ *  @(#)signal.h    8.2 (Berkeley) 5/3/95
  */
 
 /*
@@ -43,7 +43,7 @@
 typedef int sig_atomic_t;
 
 #if !defined(_POSIX_SOURCE) && !defined(_ANSI_SOURCE)
-#include <machine/trap.h>	/* codes for SIGILL, SIGFPE */
+#include <machine/trap.h>   /* codes for SIGILL, SIGFPE */
 
 /*
  * Information pushed on stack when a signal is delivered.
@@ -52,13 +52,13 @@ typedef int sig_atomic_t;
  * to the handler to allow it to restore state properly if
  * a non-standard exit is performed.
  */
-struct	sigcontext {
-	int	sc_onstack;	/* sigstack state to restore */
-	int	sc_mask;	/* signal mask to restore */
-	int	sc_pc;		/* pc at time of signal */
-	int	sc_regs[34];	/* processor regs 0 to 31, mullo, mullhi */
-	int	sc_fpused;	/* fp has been used */
-	int	sc_fpregs[33];	/* fp regs 0 to 31 and csr */
-	int	sc_fpc_eir;	/* floating point exception instruction reg */
+struct  sigcontext {
+    int sc_onstack;     /* sigstack state to restore */
+    int sc_mask;        /* signal mask to restore */
+    int sc_pc;          /* pc at time of signal */
+    int sc_regs[34];    /* processor regs 0 to 31, mullo, mullhi */
+    int sc_fpused;      /* fp has been used */
+    int sc_fpregs[33];  /* fp regs 0 to 31 and csr */
+    int sc_fpc_eir;     /* floating point exception instruction reg */
 };
 #endif

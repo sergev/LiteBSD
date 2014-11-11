@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * The Mach Operating System project at Carnegie-Mellon University.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)close.c	8.1 (Berkeley) 6/11/93
+ *  @(#)close.c 8.1 (Berkeley) 6/11/93
  *  
  *
  * Copyright (c) 1989, 1990, 1991 Carnegie Mellon University
@@ -65,26 +65,26 @@
 #include <stand/stand.h>
 
 close(fd)
-	int fd;
+    int fd;
 {
-	register struct open_file *f = &files[fd];
-	int err1, err2;
+    register struct open_file *f = &files[fd];
+    int err1, err2;
 
-	if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {
-		errno = EBADF;
-		return (-1);
-	}
-	if (!(f->f_flags & F_RAW))
-		err1 = (f->f_ops->close)(f);
-	err2 = (f->f_dev->dv_close)(f);
-	f->f_flags = 0;
-	if (err1) {
-		errno = err1;
-		return (-1);
-	}
-	if (err2) {
-		errno = err2;
-		return (-1);
-	}
-	return (0);
+    if ((unsigned)fd >= SOPEN_MAX || f->f_flags == 0) {
+        errno = EBADF;
+        return (-1);
+    }
+    if (!(f->f_flags & F_RAW))
+        err1 = (f->f_ops->close)(f);
+    err2 = (f->f_dev->dv_close)(f);
+    f->f_flags = 0;
+    if (err1) {
+        errno = err1;
+        return (-1);
+    }
+    if (err2) {
+        errno = err2;
+        return (-1);
+    }
+    return (0);
 }

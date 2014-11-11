@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,15 +35,15 @@
  *
  * from: $Hdr: sd_var.c,v 4.300 91/06/09 06:38:23 root Rel41 $ SONY
  *
- *	@(#)sd_var.c	8.1 (Berkeley) 6/11/93
+ *  @(#)sd_var.c    8.1 (Berkeley) 6/11/93
  */
 
 /*
  * Copyright (c) 1989 by SONY Corporation.
  */
 /*
- *	sd_var.c - SCSI disk device driver
- *			variable definition file.
+ *  sd_var.c - SCSI disk device driver
+ *          variable definition file.
  */
 
 #include "sd.h"
@@ -60,9 +60,9 @@ struct iop/**/_ctlr *sdminfo[NSDC];
 struct iop/**/_device *sddinfo[NSD];
 struct iop/**/_device *sdip[NSDC][MAXSLAVE];
 
-struct buf rsdbuf[NSD];			/* buffer for raw I/O */
-struct buf csdbuf[NSD];			/* buffer for controll */
-struct buf sdutab[NSD];			/* per drive buffers */
+struct buf rsdbuf[NSD];         /* buffer for raw I/O */
+struct buf csdbuf[NSD];         /* buffer for controll */
+struct buf sdutab[NSD];         /* per drive buffers */
 
 struct sdc_softc sdc_softc[NSDC];
 struct sdd_softc sdd_softc[NSD];

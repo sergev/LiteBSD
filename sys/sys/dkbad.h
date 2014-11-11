@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1982, 1986, 1993, 1994
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)dkbad.h	8.2 (Berkeley) 7/10/94
+ *  @(#)dkbad.h 8.2 (Berkeley) 7/10/94
  */
 
 /*
@@ -53,16 +53,16 @@
  * replacement sectors.
  */
 struct dkbad {
-	int32_t   bt_csn;		/* cartridge serial number */
-	u_int16_t bt_mbz;		/* unused; should be 0 */
-	u_int16_t bt_flag;		/* -1 => alignment cartridge */
-	struct bt_bad {
-		u_int16_t bt_cyl;	/* cylinder number of bad sector */
-		u_int16_t bt_trksec;	/* track and sector number */
-	} bt_bad[126];
+    int32_t   bt_csn;           /* cartridge serial number */
+    u_int16_t bt_mbz;           /* unused; should be 0 */
+    u_int16_t bt_flag;          /* -1 => alignment cartridge */
+    struct bt_bad {
+        u_int16_t bt_cyl;       /* cylinder number of bad sector */
+        u_int16_t bt_trksec;    /* track and sector number */
+    } bt_bad[126];
 };
 
-#define	ECC	0
-#define	SSE	1
-#define	BSE	2
-#define	CONT	3
+#define ECC     0
+#define SSE     1
+#define BSE     2
+#define CONT    3

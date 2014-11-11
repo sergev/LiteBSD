@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bt_subr.c	8.2 (Berkeley) 1/21/94
+ *  @(#)bt_subr.c   8.2 (Berkeley) 1/21/94
  *
  * from: $Header: bt_subr.c,v 1.1 93/10/12 15:28:39 torek Exp $
  */
@@ -63,27 +63,27 @@
  */
 int
 bt_getcmap(p, cm, cmsize)
-	register struct fbcmap *p;
-	union bt_cmap *cm;
-	int cmsize;
+    register struct fbcmap *p;
+    union bt_cmap *cm;
+    int cmsize;
 {
-	register u_int i, start, count;
-	register u_char *cp;
+    register u_int i, start, count;
+    register u_char *cp;
 
-	start = p->index;
-	count = p->count;
-	if (start >= cmsize || start + count > cmsize)
-		return (EINVAL);
-	if (!useracc(p->red, count, B_WRITE) ||
-	    !useracc(p->green, count, B_WRITE) ||
-	    !useracc(p->blue, count, B_WRITE))
-		return (EFAULT);
-	for (cp = &cm->cm_map[start][0], i = 0; i < count; cp += 3, i++) {
-		p->red[i] = cp[0];
-		p->green[i] = cp[1];
-		p->blue[i] = cp[2];
-	}
-	return (0);
+    start = p->index;
+    count = p->count;
+    if (start >= cmsize || start + count > cmsize)
+        return (EINVAL);
+    if (!useracc(p->red, count, B_WRITE) ||
+        !useracc(p->green, count, B_WRITE) ||
+        !useracc(p->blue, count, B_WRITE))
+        return (EFAULT);
+    for (cp = &cm->cm_map[start][0], i = 0; i < count; cp += 3, i++) {
+        p->red[i] = cp[0];
+        p->green[i] = cp[1];
+        p->blue[i] = cp[2];
+    }
+    return (0);
 }
 
 /*
@@ -91,25 +91,25 @@ bt_getcmap(p, cm, cmsize)
  */
 int
 bt_putcmap(p, cm, cmsize)
-	register struct fbcmap *p;
-	union bt_cmap *cm;
-	int cmsize;
+    register struct fbcmap *p;
+    union bt_cmap *cm;
+    int cmsize;
 {
-	register u_int i, start, count;
-	register u_char *cp;
+    register u_int i, start, count;
+    register u_char *cp;
 
-	start = p->index;
-	count = p->count;
-	if (start >= cmsize || start + count > cmsize)
-		return (EINVAL);
-	if (!useracc(p->red, count, B_READ) ||
-	    !useracc(p->green, count, B_READ) ||
-	    !useracc(p->blue, count, B_READ))
-		return (EFAULT);
-	for (cp = &cm->cm_map[start][0], i = 0; i < count; cp += 3, i++) {
-		cp[0] = p->red[i];
-		cp[1] = p->green[i];
-		cp[2] = p->blue[i];
-	}
-	return (0);
+    start = p->index;
+    count = p->count;
+    if (start >= cmsize || start + count > cmsize)
+        return (EINVAL);
+    if (!useracc(p->red, count, B_READ) ||
+        !useracc(p->green, count, B_READ) ||
+        !useracc(p->blue, count, B_READ))
+        return (EFAULT);
+    for (cp = &cm->cm_map[start][0], i = 0; i < count; cp += 3, i++) {
+        cp[0] = p->red[i];
+        cp[1] = p->green[i];
+        cp[2] = p->blue[i];
+    }
+    return (0);
 }

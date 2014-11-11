@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ffs_subr.c	8.5 (Berkeley) 3/21/95
+ *  @(#)ffs_subr.c  8.5 (Berkeley) 3/21/95
  */
 
 #include <sys/param.h>
@@ -54,33 +54,33 @@
  */
 int
 ffs_blkatoff(ap)
-	struct vop_blkatoff_args /* {
-		struct vnode *a_vp;
-		off_t a_offset;
-		char **a_res;
-		struct buf **a_bpp;
-	} */ *ap;
+    struct vop_blkatoff_args /* {
+        struct vnode *a_vp;
+        off_t a_offset;
+        char **a_res;
+        struct buf **a_bpp;
+    } */ *ap;
 {
-	struct inode *ip;
-	register struct fs *fs;
-	struct buf *bp;
-	ufs_daddr_t lbn;
-	int bsize, error;
+    struct inode *ip;
+    register struct fs *fs;
+    struct buf *bp;
+    ufs_daddr_t lbn;
+    int bsize, error;
 
-	ip = VTOI(ap->a_vp);
-	fs = ip->i_fs;
-	lbn = lblkno(fs, ap->a_offset);
-	bsize = blksize(fs, ip, lbn);
+    ip = VTOI(ap->a_vp);
+    fs = ip->i_fs;
+    lbn = lblkno(fs, ap->a_offset);
+    bsize = blksize(fs, ip, lbn);
 
-	*ap->a_bpp = NULL;
-	if (error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp)) {
-		brelse(bp);
-		return (error);
-	}
-	if (ap->a_res)
-		*ap->a_res = (char *)bp->b_data + blkoff(fs, ap->a_offset);
-	*ap->a_bpp = bp;
-	return (0);
+    *ap->a_bpp = NULL;
+    if (error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp)) {
+        brelse(bp);
+        return (error);
+    }
+    if (ap->a_res)
+        *ap->a_res = (char *)bp->b_data + blkoff(fs, ap->a_offset);
+    *ap->a_bpp = bp;
+    return (0);
 }
 #endif
 
@@ -90,67 +90,67 @@ ffs_blkatoff(ap)
  */
 void
 ffs_fragacct(fs, fragmap, fraglist, cnt)
-	struct fs *fs;
-	int fragmap;
-	int32_t fraglist[];
-	int cnt;
+    struct fs *fs;
+    int fragmap;
+    int32_t fraglist[];
+    int cnt;
 {
-	int inblk;
-	register int field, subfield;
-	register int siz, pos;
+    int inblk;
+    register int field, subfield;
+    register int siz, pos;
 
-	inblk = (int)(fragtbl[fs->fs_frag][fragmap]) << 1;
-	fragmap <<= 1;
-	for (siz = 1; siz < fs->fs_frag; siz++) {
-		if ((inblk & (1 << (siz + (fs->fs_frag % NBBY)))) == 0)
-			continue;
-		field = around[siz];
-		subfield = inside[siz];
-		for (pos = siz; pos <= fs->fs_frag; pos++) {
-			if ((fragmap & field) == subfield) {
-				fraglist[siz] += cnt;
-				pos += siz;
-				field <<= siz;
-				subfield <<= siz;
-			}
-			field <<= 1;
-			subfield <<= 1;
-		}
-	}
+    inblk = (int)(fragtbl[fs->fs_frag][fragmap]) << 1;
+    fragmap <<= 1;
+    for (siz = 1; siz < fs->fs_frag; siz++) {
+        if ((inblk & (1 << (siz + (fs->fs_frag % NBBY)))) == 0)
+            continue;
+        field = around[siz];
+        subfield = inside[siz];
+        for (pos = siz; pos <= fs->fs_frag; pos++) {
+            if ((fragmap & field) == subfield) {
+                fraglist[siz] += cnt;
+                pos += siz;
+                field <<= siz;
+                subfield <<= siz;
+            }
+            field <<= 1;
+            subfield <<= 1;
+        }
+    }
 }
 
 #if defined(KERNEL) && defined(DIAGNOSTIC)
 void
 ffs_checkoverlap(bp, ip)
-	struct buf *bp;
-	struct inode *ip;
+    struct buf *bp;
+    struct inode *ip;
 {
-	register struct buf *ebp, *ep;
-	register ufs_daddr_t start, last;
-	struct vnode *vp;
+    register struct buf *ebp, *ep;
+    register ufs_daddr_t start, last;
+    struct vnode *vp;
 
-	ebp = &buf[nbuf];
-	start = bp->b_blkno;
-	last = start + btodb(bp->b_bcount) - 1;
-	for (ep = buf; ep < ebp; ep++) {
-		if (ep == bp || (ep->b_flags & B_INVAL) ||
-		    ep->b_vp == NULLVP)
-			continue;
-		if (VOP_BMAP(ep->b_vp, (ufs_daddr_t)0, &vp, (ufs_daddr_t)0,
-		    NULL))
-			continue;
-		if (vp != ip->i_devvp)
-			continue;
-		/* look for overlap */
-		if (ep->b_bcount == 0 || ep->b_blkno > last ||
-		    ep->b_blkno + btodb(ep->b_bcount) <= start)
-			continue;
-		vprint("Disk overlap", vp);
-		(void)printf("\tstart %d, end %d overlap start %d, end %d\n",
-			start, last, ep->b_blkno,
-			ep->b_blkno + btodb(ep->b_bcount) - 1);
-		panic("Disk buffer overlap");
-	}
+    ebp = &buf[nbuf];
+    start = bp->b_blkno;
+    last = start + btodb(bp->b_bcount) - 1;
+    for (ep = buf; ep < ebp; ep++) {
+        if (ep == bp || (ep->b_flags & B_INVAL) ||
+            ep->b_vp == NULLVP)
+            continue;
+        if (VOP_BMAP(ep->b_vp, (ufs_daddr_t)0, &vp, (ufs_daddr_t)0,
+            NULL))
+            continue;
+        if (vp != ip->i_devvp)
+            continue;
+        /* look for overlap */
+        if (ep->b_bcount == 0 || ep->b_blkno > last ||
+            ep->b_blkno + btodb(ep->b_bcount) <= start)
+            continue;
+        vprint("Disk overlap", vp);
+        (void)printf("\tstart %d, end %d overlap start %d, end %d\n",
+            start, last, ep->b_blkno,
+            ep->b_blkno + btodb(ep->b_bcount) - 1);
+        panic("Disk buffer overlap");
+    }
 }
 #endif /* DIAGNOSTIC */
 
@@ -161,27 +161,27 @@ ffs_checkoverlap(bp, ip)
  */
 int
 ffs_isblock(fs, cp, h)
-	struct fs *fs;
-	unsigned char *cp;
-	ufs_daddr_t h;
+    struct fs *fs;
+    unsigned char *cp;
+    ufs_daddr_t h;
 {
-	unsigned char mask;
+    unsigned char mask;
 
-	switch ((int)fs->fs_frag) {
-	case 8:
-		return (cp[h] == 0xff);
-	case 4:
-		mask = 0x0f << ((h & 0x1) << 2);
-		return ((cp[h >> 1] & mask) == mask);
-	case 2:
-		mask = 0x03 << ((h & 0x3) << 1);
-		return ((cp[h >> 2] & mask) == mask);
-	case 1:
-		mask = 0x01 << (h & 0x7);
-		return ((cp[h >> 3] & mask) == mask);
-	default:
-		panic("ffs_isblock");
-	}
+    switch ((int)fs->fs_frag) {
+    case 8:
+        return (cp[h] == 0xff);
+    case 4:
+        mask = 0x0f << ((h & 0x1) << 2);
+        return ((cp[h >> 1] & mask) == mask);
+    case 2:
+        mask = 0x03 << ((h & 0x3) << 1);
+        return ((cp[h >> 2] & mask) == mask);
+    case 1:
+        mask = 0x01 << (h & 0x7);
+        return ((cp[h >> 3] & mask) == mask);
+    default:
+        panic("ffs_isblock");
+    }
 }
 
 /*
@@ -189,27 +189,27 @@ ffs_isblock(fs, cp, h)
  */
 void
 ffs_clrblock(fs, cp, h)
-	struct fs *fs;
-	u_char *cp;
-	ufs_daddr_t h;
+    struct fs *fs;
+    u_char *cp;
+    ufs_daddr_t h;
 {
 
-	switch ((int)fs->fs_frag) {
-	case 8:
-		cp[h] = 0;
-		return;
-	case 4:
-		cp[h >> 1] &= ~(0x0f << ((h & 0x1) << 2));
-		return;
-	case 2:
-		cp[h >> 2] &= ~(0x03 << ((h & 0x3) << 1));
-		return;
-	case 1:
-		cp[h >> 3] &= ~(0x01 << (h & 0x7));
-		return;
-	default:
-		panic("ffs_clrblock");
-	}
+    switch ((int)fs->fs_frag) {
+    case 8:
+        cp[h] = 0;
+        return;
+    case 4:
+        cp[h >> 1] &= ~(0x0f << ((h & 0x1) << 2));
+        return;
+    case 2:
+        cp[h >> 2] &= ~(0x03 << ((h & 0x3) << 1));
+        return;
+    case 1:
+        cp[h >> 3] &= ~(0x01 << (h & 0x7));
+        return;
+    default:
+        panic("ffs_clrblock");
+    }
 }
 
 /*
@@ -217,26 +217,26 @@ ffs_clrblock(fs, cp, h)
  */
 void
 ffs_setblock(fs, cp, h)
-	struct fs *fs;
-	unsigned char *cp;
-	ufs_daddr_t h;
+    struct fs *fs;
+    unsigned char *cp;
+    ufs_daddr_t h;
 {
 
-	switch ((int)fs->fs_frag) {
+    switch ((int)fs->fs_frag) {
 
-	case 8:
-		cp[h] = 0xff;
-		return;
-	case 4:
-		cp[h >> 1] |= (0x0f << ((h & 0x1) << 2));
-		return;
-	case 2:
-		cp[h >> 2] |= (0x03 << ((h & 0x3) << 1));
-		return;
-	case 1:
-		cp[h >> 3] |= (0x01 << (h & 0x7));
-		return;
-	default:
-		panic("ffs_setblock");
-	}
+    case 8:
+        cp[h] = 0xff;
+        return;
+    case 4:
+        cp[h >> 1] |= (0x0f << ((h & 0x1) << 2));
+        return;
+    case 2:
+        cp[h >> 2] |= (0x03 << ((h & 0x3) << 1));
+        return;
+    case 1:
+        cp[h >> 3] |= (0x01 << (h & 0x7));
+        return;
+    default:
+        panic("ffs_setblock");
+    }
 }

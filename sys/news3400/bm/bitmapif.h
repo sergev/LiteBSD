@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Sony Corp. and Kazumasa Utashiro of Software Research Associates, Inc.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,19 +35,19 @@
  *
  * from: $Hdr: bitmapif.h,v 4.300 91/06/09 06:14:42 root Rel41 $ SONY
  *
- *	@(#)bitmapif.h	8.1 (Berkeley) 6/10/93
+ *  @(#)bitmapif.h  8.1 (Berkeley) 6/10/93
  */
 
 /*
  *  bitmap interface header
  */
-#define	C_ON	1
-#define	C_OFF	0
+#define C_ON    1
+#define C_OFF   0
 
-struct	csr_buf {
-	int	csr_x;			/*XXX cursor position x	*/
-	int	csr_y;			/*XXX cursor position y	*/
-	lPoint	csr_p;			/*  cursor point	*/
-	int	csr_sw;			/*  cursor activity	*/
-	int	csr_number;		/*  which cursor use	*/
-}; 
+struct  csr_buf {
+    int     csr_x;          /*XXX cursor position x */
+    int     csr_y;          /*XXX cursor position y */
+    lPoint  csr_p;          /*  cursor point    */
+    int     csr_sw;         /*  cursor activity */
+    int     csr_number;     /*  which cursor use    */
+};

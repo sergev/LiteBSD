@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -8,8 +8,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratory.
+ *  This product includes software developed by the University of
+ *  California, Lawrence Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,8 +21,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -39,7 +39,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)rcons_font.c	8.1 (Berkeley) 6/11/93
+ *  @(#)rcons_font.c    8.1 (Berkeley) 6/11/93
  *
  * from: $Header: rcons_font.c,v 1.10 93/04/20 11:15:38 torek Exp $
  */
@@ -61,12 +61,12 @@
 
 void
 rcons_font(fb)
-	register struct fbdevice *fb;
+    register struct fbdevice *fb;
 {
 
-	/* XXX really rather get this from the prom */
-	fb->fb_font = &gallant19;
+    /* XXX really rather get this from the prom */
+    fb->fb_font = &gallant19;
 
-	/* Get distance to top and bottom of font from font origin */
-	fb->fb_font_ascent = -(fb->fb_font->chars)['a'].homey;
+    /* Get distance to top and bottom of font from font origin */
+    fb->fb_font_ascent = -(fb->fb_font->chars)['a'].homey;
 }

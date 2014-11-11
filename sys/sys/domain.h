@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)domain.h	8.1 (Berkeley) 6/2/93
+ *  @(#)domain.h    8.1 (Berkeley) 6/2/93
  */
 
 /*
@@ -40,25 +40,25 @@
 /*
  * Forward structure declarations for function prototypes [sic].
  */
-struct	mbuf;
+struct  mbuf;
 
-struct	domain {
-	int	dom_family;		/* AF_xxx */
-	char	*dom_name;
-	void	(*dom_init)		/* initialize domain data structures */
-		__P((void));
-	int	(*dom_externalize)	/* externalize access rights */
-		__P((struct mbuf *));
-	int	(*dom_dispose)		/* dispose of internalized rights */
-		__P((struct mbuf *));
-	struct	protosw *dom_protosw, *dom_protoswNPROTOSW;
-	struct	domain *dom_next;
-	int	(*dom_rtattach)		/* initialize routing table */
-		__P((void **, int));
-	int	dom_rtoffset;		/* an arg to rtattach, in bits */
-	int	dom_maxrtkey;		/* for routing layer */
+struct  domain {
+    int     dom_family;         /* AF_xxx */
+    char    *dom_name;
+    void    (*dom_init)         /* initialize domain data structures */
+                __P((void));
+    int     (*dom_externalize)  /* externalize access rights */
+                __P((struct mbuf *));
+    int     (*dom_dispose)      /* dispose of internalized rights */
+                __P((struct mbuf *));
+    struct  protosw *dom_protosw, *dom_protoswNPROTOSW;
+    struct  domain *dom_next;
+    int     (*dom_rtattach)     /* initialize routing table */
+                __P((void **, int));
+    int     dom_rtoffset;       /* an arg to rtattach, in bits */
+    int     dom_maxrtkey;       /* for routing layer */
 };
 
 #ifdef KERNEL
-struct	domain *domains;
+struct  domain *domains;
 #endif
