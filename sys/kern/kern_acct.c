@@ -52,6 +52,7 @@
 #include <sys/resourcevar.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
+#include <sys/systm.h>
 
 /*
  * The routines implemented in this file are described in:
@@ -92,6 +93,8 @@ int acctchkfreq = 15;   /* frequency (in seconds) to check space */
 struct acct_args {
     char    *path;
 };
+
+int
 acct(p, uap, retval)
     struct proc *p;
     struct acct_args *uap;
@@ -101,7 +104,8 @@ acct(p, uap, retval)
     int error;
 
     /* Make sure that the caller is root. */
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
 
     /*
@@ -110,7 +114,8 @@ acct(p, uap, retval)
      */
     if (uap->path != NULL) {
         NDINIT(&nd, LOOKUP, NOFOLLOW, UIO_USERSPACE, uap->path, p);
-        if (error = vn_open(&nd, FWRITE, 0))
+        error = vn_open(&nd, FWRITE, 0);
+        if (error)
             return (error);
         VOP_UNLOCK(nd.ni_vp, 0, p);
         if (nd.ni_vp->v_type != VREG) {
@@ -147,6 +152,7 @@ acct(p, uap, retval)
  * and are enumerated below.  (They're also noted in the system
  * "acct.h" header file.)
  */
+int
 acct_process(p)
     struct proc *p;
 {

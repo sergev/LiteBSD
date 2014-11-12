@@ -55,6 +55,7 @@
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#include <sys/signalvar.h>
 
 /*
  * Read system call.
@@ -99,10 +100,10 @@ read(p, uap, retval)
         ktriov = aiov;
 #endif
     cnt = SCARG(uap, nbyte);
-    if (error = (*fp->f_ops->fo_read)(fp, &auio, fp->f_cred))
-        if (auio.uio_resid != cnt && (error == ERESTART ||
-            error == EINTR || error == EWOULDBLOCK))
-            error = 0;
+    error = (*fp->f_ops->fo_read)(fp, &auio, fp->f_cred);
+    if (error && auio.uio_resid != cnt &&
+        (error == ERESTART || error == EINTR || error == EWOULDBLOCK))
+        error = 0;
     cnt -= auio.uio_resid;
 #ifdef KTRACE
     if (KTRPOINT(p, KTR_GENIO) && error == 0)
@@ -158,7 +159,8 @@ readv(p, uap, retval)
     auio.uio_rw = UIO_READ;
     auio.uio_segflg = UIO_USERSPACE;
     auio.uio_procp = p;
-    if (error = copyin((caddr_t)SCARG(uap, iovp), (caddr_t)iov, iovlen))
+    error = copyin((caddr_t)SCARG(uap, iovp), (caddr_t)iov, iovlen);
+    if (error)
         goto done;
     auio.uio_resid = 0;
     for (i = 0; i < SCARG(uap, iovcnt); i++) {
@@ -179,10 +181,10 @@ readv(p, uap, retval)
     }
 #endif
     cnt = auio.uio_resid;
-    if (error = (*fp->f_ops->fo_read)(fp, &auio, fp->f_cred))
-        if (auio.uio_resid != cnt && (error == ERESTART ||
-            error == EINTR || error == EWOULDBLOCK))
-            error = 0;
+    error = (*fp->f_ops->fo_read)(fp, &auio, fp->f_cred);
+    if (error && auio.uio_resid != cnt &&
+        (error == ERESTART || error == EINTR || error == EWOULDBLOCK))
+        error = 0;
     cnt -= auio.uio_resid;
 #ifdef KTRACE
     if (ktriov != NULL) {
@@ -241,7 +243,8 @@ write(p, uap, retval)
         ktriov = aiov;
 #endif
     cnt = SCARG(uap, nbyte);
-    if (error = (*fp->f_ops->fo_write)(fp, &auio, fp->f_cred)) {
+    error = (*fp->f_ops->fo_write)(fp, &auio, fp->f_cred);
+    if (error) {
         if (auio.uio_resid != cnt && (error == ERESTART ||
             error == EINTR || error == EWOULDBLOCK))
             error = 0;
@@ -303,7 +306,8 @@ writev(p, uap, retval)
     auio.uio_rw = UIO_WRITE;
     auio.uio_segflg = UIO_USERSPACE;
     auio.uio_procp = p;
-    if (error = copyin((caddr_t)SCARG(uap, iovp), (caddr_t)iov, iovlen))
+    error = copyin((caddr_t)SCARG(uap, iovp), (caddr_t)iov, iovlen);
+    if (error)
         goto done;
     auio.uio_resid = 0;
     for (i = 0; i < SCARG(uap, iovcnt); i++) {
@@ -324,7 +328,8 @@ writev(p, uap, retval)
     }
 #endif
     cnt = auio.uio_resid;
-    if (error = (*fp->f_ops->fo_write)(fp, &auio, fp->f_cred)) {
+    error = (*fp->f_ops->fo_write)(fp, &auio, fp->f_cred);
+    if (error) {
         if (auio.uio_resid != cnt && (error == ERESTART ||
             error == EINTR || error == EWOULDBLOCK))
             error = 0;
@@ -423,7 +428,8 @@ ioctl(p, uap, retval)
     switch (com) {
 
     case FIONBIO:
-        if (tmp = *(int *)data)
+        tmp = *(int *)data;
+        if (tmp)
             fp->f_flag |= FNONBLOCK;
         else
             fp->f_flag &= ~FNONBLOCK;
@@ -431,7 +437,8 @@ ioctl(p, uap, retval)
         break;
 
     case FIOASYNC:
-        if (tmp = *(int *)data)
+        tmp = *(int *)data;
+        if (tmp)
             fp->f_flag |= FASYNC;
         else
             fp->f_flag &= ~FASYNC;
@@ -485,6 +492,39 @@ ioctl(p, uap, retval)
 }
 
 int selwait, nselcoll;
+
+static int
+selscan(p, ibits, obits, nfd, retval)
+    struct proc *p;
+    fd_set *ibits, *obits;
+    int nfd;
+    register_t *retval;
+{
+    register struct filedesc *fdp = p->p_fd;
+    register int msk, i, j, fd;
+    register fd_mask bits;
+    struct file *fp;
+    int n = 0;
+    static int flag[3] = { FREAD, FWRITE, 0 };
+
+    for (msk = 0; msk < 3; msk++) {
+        for (i = 0; i < nfd; i += NFDBITS) {
+            bits = ibits[msk].fds_bits[i/NFDBITS];
+            while ((j = ffs(bits)) && (fd = i + --j) < nfd) {
+                bits &= ~(1 << j);
+                fp = fdp->fd_ofiles[fd];
+                if (fp == NULL)
+                    return (EBADF);
+                if ((*fp->f_ops->fo_select)(fp, flag[msk], p)) {
+                    FD_SET(fd, &obits[msk]);
+                    n++;
+                }
+            }
+        }
+    }
+    *retval = n;
+    return (0);
+}
 
 /*
  * Select system call.
@@ -590,39 +630,6 @@ done:
 #undef putbits
     }
     return (error);
-}
-
-int
-selscan(p, ibits, obits, nfd, retval)
-    struct proc *p;
-    fd_set *ibits, *obits;
-    int nfd;
-    register_t *retval;
-{
-    register struct filedesc *fdp = p->p_fd;
-    register int msk, i, j, fd;
-    register fd_mask bits;
-    struct file *fp;
-    int n = 0;
-    static int flag[3] = { FREAD, FWRITE, 0 };
-
-    for (msk = 0; msk < 3; msk++) {
-        for (i = 0; i < nfd; i += NFDBITS) {
-            bits = ibits[msk].fds_bits[i/NFDBITS];
-            while ((j = ffs(bits)) && (fd = i + --j) < nfd) {
-                bits &= ~(1 << j);
-                fp = fdp->fd_ofiles[fd];
-                if (fp == NULL)
-                    return (EBADF);
-                if ((*fp->f_ops->fo_select)(fp, flag[msk], p)) {
-                    FD_SET(fd, &obits[msk]);
-                    n++;
-                }
-            }
-        }
-    }
-    *retval = n;
-    return (0);
 }
 
 /*ARGSUSED*/

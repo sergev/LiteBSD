@@ -60,6 +60,56 @@
 struct  sockaddr sun_noname = { sizeof(sun_noname), AF_UNIX };
 ino_t   unp_ino;            /* prototype for fake inode numbers */
 
+/*
+ * Both send and receive buffers are allocated PIPSIZ bytes of buffering
+ * for stream sockets, although the total for sender and receiver is
+ * actually only PIPSIZ.
+ * Datagram sockets really use the sendspace as the maximum datagram size,
+ * and don't really want to reserve the sendspace.  Their recvspace should
+ * be large enough for at least one max-size datagram plus address.
+ */
+#define PIPSIZ  4096
+u_long  unpst_sendspace = PIPSIZ;
+u_long  unpst_recvspace = PIPSIZ;
+u_long  unpdg_sendspace = 2*1024;   /* really max datagram size */
+u_long  unpdg_recvspace = 4*1024;
+
+int unp_rights;         /* file descriptors in flight */
+
+static int
+unp_internalize(control, p)
+    struct mbuf *control;
+    struct proc *p;
+{
+    struct filedesc *fdp = p->p_fd;
+    register struct cmsghdr *cm = mtod(control, struct cmsghdr *);
+    register struct file **rp;
+    register struct file *fp;
+    register int i, fd;
+    int oldfds;
+
+    if (cm->cmsg_type != SCM_RIGHTS || cm->cmsg_level != SOL_SOCKET ||
+        cm->cmsg_len != control->m_len)
+        return (EINVAL);
+    oldfds = (cm->cmsg_len - sizeof (*cm)) / sizeof (int);
+    rp = (struct file **)(cm + 1);
+    for (i = 0; i < oldfds; i++) {
+        fd = *(int *)rp++;
+        if ((unsigned)fd >= fdp->fd_nfiles ||
+            fdp->fd_ofiles[fd] == NULL)
+            return (EBADF);
+    }
+    rp = (struct file **)(cm + 1);
+    for (i = 0; i < oldfds; i++) {
+        fp = fdp->fd_ofiles[*(int *)rp];
+        *rp++ = fp;
+        fp->f_count++;
+        fp->f_msgcount++;
+        unp_rights++;
+    }
+    return (0);
+}
+
 /*ARGSUSED*/
 int
 uipc_usrreq(so, req, m, nam, control)
@@ -298,22 +348,6 @@ release:
     return (error);
 }
 
-/*
- * Both send and receive buffers are allocated PIPSIZ bytes of buffering
- * for stream sockets, although the total for sender and receiver is
- * actually only PIPSIZ.
- * Datagram sockets really use the sendspace as the maximum datagram size,
- * and don't really want to reserve the sendspace.  Their recvspace should
- * be large enough for at least one max-size datagram plus address.
- */
-#define PIPSIZ  4096
-u_long  unpst_sendspace = PIPSIZ;
-u_long  unpst_recvspace = PIPSIZ;
-u_long  unpdg_sendspace = 2*1024;   /* really max datagram size */
-u_long  unpdg_recvspace = 4*1024;
-
-int unp_rights;         /* file descriptors in flight */
-
 int
 unp_attach(so)
     struct socket *so;
@@ -321,7 +355,7 @@ unp_attach(so)
     register struct mbuf *m;
     register struct unpcb *unp;
     int error;
-    
+
     if (so->so_snd.sb_hiwat == 0 || so->so_rcv.sb_hiwat == 0) {
         switch (so->so_type) {
 
@@ -352,7 +386,7 @@ void
 unp_detach(unp)
     register struct unpcb *unp;
 {
-    
+
     if (unp->unp_vnode) {
         unp->unp_vnode->v_socket = 0;
         vrele(unp->unp_vnode);
@@ -401,7 +435,8 @@ unp_bind(unp, nam, p)
     } else
         *(mtod(nam, caddr_t) + nam->m_len) = 0;
 /* SHOULD BE ABLE TO ADOPT EXISTING AND wakeup() ALA FIFO's */
-    if (error = namei(&nd))
+    error = namei(&nd);
+    if (error)
         return (error);
     vp = nd.ni_vp;
     if (vp != NULL) {
@@ -417,7 +452,8 @@ unp_bind(unp, nam, p)
     vattr.va_type = VSOCK;
     vattr.va_mode = ACCESSPERMS;
     VOP_LEASE(nd.ni_dvp, p, p->p_ucred, LEASE_WRITE);
-    if (error = VOP_CREATE(nd.ni_dvp, &nd.ni_vp, &nd.ni_cnd, &vattr))
+    error = VOP_CREATE(nd.ni_dvp, &nd.ni_vp, &nd.ni_cnd, &vattr);
+    if (error)
         return (error);
     vp = nd.ni_vp;
     vp->v_socket = unp->unp_socket;
@@ -446,14 +482,16 @@ unp_connect(so, nam, p)
             return (EMSGSIZE);
     } else
         *(mtod(nam, caddr_t) + nam->m_len) = 0;
-    if (error = namei(&nd))
+    error = namei(&nd);
+    if (error)
         return (error);
     vp = nd.ni_vp;
     if (vp->v_type != VSOCK) {
         error = ENOTSOCK;
         goto bad;
     }
-    if (error = VOP_ACCESS(vp, VWRITE, p->p_ucred, p))
+    error = VOP_ACCESS(vp, VWRITE, p->p_ucred, p);
+    if (error)
         goto bad;
     so2 = vp->v_socket;
     if (so2 == 0) {
@@ -625,40 +663,6 @@ unp_externalize(rights)
         fp->f_msgcount--;
         unp_rights--;
         *(int *)rp++ = f;
-    }
-    return (0);
-}
-
-int
-unp_internalize(control, p)
-    struct mbuf *control;
-    struct proc *p;
-{
-    struct filedesc *fdp = p->p_fd;
-    register struct cmsghdr *cm = mtod(control, struct cmsghdr *);
-    register struct file **rp;
-    register struct file *fp;
-    register int i, fd;
-    int oldfds;
-
-    if (cm->cmsg_type != SCM_RIGHTS || cm->cmsg_level != SOL_SOCKET ||
-        cm->cmsg_len != control->m_len)
-        return (EINVAL);
-    oldfds = (cm->cmsg_len - sizeof (*cm)) / sizeof (int);
-    rp = (struct file **)(cm + 1);
-    for (i = 0; i < oldfds; i++) {
-        fd = *(int *)rp++;
-        if ((unsigned)fd >= fdp->fd_nfiles ||
-            fdp->fd_ofiles[fd] == NULL)
-            return (EBADF);
-    }
-    rp = (struct file **)(cm + 1);
-    for (i = 0; i < oldfds; i++) {
-        fp = fdp->fd_ofiles[*(int *)rp];
-        *rp++ = fp;
-        fp->f_count++;
-        fp->f_msgcount++;
-        unp_rights++;
     }
     return (0);
 }

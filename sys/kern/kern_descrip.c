@@ -57,6 +57,7 @@
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#include <vm/vm.h>
 
 /*
  * Descriptor management.
@@ -76,6 +77,27 @@ getdtablesize(p, uap, retval)
 {
 
     *retval = min((int)p->p_rlimit[RLIMIT_NOFILE].rlim_cur, maxfiles);
+    return (0);
+}
+
+/*
+ * Common code for dup, dup2, and fcntl(F_DUPFD).
+ */
+static int
+finishdup(fdp, old, new, retval)
+    register struct filedesc *fdp;
+    register int old, new;
+    register_t *retval;
+{
+    register struct file *fp;
+
+    fp = fdp->fd_ofiles[old];
+    fdp->fd_ofiles[new] = fp;
+    fdp->fd_ofileflags[new] = fdp->fd_ofileflags[old] &~ UF_EXCLOSE;
+    fp->f_count++;
+    if (new > fdp->fd_lastfile)
+        fdp->fd_lastfile = new;
+    *retval = new;
     return (0);
 }
 
@@ -101,13 +123,14 @@ dup(p, uap, retval)
      */
     if (old &~ 077) {
         SCARG(uap, fd) &= 077;
-        return (dup2(p, uap, retval));
+        return (dup2(p, (struct dup2_args*) uap, retval));
     }
 
     fdp = p->p_fd;
     if (old >= fdp->fd_nfiles || fdp->fd_ofiles[old] == NULL)
         return (EBADF);
-    if (error = fdalloc(p, 0, &new))
+    error = fdalloc(p, 0, &new);
+    if (error)
         return (error);
     return (finishdup(fdp, (int)old, new, retval));
 }
@@ -139,7 +162,8 @@ dup2(p, uap, retval)
         return (0);
     }
     if (new >= fdp->fd_nfiles) {
-        if (error = fdalloc(p, new, &i))
+        error = fdalloc(p, new, &i);
+        if (error)
             return (error);
         if (new != i)
             panic("dup2: fdalloc");
@@ -188,7 +212,8 @@ fcntl(p, uap, retval)
         if (newmin >= p->p_rlimit[RLIMIT_NOFILE].rlim_cur ||
             newmin >= maxfiles)
             return (EINVAL);
-        if (error = fdalloc(p, newmin, &i))
+        error = fdalloc(p, newmin, &i);
+        if (error)
             return (error);
         return (finishdup(fdp, fd, i, retval));
 
@@ -295,7 +320,8 @@ fcntl(p, uap, retval)
             return (error);
         if (fl.l_whence == SEEK_CUR)
             fl.l_start += fp->f_offset;
-        if (error = VOP_ADVLOCK(vp, (caddr_t)p, F_GETLK, &fl, F_POSIX))
+        error = VOP_ADVLOCK(vp, (caddr_t)p, F_GETLK, &fl, F_POSIX);
+        if (error)
             return (error);
         return (copyout((caddr_t)&fl, (caddr_t)SCARG(uap, arg),
             sizeof (fl)));
@@ -304,27 +330,6 @@ fcntl(p, uap, retval)
         return (EINVAL);
     }
     /* NOTREACHED */
-}
-
-/*
- * Common code for dup, dup2, and fcntl(F_DUPFD).
- */
-int
-finishdup(fdp, old, new, retval)
-    register struct filedesc *fdp;
-    register int old, new;
-    register_t *retval;
-{
-    register struct file *fp;
-
-    fp = fdp->fd_ofiles[old];
-    fdp->fd_ofiles[new] = fp;
-    fdp->fd_ofileflags[new] = fdp->fd_ofileflags[old] &~ UF_EXCLOSE;
-    fp->f_count++;
-    if (new > fdp->fd_lastfile)
-        fdp->fd_lastfile = new;
-    *retval = new;
-    return (0);
 }
 
 /*
@@ -592,7 +597,8 @@ falloc(p, resultfp, resultfd)
     register struct file *fp, *fq;
     int error, i;
 
-    if (error = fdalloc(p, 0, &i))
+    error = fdalloc(p, 0, &i);
+    if (error)
         return (error);
     if (nfiles >= maxfiles) {
         tablefull("file");
@@ -607,7 +613,8 @@ falloc(p, resultfp, resultfd)
     nfiles++;
     MALLOC(fp, struct file *, sizeof(struct file), M_FILE, M_WAITOK);
     bzero(fp, sizeof(struct file));
-    if (fq = p->p_fd->fd_ofiles[0]) {
+    fq = p->p_fd->fd_ofiles[0];
+    if (fq) {
         LIST_INSERT_AFTER(fq, fp, f_list);
     } else {
         LIST_INSERT_HEAD(&filehead, fp, f_list);
@@ -630,8 +637,6 @@ void
 ffree(fp)
     register struct file *fp;
 {
-    register struct file *fq;
-
     LIST_REMOVE(fp, f_list);
     crfree(fp->f_cred);
 #ifdef DIAGNOSTIC
@@ -839,7 +844,7 @@ fdopen(dev, mode, type, p)
 
     /*
      * XXX Kludge: set curproc->p_dupfd to contain the value of the
-     * the file descriptor being sought for duplication. The error 
+     * the file descriptor being sought for duplication. The error
      * return ensures that the vnode for this device will be released
      * by vn_open. Open will detect this special error and take the
      * actions in dupfdopen below. Other callers of vn_open or VOP_OPEN

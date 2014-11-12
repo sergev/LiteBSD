@@ -42,6 +42,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/kernel.h>
 
 #include <machine/machConst.h>
@@ -71,6 +72,7 @@
  * Start the real-time and statistics clocks. Leave stathz 0 since there
  * are no other timers available.
  */
+void
 cpu_initclocks()
 {
     extern int tickadj;
@@ -195,6 +197,7 @@ bad:
  * TODRZERO + 100*(SECYEAR+2*SECDAY) (e.g. on Jan 2 just after midnight)
  * to wrap the TODR around.
  */
+void
 resettodr()
 {
     register int t, t2;

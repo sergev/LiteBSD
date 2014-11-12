@@ -207,7 +207,7 @@ m_freem(m)
         return;
     do {
         MFREE(m, n);
-    } while (m = n);
+    } while ((m = n));
 }
 
 /*
@@ -385,7 +385,7 @@ m_adj(mp, req_len)
 {
     register int len = req_len;
     register struct mbuf *m;
-    register count;
+    register int count;
 
     if ((m = mp) == NULL)
         return;
@@ -447,7 +447,7 @@ m_adj(mp, req_len)
             }
             count -= m->m_len;
         }
-        while (m = m->m_next)
+        while ((m = m->m_next))
             m->m_len = 0;
     }
 }

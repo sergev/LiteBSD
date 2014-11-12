@@ -69,15 +69,14 @@
 
 struct  tty *constty;           /* pointer to console "window" tty */
 
-extern  cnputc();               /* standard console putc */
-int (*v_putc)() = cnputc;       /* routine to putc on virtual console */
+void (*v_putc)(int) = cnputc;   /* routine to putc on virtual console */
 
-void  logpri __P((int level));
+void logpri __P((int level));
 static void  putchar __P((int ch, int flags, struct tty *tp));
 static char *ksprintn __P((u_long num, int base, int *len));
 void kprintf __P((const char *fmt, int flags, struct tty *tp, va_list ap));
 
-int consintr = 1;           /* Ok to handle console interrupts? */
+int consintr = 1;               /* Ok to handle console interrupts? */
 
 /*
  * Variable panicstr contains argument to first call to panic; used as flag
@@ -271,7 +270,8 @@ logpri(level)
     register char *p;
 
     putchar('<', TOLOG, NULL);
-    for (p = ksprintn((u_long)level, 10, NULL); ch = *p--;)
+    p = ksprintn((u_long)level, 10, NULL);
+    while ((ch = *p--))
         putchar(ch, TOLOG, NULL);
     putchar('>', TOLOG, NULL);
 }
@@ -398,13 +398,14 @@ reswitch:   switch (ch = *(u_char *)fmt++) {
         case 'b':
             ul = va_arg(ap, int);
             p = va_arg(ap, char *);
-            for (q = ksprintn(ul, *p++, NULL); ch = *q--;)
+            q = ksprintn(ul, *p++, NULL);
+            while ((ch = *q--))
                 putchar(ch, flags, tp);
 
             if (!ul)
                 break;
 
-            for (tmp = 0; n = *p++;) {
+            for (tmp = 0; (n = *p++); ) {
                 if (ul & (1 << (n - 1))) {
                     putchar(tmp ? ',' : '<', flags, tp);
                     for (; (n = *p) > ' '; ++p)
@@ -426,7 +427,7 @@ reswitch:   switch (ch = *(u_char *)fmt++) {
             break;
         case 's':
             p = va_arg(ap, char *);
-            while (ch = *p++)
+            while ((ch = *p++))
                 putchar(ch, flags, tp);
             break;
         case 'd':
@@ -452,7 +453,7 @@ number:         p = ksprintn(ul, base, &tmp);
             if (width && (width -= tmp) > 0)
                 while (width--)
                     putchar(padc, flags, tp);
-            while (ch = *p--)
+            while ((ch = *p--))
                 putchar(ch, flags, tp);
             break;
         default:
@@ -512,6 +513,7 @@ putchar(c, flags, tp)
 /*
  * Scaled down version of sprintf(3).
  */
+int
 #ifdef __STDC__
 sprintf(char *buf, const char *cfmt, ...)
 #else
@@ -542,7 +544,7 @@ reswitch:   switch (ch = *(u_char *)fmt++) {
             break;
         case 's':
             p = va_arg(ap, char *);
-            while (*bp++ = *p++)
+            while ((*bp++ = *p++))
                 continue;
             --bp;
             break;
@@ -568,7 +570,9 @@ reswitch:   switch (ch = *(u_char *)fmt++) {
         case 'x':
             ul = lflag ? va_arg(ap, u_long) : va_arg(ap, u_int);
             base = 16;
-number:         for (p = ksprintn(ul, base, NULL); ch = *p--;)
+number:
+            p = ksprintn(ul, base, NULL);
+            while ((ch = *p--))
                 *bp++ = ch;
             break;
         default:

@@ -5,7 +5,7 @@
  * created from @(#)syscalls.master 8.6 (Berkeley) 3/30/95
  */
 
-#define syscallarg(x)   union { x datum; register_t pad; }
+#define syscallarg(x)   union { x value; register_t pad; }
 
 struct exit_args {
     syscallarg(int) rval;

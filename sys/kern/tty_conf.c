@@ -111,6 +111,7 @@ int nlinesw = sizeof (linesw) / sizeof (linesw[0]);
  * discipline specific ioctl command.
  */
 /*ARGSUSED*/
+int
 nullioctl(tp, cmd, data, flags, p)
     struct tty *tp;
     u_long cmd;
@@ -118,7 +119,6 @@ nullioctl(tp, cmd, data, flags, p)
     int flags;
     struct proc *p;
 {
-
 #ifdef lint
     tp = tp; data = data; flags = flags; p = p;
 #endif

@@ -530,6 +530,7 @@ static void identify_cpu()
  * cpu_startup: allocate memory for variable-sized tables,
  * initialize cpu, and do autoconfiguration.
  */
+void
 cpu_startup()
 {
     register unsigned i;
@@ -654,6 +655,7 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
  * Set registers on exec.
  * Clear all registers except sp, pc.
  */
+void
 setregs(p, entry)
     register struct proc *p;
     u_long entry;
@@ -809,6 +811,7 @@ sigreturn(p, uap, retval)
 
 int     waittime = -1;
 
+void
 boot(howto)
     register int howto;
 {

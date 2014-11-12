@@ -38,6 +38,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/proc.h>
 #include <sys/lock.h>
 #include <machine/cpu.h>
@@ -392,8 +393,9 @@ lockmgr(lkp, flags, interlkp, p)
              lkp->lk_sharecount != 0 || lkp->lk_waitcount != 0); ) {
             lkp->lk_flags |= LK_WAITDRAIN;
             simple_unlock(&lkp->lk_interlock);
-            if (error = tsleep((void *)&lkp->lk_flags, lkp->lk_prio,
-                lkp->lk_wmesg, lkp->lk_timo))
+            error = tsleep((void *)&lkp->lk_flags, lkp->lk_prio,
+                lkp->lk_wmesg, lkp->lk_timo);
+            if (error)
                 return (error);
             if ((extflags) & LK_SLEEPFAIL)
                 return (ENOLCK);
@@ -425,10 +427,10 @@ lockmgr(lkp, flags, interlkp, p)
  * Print out information about state of a lock. Used by VOP_PRINT
  * routines to display ststus about contained locks.
  */
+void
 lockmgr_printinfo(lkp)
     struct lock *lkp;
 {
-
     if (lkp->lk_sharecount)
         printf(" lock type %s: SHARED (count %d)", lkp->lk_wmesg,
             lkp->lk_sharecount);
@@ -443,9 +445,11 @@ lockmgr_printinfo(lkp)
 #include <sys/kernel.h>
 #include <vm/vm.h>
 #include <sys/sysctl.h>
+
 int lockpausetime = 0;
 struct ctldebug debug2 = { "lockpausetime", &lockpausetime };
 int simplelockrecurse;
+
 /*
  * Simple lock functions so that the debugger can see from whence
  * they are being called.

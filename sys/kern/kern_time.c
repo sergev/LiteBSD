@@ -39,13 +39,13 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 #include <sys/vnode.h>
-
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#include <sys/signalvar.h>
 
 #include <machine/cpu.h>
 
-/* 
+/*
  * Time of day and interval timer support.
  *
  * These routines provide the kernel entry points to get and set
@@ -70,14 +70,27 @@ gettimeofday(p, uap, retval)
 
     if (SCARG(uap, tp)) {
         microtime(&atv);
-        if (error = copyout((caddr_t)&atv, (caddr_t)SCARG(uap, tp),
-            sizeof (atv)))
+        error = copyout((caddr_t)&atv, (caddr_t)SCARG(uap, tp), sizeof (atv));
+        if (error)
             return (error);
     }
     if (SCARG(uap, tzp))
-        error = copyout((caddr_t)&tz, (caddr_t)SCARG(uap, tzp),
-            sizeof (tz));
+        error = copyout((caddr_t)&tz, (caddr_t)SCARG(uap, tzp), sizeof (tz));
     return (error);
+}
+
+static void
+timevalfix(t1)
+    struct timeval *t1;
+{
+    if (t1->tv_usec < 0) {
+        t1->tv_sec--;
+        t1->tv_usec += 1000000;
+    }
+    if (t1->tv_usec >= 1000000) {
+        t1->tv_sec++;
+        t1->tv_usec -= 1000000;
+    }
 }
 
 /* ARGSUSED */
@@ -94,8 +107,10 @@ settimeofday(p, uap, retval)
     struct timezone atz;
     int error, s;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
+
     /* Verify all parameters before changing time. */
     if (SCARG(uap, tv) && (error = copyin((caddr_t)SCARG(uap, tv),
         (caddr_t)&atv, sizeof(atv))))
@@ -105,7 +120,7 @@ settimeofday(p, uap, retval)
         return (error);
     if (SCARG(uap, tv)) {
         /*
-         * If the system is secure, we do not allow the time to be 
+         * If the system is secure, we do not allow the time to be
          * set to an earlier value (it may be slowed using adjtime,
          * but not set back). This feature prevent interlopers from
          * setting arbitrary time stamps on files.
@@ -153,10 +168,12 @@ adjtime(p, uap, retval)
     register long ndelta, ntickdelta, odelta;
     int s, error;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
-    if (error = copyin((caddr_t)SCARG(uap, delta), (caddr_t)&atv,
-        sizeof(struct timeval)))
+    error = copyin((caddr_t)SCARG(uap, delta), (caddr_t)&atv,
+        sizeof(struct timeval));
+    if (error)
         return (error);
 
     /*
@@ -241,12 +258,12 @@ getitimer(p, uap, retval)
          * current time and time for the timer to go off.
          */
         aitv = p->p_realtimer;
-        if (timerisset(&aitv.it_value))
+        if (timerisset(&aitv.it_value)) {
             if (timercmp(&aitv.it_value, &time, <))
                 timerclear(&aitv.it_value);
             else
-                timevalsub(&aitv.it_value,
-                    (struct timeval *)&time);
+                timevalsub(&aitv.it_value, (struct timeval *)&time);
+        }
     } else
         aitv = p->p_stats->p_timer[SCARG(uap, which)];
     splx(s);
@@ -400,34 +417,20 @@ expire:
  * it just gets very confused in this case.
  * Caveat emptor.
  */
+void
 timevaladd(t1, t2)
     struct timeval *t1, *t2;
 {
-
     t1->tv_sec += t2->tv_sec;
     t1->tv_usec += t2->tv_usec;
     timevalfix(t1);
 }
 
+void
 timevalsub(t1, t2)
     struct timeval *t1, *t2;
 {
-
     t1->tv_sec -= t2->tv_sec;
     t1->tv_usec -= t2->tv_usec;
     timevalfix(t1);
-}
-
-timevalfix(t1)
-    struct timeval *t1;
-{
-
-    if (t1->tv_usec < 0) {
-        t1->tv_sec--;
-        t1->tv_usec += 1000000;
-    }
-    if (t1->tv_usec >= 1000000) {
-        t1->tv_sec++;
-        t1->tv_usec -= 1000000;
-    }
 }

@@ -149,6 +149,8 @@ union   cpuprid cpu;
 union   cpuprid fpu;
 u_int   machDataCacheSize;
 u_int   machInstCacheSize;
+
+void setsoftclock __P((void));
 #endif
 
 /*

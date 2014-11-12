@@ -111,13 +111,13 @@ sigaction(p, uap, retval)
             sa->sa_flags |= SA_RESTART;
         if (p->p_flag & P_NOCLDSTOP)
             sa->sa_flags |= SA_NOCLDSTOP;
-        if (error = copyout((caddr_t)sa, (caddr_t)SCARG(uap, osa),
-            sizeof (vec)))
+        error = copyout((caddr_t)sa, (caddr_t)SCARG(uap, osa), sizeof (vec));
+        if (error)
             return (error);
     }
     if (SCARG(uap, nsa)) {
-        if (error = copyin((caddr_t)SCARG(uap, nsa), (caddr_t)sa,
-            sizeof (vec)))
+        error = copyin((caddr_t)SCARG(uap, nsa), (caddr_t)sa, sizeof (vec));
+        if (error)
             return (error);
         setsigvec(p, signum, sa);
     }
@@ -265,7 +265,7 @@ sigprocmask(p, uap, retval)
     case SIG_SETMASK:
         p->p_sigmask = SCARG(uap, mask) &~ sigcantmask;
         break;
-    
+
     default:
         error = EINVAL;
         break;
@@ -468,8 +468,8 @@ sigaltstack(p, uap, retval)
         return (error);
     if (SCARG(uap, nss) == 0)
         return (0);
-    if (error = copyin((caddr_t)SCARG(uap, nss), (caddr_t)&ss,
-        sizeof (ss)))
+    error = copyin((caddr_t)SCARG(uap, nss), (caddr_t)&ss, sizeof (ss));
+    if (error)
         return (error);
     if (ss.ss_flags & SA_DISABLE) {
         if (psp->ps_sigstk.ss_flags & SA_ONSTACK)
@@ -483,6 +483,57 @@ sigaltstack(p, uap, retval)
     psp->ps_flags |= SAS_ALTSTACK;
     psp->ps_sigstk= ss;
     return (0);
+}
+
+/*
+ * Common code for kill process group/broadcast kill.
+ * cp is calling process.
+ */
+static int
+killpg1(cp, signum, pgid, all)
+    register struct proc *cp;
+    int signum, pgid, all;
+{
+    register struct proc *p;
+    register struct pcred *pc = cp->p_cred;
+    struct pgrp *pgrp;
+    int nfound = 0;
+
+    if (all)
+        /*
+         * broadcast
+         */
+        for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
+            if (p->p_pid <= 1 || p->p_flag & P_SYSTEM ||
+                p == cp || !CANSIGNAL(cp, pc, p, signum))
+                continue;
+            nfound++;
+            if (signum)
+                psignal(p, signum);
+        }
+    else {
+        if (pgid == 0)
+            /*
+             * zero pgid means send to my process group.
+             */
+            pgrp = cp->p_pgrp;
+        else {
+            pgrp = pgfind(pgid);
+            if (pgrp == NULL)
+                return (ESRCH);
+        }
+        for (p = pgrp->pg_members.lh_first; p != 0;
+             p = p->p_pglist.le_next) {
+            if (p->p_pid <= 1 || p->p_flag & P_SYSTEM ||
+                p->p_stat == SZOMB ||
+                !CANSIGNAL(cp, pc, p, signum))
+                continue;
+            nfound++;
+            if (signum)
+                psignal(p, signum);
+        }
+    }
+    return (nfound ? 0 : ESRCH);
 }
 
 /* ARGSUSED */
@@ -540,57 +591,6 @@ compat_43_killpg(p, uap, retval)
 #endif /* COMPAT_43 || COMPAT_SUNOS */
 
 /*
- * Common code for kill process group/broadcast kill.
- * cp is calling process.
- */
-int
-killpg1(cp, signum, pgid, all)
-    register struct proc *cp;
-    int signum, pgid, all;
-{
-    register struct proc *p;
-    register struct pcred *pc = cp->p_cred;
-    struct pgrp *pgrp;
-    int nfound = 0;
-    
-    if (all)    
-        /* 
-         * broadcast 
-         */
-        for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
-            if (p->p_pid <= 1 || p->p_flag & P_SYSTEM || 
-                p == cp || !CANSIGNAL(cp, pc, p, signum))
-                continue;
-            nfound++;
-            if (signum)
-                psignal(p, signum);
-        }
-    else {
-        if (pgid == 0)      
-            /* 
-             * zero pgid means send to my process group.
-             */
-            pgrp = cp->p_pgrp;
-        else {
-            pgrp = pgfind(pgid);
-            if (pgrp == NULL)
-                return (ESRCH);
-        }
-        for (p = pgrp->pg_members.lh_first; p != 0;
-             p = p->p_pglist.le_next) {
-            if (p->p_pid <= 1 || p->p_flag & P_SYSTEM ||
-                p->p_stat == SZOMB ||
-                !CANSIGNAL(cp, pc, p, signum))
-                continue;
-            nfound++;
-            if (signum)
-                psignal(p, signum);
-        }
-    }
-    return (nfound ? 0 : ESRCH);
-}
-
-/*
  * Send a signal to a process group.
  */
 void
@@ -641,7 +641,7 @@ trapsignal(p, signum, code)
         p->p_stats->p_ru.ru_nsignals++;
 #ifdef KTRACE
         if (KTRPOINT(p, KTR_PSIG))
-            ktrpsig(p->p_tracep, signum, ps->ps_sigact[signum], 
+            ktrpsig(p->p_tracep, signum, ps->ps_sigact[signum],
                 p->p_sigmask, code);
 #endif
         sendsig(ps->ps_sigact[signum], signum, p->p_sigmask, code);
@@ -1165,8 +1165,9 @@ coredump(p)
         return (EFAULT);
     sprintf(name, "%s.core", p->p_comm);
     NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE, name, p);
-    if (error = vn_open(&nd,
-        O_CREAT | FWRITE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
+    error = vn_open(&nd,
+        O_CREAT | FWRITE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (error)
         return (error);
     vp = nd.ni_vp;
 

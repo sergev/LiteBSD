@@ -45,7 +45,7 @@
 #include <sys/buf.h>
 #include <sys/signalvar.h>
 #include <sys/resourcevar.h>
-#include <sys/vmmeter.h>
+#include <vm/vm.h>
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
@@ -53,7 +53,7 @@
 #include <machine/cpu.h>
 
 u_char  curpriority;        /* usrpri of curproc */
-int lbolt;          /* once a second sleep address */
+int     lbolt;              /* once a second sleep address */
 
 /*
  * Force switch among equal priority processes every 100ms.
@@ -104,7 +104,7 @@ roundrobin(arg)
  * We now need to prove two things:
  *  1) Given factor ** (5 * loadavg) ~= .1, prove factor == b/(b+1)
  *  2) Given b/(b+1) ** power ~= .1, prove power == (5 * loadavg)
- *  
+ *
  * Facts:
  *         For x close to zero, exp(x) =~ 1 + x, since
  *              exp(x) = 0! + x**1/1! + x**2/2! + ... .
@@ -285,7 +285,7 @@ tsleep(ident, priority, wmesg, timo)
 {
     register struct proc *p = curproc;
     register struct slpque *qp;
-    register s;
+    register int s;
     int sig, catch = priority & PCATCH;
     extern int cold;
     void endtsleep __P((void *));
@@ -333,7 +333,8 @@ tsleep(ident, priority, wmesg, timo)
      */
     if (catch) {
         p->p_flag |= P_SINTR;
-        if (sig = CURSIG(p)) {
+        sig = CURSIG(p);
+        if (sig) {
             if (p->p_wchan)
                 unsleep(p);
             p->p_stat = SRUN;
@@ -414,7 +415,7 @@ sleep(ident, priority)
 {
     register struct proc *p = curproc;
     register struct slpque *qp;
-    register s;
+    register int s;
     extern int cold;
 
 #ifdef DIAGNOSTIC
@@ -503,9 +504,9 @@ wakeup(ident)
     s = splhigh();
     qp = &slpque[LOOKUP(ident)];
 restart:
-    for (q = &qp->sq_head; p = *q; ) {
+    for (q = &qp->sq_head; (p = *q); ) {
 #ifdef DIAGNOSTIC
-        if (p->p_back || p->p_stat != SSLEEP && p->p_stat != SSTOP)
+        if (p->p_back || (p->p_stat != SSLEEP && p->p_stat != SSTOP))
             panic("wakeup");
 #endif
         if (p->p_wchan == ident) {

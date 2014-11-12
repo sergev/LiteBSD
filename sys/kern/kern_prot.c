@@ -172,8 +172,9 @@ getgroups(p, uap, retval)
     if (ngrp < pc->pc_ucred->cr_ngroups)
         return (EINVAL);
     ngrp = pc->pc_ucred->cr_ngroups;
-    if (error = copyout((caddr_t)pc->pc_ucred->cr_groups,
-        (caddr_t)SCARG(uap, gidset), ngrp * sizeof(gid_t)))
+    error = copyout((caddr_t)pc->pc_ucred->cr_groups,
+        (caddr_t)SCARG(uap, gidset), ngrp * sizeof(gid_t));
+    if (error)
         return (error);
     *retval = ngrp;
     return (0);
@@ -362,14 +363,16 @@ setgroups(p, uap, retval)
     register u_int ngrp;
     int error;
 
-    if (error = suser(pc->pc_ucred, &p->p_acflag))
+    error = suser(pc->pc_ucred, &p->p_acflag);
+    if (error)
         return (error);
     ngrp = SCARG(uap, gidsetsize);
     if (ngrp < 1 || ngrp > NGROUPS)
         return (EINVAL);
     pc->pc_ucred = crcopy(pc->pc_ucred);
-    if (error = copyin((caddr_t)SCARG(uap, gidset),
-        (caddr_t)pc->pc_ucred->cr_groups, ngrp * sizeof(gid_t)))
+    error = copyin((caddr_t)SCARG(uap, gidset),
+        (caddr_t)pc->pc_ucred->cr_groups, ngrp * sizeof(gid_t));
+    if (error)
         return (error);
     pc->pc_ucred->cr_ngroups = ngrp;
     p->p_flag |= P_SUGID;
@@ -590,7 +593,8 @@ setlogin(p, uap, retval)
 {
     int error;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
     error = copyinstr((caddr_t) SCARG(uap, namebuf),
         (caddr_t) p->p_pgrp->pg_session->s_login,

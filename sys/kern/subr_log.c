@@ -44,6 +44,7 @@
 #include <sys/ioctl.h>
 #include <sys/msgbuf.h>
 #include <sys/file.h>
+#include <sys/signalvar.h>
 
 #define LOG_RDPRI   (PZERO + 1)
 
@@ -119,8 +120,8 @@ logread(dev, uio, flag)
             return (EWOULDBLOCK);
         }
         logsoftc.sc_state |= LOG_RDWAIT;
-        if (error = tsleep((caddr_t)mbp, LOG_RDPRI | PCATCH,
-            "klog", 0)) {
+        error = tsleep((caddr_t)mbp, LOG_RDPRI | PCATCH, "klog", 0);
+        if (error) {
             splx(s);
             return (error);
         }
@@ -179,8 +180,8 @@ logwakeup()
     selwakeup(&logsoftc.sc_selp);
     if (logsoftc.sc_state & LOG_ASYNC) {
         if (logsoftc.sc_pgid < 0)
-            gsignal(-logsoftc.sc_pgid, SIGIO); 
-        else if (p = pfind(logsoftc.sc_pgid))
+            gsignal(-logsoftc.sc_pgid, SIGIO);
+        else if ((p = pfind(logsoftc.sc_pgid)))
             psignal(p, SIGIO);
     }
     if (logsoftc.sc_state & LOG_RDWAIT) {

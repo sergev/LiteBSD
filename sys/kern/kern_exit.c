@@ -55,6 +55,9 @@
 #include <sys/malloc.h>
 #include <sys/resourcevar.h>
 #include <sys/ptrace.h>
+#include <sys/filedesc.h>
+#include <sys/signalvar.h>
+#include <sys/acct.h>
 
 #include <machine/cpu.h>
 #ifdef COMPAT_43
@@ -81,7 +84,6 @@ exit(p, uap, retval)
     struct rexit_args *uap;
     int *retval;
 {
-
     exit1(p, W_EXITCODE(uap->rval, 0));
     /* NOTREACHED */
 }
@@ -97,7 +99,6 @@ exit1(p, rv)
     int rv;
 {
     register struct proc *q, *nq;
-    register struct proc **pp;
     register struct vmspace *vm;
 
     if (p->p_pid == 1)
@@ -180,7 +181,7 @@ exit1(p, rv)
     p->p_rlimit[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
     (void)acct_process(p);
 #ifdef KTRACE
-    /* 
+    /*
      * release trace file
      */
     p->p_traceflag = 0; /* don't trace the vrele() */
@@ -346,8 +347,9 @@ loop:
 #endif
             if (uap->status) {
                 status = p->p_xstat;    /* convert to int */
-                if (error = copyout((caddr_t)&status,
-                    (caddr_t)uap->status, sizeof(status)))
+                error = copyout((caddr_t)&status,
+                    (caddr_t)uap->status, sizeof(status));
+                if (error)
                     return (error);
             }
             if (uap->rusage && (error = copyout((caddr_t)p->p_ru,
@@ -430,7 +432,8 @@ loop:
         retval[0] = 0;
         return (0);
     }
-    if (error = tsleep((caddr_t)q, PWAIT | PCATCH, "wait", 0))
+    error = tsleep((caddr_t)q, PWAIT | PCATCH, "wait", 0);
+    if (error)
         return (error);
     goto loop;
 }

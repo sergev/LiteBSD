@@ -111,20 +111,20 @@
 #endif
 
 /* pages ("clicks") (4096 bytes) to disk blocks */
-#define ctod(x) ((x)<<(PGSHIFT-DEV_BSHIFT))
-#define dtoc(x) ((x)>>(PGSHIFT-DEV_BSHIFT))
-#define dtob(x) ((x)<<DEV_BSHIFT)
+#define ctod(x)         ((x)<<(PGSHIFT-DEV_BSHIFT))
+#define dtoc(x)         ((x)>>(PGSHIFT-DEV_BSHIFT))
 
 /* pages to bytes */
-#define ctob(x) ((x)<<PGSHIFT)
+#define ctob(x)         ((x)<<PGSHIFT)
 
 /* bytes to pages */
-#define btoc(x) (((unsigned)(x)+(NBPG-1))>>PGSHIFT)
+#define btoc(x)         (((unsigned)(x)+(NBPG-1))>>PGSHIFT)
 
-#define btodb(bytes)                    /* calculates (bytes / DEV_BSIZE) */ \
-        ((bytes) >> DEV_BSHIFT)
-#define dbtob(db)                       /* calculates (db * DEV_BSIZE) */ \
-        ((db) << DEV_BSHIFT)
+/* bytes to disk blocks */
+#define btodb(bytes)    ((bytes) >> DEV_BSHIFT)
+
+/* disk blocks to bytes */
+#define dbtob(db)       ((db) << DEV_BSHIFT)
 
 /*
  * Map a ``block device block'' to a file system block.
@@ -144,25 +144,13 @@
 
 #ifndef LOCORE
 #ifdef KERNEL
-#ifdef DS5000
-/*
- * Decstation 5000.
- */
-extern int (*Mach_splnet)(), (*Mach_splbio)(), (*Mach_splimp)(),
-           (*Mach_spltty)(), (*Mach_splclock)(), (*Mach_splstatclock)();
-#define splnet()        ((*Mach_splnet)())
-#define splbio()        ((*Mach_splbio)())
-#define splimp()        ((*Mach_splimp)())
-#define spltty()        ((*Mach_spltty)())
-#define splclock()      ((*Mach_splclock)())
-#define splstatclock()  ((*Mach_splstatclock)())
-extern  int cpuspeed;
-#define DELAY(n)        { register int N = cpuspeed * (n); while (--N > 0); }
-#else /* !DS5000 */
 /*
  * Generic MIPSr2.
  */
-extern int splnet(void), splbio(void), splimp(void), spltty(void), splclock(void);
+extern int spl0(void), spl1(void), spl2(void), spl3(void);
+extern int spl4(void), spl5(void), spl6(void), splhigh(void);
+extern void splx(int);
+
 #define splsoftclock()  spl1()      /* low-priority clock processing */
 #define splnet()        spl2()      /* network protocol processing */
 #define splbio()        spl3()      /* disk controllers */
@@ -172,8 +160,8 @@ extern int splnet(void), splbio(void), splimp(void), spltty(void), splclock(void
 #define splstatclock()  splhigh()   /* blocks all interrupt activity */
 
 extern void udelay(unsigned);
+
 #define DELAY(usec)     udelay(usec)
-#endif /* !DS5000 */
 #else /* !KERNEL */
 #define DELAY(n)        { register int N = (n); while (--N > 0); }
 #endif /* !KERNEL */
@@ -206,7 +194,6 @@ static __inline void
 simple_lock_init(lkp)
         struct simplelock *lkp;
 {
-
         lkp->lock_data = 0;
 }
 
@@ -214,7 +201,6 @@ static __inline void
 simple_lock(lkp)
         __volatile struct simplelock *lkp;
 {
-
         while (test_and_set(&lkp->lock_data))
                 continue;
 }
@@ -223,7 +209,6 @@ static __inline int
 simple_lock_try(lkp)
         __volatile struct simplelock *lkp;
 {
-
         return (!test_and_set(&lkp->lock_data))
 }
 
@@ -231,7 +216,6 @@ static __inline void
 simple_unlock(lkp)
         __volatile struct simplelock *lkp;
 {
-
         lkp->lock_data = 0;
 }
 #endif /* NCPUS > 1 */

@@ -42,6 +42,7 @@
 #include <sys/buf.h>
 #include <sys/conf.h>
 #include <sys/proc.h>
+#include <vm/vm.h>
 
 /*
  * The routines implemented in this file are described in:
@@ -92,7 +93,8 @@ physio(strategy, bp, dev, flags, minphys, uio)
             return (EFAULT);
 
     /* Make sure we have a buffer, creating one if necessary. */
-    if (nobuf = (bp == NULL))
+    nobuf = (bp == NULL);
+    if (nobuf)
         bp = getphysbuf();
 
     /* [raise the processor priority level to splbio;] */
@@ -182,7 +184,7 @@ physio(strategy, bp, dev, flags, minphys, uio)
              *    locked]
              */
             vunmapbuf(bp, todo);
-            vsunlock(bp->b_data, todo);
+            vsunlock(bp->b_data, todo, flags & B_WRITE);
             //p->p_holdcnt--;
 
             /* remember error value (save a splbio/splx pair) */
@@ -301,6 +303,7 @@ minphys(bp)
 /*
  * Do a read on a device for a user process.
  */
+int
 rawread(dev, uio)
     dev_t dev;
     struct uio *uio;
@@ -312,6 +315,7 @@ rawread(dev, uio)
 /*
  * Do a write on a device for a user process.
  */
+int
 rawwrite(dev, uio)
     dev_t dev;
     struct uio *uio;

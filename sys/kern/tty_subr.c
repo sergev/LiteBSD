@@ -84,7 +84,7 @@ clalloc(clp, size, quot)
         return (-1);
     bzero(clp->c_cs, size);
 
-    if(quot) {
+    if (quot) {
         MALLOC(clp->c_cq, char *, QMEM(size), M_TTYS, M_WAITOK);
         if (!clp->c_cq) {
             FREE(clp->c_cs, M_TTYS);
@@ -105,9 +105,9 @@ void
 clfree(clp)
     struct clist *clp;
 {
-    if(clp->c_cs)
+    if (clp->c_cs)
         FREE(clp->c_cs, M_TTYS);
-    if(clp->c_cq)
+    if (clp->c_cq)
         FREE(clp->c_cq, M_TTYS);
     clp->c_cs = clp->c_cq = (char *)0;
 }
@@ -186,6 +186,7 @@ q_to_b(clp, cp, count)
  * Return count of contiguous characters in clist.
  * Stop counting if flag&character is non-null.
  */
+int
 ndqb(clp, flag)
     struct clist *clp;
     int flag;
@@ -270,9 +271,7 @@ putc(c, clp)
     int c;
     struct clist *clp;
 {
-    register char *q;
     register int i;
-    int r = -1;
     int s;
 
     s = spltty();
@@ -284,7 +283,7 @@ putc(c, clp)
 #if defined(DIAGNOSTIC) || 1
             printf("putc: required clalloc\n");
 #endif
-            if(clalloc(clp, 1024, 1)) {
+            if (clalloc(clp, 1024, 1)) {
 out:
                 splx(s);
                 return -1;
@@ -302,7 +301,7 @@ out:
         else
             clrbit(clp->c_cq, i);
 #else
-        q = clp->c_cq + i;
+        register char *q = clp->c_cq + i;
         *q = (c & TTY_QUOTE) ? 1 : 0;
 #endif
     }
@@ -331,7 +330,7 @@ clrbits(cp, off, len)
     register int i;
     char mask;
 
-    if(len==1) {
+    if (len==1) {
         clrbit(cp, off);
         return;
     }
@@ -366,9 +365,9 @@ b_to_q(cp, count, clp)
     int count;
     struct clist *clp;
 {
-    register int i, cc;
+    register int cc;
     register char *p = cp;
-    int off, s;
+    int s;
 
     if (count <= 0)
         return 0;
@@ -382,7 +381,7 @@ b_to_q(cp, count, clp)
 #if defined(DIAGNOSTIC) || 1
             printf("b_to_q: required clalloc\n");
 #endif
-            if(clalloc(clp, 1024, 1))
+            if (clalloc(clp, 1024, 1))
                 goto out;
         }
         clp->c_cf = clp->c_cl = clp->c_cs;
@@ -472,16 +471,15 @@ firstc(clp, c)
     struct clist *clp;
     int *c;
 {
-    int empty = 0;
     register char *cp;
-    register int i;
 
     cc = clp->c_cc;
     if (cc == 0)
         return NULL;
+
     cp = clp->c_cf;
     *c = *cp & 0xff;
-    if(clp->c_cq) {
+    if (clp->c_cq) {
 #ifdef QBITS
         if (isset(clp->c_cq, cp - clp->c_cs))
             *c |= TTY_QUOTE;

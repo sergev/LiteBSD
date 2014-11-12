@@ -97,7 +97,7 @@ extern struct sysent {          /* system call table */
     int     (*sy_call)();       /* implementing function */
 } sysent[];
 extern int nsysent;
-#define SCARG(p,k)  ((p)->k.datum)  /* get arg from args pointer */
+#define SCARG(p,k)  ((p)->k.value)  /* get arg from args pointer */
 
 extern int boothowto;           /* reboot flags, from console subsystem */
 
@@ -129,6 +129,7 @@ void    log __P((int, const char *, ...));
 void    printf __P((const char *, ...));
 int     sprintf __P((char *buf, const char *, ...));
 void    ttyprintf __P((struct tty *, const char *, ...));
+void    uprintf __P((const char *, ...));
 
 void    bcopy __P((const void *from, void *to, u_int len));
 void    ovbcopy __P((const void *from, void *to, u_int len));
@@ -166,5 +167,50 @@ void    initclocks __P((void));
 void    startprofclock __P((struct proc *));
 void    stopprofclock __P((struct proc *));
 void    setstatclockrate __P((int hzrate));
+
+void    consinit __P((void));
+void    kmeminit __P((void));
+void    cpu_startup __P((void));
+void    rqinit __P((void));
+void    vfsinit __P((void));
+void    mbinit __P((void));
+void    clist_init __P((void));
+void    ifinit __P((void));
+void    domaininit __P((void));
+void    scheduler __P((void));
+void    cpu_initclocks __P((void));
+void    resettodr __P((void));
+
+struct execve_args;
+struct dup2_args;
+struct socket;
+struct stat;
+int     fork __P((struct proc *, void *, register_t *));
+int     execve __P((struct proc *, struct execve_args *, register_t *));
+int     dup2 __P((struct proc *, struct dup2_args *, register_t *));
+int     closef __P((struct file *, struct proc *));
+int     soo_stat __P((struct socket *, struct stat *));
+int     trace_req __P((struct proc *));
+int     cpu_coredump __P((struct proc *, struct vnode *, struct ucred *));
+int     sysctl_clockrate __P((char *, size_t *));
+int     sysctl_vnode __P((char *, size_t *, struct proc *));
+int     uiomove __P((caddr_t, int, struct uio *));
+int     fuswintr __P((caddr_t));
+int     suswintr __P((caddr_t, int));
+int     ureadc(int c, struct uio *);
+
+void    timevaladd __P((struct timeval *, struct timeval *));
+void    timevalsub __P((struct timeval *, struct timeval *));
+void    setregs __P((struct proc *, u_long));
+void    exit1 __P((struct proc *, int));
+void    vmapbuf __P((struct buf *, vm_size_t));
+void    vunmapbuf __P((struct buf *, vm_size_t));
+void    brelvp __P((struct buf *));
+void    remrq __P((struct proc *));
+void    cpu_switch __P((struct proc *));
+void    cnputc __P((int));
+void    boot __P((int));
+void    logwakeup(void);
+void    ffree(struct file *);
 
 #include <libkern/libkern.h>

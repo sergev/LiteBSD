@@ -50,29 +50,11 @@
 #include <sys/file.h>
 #include <sys/acct.h>
 #include <sys/ktrace.h>
-
-/* ARGSUSED */
-fork(p, uap, retval)
-    struct proc *p;
-    void *uap;
-    register_t *retval;
-{
-
-    return (fork1(p, 0, retval));
-}
-
-/* ARGSUSED */
-vfork(p, uap, retval)
-    struct proc *p;
-    void *uap;
-    register_t *retval;
-{
-
-    return (fork1(p, 1, retval));
-}
+#include <vm/vm.h>
 
 int nprocs = 1;     /* process 0 */
 
+static int
 fork1(p1, isvfork, retval)
     register struct proc *p1;
     int isvfork;
@@ -81,7 +63,6 @@ fork1(p1, isvfork, retval)
     register struct proc *p2;
     register uid_t uid;
     struct proc *newproc;
-    struct proc **hash;
     int count;
     static int nextpid, pidchecked = 0;
 
@@ -146,7 +127,7 @@ again:
             }
             if (p2->p_pid > nextpid && pidchecked > p2->p_pid)
                 pidchecked = p2->p_pid;
-            if (p2->p_pgrp->pg_id > nextpid && 
+            if (p2->p_pgrp->pg_id > nextpid &&
                 pidchecked > p2->p_pgrp->pg_id)
                 pidchecked = p2->p_pgrp->pg_id;
         }
@@ -284,4 +265,24 @@ again:
     retval[0] = p2->p_pid;
     retval[1] = 0;
     return (0);
+}
+
+/* ARGSUSED */
+int
+fork(p, uap, retval)
+    struct proc *p;
+    void *uap;
+    register_t *retval;
+{
+    return (fork1(p, 0, retval));
+}
+
+/* ARGSUSED */
+int
+vfork(p, uap, retval)
+    struct proc *p;
+    void *uap;
+    register_t *retval;
+{
+    return (fork1(p, 1, retval));
 }

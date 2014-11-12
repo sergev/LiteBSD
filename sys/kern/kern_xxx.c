@@ -55,7 +55,8 @@ reboot(p, uap, retval)
 {
     int error;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
     boot(SCARG(uap, opt));
     return (0);

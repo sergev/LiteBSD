@@ -45,6 +45,9 @@
 #include <sys/kernel.h>
 #include <sys/proc.h>
 #include <sys/resourcevar.h>
+#include <sys/signalvar.h>
+#include <vm/vm.h>
+#include <sys/sysctl.h>
 
 #include <machine/cpu.h>
 
@@ -511,6 +514,7 @@ statclock(frame)
 /*
  * Return information about system clocks.
  */
+int
 sysctl_clockrate(where, sizep)
     register char *where;
     size_t *sizep;

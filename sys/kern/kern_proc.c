@@ -48,6 +48,7 @@
 #include <sys/mbuf.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
+#include <sys/signalvar.h>
 
 /*
  * Structure associated with user cacheing.
@@ -126,10 +127,10 @@ chgproccnt(uid, diff)
 /*
  * Is p an inferior of the current process?
  */
+int
 inferior(p)
     register struct proc *p;
 {
-
     for (; p != curproc; p = p->p_pptr)
         if (p->p_pid == 0)
             return (0);
@@ -268,7 +269,7 @@ pgdelete(pgrp)
     register struct pgrp *pgrp;
 {
 
-    if (pgrp->pg_session->s_ttyp != NULL && 
+    if (pgrp->pg_session->s_ttyp != NULL &&
         pgrp->pg_session->s_ttyp->t_pgrp == pgrp)
         pgrp->pg_session->s_ttyp->t_pgrp = NULL;
     LIST_REMOVE(pgrp, pg_hash);
@@ -303,11 +304,12 @@ fixjobc(p, pgrp, entering)
      * group; if so, adjust count for p's process group.
      */
     if ((hispgrp = p->p_pptr->p_pgrp) != pgrp &&
-        hispgrp->pg_session == mysession)
+        hispgrp->pg_session == mysession) {
         if (entering)
             pgrp->pg_jobc++;
         else if (--pgrp->pg_jobc == 0)
             orphanpg(pgrp);
+    }
 
     /*
      * Check this process' children to see whether they qualify
@@ -317,14 +319,15 @@ fixjobc(p, pgrp, entering)
     for (p = p->p_children.lh_first; p != 0; p = p->p_sibling.le_next)
         if ((hispgrp = p->p_pgrp) != pgrp &&
             hispgrp->pg_session == mysession &&
-            p->p_stat != SZOMB)
+            p->p_stat != SZOMB) {
             if (entering)
                 hispgrp->pg_jobc++;
             else if (--hispgrp->pg_jobc == 0)
                 orphanpg(hispgrp);
+        }
 }
 
-/* 
+/*
  * A process group has become orphaned;
  * if there are any stopped processes in the group,
  * hang-up all process in that group.
@@ -364,7 +367,7 @@ pgrpdump()
                     pgrp->pg_members.lh_first);
                 for (p = pgrp->pg_members.lh_first; p != 0;
                     p = p->p_pglist.le_next) {
-                    printf("\t\tpid %d addr %x pgrp %x\n", 
+                    printf("\t\tpid %d addr %x pgrp %x\n",
                         p->p_pid, p, p->p_pgrp);
                 }
             }

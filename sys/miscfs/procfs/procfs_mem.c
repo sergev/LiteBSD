@@ -107,7 +107,7 @@ procfs_rwmem(p, uio)
          * The map we want...
          */
         map = &p->p_vmspace->vm_map;
-  
+
         /*
          * Check the permissions for the area we're interested
          * in.
@@ -147,7 +147,7 @@ procfs_rwmem(p, uio)
          */
         if (!error)
             vm_map_lookup_done(tmap, out_entry);
-  
+
         /*
          * Fault the page in...
          */
@@ -181,7 +181,7 @@ procfs_rwmem(p, uio)
              * Now do the i/o move.
              */
             if (!error)
-                error = uiomove(kva + page_offset, len, uio);
+                error = uiomove((caddr_t) (kva + page_offset), len, uio);
 
             vm_map_remove(kernel_map, kva, kva + PAGE_SIZE);
         }

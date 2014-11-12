@@ -43,6 +43,7 @@
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
+#include <sys/signalvar.h>
 
 /*
  * Primitive routines for operating on sockets and socket buffers
@@ -76,7 +77,7 @@ u_long  sb_max = SB_MAX;        /* patchable */
  * structure queued on so_q0 by calling sonewconn().  When the connection
  * is established, soisconnected() is called, and transfers the
  * socket structure to so_q, making it available to accept().
- * 
+ *
  * If a socket is closed with sockets on either
  * so_q0 or so_q, these sockets are dropped.
  *
@@ -159,7 +160,7 @@ sonewconn1(head, connstatus)
     if (head->so_qlen + head->so_q0len > 3 * head->so_qlimit / 2)
         return ((struct socket *)0);
     MALLOC(so, struct socket *, sizeof(*so), M_SOCKET, M_DONTWAIT);
-    if (so == NULL) 
+    if (so == NULL)
         return ((struct socket *)0);
     bzero((caddr_t)so, sizeof(*so));
     so->so_type = head->so_type;
@@ -278,7 +279,7 @@ sbwait(sb)
         sb->sb_timeo));
 }
 
-/* 
+/*
  * Lock a sockbuf already known to be locked;
  * return any error returned from sleep (EINTR).
  */
@@ -290,9 +291,10 @@ sb_lock(sb)
 
     while (sb->sb_flags & SB_LOCK) {
         sb->sb_flags |= SB_WANT;
-        if (error = tsleep((caddr_t)&sb->sb_flags, 
+        error = tsleep((caddr_t)&sb->sb_flags,
             (sb->sb_flags & SB_NOINTR) ? PSOCK : PSOCK|PCATCH,
-            netio, 0))
+            netio, 0);
+        if (error)
             return (error);
     }
     sb->sb_flags |= SB_LOCK;
@@ -452,7 +454,8 @@ sbappend(sb, m)
 
     if (m == 0)
         return;
-    if (n = sb->sb_mb) {
+    n = sb->sb_mb;
+    if (n) {
         while (n->m_nextpkt)
             n = n->m_nextpkt;
         do {
@@ -502,7 +505,8 @@ sbappendrecord(sb, m0)
 
     if (m0 == 0)
         return;
-    if (m = sb->sb_mb)
+    m = sb->sb_mb;
+    if (m)
         while (m->m_nextpkt)
             m = m->m_nextpkt;
     /*
@@ -538,7 +542,7 @@ sbinsertoob(sb, m0)
 
     if (m0 == 0)
         return;
-    for (mp = &sb->sb_mb; m = *mp; mp = &((*mp)->m_nextpkt)) {
+    for (mp = &sb->sb_mb; (m = *mp); mp = &((*mp)->m_nextpkt)) {
         again:
         switch (m->m_type) {
 
@@ -546,7 +550,8 @@ sbinsertoob(sb, m0)
             continue;       /* WANT next train */
 
         case MT_CONTROL:
-            if (m = m->m_next)
+            m = m->m_next;
+            if (m)
                 goto again; /* inspect THIS train further */
         }
         break;
@@ -607,7 +612,8 @@ panic("sbappendaddr");
     m->m_next = control;
     for (n = m; n; n = n->m_next)
         sballoc(sb, n);
-    if (n = sb->sb_mb) {
+    n = sb->sb_mb;
+    if (n) {
         while (n->m_nextpkt)
             n = n->m_nextpkt;
         n->m_nextpkt = m;
@@ -639,7 +645,8 @@ sbappendcontrol(sb, m0, control)
     n->m_next = m0;         /* concatenate data to control */
     for (m = control; m; m = m->m_next)
         sballoc(sb, m);
-    if (n = sb->sb_mb) {
+    n = sb->sb_mb;
+    if (n) {
         while (n->m_nextpkt)
             n = n->m_nextpkt;
         n->m_nextpkt = control;
@@ -774,6 +781,6 @@ sbdroprecord(sb)
         do {
             sbfree(sb, m);
             MFREE(m, mn);
-        } while (m = mn);
+        } while ((m = mn));
     }
 }

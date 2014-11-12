@@ -79,8 +79,8 @@ struct  sigacts {
  */
 #define CURSIG(p) \
     (((p)->p_siglist == 0 || \
-        ((p)->p_flag & P_TRACED) == 0 && \
-        ((p)->p_siglist & ~(p)->p_sigmask) == 0) ? \
+        (((p)->p_flag & P_TRACED) == 0 && \
+        ((p)->p_siglist & ~(p)->p_sigmask) == 0)) ? \
         0 : issignal(p))
 
 /*

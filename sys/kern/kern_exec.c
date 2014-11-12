@@ -24,6 +24,7 @@
  * this software.
  */
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/errno.h>
 #include <sys/proc.h>
 #include <sys/namei.h>
@@ -36,18 +37,11 @@
 #include <sys/wait.h>
 #include <sys/filedesc.h>
 #include <sys/malloc.h>
+#include <sys/syscallargs.h>
+#include <sys/signalvar.h>
 #include <sys/exec_elf.h>
 #include <vm/vm.h>
 #include <machine/reg.h>
-
-/*
- * exec system call
- */
-struct execve_args {
-    char    *fname;
-    char    **argp;
-    char    **envp;
-};
 
 extern char sigcode[], esigcode[];
 #define SZSIGCODE (esigcode - sigcode)
@@ -160,7 +154,7 @@ copyargs (uap, hdr, framebuf, framesz)
 
     argc = 0;
     arglen = 0;
-    vectp = uap->argp;
+    vectp = SCARG(uap, argp);
     if (hdr->indir) {
         /* Count shell parameters. */
         rv = countstr(hdr->shellname, framebuf, &argc, &arglen);
@@ -173,7 +167,7 @@ copyargs (uap, hdr, framebuf, framesz)
                 return rv;
         }
 
-        rv = countstr(uap->fname, framebuf, &argc, &arglen);
+        rv = countstr(SCARG(uap, path), framebuf, &argc, &arglen);
         if (rv)
             return rv;
 
@@ -195,7 +189,7 @@ copyargs (uap, hdr, framebuf, framesz)
         }
     }
 
-    vectp = uap->envp;
+    vectp = SCARG(uap, envp);
     envc = 0;
     if (vectp) {
         /* Count environment strings. */
@@ -232,7 +226,7 @@ copyargs (uap, hdr, framebuf, framesz)
 
     argc = 0;
     arglen = 0;
-    vectp = uap->argp;
+    vectp = SCARG(uap, argp);
     arginfo->ps_argvstr = (char*)user_stringp; /* remember location of argv */
     if (hdr->indir) {
         /* Copy shell parameters. */
@@ -249,7 +243,7 @@ copyargs (uap, hdr, framebuf, framesz)
         }
 
         *argp++ = user_stringp + arglen;
-        rv = countstr(uap->fname, stringp + arglen, &argc, &arglen);
+        rv = countstr(SCARG(uap, path), stringp + arglen, &argc, &arglen);
         if (rv)
             return rv;
 
@@ -274,7 +268,7 @@ copyargs (uap, hdr, framebuf, framesz)
     argbuf[0] = argc;
     arginfo->ps_nargvstr = argc;
 
-    vectp = uap->envp;
+    vectp = SCARG(uap, envp);
     envc = 0;
     arginfo->ps_envstr = (char*)user_stringp + arglen; /* remember location of env */
     if (vectp) {
@@ -480,6 +474,7 @@ getheader(p, ndp, file_size, hdr)
 }
 
 /* ARGSUSED */
+int
 execve(p, uap, retval)
     struct proc *p;
     register struct execve_args *uap;
@@ -502,10 +497,11 @@ execve(p, uap, retval)
     hdr.indir = 0;
 again:
     NDINIT(ndp, LOOKUP, LOCKLEAF | FOLLOW | SAVENAME, UIO_USERSPACE,
-        uap->fname, p);
+        SCARG(uap, path), p);
 
     /* is it there? */
-    if (rv = namei(ndp))
+    rv = namei(ndp);
+    if (rv)
         return rv;
 
     if (ndp->ni_vp->v_writecount) { /* don't exec if file is busy */

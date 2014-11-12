@@ -141,10 +141,10 @@ struct socket {
 /* can we write something to so? */
 #define sowriteable(so) \
     (sbspace(&(so)->so_snd) >= (so)->so_snd.sb_lowat && \
-    (((so)->so_state&SS_ISCONNECTED) || \
-      ((so)->so_proto->pr_flags&PR_CONNREQUIRED)==0) || \
-     ((so)->so_state & SS_CANTSENDMORE) || \
-     (so)->so_error)
+     (((so)->so_state & SS_ISCONNECTED) || \
+      !((so)->so_proto->pr_flags & PR_CONNREQUIRED) || \
+      ((so)->so_state & SS_CANTSENDMORE) || \
+      (so)->so_error))
 
 /* adjust counters in sb reflecting allocation of m */
 #define sballoc(sb, m) { \
@@ -235,7 +235,7 @@ int     soconnect __P((struct socket *so, struct mbuf *nam));
 int     soconnect2 __P((struct socket *so1, struct socket *so2));
 int     socreate __P((int dom, struct socket **aso, int type, int proto));
 int     sodisconnect __P((struct socket *so));
-int     sofree __P((struct socket *so));
+void    sofree __P((struct socket *so));
 int     sogetopt __P((struct socket *so, int level, int optname,
                     struct mbuf **mp));
 void    sohasoutofband __P((struct socket *so));

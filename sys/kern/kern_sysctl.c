@@ -90,7 +90,7 @@ __sysctl(p, uap, retval)
     register_t *retval;
 {
     int error, dolock = 1;
-    size_t savelen, oldlen = 0;
+    size_t savelen = 0, oldlen = 0;
     sysctlfn *fn;
     int name[CTL_MAXNAME];
 
@@ -102,8 +102,8 @@ __sysctl(p, uap, retval)
      */
     if (SCARG(uap, namelen) > CTL_MAXNAME || SCARG(uap, namelen) < 2)
         return (EINVAL);
-    if (error =
-        copyin(SCARG(uap, name), &name, SCARG(uap, namelen) * sizeof(int)))
+    error = copyin(SCARG(uap, name), &name, SCARG(uap, namelen) * sizeof(int));
+    if (error)
         return (error);
 
     switch (name[0]) {
@@ -180,8 +180,156 @@ long hostid;
 int securelevel;
 
 /*
+ * try over estimating by 5 procs
+ */
+#define KERN_PROCSLOP   (5 * sizeof (struct kinfo_proc))
+
+static int
+sysctl_doproc(name, namelen, where, sizep)
+    int *name;
+    u_int namelen;
+    char *where;
+    size_t *sizep;
+{
+    register struct proc *p;
+    register struct kinfo_proc *dp = (struct kinfo_proc *)where;
+    register int needed = 0;
+    int buflen = where != NULL ? *sizep : 0;
+    int doingzomb;
+    struct eproc eproc;
+    int error = 0;
+
+    if (namelen != 2 && !(namelen == 1 && name[0] == KERN_PROC_ALL))
+        return (EINVAL);
+    p = allproc.lh_first;
+    doingzomb = 0;
+again:
+    for (; p != 0; p = p->p_list.le_next) {
+        /*
+         * Skip embryonic processes.
+         */
+        if (p->p_stat == SIDL)
+            continue;
+        /*
+         * TODO - make more efficient (see notes below).
+         * do by session.
+         */
+        switch (name[0]) {
+
+        case KERN_PROC_PID:
+            /* could do this with just a lookup */
+            if (p->p_pid != (pid_t)name[1])
+                continue;
+            break;
+
+        case KERN_PROC_PGRP:
+            /* could do this by traversing pgrp */
+            if (p->p_pgrp->pg_id != (pid_t)name[1])
+                continue;
+            break;
+
+        case KERN_PROC_TTY:
+            if ((p->p_flag & P_CONTROLT) == 0 ||
+                p->p_session->s_ttyp == NULL ||
+                p->p_session->s_ttyp->t_dev != (dev_t)name[1])
+                continue;
+            break;
+
+        case KERN_PROC_UID:
+            if (p->p_ucred->cr_uid != (uid_t)name[1])
+                continue;
+            break;
+
+        case KERN_PROC_RUID:
+            if (p->p_cred->p_ruid != (uid_t)name[1])
+                continue;
+            break;
+        }
+        if (buflen >= sizeof(struct kinfo_proc)) {
+            fill_eproc(p, &eproc);
+            error = copyout((caddr_t)p, &dp->kp_proc, sizeof(struct proc));
+            if (error)
+                return (error);
+            error = copyout((caddr_t)&eproc, &dp->kp_eproc, sizeof(eproc));
+            if (error)
+                return (error);
+            dp++;
+            buflen -= sizeof(struct kinfo_proc);
+        }
+        needed += sizeof(struct kinfo_proc);
+    }
+    if (doingzomb == 0) {
+        p = zombproc.lh_first;
+        doingzomb++;
+        goto again;
+    }
+    if (where != NULL) {
+        *sizep = (caddr_t)dp - where;
+        if (needed > *sizep)
+            return (ENOMEM);
+    } else {
+        needed += KERN_PROCSLOP;
+        *sizep = needed;
+    }
+    return (0);
+}
+
+/*
+ * Get file structures.
+ */
+static int
+sysctl_file(where, sizep)
+    char *where;
+    size_t *sizep;
+{
+    int buflen, error;
+    struct file *fp;
+    char *start = where;
+
+    buflen = *sizep;
+    if (where == NULL) {
+        /*
+         * overestimate by 10 files
+         */
+        *sizep = sizeof(filehead) + (nfiles + 10) * sizeof(struct file);
+        return (0);
+    }
+
+    /*
+     * first copyout filehead
+     */
+    if (buflen < sizeof(filehead)) {
+        *sizep = 0;
+        return (0);
+    }
+    error = copyout((caddr_t)&filehead, where, sizeof(filehead));
+    if (error)
+        return (error);
+    buflen -= sizeof(filehead);
+    where += sizeof(filehead);
+
+    /*
+     * followed by an array of file structures
+     */
+    for (fp = filehead.lh_first; fp != 0; fp = fp->f_list.le_next) {
+        if (buflen < sizeof(struct file)) {
+            *sizep = where - start;
+            return (ENOMEM);
+        }
+        error = copyout((caddr_t)fp, where, sizeof (struct file));
+        if (error)
+            return (error);
+        buflen -= sizeof(struct file);
+        where += sizeof(struct file);
+    }
+    *sizep = where - start;
+    return (0);
+}
+
+/*
  * kernel related system variables.
  */
+int
 kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     int *name;
     u_int namelen;
@@ -272,6 +420,7 @@ kern_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 /*
  * hardware related system variables.
  */
+int
 hw_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     int *name;
     u_int namelen;
@@ -317,12 +466,14 @@ struct ctldebug debug0, debug1, debug2, debug3, debug4;
 struct ctldebug debug5, debug6, debug7, debug8, debug9;
 struct ctldebug debug10, debug11, debug12, debug13, debug14;
 struct ctldebug debug15, debug16, debug17, debug18, debug19;
+
 static struct ctldebug *debugvars[CTL_DEBUG_MAXID] = {
     &debug0, &debug1, &debug2, &debug3, &debug4,
     &debug5, &debug6, &debug7, &debug8, &debug9,
     &debug10, &debug11, &debug12, &debug13, &debug14,
     &debug15, &debug16, &debug17, &debug18, &debug19,
 };
+
 int
 debug_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     int *name;
@@ -357,6 +508,7 @@ debug_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
  * Validate parameters and get old / set new parameters
  * for an integer-valued sysctl function.
  */
+int
 sysctl_int(oldp, oldlenp, newp, newlen, valp)
     void *oldp;
     size_t *oldlenp;
@@ -381,6 +533,7 @@ sysctl_int(oldp, oldlenp, newp, newlen, valp)
 /*
  * As above, but read-only.
  */
+int
 sysctl_rdint(oldp, oldlenp, newp, val)
     void *oldp;
     size_t *oldlenp;
@@ -403,6 +556,7 @@ sysctl_rdint(oldp, oldlenp, newp, val)
  * Validate parameters and get old / set new parameters
  * for a string-valued sysctl function.
  */
+int
 sysctl_string(oldp, oldlenp, newp, newlen, str, maxlen)
     void *oldp;
     size_t *oldlenp;
@@ -432,6 +586,7 @@ sysctl_string(oldp, oldlenp, newp, newlen, str, maxlen)
 /*
  * As above, but read-only.
  */
+int
 sysctl_rdstring(oldp, oldlenp, newp, str)
     void *oldp;
     size_t *oldlenp;
@@ -455,6 +610,7 @@ sysctl_rdstring(oldp, oldlenp, newp, str)
  * Validate parameters and get old / set new parameters
  * for a structure oriented sysctl function.
  */
+int
 sysctl_struct(oldp, oldlenp, newp, newlen, sp, len)
     void *oldp;
     size_t *oldlenp;
@@ -482,6 +638,7 @@ sysctl_struct(oldp, oldlenp, newp, newlen, sp, len)
  * Validate parameters and get old parameters
  * for a structure oriented sysctl function.
  */
+int
 sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
     void *oldp;
     size_t *oldlenp;
@@ -498,149 +655,6 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
     if (oldp)
         error = copyout(sp, oldp, len);
     return (error);
-}
-
-/*
- * Get file structures.
- */
-sysctl_file(where, sizep)
-    char *where;
-    size_t *sizep;
-{
-    int buflen, error;
-    struct file *fp;
-    char *start = where;
-
-    buflen = *sizep;
-    if (where == NULL) {
-        /*
-         * overestimate by 10 files
-         */
-        *sizep = sizeof(filehead) + (nfiles + 10) * sizeof(struct file);
-        return (0);
-    }
-
-    /*
-     * first copyout filehead
-     */
-    if (buflen < sizeof(filehead)) {
-        *sizep = 0;
-        return (0);
-    }
-    if (error = copyout((caddr_t)&filehead, where, sizeof(filehead)))
-        return (error);
-    buflen -= sizeof(filehead);
-    where += sizeof(filehead);
-
-    /*
-     * followed by an array of file structures
-     */
-    for (fp = filehead.lh_first; fp != 0; fp = fp->f_list.le_next) {
-        if (buflen < sizeof(struct file)) {
-            *sizep = where - start;
-            return (ENOMEM);
-        }
-        if (error = copyout((caddr_t)fp, where, sizeof (struct file)))
-            return (error);
-        buflen -= sizeof(struct file);
-        where += sizeof(struct file);
-    }
-    *sizep = where - start;
-    return (0);
-}
-
-/*
- * try over estimating by 5 procs
- */
-#define KERN_PROCSLOP   (5 * sizeof (struct kinfo_proc))
-
-sysctl_doproc(name, namelen, where, sizep)
-    int *name;
-    u_int namelen;
-    char *where;
-    size_t *sizep;
-{
-    register struct proc *p;
-    register struct kinfo_proc *dp = (struct kinfo_proc *)where;
-    register int needed = 0;
-    int buflen = where != NULL ? *sizep : 0;
-    int doingzomb;
-    struct eproc eproc;
-    int error = 0;
-
-    if (namelen != 2 && !(namelen == 1 && name[0] == KERN_PROC_ALL))
-        return (EINVAL);
-    p = allproc.lh_first;
-    doingzomb = 0;
-again:
-    for (; p != 0; p = p->p_list.le_next) {
-        /*
-         * Skip embryonic processes.
-         */
-        if (p->p_stat == SIDL)
-            continue;
-        /*
-         * TODO - make more efficient (see notes below).
-         * do by session.
-         */
-        switch (name[0]) {
-
-        case KERN_PROC_PID:
-            /* could do this with just a lookup */
-            if (p->p_pid != (pid_t)name[1])
-                continue;
-            break;
-
-        case KERN_PROC_PGRP:
-            /* could do this by traversing pgrp */
-            if (p->p_pgrp->pg_id != (pid_t)name[1])
-                continue;
-            break;
-
-        case KERN_PROC_TTY:
-            if ((p->p_flag & P_CONTROLT) == 0 ||
-                p->p_session->s_ttyp == NULL ||
-                p->p_session->s_ttyp->t_dev != (dev_t)name[1])
-                continue;
-            break;
-
-        case KERN_PROC_UID:
-            if (p->p_ucred->cr_uid != (uid_t)name[1])
-                continue;
-            break;
-
-        case KERN_PROC_RUID:
-            if (p->p_cred->p_ruid != (uid_t)name[1])
-                continue;
-            break;
-        }
-        if (buflen >= sizeof(struct kinfo_proc)) {
-            fill_eproc(p, &eproc);
-            if (error = copyout((caddr_t)p, &dp->kp_proc,
-                sizeof(struct proc)))
-                return (error);
-            if (error = copyout((caddr_t)&eproc, &dp->kp_eproc,
-                sizeof(eproc)))
-                return (error);
-            dp++;
-            buflen -= sizeof(struct kinfo_proc);
-        }
-        needed += sizeof(struct kinfo_proc);
-    }
-    if (doingzomb == 0) {
-        p = zombproc.lh_first;
-        doingzomb++;
-        goto again;
-    }
-    if (where != NULL) {
-        *sizep = (caddr_t)dp - where;
-        if (needed > *sizep)
-            return (ENOMEM);
-    } else {
-        needed += KERN_PROCSLOP;
-        *sizep = needed;
-    }
-    return (0);
 }
 
 /*

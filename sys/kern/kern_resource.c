@@ -144,7 +144,7 @@ setpriority(curp, uap, retval)
 
     case PRIO_PGRP: {
         register struct pgrp *pg;
-         
+
         if (SCARG(uap, who) == 0)
             pg = curp->p_pgrp;
         else if ((pg = pgfind(SCARG(uap, who))) == NULL)
@@ -258,8 +258,9 @@ setrlimit(p, uap, retval)
     struct rlimit alim;
     int error;
 
-    if (error = copyin((caddr_t)SCARG(uap, rlp), (caddr_t)&alim,
-        sizeof (struct rlimit)))
+    error = copyin((caddr_t)SCARG(uap, rlp), (caddr_t)&alim,
+        sizeof (struct rlimit));
+    if (error)
         return (error);
     return (dosetrlimit(p, SCARG(uap, which), &alim));
 }
@@ -277,10 +278,12 @@ dosetrlimit(p, which, limp)
     if (which >= RLIM_NLIMITS)
         return (EINVAL);
     alimp = &p->p_rlimit[which];
-    if (limp->rlim_cur > alimp->rlim_max || 
-        limp->rlim_max > alimp->rlim_max)
-        if (error = suser(p->p_ucred, &p->p_acflag))
+    if (limp->rlim_cur > alimp->rlim_max ||
+        limp->rlim_max > alimp->rlim_max) {
+        error = suser(p->p_ucred, &p->p_acflag);
+        if (error)
             return (error);
+    }
     if (limp->rlim_cur > limp->rlim_max)
         limp->rlim_cur = limp->rlim_max;
     if (p->p_limit->p_refcnt > 1 &&

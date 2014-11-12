@@ -64,6 +64,7 @@
 #include <machine/cpu.h>
 
 #include <vm/vm.h>
+#include <vm/vm_pageout.h>
 
 #ifdef HPFPLIB
 char    copyright[] =
@@ -100,6 +101,7 @@ static void start_init __P((struct proc *p, void *framep));
  * hard work is done in the lower-level initialization routines including
  * startup(), which does memory initialization and autoconfiguration.
  */
+int
 main(framep)
     void *framep;
 {
@@ -276,7 +278,7 @@ main(framep)
         panic("fork init");
     if (rval[1]) {
         start_init(curproc, framep);
-        return;
+        return 0;
     }
 
     /* Create process 2 (the pageout daemon). */
@@ -296,7 +298,9 @@ main(framep)
 
     /* The scheduler is an infinite loop. */
     scheduler();
+
     /* NOTREACHED */
+    return 0;
 }
 
 /*
@@ -319,11 +323,7 @@ start_init(p, framep)
     void *framep;
 {
     vm_offset_t addr;
-    struct execve_args /* {
-        syscallarg(char *) path;
-        syscallarg(char **) argp;
-        syscallarg(char **) envp;
-    } */ args;
+    struct execve_args args;
     int options, i, error;
     register_t retval[2];
     char flags[4] = "-", *flagsp;
@@ -402,7 +402,8 @@ start_init(p, framep)
          * Now try to exec the program.  If can't for any reason
          * other than it doesn't exist, complain.
          */
-        if ((error = execve(p, &args, retval)) == 0)
+        error = execve(p, &args, retval);
+        if (error == 0)
             return;
         if (error != ENOENT)
             printf("exec %s: error %d\n", path, error);

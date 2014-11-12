@@ -38,6 +38,7 @@
 #include <sys/map.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
+#include <sys/systm.h>
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
@@ -339,11 +340,12 @@ free(addr, type)
 #endif /* DIAGNOSTIC */
 #ifdef KMEMSTATS
     kup->ku_freecnt++;
-    if (kup->ku_freecnt >= kbp->kb_elmpercl)
+    if (kup->ku_freecnt >= kbp->kb_elmpercl) {
         if (kup->ku_freecnt > kbp->kb_elmpercl)
             panic("free: multiple frees");
         else if (kbp->kb_totalfree > kbp->kb_highwat)
             kbp->kb_couldfree++;
+    }
     kbp->kb_totalfree++;
     ksp->ks_memuse -= size;
     if (ksp->ks_memuse + size >= ksp->ks_limit &&
@@ -363,6 +365,7 @@ free(addr, type)
 /*
  * Initialize the kernel memory allocator
  */
+void
 kmeminit()
 {
     register long indx;

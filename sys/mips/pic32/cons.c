@@ -73,6 +73,7 @@ dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
  * before vm init or startup.  Do enough configuration
  * to choose and initialize a console.
  */
+void
 consinit()
 {
     int unit = minor(cn_dev);
@@ -174,6 +175,7 @@ cngetc()
 /*
  * Print a character on console.
  */
+void
 cnputc(c)
     register int c;
 {
