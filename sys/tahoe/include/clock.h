@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,22 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)clock.h	7.3 (Berkeley) 6/28/90
+ *  @(#)clock.h 7.3 (Berkeley) 6/28/90
  */
 
-#define	SECDAY		((unsigned)(24*60*60))		/* seconds per day */
-#define	SECYR		((unsigned)(365*SECDAY))	/* per common year */
+#define SECDAY          ((unsigned)(24*60*60))      /* seconds per day */
+#define SECYR           ((unsigned)(365*SECDAY))    /* per common year */
 
-#define	YRREF		1970
-#define	LEAPYEAR(year)	((year)%4==0)	/* good till time becomes negative */
+#define YRREF           1970
+#define LEAPYEAR(year)  ((year)%4==0)   /* good till time becomes negative */
 
 /*
  * Software clock is software interrupt level 8
  */
-#define	setsoftclock()	mtpr(SIRR, 0x8)
+#define setsoftclock()  mtpr(SIRR, 0x8)
 
 /*
  * To calculate value for interval timer register, we
  * use the fact that 20512 yields a 60hz clock.
  */
-#define	hztocount(v)	((20512*60) / (v))
+#define hztocount(v)    ((20512*60) / (v))

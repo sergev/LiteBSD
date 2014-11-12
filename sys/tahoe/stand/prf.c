@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)prf.c	7.1 (Berkeley) 5/4/91
+ *  @(#)prf.c   7.1 (Berkeley) 5/4/91
  */
 
 #include "sys/param.h"
@@ -43,36 +43,36 @@
 /*
  * Print a character on console.
  */
-struct	cpdcb_o cpout;
-struct	cpdcb_i cpin;
+struct  cpdcb_o cpout;
+struct  cpdcb_i cpin;
 
 /* console requires even parity */
 #define EVENP
 
 putchar(c)
-	char c;
+    char c;
 {
-	int time;
+    int time;
 #ifdef EVENP
-	register mask, par;
+    register mask, par;
 
-	for (par = 0, mask = 1; mask != 0200; mask <<= 1, par <<= 1)
-		par ^= c&mask;
-	c |= par;
+    for (par = 0, mask = 1; mask != 0200; mask <<= 1, par <<= 1)
+        par ^= c&mask;
+    c |= par;
 #endif /* EVENP */
-	cpout.cp_hdr.cp_unit = CPCONS;		/* Resets done bit */
-	cpout.cp_hdr.cp_comm = CPWRITE;
-	cpout.cp_hdr.cp_count = 1;
-	cpout.cp_buf[0] = c;
-	mtpr(CPMDCB, &cpout);
-	time = 100000;				/* Delay loop */
-	while (time--) {
-		uncache(&cpout.cp_hdr.cp_unit);
-		if (cpout.cp_hdr.cp_unit & CPDONE)
-			break;
-	}
-	if (c == '\n')
-		putchar ('\r');
+    cpout.cp_hdr.cp_unit = CPCONS;      /* Resets done bit */
+    cpout.cp_hdr.cp_comm = CPWRITE;
+    cpout.cp_hdr.cp_count = 1;
+    cpout.cp_buf[0] = c;
+    mtpr(CPMDCB, &cpout);
+    time = 100000;              /* Delay loop */
+    while (time--) {
+        uncache(&cpout.cp_hdr.cp_unit);
+        if (cpout.cp_hdr.cp_unit & CPDONE)
+            break;
+    }
+    if (c == '\n')
+        putchar ('\r');
 }
 
 scankbd()
@@ -80,34 +80,34 @@ scankbd()
 
 getchar()
 {
-	char c;
+    char c;
 
-	cpin.cp_hdr.cp_unit = CPCONS;		/* Resets done bit */
-	cpin.cp_hdr.cp_comm = CPREAD;
-	cpin.cp_hdr.cp_count = 1;
-	mtpr(CPMDCB, &cpin);
-	while ((cpin.cp_hdr.cp_unit & CPDONE) == 0) 
-		uncache(&cpin.cp_hdr.cp_unit);
-	uncache(&cpin.cpi_buf[0]);
-	c = cpin.cpi_buf[0] & 0x7f;
-	if (c == '\r')
-		c = '\n';
-	if (c != '\b' && c != '\177')
-		putchar(c);
-	return (c);
+    cpin.cp_hdr.cp_unit = CPCONS;       /* Resets done bit */
+    cpin.cp_hdr.cp_comm = CPREAD;
+    cpin.cp_hdr.cp_count = 1;
+    mtpr(CPMDCB, &cpin);
+    while ((cpin.cp_hdr.cp_unit & CPDONE) == 0) 
+        uncache(&cpin.cp_hdr.cp_unit);
+    uncache(&cpin.cpi_buf[0]);
+    c = cpin.cpi_buf[0] & 0x7f;
+    if (c == '\r')
+        c = '\n';
+    if (c != '\b' && c != '\177')
+        putchar(c);
+    return (c);
 }
 
 trap(ps)
-	int ps;
+    int ps;
 {
-	printf("Trap %o\n", ps);
-	for (;;)
-		;
+    printf("Trap %o\n", ps);
+    for (;;)
+        ;
 }
 
 uncache (addr)
-	char *addr;
+    char *addr;
 {
-	/* Return *(addr-0x4000); DIRTY assumes this address is valid */
-	mtpr(PDCS, addr);
+    /* Return *(addr-0x4000); DIRTY assumes this address is valid */
+    mtpr(PDCS, addr);
 }

@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,20 +30,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)if_en.h	7.3 (Berkeley) 6/28/90
+ *  @(#)if_en.h 7.3 (Berkeley) 6/28/90
  */
 
 /*
  * Structure of a Ethernet header.
  */
-struct	en_header {
-	u_char	en_shost;
-	u_char	en_dhost;
-	u_short	en_type;
+struct  en_header {
+    u_char  en_shost;
+    u_char  en_dhost;
+    u_short en_type;
 };
 
-#define	ENTYPE_PUP	0x0200		/* PUP protocol */
-#define	ENTYPE_IP	0x0201		/* IP protocol */
+#define ENTYPE_PUP  0x0200      /* PUP protocol */
+#define ENTYPE_IP   0x0201      /* IP protocol */
 
 /*
  * The ENTYPE_NTRAILER packet types starting at
@@ -51,7 +51,7 @@ struct	en_header {
  * of data followed by an Ethernet type (as given above)
  * and then the (variable-length) header.
  */
-#define	ENTYPE_TRAIL	0x1000		/* Trailer type */
-#define	ENTYPE_NTRAILER	16
+#define ENTYPE_TRAIL    0x1000      /* Trailer type */
+#define ENTYPE_NTRAILER 16
 
-#define EN_BROADCAST	0		/* Hardware broadcast address */
+#define EN_BROADCAST    0       /* Hardware broadcast address */

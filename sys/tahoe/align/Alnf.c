@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Alnf.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Alnf.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-lnf(infop)	process_info *infop;
+lnf(infop)  process_info *infop;
 /*
-/*	Load a negated float operand into accumulator.
+/*  Load a negated float operand into accumulator.
 /*
 /******************************************************/
 {
 
-	register struct oprnd	*op_pnt;
+    register struct oprnd   *op_pnt;
 
-	op_pnt = operand(infop,0);
-	if ( reserved( op_pnt->data ) ) 
-		exception(infop, ILL_OPRND);
-	if ( op_pnt->data == 0 ) acc_high = 0;
-	else acc_high = 0x80000000 ^ op_pnt->data ;
-	psl &= ~PSL_DBL;
-	infop->acc_dbl = 0;
+    op_pnt = operand(infop,0);
+    if ( reserved( op_pnt->data ) ) 
+        exception(infop, ILL_OPRND);
+    if ( op_pnt->data == 0 ) acc_high = 0;
+    else acc_high = 0x80000000 ^ op_pnt->data ;
+    psl &= ~PSL_DBL;
+    infop->acc_dbl = 0;
 }

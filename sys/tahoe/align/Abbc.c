@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,21 +33,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Abbc.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Abbc.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-bbc(infop)	process_info *infop;
+bbc(infop)  process_info *infop;
 /*
-/*	Branch on bit clear.
+/*  Branch on bit clear.
 /*
 /********************************/
 {
-	register int position,base, new_address;
+    register int position,base, new_address;
 
-	position = operand(infop,0)-> data & 0x1f;
-	base = operand(infop,1)->data;
-	new_address = operand(infop,2) -> address;
-	negative_0; zero_1; overflow_0; carry_1;
-	if ( !(base & 1 << position) ) pc = new_address;
+    position = operand(infop,0)-> data & 0x1f;
+    base = operand(infop,1)->data;
+    new_address = operand(infop,2) -> address;
+    negative_0; zero_1; overflow_0; carry_1;
+    if ( !(base & 1 << position) ) pc = new_address;
 }

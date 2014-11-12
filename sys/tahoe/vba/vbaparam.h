@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)vbaparam.h	7.3 (Berkeley) 6/28/90
+ *  @(#)vbaparam.h  7.3 (Berkeley) 6/28/90
  */
 
 /*
@@ -50,10 +50,10 @@
  * VBmap tables must be large enough for the needs of all devices
  * in the system.
  */
-extern	struct pte VMEMmap[], VMEMmap1[];
-extern	caddr_t	vmem1, vmemend;
-extern	struct pte VBmap[];
-extern	caddr_t vbbase, vbend; 
+extern  struct pte VMEMmap[], VMEMmap1[];
+extern  caddr_t vmem1, vmemend;
+extern  struct pte VBmap[];
+extern  caddr_t vbbase, vbend;
 
 /*
  * The following macros relate to the segmentation of the VERSAbus
@@ -70,22 +70,22 @@ extern	caddr_t vbbase, vbend;
  * zero in the upper 2 bits; e.g. a reference to physical address fe000000
  * results in a VERSAbus address of 3e000000.
  */
-#define	VBIO16BIT(a)	((unsigned)0xfffe0000 <= ((unsigned)(a)))
-#define	VBIO24BIT(a)	((unsigned)0xff000000 <= ((unsigned)(a)) && \
-			 ((unsigned)(a)) < (unsigned)0xfffe0000)
-#define	VBIO32BIT(a)	(((unsigned)(a)) < (unsigned)0xff000000)
+#define VBIO16BIT(a)    ((unsigned)0xfffe0000 <= ((unsigned)(a)))
+#define VBIO24BIT(a)    ((unsigned)0xff000000 <= ((unsigned)(a)) && \
+                         ((unsigned)(a)) < (unsigned)0xfffe0000)
+#define VBIO32BIT(a)    (((unsigned)(a)) < (unsigned)0xff000000)
 
-/* 
+/*
  * The following constants define the fixed size map of the
  * VERSAbus i/o space.  The values should reflect the range
  * of i/o addresses used by all the controllers unprepared
  * to allocate and initialize their own page maps.
  */
-#define VBIOBASE	0xfff00000	/* base of VERSAbus address space */
-#define VBIOEND		0xffffee45	/* last address in mapped space */
+#define VBIOBASE    0xfff00000  /* base of VERSAbus address space */
+#define VBIOEND     0xffffee45  /* last address in mapped space */
 /* number of entries in the system page table for i/o space */
-#define VBIOSIZE	btoc(VBIOEND-VBIOBASE)
+#define VBIOSIZE    btoc(VBIOEND-VBIOBASE)
 /* is device in mapped region */
-#define	VBIOMAPPED(a)	((unsigned)VBIOBASE <= ((unsigned)(a)) && \
-			 ((unsigned)(a)) <= (unsigned)VBIOEND) 
-#define	vboff(addr)	((int)(((caddr_t)(addr)) - VBIOBASE))
+#define VBIOMAPPED(a)   ((unsigned)VBIOBASE <= ((unsigned)(a)) && \
+                         ((unsigned)(a)) <= (unsigned)VBIOEND)
+#define vboff(addr)     ((int)(((caddr_t)(addr)) - VBIOBASE))

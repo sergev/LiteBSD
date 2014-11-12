@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,30 +33,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)hdreg.h	7.4 (Berkeley) 6/28/90
+ *  @(#)hdreg.h 7.4 (Berkeley) 6/28/90
  */
 
 #ifndef COMPAT_42
-#define	COMPAT_42
+#define COMPAT_42
 #endif
 
-#define	HDC_READ	0
-#define	HDC_WRITE	1
+#define HDC_READ        0
+#define HDC_WRITE       1
 
-#define	HDC_MAXBUS	2		/* max# buses */
-#define	HDC_MAXCTLR	21		/* max# hdc controllers per bus */
-#define	HDC_MAXDRIVE	4		/* max# drives per hdc controller */
-#define	HDC_MAXMCBS	32		/* max# mcb's the hdc can handle */
-#define	HDC_MAXCHAIN	64		/* max# of data chains */
-#define	HDC_MAXBC	64*1024		/* max# byte count per data chain */
-#define	HDC_MAXFLAWS	8000		/* max# flaws per hdc disk */
+#define HDC_MAXBUS      2       /* max# buses */
+#define HDC_MAXCTLR     21      /* max# hdc controllers per bus */
+#define HDC_MAXDRIVE    4       /* max# drives per hdc controller */
+#define HDC_MAXMCBS     32      /* max# mcb's the hdc can handle */
+#define HDC_MAXCHAIN    64      /* max# of data chains */
+#define HDC_MAXBC       64*1024 /* max# byte count per data chain */
+#define HDC_MAXFLAWS    8000    /* max# flaws per hdc disk */
 
-#define	HDC_SPB		2		/* sectors per block for hdc's */
-#define	HDC_VDATA_SIZE	16		/* vendor data size (long words) */
+#define HDC_SPB         2       /* sectors per block for hdc's */
+#define HDC_VDATA_SIZE  16      /* vendor data size (long words) */
 
-#define	HDC_REG(x)	(hd->reg->x)	/* set an HDC register */
-					/* number of blocks per dump record */
-#define	HDC_DUMPSIZE	(HDC_MAXBC/DEV_BSIZE*HDC_MAXCHAIN)
+#define HDC_REG(x)      (hd->reg->x)    /* set an HDC register */
+                                        /* number of blocks per dump record */
+#define HDC_DUMPSIZE    (HDC_MAXBC/DEV_BSIZE*HDC_MAXCHAIN)
 
 /*
  * These are the 4 hdc i/o register addresses.  Writing to "master_mcb"
@@ -69,23 +69,23 @@
  * used as use while the HDC is active may cause format errors.
  */
 struct registers {
-	u_long	master_mcb,		/* set the master mcb address */
-		module_id,		/* returns hdc's module id (hdc_mid) */
-		soft_reset,		/* shut down the hdc */
-		hard_reset;		/* send a system reset to the hdc */
+    u_long  master_mcb,     /* set the master mcb address */
+            module_id,      /* returns hdc's module id (hdc_mid) */
+            soft_reset,     /* shut down the hdc */
+            hard_reset;     /* send a system reset to the hdc */
 };
 
 /*
  * Definition for the module id returned by the hdc when "module_id"
  * is written to.  The format is defined by the hdc microcode.
  */
-#define	HID_HDC		0x01		/* hvme_id for HDC */
-#define	HDC_MID		HID_HDC		/* module id code for hdc's */
+#define HID_HDC     0x01    /* hvme_id for HDC */
+#define HDC_MID     HID_HDC /* module id code for hdc's */
 struct module_id {
-	u_char	module_id,		/* module id; hdc's return HDC_MID */
-		reserved,
-		code_rev,		/* micro-code rev#; FF= not loaded */
-		fit;			/* FIT test result; FF= no error */
+    u_char  module_id,      /* module id; hdc's return HDC_MID */
+            reserved,
+            code_rev,       /* micro-code rev#; FF= not loaded */
+            fit;            /* FIT test result; FF= no error */
 };
 
 /*
@@ -105,32 +105,32 @@ struct module_id {
  * operation of the hdc.  Bits in device control word #2 define the disk
  * sector address for the operation defined in control word #1.
  */
-#define	LWC_DATA_CHAIN	0x80000000	/* mask for data chain bit in wcount */
+#define LWC_DATA_CHAIN  0x80000000  /* mask for data chain bit in wcount */
 struct mcb {
-	u_long	forw_phaddr;		/* phys address of next mcb */
-	u_int	priority  :  8,		/* device control word #1 */
-		interrupt :  1,		/*        "               */
-		drive     :  7,		/*        "               */
-		command   : 16,		/*        "   (see HCMD_) */
-		cyl       : 13,		/* device control word #2 */
-		head      :  9,		/*        "               */
-		sector    : 10;		/*        "               */
-	u_long	r1, r2,
-		context;		/* software context word */
-	struct chain {
-		long	wcount,		/* word count */
-			memadr;		/* transfer address */
-	} chain[HDC_MAXCHAIN];		/* data chain */
+    u_long  forw_phaddr;        /* phys address of next mcb */
+    u_int   priority  :  8,     /* device control word #1 */
+            interrupt :  1,     /*        "               */
+            drive     :  7,     /*        "               */
+            command   : 16,     /*        "   (see HCMD_) */
+            cyl       : 13,     /* device control word #2 */
+            head      :  9,     /*        "               */
+            sector    : 10;     /*        "               */
+    u_long  r1, r2,
+            context;            /* software context word */
+    struct chain {
+        long    wcount,         /* word count */
+                memadr;         /* transfer address */
+    } chain[HDC_MAXCHAIN];      /* data chain */
 };
-					/* defines for the "command"s */
-#define	HCMD_STATUS	0x40		/* command: read drive status */
-#define	HCMD_READ	0x60		/* command: read data */
-#define	HCMD_VENDOR	0x6a		/* command: read vendor data */
-#define	HCMD_VERIFY	0x6d		/* command: verify a track */
-#define	HCMD_WRITE	0x70		/* command: write data */
-#define	HCMD_FORMAT	0x7e		/* command: format a track */
-#define	HCMD_CERTIFY	0x7f		/* command: certify a track */
-#define	HCMD_WCS	0xd0		/* command: write control store */
+                                /* defines for the "command"s */
+#define HCMD_STATUS     0x40    /* command: read drive status */
+#define HCMD_READ       0x60    /* command: read data */
+#define HCMD_VENDOR     0x6a    /* command: read vendor data */
+#define HCMD_VERIFY     0x6d    /* command: verify a track */
+#define HCMD_WRITE      0x70    /* command: write data */
+#define HCMD_FORMAT     0x7e    /* command: format a track */
+#define HCMD_CERTIFY    0x7f    /* command: certify a track */
+#define HCMD_WCS        0xd0    /* command: write control store */
 
 /*
  * This structure defines the master mcb - one per hdc controller.
@@ -155,24 +155,24 @@ struct mcb {
  * The "context" word is copied from the context word of the completed
  * mcb.  It is currently the virtual pointer to the completed mcb.
  */
-					/* definition of master mcb "mcl" */
-#define	MCL_QUEUED	0x00000010	/* start queued execution of mcb's */
-#define	MCL_IMMEDIATE	0x00000001	/* start immediate xqt of an mcb */
-					/* definition of master mcb "mcs" */
-#define	MCS_DONE	0x00000080	/* an mcb is done; status is valid */
-#define	MCS_FATALERROR	0x00000002	/* a fatal error occurred */
-#define	MCS_SOFTERROR	0x00000001	/* a recoverable error occurred */
+                                    /* definition of master mcb "mcl" */
+#define MCL_QUEUED      0x00000010  /* start queued execution of mcb's */
+#define MCL_IMMEDIATE   0x00000001  /* start immediate xqt of an mcb */
+                                    /* definition of master mcb "mcs" */
+#define MCS_DONE        0x00000080  /* an mcb is done; status is valid */
+#define MCS_FATALERROR  0x00000002  /* a fatal error occurred */
+#define MCS_SOFTERROR   0x00000001  /* a recoverable error occurred */
 
 struct master_mcb {
-	u_long	mcw,			/* W  module control word (MCL_) */
-		interrupt,		/* W  interrupt acknowledge word */
-		forw_phaddr,		/* W  physical address of first mcb */
-		r1, r2,
-		mcs,			/* R  status for last completed mcb */
-		cmcb_phaddr,		/* W  physical addr of completed mcb */
-		context,		/* W  software context word */
-#define	HDC_XSTAT_SIZE	128		/* size of extended status (lwords) */
-		xstatus[HDC_XSTAT_SIZE];/* R  xstatus of last mcb */
+    u_long  mcw,                    /* W  module control word (MCL_) */
+            interrupt,              /* W  interrupt acknowledge word */
+            forw_phaddr,            /* W  physical address of first mcb */
+            r1, r2,
+            mcs,                    /* R  status for last completed mcb */
+            cmcb_phaddr,            /* W  physical addr of completed mcb */
+            context,                /* W  software context word */
+#define HDC_XSTAT_SIZE  128         /* size of extended status (lwords) */
+            xstatus[HDC_XSTAT_SIZE];/* R  xstatus of last mcb */
 };
 
 /*
@@ -180,45 +180,45 @@ struct master_mcb {
  * a "read drive status" (HCMD_STATUS) command.  The format of this structure
  * is determined by the hdc firmware.  r[1-11] are reserved for future use.
  */
-					/* defines for drive_stat drs word */
-#define	DRS_FAULT	0x00000080	/* drive is reporting a fault */
-#define	DRS_RESERVED	0x00000040	/* drive is reserved by other port */
-#define	DRS_WRITE_PROT	0x00000020	/* drive is write protected */
-#define	DRS_ON_CYLINDER	0x00000002	/* drive heads are not moving now */
-#define	DRS_ONLINE	0x00000001	/* drive is available for operation */
+                                    /* defines for drive_stat drs word */
+#define DRS_FAULT       0x00000080  /* drive is reporting a fault */
+#define DRS_RESERVED    0x00000040  /* drive is reserved by other port */
+#define DRS_WRITE_PROT  0x00000020  /* drive is write protected */
+#define DRS_ON_CYLINDER 0x00000002  /* drive heads are not moving now */
+#define DRS_ONLINE      0x00000001  /* drive is available for operation */
 
 struct status {
-	u_long	drs,			/* drive status (see DRS_) */
-		r1, r2, r3;
-	u_short	max_cyl,		/* max logical cylinder address */
-		max_head,		/* max logical head address */
-		r4,
-		max_sector,		/* max logical sector address */
-		def_cyl,		/* definition track cylinder address */
-		def_cyl_count,		/* definition track cylinder count */
-		diag_cyl,		/* diagnostic track cylinder address */
-		diag_cyl_count,		/* diagnostic track cylinder count */
-		max_phys_cyl,		/* max physical cylinder address */
-		max_phys_head,		/* max physical head address */
-		r5,
-		max_phys_sector,	/* max physical sector address */
-		r6,
-		id,			/* drive id (drive model) */
-		r7,
-		bytes_per_sec,		/* bytes/sector -vendorflaw conversn */
-		r8,
-		rpm;			/* disk revolutions per minute */
-	u_long	r9, r10, r11;
+    u_long  drs,                /* drive status (see DRS_) */
+            r1, r2, r3;
+    u_short max_cyl,            /* max logical cylinder address */
+            max_head,           /* max logical head address */
+            r4,
+            max_sector,         /* max logical sector address */
+            def_cyl,            /* definition track cylinder address */
+            def_cyl_count,      /* definition track cylinder count */
+            diag_cyl,           /* diagnostic track cylinder address */
+            diag_cyl_count,     /* diagnostic track cylinder count */
+            max_phys_cyl,       /* max physical cylinder address */
+            max_phys_head,      /* max physical head address */
+            r5,
+            max_phys_sector,    /* max physical sector address */
+            r6,
+            id,                 /* drive id (drive model) */
+            r7,
+            bytes_per_sec,      /* bytes/sector -vendorflaw conversn */
+            r8,
+            rpm;                /* disk revolutions per minute */
+    u_long  r9, r10, r11;
 };
 
 #ifdef COMPAT_42
-#define	GB_ID		"geometry"
-#define	GB_ID_LEN 	sizeof(GB_ID)-1
-#define	GB_MAXPART	8
-#define	GB_VERSION	1
+#define GB_ID       "geometry"
+#define GB_ID_LEN   sizeof(GB_ID)-1
+#define GB_MAXPART  8
+#define GB_VERSION  1
 
-#define	HDC_DEFPART	GB_MAXPART-1	/* partition# of def and diag cyls */
-#define	BPS		512		/* bytes per sector */
+#define HDC_DEFPART GB_MAXPART-1    /* partition# of def and diag cyls */
+#define BPS         512             /* bytes per sector */
 
 /*
  * Geometry Block:
@@ -236,25 +236,25 @@ struct status {
  * the future.
  */
 
-#define	DRIVE_TYPE	flaw_offset	/* For VDDC Geometry Blocks Only */
+#define DRIVE_TYPE  flaw_offset /* For VDDC Geometry Blocks Only */
 
 typedef struct {
-	char	id[GB_ID_LEN];		/* identifies the geometry block */
-	long	version,		/* geometry block version number */
-		flaw_offset,		/* flaw map byte offset in partition7 */
-		flaw_size,		/* harris flaw map size in bytes */
-		flaw_checksum,		/* sum of bytes in harris flaw map */
-		unused[3];		/* --- available for use */
-	struct par_tab {
-		long	start,		/* starting 1K block number */
-			length;		/* partition size in 1K blocks */
-	} partition[GB_MAXPART];	/* partition definitions */
+    char    id[GB_ID_LEN];      /* identifies the geometry block */
+    long    version,            /* geometry block version number */
+            flaw_offset,        /* flaw map byte offset in partition7 */
+            flaw_size,          /* harris flaw map size in bytes */
+            flaw_checksum,      /* sum of bytes in harris flaw map */
+            unused[3];          /* --- available for use */
+    struct par_tab {
+        long    start,          /* starting 1K block number */
+                length;         /* partition size in 1K blocks */
+    } partition[GB_MAXPART];    /* partition definitions */
 } geometry_block;
 
 typedef struct {
-	geometry_block	geometry_block;	/* disk geometry */
-	char	filler[BPS - sizeof(geometry_block) - sizeof(long)];
-	long	checksum;		/* sector checksum */
+    geometry_block  geometry_block; /* disk geometry */
+    char    filler[BPS - sizeof(geometry_block) - sizeof(long)];
+    long    checksum;               /* sector checksum */
 } geometry_sector;
 
 /*
@@ -265,12 +265,12 @@ typedef struct {
  * useless, should at least have done an XOR.
  */
 #define GB_CHECKSUM(_gs_ptr, _checksum) { \
-	register u_char *_ptr; \
-	register u_long _i, _xsum; \
-	_xsum = 0; \
-	_ptr = (u_char *)(_gs_ptr); \
-	for (_i = 0; _i < (sizeof(geometry_sector) - sizeof(long)); _i++) \
-		_xsum += * _ptr++; \
-	_checksum = _xsum; \
+    register u_char *_ptr; \
+    register u_long _i, _xsum; \
+    _xsum = 0; \
+    _ptr = (u_char *)(_gs_ptr); \
+    for (_i = 0; _i < (sizeof(geometry_sector) - sizeof(long)); _i++) \
+        _xsum += * _ptr++; \
+    _checksum = _xsum; \
 }
 #endif /* COMPAT_42 */

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,20 +33,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Aclr.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Aclr.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-clr(infop)	process_info *infop;
+clr(infop)  process_info *infop;
 /*
-/*	Clear operand
+/*  Clear operand
 /*
 /*************************************/
 {
 
-	write_back(infop, 0, operand(infop,0));
-	negative_0;
-	zero_1;
-	overflow_0;
-	carry_1;
+    write_back(infop, 0, operand(infop,0));
+    negative_0;
+    zero_1;
+    overflow_0;
+    carry_1;
 }

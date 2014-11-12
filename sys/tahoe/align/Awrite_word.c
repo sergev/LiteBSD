@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,42 +33,42 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Awrite_word.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Awrite_word.c   7.1 (Berkeley) 12/6/90
  */
 
-#include	"align.h"
+#include    "align.h"
 
 write_word (infop, word, where)
-process_info	*infop;
-long 		word;
-struct oprnd 	*where;
+process_info    *infop;
+long        word;
+struct oprnd    *where;
 /*
-/*	Put the word at the given address in
-/*	tahoe's memory.
-/*	
-/*	1. The least significant word is written.
+/*  Put the word at the given address in
+/*  tahoe's memory.
+/*  
+/*  1. The least significant word is written.
 /*
 /**************************************************/
 {
-	register struct operand_des *look_at;
+    register struct operand_des *look_at;
 
-	look_at = &Table[opCODE].operand[last_operand];
-	if (! (look_at->add_modes & NOVF))
-		if (word > 0x7fff || word < -0x8000) overflow_1;	
-	if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
-	switch (where->mode & ADDFIELD)	/* Mask out R/W bits */
-	{
-	case Add:
-		put_word (infop, word, where->address);
-		break;
-	case Dir:
-		Replace (infop, where->reg_number, word);
-		break;
-	case SPmode: 
-		where->mode = where->mode & ~SPmode | Add; 
-		write_longword (infop, word, where);
-		break;
-	default:
-		printf("Unknown destination in write_word (alignment code)\n");
-	};
-}	
+    look_at = &Table[opCODE].operand[last_operand];
+    if (! (look_at->add_modes & NOVF))
+        if (word > 0x7fff || word < -0x8000) overflow_1;    
+    if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
+    switch (where->mode & ADDFIELD) /* Mask out R/W bits */
+    {
+    case Add:
+        put_word (infop, word, where->address);
+        break;
+    case Dir:
+        Replace (infop, where->reg_number, word);
+        break;
+    case SPmode: 
+        where->mode = where->mode & ~SPmode | Add; 
+        write_longword (infop, word, where);
+        break;
+    default:
+        printf("Unknown destination in write_word (alignment code)\n");
+    };
+}   

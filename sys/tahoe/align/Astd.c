@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,23 +33,23 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Astd.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Astd.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-std(infop)	process_info *infop;
+std(infop)  process_info *infop;
 /*
-/*	Store accumulator (double) in destination.
+/*  Store accumulator (double) in destination.
 /*
 /*************************************************/
 {
-	quadword ac;
+    quadword ac;
 
-	ac.high = acc_high;
-	ac.low = acc_low;
-	write_quadword (infop, ac, operand(infop,0) );
-	if (ac.high < 0) negative_1; else negative_0;
-	if ( (ac.high & 0xff800000) == 0 ) zero_1; else zero_0;
-	carry_1;
-	overflow_0;
+    ac.high = acc_high;
+    ac.low = acc_low;
+    write_quadword (infop, ac, operand(infop,0) );
+    if (ac.high < 0) negative_1; else negative_0;
+    if ( (ac.high & 0xff800000) == 0 ) zero_1; else zero_0;
+    carry_1;
+    overflow_0;
 }

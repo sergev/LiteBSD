@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bivar.h	7.3 (Berkeley) 6/28/90
+ *  @(#)bivar.h 7.3 (Berkeley) 6/28/90
  */
 
 /*
  * Software status per BI node.
  */
 
-struct	binode_status {
-/*	int	bh_type;		/* type of adapter */
-	struct	biiregs *bh_bi;		/* virt addr of registers */
-	struct	biiregs *bh_physbi;	/* phys addr of registers */
-	int	bh_errcnt;		/* number of errors */
-	int	bh_ivec;		/* interrupt vector */
-	int	bh_arb;			/* arbitration */
+struct  binode_status {
+/*  int     bh_type;            /* type of adapter */
+    struct  biiregs *bh_bi;     /* virt addr of registers */
+    struct  biiregs *bh_physbi; /* phys addr of registers */
+    int     bh_errcnt;          /* number of errors */
+    int     bh_ivec;            /* interrupt vector */
+    int     bh_arb;             /* arbitration */
 };
 
 /*
  * ... per BI
  */
-struct	bi_hd {
-	short	bh_nodes;		/* which nodes are present */
-	struct	binode_status bh_nodes[16];	/* info about those nodes */
+struct  bi_hd {
+    short   bh_nodes;                   /* which nodes are present */
+    struct  binode_status bh_nodes[16]; /* info about those nodes */
 };

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,48 +35,48 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)time.h	8.3 (Berkeley) 1/21/94
+ *  @(#)time.h  8.3 (Berkeley) 1/21/94
  */
 
 #ifndef _TIME_H_
-#define	_TIME_H_
+#define _TIME_H_
 
 #include <machine/ansi.h>
 
-#ifndef	NULL
-#define	NULL	0
+#ifndef NULL
+#define NULL    0
 #endif
 
-#ifdef	_BSD_CLOCK_T_
-typedef	_BSD_CLOCK_T_	clock_t;
-#undef	_BSD_CLOCK_T_
+#ifdef  _BSD_CLOCK_T_
+typedef _BSD_CLOCK_T_   clock_t;
+#undef  _BSD_CLOCK_T_
 #endif
 
-#ifdef	_BSD_TIME_T_
-typedef	_BSD_TIME_T_	time_t;
-#undef	_BSD_TIME_T_
+#ifdef  _BSD_TIME_T_
+typedef _BSD_TIME_T_    time_t;
+#undef  _BSD_TIME_T_
 #endif
 
-#ifdef	_BSD_SIZE_T_
-typedef	_BSD_SIZE_T_	size_t;
-#undef	_BSD_SIZE_T_
+#ifdef  _BSD_SIZE_T_
+typedef _BSD_SIZE_T_    size_t;
+#undef  _BSD_SIZE_T_
 #endif
 
 struct tm {
-	int	tm_sec;		/* seconds after the minute [0-60] */
-	int	tm_min;		/* minutes after the hour [0-59] */
-	int	tm_hour;	/* hours since midnight [0-23] */
-	int	tm_mday;	/* day of the month [1-31] */
-	int	tm_mon;		/* months since January [0-11] */
-	int	tm_year;	/* years since 1900 */
-	int	tm_wday;	/* days since Sunday [0-6] */
-	int	tm_yday;	/* days since January 1 [0-365] */
-	int	tm_isdst;	/* Daylight Savings Time flag */
-	long	tm_gmtoff;	/* offset from CUT in seconds */
-	char	*tm_zone;	/* timezone abbreviation */
+    int     tm_sec;     /* seconds after the minute [0-60] */
+    int     tm_min;     /* minutes after the hour [0-59] */
+    int     tm_hour;    /* hours since midnight [0-23] */
+    int     tm_mday;    /* day of the month [1-31] */
+    int     tm_mon;     /* months since January [0-11] */
+    int     tm_year;    /* years since 1900 */
+    int     tm_wday;    /* days since Sunday [0-6] */
+    int     tm_yday;    /* days since January 1 [0-365] */
+    int     tm_isdst;   /* Daylight Savings Time flag */
+    long    tm_gmtoff;  /* offset from CUT in seconds */
+    char    *tm_zone;   /* timezone abbreviation */
 };
 
-#include <machine/limits.h>	/* Include file containing CLK_TCK. */
+#include <machine/limits.h> /* Include file containing CLK_TCK. */
 
 #include <sys/cdefs.h>
 

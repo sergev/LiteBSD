@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Paul Borman at Krystal Technologies.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,34 +33,34 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)rune.h	8.1 (Berkeley) 6/27/93
+ *  @(#)rune.h  8.1 (Berkeley) 6/27/93
  */
 
-#ifndef	_RUNE_H_
-#define	_RUNE_H_
+#ifndef _RUNE_H_
+#define _RUNE_H_
 
 #include <runetype.h>
 #include <stdio.h>
 
-#define	_PATH_LOCALE	"/usr/share/locale"
+#define _PATH_LOCALE            "/usr/share/locale"
 
-#define _INVALID_RUNE   _CurrentRuneLocale->invalid_rune
+#define _INVALID_RUNE           _CurrentRuneLocale->invalid_rune
 
-#define __sgetrune      _CurrentRuneLocale->sgetrune
-#define __sputrune      _CurrentRuneLocale->sputrune
+#define __sgetrune              _CurrentRuneLocale->sgetrune
+#define __sputrune              _CurrentRuneLocale->sputrune
 
 #define sgetrune(s, n, r)       (*__sgetrune)((s), (n), (r))
 #define sputrune(c, s, n, r)    (*__sputrune)((c), (s), (n), (r))
 
 __BEGIN_DECLS
-char	*mbrune __P((const char *, rune_t));
-char	*mbrrune __P((const char *, rune_t));
-char	*mbmb __P((const char *, char *));
-long	 fgetrune __P((FILE *));
-int	 fputrune __P((rune_t, FILE *));
-int	 fungetrune __P((rune_t, FILE *));
-int	 setrunelocale __P((char *));
-void	 setinvalidrune __P((rune_t));
+char    *mbrune __P((const char *, rune_t));
+char    *mbrrune __P((const char *, rune_t));
+char    *mbmb __P((const char *, char *));
+long     fgetrune __P((FILE *));
+int      fputrune __P((rune_t, FILE *));
+int      fungetrune __P((rune_t, FILE *));
+int      setrunelocale __P((char *));
+void     setinvalidrune __P((rune_t));
 __END_DECLS
 
-#endif	/*! _RUNE_H_ */
+#endif  /*! _RUNE_H_ */

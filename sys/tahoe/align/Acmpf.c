@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,28 +33,28 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acmpf.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acmpf.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cmpf(infop)	process_info *infop;
+cmpf(infop) process_info *infop;
 /*
-/*	Compare accumulator (float) with operand.
+/*  Compare accumulator (float) with operand.
 /*
 /*************************************************/
 {
-	register float	*Register_12;	/* Has to be first reg ! */
-	register float	*Register_11;
-	register long	Register_10;
+    register float  *Register_12;   /* Has to be first reg ! */
+    register float  *Register_11;
+    register long   Register_10;
 
-	Register_12 = (float *) &acc_high;
-	Register_11 = (float *) &operand(infop,0)->data;
-	if ( reserved( *(long *)Register_11 ) )
-			exception(infop, ILL_OPRND);
-	asm ("	ldf	(r12)");
-	Register_10=psl;
-	Set_psl(r10);	/* restore the user psl */
-	asm ("	cmpf	(r11)");
-	asm ("	movpsl	r10");
-	New_cc (Register_10);
+    Register_12 = (float *) &acc_high;
+    Register_11 = (float *) &operand(infop,0)->data;
+    if ( reserved( *(long *)Register_11 ) )
+            exception(infop, ILL_OPRND);
+    asm ("  ldf (r12)");
+    Register_10=psl;
+    Set_psl(r10);   /* restore the user psl */
+    asm ("  cmpf    (r11)");
+    asm ("  movpsl  r10");
+    New_cc (Register_10);
 }

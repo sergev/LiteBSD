@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Affc.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Affc.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-ffc(infop)	process_info *infop;
+ffc(infop)  process_info *infop;
 /*
-/*	Find first clear bit.
+/*  Find first clear bit.
 /*
 /********************************/
 {
 
-	register long	Register_12;	/* Has to be first reg ! */
-	register long	Register_11;
-	register long	Register_10;
+    register long   Register_12;    /* Has to be first reg ! */
+    register long   Register_11;
+    register long   Register_10;
 
-	Register_12 = operand(infop,0)->data;
-	Register_10=psl;
-	Set_psl(r10);	/* restore the user psl */
-	asm ("	ffc	r12,r11");
-	asm ("	movpsl	r12");
-	New_cc (Register_12);
-	write_back (infop,Register_11, operand(infop,1));
+    Register_12 = operand(infop,0)->data;
+    Register_10=psl;
+    Set_psl(r10);   /* restore the user psl */
+    asm ("  ffc r12,r11");
+    asm ("  movpsl  r12");
+    New_cc (Register_12);
+    write_back (infop,Register_11, operand(infop,1));
 }

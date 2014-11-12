@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)bi.c	7.4 (Berkeley) 12/16/90
+ *  @(#)bi.c    7.4 (Berkeley) 12/16/90
  */
 
 /*
@@ -47,11 +47,11 @@
 #include "bireg.h"
 
 bi_reset(bi)
-	register struct biiregs *bi;
+    register struct biiregs *bi;
 {
 
-	bi->bi_csr |= BICSR_NRST;
-	DELAY(10000);		/* ??? */
+    bi->bi_csr |= BICSR_NRST;
+    DELAY(10000);       /* ??? */
 }
 
 /*
@@ -60,19 +60,19 @@ bi_reset(bi)
  * does self test ever cause a bi bus error?
  */
 bi_selftest(bi)
-	register struct biiregs *bi;
+    register struct biiregs *bi;
 {
-	register int timo;
+    register int timo;
 
-	bi->bi_csr |= BICSR_ARB_NONE;	/* why? */
-	bi->bi_csr |= BICSR_STS | BICSR_INIT;/* must this be separate? */
-	DELAY(50);			/* why? */
-	timo = todr() + 1000;
-	while (bi->bi_csr & BICSR_BROKE) {
-		if (todr() > timo)	/* reset failed */
-			return (-1);
-	}
-	return (0);			/* reset OK */
+    bi->bi_csr |= BICSR_ARB_NONE;       /* why? */
+    bi->bi_csr |= BICSR_STS | BICSR_INIT;/* must this be separate? */
+    DELAY(50);                          /* why? */
+    timo = todr() + 1000;
+    while (bi->bi_csr & BICSR_BROKE) {
+        if (todr() > timo)              /* reset failed */
+            return (-1);
+    }
+    return (0);                         /* reset OK */
 }
 
 /*
@@ -81,19 +81,19 @@ bi_selftest(bi)
  * (we need a per-BI-device driver structure!)
  */
 bi_buserr(binum)
-	int binum;
+    int binum;
 {
-	register struct bi_node *bi;
-	register int node;
-	extern int bi_nodes;
-	extern int cold;
+    register struct bi_node *bi;
+    register int node;
+    extern int bi_nodes;
+    extern int cold;
 
-	printf("vaxbi%d: bus error\n", binum);
-	bi = (struct bi_node *) &nexus[binum * NNODEBI];/* XXX */
-	for (node = 0; node < 16; node++, bi++) {
-		if ((bi_nodes & (1 << node)) == 0)	/* XXX crude */
-			continue;
-		printf("node %x: ber=%b\n", node, bi->biic.bi_ber, BIBER_BITS);
-	}
-	panic("bi_buserr");
+    printf("vaxbi%d: bus error\n", binum);
+    bi = (struct bi_node *) &nexus[binum * NNODEBI];/* XXX */
+    for (node = 0; node < 16; node++, bi++) {
+        if ((bi_nodes & (1 << node)) == 0)  /* XXX crude */
+            continue;
+        printf("node %x: ber=%b\n", node, bi->biic.bi_ber, BIBER_BITS);
+    }
+    panic("bi_buserr");
 }

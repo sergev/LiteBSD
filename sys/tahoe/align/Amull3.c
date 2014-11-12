@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,25 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Amull3.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Amull3.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-mull3(infop)	process_info *infop;
+mull3(infop)    process_info *infop;
 /*
-/*	Multiply longwords, 3 operands.
+/*  Multiply longwords, 3 operands.
 /*
 /*****************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	long	result, data0, data1;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    result, data0, data1;
 
-	data0 = operand(infop,0)->data; 
-	data1 = operand(infop,1)->data; 
-	Register_12=psl;
-	Set_psl(r12);	/* restore the user psl */
-	result = data0 * data1;
-	asm ("	movpsl	r12");
-	New_cc (Register_12);
-	write_back (infop,result, operand(infop,2) );
+    data0 = operand(infop,0)->data; 
+    data1 = operand(infop,1)->data; 
+    Register_12=psl;
+    Set_psl(r12);   /* restore the user psl */
+    result = data0 * data1;
+    asm ("  movpsl  r12");
+    New_cc (Register_12);
+    write_back (infop,result, operand(infop,2) );
 }

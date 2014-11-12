@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,45 +33,45 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Kcmpf.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Kcmpf.s     7.1 (Berkeley) 12/6/90
  */
 
 #include "../tahoe/SYS.h"
 
 /*
  * cmpf(o1, o2)
- *	register o1, o2;
+ *      register o1, o2;
  *{
- *	if(o1 < 0) {
- *		o1 ^= 0x80000000;
- *		o1 = -o1;
- *	}
- *	if(o2 < 0) {
- *		o2 ^= 0x80000000;
- *		o2 = -o2;
- *	}
- *	if(o1 != o2)
- *		return(o1>o2 ? 1 : -1);
- *	return(0);
+ *      if(o1 < 0) {
+ *              o1 ^= 0x80000000;
+ *              o1 = -o1;
+ *      }
+ *      if(o2 < 0) {
+ *              o2 ^= 0x80000000;
+ *              o2 = -o2;
+ *      }
+ *      if(o1 != o2)
+ *              return(o1>o2 ? 1 : -1);
+ *      return(0);
  *}
  */
-	.text
+        .text
 ENTRY(Kcmpf, 0)
-	movl	4(fp),r12
-	jgeq	1f
-	xorl2	$0x80000000,r12
-	mnegl	r12,r12
+        movl    4(fp),r12
+        jgeq    1f
+        xorl2   $0x80000000,r12
+        mnegl   r12,r12
 1:
-	movl	12(fp),r11
-	jgeq	1f
-	xorl2	$0x80000000,r11
-	mnegl	r11,r11
+        movl    12(fp),r11
+        jgeq    1f
+        xorl2   $0x80000000,r11
+        mnegl   r11,r11
 1:
-	cmpl	r12,r11
-	jneq	1f
-	clr	r0; ret
+        cmpl    r12,r11
+        jneq    1f
+        clr     r0; ret
 1:
-	jleq	1f
-	movl	$1,r0; ret
+        jleq    1f
+        movl    $1,r0; ret
 1:
-	mnegl	$1,r0; ret
+        mnegl   $1,r0; ret

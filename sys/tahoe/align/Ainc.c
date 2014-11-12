@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Ainc.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Ainc.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-inc(infop)	process_info *infop;
+inc(infop)  process_info *infop;
 /*
-/*	Increment operand.
+/*  Increment operand.
 /*
 /***************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	long	Register_11;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    Register_11;
 
-	Register_11 = operand(infop,0)->data;
-	Register_12=psl;
-	Set_psl(r12);	/* restore the user psl */
-	asm ("	incl	r11");			/* Make sure to use the
-						 * right opcode */
-	asm ("	movpsl	r12");
-	New_cc (Register_12);
+    Register_11 = operand(infop,0)->data;
+    Register_12=psl;
+    Set_psl(r12);   /* restore the user psl */
+    asm ("  incl    r11");          /* Make sure to use the
+                         * right opcode */
+    asm ("  movpsl  r12");
+    New_cc (Register_12);
 
-	write_back (infop,Register_11, operand(infop,0) );
-}	
+    write_back (infop,Register_11, operand(infop,0) );
+}   

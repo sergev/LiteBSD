@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)inline.h	1.3 (Berkeley) 5/8/91
+ *  @(#)inline.h    1.3 (Berkeley) 5/8/91
  */
 
 /*
@@ -38,29 +38,29 @@
  * LABELCHAR is the character that separates labels from instructions.
  * ARGSEPCHAR is the character that separates arguments in instructions.
  */
-#define COMMENTCHAR	'#'
-#define LABELCHAR	':'
-#define ARGSEPCHAR	','
+#define COMMENTCHAR '#'
+#define LABELCHAR   ':'
+#define ARGSEPCHAR  ','
 
 /*
  * Expansion parameters:
- *   QUEUESIZE is the number of instructions to be considered for 
- *	integration of argument pushes and pops
+ *   QUEUESIZE is the number of instructions to be considered for
+ *  integration of argument pushes and pops
  *   MAXLINELEN is the longest expected input line
  *   MAXARGS is the maximum number of arguments in an assembly instruction
  */
-#define QUEUESIZE	16
-#define MAXLINELEN	128
-#define MAXARGS		10
+#define QUEUESIZE   16
+#define MAXLINELEN  128
+#define MAXARGS     10
 
 /*
  * The following global variables are used to manipulate the queue of
  * recently seen instructions.
- *	line - The queue of instructions.
- *	bufhead - Pointer to next availble queue slot. It is not
- *		considered part of te instruction stream until
- *		bufhead is advanced.
- *	buftail - Pointer to last instruction in queue.
+ *  line - The queue of instructions.
+ *  bufhead - Pointer to next availble queue slot. It is not
+ *      considered part of te instruction stream until
+ *      bufhead is advanced.
+ *  buftail - Pointer to last instruction in queue.
  * Note that bufhead == buftail implies that the queue is empty.
  */
 int bufhead, buftail;
@@ -73,17 +73,17 @@ char line[QUEUESIZE][MAXLINELEN];
  * Hash table headers should be twice as big as the number of patterns.
  * They must be a power of two.
  */
-#define HSHSIZ	128
+#define HSHSIZ  128
 
 /*
  * These tables specify the substitutions that are to be done.
  */
 struct pats {
-	int	args;
-	char	*name;
-	char	*replace;
-	struct	pats *next;
-	int	size;
+    int     args;
+    char    *name;
+    char    *replace;
+    struct  pats *next;
+    int     size;
 };
 struct pats *patshdr[HSHSIZ];
 extern struct pats language_ptab[], libc_ptab[], machine_ptab[];
@@ -93,9 +93,9 @@ extern struct pats language_ptab[], libc_ptab[], machine_ptab[];
  * end of a basic block.
  */
 struct inststoptbl {
-	char	*name;
-	struct	inststoptbl *next;
-	int	size;
+    char    *name;
+    struct  inststoptbl *next;
+    int     size;
 };
 struct inststoptbl *inststoptblhdr[HSHSIZ];
 extern struct inststoptbl inststoptable[];

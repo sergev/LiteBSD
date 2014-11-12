@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)psproto.h	7.3 (Berkeley) 6/28/90
+ *  @(#)psproto.h   7.3 (Berkeley) 6/28/90
  */
 
 /*
@@ -71,9 +71,9 @@
  * Single unit PS300 address list.
  */
 struct  psalist {
-        u_short nblocks;                /* # of i/o vectors (we always use 1) */
-        u_short addr[2];                /* PS300 address */
-        u_short wc;                     /* transfer size */
+    u_short nblocks;                /* # of i/o vectors (we always use 1) */
+    u_short addr[2];                /* PS300 address */
+    u_short wc;                     /* transfer size */
 };
 
 /*

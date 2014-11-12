@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Kfp_mvtoacc.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Kfp_mvtoacc.s       7.1 (Berkeley) 12/6/90
  */
 
 #include "../math/fp.h"
@@ -45,8 +45,8 @@
  * move value to floating point accumulator
  */
 ENTRY(mvtofacc, 0)
-	movl	4(fp),*12(fp)
-	ret
+        movl    4(fp),*12(fp)
+        ret
 
 /*
  * mvtodacc(value_hi, value_lo, acc_addr)
@@ -54,7 +54,7 @@ ENTRY(mvtofacc, 0)
  * move value to double precision accumulator
  */
 ENTRY(mvtodacc, 0)
-	movl	12(fp),r0	# address of accumulator
-	movl	4(fp),(r0)	# most significant longword
-	movl	8(fp),4(r0)	# least significant longword
-	ret
+        movl    12(fp),r0       # address of accumulator
+        movl    4(fp),(r0)      # most significant longword
+        movl    8(fp),4(r0)     # least significant longword
+        ret

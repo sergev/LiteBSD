@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,29 +33,29 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Adivl3.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Adivl3.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-divl3(infop) 	process_info *infop;
+divl3(infop)    process_info *infop;
 /*
-/*	Arithmetic division, 3 operands.
+/*  Arithmetic division, 3 operands.
 /*
 /**************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register 	long	divident, divisor, result;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    divident, divisor, result;
 
-	divisor = operand(infop,0)->data;
-	divident = operand(infop,1)->data;
-	if (divisor == 0) {
-		exception (infop, ARITHMETIC, 2);
-	} else {
-		Register_12=psl;
-		Set_psl(r12);	/* restore the user psl */
-		result = divident / divisor;
-		asm ("	movpsl	r12");
-		New_cc (Register_12);
-	}
-	write_back (infop,result, operand(infop,2));
+    divisor = operand(infop,0)->data;
+    divident = operand(infop,1)->data;
+    if (divisor == 0) {
+        exception (infop, ARITHMETIC, 2);
+    } else {
+        Register_12=psl;
+        Set_psl(r12);   /* restore the user psl */
+        result = divident / divisor;
+        asm ("  movpsl  r12");
+        New_cc (Register_12);
+    }
+    write_back (infop,result, operand(infop,2));
 }

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,32 +33,32 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Aemul.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Aemul.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-emul(infop)	process_info *infop;
+emul(infop) process_info *infop;
 /*
-/*	Extended precision multiplication.
+/*  Extended precision multiplication.
 /*
 /***************************************/
 {
-	register long Register_12;	/* multiplicand */
-	register long Register_11;	/* product least */
-	register long Register_10;	/* product most */
-	register long Register_9;	/* addend */
-	register long Register_8;	/* multiplier */
-	quadword result;
+    register long Register_12;  /* multiplicand */
+    register long Register_11;  /* product least */
+    register long Register_10;  /* product most */
+    register long Register_9;   /* addend */
+    register long Register_8;   /* multiplier */
+    quadword result;
 
-	Register_8 = operand(infop, 0)->data;
-	Register_12 = operand(infop, 1)->data;
-	Register_9 = operand(infop, 2)->data;
-	Register_10=psl;
-	Set_psl(r10);	/* restore the user psl */
-	asm ("	emul	r8,r12,r9,r10");
-	asm ("	movpsl	r8");
-	New_cc (Register_8);
-	result.high = Register_10;
-	result.low  = Register_11;
-	write_quadword (infop, result, operand(infop, 3));
+    Register_8 = operand(infop, 0)->data;
+    Register_12 = operand(infop, 1)->data;
+    Register_9 = operand(infop, 2)->data;
+    Register_10=psl;
+    Set_psl(r10);   /* restore the user psl */
+    asm ("  emul    r8,r12,r9,r10");
+    asm ("  movpsl  r8");
+    New_cc (Register_8);
+    result.high = Register_10;
+    result.low  = Register_11;
+    write_quadword (infop, result, operand(infop, 3));
 }

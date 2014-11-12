@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,20 +33,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Asubd.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Asubd.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-subd(infop)	process_info *infop;
+subd(infop) process_info *infop;
 /*
-/*	Subtract operand from accumulator to accumulator (double).
+/*  Subtract operand from accumulator to accumulator (double).
 /*
 /*******************************************************************/
 {
-	register double 	*operand_pnt;
-	register double		*acc_pnt;
+    register double     *operand_pnt;
+    register double     *acc_pnt;
 
-	operand_pnt = (double *)&operand(infop,0)->data;
-	acc_pnt = (double *) &acc_high;
-	*acc_pnt = *acc_pnt - *operand_pnt;
+    operand_pnt = (double *)&operand(infop,0)->data;
+    acc_pnt = (double *) &acc_high;
+    *acc_pnt = *acc_pnt - *operand_pnt;
 }

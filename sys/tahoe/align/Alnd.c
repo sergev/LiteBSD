@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Alnd.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Alnd.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-lnd(infop)	process_info *infop;
+lnd(infop)  process_info *infop;
 /*
-/*	Load a negated double operand into accumulator.
+/*  Load a negated double operand into accumulator.
 /*
 /*******************************************************/
 {
-	register struct oprnd *oprnd_pnt;
+    register struct oprnd *oprnd_pnt;
 
-	oprnd_pnt = operand(infop,0);
-	if ( reserved( oprnd_pnt->data ) ) 
-		exception(infop, ILL_OPRND);
-	if ( oprnd_pnt->data == 0 ) acc_high = 0;
-	else acc_high = 0x80000000 ^ oprnd_pnt->data ;
-	acc_low = oprnd_pnt->data2 ;
-	psl |= PSL_DBL;
-	infop->acc_dbl = 1;
+    oprnd_pnt = operand(infop,0);
+    if ( reserved( oprnd_pnt->data ) ) 
+        exception(infop, ILL_OPRND);
+    if ( oprnd_pnt->data == 0 ) acc_high = 0;
+    else acc_high = 0x80000000 ^ oprnd_pnt->data ;
+    acc_low = oprnd_pnt->data2 ;
+    psl |= PSL_DBL;
+    infop->acc_dbl = 1;
 }

@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)machdep.c	1.4 (Berkeley) 5/8/91";
+static char sccsid[] = "@(#)machdep.c   1.4 (Berkeley) 5/8/91";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -58,29 +58,29 @@ extern char *index();
  */
 struct inststoptbl inststoptable[] = {
 /* control */
-	{ "bbssi" }, { "bcc" }, { "bcs" }, { "beql" }, { "beqlu" },
-	{ "bgeq" }, { "bgequ" }, { "bgtr" }, { "bgtru" }, { "bleq" },
-	{ "blequ" }, { "blss" }, { "blssu" }, { "bneq" }, { "bnequ" },
-	{ "brb" }, { "brw" }, { "bvc" }, { "bvs" }, { "jmp" },
+    { "bbssi" }, { "bcc" }, { "bcs" }, { "beql" }, { "beqlu" },
+    { "bgeq" }, { "bgequ" }, { "bgtr" }, { "bgtru" }, { "bleq" },
+    { "blequ" }, { "blss" }, { "blssu" }, { "bneq" }, { "bnequ" },
+    { "brb" }, { "brw" }, { "bvc" }, { "bvs" }, { "jmp" },
 /* jump versions of control */
-	{ "jbc" }, { "jbs" }, { "jeql" }, { "jeqlu" },
-	{ "jgeq" }, { "jgequ" }, { "jgtr" }, { "jgtru" }, { "jleq" },
-	{ "jlequ" }, { "jlss" }, { "jlssu" }, { "jneq" }, { "jnequ" },
-	{ "jcc" }, { "jcs" }, { "jvc" }, { "jvs" }, { "jbr" },
+    { "jbc" }, { "jbs" }, { "jeql" }, { "jeqlu" },
+    { "jgeq" }, { "jgequ" }, { "jgtr" }, { "jgtru" }, { "jleq" },
+    { "jlequ" }, { "jlss" }, { "jlssu" }, { "jneq" }, { "jnequ" },
+    { "jcc" }, { "jcs" }, { "jvc" }, { "jvs" }, { "jbr" },
 /* multiple registers */
-	{ "loadr" },
+    { "loadr" },
 /* bit field */
-	{ "bbc" }, { "bbs" },
+    { "bbc" }, { "bbs" },
 /* character string and block move */
-	{ "cmps2" }, { "cmps3" }, { "movblk" }, { "movs2" }, { "movs3" },
+    { "cmps2" }, { "cmps3" }, { "movblk" }, { "movs2" }, { "movs3" },
 /* procedure call */
-	{ "callf" }, { "calls" }, { "ret" },
+    { "callf" }, { "calls" }, { "ret" },
 /* loop control */
-	{ "aobleq" }, { "aoblss" }, { "casel" },
+    { "aobleq" }, { "aoblss" }, { "casel" },
 /* privileged and miscellaneous */
-	{ "bpt" }, { "halt" }, { "kcall" }, { "ldpctx" }, { "rei" },
-	{ "svpctx" },
-	{ "" }
+    { "bpt" }, { "halt" }, { "kcall" }, { "ldpctx" }, { "rei" },
+    { "svpctx" },
+    { "" }
 };
 
 /*
@@ -89,14 +89,14 @@ struct inststoptbl inststoptable[] = {
  */
 char *
 doreplaceon(cp)
-	char *cp;
+    char *cp;
 {
 
-	if (bcmp(cp, "callf\t", 6))
-		return (0);
-	if ((cp = index(cp + 6, ',')) == 0)
-		return (0);
-	return (++cp);
+    if (bcmp(cp, "callf\t", 6))
+        return (0);
+    if ((cp = index(cp + 6, ',')) == 0)
+        return (0);
+    return (++cp);
 }
 
 /*
@@ -104,49 +104,49 @@ doreplaceon(cp)
  * A return value of -1 indicates that the count can't be determined.
  */
 countargs(cp)
-	char *cp;
+    char *cp;
 {
-	int i;
+    int i;
 
-	if ((cp = index(cp, '$')) == 0)
-		return (-1);
-	if (!isdigit(*++cp) || (i = atoi(cp)) == -1)
-		return (-1);
-	return (i/4 - 1);
+    if ((cp = index(cp, '$')) == 0)
+        return (-1);
+    if (!isdigit(*++cp) || (i = atoi(cp)) == -1)
+        return (-1);
+    return (i/4 - 1);
 }
 
 /*
  * Find the next argument to the function being expanded.
  */
 nextarg(argc, argv)
-	int argc;
-	char *argv[];
+    int argc;
+    char *argv[];
 {
-	register char *lastarg = argv[2];
+    register char *lastarg = argv[2];
 
-	if (argc == 3 &&
-	    bcmp(argv[0], "mov", 3) == 0 &&
-	    bcmp(argv[1], "(sp)+", 6) == 0 &&
-	    lastarg[0] == 'r' && isdigit(lastarg[1]) && lastarg[2] == '\0')
-		return (lastarg[1] - '0');
-	return (-1);
+    if (argc == 3 &&
+        bcmp(argv[0], "mov", 3) == 0 &&
+        bcmp(argv[1], "(sp)+", 6) == 0 &&
+        lastarg[0] == 'r' && isdigit(lastarg[1]) && lastarg[2] == '\0')
+        return (lastarg[1] - '0');
+    return (-1);
 }
 
 /*
  * Determine whether the current line pushes an argument.
  */
 ispusharg(argc, argv)
-	int argc;
-	char *argv[];
+    int argc;
+    char *argv[];
 {
 
-	if (argc < 2)
-		return (0);
-	if (argc == 2 && bcmp(argv[0], "push", 4) == 0)
-		return (1);
-	if (bcmp(argv[argc - 1], "-(sp)", 6) == 0)
-		return (1);
-	return (0);
+    if (argc < 2)
+        return (0);
+    if (argc == 2 && bcmp(argv[0], "push", 4) == 0)
+        return (1);
+    if (bcmp(argv[argc - 1], "-(sp)", 6) == 0)
+        return (1);
+    return (0);
 }
 
 /*
@@ -154,17 +154,17 @@ ispusharg(argc, argv)
  * Return register number that is modified, -1 if none are modified.
  */
 modifies(argc, argv)
-	int argc;
-	char *argv[];
+    int argc;
+    char *argv[];
 {
-	register char *lastarg = argv[argc - 1];
+    register char *lastarg = argv[argc - 1];
 
-	/*
-	 * For the tahoe all we care about are r0 to r5
-	 */
-	if (lastarg[0] == 'r' && isdigit(lastarg[1]) && lastarg[2] == '\0')
-		return (lastarg[1] - '0');
-	return (-1);
+    /*
+     * For the tahoe all we care about are r0 to r5
+     */
+    if (lastarg[0] == 'r' && isdigit(lastarg[1]) && lastarg[2] == '\0')
+        return (lastarg[1] - '0');
+    return (-1);
 }
 
 /*
@@ -173,58 +173,58 @@ modifies(argc, argv)
  * instruction is placed in the buffer that is provided.
  */
 rewrite(instbuf, argc, argv, target)
-	char *instbuf;
-	int argc;
-	char *argv[];
-	int target;
+    char *instbuf;
+    int argc;
+    char *argv[];
+    int target;
 {
 
-	switch (argc) {
-	case 0:
-		instbuf[0] = '\0';
-		fprintf(stderr, "blank line to rewrite?\n");
-		return;
-	case 1:
-		sprintf(instbuf, "\t%s\n", argv[0]);
-		fprintf(stderr, "rewrite?-> %s", instbuf);
-		return;
-	case 2:
-		if (bcmp(argv[0], "push", 4) == 0) {
-			sprintf(instbuf, "\tmov%s\t%s,r%d\n",
-				&argv[0][4], argv[1], target);
-			return;
-		}
-		sprintf(instbuf, "\t%s\tr%d\n", argv[0], target);
-		return;
-	case 3:
-		sprintf(instbuf, "\t%s\t%s,r%d\n", argv[0], argv[1], target);
-		return;
-	case 4:
-		sprintf(instbuf, "\t%s\t%s,%s,r%d\n",
-			argv[0], argv[1], argv[2], target);
-		return;
-	case 5:
-		sprintf(instbuf, "\t%s\t%s,%s,%s,r%d\n",
-			argv[0], argv[1], argv[2], argv[3], target);
-		return;
-	default:
-		sprintf(instbuf, "\t%s\t%s", argv[0], argv[1]);
-		argc -= 2, argv += 2;
-		while (argc-- > 0) {
-			strcat(instbuf, ",");
-			strcat(instbuf, *argv++);
-		}
-		strcat(instbuf, "\n");
-		fprintf(stderr, "rewrite?-> %s", instbuf);
-		return;
-	}
+    switch (argc) {
+    case 0:
+        instbuf[0] = '\0';
+        fprintf(stderr, "blank line to rewrite?\n");
+        return;
+    case 1:
+        sprintf(instbuf, "\t%s\n", argv[0]);
+        fprintf(stderr, "rewrite?-> %s", instbuf);
+        return;
+    case 2:
+        if (bcmp(argv[0], "push", 4) == 0) {
+            sprintf(instbuf, "\tmov%s\t%s,r%d\n",
+                &argv[0][4], argv[1], target);
+            return;
+        }
+        sprintf(instbuf, "\t%s\tr%d\n", argv[0], target);
+        return;
+    case 3:
+        sprintf(instbuf, "\t%s\t%s,r%d\n", argv[0], argv[1], target);
+        return;
+    case 4:
+        sprintf(instbuf, "\t%s\t%s,%s,r%d\n",
+            argv[0], argv[1], argv[2], target);
+        return;
+    case 5:
+        sprintf(instbuf, "\t%s\t%s,%s,%s,r%d\n",
+            argv[0], argv[1], argv[2], argv[3], target);
+        return;
+    default:
+        sprintf(instbuf, "\t%s\t%s", argv[0], argv[1]);
+        argc -= 2, argv += 2;
+        while (argc-- > 0) {
+            strcat(instbuf, ",");
+            strcat(instbuf, *argv++);
+        }
+        strcat(instbuf, "\n");
+        fprintf(stderr, "rewrite?-> %s", instbuf);
+        return;
+    }
 }
 
 /*
  * Do any necessary post expansion cleanup.
  */
 cleanup(numargs)
-	int numargs;
+    int numargs;
 {
 
 }

@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -20,8 +20,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -38,30 +38,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ar.h	8.2 (Berkeley) 1/21/94
+ *  @(#)ar.h    8.2 (Berkeley) 1/21/94
  */
 
 #ifndef _AR_H_
-#define	_AR_H_
+#define _AR_H_
 
 /* Pre-4BSD archives had these magic numbers in them. */
-#define	OARMAG1	0177555
-#define	OARMAG2	0177545
+#define OARMAG1     0177555
+#define OARMAG2     0177545
 
-#define	ARMAG		"!<arch>\n"	/* ar "magic number" */
-#define	SARMAG		8		/* strlen(ARMAG); */
+#define ARMAG       "!<arch>\n" /* ar "magic number" */
+#define SARMAG      8           /* strlen(ARMAG); */
 
-#define	AR_EFMT1	"#1/"		/* extended format #1 */
+#define AR_EFMT1    "#1/"       /* extended format #1 */
 
 struct ar_hdr {
-	char ar_name[16];		/* name */
-	char ar_date[12];		/* modification time */
-	char ar_uid[6];			/* user id */
-	char ar_gid[6];			/* group id */
-	char ar_mode[8];		/* octal file permissions */
-	char ar_size[10];		/* size in bytes */
-#define	ARFMAG	"`\n"
-	char ar_fmag[2];		/* consistency check */
+    char ar_name[16];           /* name */
+    char ar_date[12];           /* modification time */
+    char ar_uid[6];             /* user id */
+    char ar_gid[6];             /* group id */
+    char ar_mode[8];            /* octal file permissions */
+    char ar_size[10];           /* size in bytes */
+#define ARFMAG      "`\n"
+    char ar_fmag[2];            /* consistency check */
 };
 
 #endif /* !_AR_H_ */

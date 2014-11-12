@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,19 +33,19 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Astf.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Astf.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-stf(infop)	process_info *infop;
+stf(infop)  process_info *infop;
 /*
-/*	Store accumulator (float) in destination.
+/*  Store accumulator (float) in destination.
 /*
 /*************************************************/
 {
 
-	write_back (infop, acc_high, operand(infop,0) );
-	if (acc_high < 0) negative_1; else negative_0;
-	if ( (acc_high & 0xff800000) == 0 ) zero_1; else zero_0;
-	carry_1; overflow_0;
+    write_back (infop, acc_high, operand(infop,0) );
+    if (acc_high < 0) negative_1; else negative_0;
+    if ( (acc_high & 0xff800000) == 0 ) zero_1; else zero_0;
+    carry_1; overflow_0;
 }

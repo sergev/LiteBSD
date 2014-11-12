@@ -13,8 +13,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -31,30 +31,30 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)np.c	7.11 (Berkeley) 9/23/93
+ *  @(#)np.c    7.11 (Berkeley) 9/23/93
  */
 
 /*
  * From:
- *	np.c version 1.5
+ *  np.c version 1.5
  *
- *	This version retrieved: 8/18/86 @ 18:58:54
- *	    This delta created: 8/18/86 @ 18:19:24
+ *  This version retrieved: 8/18/86 @ 18:58:54
+ *      This delta created: 8/18/86 @ 18:19:24
  *
- *	static		char	*SCCSID = "@(#)np.c	1.5";
+ *  static      char    *SCCSID = "@(#)np.c 1.5";
  *
  */
 
-		/******************************************
- 		*					  *
- 		*		NPDRIVER		  *
- 		*					  *
- 		******************************************/
+        /******************************************
+        *                                         *
+        *       NPDRIVER                          *
+        *                                         *
+        ******************************************/
 
 /*
  * The NP Driver is used to route requests, independent of protocol type,
  * to the NP series Intelligent Board. The facilities it provides are
- * used for board maintainance by the superuser and by protocol pseudo-drivers, 
+ * used for board maintainance by the superuser and by protocol pseudo-drivers,
  * such as WN, for sending requests to a board. The board maintainance and
  * control functions are accessed via npioctl() by the NP support utilities.
  */
@@ -101,7 +101,7 @@ int (*IxReset)();
  * Debugging level.
  */
 
-int	NpDebug = 0;		
+int NpDebug = 0;
 
 /* Driver Wide State used by the ICP */
 
@@ -121,10 +121,10 @@ static struct npspace npspaces[NNP];
 
 /* Panic Message data structures */
 
-static int panicmap;			/* Mapping information */
-static char	NpPbuf[PANLEN] = 0;	/* Panic message buffer */
-static caddr_t pstring;			/* Panic string address on board, absolute */
-static unsign16 panaddr[2];		/* Panic string address on board (seg/offset) */
+static int panicmap;            /* Mapping information */
+static char NpPbuf[PANLEN] = 0; /* Panic message buffer */
+static caddr_t pstring;         /* Panic string address on board, absolute */
+static unsign16 panaddr[2];     /* Panic string address on board (seg/offset) */
 
 /* Driver Wide Connection Table */
 
@@ -148,20 +148,20 @@ static struct npreq npreqs[NNP][NUMCQE];
  * Data structures needed for BSD 4.2 Device Drivers
  */
 
-int	npprobe(), npattach(), npintr();
-struct	uba_device *npdinfo[NNP];
+int npprobe(), npattach(), npintr();
+struct  uba_device *npdinfo[NNP];
 
 /* UNIBUS address of Network Processors */
 
-u_short	npstd[] = { 0166000, 0166020, 0 };
+u_short npstd[] = { 0166000, 0166020, 0 };
 
 /* Interrupt vectors used by the Network Processors */
 
 static unsign16 npvectors[NNP];
 
-struct	uba_driver npdriver =
+struct  uba_driver npdriver =
     { npprobe, 0, npattach, 0, npstd, "np", npdinfo };
-struct	buf	np_tab[NNP];
+struct  buf np_tab[NNP];
 static unsigned long np_icount[NNP];
 
 
@@ -170,45 +170,45 @@ static unsigned long np_icount[NNP];
  */
 
 struct npreq * NpGetReq();
-struct npmaster	*NpBoardChange();
+struct npmaster *NpBoardChange();
 int NpTimer();
 struct CQE * NpRemCQE();
 
 extern struct user u;
 
 /*
- * Np_init() is responsible for hardware initializiation and the software 
+ * Np_init() is responsible for hardware initializiation and the software
  * initialization of the connection table and driver software data structures.
  */
 
 npinit(unit)
 int unit;
 {
-	register int j;
+    register int j;
 
 
-		/* Software Initialization */
+        /* Software Initialization */
 
-	npmasters[unit].flags = NPCLEAR;
+    npmasters[unit].flags = NPCLEAR;
 
-	NpSWinit(unit);
+    NpSWinit(unit);
 
-		/* Hardware Initialization */
+        /* Hardware Initialization */
 
-	NpHWinit(unit);		
+    NpHWinit(unit);
 
-		/* Connection Table Initialization */
+        /* Connection Table Initialization */
 
-	for(j=0;j<NNPCNN;j++) {
-		npcnxtab[unit][j].protocol = NPCLCONN;
-		npcnxtab[unit][j].unit = &npmasters[unit];
-	}
+    for(j=0;j<NNPCNN;j++) {
+        npcnxtab[unit][j].protocol = NPCLCONN;
+        npcnxtab[unit][j].unit = &npmasters[unit];
+    }
 }
 
 /*
  * Np_open establishes a connection to the NP Driver using the minor
  * device number as an identifier. A default protocol, NPMAINT, is assigned
- * with the specified unit. Protocol and unit may be changed using the 
+ * with the specified unit. Protocol and unit may be changed using the
  * NpProtChange and NpBoardChange functions.
  * Since the maintainance protocol does not need a working I-Board, entries
  * are always made in the Connection Table, npcnxtab, if the board exists.
@@ -219,47 +219,47 @@ npopen(dev,flag)
 dev_t dev;
 int flag;
 {
-	int unit;
-	unsign16 conn;
-	struct npmaster *mp;
-	int error;
+    int unit;
+    unsign16 conn;
+    struct npmaster *mp;
+    int error;
 
-	if(NpDebug & DEBENTRY)
-		printf("npopen\n");
+    if(NpDebug & DEBENTRY)
+        printf("npopen\n");
 
-	/* Clear error */
+    /* Clear error */
 
-	error = 0;
+    error = 0;
 
-	/* Make sure it's the superuser */
+    /* Make sure it's the superuser */
 
-	if(u.u_uid) 
-		return(EPERM);
-	
-	/* Get the connection identifier */
+    if(u.u_uid)
+        return(EPERM);
 
-	if(((conn = NPCONN(dev)) >= NNPCNN) ||
-	    ((unit = NPUNIT(dev)) >= NNP)) 
-		return(ENODEV);
-	
+    /* Get the connection identifier */
 
-	if(NpDebug  & DEBOPEN)
-		printf("conn = %x unit = %d\n",conn,unit);
+    if(((conn = NPCONN(dev)) >= NNPCNN) ||
+        ((unit = NPUNIT(dev)) >= NNP))
+        return(ENODEV);
 
-	/* Get the board for the specified unit */
 
-	mp = NpBoardChange(NPMAINT,unit);
+    if(NpDebug  & DEBOPEN)
+        printf("conn = %x unit = %d\n",conn,unit);
 
-	if(mp != (struct npmaster *) 0) {
-		npcnxtab[unit][conn].unit = mp;
-		npcnxtab[unit][conn].protocol = NPMAINT;
-	}
-	else error = ENXIO;
+    /* Get the board for the specified unit */
 
-	if(NpDebug & DEBENTRY)
-		printf("npopen...\n");
+    mp = NpBoardChange(NPMAINT,unit);
 
-	return(error);
+    if(mp != (struct npmaster *) 0) {
+        npcnxtab[unit][conn].unit = mp;
+        npcnxtab[unit][conn].protocol = NPMAINT;
+    }
+    else error = ENXIO;
+
+    if(NpDebug & DEBENTRY)
+        printf("npopen...\n");
+
+    return(error);
 }
 
 /*
@@ -271,24 +271,24 @@ npclose(dev)
 dev_t dev;
 {
 
-	if(NpDebug & DEBENTRY)
-		printf("npclose\n");
+    if(NpDebug & DEBENTRY)
+        printf("npclose\n");
 
-	/* Get the connection identifier */
+    /* Get the connection identifier */
 
-	npcnxtab[NPUNIT(dev)][NPCONN(dev)].protocol = NPCLCONN;
+    npcnxtab[NPUNIT(dev)][NPCONN(dev)].protocol = NPCLCONN;
 
-	if(NpDebug & DEBENTRY)
-		printf("npclose...\n");
+    if(NpDebug & DEBENTRY)
+        printf("npclose...\n");
 
-	return(0);
+    return(0);
 
 }
 
 /*
  * Npioctl is the main conduit of commands between the I-Board and the
  * NP support utilities. Relevant information for the request is found in the
- * cmd and addr parameters. Cmd specifies the function to perform, addr is 
+ * cmd and addr parameters. Cmd specifies the function to perform, addr is
  * command specific. Npioctl returns 0 if successful, or an error number
  * (which winds up in errno).
  */
@@ -300,189 +300,189 @@ int cmd;
 caddr_t *addr;
 int flag;
 {
-	unsign16 protocol;
-	unsign16 conn;
-	unsign16 unit;
-	int error;
+    unsign16 protocol;
+    unsign16 conn;
+    unsign16 unit;
+    int error;
 
-	register struct npmaster *mp;
-	register struct npreq *rp;
-	unsigned usrarg;
+    register struct npmaster *mp;
+    register struct npreq *rp;
+    unsigned usrarg;
 
-	if(NpDebug & DEBENTRY)
-		printf("npioctl\n");
+    if(NpDebug & DEBENTRY)
+        printf("npioctl\n");
 
-	/* Clear error */
+    /* Clear error */
 
-	error = 0;
+    error = 0;
 
-	/* Strip off IOC_VOID bit */
+    /* Strip off IOC_VOID bit */
 
-	cmd &= CMDMASK;
+    cmd &= CMDMASK;
 
-	/* Get connection identifier */
+    /* Get connection identifier */
 
-	conn = NPCONN(dev);
-	unit = NPUNIT(dev);
+    conn = NPCONN(dev);
+    unit = NPUNIT(dev);
 
-	/* Master pointer for this unit */
+    /* Master pointer for this unit */
 
-	mp = npcnxtab[unit][conn].unit;
+    mp = npcnxtab[unit][conn].unit;
 
-	protocol = npcnxtab[unit][conn].protocol;
+    protocol = npcnxtab[unit][conn].protocol;
 
-	/* Get a request structure from the pool and initialize it */
+    /* Get a request structure from the pool and initialize it */
 
-	while((rp = NpGetReq(mp->reqtab)) == NULL) {
-		mp->reqtab->flags |= WANTREQ;
-		sleep((caddr_t)(mp->reqtab),PZERO -1);
-	}
+    while((rp = NpGetReq(mp->reqtab)) == NULL) {
+        mp->reqtab->flags |= WANTREQ;
+        sleep((caddr_t)(mp->reqtab),PZERO -1);
+    }
 
-	if(NpDebug & DEBREQ)
-		printf("NP Reqp is %x\n",rp);
+    if(NpDebug & DEBREQ)
+        printf("NP Reqp is %x\n",rp);
 
-	/* Initializations of request structure */
+    /* Initializations of request structure */
 
-	rp->intr = (int (*)())0;	/* Do not call interrupt routine */
-	rp->bufoffset = 0;		/* Offset into data buffer */
-	rp->procp = u.u_procp; 	/* Process structure for this user */
+    rp->intr = (int (*)())0;    /* Do not call interrupt routine */
+    rp->bufoffset = 0;      /* Offset into data buffer */
+    rp->procp = u.u_procp;  /* Process structure for this user */
 
-	/* Copy in user's argument to ioctl() call */
+    /* Copy in user's argument to ioctl() call */
 
-	if(error = copyin(*addr,&usrarg,sizeof(usrarg)))
-		return(error);
-	
+    if(error = copyin(*addr,&usrarg,sizeof(usrarg)))
+        return(error);
 
-	if(NpDebug & DEBIOCTL)
-		printf("arg = %x\n",usrarg);
 
-	/* Execute the specified command */
+    if(NpDebug & DEBIOCTL)
+        printf("arg = %x\n",usrarg);
 
-	switch(cmd) {
+    /* Execute the specified command */
 
-	    case NPSETPROT:
-	    	if((error = NpProtChange(usrarg,mp->unit)) == 0)
-			npcnxtab[unit][conn].protocol = usrarg;
-		break;
-	    case NPSETBOARD:
-		if(mp = NpBoardChange(protocol,usrarg))
-			npcnxtab[unit][conn].unit = mp;
-		else {
-			mp = npcnxtab[unit][conn].unit;
-			error = ENXIO;
-		}
-		break;
-	    case NPRESET:
-		error = NpReset(mp,rp);
-		break;
-	    case NPSETNPDEB:
-		NpDebug = usrarg;
-		break;
-	    case NPINIT:
-		error = NpSWinit(mp->unit);
-		break;
-	    case NPSTART:
+    switch(cmd) {
+
+    case NPSETPROT:
+        if((error = NpProtChange(usrarg,mp->unit)) == 0)
+            npcnxtab[unit][conn].protocol = usrarg;
+        break;
+    case NPSETBOARD:
+        if(mp = NpBoardChange(protocol,usrarg))
+            npcnxtab[unit][conn].unit = mp;
+        else {
+            mp = npcnxtab[unit][conn].unit;
+            error = ENXIO;
+        }
+        break;
+    case NPRESET:
+        error = NpReset(mp,rp);
+        break;
+    case NPSETNPDEB:
+        NpDebug = usrarg;
+        break;
+    case NPINIT:
+        error = NpSWinit(mp->unit);
+        break;
+    case NPSTART:
 
 #ifdef OLDROM
-		/*
-		 * Kludge to work around I-Board boot from Host. Read two bytes
-		 * from the board into the Device Configuration Word
-		 * in Shared Memory.
-		 */
+        /*
+         * Kludge to work around I-Board boot from Host. Read two bytes
+         * from the board into the Device Configuration Word
+         * in Shared Memory.
+         */
 
-		NPIO(mp,(paddr_t)0x500,(paddr_t)(&mp->shmemp->statblock.sb_dcw),2,B_READ);
+        NPIO(mp,(paddr_t)0x500,(paddr_t)(&mp->shmemp->statblock.sb_dcw),2,B_READ);
 
-		mp->shmemp->statblock.sb_drw = 0;
+        mp->shmemp->statblock.sb_drw = 0;
 #endif
 
-		/* Set the Address at which to begin On-Board execution */
+        /* Set the Address at which to begin On-Board execution */
 
-		error = NpSetXeqAddr(mp,(caddr_t)usrarg);
-		break;
-	    case NPSTATS:
-		error = NpStats();
-		break;
-	    case NPGPANIC:
-		error = copyout((caddr_t)NpPbuf,*addr,PANLEN);
+        error = NpSetXeqAddr(mp,(caddr_t)usrarg);
+        break;
+    case NPSTATS:
+        error = NpStats();
+        break;
+    case NPGPANIC:
+        error = copyout((caddr_t)NpPbuf,*addr,PANLEN);
 
-		/* Clear panic request flag and leave */
+        /* Clear panic request flag and leave */
 
-		mp->flags &= ~PANICREQ;
-		break;
-	    case NPPOLL:
-		error = NpPoll(mp,*addr);
-		break;
-	    case NPKILL:
-		error = NpKill(mp,rp);
-		break;
-	    case NPSETADDR:
-		error = NpSetMemAddr(mp,*addr);
-		break;
-	    case NPRCSR0:
-		usrarg = RCSR0(mp->iobase);
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPRCSR1:
-		usrarg = RCSR1(mp->iobase);
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPRCSR2:
-		usrarg = RCSR2(mp->iobase);
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPRCSR3:
-		usrarg = RCSR3(mp->iobase);
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPWCSR0:
-		WCSR0(mp->iobase,usrarg);
-		break;
-	    case NPWCSR1:
-		WCSR1(mp->iobase,usrarg);
-		break;
-	    case NPWCSR2:
-		WCSR2(mp->iobase,usrarg);
-		break;
-	    case NPWCSR3:
-		WCSR3(mp->iobase,usrarg);
-		break;
-	    case NPNETBOOT:
-		error = NpSetIntLevel(mp,mp->vector);
-		if(error) break;
-		error = NpSetXeqAddr(mp,(caddr_t)INETBOOT);
-		break;
-	    case NPSETLAST:
-		if (usrarg)
-			mp->flags &= ~LSTCMD;
-		else
-			mp->flags |= LSTCMD;
-		break;
-	    case NPCLRICNT:
-		np_icount[unit] = NPCLEAR;
-		break;
-	    case NPGETICNT:
-		usrarg = np_icount[unit];
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPGETIVEC:
-		usrarg = mp->vector;
-		error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
-		break;
-	    case NPMAPMEM:
-		error = NpMem(mp, rp, *addr);
-		break;
-	    default:
-		printf("Bad Maintenance command: %d!\n",cmd);
-		error = EIO;
-		break;
-	}
-	if((cmd != NPRESET) && (cmd != NPINIT) && (cmd != NPMAPMEM))
-		NpFreeReq(mp->reqtab,rp);
+        mp->flags &= ~PANICREQ;
+        break;
+    case NPPOLL:
+        error = NpPoll(mp,*addr);
+        break;
+    case NPKILL:
+        error = NpKill(mp,rp);
+        break;
+    case NPSETADDR:
+        error = NpSetMemAddr(mp,*addr);
+        break;
+    case NPRCSR0:
+        usrarg = RCSR0(mp->iobase);
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPRCSR1:
+        usrarg = RCSR1(mp->iobase);
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPRCSR2:
+        usrarg = RCSR2(mp->iobase);
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPRCSR3:
+        usrarg = RCSR3(mp->iobase);
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPWCSR0:
+        WCSR0(mp->iobase,usrarg);
+        break;
+    case NPWCSR1:
+        WCSR1(mp->iobase,usrarg);
+        break;
+    case NPWCSR2:
+        WCSR2(mp->iobase,usrarg);
+        break;
+    case NPWCSR3:
+        WCSR3(mp->iobase,usrarg);
+        break;
+    case NPNETBOOT:
+        error = NpSetIntLevel(mp,mp->vector);
+        if(error) break;
+        error = NpSetXeqAddr(mp,(caddr_t)INETBOOT);
+        break;
+    case NPSETLAST:
+        if (usrarg)
+            mp->flags &= ~LSTCMD;
+        else
+            mp->flags |= LSTCMD;
+        break;
+    case NPCLRICNT:
+        np_icount[unit] = NPCLEAR;
+        break;
+    case NPGETICNT:
+        usrarg = np_icount[unit];
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPGETIVEC:
+        usrarg = mp->vector;
+        error = copyout((caddr_t)&usrarg,*addr,sizeof(usrarg));
+        break;
+    case NPMAPMEM:
+        error = NpMem(mp, rp, *addr);
+        break;
+    default:
+        printf("Bad Maintenance command: %d!\n",cmd);
+        error = EIO;
+        break;
+    }
+    if((cmd != NPRESET) && (cmd != NPINIT) && (cmd != NPMAPMEM))
+        NpFreeReq(mp->reqtab,rp);
 
-	if(NpDebug & DEBENTRY)
-		printf("npioctl...\n");
+    if(NpDebug & DEBENTRY)
+        printf("npioctl...\n");
 
-	return(error);
+    return(error);
 }
 
 /*
@@ -492,57 +492,57 @@ npstart(mp)
 register struct npmaster *mp;
 {
 
-	register struct uio 	*uio;
-	register struct buf	*bp;
-	register struct npreq	*rp;
+    register struct uio     *uio;
+    register struct buf *bp;
+    register struct npreq   *rp;
 
-	int error;			/* Return from NPIO call */
+    int error;          /* Return from NPIO call */
 
-	if(NpDebug & DEBENTRY)
-		printf("npstart\n");
+    if(NpDebug & DEBENTRY)
+        printf("npstart\n");
 
-	if((bp = np_tab[mp->unit].b_actf) == (struct buf *)0) {
-		np_tab[mp->unit].b_active = 0;
-		return;
-	}
-	if((rp = (struct npreq *)(bp->b_rp)) == (struct npreq *)0) {
-		bp->b_flags = B_ERROR;
-		iodone(bp);
-		return;
-	}
-	if ((uio = (struct uio *)bp->b_uio) == (struct uio *)0) {
-		bp->b_flags = B_ERROR;
-		iodone(bp);
-		return;
-	}
-	np_tab[mp->unit].b_active = 1;
+    if((bp = np_tab[mp->unit].b_actf) == (struct buf *)0) {
+        np_tab[mp->unit].b_active = 0;
+        return;
+    }
+    if((rp = (struct npreq *)(bp->b_rp)) == (struct npreq *)0) {
+        bp->b_flags = B_ERROR;
+        iodone(bp);
+        return;
+    }
+    if ((uio = (struct uio *)bp->b_uio) == (struct uio *)0) {
+        bp->b_flags = B_ERROR;
+        iodone(bp);
+        return;
+    }
+    np_tab[mp->unit].b_active = 1;
 
-	if(NpDebug & DEBIO)
-		printf("NP IO src %x dst = %x cnt = %x\n", bp->b_un.b_addr,
-			uio->uio_offset, bp->b_bcount);
+    if(NpDebug & DEBIO)
+        printf("NP IO src %x dst = %x cnt = %x\n", bp->b_un.b_addr,
+            uio->uio_offset, bp->b_bcount);
 
-	/* Send the request to the board via the CSR0 command interface */
+    /* Send the request to the board via the CSR0 command interface */
 
-	if(bp->b_flags & B_READ) 
-		error = NPIO(mp, (paddr_t)uio->uio_offset, (paddr_t)rp->bufaddr,
-	    		bp->b_bcount, (bp->b_flags & B_READ)); 
-	else
-		error = NPIO(mp, (paddr_t)rp->bufaddr, (paddr_t)uio->uio_offset,
-			bp->b_bcount, (bp->b_flags & B_READ)); 
-	
+    if(bp->b_flags & B_READ)
+        error = NPIO(mp, (paddr_t)uio->uio_offset, (paddr_t)rp->bufaddr,
+            bp->b_bcount, (bp->b_flags & B_READ));
+    else
+        error = NPIO(mp, (paddr_t)rp->bufaddr, (paddr_t)uio->uio_offset,
+            bp->b_bcount, (bp->b_flags & B_READ));
 
-	/* Check return from I/O */
 
-	if(error) {
-		bp->b_flags |= B_ERROR;
-		np_tab[mp->unit].b_actf = bp->av_forw;
-		if(NpDebug & DEBIO)
-			printf("NPIO return error: b_flags is %x \n",bp->b_flags);
-		iodone(bp);
-	}
+    /* Check return from I/O */
 
-	if(NpDebug & DEBENTRY)
-		printf("npstart...\n");
+    if(error) {
+        bp->b_flags |= B_ERROR;
+        np_tab[mp->unit].b_actf = bp->av_forw;
+        if(NpDebug & DEBIO)
+            printf("NPIO return error: b_flags is %x \n",bp->b_flags);
+        iodone(bp);
+    }
+
+    if(NpDebug & DEBENTRY)
+        printf("npstart...\n");
 
 }
 /*
@@ -553,96 +553,96 @@ npstrategy(bp)
 register struct buf *bp;
 {
 
-	register struct buf *ip;	/* quick pointer */
-	register struct npmaster *mp;	/* master structure for this device */
-	register struct npreq *rp;	/* reqest struct pointer */
-	int s;				/* priority to return to */
+    register struct buf *ip;        /* quick pointer */
+    register struct npmaster *mp;   /* master structure for this device */
+    register struct npreq *rp;      /* reqest struct pointer */
+    int s;                          /* priority to return to */
 
-	if(NpDebug & DEBENTRY)
-		printf("npstrategy\n");
-	if(NpDebug & DEBIO)
-		printf("flag = %x count = %x paddr = %x %x blkno = %x %x\n",
-		    bp->b_flags, bp->b_bcount, bp->b_un.b_addr, bp->b_un.b_addr,
-		    bp->b_blkno,bp->b_blkno);
+    if(NpDebug & DEBENTRY)
+        printf("npstrategy\n");
+    if(NpDebug & DEBIO)
+        printf("flag = %x count = %x paddr = %x %x blkno = %x %x\n",
+            bp->b_flags, bp->b_bcount, bp->b_un.b_addr, bp->b_un.b_addr,
+            bp->b_blkno,bp->b_blkno);
 
-	/* get master structure */
+    /* get master structure */
 
-	mp = npcnxtab[NPUNIT(bp->b_dev)][NPCONN(bp->b_dev)].unit;
+    mp = npcnxtab[NPUNIT(bp->b_dev)][NPCONN(bp->b_dev)].unit;
 
-	/* make sure the boards ok */
+    /* make sure the boards ok */
 
-	if (mp->flags & BADBOARD) {
-		bp->b_flags |= B_ERROR;
+    if (mp->flags & BADBOARD) {
+        bp->b_flags |= B_ERROR;
 
-		if(NpDebug & DEBMEM)
-			printf("Bad Board %x bp %x\n",mp->flags,bp->b_flags);
+        if(NpDebug & DEBMEM)
+            printf("Bad Board %x bp %x\n",mp->flags,bp->b_flags);
 
-		np_tab[mp->unit].b_actf = bp->av_forw;
-		iodone(bp);
-		return;
-	}
+        np_tab[mp->unit].b_actf = bp->av_forw;
+        iodone(bp);
+        return;
+    }
 
-	/* Initializations of request structure */
+    /* Initializations of request structure */
 
-	while((rp = NpGetReq(mp->reqtab)) == NULL) {
-		mp->reqtab->flags |= WANTREQ;
-		sleep((caddr_t)(mp->reqtab),PZERO -1);
-	}
+    while((rp = NpGetReq(mp->reqtab)) == NULL) {
+        mp->reqtab->flags |= WANTREQ;
+        sleep((caddr_t)(mp->reqtab),PZERO -1);
+    }
 
-	rp->bufoffset = 0;		/* This is the start of the buffer */
-	ip = &np_tab[mp->unit];
-	bp->b_rp = (struct buf *)rp;
+    rp->bufoffset = 0;      /* This is the start of the buffer */
+    ip = &np_tab[mp->unit];
+    bp->b_rp = (struct buf *)rp;
 
-	rp->flags |= KERNREQ;		/* Mark it as kernel so not to map */
+    rp->flags |= KERNREQ;       /* Mark it as kernel so not to map */
 
-	rp->mapbase = ubasetup(mp->devp->ui_ubanum,bp,0);
-	rp->bufaddr = (caddr_t)((int)(rp->mapbase) & UBADDRMASK);
+    rp->mapbase = ubasetup(mp->devp->ui_ubanum,bp,0);
+    rp->bufaddr = (caddr_t)((int)(rp->mapbase) & UBADDRMASK);
 
-	s = spl5();
-	if(ip->b_actf ==(struct buf *)0)
-		ip->b_actf = bp;
-	else {
-		if(ip->b_actf->av_forw)
-			printf("Panic NP100 bad buffer chain\n");
-		ip->b_actf->av_forw = bp;
-	}
-	ip->b_actl = bp;
+    s = spl5();
+    if(ip->b_actf ==(struct buf *)0)
+        ip->b_actf = bp;
+    else {
+        if(ip->b_actf->av_forw)
+            printf("Panic NP100 bad buffer chain\n");
+        ip->b_actf->av_forw = bp;
+    }
+    ip->b_actl = bp;
 
-	NpAddReq(mp->reqtab,rp);		/* Queue onto active list */
+    NpAddReq(mp->reqtab,rp);        /* Queue onto active list */
 
-	if(ip->b_active == 0) {
+    if(ip->b_active == 0) {
 
-		if(NpDebug & DEBIO)
-			printf("calling npstart %x\n",mp);
+        if(NpDebug & DEBIO)
+            printf("calling npstart %x\n",mp);
 
-		npstart(mp);
-	}
-	splx(s);
+        npstart(mp);
+    }
+    splx(s);
 
-	if(NpDebug & DEBIO)
-		printf("back from npstart\n");
+    if(NpDebug & DEBIO)
+        printf("back from npstart\n");
 
-	/* Await completion of I/O */
+    /* Await completion of I/O */
 
-	iowait(bp);
+    iowait(bp);
 
-	if(NpDebug & DEBIO)
-		printf("after iowait in npstrategy\n");
+    if(NpDebug & DEBIO)
+        printf("after iowait in npstrategy\n");
 
-	/* Remove request from queue */
+    /* Remove request from queue */
 
-	NpRemReq(rp);
+    NpRemReq(rp);
 
-	/* Release mapping registers */
+    /* Release mapping registers */
 
-	ubarelse(mp->devp->ui_ubanum,&rp->mapbase);
+    ubarelse(mp->devp->ui_ubanum,&rp->mapbase);
 
-	/* Free up request structure */
+    /* Free up request structure */
 
-	NpFreeReq(mp->reqtab,rp);
+    NpFreeReq(mp->reqtab,rp);
 
-	if(NpDebug & DEBENTRY)
-		printf("Leaving npstrategy flags is %x\n",bp->b_flags);
+    if(NpDebug & DEBENTRY)
+        printf("Leaving npstrategy flags is %x\n",bp->b_flags);
 }
 
 unsigned
@@ -650,8 +650,8 @@ nptrim(bp)
 register struct buf *bp;
 {
 
-	if(bp->b_bcount > NPMAXXFR)
-		bp->b_bcount = NPMAXXFR;
+    if(bp->b_bcount > NPMAXXFR)
+        bp->b_bcount = NPMAXXFR;
 }
 
 /*
@@ -661,14 +661,14 @@ npread(dev,uio)
 dev_t dev;
 struct uio *uio;
 {
-	struct buf *bp;
-	bp = &npcnxtab[NPUNIT(dev)][NPCONN(dev)].np_rbuf;
+    struct buf *bp;
+    bp = &npcnxtab[NPUNIT(dev)][NPCONN(dev)].np_rbuf;
 
-	if(NpDebug & DEBENTRY)
-		printf("in npread\n");
+    if(NpDebug & DEBENTRY)
+        printf("in npread\n");
 
-	bp->b_uio = (struct buf *)uio;
-	return(physio(npstrategy,bp,dev,B_READ ,nptrim,uio));
+    bp->b_uio = (struct buf *)uio;
+    return(physio(npstrategy,bp,dev,B_READ ,nptrim,uio));
 }
 
 /*
@@ -679,14 +679,14 @@ npwrite(dev,uio)
 dev_t dev;
 struct uio *uio;
 {
-	struct buf *bp;
-	bp = &npcnxtab[NPUNIT(dev)][NPCONN(dev)].np_wbuf;
+    struct buf *bp;
+    bp = &npcnxtab[NPUNIT(dev)][NPCONN(dev)].np_wbuf;
 
-	if(NpDebug & DEBENTRY)
-		printf("in npwrite \n");
+    if(NpDebug & DEBENTRY)
+        printf("in npwrite \n");
 
-	bp->b_uio = (struct buf *)uio;
-	return(physio(npstrategy,bp,dev,B_WRITE ,nptrim,uio));
+    bp->b_uio = (struct buf *)uio;
+    return(physio(npstrategy,bp,dev,B_WRITE ,nptrim,uio));
 }
 
 /*
@@ -697,32 +697,32 @@ npreset(uban)
 int uban;
 {
 
-	register struct npmaster *mp;
-	register struct npreq *rp;
-	register struct uba_device *ui;
-	int i;
+    register struct npmaster *mp;
+    register struct npreq *rp;
+    register struct uba_device *ui;
+    int i;
 
-	if(NpDebug & DEBENTRY)
-		printf("npreset(ubareset)\n");
-	for(i = 0; i < NNP; i++) {
+    if(NpDebug & DEBENTRY)
+        printf("npreset(ubareset)\n");
+    for(i = 0; i < NNP; i++) {
 
-		if(((ui = npdinfo[i]) == (struct uba_device *)NULL) ||
-			(ui->ui_ubanum != uban))
-			continue;
+        if(((ui = npdinfo[i]) == (struct uba_device *)NULL) ||
+            (ui->ui_ubanum != uban))
+            continue;
 
-		mp = &npmasters[i];
+        mp = &npmasters[i];
 
-		/* Get a Request structure */
+        /* Get a Request structure */
 
-		while((rp = NpGetReq(mp->reqtab)) == NULL) {
-			mp->reqtab->flags |= WANTREQ;
-			sleep((caddr_t)(mp->reqtab),PZERO -1);
-		}
+        while((rp = NpGetReq(mp->reqtab)) == NULL) {
+            mp->reqtab->flags |= WANTREQ;
+            sleep((caddr_t)(mp->reqtab),PZERO -1);
+        }
 
-		NpReset(mp,rp);
-	}
-	if(NpDebug & DEBENTRY)
-		printf("npreset(ubareset)...\n");
+        NpReset(mp,rp);
+    }
+    if(NpDebug & DEBENTRY)
+        printf("npreset(ubareset)...\n");
 }
 
 
@@ -734,77 +734,77 @@ int uban;
 
 NpPoll(mp,addr)
 struct npmaster *mp;
-caddr_t	addr;
+caddr_t addr;
 {
-	int error;
+    int error;
 
-	struct {
-		unsign16 request;
-		unsign16 unit;
-	}icpreq;
+    struct {
+        unsign16 request;
+        unsign16 unit;
+    }icpreq;
 
-	if(NpDebug & DEBMAINT)
-		printf("NpPoll: flags is %x.\n",mp->flags);
+    if(NpDebug & DEBMAINT)
+        printf("NpPoll: flags is %x.\n",mp->flags);
 
-	while(TRUE) {
+    while(TRUE) {
 
-		for(mp = npmasters; mp; mp = mp->next) {
+        for(mp = npmasters; mp; mp = mp->next) {
 
-			if(mp->flags & BOARDREQ) {
+            if(mp->flags & BOARDREQ) {
 
-				/* Get request type from master structure */
+                /* Get request type from master structure */
 
-				if(mp->flags & BRDRESET) {
-					icpreq.request = ICPPOLL;
-					mp->reqtab->reqcnt--;
+                if(mp->flags & BRDRESET) {
+                    icpreq.request = ICPPOLL;
+                    mp->reqtab->reqcnt--;
 
-					if(NpDebug & DEBMAINT)
-						printf("Waking NpResetter!\n");
+                    if(NpDebug & DEBMAINT)
+                        printf("Waking NpResetter!\n");
 
-					wakeup((caddr_t)(&mp->reqtab));
-				}
-				else if(mp->flags & PANICREQ)
-					icpreq.request = ICPPANIC;
-				else if(mp->flags & DUMPREQ)
-					icpreq.request = ICPDUMP;
-				else if(mp->flags & LOADREQ)
-					icpreq.request = ICPLOAD;
-				else {
-					mp->flags &= ~BOARDREQ;
-					continue;
-				}
+                    wakeup((caddr_t)(&mp->reqtab));
+                }
+                else if(mp->flags & PANICREQ)
+                    icpreq.request = ICPPANIC;
+                else if(mp->flags & DUMPREQ)
+                    icpreq.request = ICPDUMP;
+                else if(mp->flags & LOADREQ)
+                    icpreq.request = ICPLOAD;
+                else {
+                    mp->flags &= ~BOARDREQ;
+                    continue;
+                }
 
-				if(NpDebug & DEBMAINT)
-					printf("ProcICP servicing %d \n",icpreq.request );
+                if(NpDebug & DEBMAINT)
+                    printf("ProcICP servicing %d \n",icpreq.request );
 
-				/* Request and unit number to be sent */
+                /* Request and unit number to be sent */
 
-				icpreq.unit = mp->unit;
+                icpreq.unit = mp->unit;
 
-				/* Copy service request to calling process */
+                /* Copy service request to calling process */
 
-				error = copyout(&icpreq,addr,sizeof(icpreq));
+                error = copyout(&icpreq,addr,sizeof(icpreq));
 
-				/* Mark Poller as being unavailable */
+                /* Mark Poller as being unavailable */
 
-				NpState &= ~ICPAVAIL;
+                NpState &= ~ICPAVAIL;
 
-				return(error);
-			}
-		}
+                return(error);
+            }
+        }
 
-		/* Mark Poller as being available */
+        /* Mark Poller as being available */
 
-		NpState |= ICPAVAIL;
+        NpState |= ICPAVAIL;
 
-		if (error = tsleep((caddr_t)&NpState, (PZERO + 1) | PCATCH,
-		    devio, 0))
-			return (error);
+        if (error = tsleep((caddr_t)&NpState, (PZERO + 1) | PCATCH,
+            devio, 0))
+            return (error);
 
-		if(NpDebug & DEBMAINT)
-			printf("wakeup in NpPoll\n");
+        if(NpDebug & DEBMAINT)
+            printf("wakeup in NpPoll\n");
 
-	}
+    }
 }
 
 /*
@@ -815,154 +815,154 @@ NpSWinit(unit)
 int unit;
 {
 
-	register int j;
-	register struct npmaster *mp;
-	register struct npspace *npsp;
-	register struct CmdQue *cqp;
-	int offset;
+    register int j;
+    register struct npmaster *mp;
+    register struct npspace *npsp;
+    register struct CmdQue *cqp;
+    int offset;
 
-	if(NpDebug & DEBINIT)
-		printf("SW reset on unit %d.\n",unit);
+    if(NpDebug & DEBINIT)
+        printf("SW reset on unit %d.\n",unit);
 
-	np_icount[unit] = NPCLEAR;
-	np_mapreq[unit] = (struct npreq *) NPCLEAR;
+    np_icount[unit] = NPCLEAR;
+    np_mapreq[unit] = (struct npreq *) NPCLEAR;
 
-	/* Initialize master structure pointer for this unit */
+    /* Initialize master structure pointer for this unit */
 
-	mp = &npmasters[unit];
+    mp = &npmasters[unit];
 
-	/* Initialize unit buffer headers */
+    /* Initialize unit buffer headers */
 
-	np_tab[unit].b_active = 0;
-	np_tab[unit].b_actf = 0;
+    np_tab[unit].b_active = 0;
+    np_tab[unit].b_actf = 0;
 
-	/* UBA device structure for this unit */
+    /* UBA device structure for this unit */
 
-	mp->devp = npdinfo[unit];
+    mp->devp = npdinfo[unit];
 
-	/* Interrupt vector for this unit */
+    /* Interrupt vector for this unit */
 
-	mp->vector = npvectors[unit];
+    mp->vector = npvectors[unit];
 
-	if(unit == (NNP -1))
-		mp->next = (struct npmaster *)NULL;
-	else mp->next = &npmasters[unit + 1];
+    if(unit == (NNP -1))
+        mp->next = (struct npmaster *)NULL;
+    else mp->next = &npmasters[unit + 1];
 
-	/*
-	 * Guarantee alignment of shared memory area on a
-         * 16 byte boundary as required by I-Board
-	 */
+    /*
+     * Guarantee alignment of shared memory area on a
+     * 16 byte boundary as required by I-Board
+     */
 
-	mp->shmemp = &npspaces[unit];
-	mp->shmemp = (struct npspace *)ROUND16((int)(mp->shmemp));
+    mp->shmemp = &npspaces[unit];
+    mp->shmemp = (struct npspace *)ROUND16((int)(mp->shmemp));
 
-	/* Base address of this controller */
+    /* Base address of this controller */
 
-	mp->iobase = (struct NPREG *)(mp->devp->ui_addr);
+    mp->iobase = (struct NPREG *)(mp->devp->ui_addr);
 
-	if(NpDebug & DEBMEM) { 
-		printf("Npspaces starts at %x.\n",npspaces);
-		printf("Shared memory starts at %x.\n",mp->shmemp);
-		printf("End of shared memory is %x.\n",&npspaces[unit + 1]);
-		printf("Iobase is %x.\n",mp->iobase);
-		printf("Npmasters start at %x\n",npmasters);
-		printf("Reqhdr start at %x\n",reqhdr);
-		printf("Npreqs start at %x\n",npreqs);
- 	}
+    if(NpDebug & DEBMEM) {
+        printf("Npspaces starts at %x.\n",npspaces);
+        printf("Shared memory starts at %x.\n",mp->shmemp);
+        printf("End of shared memory is %x.\n",&npspaces[unit + 1]);
+        printf("Iobase is %x.\n",mp->iobase);
+        printf("Npmasters start at %x\n",npmasters);
+        printf("Reqhdr start at %x\n",reqhdr);
+        printf("Npreqs start at %x\n",npreqs);
+    }
 
-	/* Initialize the request header */
+    /* Initialize the request header */
 
-	mp->reqtab = &reqhdr[unit];
+    mp->reqtab = &reqhdr[unit];
 
-	/* Unit initialization */
+    /* Unit initialization */
 
-	mp->unit = unit;
+    mp->unit = unit;
 
-	/* Initialize Status Block */
+    /* Initialize Status Block */
 
-	npsp = mp->shmemp;
-	offset = (int) (mp->shmemp);
+    npsp = mp->shmemp;
+    offset = (int) (mp->shmemp);
 
-	npsp->statblock.sb_drw = 0;
-	npsp->statblock.sb_hcw = HOSTCONF;
-	npsp->statblock.sb_dcw = 0;
-	npsp->statblock.sb_dpm = 0;
+    npsp->statblock.sb_drw = 0;
+    npsp->statblock.sb_hcw = HOSTCONF;
+    npsp->statblock.sb_dcw = 0;
+    npsp->statblock.sb_dpm = 0;
 
-	npsp->statblock.sb_dcq = (unsign16)((int)(&npsp->devcq))-offset;
+    npsp->statblock.sb_dcq = (unsign16)((int)(&npsp->devcq))-offset;
 
-	npsp->statblock.sb_hcq = (unsign16)((int)(&npsp->hostcq))-offset;
+    npsp->statblock.sb_hcq = (unsign16)((int)(&npsp->hostcq))-offset;
 
-	/* Initialize Device Command Queue */
+    /* Initialize Device Command Queue */
 
-	cqp = (struct CmdQue *) &npsp->devcq;
+    cqp = (struct CmdQue *) &npsp->devcq;
 
-	if(NpDebug & DEBCQ) 
-		printf("Device CQ at %x\n",cqp);
+    if(NpDebug & DEBCQ)
+        printf("Device CQ at %x\n",cqp);
 
-	cqp->scanflag = NPCLEAR;
-	cqp->chngflag = NPCLEAR;
+    cqp->scanflag = NPCLEAR;
+    cqp->chngflag = NPCLEAR;
 
-	cqp->cq_add = (unsign16)(int)(&cqp->cq_cqe[0]) - offset;
-	cqp->cq_rem = cqp->cq_add;
+    cqp->cq_add = (unsign16)(int)(&cqp->cq_cqe[0]) - offset;
+    cqp->cq_rem = cqp->cq_add;
 
-	cqp->cq_wrap = (unsign16)(int)(&cqp->cq_cqe[NUMCQE]) - offset;
+    cqp->cq_wrap = (unsign16)(int)(&cqp->cq_cqe[NUMCQE]) - offset;
 
-	for(j = 0; j < NUMCQE; j++)
-		cqp->cq_cqe[j] = (unsign16)NULL;
+    for(j = 0; j < NUMCQE; j++)
+        cqp->cq_cqe[j] = (unsign16)NULL;
 
-	/* Initialize Host Command Queue */
+    /* Initialize Host Command Queue */
 
-	cqp = (struct CmdQue *) &npsp->hostcq;
+    cqp = (struct CmdQue *) &npsp->hostcq;
 
-	if(NpDebug & DEBCQ) 
-		printf("HOST CQ at %x\n",cqp);
+    if(NpDebug & DEBCQ)
+        printf("HOST CQ at %x\n",cqp);
 
-	cqp->scanflag = NPCLEAR;
-	cqp->chngflag = NPCLEAR;
+    cqp->scanflag = NPCLEAR;
+    cqp->chngflag = NPCLEAR;
 
-	cqp->cq_add = (unsign16)(int)(&cqp->cq_cqe[0]) - offset;
-	cqp->cq_rem = cqp->cq_add;
+    cqp->cq_add = (unsign16)(int)(&cqp->cq_cqe[0]) - offset;
+    cqp->cq_rem = cqp->cq_add;
 
-	cqp->cq_wrap = (unsign16)(int)(&cqp->cq_cqe[NUMCQE]) - offset;
+    cqp->cq_wrap = (unsign16)(int)(&cqp->cq_cqe[NUMCQE]) - offset;
 
-	for(j = 0; j < NUMCQE; j++)
-		cqp->cq_cqe[j] = (unsign16)NULL;
+    for(j = 0; j < NUMCQE; j++)
+        cqp->cq_cqe[j] = (unsign16)NULL;
 
-	/*
-	 * Initialize the reqid of the elements to the address
-	 * of the corresponding Npreq structure. These don't change.
- 	 */
+    /*
+     * Initialize the reqid of the elements to the address
+     * of the corresponding Npreq structure. These don't change.
+     */
 
-	for(j = 0; j < NUMCQE; j++)
-		npsp->elements[j].cqe_reqid = &npreqs[unit][j];
+    for(j = 0; j < NUMCQE; j++)
+        npsp->elements[j].cqe_reqid = &npreqs[unit][j];
 
-	/*
-	 * Initialize the Request Header (reqhdr), free list of
- 	 * npreqs, and pointers to CQEs.
- 	 */
+    /*
+     * Initialize the Request Header (reqhdr), free list of
+     * npreqs, and pointers to CQEs.
+     */
 
-	reqhdr[unit].forw = reqhdr[unit].back = &reqhdr[unit];
-	reqhdr[unit].free = &npreqs[unit][0];
+    reqhdr[unit].forw = reqhdr[unit].back = &reqhdr[unit];
+    reqhdr[unit].free = &npreqs[unit][0];
 
-	for(j = 0; j < NUMCQE; j++) {
-		npreqs[unit][j].free = &npreqs[unit][j + 1];
-		npreqs[unit][j].element = &npsp->elements[j];
-		npreqs[unit][j].forw = npreqs[unit][j].back = (struct npreq *)NULL;
-		npreqs[unit][j].flags = NPCLEAR;
-	}
-	npreqs[unit][--j].free = &reqhdr[unit];
+    for(j = 0; j < NUMCQE; j++) {
+        npreqs[unit][j].free = &npreqs[unit][j + 1];
+        npreqs[unit][j].element = &npsp->elements[j];
+        npreqs[unit][j].forw = npreqs[unit][j].back = (struct npreq *)NULL;
+        npreqs[unit][j].flags = NPCLEAR;
+    }
+    npreqs[unit][--j].free = &reqhdr[unit];
 
-	/*
-	 * Set up the UNIBUS I/O Map Registers for the
-	 * Shared memory area.
- 	 */
+    /*
+     * Set up the UNIBUS I/O Map Registers for the
+     * Shared memory area.
+     */
 
-	mp->iomapbase = uballoc(mp->devp->ui_ubanum,(caddr_t)(mp->shmemp),sizeof(struct npspace),0);
+    mp->iomapbase = uballoc(mp->devp->ui_ubanum,(caddr_t)(mp->shmemp),sizeof(struct npspace),0);
 
 
-	if(NpDebug & DEBENTRY)
-		printf("SW_Init...\n");
-	return(0);
+    if(NpDebug & DEBENTRY)
+        printf("SW_Init...\n");
+    return(0);
 }
 
 /*
@@ -974,80 +974,80 @@ int unit;
 NpHWinit(unit)
 int unit;
 {
-	register struct npmaster *mp;
-	struct NPREG *REG;
-	unsign16 status;
-	int dflag;
+    register struct npmaster *mp;
+    struct NPREG *REG;
+    unsign16 status;
+    int dflag;
 
-	if(unit >= NNP)
-		return(ENXIO);
+    if(unit >= NNP)
+        return(ENXIO);
 
-	mp = &npmasters[unit];
+    mp = &npmasters[unit];
 
-	if(NpDebug & DEBENTRY)
-		printf("NpHWinit\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpHWinit\n");
 
-	/* See if the board is out there */
+    /* See if the board is out there */
 
-	REG = (struct NPREG *)mp->iobase;
+    REG = (struct NPREG *)mp->iobase;
 
-	if(NpDebug & DEBINIT)
-		printf("REG in HWinit is %x.\n",mp->iobase);
+    if(NpDebug & DEBINIT)
+        printf("REG in HWinit is %x.\n",mp->iobase);
 
-	if(!(mp->flags & BRDRESET))
+    if(!(mp->flags & BRDRESET))
 
-		if(badaddr(REG,2)) {
-			mp->flags |= BADBOARD;
-			printf("\nNP100 unit %d not found!\n",unit);
-			return(ENXIO);
-		}
+        if(badaddr(REG,2)) {
+            mp->flags |= BADBOARD;
+            printf("\nNP100 unit %d not found!\n",unit);
+            return(ENXIO);
+        }
 
 
-	if(NpDebug & DEBENTRY)
-		printf("Resetting the NP100 Board at %x\n",mp->iobase);
+    if(NpDebug & DEBENTRY)
+        printf("Resetting the NP100 Board at %x\n",mp->iobase);
 
-	/* Reset the Board */
+    /* Reset the Board */
 
-	RESET(mp);
+    RESET(mp);
 
-	dflag = NPCLEAR;
+    dflag = NPCLEAR;
 
-	timeout(NpTimer,&dflag,DIAGTIME);
+    timeout(NpTimer,&dflag,DIAGTIME);
 
-	/* Wait for Enable and Read Data Ready to go high */
+    /* Wait for Enable and Read Data Ready to go high */
 
-	while(! ((RCSR1(mp->iobase) & NPENB) && (RCSR1(mp->iobase) & NPRDR))) {
-		if(dflag)
-			break;
+    while(! ((RCSR1(mp->iobase) & NPENB) && (RCSR1(mp->iobase) & NPRDR))) {
+        if(dflag)
+            break;
 
-	}
+    }
 
-	untimeout(NpTimer,&dflag);
+    untimeout(NpTimer,&dflag);
 
-	if(NpDebug & DEBINIT)
-		printf("np reset %d \n",dflag);
+    if(NpDebug & DEBINIT)
+        printf("np reset %d \n",dflag);
 
-	if(dflag) {
-		mp->flags |= BADBOARD;
-		printf("NP100 Unit %d timed out!\n",unit);
-		return(EIO);
-	}
+    if(dflag) {
+        mp->flags |= BADBOARD;
+        printf("NP100 Unit %d timed out!\n",unit);
+        return(EIO);
+    }
 
-	status = RCSR0(mp->iobase);
+    status = RCSR0(mp->iobase);
 
-	/* Check for Hardware OK */
+    /* Check for Hardware OK */
 
-	if(!(RCSR1(mp->iobase) & NPHOK)) {
-		mp->flags |= BADBOARD;
-		printf("NP100 Unit %d Failed diagnostics!\n",unit);
-		printf("Status from CSR0: %x.\n",status);
-		return(EIO);
-	}
+    if(!(RCSR1(mp->iobase) & NPHOK)) {
+        mp->flags |= BADBOARD;
+        printf("NP100 Unit %d Failed diagnostics!\n",unit);
+        printf("Status from CSR0: %x.\n",status);
+        return(EIO);
+    }
 
-	if(NpDebug & DEBENTRY)
-		printf("HWinit...\n");
+    if(NpDebug & DEBENTRY)
+        printf("HWinit...\n");
 
-	return(0);
+    return(0);
 }
 
 /*
@@ -1057,131 +1057,131 @@ int unit;
 npintr(unit)
 int unit;
 {
-	register struct npmaster *mp;
-	register struct buf	*bp;
+    register struct npmaster *mp;
+    register struct buf *bp;
 
-	if(NpDebug & DEBENTRY)
-		printf("npintr on unit %d!\n",unit);
+    if(NpDebug & DEBENTRY)
+        printf("npintr on unit %d!\n",unit);
 
-	mp = &npmasters[unit];
-	np_icount[unit]++;
+    mp = &npmasters[unit];
+    np_icount[unit]++;
 
-	if(NpDebug & DEBINTR)
-		printf("npintr mp->flags = %x  interupt count = %x\n",
-			mp->flags, np_icount[unit]);
+    if(NpDebug & DEBINTR)
+        printf("npintr mp->flags = %x  interupt count = %x\n",
+            mp->flags, np_icount[unit]);
 
-	/* Wake up anyone sleeping on a CSR0 Command */
+    /* Wake up anyone sleeping on a CSR0 Command */
 
-	if(mp->flags & CSRPEND) {
+    if(mp->flags & CSRPEND) {
 
-		mp->flags &= ~CSRPEND;
-		if(np_tab[mp->unit].b_active) {
-			np_tab[mp->unit].b_active = 0;
-			bp = np_tab[mp->unit].b_actf;
-			np_tab[mp->unit].b_actf = bp->av_forw;
+        mp->flags &= ~CSRPEND;
+        if(np_tab[mp->unit].b_active) {
+            np_tab[mp->unit].b_active = 0;
+            bp = np_tab[mp->unit].b_actf;
+            np_tab[mp->unit].b_actf = bp->av_forw;
 
-			if(NpDebug & DEBINTR)
-				printf("bp = %x resid = %d forw = %x\n",bp,
-				    bp->b_resid,bp->av_forw);
+            if(NpDebug & DEBINTR)
+                printf("bp = %x resid = %d forw = %x\n",bp,
+                    bp->b_resid,bp->av_forw);
 
-			bp->b_resid = 0;
-			iodone(bp);
-		}
-		if(mp->flags & PANIC3) {
-			mp->flags &= ~PANIC3;
-			mp->flags = AVAILABLE;
-			ubarelse(mp->devp->ui_ubanum,&panicmap);
-		}
-		if(mp->flags & PANIC2) {
-			mp->flags &= ~PANIC2;
-			printf("Panic Message: %s",NpPbuf);
-			mp->flags |= PANIC3;
-			NpPbuf[0] = 0;
-			NPIO(mp,(paddr_t)((int) panicmap & UBADDRMASK),(paddr_t)pstring,sizeof(NpPbuf),B_WRITE);
-		}
-		if(mp->flags & PANIC1) {
-			mp->flags &= ~PANIC1;
-			mp->flags |= PANIC2;
-			ubarelse(mp->devp->ui_ubanum,&panicmap);
-			panicmap = uballoc(mp->devp->ui_ubanum,(caddr_t)NpPbuf,sizeof(NpPbuf),0);
-			pstring = (caddr_t)((panaddr[1] << 4) + panaddr[0]);
-			NPIO(mp,(paddr_t)pstring,(paddr_t)((int) panicmap & UBADDRMASK),sizeof(NpPbuf),B_READ);
-		}
+            bp->b_resid = 0;
+            iodone(bp);
+        }
+        if(mp->flags & PANIC3) {
+            mp->flags &= ~PANIC3;
+            mp->flags = AVAILABLE;
+            ubarelse(mp->devp->ui_ubanum,&panicmap);
+        }
+        if(mp->flags & PANIC2) {
+            mp->flags &= ~PANIC2;
+            printf("Panic Message: %s",NpPbuf);
+            mp->flags |= PANIC3;
+            NpPbuf[0] = 0;
+            NPIO(mp,(paddr_t)((int) panicmap & UBADDRMASK),(paddr_t)pstring,sizeof(NpPbuf),B_WRITE);
+        }
+        if(mp->flags & PANIC1) {
+            mp->flags &= ~PANIC1;
+            mp->flags |= PANIC2;
+            ubarelse(mp->devp->ui_ubanum,&panicmap);
+            panicmap = uballoc(mp->devp->ui_ubanum,(caddr_t)NpPbuf,sizeof(NpPbuf),0);
+            pstring = (caddr_t)((panaddr[1] << 4) + panaddr[0]);
+            NPIO(mp,(paddr_t)pstring,(paddr_t)((int) panicmap & UBADDRMASK),sizeof(NpPbuf),B_READ);
+        }
 
-		wakeup((caddr_t)mp);
-		goto out;
-	}
+        wakeup((caddr_t)mp);
+        goto out;
+    }
 
-	/* Mark unit as being available if Device Protocol Mask set */
+    /* Mark unit as being available if Device Protocol Mask set */
 
-	if(!(mp->flags & AVAILABLE)) {
+    if(!(mp->flags & AVAILABLE)) {
 
-		if((mp->shmemp->statblock.sb_dpm) && (!(mp->flags & BRDRESET)))
+        if((mp->shmemp->statblock.sb_dpm) && (!(mp->flags & BRDRESET)))
 
-			mp->flags = AVAILABLE;
-	}
+            mp->flags = AVAILABLE;
+    }
 
-	/* Honor service requests from the device */
+    /* Honor service requests from the device */
 
-	switch(mp->shmemp->statblock.sb_drw) {
+    switch(mp->shmemp->statblock.sb_drw) {
 
-	    case NOREQ:
-		break;
+    case NOREQ:
+        break;
 
-	    case NPPANIC:
+    case NPPANIC:
 
-		printf("\nPanic from NP100 unit %d!\n",mp->unit);
-		mp->flags &= ~AVAILABLE;
-		mp->flags |= PANIC1;
+        printf("\nPanic from NP100 unit %d!\n",mp->unit);
+        mp->flags &= ~AVAILABLE;
+        mp->flags |= PANIC1;
 
-		/* Clear device request word */
+        /* Clear device request word */
 
-		mp->shmemp->statblock.sb_drw = 0;
+        mp->shmemp->statblock.sb_drw = 0;
 
-		panicmap = uballoc(mp->devp->ui_ubanum,(caddr_t)panaddr,sizeof(panaddr),0);
-		NPIO(mp,(paddr_t)NPPSADDR,(paddr_t)((int)panicmap & UBADDRMASK),sizeof(panaddr),B_READ);
-		goto out;
-		break;
+        panicmap = uballoc(mp->devp->ui_ubanum,(caddr_t)panaddr,sizeof(panaddr),0);
+        NPIO(mp,(paddr_t)NPPSADDR,(paddr_t)((int)panicmap & UBADDRMASK),sizeof(panaddr),B_READ);
+        goto out;
+        break;
 
-	    case NPDUMP:
-		mp->flags |= (DUMPREQ | BOARDREQ);
+    case NPDUMP:
+        mp->flags |= (DUMPREQ | BOARDREQ);
 
-		/* Clear device request word */
+        /* Clear device request word */
 
-		mp->shmemp->statblock.sb_drw = 0;
+        mp->shmemp->statblock.sb_drw = 0;
 
-		if(NpState & ICPAVAIL)
-			wakeup((caddr_t)&NpState);
-		break;
+        if(NpState & ICPAVAIL)
+            wakeup((caddr_t)&NpState);
+        break;
 
-	    case NPLOAD:
-		mp->flags |= (LOADREQ | BOARDREQ);
+    case NPLOAD:
+        mp->flags |= (LOADREQ | BOARDREQ);
 
-		/* Clear device request word */
+        /* Clear device request word */
 
-		mp->shmemp->statblock.sb_drw = 0;
+        mp->shmemp->statblock.sb_drw = 0;
 
-		if(NpState & ICPAVAIL)
-			wakeup((caddr_t)&NpState);
-		break;
+        if(NpState & ICPAVAIL)
+            wakeup((caddr_t)&NpState);
+        break;
 
-	    default:
-		printf("Bad Req: %x.\n",mp->shmemp->statblock.sb_drw);
-		goto out;
+    default:
+        printf("Bad Req: %x.\n",mp->shmemp->statblock.sb_drw);
+        goto out;
 
-	}
+    }
 
- 	/* Process the Host Command Queue for this device */
+    /* Process the Host Command Queue for this device */
 
-	NpProcQueue(mp);
+    NpProcQueue(mp);
 
 out:
-	CLEARINT(mp);	/* Clear the interrupt */
+    CLEARINT(mp);   /* Clear the interrupt */
 
-	if(NpDebug & DEBENTRY)
-		printf("npintr...\n");
+    if(NpDebug & DEBENTRY)
+        printf("npintr...\n");
 
-	return(1);	/* Interrupt serviced */
+    return(1);  /* Interrupt serviced */
 
 }
 
@@ -1193,158 +1193,158 @@ out:
 NpProcQueue(mp)
 struct npmaster *mp;
 {
-	register struct CmdQue *cqp;
-	register struct CQE *ep;
-	register struct npreq *rp;
-	register int base;
-	int s;
+    register struct CmdQue *cqp;
+    register struct CQE *ep;
+    register struct npreq *rp;
+    register int base;
+    int s;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpProcQueue\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpProcQueue\n");
 
-	cqp = &mp->shmemp->hostcq;	/* Command Queue pointer */
+    cqp = &mp->shmemp->hostcq;  /* Command Queue pointer */
 
-	s = spl5();
-	if(mp->flags & SCANNING) {
-		splx(s);
-            	return;
-	}
-	mp->flags |= SCANNING;
-	splx(s);
+    s = spl5();
+    if(mp->flags & SCANNING) {
+        splx(s);
+        return;
+    }
+    mp->flags |= SCANNING;
+    splx(s);
 
-	cqp->scanflag | = ON;
+    cqp->scanflag | = ON;
 
-	base = (int)mp->shmemp;		/* Shared memory base address */
+    base = (int)mp->shmemp;     /* Shared memory base address */
 
-	while(1) {
+    while(1) {
 
-	       	cqp->scanflag |= ON;
-		cqp->chngflag &= ~ON;
-		while(ep = NpRemCQE(cqp,base)) {
+        cqp->scanflag |= ON;
+        cqp->chngflag &= ~ON;
+        while(ep = NpRemCQE(cqp,base)) {
 
-			rp = ep->cqe_reqid;
+            rp = ep->cqe_reqid;
 
-			if(NpDebug & DEBCQE)
-				printf("cqe_sts is %x ep = %x\n",ep->cqe_sts,ep);
+            if(NpDebug & DEBCQE)
+                printf("cqe_sts is %x ep = %x\n",ep->cqe_sts,ep);
 
-			switch (ep->cqe_sts)  {
+            switch (ep->cqe_sts)  {
 
-			    case NPDONE:
-				rp->flags |= REQDONE;	/* Normal completion */
-				break;
-			    case NPIFC:			/* IFC Request */
-				rp->flags |= IOIFC;
-				break;
-			    case NPPERR:		/* Protocol Error */
-				rp->flags |= (NPPERR | REQDONE);
-				break;
-			    case NPMERR:		/* Memory allocation */
-				rp->flags |= (NPMERR | REQDONE);
-				break;
-			    default:			/* Error on Board */
-				rp->flags |= (IOERR | REQDONE);
-				break;
+            case NPDONE:
+                rp->flags |= REQDONE;   /* Normal completion */
+                break;
+            case NPIFC:                 /* IFC Request */
+                rp->flags |= IOIFC;
+                break;
+            case NPPERR:                /* Protocol Error */
+                rp->flags |= (NPPERR | REQDONE);
+                break;
+            case NPMERR:                /* Memory allocation */
+                rp->flags |= (NPMERR | REQDONE);
+                break;
+            default:                    /* Error on Board */
+                rp->flags |= (IOERR | REQDONE);
+                break;
 
-			}
+            }
 
-			if(NpDebug & DEBCQE) {
-				printf("flag is %x reqid = %x\n",rp->flags,ep->cqe_reqid);
-				printf("wakeup in procqueue\n");
-			}
+            if(NpDebug & DEBCQE) {
+                printf("flag is %x reqid = %x\n",rp->flags,ep->cqe_reqid);
+                printf("wakeup in procqueue\n");
+            }
 
-			if(rp->intr) {
+            if(rp->intr) {
 
-				if(NpDebug & DEBINTR)
-					printf("calling usr intr at %x\n",
-						rp->intr);
+                if(NpDebug & DEBINTR)
+                    printf("calling usr intr at %x\n",
+                        rp->intr);
 
-				/* Call interrupt routine */
+                /* Call interrupt routine */
 
-				(*rp->intr)(mp,rp);
-			}
-			else {
+                (*rp->intr)(mp,rp);
+            }
+            else {
 
-			if(NpDebug & DEBINTR)
-				printf("waking up %x\n",rp);
+            if(NpDebug & DEBINTR)
+                printf("waking up %x\n",rp);
 
-				/* if(rp->flags & NPUIO)
-					iodone(&rp->buf);
-				else	wakeup((caddr_t) (rp)); /* Awaken */
+                /* if(rp->flags & NPUIO)
+                    iodone(&rp->buf);
+                else    wakeup((caddr_t) (rp)); /* Awaken */
 
-				wakeup((caddr_t)(rp)); 	/* Awaken */
-			if(NpDebug & DEBINTR)
-				printf("AWAKE\n");
-			}
-		}
+                wakeup((caddr_t)(rp));  /* Awaken */
+            if(NpDebug & DEBINTR)
+                printf("AWAKE\n");
+            }
+        }
 
-		cqp->scanflag &= ~ON;
-		if(!(cqp->chngflag & ON))
-			break;
+        cqp->scanflag &= ~ON;
+        if(!(cqp->chngflag & ON))
+            break;
 
-	}
+    }
 
-	mp->flags &= ~SCANNING;
-	if(NpDebug & DEBENTRY)
-		printf("NpProcQueue...\n");
+    mp->flags &= ~SCANNING;
+    if(NpDebug & DEBENTRY)
+        printf("NpProcQueue...\n");
 }
 
 /*
- * NpIFC - processes an IFC (Internal Fuction Call) request 
- *		NOTE: this function must be called from the user context
- *			on all virtual pageing systems
+ * NpIFC - processes an IFC (Internal Fuction Call) request
+ *      NOTE: this function must be called from the user context
+ *          on all virtual pageing systems
  *
  */
 NpIFC(mp,rp)
 register struct npmaster *mp;
 register struct npreq *rp;
 {
-	register struct CQE	*ep;
+    register struct CQE *ep;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpIFC\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpIFC\n");
 
-	ep = rp->element;
-	rp->flags &= ~IOIFC;
-	switch(ep->cqe_func) {
+    ep = rp->element;
+    rp->flags &= ~IOIFC;
+    switch(ep->cqe_func) {
 
-	    case NPUNLOCK:	/* Unlock process, free up mapping registers  */
+    case NPUNLOCK:  /* Unlock process, free up mapping registers  */
 
-		if(NpDebug & DEBIFC)
-			printf("NPUNLOCK\n");
+        if(NpDebug & DEBIFC)
+            printf("NPUNLOCK\n");
 
-		if(rp->mapbase)
-			NpUnMapMem(mp,rp);
-		break;
+        if(rp->mapbase)
+            NpUnMapMem(mp,rp);
+        break;
 
-	    case NPLOCK:	/* Lock process, get mapping registers */
+    case NPLOCK:    /* Lock process, get mapping registers */
 
-		if(NpDebug & DEBIFC)
-			printf("NPLOCK\n");
-		NpMapMem(mp,rp,rp->virtmem,rp->bytecnt);
-		ep->cqe_dma[0] = LOWORD(rp->bufaddr);
-		ep->cqe_dma[1] = HIWORD(rp->bufaddr);
-		break;
+        if(NpDebug & DEBIFC)
+            printf("NPLOCK\n");
+        NpMapMem(mp,rp,rp->virtmem,rp->bytecnt);
+        ep->cqe_dma[0] = LOWORD(rp->bufaddr);
+        ep->cqe_dma[1] = HIWORD(rp->bufaddr);
+        break;
 
-	    case NPREMAP:
+    case NPREMAP:
 
-		if(NpDebug & DEBIFC)
-			printf("NPREMAP\n");
+        if(NpDebug & DEBIFC)
+            printf("NPREMAP\n");
 
-		/* Remap user buffer and update buffer offset */
+        /* Remap user buffer and update buffer offset */
 #ifdef USG
-		np_remapmem(rp,rp->virtmem); 
-		ep->cqe_dma[0] = LOWORD(rp->bufaddr);
-		ep->cqe_dma[1] = HIWORD(rp->bufaddr);
-		break;
+        np_remapmem(rp,rp->virtmem);
+        ep->cqe_dma[0] = LOWORD(rp->bufaddr);
+        ep->cqe_dma[1] = HIWORD(rp->bufaddr);
+        break;
 #endif
 
-	    default:
-		if(NpDebug & DEBIFC)
-			printf("Bad case %x in IFC\n", ep->cqe_func);
+    default:
+        if(NpDebug & DEBIFC)
+            printf("Bad case %x in IFC\n", ep->cqe_func);
 
-		rp->flags |= (REQDONE | IOERR);
-		break;
-	}
+        rp->flags |= (REQDONE | IOERR);
+        break;
+    }
 }
 
 /*
@@ -1363,16 +1363,16 @@ NpGetReq(head)
 struct npreq *head;
 {
 
-	register struct npreq *p;
+    register struct npreq *p;
 
-	p = head->free;
-	head->free = p->free;
-	if (p->flags & REQALOC)
-		printf("GetReq: Req %x already allocated\n", p);
-	p->flags &= WANTREQ;
-	if (p != head)
-		p->flags |= REQALOC;
-	return(p==head ? (struct npreq *)NULL : p);
+    p = head->free;
+    head->free = p->free;
+    if (p->flags & REQALOC)
+        printf("GetReq: Req %x already allocated\n", p);
+    p->flags &= WANTREQ;
+    if (p != head)
+        p->flags |= REQALOC;
+    return(p==head ? (struct npreq *)NULL : p);
 }
 
 /*
@@ -1382,39 +1382,39 @@ struct npreq *head;
 NpFreeReq(head,nprp)
 register struct npreq *head, *nprp;
 {
-	int s;
+    int s;
 
-	if(NpDebug & DEBREQ)
-		printf("NpFreeReq, head is %x rp is %x\n",head,nprp);
+    if(NpDebug & DEBREQ)
+        printf("NpFreeReq, head is %x rp is %x\n",head,nprp);
 
-	if (nprp == NULL) {
-		printf("FREEREQ: attempt to free null pointer\n");
-		return;
-	}
-	if (!(nprp->flags & REQALOC)) {
-		printf("FREEREQ: attempt to free unallocated request %x\n",
-			nprp);
-		return;
-	}
-	if (nprp->flags & REQUSE)
-		printf("FREEREQ: freeing unremoved request %x\n", nprp);
+    if (nprp == NULL) {
+        printf("FREEREQ: attempt to free null pointer\n");
+        return;
+    }
+    if (!(nprp->flags & REQALOC)) {
+        printf("FREEREQ: attempt to free unallocated request %x\n",
+            nprp);
+        return;
+    }
+    if (nprp->flags & REQUSE)
+        printf("FREEREQ: freeing unremoved request %x\n", nprp);
 
-	s = spl5();
-	nprp->forw = nprp->back = (struct npreq *)NULL;
-	nprp->free = head->free;
-	head->free = nprp;
-	nprp->flags &= ~REQALOC;
-	splx(s);
+    s = spl5();
+    nprp->forw = nprp->back = (struct npreq *)NULL;
+    nprp->free = head->free;
+    head->free = nprp;
+    nprp->flags &= ~REQALOC;
+    splx(s);
 
-	/* Wake up any processes waiting for a request structure */
+    /* Wake up any processes waiting for a request structure */
 
-	if(head->flags & WANTREQ) {
-		head->flags &= ~WANTREQ;
-		wakeup((caddr_t)head);
-	}
+    if(head->flags & WANTREQ) {
+        head->flags &= ~WANTREQ;
+        wakeup((caddr_t)head);
+    }
 
-	if(NpDebug & DEBENTRY)
-		printf("NpFreeReq...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpFreeReq...\n");
 }
 
 /*
@@ -1428,37 +1428,37 @@ struct CmdQue *cqp;
 struct npmaster *mp;
 {
 
-	register unsign16 *temp;
-	register unsign16 cqe_offset;
-	register int base;
+    register unsign16 *temp;
+    register unsign16 cqe_offset;
+    register int base;
 
-	base = (int)mp->shmemp;		/* Shared memory base address */
+    base = (int)mp->shmemp;     /* Shared memory base address */
 
-	temp = (unsign16 *)(base + cqp->cq_add); /* Offset to add element */
+    temp = (unsign16 *)(base + cqp->cq_add); /* Offset to add element */
 
-	cqe_offset = (unsign16)((int)ep - base);
+    cqe_offset = (unsign16)((int)ep - base);
 
-	if(*temp) {			/* Should never happen */
+    if(*temp) {         /* Should never happen */
 
-		printf("No more room on Command Queue!\n");
-		return;
-	}
-	else *temp = cqe_offset;	/* Enter this request's offset */
+        printf("No more room on Command Queue!\n");
+        return;
+    }
+    else *temp = cqe_offset;    /* Enter this request's offset */
 
-	/* Update cqe_add where next request is to be added */
+    /* Update cqe_add where next request is to be added */
 
-	cqp->cq_add += sizeof(unsign16);
+    cqp->cq_add += sizeof(unsign16);
 
-	if(cqp->cq_add == cqp->cq_wrap)	/* Wrap if necessary */
-		cqp->cq_add = (unsign16)((int)cqp->cq_cqe - base);
+    if(cqp->cq_add == cqp->cq_wrap) /* Wrap if necessary */
+        cqp->cq_add = (unsign16)((int)cqp->cq_cqe - base);
 
-	cqp->chngflag |= ON;		/* Set change flag unconditionally */
+    cqp->chngflag |= ON;        /* Set change flag unconditionally */
 
-	/* Interrupt the Board if his scan flag isn't on */
+    /* Interrupt the Board if his scan flag isn't on */
 
-	if(!(cqp->scanflag & ON))
+    if(!(cqp->scanflag & ON))
 
-		INTNI(mp);		/* Interrupt the Board */
+        INTNI(mp);      /* Interrupt the Board */
 
 }
 
@@ -1477,31 +1477,31 @@ struct CmdQue *cqp;
 int base;
 {
 
-	register unsign16 *temp;
-	register unsign16 cqe_offset;
+    register unsign16 *temp;
+    register unsign16 cqe_offset;
 
-	cqp->chngflag &= ~ON;			/* Turn off unconditionally */
+    cqp->chngflag &= ~ON;               /* Turn off unconditionally */
 
-	/* Get address of element to remove */
+    /* Get address of element to remove */
 
-	temp = (unsign16 *)(base +cqp->cq_rem);
+    temp = (unsign16 *)(base +cqp->cq_rem);
 
-	if(*temp == NULL)			/* If none left, go home */
-		return((struct CQE *) NULL);
+    if(*temp == NULL)                   /* If none left, go home */
+        return((struct CQE *) NULL);
 
-	else cqe_offset = *temp;		/* Offset of CQE to remove */
+    else cqe_offset = *temp;            /* Offset of CQE to remove */
 
-	/* Update the Command Queue's cqe_rem offset */
+    /* Update the Command Queue's cqe_rem offset */
 
-	*temp = NULL;				/* Clear out this entry */
+    *temp = NULL;                       /* Clear out this entry */
 
-	cqp->cq_rem += sizeof(unsign16);	/* Bump offset */
+    cqp->cq_rem += sizeof(unsign16);    /* Bump offset */
 
-	if(cqp->cq_rem == cqp->cq_wrap)		/* Wrap if necessary */
-		cqp->cq_rem = (unsign16)((int)cqp->cq_cqe - base);
+    if(cqp->cq_rem == cqp->cq_wrap)     /* Wrap if necessary */
+        cqp->cq_rem = (unsign16)((int)cqp->cq_cqe - base);
 
-	temp = (unsign16 *)(base + cqe_offset);	/* CQE address */
-	return((struct CQE *)temp);		/* is returned */
+    temp = (unsign16 *)(base + cqe_offset); /* CQE address */
+    return((struct CQE *)temp);         /* is returned */
 }
 
 /*
@@ -1512,24 +1512,24 @@ int base;
 NpAddReq(head,rp)
 register struct npreq *head, *rp;
 {
-	int s;
+    int s;
 
-	if (NpDebug & (DEBENTRY|DEBREQ))
-		printf("NpAddReq: %x\n",rp);
+    if (NpDebug & (DEBENTRY|DEBREQ))
+        printf("NpAddReq: %x\n",rp);
 
-	if (rp->flags & REQUSE)
-		printf("ADDREQ: Request %x allready in use\n", rp);
+    if (rp->flags & REQUSE)
+        printf("ADDREQ: Request %x allready in use\n", rp);
 
-	s = spl7();
-	rp->forw = head->forw;
-	rp->forw->back = rp;
-	rp->back = head;
-	head->forw = rp;
-	rp->flags |= REQUSE;
-	splx(s);
+    s = spl7();
+    rp->forw = head->forw;
+    rp->forw->back = rp;
+    rp->back = head;
+    head->forw = rp;
+    rp->flags |= REQUSE;
+    splx(s);
 
-	if(NpDebug & DEBENTRY)
-		printf("NpAddReq...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpAddReq...\n");
 }
 
 /*
@@ -1540,32 +1540,32 @@ register struct npreq *head, *rp;
 NpRemReq(rp)
 register struct npreq *rp;
 {
-	int s;
+    int s;
 
-	if (NpDebug & (DEBENTRY|DEBREQ))
-		printf("NpRemReq: %x\n",rp);
+    if (NpDebug & (DEBENTRY|DEBREQ))
+        printf("NpRemReq: %x\n",rp);
 
-	if (rp == NULL) {
-		printf("REMREQ: null pointer removal requested\n");
-		return;
-	}
-	if (!(rp->flags & REQUSE)) {
-		printf("REMREQ: trying to rem unused req %x\n", rp);
-		return;
-	}
-	if (!(rp->flags & REQALOC)) {
-		printf("REMREQ: trying to rem unallocated req %x\n", rp);
-		return;
-	}
-		
-	s = spl7();
-	rp->back->forw = rp->forw;
-	rp->forw->back = rp->back;
-	rp->flags &= ~REQUSE;
-	splx(s);
+    if (rp == NULL) {
+        printf("REMREQ: null pointer removal requested\n");
+        return;
+    }
+    if (!(rp->flags & REQUSE)) {
+        printf("REMREQ: trying to rem unused req %x\n", rp);
+        return;
+    }
+    if (!(rp->flags & REQALOC)) {
+        printf("REMREQ: trying to rem unallocated req %x\n", rp);
+        return;
+    }
 
-	if(NpDebug & DEBENTRY)
-		printf("NpRemReq...\n");
+    s = spl7();
+    rp->back->forw = rp->forw;
+    rp->forw->back = rp->back;
+    rp->flags &= ~REQUSE;
+    splx(s);
+
+    if(NpDebug & DEBENTRY)
+        printf("NpRemReq...\n");
 }
 
 
@@ -1584,47 +1584,47 @@ struct NPREG *iobase;
 register unsign16 *src;
 int bcount;
 {
-	register int wcount;
-	int i;
-	int csrflag;
-	unsign16 tmp;
+    register int wcount;
+    int i;
+    int csrflag;
+    unsign16 tmp;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSendCSR0\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpSendCSR0\n");
 
-	/* Jolt the board into CSR0 command mode if necessary */
+    /* Jolt the board into CSR0 command mode if necessary */
 
-	if(!(RCSR1(iobase) & NPENB)){   
-		tmp = NPCLEAR;		/* MC68000 clr reads before writing */
-		WCSR0(iobase,tmp); 	
-	}
+    if(!(RCSR1(iobase) & NPENB)){
+        tmp = NPCLEAR;      /* MC68000 clr reads before writing */
+        WCSR0(iobase,tmp);
+    }
 
-	wcount = (bcount +1) >> 1;	/* Convert byte count to word count */
+    wcount = (bcount +1) >> 1;  /* Convert byte count to word count */
 
-	/* Clear timer flag before beginning the timer */
+    /* Clear timer flag before beginning the timer */
 
-	csrflag = NPCLEAR;
-	timeout(NpTimer,&csrflag,DIAGTIME);
+    csrflag = NPCLEAR;
+    timeout(NpTimer,&csrflag,DIAGTIME);
 
-	for(i = 0; (i < wcount) & (csrflag == NPCLEAR); i++) {
-		while(! ((RCSR1(iobase) & NPENB) && (RCSR1(iobase) & NPRDY)))
-			if(csrflag) break;
-		WCSR0(iobase,*src);
-		src++;			/* Better do this WCSR is a macro */
-	}
+    for(i = 0; (i < wcount) & (csrflag == NPCLEAR); i++) {
+        while(! ((RCSR1(iobase) & NPENB) && (RCSR1(iobase) & NPRDY)))
+            if(csrflag) break;
+        WCSR0(iobase,*src);
+        src++;          /* Better do this WCSR is a macro */
+    }
 
-	/* Clear the timer entry */
+    /* Clear the timer entry */
 
-	untimeout(NpTimer,&csrflag);
+    untimeout(NpTimer,&csrflag);
 
-	/* Error if timer went off */
+    /* Error if timer went off */
 
-	if(csrflag)
-		return(EIO);	
+    if(csrflag)
+        return(EIO);
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSendCSR0...\n");
-	return(0);
+    if(NpDebug & DEBENTRY)
+        printf("NpSendCSR0...\n");
+    return(0);
 }
 
 /*
@@ -1637,15 +1637,15 @@ struct npmaster *mp;
 int level;
 {
 
-	struct {
-		unsign16 cmd_word;
-		unsign16 int_level;
-	}cmd_block;
+    struct {
+        unsign16 cmd_word;
+        unsign16 int_level;
+    }cmd_block;
 
-	cmd_block.cmd_word = NPCBI | CBICNT;
-	cmd_block.int_level = level;
+    cmd_block.cmd_word = NPCBI | CBICNT;
+    cmd_block.int_level = level;
 
-	return(NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block)));
+    return(NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block)));
 }
 
 /*
@@ -1660,33 +1660,33 @@ struct npmaster *mp;
 caddr_t addr;
 {
 
-	caddr_t shmaddr;
-	int error;
+    caddr_t shmaddr;
+    int error;
 
-	struct {
-		unsign16 cmd_word;
-		unsign16 hi_addr;
-		unsign16 lo_addr;
-	} cmd_block;
+    struct {
+        unsign16 cmd_word;
+        unsign16 hi_addr;
+        unsign16 lo_addr;
+    } cmd_block;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSetMemAddr\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpSetMemAddr\n");
 
-	shmaddr = addr;
+    shmaddr = addr;
 
-	if(NpDebug & DEBMEM)
-		printf("NpSetMemAddr, addr is %x shmaddr is %x.\n",addr,shmaddr);
+    if(NpDebug & DEBMEM)
+        printf("NpSetMemAddr, addr is %x shmaddr is %x.\n",addr,shmaddr);
 
-	cmd_block.cmd_word = NPCMD | CMDCNT;
-	cmd_block.hi_addr = HIWORD(shmaddr);
-	cmd_block.lo_addr = LOWORD(shmaddr);
+    cmd_block.cmd_word = NPCMD | CMDCNT;
+    cmd_block.hi_addr = HIWORD(shmaddr);
+    cmd_block.lo_addr = LOWORD(shmaddr);
 
-	error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
+    error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSetMemAddr...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpSetMemAddr...\n");
 
-	return(error);
+    return(error);
 }
 
 
@@ -1700,39 +1700,39 @@ NpSetXeqAddr(mp,addr)
 struct npmaster *mp;
 caddr_t addr;
 {
-	caddr_t shmaddr;
-	int error;
+    caddr_t shmaddr;
+    int error;
 
-	struct {
-		unsign16 cmd_word;
-		unsign16 hi_addr;
-		unsign16 lo_addr;
-		unsign16 mhi_addr;
-		unsign16 mlo_addr;
-	} cmd_block;
+    struct {
+        unsign16 cmd_word;
+        unsign16 hi_addr;
+        unsign16 lo_addr;
+        unsign16 mhi_addr;
+        unsign16 mlo_addr;
+    } cmd_block;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSetXeqAddr\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpSetXeqAddr\n");
 
-	shmaddr = (caddr_t)((int)mp->iomapbase & UBADDRMASK);
+    shmaddr = (caddr_t)((int)mp->iomapbase & UBADDRMASK);
 
-	cmd_block.cmd_word = NPBGN | NPCMD | NPLST | (BGNCNT + CMDCNT);
-	cmd_block.hi_addr = HIWORD(addr);
-	cmd_block.lo_addr = LOWORD(addr);
-	cmd_block.mhi_addr = HIWORD(shmaddr);
-	cmd_block.mlo_addr = LOWORD(shmaddr);
+    cmd_block.cmd_word = NPBGN | NPCMD | NPLST | (BGNCNT + CMDCNT);
+    cmd_block.hi_addr = HIWORD(addr);
+    cmd_block.lo_addr = LOWORD(addr);
+    cmd_block.mhi_addr = HIWORD(shmaddr);
+    cmd_block.mlo_addr = LOWORD(shmaddr);
 
-	if(NpDebug & DEBINIT) {
-		printf("NpSetXeqAdddr: hi: %x lo: %x\n",HIWORD(addr), LOWORD(addr));
-		printf("NpSetXeqAdddr: mhi: %x mlo: %x\n",HIWORD(shmaddr),LOWORD(shmaddr));
-	}
+    if(NpDebug & DEBINIT) {
+        printf("NpSetXeqAdddr: hi: %x lo: %x\n",HIWORD(addr), LOWORD(addr));
+        printf("NpSetXeqAdddr: mhi: %x mlo: %x\n",HIWORD(shmaddr),LOWORD(shmaddr));
+    }
 
-	error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
+    error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
 
-	if(NpDebug & DEBENTRY)
-		printf("NpSetXeqAddr...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpSetXeqAddr...\n");
 
-	return(error);
+    return(error);
 }
 
 /*
@@ -1745,56 +1745,56 @@ struct npmaster *mp;
 paddr_t dest;
 paddr_t src;
 unsign16 count;
-int dir;		/* Direction  READ/WRITE */
+int dir;        /* Direction  READ/WRITE */
 {
 
-	int error;
+    int error;
 
-	struct {
-		unsign16 cmd_word;	/* Command Word */
-		unsign16 shi_addr;	/* High word of Source Address */
-		unsign16 slo_addr;	/* Low word of Source Address */
-		unsign16 dhi_addr;	/* High word of Destination Address */
-		unsign16 dlo_addr;	/* Low word of Destination Address */
-		unsign16 count;		/* Byte count */
-		unsign16 intlevel;	/* Interrupt level to host */
-	} cmd_block;
+    struct {
+        unsign16 cmd_word;  /* Command Word */
+        unsign16 shi_addr;  /* High word of Source Address */
+        unsign16 slo_addr;  /* Low word of Source Address */
+        unsign16 dhi_addr;  /* High word of Destination Address */
+        unsign16 dlo_addr;  /* Low word of Destination Address */
+        unsign16 count;     /* Byte count */
+        unsign16 intlevel;  /* Interrupt level to host */
+    } cmd_block;
 
-	if(NpDebug & DEBENTRY)
-		printf("NPIO\n");
-	if(NpDebug & DEBMAINT) {
-		printf("I/O src addr = %x, dest addr = %x \n",src,dest);
-		printf("I/O count = %d \n",count);
-	}
+    if(NpDebug & DEBENTRY)
+        printf("NPIO\n");
+    if(NpDebug & DEBMAINT) {
+        printf("I/O src addr = %x, dest addr = %x \n",src,dest);
+        printf("I/O count = %d \n",count);
+    }
 
-	cmd_block.cmd_word = NPCBI | (CBICNT + IOCNT);
-	cmd_block.intlevel = mp->vector;
-	cmd_block.shi_addr = HIWORD(src);
-	cmd_block.slo_addr = LOWORD(src);
-	cmd_block.dhi_addr = HIWORD(dest);
-	cmd_block.dlo_addr = LOWORD(dest);
-	cmd_block.count = count;
-	if ((mp->flags & LSTCMD) == 0)
-		cmd_block.cmd_word |= NPLST;
-	if(dir == B_READ)
-		cmd_block.cmd_word |= NPDMP;
-	else
-		cmd_block.cmd_word |= NPLD;
+    cmd_block.cmd_word = NPCBI | (CBICNT + IOCNT);
+    cmd_block.intlevel = mp->vector;
+    cmd_block.shi_addr = HIWORD(src);
+    cmd_block.slo_addr = LOWORD(src);
+    cmd_block.dhi_addr = HIWORD(dest);
+    cmd_block.dlo_addr = LOWORD(dest);
+    cmd_block.count = count;
+    if ((mp->flags & LSTCMD) == 0)
+        cmd_block.cmd_word |= NPLST;
+    if(dir == B_READ)
+        cmd_block.cmd_word |= NPDMP;
+    else
+        cmd_block.cmd_word |= NPLD;
 
 
-	if(NpDebug & DEBIO) {
-		printf("cmd: %x int: %o shi: %x slo: %x dhi: %x dlo: %x cnt: %x\n",
-	cmd_block.cmd_word,cmd_block.intlevel,cmd_block.shi_addr,cmd_block.slo_addr,
-	cmd_block.dhi_addr,cmd_block.dlo_addr,cmd_block.count);
-	}
-	
-	mp->flags |= CSRPEND;		/* CSR0 command pending */
+    if(NpDebug & DEBIO) {
+        printf("cmd: %x int: %o shi: %x slo: %x dhi: %x dlo: %x cnt: %x\n",
+    cmd_block.cmd_word,cmd_block.intlevel,cmd_block.shi_addr,cmd_block.slo_addr,
+    cmd_block.dhi_addr,cmd_block.dlo_addr,cmd_block.count);
+    }
 
-	error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
-	if(NpDebug & DEBENTRY)
-		printf("NPIO...\n");
+    mp->flags |= CSRPEND;       /* CSR0 command pending */
 
-	return(error);
+    error = NpSendCSR0(mp->iobase,(unsign16 *)&cmd_block,(int)sizeof(cmd_block));
+    if(NpDebug & DEBENTRY)
+        printf("NPIO...\n");
+
+    return(error);
 }
 
 
@@ -1806,39 +1806,39 @@ NpKill(mp,curr_rp)
 struct npmaster *mp;
 struct npreq *curr_rp;
 {
-	struct npreq *rp;
-	int s;
+    struct npreq *rp;
+    int s;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpKill\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpKill\n");
 
-	mp->reqtab->reqcnt = 0;		/* Init request count */
+    mp->reqtab->reqcnt = 0;     /* Init request count */
 
-	s = spl5();			/* Disable interrupts */
+    s = spl5();         /* Disable interrupts */
 
-	/* Mark each active request as having an error and wake him up */
+    /* Mark each active request as having an error and wake him up */
 
-	for(rp = mp->reqtab->forw;rp != mp->reqtab;rp = rp->forw) {
+    for(rp = mp->reqtab->forw;rp != mp->reqtab;rp = rp->forw) {
 
-		if(rp == curr_rp) continue;
+        if(rp == curr_rp) continue;
 
-		rp->flags |= (IOABORT | REQDONE);
-		mp->reqtab->reqcnt++;
-		/* if(rp->flags & NPUIO)
-			iodone(&rp->buf);
-		else */
-		wakeup((caddr_t)rp);
-	}
+        rp->flags |= (IOABORT | REQDONE);
+        mp->reqtab->reqcnt++;
+        /* if(rp->flags & NPUIO)
+            iodone(&rp->buf);
+        else */
+        wakeup((caddr_t)rp);
+    }
 
-	if(NpDebug & DEBMAINT)
-		printf("NpKill, req count is %d\n",mp->reqtab->reqcnt);
+    if(NpDebug & DEBMAINT)
+        printf("NpKill, req count is %d\n",mp->reqtab->reqcnt);
 
-	splx(s);
+    splx(s);
 
-	if(NpDebug & DEBENTRY)
-		printf("NpKill...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpKill...\n");
 
-	return(0);
+    return(0);
 
 }
 
@@ -1848,91 +1848,91 @@ NpReset(mp,rp)
 register struct npmaster *mp;
 struct npreq *rp;
 {
-	int error;
+    int error;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpReset!\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpReset!\n");
 
-	/* Mark board as being reset and make unavailable */
+    /* Mark board as being reset and make unavailable */
 
-	mp->flags = BRDRESET;
+    mp->flags = BRDRESET;
 
-	/* Abort outstanding requests for this board */
+    /* Abort outstanding requests for this board */
 
-	mp->reqtab->reqcnt = 0;		/* Init request count */
+    mp->reqtab->reqcnt = 0;     /* Init request count */
 
-	/* Wakeup Poller if available and wait until he's gone */
+    /* Wakeup Poller if available and wait until he's gone */
 
-	if(NpState & ICPAVAIL) {
+    if(NpState & ICPAVAIL) {
 
-		mp->flags |= BOARDREQ;
-		mp->reqtab->reqcnt++;
+        mp->flags |= BOARDREQ;
+        mp->reqtab->reqcnt++;
 
-		if(NpDebug & DEBMAINT)
-			printf("Waking ICP in reset!\n");
+        if(NpDebug & DEBMAINT)
+            printf("Waking ICP in reset!\n");
 
-		wakeup((caddr_t)&NpState);
+        wakeup((caddr_t)&NpState);
 
-		while(mp->reqtab->reqcnt)
-			if (error = tsleep((caddr_t)(&mp->reqtab),
-			    (PZERO + 1) | PCATCH, devio, 0))
-				return (error);
+        while(mp->reqtab->reqcnt)
+            if (error = tsleep((caddr_t)(&mp->reqtab),
+                (PZERO + 1) | PCATCH, devio, 0))
+                return (error);
 
-		if(NpDebug & DEBMAINT)
-			printf("Reset:awoken by ICP senior!\n");
+        if(NpDebug & DEBMAINT)
+            printf("Reset:awoken by ICP senior!\n");
 
-	}
+    }
 
-	/* Abort outstanding requests and wait till they're gone */
+    /* Abort outstanding requests and wait till they're gone */
 
-	NpKill(mp,rp);
+    NpKill(mp,rp);
 
-	while(mp->reqtab->reqcnt) {
+    while(mp->reqtab->reqcnt) {
 
-		if(NpDebug & DEBMAINT) {
-			printf("Sleeping in NpReset on reqtab!\n");
-			printf("Reqcnt is %d.\n",mp->reqtab->reqcnt);
-		}
+        if(NpDebug & DEBMAINT) {
+            printf("Sleeping in NpReset on reqtab!\n");
+            printf("Reqcnt is %d.\n",mp->reqtab->reqcnt);
+        }
 
-		if (error = tsleep((caddr_t)(&mp->reqtab),
-		    (PZERO + 1) | PCATCH, devio, 0))
-			return (error);
-	}
+        if (error = tsleep((caddr_t)(&mp->reqtab),
+            (PZERO + 1) | PCATCH, devio, 0))
+            return (error);
+    }
 
-	/* Free up I/O Map registers if any allocated */
+    /* Free up I/O Map registers if any allocated */
 
-	if(mp->iomapbase) {
+    if(mp->iomapbase) {
 
-		if(NpDebug & DEBMEM)
-			printf("freeing shared memory map.\n");
+        if(NpDebug & DEBMEM)
+            printf("freeing shared memory map.\n");
 
-		ubarelse(mp->devp->ui_ubanum,&mp->iomapbase);
-		mp->iomapbase = 0;
-	}
+        ubarelse(mp->devp->ui_ubanum,&mp->iomapbase);
+        mp->iomapbase = 0;
+    }
 
-	/* Initialize S/W data structures in NP Driver */
+    /* Initialize S/W data structures in NP Driver */
 
-	NpSWinit(mp->unit);		/* Software initialization */
+    NpSWinit(mp->unit);         /* Software initialization */
 
-	/* Hardware initialization of the board */
+    /* Hardware initialization of the board */
 
-	error = NpHWinit(mp->unit);	/* Hardware initialization */
+    error = NpHWinit(mp->unit); /* Hardware initialization */
 
-	mp->flags &= ~BRDRESET;		/* Initialization complete */
+    mp->flags &= ~BRDRESET;     /* Initialization complete */
 
-	/* Initialize Pseudo-Drivers */
+    /* Initialize Pseudo-Drivers */
 
-	if (IxReset)
-		(*IxReset)(mp->unit, mp->devp->ui_ubanum, rp);
+    if (IxReset)
+        (*IxReset)(mp->unit, mp->devp->ui_ubanum, rp);
 
-	/* Clear Poller's State Flag */
+    /* Clear Poller's State Flag */
 
-	NpState = NPCLEAR;
+    NpState = NPCLEAR;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpReset...\n");
-	
-	return(error);
+    if(NpDebug & DEBENTRY)
+        printf("NpReset...\n");
+
+    return(error);
 }
 
 /*
@@ -1943,14 +1943,14 @@ struct npreq *rp;
 NpTimer(flagp)
 int *flagp;
 {
-	*flagp = NPSET;
+    *flagp = NPSET;
 }
 
 NpStats()
 {
-	if(NpDebug & DEBENTRY)
-		printf("npstats\n");
-	return(0);
+    if(NpDebug & DEBENTRY)
+        printf("npstats\n");
+    return(0);
 }
 
 /*
@@ -1962,68 +1962,68 @@ struct npmaster *mp;
 unsign16 protocol;
 {
 
-	register struct npreq *rp;
-	register struct CQE *ep;
-	int pri;
+    register struct npreq *rp;
+    register struct CQE *ep;
+    int pri;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpCloseConn\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpCloseConn\n");
 
-	/*
-	 * Don't issue the Close Connection command if the Board
-         * isn't up.
-         */
+    /*
+     * Don't issue the Close Connection command if the Board
+     * isn't up.
+     */
 
-	if(!((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol))) {
-		return;
-	}
+    if(!((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol))) {
+        return;
+    }
 
-	/* Get a Request structure */
+    /* Get a Request structure */
 
-	while((rp = NpGetReq(mp->reqtab)) == NULL) {
-		mp->reqtab->flags |= WANTREQ;
-		sleep((caddr_t)(mp->reqtab),PZERO -1);
-	}
+    while((rp = NpGetReq(mp->reqtab)) == NULL) {
+        mp->reqtab->flags |= WANTREQ;
+        sleep((caddr_t)(mp->reqtab),PZERO -1);
+    }
 
-	rp->intr = (int (*)())0;	/* Do not call interrupt routine */
-	rp->mapbase = 0;		/* Clear mapping information */
+    rp->intr = (int (*)())0;    /* Do not call interrupt routine */
+    rp->mapbase = 0;            /* Clear mapping information */
 
-	ep = rp->element;		/* Handy pointer */
+    ep = rp->element;           /* Handy pointer */
 
-	/* Fill in CQE */
+    /* Fill in CQE */
 
-	ep->cqe_wind = 0;		/* Entire buffer mapped */
-	ep->cqe_nbuf = 1;		/* Must be 1, no buffer chaining */
-	ep->cqe_char = 0;		/* Set to 0 for now */
+    ep->cqe_wind = 0;           /* Entire buffer mapped */
+    ep->cqe_nbuf = 1;           /* Must be 1, no buffer chaining */
+    ep->cqe_char = 0;           /* Set to 0 for now */
 
-	ep->cqe_func = NPSTOP;		/* OS_STP to I-Board */
+    ep->cqe_func = NPSTOP;      /* OS_STP to I-Board */
 
-	ep->cqe_prot = protocol;	/* Protocol of this connection */
-	ep->cqe_lenrpb = 0;		/* Parameter block length */
+    ep->cqe_prot = protocol;    /* Protocol of this connection */
+    ep->cqe_lenrpb = 0;         /* Parameter block length */
 
-	ep->cqe_ust0 = ep->cqe_ust1 = NPCLEAR;	/* Clear status flags */
+    ep->cqe_ust0 = ep->cqe_ust1 = NPCLEAR;  /* Clear status flags */
 
-	ep->cqe_famid = (unsign32)u.u_procp->p_pid;  /* Process ID */
+    ep->cqe_famid = (unsign32)u.u_procp->p_pid;  /* Process ID */
 
-	NpAddReq(mp->reqtab,rp);	/* Queue onto active list */
+    NpAddReq(mp->reqtab,rp);    /* Queue onto active list */
 
-	pri = spl5();			/* Mask our interrupts */
+    pri = spl5();               /* Mask our interrupts */
 
-	NpAddCQE(ep,&mp->shmemp->devcq,mp); /* Add CQE to device's queue */
+    NpAddCQE(ep,&mp->shmemp->devcq,mp); /* Add CQE to device's queue */
 
-	/* Wait for command to complete */
+    /* Wait for command to complete */
 
-	while(!(rp->flags & REQDONE)) 
-		sleep((caddr_t)rp,PZERO - 1);
+    while(!(rp->flags & REQDONE))
+        sleep((caddr_t)rp,PZERO - 1);
 
-	splx(pri);
+    splx(pri);
 
-	NpRemReq(rp);			/* Remove request from active list */
+    NpRemReq(rp);               /* Remove request from active list */
 
-	NpFreeReq(mp->reqtab,rp);	/* Deallocate request structure */
+    NpFreeReq(mp->reqtab,rp);   /* Deallocate request structure */
 
-	if(NpDebug & DEBENTRY)
-		printf("NpCloseConn...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpCloseConn...\n");
 
 }
 
@@ -2037,27 +2037,27 @@ register unsign16 protocol;
 register int unit;
 {
 
-	register struct npmaster *mp;
+    register struct npmaster *mp;
 
-	/* Privileged users only for Maintenance Protocol */
+    /* Privileged users only for Maintenance Protocol */
 
-	if((protocol == NPMAINT) && (u.u_uid != 0)) 
-		return(EPERM);
+    if((protocol == NPMAINT) && (u.u_uid != 0))
+        return(EPERM);
 
-	if(NpDebug & DEBMAINT)
-		printf("NpProtChange = %x\n",protocol);
+    if(NpDebug & DEBMAINT)
+        printf("NpProtChange = %x\n",protocol);
 
-	if(protocol != NPMAINT) {
+    if(protocol != NPMAINT) {
 
-		/* Make sure the I-Board supports the protocol */
+        /* Make sure the I-Board supports the protocol */
 
-		mp = &npmasters[unit];
+        mp = &npmasters[unit];
 
-		if(!((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol)))
-			return(ENXIO);
-	}
+        if(!((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol)))
+            return(ENXIO);
+    }
 
-	return(0);
+    return(0);
 }
 
 /*
@@ -2067,32 +2067,32 @@ register int unit;
 struct npmaster *
 NpBoardChange(protocol,unit)
 register unsign16 protocol;
-register int unit;			/* Unit number */
+register int unit;          /* Unit number */
 {
-	register struct npmaster *mp;
+    register struct npmaster *mp;
 
 
-	if(unit > NNP)
-		return((struct npmaster *)0);
+    if(unit > NNP)
+        return((struct npmaster *)0);
 
-	if(protocol != NPMAINT) {
+    if(protocol != NPMAINT) {
 
-		/*
-		 * Loop through the master structures finding a board which 
-		 * supports the requested protocol.
-		 */
+        /*
+         * Loop through the master structures finding a board which
+         * supports the requested protocol.
+         */
 
-		for(mp = npmasters; mp ; mp = mp->next) {
+        for(mp = npmasters; mp ; mp = mp->next) {
 
-			if(mp->flags & BADBOARD)
-				continue;
+            if(mp->flags & BADBOARD)
+                continue;
 
-			if(((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol)))
-				return(mp);
-		}
-		return((struct npmaster *)0);
-	}
-	return(&npmasters[unit]);
+            if(((mp->shmemp->statblock.sb_dpm) & PROTOMASK(protocol)))
+                return(mp);
+        }
+        return((struct npmaster *)0);
+    }
+    return(&npmasters[unit]);
 }
 
 /*
@@ -2102,56 +2102,56 @@ register int unit;			/* Unit number */
 NpMapMem(mp,rp,addr,count)
 register struct npmaster *mp;
 register struct npreq *rp;
-caddr_t	addr;
-int	count;
+caddr_t addr;
+int count;
 {
 
-	if(NpDebug & DEBENTRY)
-		printf("NpMapMem\n");
-	if(NpDebug & DEBIO)
-		printf("mp %x rp %x addr %x count %x\n",mp,rp,addr,count);
+    if(NpDebug & DEBENTRY)
+        printf("NpMapMem\n");
+    if(NpDebug & DEBIO)
+        printf("mp %x rp %x addr %x count %x\n",mp,rp,addr,count);
 
-	rp->virtmem = addr;
-	rp->bytecnt = count;
+    rp->virtmem = addr;
+    rp->bytecnt = count;
 
-	rp->buf.b_un.b_addr = addr;
-	rp->buf.b_flags = B_PHYS | B_BUSY;
-	rp->buf.b_bcount = count;
-	rp->buf.b_proc = rp->procp;
-		
-	rp->procp->p_flag |= P_PHYSIO;
-	if(NpDebug & DEBENTRY)
-		printf("vslock\n");
-	vslock(addr,count);
-	if(NpDebug & DEBENTRY)
-		printf("vslock...\n");
+    rp->buf.b_un.b_addr = addr;
+    rp->buf.b_flags = B_PHYS | B_BUSY;
+    rp->buf.b_bcount = count;
+    rp->buf.b_proc = rp->procp;
 
-	rp->mapbase = ubasetup(mp->devp->ui_ubanum,&rp->buf,0);
+    rp->procp->p_flag |= P_PHYSIO;
+    if(NpDebug & DEBENTRY)
+        printf("vslock\n");
+    vslock(addr,count);
+    if(NpDebug & DEBENTRY)
+        printf("vslock...\n");
 
-	rp->bufaddr = (caddr_t)(rp->mapbase & UBADDRMASK);
+    rp->mapbase = ubasetup(mp->devp->ui_ubanum,&rp->buf,0);
 
-	if(NpDebug & DEBENTRY)
-		printf("NpMapMem...\n");
+    rp->bufaddr = (caddr_t)(rp->mapbase & UBADDRMASK);
+
+    if(NpDebug & DEBENTRY)
+        printf("NpMapMem...\n");
 }
 
 /*
- * Unmap the user's memory and free up mapping registers 
+ * Unmap the user's memory and free up mapping registers
  */
 
 NpUnMapMem(mp,rp)
 struct npmaster *mp;
 struct npreq *rp;
 {
-	if(NpDebug & DEBENTRY)
-		printf("NpUnMapMem\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpUnMapMem\n");
 
-	ubarelse(mp->devp->ui_ubanum,&rp->mapbase);
-	rp->mapbase = 0;
-	vsunlock(rp->virtmem,rp->bytecnt,B_READ);
-	rp->procp->p_flag &= ~P_PHYSIO;
+    ubarelse(mp->devp->ui_ubanum,&rp->mapbase);
+    rp->mapbase = 0;
+    vsunlock(rp->virtmem,rp->bytecnt,B_READ);
+    rp->procp->p_flag &= ~P_PHYSIO;
 
-	if(NpDebug & DEBENTRY)
-		printf("NpUnMapMem...\n");
+    if(NpDebug & DEBENTRY)
+        printf("NpUnMapMem...\n");
 }
 
 npprobe(reg, ui)
@@ -2163,38 +2163,38 @@ u_short csraddr;
 int i;
 
 #ifdef lint
-	br = 0; cvec = br; br = cvec;
+    br = 0; cvec = br; br = cvec;
 #endif
 
-	if(NpDebug & DEBINIT)
-		printf("In npprobe, regaddr is %x!\n",reg);
+    if(NpDebug & DEBINIT)
+        printf("In npprobe, regaddr is %x!\n",reg);
 
-	cvec = (uba_hd[numuba].uh_lastiv -= 4); 
+    cvec = (uba_hd[numuba].uh_lastiv -= 4);
 
 #ifdef OLDBSD
-	/* Find unit number from npstd[] by matching the csr address */
+    /* Find unit number from npstd[] by matching the csr address */
 
-	csraddr = (u_short)((int)reg & 0x0FFFF);
+    csraddr = (u_short)((int)reg & 0x0FFFF);
 
-	for(i = 0; i < NNP; i++) {
+    for(i = 0; i < NNP; i++) {
 
-		if(csraddr == npstd[i]) {
-			npvectors[i] = cvec;
-			break;
-		}
-	}
-	if(i == NNP)
-		printf("Couldn't find device in npstd[]!\n");
+        if(csraddr == npstd[i]) {
+            npvectors[i] = cvec;
+            break;
+        }
+    }
+    if(i == NNP)
+        printf("Couldn't find device in npstd[]!\n");
 
 #else
-	npvectors[ui->ui_unit] = cvec;
+    npvectors[ui->ui_unit] = cvec;
 #endif
-	br = 0x15;
+    br = 0x15;
 
-	if(NpDebug & DEBINIT)
-		printf("npprobe...\n");
+    if(NpDebug & DEBINIT)
+        printf("npprobe...\n");
 
-	return(sizeof(struct NPREG));		/* CSR Registers */
+    return(sizeof(struct NPREG));       /* CSR Registers */
 
 }
 
@@ -2202,15 +2202,15 @@ npattach(ui)
 register struct uba_device *ui;
 {
 
-	if(NpDebug & DEBINIT)
-		printf("In npattach, ui is %x.\n",ui);
+    if(NpDebug & DEBINIT)
+        printf("In npattach, ui is %x.\n",ui);
 
-	npinit(ui->ui_unit);
-	if (IxAttach)
-		(*IxAttach)(ui);
+    npinit(ui->ui_unit);
+    if (IxAttach)
+        (*IxAttach)(ui);
 
-	if(NpDebug & DEBINIT)
-		printf("npattach...\n");
+    if(NpDebug & DEBINIT)
+        printf("npattach...\n");
 }
 
 
@@ -2219,38 +2219,38 @@ struct npmaster *mp;
 struct npreq *rp;
 unsigned long uaddr;
 {
-	struct np_mem mem;
-	register int error = 0;
+    struct np_mem mem;
+    register int error = 0;
 
-	if(NpDebug & DEBENTRY)
-		printf("npmem\n");
+    if(NpDebug & DEBENTRY)
+        printf("npmem\n");
 
-	if (error = copyin(uaddr, &mem, sizeof(mem)))
-		return (error);
+    if (error = copyin(uaddr, &mem, sizeof(mem)))
+        return (error);
 
-	if (mem.mem_type == NP_SET) {
-		if (np_mapreq[mp->unit] != (struct npreq *)NPCLEAR)
-			error = EBUSY;
-		else {
-			error = NpMapMem(mp, rp, mem.mem_addr, mem.mem_count);
-			if (error != 0) {
-				np_mapreq[mp->unit] = rp;
-				mem.mem_addr = rp->bufaddr;
-			}
-		}
-	} else if (mem.mem_type == NP_USET) {
-		error = NpUnMapMem(mp, np_mapreq[mp->unit]);
-		NpFreeReq(mp->reqtab, rp);
-		NpFreeReq(mp->reqtab, np_mapreq[mp->unit]);
-		np_mapreq[mp->unit] = (struct npreq *)NPCLEAR;
-	} else 
-		error = EIO;
+    if (mem.mem_type == NP_SET) {
+        if (np_mapreq[mp->unit] != (struct npreq *)NPCLEAR)
+            error = EBUSY;
+        else {
+            error = NpMapMem(mp, rp, mem.mem_addr, mem.mem_count);
+            if (error != 0) {
+                np_mapreq[mp->unit] = rp;
+                mem.mem_addr = rp->bufaddr;
+            }
+        }
+    } else if (mem.mem_type == NP_USET) {
+        error = NpUnMapMem(mp, np_mapreq[mp->unit]);
+        NpFreeReq(mp->reqtab, rp);
+        NpFreeReq(mp->reqtab, np_mapreq[mp->unit]);
+        np_mapreq[mp->unit] = (struct npreq *)NPCLEAR;
+    } else
+        error = EIO;
 
-	if (error != 0)
-		error = copyout(&mem, uaddr, sizeof(mem));
+    if (error != 0)
+        error = copyout(&mem, uaddr, sizeof(mem));
 
-	if(NpDebug & DEBENTRY)
-		printf("npmem...\n");
-	return (error);
+    if(NpDebug & DEBENTRY)
+        printf("npmem...\n");
+    return (error);
 }
 #endif

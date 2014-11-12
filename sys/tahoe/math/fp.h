@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,22 +33,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)fp.h	7.1 (Berkeley) 12/6/90
+ *  @(#)fp.h    7.1 (Berkeley) 12/6/90
  */
 
-#define	EXPMASK		0x7f800000
-#define	SIGNBIT		0x80000000
-#define	ONE_EXP		0x40800000
-#define	TWO_EXP		0x40000000
-#define	EXPSHIFT	23
-#define	HID_POS		24
-#define	HID_R0R1	24+32
-#define	CLEARHID	0xff7fffff
-#define	EXPSIGN		0x40000000
-#define	MAX_EXP_DIF	55
-#define	SMAX_EXP_DIF	23
-#define	BIAS		0x80
-#define	BIASP1		0x81
-#define	BIASM1		0x7f
-#define	HUGE0		0x7fffffff
-#define	HUGE1		0xffffffff
+#define EXPMASK         0x7f800000
+#define SIGNBIT         0x80000000
+#define ONE_EXP         0x40800000
+#define TWO_EXP         0x40000000
+#define EXPSHIFT        23
+#define HID_POS         24
+#define HID_R0R1        24+32
+#define CLEARHID        0xff7fffff
+#define EXPSIGN         0x40000000
+#define MAX_EXP_DIF     55
+#define SMAX_EXP_DIF    23
+#define BIAS            0x80
+#define BIASP1          0x81
+#define BIASM1          0x7f
+#define HUGE0           0x7fffffff
+#define HUGE1           0xffffffff

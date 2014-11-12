@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,21 +33,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Apusha.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Apusha.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-pusha(infop)	process_info *infop;
+pusha(infop)    process_info *infop;
 /*
-/*	Push address of the operand
+/*  Push address of the operand
 /*
 /**************************************/
 {
-	register long new_address;
+    register long new_address;
 
-	new_address = operand(infop,0)->address;
-	if (new_address < 0) negative_1; else negative_0;
-	if (new_address == 0) zero_1; else zero_0;
-	overflow_0; carry_1;
-	push (infop, new_address);
+    new_address = operand(infop,0)->address;
+    if (new_address < 0) negative_1; else negative_0;
+    if (new_address == 0) zero_1; else zero_0;
+    overflow_0; carry_1;
+    push (infop, new_address);
 }

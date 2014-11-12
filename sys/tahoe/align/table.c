@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)table.c	7.1 (Berkeley) 12/6/90
+ *  @(#)table.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
@@ -43,244 +43,244 @@
  *
  */
 
-#define	insque	cannot_do	/* Can't emulate un-interruptable opcode ! */
-#define	remque	cannot_do	/* Can't emulate un-interruptable opcode ! */
-#define	addb2	add2
-#define	addb3	add3
-#define	addl2	add2
-#define	addl3	add3
-#define	addw2	add2
-#define	addw3	add3
-#define	andb2	and2
-#define	andb3	and3
-#define	andl2	and2
-#define	andl3	and3
-#define	andw2	and2
-#define	andw3	and3
-#define	atanf	not_needed
-#define	kcall	cannot_do	/* Too complicated to emulate completely */
-#define	bbssi	cannot_do	/* Interlock memory during emulation ??? */
-#define	bcc	not_needed
-#define	bcs	not_needed
-#define	beql	not_needed
-#define	bgeq	not_needed
-#define	bgtr	not_needed
-#define	bgtru	not_needed
-#define	bitb	bit
-#define	bitl	bit
-#define	bitw	bit
-#define	bleq	not_needed
-#define	blequ	not_needed
-#define	blss	not_needed
-#define	bnequ	not_needed
-#define	bpt	not_needed
-#define	brb	not_needed
-#define	brw	not_needed
-#define	bvc	not_needed
-#define	bvs	not_needed
-#define	callf	not_needed 
-#define	calls	not_needed 
-#define	clrb	clr
-#define	clrl	clr
-#define	clrw	clr
-#define	cmpb	cmp
-#define	cmpl	cmp
-#define	cmps2	not_needed
-#define	cmps3	not_needed
-#define	cmpw	cmp
-#define	cosf	not_needed
-#define	cvdf	not_needed
-#define	cvtbl	cvt
-#define	cvtbw	cvt
-#define	cvtwl	cvt
-#define	cvtwb	cvtlb
-#define	decb	dec
-#define	decl	dec
-#define	decw	dec
-#define	expf	not_needed
-#define	ffs	ffs_op
-#define	incb	inc
-#define	incl	inc
-#define	incw	inc
-#define	ldpctx	not_needed
-#define	logf	not_needed
-#define	mcomb	mcom
-#define	mcoml	mcom
-#define	mcomw	mcom
-#define	mnegb	mneg
-#define	mnegl	mneg
-#define	mnegw	mneg
-#define	movab	mova
-#define	moval	mova
-#define	movaw	mova
-#define	movow	cannot_do	/* 2 X movob != movow !! See any HW spec ! */
-#define movob	movob_op
-#define	movb	mov
-#define	movblk	not_needed
-#define	movl	mov
-#define	movs2	not_needed
-#define	movs3	not_needed
-#define	movw	mov
-#define	negd	not_needed
-#define	negf	not_needed
-#define	nop	not_needed
-#define	orb2	or2
-#define	orb3	or3
-#define	orl2	or2
-#define	orl3	or3
-#define	orw2	or2
-#define	orw3	or3
-#define	pushab	pusha
-#define	pushal	pusha
-#define	pushaw	pusha
-#define	pushb	pushx
-#define	pushd	not_needed
-#define	pushl	pushx
-#define	pushw	pushx
-#define	rei	not_needed
-#define	ret	not_needed
-#define	sinf	not_needed
-#define	sqrtf	not_needed
-#define	subb2	sub2
-#define	subb3	sub3
-#define	subl2	sub2
-#define	subl3	sub3
-#define	subw2	sub2
-#define	subw3	sub3
-#define	svpctx	not_needed
-#define	tstb	tst
-#define	tstd	not_needed
-#define	tstf	not_needed
-#define	tstl	tst
-#define	tstw	tst
-#define	xorb2	xor2
-#define	xorb3	xor3
-#define	xorl2	xor2
-#define	xorl3	xor3
-#define	xorw2	xor2
-#define	xorw3	xor3
-#define movzbl	movzb
-#define movzbw	movzb
-#define	halt	not_needed		/* Privileged to user */
-#define	illegal	not_needed		/* Should be trapped by HW */
-#define	mtpr	not_needed		/* Privileged to user */
-#define	mfpr	not_needed		/* Privileged to user */
-#define	btcs	not_needed		/* Privileged to user */
+#define insque  cannot_do   /* Can't emulate un-interruptable opcode ! */
+#define remque  cannot_do   /* Can't emulate un-interruptable opcode ! */
+#define addb2   add2
+#define addb3   add3
+#define addl2   add2
+#define addl3   add3
+#define addw2   add2
+#define addw3   add3
+#define andb2   and2
+#define andb3   and3
+#define andl2   and2
+#define andl3   and3
+#define andw2   and2
+#define andw3   and3
+#define atanf   not_needed
+#define kcall   cannot_do   /* Too complicated to emulate completely */
+#define bbssi   cannot_do   /* Interlock memory during emulation ??? */
+#define bcc     not_needed
+#define bcs     not_needed
+#define beql    not_needed
+#define bgeq    not_needed
+#define bgtr    not_needed
+#define bgtru   not_needed
+#define bitb    bit
+#define bitl    bit
+#define bitw    bit
+#define bleq    not_needed
+#define blequ   not_needed
+#define blss    not_needed
+#define bnequ   not_needed
+#define bpt     not_needed
+#define brb     not_needed
+#define brw     not_needed
+#define bvc     not_needed
+#define bvs     not_needed
+#define callf   not_needed
+#define calls   not_needed
+#define clrb    clr
+#define clrl    clr
+#define clrw    clr
+#define cmpb    cmp
+#define cmpl    cmp
+#define cmps2   not_needed
+#define cmps3   not_needed
+#define cmpw    cmp
+#define cosf    not_needed
+#define cvdf    not_needed
+#define cvtbl   cvt
+#define cvtbw   cvt
+#define cvtwl   cvt
+#define cvtwb   cvtlb
+#define decb    dec
+#define decl    dec
+#define decw    dec
+#define expf    not_needed
+#define ffs     ffs_op
+#define incb    inc
+#define incl    inc
+#define incw    inc
+#define ldpctx  not_needed
+#define logf    not_needed
+#define mcomb   mcom
+#define mcoml   mcom
+#define mcomw   mcom
+#define mnegb   mneg
+#define mnegl   mneg
+#define mnegw   mneg
+#define movab   mova
+#define moval   mova
+#define movaw   mova
+#define movow   cannot_do   /* 2 X movob != movow !! See any HW spec ! */
+#define movob   movob_op
+#define movb    mov
+#define movblk  not_needed
+#define movl    mov
+#define movs2   not_needed
+#define movs3   not_needed
+#define movw    mov
+#define negd    not_needed
+#define negf    not_needed
+#define nop     not_needed
+#define orb2    or2
+#define orb3    or3
+#define orl2    or2
+#define orl3    or3
+#define orw2    or2
+#define orw3    or3
+#define pushab  pusha
+#define pushal  pusha
+#define pushaw  pusha
+#define pushb   pushx
+#define pushd   not_needed
+#define pushl   pushx
+#define pushw   pushx
+#define rei     not_needed
+#define ret     not_needed
+#define sinf    not_needed
+#define sqrtf   not_needed
+#define subb2   sub2
+#define subb3   sub3
+#define subl2   sub2
+#define subl3   sub3
+#define subw2   sub2
+#define subw3   sub3
+#define svpctx  not_needed
+#define tstb    tst
+#define tstd    not_needed
+#define tstf    not_needed
+#define tstl    tst
+#define tstw    tst
+#define xorb2   xor2
+#define xorb3   xor3
+#define xorl2   xor2
+#define xorl3   xor3
+#define xorw2   xor2
+#define xorw3   xor3
+#define movzbl  movzb
+#define movzbw  movzb
+#define halt    not_needed      /* Privileged to user */
+#define illegal not_needed      /* Should be trapped by HW */
+#define mtpr    not_needed      /* Privileged to user */
+#define mfpr    not_needed      /* Privileged to user */
+#define btcs    not_needed      /* Privileged to user */
 
-int	add2();
-int	add3();
-int	adda();
-int	addd();
-int	addf();
-int	adwc();
-int	and2();
-int	and3();
-int	aobleq();
-int	aoblss();
-int	bbc();
-int	bbs();
-int	bbssi();
-int	bcc();
-int	bcs();
-int	beql();
-int	bgeq();
-int	bgtr();
-int	bgtru();
-int	bicpsw();
-int	bispsw();
-int	bit();
-int	bleq();
-int	blequ();
-int	blss();
-int	bnequ();
-int	btcs();
-int	bvc();
-int	bvs();
-int	call();
-int	casel();
-int	clr();
-int	cmp();
-int	cmpd();
-int	cmpd2();
-int	cmpf();
-int	cmpf2();
-int	cvdl();
-int	cvfl();
-int	cvld();
-int	cvlf();
-int	cvt();
-int	cvt();
-int	cvtlb();
-int	cvtlw();
-int	dec();
-int	divd();
-int	divf();
-int	divl2();
-int	divl3();
-int	ediv();
-int	emul();
-int	ffc();
-int	ffs_op();
-int	halt();
-int	illegal();
-int	inc();
-int	insque();
-int	jmp();
-int	kcall();
-int	ldd();
-int	ldf();
-int	ldfd();
-int	lnd();
-int	lnf();
-int	loadr();
-int	mcom();
-int	mfpr();
-int	mneg();
-int	mov();
-int	mova();
-int	movob_op();
-int	movow();
-int	movpsl();
-int	movzb();
-int	movzwl();
-int	mtpr();
-int	muld();
-int	mulf();
-int	mull2();
-int	mull3();
-int	or2();
-int	or3();
-int	prober();
-int	probew();
-int	pusha();
-int	pushx();
-int	remque();
-int	sbwc();
-int	shal();
-int	shar();
-int	shll();
-int	shlq();
-int	shrl();
-int	shrq();
-int	std();
-int	stf();
-int	storer();
-int	sub2();
-int	sub3();
-int	suba();
-int	subd();
-int	subf();
-int	tst();
-int	xor2();
-int	xor3();
-int	not_needed();
+int add2();
+int add3();
+int adda();
+int addd();
+int addf();
+int adwc();
+int and2();
+int and3();
+int aobleq();
+int aoblss();
+int bbc();
+int bbs();
+int bbssi();
+int bcc();
+int bcs();
+int beql();
+int bgeq();
+int bgtr();
+int bgtru();
+int bicpsw();
+int bispsw();
+int bit();
+int bleq();
+int blequ();
+int blss();
+int bnequ();
+int btcs();
+int bvc();
+int bvs();
+int call();
+int casel();
+int clr();
+int cmp();
+int cmpd();
+int cmpd2();
+int cmpf();
+int cmpf2();
+int cvdl();
+int cvfl();
+int cvld();
+int cvlf();
+int cvt();
+int cvt();
+int cvtlb();
+int cvtlw();
+int dec();
+int divd();
+int divf();
+int divl2();
+int divl3();
+int ediv();
+int emul();
+int ffc();
+int ffs_op();
+int halt();
+int illegal();
+int inc();
+int insque();
+int jmp();
+int kcall();
+int ldd();
+int ldf();
+int ldfd();
+int lnd();
+int lnf();
+int loadr();
+int mcom();
+int mfpr();
+int mneg();
+int mov();
+int mova();
+int movob_op();
+int movow();
+int movpsl();
+int movzb();
+int movzwl();
+int mtpr();
+int muld();
+int mulf();
+int mull2();
+int mull3();
+int or2();
+int or3();
+int prober();
+int probew();
+int pusha();
+int pushx();
+int remque();
+int sbwc();
+int shal();
+int shar();
+int shll();
+int shlq();
+int shrl();
+int shrq();
+int std();
+int stf();
+int storer();
+int sub2();
+int sub3();
+int suba();
+int subd();
+int subf();
+int tst();
+int xor2();
+int xor3();
+int not_needed();
 
 
 /**************************************************/
 /*  The great opcodes table, it drives everything */
 /**************************************************/
 
-struct	opcode_des	Table[]= {
+struct  opcode_des  Table[]= {
 
 /* 00 */ halt      ,   0,   0,   0,   0,   0,   0,   0,   0,
 /* 01 */ halt      ,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -358,7 +358,7 @@ struct	opcode_des	Table[]= {
 /* 49 */ clrb      , WAD,   1,   0,   0,   0,   0,   0,   0,
 /* 4A */ shlq      ,RADI,   1,RADI,   8, WAD,   8,   0,   0,
 /* 4B */ clrw      , WAD,   2,   0,   0,   0,   0,   0,   0,
-/* 4C */ mull2     ,RADI,   4, MAD,   4,   0,   0,   0,   0, 
+/* 4C */ mull2     ,RADI,   4, MAD,   4,   0,   0,   0,   0,
 /* 4D */ clrl      , WAD,   4,   0,   0,   0,   0,   0,   0,
 /* 4E */ shal      ,RADI,   1,RADI,   4, WAD,   4,   0,   0,
 /* 4F */ illegal   ,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -418,7 +418,7 @@ struct	opcode_des	Table[]= {
 /* 85 */ illegal   ,   0,   0,   0,   0,   0,   0,   0,   0,
 /* 86 */ cvfl      , WAD,   4,   0,   0,   0,   0,   0,   0,
 /* 87 */ cvdl      , WAD,   4,   0,   0,   0,   0,   0,   0,
-/* 88 */ orb2      ,RADI,   1,NMAD,   1,   0,   0,   0,   0, 
+/* 88 */ orb2      ,RADI,   1,NMAD,   1,   0,   0,   0,   0,
 /* 89 */ cvtbl     ,RADI,   1, WAD,   4,   0,   0,   0,   0,
 /* 8A */ orw2      ,RADI,   2,NMAD,   2,   0,   0,   0,   0,
 /* 8B */ bispsw    ,RADI,   2,   0,   0,   0,   0,   0,   0,

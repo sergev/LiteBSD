@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,16 +30,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)if_vba.h	1.2 (Berkeley) 6/28/90
+ *  @(#)if_vba.h    1.2 (Berkeley) 6/28/90
  */
 
 struct ifvba {
-	struct	mbuf *iff_mbuf;	/* associated mbuf to free */
-	caddr_t	iff_buffer;	/* contiguous memory for data, kernel address */
-	u_long	iff_physaddr;	/* contiguous memory for data, phys address */
+    struct  mbuf *iff_mbuf; /* associated mbuf to free */
+    caddr_t iff_buffer;     /* contiguous memory for data, kernel address */
+    u_long  iff_physaddr;   /* contiguous memory for data, phys address */
 };
 
-#define VIFF_16BIT 1		/* only allow two byte transfers */
+#define VIFF_16BIT 1        /* only allow two byte transfers */
 
 #ifdef KERNEL
 struct mbuf *if_vbaget();

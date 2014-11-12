@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.
  * All or some portions of this file are derived from material licensed
  * to the University of California by American Telephone and Telegraph
@@ -17,8 +17,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -35,31 +35,31 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)utmp.h	8.2 (Berkeley) 1/21/94
+ *  @(#)utmp.h  8.2 (Berkeley) 1/21/94
  */
 
-#ifndef	_UTMP_H_
-#define	_UTMP_H_
+#ifndef _UTMP_H_
+#define _UTMP_H_
 
-#define	_PATH_UTMP	"/var/run/utmp"
-#define	_PATH_WTMP	"/var/log/wtmp"
-#define	_PATH_LASTLOG	"/var/log/lastlog"
+#define _PATH_UTMP      "/var/run/utmp"
+#define _PATH_WTMP      "/var/log/wtmp"
+#define _PATH_LASTLOG   "/var/log/lastlog"
 
-#define	UT_NAMESIZE	8
-#define	UT_LINESIZE	8
-#define	UT_HOSTSIZE	16
+#define UT_NAMESIZE 8
+#define UT_LINESIZE 8
+#define UT_HOSTSIZE 16
 
 struct lastlog {
-	time_t	ll_time;
-	char	ll_line[UT_LINESIZE];
-	char	ll_host[UT_HOSTSIZE];
+    time_t  ll_time;
+    char    ll_line[UT_LINESIZE];
+    char    ll_host[UT_HOSTSIZE];
 };
 
 struct utmp {
-	char	ut_line[UT_LINESIZE];
-	char	ut_name[UT_NAMESIZE];
-	char	ut_host[UT_HOSTSIZE];
-	long	ut_time;
+    char    ut_line[UT_LINESIZE];
+    char    ut_name[UT_NAMESIZE];
+    char    ut_host[UT_HOSTSIZE];
+    long    ut_time;
 };
 
 #endif /* !_UTMP_H_ */

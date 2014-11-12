@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)signal.h	7.1 (Berkeley) 9/8/91
+ *  @(#)signal.h    7.1 (Berkeley) 9/8/91
  */
 
 /*
@@ -40,7 +40,7 @@
 typedef int sig_atomic_t;
 
 #ifndef _POSIX_SOURCE
-#include <machine/trap.h>	/* codes for SIGILL, SIGFPE */
+#include <machine/trap.h>   /* codes for SIGILL, SIGFPE */
 #endif
 
 /*
@@ -50,12 +50,12 @@ typedef int sig_atomic_t;
  * to the handler to allow it to restore state properly if
  * a non-standard exit is performed.
  */
-struct	sigcontext {
-	int	sc_onstack;	/* sigstack state to restore */
-	int	sc_mask;	/* signal mask to restore */
-	int	sc_sp;		/* sp to restore */
-	int	sc_fp;		/* fp to restore */
-	int	sc_ap;		/* ap to restore */
-	int	sc_pc;		/* pc to restore */
-	int	sc_ps;		/* psl to restore */
+struct  sigcontext {
+    int sc_onstack; /* sigstack state to restore */
+    int sc_mask;    /* signal mask to restore */
+    int sc_sp;      /* sp to restore */
+    int sc_fp;      /* fp to restore */
+    int sc_ap;      /* ap to restore */
+    int sc_pc;      /* pc to restore */
+    int sc_ps;      /* psl to restore */
 };

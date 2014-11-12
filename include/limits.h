@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,34 +30,34 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)limits.h	8.2 (Berkeley) 1/4/94
+ *  @(#)limits.h    8.2 (Berkeley) 1/4/94
  */
 
 #ifndef _LIMITS_H_
-#define	_LIMITS_H_
+#define _LIMITS_H_
 
-#define	_POSIX_ARG_MAX		4096
-#define	_POSIX_CHILD_MAX	6
-#define	_POSIX_LINK_MAX		8
-#define	_POSIX_MAX_CANON	255
-#define	_POSIX_MAX_INPUT	255
-#define	_POSIX_NAME_MAX		14
-#define	_POSIX_NGROUPS_MAX	0
-#define	_POSIX_OPEN_MAX		16
-#define	_POSIX_PATH_MAX		255
-#define	_POSIX_PIPE_BUF		512
-#define	_POSIX_SSIZE_MAX	32767
-#define	_POSIX_STREAM_MAX	8
-#define	_POSIX_TZNAME_MAX	3
+#define _POSIX_ARG_MAX          4096
+#define _POSIX_CHILD_MAX        6
+#define _POSIX_LINK_MAX         8
+#define _POSIX_MAX_CANON        255
+#define _POSIX_MAX_INPUT        255
+#define _POSIX_NAME_MAX         14
+#define _POSIX_NGROUPS_MAX      0
+#define _POSIX_OPEN_MAX         16
+#define _POSIX_PATH_MAX         255
+#define _POSIX_PIPE_BUF         512
+#define _POSIX_SSIZE_MAX        32767
+#define _POSIX_STREAM_MAX       8
+#define _POSIX_TZNAME_MAX       3
 
-#define	_POSIX2_BC_BASE_MAX	99
-#define	_POSIX2_BC_DIM_MAX	2048
-#define	_POSIX2_BC_SCALE_MAX	99
-#define	_POSIX2_BC_STRING_MAX	1000
-#define	_POSIX2_EQUIV_CLASS_MAX	2
-#define	_POSIX2_EXPR_NEST_MAX	32
-#define	_POSIX2_LINE_MAX	2048
-#define	_POSIX2_RE_DUP_MAX	255
+#define _POSIX2_BC_BASE_MAX     99
+#define _POSIX2_BC_DIM_MAX      2048
+#define _POSIX2_BC_SCALE_MAX    99
+#define _POSIX2_BC_STRING_MAX   1000
+#define _POSIX2_EQUIV_CLASS_MAX 2
+#define _POSIX2_EXPR_NEST_MAX   32
+#define _POSIX2_LINE_MAX        2048
+#define _POSIX2_RE_DUP_MAX      255
 
 #include <machine/limits.h>
 #include <sys/syslimits.h>

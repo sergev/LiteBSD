@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,39 +33,39 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Awrite_quad.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Awrite_quad.c   7.1 (Berkeley) 12/6/90
  */
 
-#include	"align.h"
+#include    "align.h"
 
 write_quadword (infop, qword, where)
-process_info	*infop;
-quadword 	qword;
-struct oprnd 	*where;
+process_info    *infop;
+quadword    qword;
+struct oprnd    *where;
 /*
-/*	Put the quadword at the given address in memory.
-/*	
+/*  Put the quadword at the given address in memory.
+/*  
 /*
 /**************************************************/
 {
-	if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
-	switch (where->mode & ADDFIELD)	/* Mask out R/W bits */
-	{
-	case Add:
-		put_longword (infop, qword.high, where->address);
-		where->address += 4;
-		put_longword (infop, qword.low, where->address);
-		break;
-	case Dir:
-		if ( where->reg_number >= SPOINTER || (where->reg_number & 1) == 1 )
-			exception (infop, ILL_OPRND); 
-		Replace (infop, where->reg_number, qword.high);
-		Replace (infop, where->reg_number+1, qword.low);
-		break;
-	case SPmode:
-		exception(infop, ILL_ADDRMOD);
-		break;
-	default:
-		printf("Unknown destination in write_quad (alignment code)\n");
-	};
-}	
+    if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
+    switch (where->mode & ADDFIELD) /* Mask out R/W bits */
+    {
+    case Add:
+        put_longword (infop, qword.high, where->address);
+        where->address += 4;
+        put_longword (infop, qword.low, where->address);
+        break;
+    case Dir:
+        if ( where->reg_number >= SPOINTER || (where->reg_number & 1) == 1 )
+            exception (infop, ILL_OPRND); 
+        Replace (infop, where->reg_number, qword.high);
+        Replace (infop, where->reg_number+1, qword.low);
+        break;
+    case SPmode:
+        exception(infop, ILL_ADDRMOD);
+        break;
+    default:
+        printf("Unknown destination in write_quad (alignment code)\n");
+    };
+}   

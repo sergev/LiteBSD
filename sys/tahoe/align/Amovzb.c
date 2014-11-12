@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,25 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Amovzb.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Amovzb.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-movzb(infop) 	process_info *infop;
+movzb(infop)    process_info *infop;
 /*
-/*	Move byte to word or longword, zero-extended
+/*  Move byte to word or longword, zero-extended
 /*
 /****************************************/
 {
-	register long result;
-	register struct oprnd *oppnt;
+    register long result;
+    register struct oprnd *oppnt;
 
-	oppnt = operand(infop,0);
-	result = oppnt->data;
-	negative_0;
-	if (result == 0 )  zero_1 ; else zero_0;
-	overflow_0;  carry_1;
-	if ((oppnt->mode & 0xff) == Dir) 
-		write_back (infop, result , operand(infop,1) );
-	else write_back (infop, result & 0xff, operand(infop,1) );
+    oppnt = operand(infop,0);
+    result = oppnt->data;
+    negative_0;
+    if (result == 0 )  zero_1 ; else zero_0;
+    overflow_0;  carry_1;
+    if ((oppnt->mode & 0xff) == Dir) 
+        write_back (infop, result , operand(infop,1) );
+    else write_back (infop, result & 0xff, operand(infop,1) );
 }

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,15 +33,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Kldexpf.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Kldexpf.s   7.1 (Berkeley) 12/6/90
  */
 
 #include "../tahoe/SYS.h"
 #include "../math/fp.h"
 #include "../math/Kfp.h"
 
-/* @(*)Kldexpf.s	4.2 (Berkeley) 12/21/80
- *	Tahoe 		2/2/83
+/* @(*)Kldexpf.s        4.2 (Berkeley) 12/21/80
+ *      Tahoe           2/2/83
  *
  * float Kldexpf (op_most, op_least, exp, hfs)
  *
@@ -55,44 +55,44 @@
  * other than ERANGE first (zero is a reasonable value to use).
  */
 
-	.text
+        .text
 ENTRY(Kldexpf, R2)
-	movl	4(fp),r0	/* Fetch "value" */
-	movl	8(fp),r1
+        movl    4(fp),r0        /* Fetch "value" */
+        movl    8(fp),r1
 
-	andl3	$EXPMASK,r0,r2	/* r2 := shifted biased exponent */
-	jeql	ld1		/* If it's zero, we're done */
-	shar	$EXPSHIFT,r2,r2	/* shift to get value of exponent  */
+        andl3   $EXPMASK,r0,r2  /* r2 := shifted biased exponent */
+        jeql    ld1             /* If it's zero, we're done */
+        shar    $EXPSHIFT,r2,r2 /* shift to get value of exponent  */
 
-	addl2	12(fp),r2	/* r2 := new biased exponent */
-	jleq	under		/* if it's <= 0, we have an underflow */
-	cmpl	r2,$256		/* Otherwise check if it's too big */
-	jgeq	over		/* jump if overflow */
+        addl2   12(fp),r2       /* r2 := new biased exponent */
+        jleq    under           /* if it's <= 0, we have an underflow */
+        cmpl    r2,$256         /* Otherwise check if it's too big */
+        jgeq    over            /* jump if overflow */
 /*
- *	Construct the result and return
+ *      Construct the result and return
  */
-	andl2	$0!EXPMASK,r0	/* clear old exponent */
-	shal 	$EXPSHIFT,r2,r2	/* Put the exponent back in the result */
-	orl2	r2,r0
-ld1:	ret
+        andl2   $0!EXPMASK,r0   /* clear old exponent */
+        shal    $EXPSHIFT,r2,r2 /* Put the exponent back in the result */
+        orl2    r2,r0
+ld1:    ret
 /*
- *	Underflow
+ *      Underflow
  */
-under:	clrl	r0		/* Result is zero */
-	clrl	r1
-	orl2	$HFS_UNDF,*16(fp)
-	jmp	err		/* Join general error code */
+under:  clrl    r0              /* Result is zero */
+        clrl    r1
+        orl2    $HFS_UNDF,*16(fp)
+        jmp     err             /* Join general error code */
 /*
- *	Overflow
+ *      Overflow
  */
-over:	movl	huge0,r0	/* Largest possible floating magnitude */
-	movl	huge1,r1
-	orl2	$HFS_OVF,*16(fp)
-	orl2	$SIGNBIT,r0	/* If arg < 0, make result negative */
+over:   movl    huge0,r0        /* Largest possible floating magnitude */
+        movl    huge1,r1
+        orl2    $HFS_OVF,*16(fp)
+        orl2    $SIGNBIT,r0     /* If arg < 0, make result negative */
 
-err:	orl2	$HFS_RANGE,*16(fp)	/* Indicate range error */
-	ret
+err:    orl2    $HFS_RANGE,*16(fp)      /* Indicate range error */
+        ret
 
-	.data
-huge0:	.long	0x7fffffff
-huge1:	.long	0xffffffff
+        .data
+huge0:  .long   0x7fffffff
+huge1:  .long   0xffffffff

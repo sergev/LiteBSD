@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,28 +33,28 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Ashll.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Ashll.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
 
-shll(infop)	process_info *infop;
+shll(infop) process_info *infop;
 /*
-/*	Shift logical left (longword).
-/*	Checks for overflow.
+/*  Shift logical left (longword).
+/*  Checks for overflow.
 /*
 /*******************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	long	Register_11;
-	register	long	Register_10;
-	
-	Register_12 = operand(infop,0)->data;
-	Register_11 = operand(infop,1)->data;
-	Register_10 = psl;
-	Set_psl(r10);	/*save the orig CC bits of the psl */
-	asm("	shll	r12,r11,r10");
-	asm("	movpsl	r12");
-	New_cc (Register_12);
-	write_back (infop, Register_10, operand(infop,2));
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    Register_11;
+    register    long    Register_10;
+    
+    Register_12 = operand(infop,0)->data;
+    Register_11 = operand(infop,1)->data;
+    Register_10 = psl;
+    Set_psl(r10);   /*save the orig CC bits of the psl */
+    asm("   shll    r12,r11,r10");
+    asm("   movpsl  r12");
+    New_cc (Register_12);
+    write_back (infop, Register_10, operand(infop,2));
 }

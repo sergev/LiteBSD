@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,27 +33,27 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Awrite_back.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Awrite_back.c   7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
 
 write_back(infop,value, where)
-process_info	*infop;
-long		value; 
-struct	oprnd 	*where;
+process_info    *infop;
+long        value; 
+struct  oprnd   *where;
 /*
-/*	Put the given result where the operand specifies. 
-/*	
+/*  Put the given result where the operand specifies. 
+/*  
 /*
 /**************************************************/
 {
-	switch (where->length)
-	{
-		case 1: write_byte (infop,value, where); break;
-		case 2: write_word (infop,value, where); break;
-		case 4: write_longword (infop,value, where); break;
-		case 8: write_quadword (infop,value, where); break;
-		default : printf ("Wrong destination length in alignment\n");
-	}
+    switch (where->length)
+    {
+        case 1: write_byte (infop,value, where); break;
+        case 2: write_word (infop,value, where); break;
+        case 4: write_longword (infop,value, where); break;
+        case 8: write_quadword (infop,value, where); break;
+        default : printf ("Wrong destination length in alignment\n");
+    }
 }

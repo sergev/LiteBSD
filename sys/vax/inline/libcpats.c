@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)libcpats.c	7.3 (Berkeley) 11/13/91";
+static char sccsid[] = "@(#)libcpats.c  7.3 (Berkeley) 11/13/91";
 #endif /* not lint */
 
 #include "inline.h"
@@ -43,24 +43,24 @@ static char sccsid[] = "@(#)libcpats.c	7.3 (Berkeley) 11/13/91";
 struct pats libc_ptab[] = {
 
 #if defined(NOTDEF) && defined(vax)
-	{ 1, "_fgetc\n",
-"	sobgeq	*(sp),1f\n\
-	calls	$1,__filbuf\n\
-	jbr     2f\n\
+    { 1, "_fgetc\n",
+"   sobgeq  *(sp),1f\n\
+    calls   $1,__filbuf\n\
+    jbr     2f\n\
 1:\n\
-	addl3	$4,(sp)+,r1\n\
-	movzbl	*(r1),r0\n\
-	incl	(r1)\n\
+    addl3   $4,(sp)+,r1\n\
+    movzbl  *(r1),r0\n\
+    incl    (r1)\n\
 2:\n" },
 
-	{ 2, "_fputc\n",
-"	sobgeq	*4(sp),1f\n\
-	calls	$2,__flsbuf\n\
-	jbr	2f\n\
+    { 2, "_fputc\n",
+"   sobgeq  *4(sp),1f\n\
+    calls   $2,__flsbuf\n\
+    jbr 2f\n\
 1:\n\
-	movq	(sp)+,r0\n\
-	movb	r0,*4(r1)\n\
-	incl	4(r1)\n\
+    movq    (sp)+,r0\n\
+    movb    r0,*4(r1)\n\
+    incl    4(r1)\n\
 2:\n" },
 #endif
 
@@ -68,32 +68,32 @@ struct pats libc_ptab[] = {
 /* someday... */
 #endif mc68000
 
-	{ 0, "", "" }
+    { 0, "", "" }
 };
 
 struct pats vaxsubset_libc_ptab[] = {
 
-	{ 1, "_strlen\n",
-"	movl	(sp)+,r5\n\
-	movl	r5,r1\n\
+    { 1, "_strlen\n",
+"   movl    (sp)+,r5\n\
+    movl    r5,r1\n\
 1:\n\
-	tstb	(r1)+\n\
-	jneq	1b\n\
-	decl	r1\n\
-	subl3	r5,r1,r0\n" },
+    tstb    (r1)+\n\
+    jneq    1b\n\
+    decl    r1\n\
+    subl3   r5,r1,r0\n" },
 
-	{ 0, "", "" }
+    { 0, "", "" }
 };
 
 struct pats vax_libc_ptab[] = {
 
-	{ 1, "_strlen\n",
-"	movl	(sp)+,r5\n\
-	movl	r5,r1\n\
+    { 1, "_strlen\n",
+"   movl    (sp)+,r5\n\
+    movl    r5,r1\n\
 1:\n\
-	locc	$0,$65535,(r1)\n\
-	jeql	1b\n\
-	subl3	r5,r1,r0\n" },
+    locc    $0,$65535,(r1)\n\
+    jeql    1b\n\
+    subl3   r5,r1,r0\n" },
 
-	{ 0, "", "" }
+    { 0, "", "" }
 };

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acvld.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acvld.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cvld(infop)	process_info *infop;
+cvld(infop) process_info *infop;
 /*
-/*	Convert integer to double (into accumulator).
+/*  Convert integer to double (into accumulator).
 /*
 /******************************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	double	*Register_11;
-	register	long	Register_10;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    double  *Register_11;
+    register    long    Register_10;
 
-	Register_11 = (double *) &acc_high;
-	Register_10 = operand(infop,0)->data;
-	Register_12=psl;
-	Set_psl(r12);	/* restore the user psl */
-	asm ("	cvld	r10");		/* Don't change the order !! */
-	asm ("	movpsl	r12");
-	asm ("	std	(r11)");
-	New_cc (Register_12);
+    Register_11 = (double *) &acc_high;
+    Register_10 = operand(infop,0)->data;
+    Register_12=psl;
+    Set_psl(r12);   /* restore the user psl */
+    asm ("  cvld    r10");      /* Don't change the order !! */
+    asm ("  movpsl  r12");
+    asm ("  std (r11)");
+    New_cc (Register_12);
 }

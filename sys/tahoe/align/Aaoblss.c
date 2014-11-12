@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,26 +33,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Aaoblss.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Aaoblss.c   7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-aoblss(infop)	process_info *infop;
+aoblss(infop)   process_info *infop;
 /*
-/*	Add one, branch if less than.
-/*	Can't use real HW opcode, don't want to branch out of here !
+/*  Add one, branch if less than.
+/*  Can't use real HW opcode, don't want to branch out of here !
 /*
 /*******************************************/
 {
-	register long limit, index, new_address, complement;
+    register long limit, index, new_address, complement;
 
-	limit = operand(infop,0)->data;
-	index = operand(infop,1)->data;
-	complement =  limit + ~index;
-	if ( complement < 0){ carry_0; negative_1;}else{carry_1; negative_0;}
-	if ( complement == 0) zero_1; else zero_0;
-	overflow_0;
-	write_back (infop,index+1, operand(infop,1));
-	new_address = operand(infop,2)->address;
-	if (!negative && !zero) pc = new_address;
+    limit = operand(infop,0)->data;
+    index = operand(infop,1)->data;
+    complement =  limit + ~index;
+    if ( complement < 0){ carry_0; negative_1;}else{carry_1; negative_0;}
+    if ( complement == 0) zero_1; else zero_0;
+    overflow_0;
+    write_back (infop,index+1, operand(infop,1));
+    new_address = operand(infop,2)->address;
+    if (!negative && !zero) pc = new_address;
 }

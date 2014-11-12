@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,31 +33,31 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acvlf.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acvlf.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cvlf(infop)	process_info *infop;
+cvlf(infop) process_info *infop;
 /*
-/*	Convert integer to float (into accumulator).
+/*  Convert integer to float (into accumulator).
 /*
 /******************************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	long	Register_11;
-	register	float	*Register_10;
-	/*
-	register	long	Register_9;
-	register	long	Register_8;
-	*/
-	register struct oprnd *oppnt;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    Register_11;
+    register    float   *Register_10;
+    /*
+    register    long    Register_9;
+    register    long    Register_8;
+    */
+    register struct oprnd *oppnt;
 
-	Register_11 = operand(infop,0)->data;
-	Register_10 = (float *) &acc_high;
-	Register_12 = psl;
-	Set_psl (r12);  
-	asm ("	cvlf	r11");		/* Don't change the order !! */
-	asm ("	movpsl	r12");
-	asm ("	stf	(r10)");
-	New_cc ( Register_12 );
+    Register_11 = operand(infop,0)->data;
+    Register_10 = (float *) &acc_high;
+    Register_12 = psl;
+    Set_psl (r12);  
+    asm ("  cvlf    r11");      /* Don't change the order !! */
+    asm ("  movpsl  r12");
+    asm ("  stf (r10)");
+    New_cc ( Register_12 );
 }

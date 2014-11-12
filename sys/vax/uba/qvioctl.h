@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,11 +30,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)qvioctl.h	7.1 (Berkeley) 5/9/91
+ *  @(#)qvioctl.h   7.1 (Berkeley) 5/9/91
  */
 
-/* 
- *	derived from: @(#)qvioctl.h	1.7 (ULTRIX) 6/11/85
+/*
+ *  derived from: @(#)qvioctl.h 1.7 (ULTRIX) 6/11/85
  */
 /*
  * Ioctl definitions for the qvss.
@@ -50,47 +50,46 @@
 #endif
 
 struct qv_kpcmd {
-	char nbytes;		/* number of bytes in parameter */
-	unsigned char cmd;	/* command to be sent, peripheral bit will */
-				/* be forced by driver */
-	unsigned char par[2];	/* bytes of parameters to be sent */
+    char nbytes;            /* number of bytes in parameter */
+    unsigned char cmd;      /* command to be sent, peripheral bit will */
+                            /* be forced by driver */
+    unsigned char par[2];   /* bytes of parameters to be sent */
 };
 /*
  * qvss information block
  */
 
 struct qv_info {
-	short	mswitches;		/* current value of mouse buttons */
-	vsCursor tablet;		/* current tablet position	*/
-	short	tswitches;		/* current tablet buttons NI!	*/
-	vsCursor cursor;		/* current cursor position	*/
-	short	row;			/* screen row			*/
-	short	col;			/* screen col			*/
-	short	max_row;		/* max character row		*/
-	short	max_col;		/* max character col		*/
-	short	max_x;			/* max x position		*/
-	short	max_y;			/* max y position		*/
-	short	max_cur_x;		/* max cursor y position 	*/
-	short	max_cur_y;		/* max cursor y position	*/
-	char	*bitmap;		/* bit map position		*/
-	short	*scanmap;		/* scanline map position	*/
-	short	*cursorbits;		/* cursor bit position		*/
-	struct	qvdevice *qvaddr;	/* virtual address of the csr	*/
-	vsEvent *ibuff;			/* pointer to event queue	*/
-	int 	iqsize;			/* may assume power of two 	*/
-	int 	ihead;			/* atomic write			*/
-	int 	itail;			/* atomic read			*/
-	vsCursor mouse;			/* atomic read/write		*/
-	vsBox	mbox;			/* atomic read/write		*/
-	short	mthreshold;		/* mouse motion parameter	*/
-	short	mscale;			/* mouse scale factor (if 
-					   negative, then do square).	*/
+    short   mswitches;          /* current value of mouse buttons */
+    vsCursor tablet;            /* current tablet position */
+    short   tswitches;          /* current tablet buttons NI! */
+    vsCursor cursor;            /* current cursor position */
+    short   row;                /* screen row */
+    short   col;                /* screen col */
+    short   max_row;            /* max character row */
+    short   max_col;            /* max character col */
+    short   max_x;              /* max x position */
+    short   max_y;              /* max y position */
+    short   max_cur_x;          /* max cursor y position */
+    short   max_cur_y;          /* max cursor y position */
+    char    *bitmap;            /* bit map position */
+    short   *scanmap;           /* scanline map position */
+    short   *cursorbits;        /* cursor bit position */
+    struct  qvdevice *qvaddr;   /* virtual address of the csr */
+    vsEvent *ibuff;             /* pointer to event queue */
+    int     iqsize;             /* may assume power of two */
+    int     ihead;              /* atomic write */
+    int     itail;              /* atomic read */
+    vsCursor mouse;             /* atomic read/write */
+    vsBox   mbox;               /* atomic read/write */
+    short   mthreshold;         /* mouse motion parameter */
+    short   mscale;             /* mouse scale factor (if
+                                   negative, then do square). */
 };
 typedef struct qv_info vsIoAddr;
 
-#define QIOCGINFO 	_IOR('q', 1, struct qv_info)	/* get the info	 */
-#define QIOCSMSTATE	_IOW('q', 2, vsCursor)		/* set mouse pos */
-#define QIOCINIT	_IO('q', 4)			/* init screen   */
-#define QIOCKPCMD	_IOW('q', 5, struct qv_kpcmd)	/* keybd. per. cmd */
-#define QIOCADDR	_IOR('q', 6, struct qv_info *)	/* get address */
-
+#define QIOCGINFO   _IOR('q', 1, struct qv_info)    /* get the info */
+#define QIOCSMSTATE _IOW('q', 2, vsCursor)          /* set mouse pos */
+#define QIOCINIT    _IO('q', 4)                     /* init screen */
+#define QIOCKPCMD   _IOW('q', 5, struct qv_kpcmd)   /* keybd. per. cmd */
+#define QIOCADDR    _IOR('q', 6, struct qv_info *)  /* get address */

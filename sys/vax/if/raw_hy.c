@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)raw_hy.c	7.4 (Berkeley) 12/16/90
+ *  @(#)raw_hy.c    7.4 (Berkeley) 12/16/90
  */
 
 /*
@@ -77,32 +77,32 @@
  * We don't really check the header supplied by the user.
  */
 rhy_output(m, so)
-	register struct mbuf *m;
-	struct socket *so;
+    register struct mbuf *m;
+    struct socket *so;
 {
-	int error = 0;
-	register struct sockaddr_in *sin;
-	register struct rawcb *rp = sotorawcb(so);
-	struct in_ifaddr *ia;
+    int error = 0;
+    register struct sockaddr_in *sin;
+    register struct rawcb *rp = sotorawcb(so);
+    struct in_ifaddr *ia;
 
-	/*
-	 * Verify user has supplied necessary space
-	 * for the header.
-	 */
-	if ((m->m_off > MMAXOFF || m->m_len < sizeof(struct hym_hdr)) &&
-	    (m = m_pullup(m, sizeof(struct hym_hdr))) == 0) {
-		error = EMSGSIZE;	/* XXX */
-		goto bad;
-	}
+    /*
+     * Verify user has supplied necessary space
+     * for the header.
+     */
+    if ((m->m_off > MMAXOFF || m->m_len < sizeof(struct hym_hdr)) &&
+        (m = m_pullup(m, sizeof(struct hym_hdr))) == 0) {
+        error = EMSGSIZE;   /* XXX */
+        goto bad;
+    }
 
-	sin = (struct sockaddr_in *)&rp->rcb_faddr;
-	/* no routing here */
-	ia = in_iaonnetof(in_netof(sin->sin_addr));
-	if (ia)
-		return (hyoutput(ia->ia_ifp, m, (struct sockaddr *)sin));
-	error = ENETUNREACH;
+    sin = (struct sockaddr_in *)&rp->rcb_faddr;
+    /* no routing here */
+    ia = in_iaonnetof(in_netof(sin->sin_addr));
+    if (ia)
+        return (hyoutput(ia->ia_ifp, m, (struct sockaddr *)sin));
+    error = ENETUNREACH;
 bad:
-	m_freem(m);
-	return (error);
+    m_freem(m);
+    return (error);
 }
 #endif

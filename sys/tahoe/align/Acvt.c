@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,22 +33,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acvt.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acvt.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cvt(infop) 	process_info *infop;
+cvt(infop)  process_info *infop;
 /*
-/*	Convert , checks overflow
+/*  Convert , checks overflow
 /*
 /****************************************/
 {
-	register long result;
+    register long result;
 
-	result = operand(infop,0)->data;
-	if (result < 0 )  negative_1 ; else negative_0;
-	if (result == 0 )  zero_1 ; else zero_0;
-	carry_1; overflow_0;
-		/* Overflow may be set by writing back */
-	write_back (infop, result, operand(infop,1) );
+    result = operand(infop,0)->data;
+    if (result < 0 )  negative_1 ; else negative_0;
+    if (result == 0 )  zero_1 ; else zero_0;
+    carry_1; overflow_0;
+        /* Overflow may be set by writing back */
+    write_back (infop, result, operand(infop,1) );
 }

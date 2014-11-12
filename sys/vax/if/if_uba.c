@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)if_uba.c	7.16 (Berkeley) 12/16/90
+ *  @(#)if_uba.c    7.16 (Berkeley) 12/16/90
  */
 
 #include "sys/param.h"
@@ -56,7 +56,7 @@
  * Routines supporting UNIBUS network interfaces.
  *
  * TODO:
- *	Support interfaces using only one BDP statically.
+ *  Support interfaces using only one BDP statically.
  */
 
 /*
@@ -67,71 +67,71 @@
  * allocate page frames in the mbuffer pool for these pages.
  */
 if_ubaminit(ifu, uban, hlen, nmr, ifr, nr, ifw, nw)
-	register struct ifubinfo *ifu;
-	int uban, hlen, nmr, nr, nw;
-	register struct ifrw *ifr;
-	register struct ifxmt *ifw;
+    register struct ifubinfo *ifu;
+    int uban, hlen, nmr, nr, nw;
+    register struct ifrw *ifr;
+    register struct ifxmt *ifw;
 {
-	register caddr_t p;
-	caddr_t cp;
-	int i, nclbytes, off;
+    register caddr_t p;
+    caddr_t cp;
+    int i, nclbytes, off;
 
-	if (hlen)
-		off = MCLBYTES - hlen;
-	else
-		off = 0;
-	nclbytes = roundup(nmr * NBPG, MCLBYTES);
-	if (hlen)
-		nclbytes += MCLBYTES;
-	if (ifr[0].ifrw_addr)
-		cp = ifr[0].ifrw_addr - off;
-	else {
-		cp = (caddr_t)malloc((u_long)((nr + nw) * nclbytes), M_DEVBUF,
-		    M_NOWAIT);
-		if (cp == 0)
-			return (0);
-		p = cp;
-		for (i = 0; i < nr; i++) {
-			ifr[i].ifrw_addr = p + off;
-			p += nclbytes;
-		}
-		for (i = 0; i < nw; i++) {
-			ifw[i].ifw_base = p;
-			ifw[i].ifw_addr = p + off;
-			p += nclbytes;
-		}
-		ifu->iff_hlen = hlen;
-		ifu->iff_uban = uban;
-		ifu->iff_uba = uba_hd[uban].uh_uba;
-		ifu->iff_ubamr = uba_hd[uban].uh_mr;
-	}
-	for (i = 0; i < nr; i++)
-		if (if_ubaalloc(ifu, &ifr[i], nmr) == 0) {
-			nr = i;
-			nw = 0;
-			goto bad;
-		}
-	for (i = 0; i < nw; i++)
-		if (if_ubaalloc(ifu, &ifw[i].ifrw, nmr) == 0) {
-			nw = i;
-			goto bad;
-		}
-	while (--nw >= 0) {
-		for (i = 0; i < nmr; i++)
-			ifw[nw].ifw_wmap[i] = ifw[nw].ifw_mr[i];
-		ifw[nw].ifw_xswapd = 0;
-		ifw[nw].ifw_flags = IFRW_W;
-		ifw[nw].ifw_nmr = nmr;
-	}
-	return (1);
+    if (hlen)
+        off = MCLBYTES - hlen;
+    else
+        off = 0;
+    nclbytes = roundup(nmr * NBPG, MCLBYTES);
+    if (hlen)
+        nclbytes += MCLBYTES;
+    if (ifr[0].ifrw_addr)
+        cp = ifr[0].ifrw_addr - off;
+    else {
+        cp = (caddr_t)malloc((u_long)((nr + nw) * nclbytes), M_DEVBUF,
+            M_NOWAIT);
+        if (cp == 0)
+            return (0);
+        p = cp;
+        for (i = 0; i < nr; i++) {
+            ifr[i].ifrw_addr = p + off;
+            p += nclbytes;
+        }
+        for (i = 0; i < nw; i++) {
+            ifw[i].ifw_base = p;
+            ifw[i].ifw_addr = p + off;
+            p += nclbytes;
+        }
+        ifu->iff_hlen = hlen;
+        ifu->iff_uban = uban;
+        ifu->iff_uba = uba_hd[uban].uh_uba;
+        ifu->iff_ubamr = uba_hd[uban].uh_mr;
+    }
+    for (i = 0; i < nr; i++)
+        if (if_ubaalloc(ifu, &ifr[i], nmr) == 0) {
+            nr = i;
+            nw = 0;
+            goto bad;
+        }
+    for (i = 0; i < nw; i++)
+        if (if_ubaalloc(ifu, &ifw[i].ifrw, nmr) == 0) {
+            nw = i;
+            goto bad;
+        }
+    while (--nw >= 0) {
+        for (i = 0; i < nmr; i++)
+            ifw[nw].ifw_wmap[i] = ifw[nw].ifw_mr[i];
+        ifw[nw].ifw_xswapd = 0;
+        ifw[nw].ifw_flags = IFRW_W;
+        ifw[nw].ifw_nmr = nmr;
+    }
+    return (1);
 bad:
-	while (--nw >= 0)
-		ubarelse(ifu->iff_uban, &ifw[nw].ifw_info);
-	while (--nr >= 0)
-		ubarelse(ifu->iff_uban, &ifr[nr].ifrw_info);
-	free(cp, M_DEVBUF);
-	ifr[0].ifrw_addr = 0;
-	return (0);
+    while (--nw >= 0)
+        ubarelse(ifu->iff_uban, &ifw[nw].ifw_info);
+    while (--nr >= 0)
+        ubarelse(ifu->iff_uban, &ifr[nr].ifrw_info);
+    free(cp, M_DEVBUF);
+    ifr[0].ifrw_addr = 0;
+    return (0);
 }
 
 /*
@@ -141,22 +141,22 @@ bad:
  */
 static
 if_ubaalloc(ifu, ifrw, nmr)
-	struct ifubinfo *ifu;
-	register struct ifrw *ifrw;
-	int nmr;
+    struct ifubinfo *ifu;
+    register struct ifrw *ifrw;
+    int nmr;
 {
-	register int info;
+    register int info;
 
-	info =
-	    uballoc(ifu->iff_uban, ifrw->ifrw_addr, nmr*NBPG + ifu->iff_hlen,
-	        ifu->iff_flags);
-	if (info == 0)
-		return (0);
-	ifrw->ifrw_info = info;
-	ifrw->ifrw_bdp = UBAI_BDP(info);
-	ifrw->ifrw_proto = UBAMR_MRV | (UBAI_BDP(info) << UBAMR_DPSHIFT);
-	ifrw->ifrw_mr = &ifu->iff_ubamr[UBAI_MR(info) + (ifu->iff_hlen? 1 : 0)];
-	return (1);
+    info =
+        uballoc(ifu->iff_uban, ifrw->ifrw_addr, nmr*NBPG + ifu->iff_hlen,
+        ifu->iff_flags);
+    if (info == 0)
+        return (0);
+    ifrw->ifrw_info = info;
+    ifrw->ifrw_bdp = UBAI_BDP(info);
+    ifrw->ifrw_proto = UBAMR_MRV | (UBAI_BDP(info) << UBAMR_DPSHIFT);
+    ifrw->ifrw_mr = &ifu->iff_ubamr[UBAI_MR(info) + (ifu->iff_hlen? 1 : 0)];
+    return (1);
 }
 
 /*
@@ -177,105 +177,105 @@ if_ubaalloc(ifu, ifrw, nmr)
  */
 struct mbuf *
 if_ubaget(ifu, ifr, totlen, off, ifp)
-	struct ifubinfo *ifu;
-	register struct ifrw *ifr;
-	register int totlen;
-	int off;
-	struct ifnet *ifp;
+    struct ifubinfo *ifu;
+    register struct ifrw *ifr;
+    register int totlen;
+    int off;
+    struct ifnet *ifp;
 {
-	struct mbuf *top, **mp;
-	register struct mbuf *m;
-	register caddr_t cp = ifr->ifrw_addr + ifu->iff_hlen, pp;
-	register int len;
-	caddr_t epkt = cp + totlen;
+    struct mbuf *top, **mp;
+    register struct mbuf *m;
+    register caddr_t cp = ifr->ifrw_addr + ifu->iff_hlen, pp;
+    register int len;
+    caddr_t epkt = cp + totlen;
 
-	top = 0;
-	mp = &top;
-	/*
-	 * Skip the trailer header (type and trailer length).
-	 */
-	if (off) {
-		off += 2 * sizeof(u_short);
-		totlen -= 2 * sizeof(u_short);
-		cp += off;
-	}
-	MGETHDR(m, M_DONTWAIT, MT_DATA);
-	if (m == 0)
-		return ((struct mbuf *)NULL);
-	m->m_pkthdr.rcvif = ifp;
-	m->m_pkthdr.len = totlen;
-	m->m_len = MHLEN;
+    top = 0;
+    mp = &top;
+    /*
+     * Skip the trailer header (type and trailer length).
+     */
+    if (off) {
+        off += 2 * sizeof(u_short);
+        totlen -= 2 * sizeof(u_short);
+        cp += off;
+    }
+    MGETHDR(m, M_DONTWAIT, MT_DATA);
+    if (m == 0)
+        return ((struct mbuf *)NULL);
+    m->m_pkthdr.rcvif = ifp;
+    m->m_pkthdr.len = totlen;
+    m->m_len = MHLEN;
 
-	if (ifr->ifrw_flags & IFRW_W)
-		rcv_xmtbuf((struct ifxmt *)ifr);
+    if (ifr->ifrw_flags & IFRW_W)
+        rcv_xmtbuf((struct ifxmt *)ifr);
 
-	while (totlen > 0) {
-		if (top) {
-			MGET(m, M_DONTWAIT, MT_DATA);
-			if (m == 0) {
-				m_freem(top);
-				top = 0;
-				goto out;
-			}
-			m->m_len = MLEN;
-		}
-		len = min(totlen, epkt - cp);
-		if (len >= MINCLSIZE) {
-			struct pte *cpte, *ppte;
-			int x, *ip, i;
+    while (totlen > 0) {
+        if (top) {
+            MGET(m, M_DONTWAIT, MT_DATA);
+            if (m == 0) {
+                m_freem(top);
+                top = 0;
+                goto out;
+            }
+            m->m_len = MLEN;
+        }
+        len = min(totlen, epkt - cp);
+        if (len >= MINCLSIZE) {
+            struct pte *cpte, *ppte;
+            int x, *ip, i;
 
-			MCLGET(m, M_DONTWAIT);
-			if ((m->m_flags & M_EXT) == 0)
-				goto nopage;
-			len = min(len, MCLBYTES);
-			m->m_len = len;
-			if (!claligned(cp))
-				goto copy;
+            MCLGET(m, M_DONTWAIT);
+            if ((m->m_flags & M_EXT) == 0)
+                goto nopage;
+            len = min(len, MCLBYTES);
+            m->m_len = len;
+            if (!claligned(cp))
+                goto copy;
 
-			/*
-			 * Switch pages mapped to UNIBUS with new page pp,
-			 * as quick form of copy.  Remap UNIBUS and invalidate.
-			 */
-			pp = mtod(m, char *);
-			cpte = kvtopte(cp);
-			ppte = kvtopte(pp);
-			x = btop(cp - ifr->ifrw_addr);
-			ip = (int *)&ifr->ifrw_mr[x];
-			for (i = 0; i < MCLBYTES/NBPG; i++) {
-				struct pte t;
-				t = *ppte; *ppte++ = *cpte; *cpte = t;
-				*ip++ = cpte++->pg_pfnum|ifr->ifrw_proto;
-				mtpr(TBIS, cp);
-				cp += NBPG;
-				mtpr(TBIS, (caddr_t)pp);
-				pp += NBPG;
-			}
-			goto nocopy;
-		}
+            /*
+             * Switch pages mapped to UNIBUS with new page pp,
+             * as quick form of copy.  Remap UNIBUS and invalidate.
+             */
+            pp = mtod(m, char *);
+            cpte = kvtopte(cp);
+            ppte = kvtopte(pp);
+            x = btop(cp - ifr->ifrw_addr);
+            ip = (int *)&ifr->ifrw_mr[x];
+            for (i = 0; i < MCLBYTES/NBPG; i++) {
+                struct pte t;
+                t = *ppte; *ppte++ = *cpte; *cpte = t;
+                *ip++ = cpte++->pg_pfnum|ifr->ifrw_proto;
+                mtpr(TBIS, cp);
+                cp += NBPG;
+                mtpr(TBIS, (caddr_t)pp);
+                pp += NBPG;
+            }
+            goto nocopy;
+        }
 nopage:
-		if (len < m->m_len) {
-			/*
-			 * Place initial small packet/header at end of mbuf.
-			 */
-			if (top == 0 && len + max_linkhdr <= m->m_len)
-				m->m_data += max_linkhdr;
-			m->m_len = len;
-		} else
-			len = m->m_len;
+        if (len < m->m_len) {
+            /*
+             * Place initial small packet/header at end of mbuf.
+             */
+            if (top == 0 && len + max_linkhdr <= m->m_len)
+                m->m_data += max_linkhdr;
+            m->m_len = len;
+        } else
+            len = m->m_len;
 copy:
-		bcopy(cp, mtod(m, caddr_t), (unsigned)len);
-		cp += len;
+        bcopy(cp, mtod(m, caddr_t), (unsigned)len);
+        cp += len;
 nocopy:
-		*mp = m;
-		mp = &m->m_next;
-		totlen -= len;
-		if (cp == epkt)
-			cp = ifr->ifrw_addr + ifu->iff_hlen;
-	}
+        *mp = m;
+        mp = &m->m_next;
+        totlen -= len;
+        if (cp == epkt)
+            cp = ifr->ifrw_addr + ifu->iff_hlen;
+    }
 out:
-	if (ifr->ifrw_flags & IFRW_W)
-		restor_xmtbuf((struct ifxmt *)ifr);
-	return (top);
+    if (ifr->ifrw_flags & IFRW_W)
+        restor_xmtbuf((struct ifxmt *)ifr);
+    return (top);
 }
 
 /*
@@ -288,29 +288,29 @@ out:
  */
 static
 rcv_xmtbuf(ifw)
-	register struct ifxmt *ifw;
+    register struct ifxmt *ifw;
 {
-	register struct mbuf *m;
-	struct mbuf **mprev;
-	register i;
-	char *cp;
+    register struct mbuf *m;
+    struct mbuf **mprev;
+    register i;
+    char *cp;
 
-	while (i = ffs((long)ifw->ifw_xswapd)) {
-		cp = ifw->ifw_base + i * MCLBYTES;
-		i--;
-		ifw->ifw_xswapd &= ~(1<<i);
-		mprev = &ifw->ifw_xtofree;
-		for (m = ifw->ifw_xtofree; m && m->m_next; m = m->m_next)
-			mprev = &m->m_next;
-		if (m == NULL)
-			break;
-		bcopy(mtod(m, caddr_t), cp, MCLBYTES);
-		(void) m_free(m);
-		*mprev = NULL;
-	}
-	ifw->ifw_xswapd = 0;
-	for (i = 0; i < ifw->ifw_nmr; i++)
-		ifw->ifw_mr[i] = ifw->ifw_wmap[i];
+    while (i = ffs((long)ifw->ifw_xswapd)) {
+        cp = ifw->ifw_base + i * MCLBYTES;
+        i--;
+        ifw->ifw_xswapd &= ~(1<<i);
+        mprev = &ifw->ifw_xtofree;
+        for (m = ifw->ifw_xtofree; m && m->m_next; m = m->m_next)
+            mprev = &m->m_next;
+        if (m == NULL)
+            break;
+        bcopy(mtod(m, caddr_t), cp, MCLBYTES);
+        (void) m_free(m);
+        *mprev = NULL;
+    }
+    ifw->ifw_xswapd = 0;
+    for (i = 0; i < ifw->ifw_nmr; i++)
+        ifw->ifw_mr[i] = ifw->ifw_wmap[i];
 }
 
 /*
@@ -319,12 +319,12 @@ rcv_xmtbuf(ifw)
  */
 static
 restor_xmtbuf(ifw)
-	register struct ifxmt *ifw;
+    register struct ifxmt *ifw;
 {
-	register i;
+    register i;
 
-	for (i = 0; i < ifw->ifw_nmr; i++)
-		ifw->ifw_wmap[i] = ifw->ifw_mr[i];
+    for (i = 0; i < ifw->ifw_nmr; i++)
+        ifw->ifw_wmap[i] = ifw->ifw_mr[i];
 }
 
 /*
@@ -335,63 +335,63 @@ restor_xmtbuf(ifw)
  * i/o space.
  */
 if_ubaput(ifu, ifw, m)
-	struct ifubinfo *ifu;
-	register struct ifxmt *ifw;
-	register struct mbuf *m;
+    struct ifubinfo *ifu;
+    register struct ifxmt *ifw;
+    register struct mbuf *m;
 {
-	register struct mbuf *mp;
-	register caddr_t cp, dp;
-	register int i;
-	int xswapd = 0;
-	int x, cc, t;
+    register struct mbuf *mp;
+    register caddr_t cp, dp;
+    register int i;
+    int xswapd = 0;
+    int x, cc, t;
 
-	cp = ifw->ifw_addr;
-	while (m) {
-		dp = mtod(m, char *);
-		if (claligned(cp) && claligned(dp) &&
-		    (m->m_len == MCLBYTES || m->m_next == (struct mbuf *)0)) {
-			struct pte *pte;
-			int *ip;
+    cp = ifw->ifw_addr;
+    while (m) {
+        dp = mtod(m, char *);
+        if (claligned(cp) && claligned(dp) &&
+            (m->m_len == MCLBYTES || m->m_next == (struct mbuf *)0)) {
+            struct pte *pte;
+            int *ip;
 
-			pte = kvtopte(dp);
-			x = btop(cp - ifw->ifw_addr);
-			ip = (int *)&ifw->ifw_mr[x];
-			for (i = 0; i < MCLBYTES/NBPG; i++)
-				*ip++ = ifw->ifw_proto | pte++->pg_pfnum;
-			xswapd |= 1 << (x>>(MCLSHIFT-PGSHIFT));
-			mp = m->m_next;
-			m->m_next = ifw->ifw_xtofree;
-			ifw->ifw_xtofree = m;
-			cp += m->m_len;
-		} else {
-			bcopy(mtod(m, caddr_t), cp, (unsigned)m->m_len);
-			cp += m->m_len;
-			MFREE(m, mp);
-		}
-		m = mp;
-	}
+            pte = kvtopte(dp);
+            x = btop(cp - ifw->ifw_addr);
+            ip = (int *)&ifw->ifw_mr[x];
+            for (i = 0; i < MCLBYTES/NBPG; i++)
+                *ip++ = ifw->ifw_proto | pte++->pg_pfnum;
+            xswapd |= 1 << (x>>(MCLSHIFT-PGSHIFT));
+            mp = m->m_next;
+            m->m_next = ifw->ifw_xtofree;
+            ifw->ifw_xtofree = m;
+            cp += m->m_len;
+        } else {
+            bcopy(mtod(m, caddr_t), cp, (unsigned)m->m_len);
+            cp += m->m_len;
+            MFREE(m, mp);
+        }
+        m = mp;
+    }
 
-	/*
-	 * Xswapd is the set of clusters we just mapped out.  Ifu->iff_xswapd
-	 * is the set of clusters mapped out from before.  We compute
-	 * the number of clusters involved in this operation in x.
-	 * Clusters mapped out before and involved in this operation
-	 * should be unmapped so original pages will be accessed by the device.
-	 */
-	cc = cp - ifw->ifw_addr;
-	x = ((cc - ifu->iff_hlen) + MCLBYTES - 1) >> MCLSHIFT;
-	ifw->ifw_xswapd &= ~xswapd;
-	while (i = ffs((long)ifw->ifw_xswapd)) {
-		i--;
-		if (i >= x)
-			break;
-		ifw->ifw_xswapd &= ~(1<<i);
-		i *= MCLBYTES/NBPG;
-		for (t = 0; t < MCLBYTES/NBPG; t++) {
-			ifw->ifw_mr[i] = ifw->ifw_wmap[i];
-			i++;
-		}
-	}
-	ifw->ifw_xswapd |= xswapd;
-	return (cc);
+    /*
+     * Xswapd is the set of clusters we just mapped out.  Ifu->iff_xswapd
+     * is the set of clusters mapped out from before.  We compute
+     * the number of clusters involved in this operation in x.
+     * Clusters mapped out before and involved in this operation
+     * should be unmapped so original pages will be accessed by the device.
+     */
+    cc = cp - ifw->ifw_addr;
+    x = ((cc - ifu->iff_hlen) + MCLBYTES - 1) >> MCLSHIFT;
+    ifw->ifw_xswapd &= ~xswapd;
+    while (i = ffs((long)ifw->ifw_xswapd)) {
+        i--;
+        if (i >= x)
+            break;
+        ifw->ifw_xswapd &= ~(1<<i);
+        i *= MCLBYTES/NBPG;
+        for (t = 0; t < MCLBYTES/NBPG; t++) {
+            ifw->ifw_mr[i] = ifw->ifw_wmap[i];
+            i++;
+        }
+    }
+    ifw->ifw_xswapd |= xswapd;
+    return (cc);
 }

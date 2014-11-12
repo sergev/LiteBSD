@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Ksubd.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Ksubd.s     7.1 (Berkeley) 12/6/90
  */
 
 #include "../tahoe/SYS.h"
@@ -43,29 +43,29 @@
  * Ksubd(d1,d2)
  * double d1,d2;
  * {
- * 	return(d1+(-d2));
+ *      return(d1+(-d2));
  * }
  */
-	.text
+        .text
 ENTRY(Ksubd, 0)
-	tstl	4(fp)
-	jneq	next
-	movl	16(fp),r1
-	movl	12(fp),r0
-	lnd	r0
-	std	r0
-	ret
+        tstl    4(fp)
+        jneq    next
+        movl    16(fp),r1
+        movl    12(fp),r0
+        lnd     r0
+        std     r0
+        ret
 next:
-	tstl	12(fp)
-	jneq	doit
-	movl	8(fp),r1
-	movl	4(fp),r0
-	ret
+        tstl    12(fp)
+        jneq    doit
+        movl    8(fp),r1
+        movl    4(fp),r0
+        ret
 doit:
-	lnd	12(fp)		# -op
-	pushl	20(fp)		# hfs
-	pushd			# push op_least op_most
-	pushl	8(fp)
-	pushl	4(fp)		# acc
-	callf	$24,_Kaddd
-	ret
+        lnd     12(fp)          # -op
+        pushl   20(fp)          # hfs
+        pushd                   # push op_least op_most
+        pushl   8(fp)
+        pushl   4(fp)           # acc
+        callf   $24,_Kaddd
+        ret

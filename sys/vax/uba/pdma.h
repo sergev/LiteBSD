@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,13 +30,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)pdma.h	7.2 (Berkeley) 5/9/91
+ *  @(#)pdma.h  7.2 (Berkeley) 5/9/91
  */
 
 struct pdma {
-	struct	dzdevice *p_addr;
-	char	*p_mem;
-	char	*p_end;
-	int	p_arg;
-	int	(*p_fcn)();
+    struct  dzdevice *p_addr;
+    char    *p_mem;
+    char    *p_end;
+    int     p_arg;
+    int     (*p_fcn)();
 };

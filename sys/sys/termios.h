@@ -43,39 +43,39 @@
  *
  *  Name         Subscript  Enabled by
  */
-#define VEOF        0   /* ICANON */
-#define VEOL        1   /* ICANON */
+#define VEOF            0   /* ICANON */
+#define VEOL            1   /* ICANON */
 #ifndef _POSIX_SOURCE
-#define VEOL2       2   /* ICANON */
+#define VEOL2           2   /* ICANON */
 #endif
-#define VERASE      3   /* ICANON */
+#define VERASE          3   /* ICANON */
 #ifndef _POSIX_SOURCE
-#define VWERASE     4   /* ICANON */
+#define VWERASE         4   /* ICANON */
 #endif
-#define VKILL       5   /* ICANON */
+#define VKILL           5   /* ICANON */
 #ifndef _POSIX_SOURCE
-#define VREPRINT    6   /* ICANON */
+#define VREPRINT        6   /* ICANON */
 #endif
-/*                  7      spare 1 */
-#define VINTR       8   /* ISIG */
-#define VQUIT       9   /* ISIG */
-#define VSUSP       10  /* ISIG */
+/*                      7      spare 1 */
+#define VINTR           8   /* ISIG */
+#define VQUIT           9   /* ISIG */
+#define VSUSP           10  /* ISIG */
 #ifndef _POSIX_SOURCE
-#define VDSUSP      11  /* ISIG */
+#define VDSUSP          11  /* ISIG */
 #endif
-#define VSTART      12  /* IXON, IXOFF */
-#define VSTOP       13  /* IXON, IXOFF */
+#define VSTART          12  /* IXON, IXOFF */
+#define VSTOP           13  /* IXON, IXOFF */
 #ifndef _POSIX_SOURCE
-#define VLNEXT      14  /* IEXTEN */
-#define VDISCARD    15  /* IEXTEN */
+#define VLNEXT          14  /* IEXTEN */
+#define VDISCARD        15  /* IEXTEN */
 #endif
-#define VMIN        16  /* !ICANON */
-#define VTIME       17  /* !ICANON */
+#define VMIN            16  /* !ICANON */
+#define VTIME           17  /* !ICANON */
 #ifndef _POSIX_SOURCE
-#define VSTATUS     18  /* ICANON */
-/*                  19     spare 2 */
+#define VSTATUS         18  /* ICANON */
+/*                      19     spare 2 */
 #endif
-#define NCCS        20
+#define NCCS            20
 
 #define _POSIX_VDISABLE ((unsigned char)'\377')
 

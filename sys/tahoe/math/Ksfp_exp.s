@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Ksfp_exp.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Ksfp_exp.s  7.1 (Berkeley) 12/6/90
  */
 
 #include "../math/fp.h"
@@ -41,15 +41,15 @@
 #include "../tahoe/SYS.h"
 
 ENTRY(Ksfpover, 0)
-	movl	$HUGE0,r0
-	movl	$HUGE1,r1
-	ret
+        movl    $HUGE0,r0
+        movl    $HUGE1,r1
+        ret
 
 ENTRY(Ksfpunder, 0)
-	clrl	r0
-	clrl	r1
-	ret
+        clrl    r0
+        clrl    r1
+        ret
 
 ENTRY(Ksfpzdiv, 0)
-	divl2	$0,r1		# force divission by zero.
-	ret
+        divl2   $0,r1           # force divission by zero.
+        ret

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,25 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acvfl.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acvfl.c 7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cvfl(infop)	process_info *infop;
+cvfl(infop) process_info *infop;
 /*
-/*	Convert single precission accumulator into integer.
+/*  Convert single precission accumulator into integer.
 /*
 /******************************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register	float	*acc_pnt;
-	register	long	result;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    float   *acc_pnt;
+    register    long    result;
 
-	acc_pnt = (float *)&acc_high;
-	Register_12=psl;
-	Set_psl(r12);	/* restore the user psl */
-	result = (long) *acc_pnt;
-	asm ("	movpsl	r12");
-	New_cc (Register_12);
-	write_back (infop, result, operand(infop,0) );
+    acc_pnt = (float *)&acc_high;
+    Register_12=psl;
+    Set_psl(r12);   /* restore the user psl */
+    result = (long) *acc_pnt;
+    asm ("  movpsl  r12");
+    New_cc (Register_12);
+    write_back (infop, result, operand(infop,0) );
 }

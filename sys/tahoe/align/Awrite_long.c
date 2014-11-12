@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,32 +33,32 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Awrite_long.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Awrite_long.c   7.1 (Berkeley) 12/6/90
  */
 
-#include	"align.h"
+#include    "align.h"
 
 write_longword (infop, longword, where)
-process_info	*infop;
-long		longword;
-struct oprnd 	*where;
+process_info    *infop;
+long        longword;
+struct oprnd    *where;
 /*
-/*	Put the longword at the given address in
-/*	tahoe's memory.
+/*  Put the longword at the given address in
+/*  tahoe's memory.
 /*
 /**************************************************/
 {
-	if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
-	switch (where->mode & ADDFIELD)	/* Mask out R/W bits */
-	{
-	case Add:
-	case SPmode:
-		put_longword (infop, longword, where->address);
-		break;
-	case Dir:
-		Replace (infop, where->reg_number, longword);
-		break;
-	default:
-		printf("Unknown destination in write_long (alignment code)\n");
-	};
-}	
+    if (! (where->mode & W)) exception(infop, ILL_ADDRMOD);
+    switch (where->mode & ADDFIELD) /* Mask out R/W bits */
+    {
+    case Add:
+    case SPmode:
+        put_longword (infop, longword, where->address);
+        break;
+    case Dir:
+        Replace (infop, where->reg_number, longword);
+        break;
+    default:
+        printf("Unknown destination in write_long (alignment code)\n");
+    };
+}   

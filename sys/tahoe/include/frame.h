@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,15 +33,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)frame.h	7.2 (Berkeley) 5/8/91
+ *  @(#)frame.h 7.2 (Berkeley) 5/8/91
  */
 
 /*
  * Definition of the tahoe call frame.
  */
 struct frame {
-	int	fr_savpc;		/* saved program counter */
-	u_int	fr_mask:16,		/* register save mask */
-		fr_removed:16;		/* 4*number of arguments + 4 */
-	int	fr_savfp;		/* saved frame pointer */
+    int     fr_savpc;           /* saved program counter */
+    u_int   fr_mask:16,         /* register save mask */
+            fr_removed:16;      /* 4*number of arguments + 4 */
+    int     fr_savfp;           /* saved frame pointer */
 };

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,25 +33,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Aor2.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Aor2.c  7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h" 
-or2 (infop)	process_info *infop;
+or2 (infop) process_info *infop;
 /*
-/*	Or , 2 operands.
+/*  Or , 2 operands.
 /*
 /****************************************/
 {
-	register	long	Register_12;	/* Has to be first reg ! */
-	register 	long	data0, data1, result;
+    register    long    Register_12;    /* Has to be first reg ! */
+    register    long    data0, data1, result;
 
-	data0 = operand(infop,0)->data; 
-	data1 = operand(infop,1)->data; 
-	Register_12=psl;
-	Set_psl(r12);	/* restore the user psl */
-	result = data0 | data1;		/* 32 bits of true result */
-	asm ("	movpsl	r12");
-	New_cc (Register_12);
-	write_back (infop,result, operand(infop,1) );
+    data0 = operand(infop,0)->data; 
+    data1 = operand(infop,1)->data; 
+    Register_12=psl;
+    Set_psl(r12);   /* restore the user psl */
+    result = data0 | data1;     /* 32 bits of true result */
+    asm ("  movpsl  r12");
+    New_cc (Register_12);
+    write_back (infop,result, operand(infop,1) );
 }

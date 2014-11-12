@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -32,7 +32,7 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)machpats.c	1.4 (Berkeley) 5/8/91";
+static char sccsid[] = "@(#)machpats.c  1.4 (Berkeley) 5/8/91";
 #endif /* not lint */
 
 #include "inline.h"
@@ -42,35 +42,35 @@ static char sccsid[] = "@(#)machpats.c	1.4 (Berkeley) 5/8/91";
  */
 struct pats machine_ptab[] = {
 
-	{ 3, "_blkcpy\n",
-"	movl	(sp)+,r0\n\
-	movl	(sp)+,r1\n\
-	movl	(sp)+,r2\n\
-	movblk\n" },
+    { 3, "_blkcpy\n",
+"   movl    (sp)+,r0\n\
+    movl    (sp)+,r1\n\
+    movl    (sp)+,r2\n\
+    movblk\n" },
 
-	{ 3, "_bcopy\n",
-"	movl	(sp)+,r0\n\
-	movl	(sp)+,r1\n\
-	movl	(sp)+,r2\n\
-	movblk\n" },
+    { 3, "_bcopy\n",
+"   movl    (sp)+,r0\n\
+    movl    (sp)+,r1\n\
+    movl    (sp)+,r2\n\
+    movblk\n" },
 
-	{ 2, "_bzero\n",
-"	movl	(sp)+,r1\n\
-	movl	(sp)+,r2\n\
-	movab	1f,r0\n\
-	movs3\n\
-	.data\n\
-1:	.byte	0\n\
-	.text\n" },
+    { 2, "_bzero\n",
+"   movl    (sp)+,r1\n\
+    movl    (sp)+,r2\n\
+    movab   1f,r0\n\
+    movs3\n\
+    .data\n\
+1:  .byte   0\n\
+    .text\n" },
 
-	{ 2, "_blkclr\n",
-"	movl	(sp)+,r1\n\
-	movl	(sp)+,r2\n\
-	movab	1f,r0\n\
-	movs3\n\
-	.data\n\
-1:	.byte	0\n\
-	.text\n" },
+    { 2, "_blkclr\n",
+"   movl    (sp)+,r1\n\
+    movl    (sp)+,r2\n\
+    movab   1f,r0\n\
+    movs3\n\
+    .data\n\
+1:  .byte   0\n\
+    .text\n" },
 
-	{ 0, "", "" }
+    { 0, "", "" }
 };

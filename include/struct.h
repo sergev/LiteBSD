@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1983, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,22 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)struct.h	8.1 (Berkeley) 6/2/93
+ *  @(#)struct.h    8.1 (Berkeley) 6/2/93
  */
 
 #ifndef _STRUCT_H_
-#define	_STRUCT_H_
+#define _STRUCT_H_
 
 /* Offset of the field in the structure. */
-#define	fldoff(name, field) \
-	((int)&(((struct name *)0)->field))
+#define fldoff(name, field) \
+    ((int)&(((struct name *)0)->field))
 
 /* Size of the field in the structure. */
-#define	fldsiz(name, field) \
-	(sizeof(((struct name *)0)->field))
+#define fldsiz(name, field) \
+    (sizeof(((struct name *)0)->field))
 
 /* Address of the structure from a field. */
-#define	strbase(name, addr, field) \
-	((struct name *)((char *)(addr) - fldoff(name, field)))
+#define strbase(name, addr, field) \
+    ((struct name *)((char *)(addr) - fldoff(name, field)))
 
 #endif /* !_STRUCT_H_ */

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Apush.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Apush.c 7.1 (Berkeley) 12/6/90
  */
 
-#include	"align.h"
+#include    "align.h"
 
-push (infop,longword)	process_info *infop;
-int	longword;
+push (infop,longword)   process_info *infop;
+int longword;
 /*
-/*	Push the given datum on the current stack.
+/*  Push the given datum on the current stack.
 /*
 /******************************************/
 {
 
-	struct oprnd temp;
+    struct oprnd temp;
 
-	temp.mode = Add | W; 
-	sp -= 4; 
-	temp.address = sp; 
-	temp.length = 4;
-	write_back(infop,longword, &temp) ;
+    temp.mode = Add | W; 
+    sp -= 4; 
+    temp.address = sp; 
+    temp.length = 4;
+    write_back(infop,longword, &temp) ;
 }

@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,24 +33,24 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Knegf.s	7.1 (Berkeley) 12/6/90
+ *      @(#)Knegf.s     7.1 (Berkeley) 12/6/90
  */
 
 #include "../math/fp.h"
 #include "../math/Kfp.h"
 #include "../tahoe/SYS.h"
 
-	.text
+        .text
 ENTRY(Knegf, 0)
-	clrl	r1
-	andl3	$EXPMASK,4(fp),r0	/* check for reserved operand,zero. */
-	beql	retzero
-	movl	4(fp),r0		/* fetch operand. */
-	bbc	$31,r0,seton
-	andl2	$(0!SIGNBIT),r0		/* turn it off. */
-	ret
-seton:	orl2	$SIGNBIT,r0		/* turn it on. */
-	ret
+        clrl    r1
+        andl3   $EXPMASK,4(fp),r0       /* check for reserved operand,zero. */
+        beql    retzero
+        movl    4(fp),r0                /* fetch operand. */
+        bbc     $31,r0,seton
+        andl2   $(0!SIGNBIT),r0         /* turn it off. */
+        ret
+seton:  orl2    $SIGNBIT,r0             /* turn it on. */
+        ret
 retzero:
-	clrl	r0
-	ret
+        clrl    r0
+        ret

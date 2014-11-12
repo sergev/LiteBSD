@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1986 by University of Toronto.
  * Copyright (c) 1989, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley
  * by Henry Spencer.
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -34,11 +34,11 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)regexp.h	8.1 (Berkeley) 6/2/93
+ *  @(#)regexp.h    8.1 (Berkeley) 6/2/93
  */
 
-#ifndef	_REGEXP_H_
-#define	_REGEXP_H_
+#ifndef _REGEXP_H_
+#define _REGEXP_H_
 
 /*
  * Definitions etc. for regexp(3) routines.
@@ -48,13 +48,13 @@
  */
 #define NSUBEXP  10
 typedef struct regexp {
-	char *startp[NSUBEXP];
-	char *endp[NSUBEXP];
-	char regstart;		/* Internal use only. */
-	char reganch;		/* Internal use only. */
-	char *regmust;		/* Internal use only. */
-	int regmlen;		/* Internal use only. */
-	char program[1];	/* Unwarranted chumminess with compiler. */
+    char *startp[NSUBEXP];
+    char *endp[NSUBEXP];
+    char regstart;      /* Internal use only. */
+    char reganch;       /* Internal use only. */
+    char *regmust;      /* Internal use only. */
+    int regmlen;        /* Internal use only. */
+    char program[1];    /* Unwarranted chumminess with compiler. */
 } regexp;
 
 #include <sys/cdefs.h>

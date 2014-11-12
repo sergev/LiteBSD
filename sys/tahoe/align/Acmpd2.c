@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,28 +33,28 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acmpd2.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acmpd2.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cmpd2(infop)	process_info *infop;
+cmpd2(infop)    process_info *infop;
 /*
-/*	Compare operand 1 with operand 2 (double). 
+/*  Compare operand 1 with operand 2 (double). 
 /*
 /****************************************************/
 {
-	register double	*Register_12;	/* Has to be first reg ! */
-	register double	*Register_11;
-	register long	Register_10;
+    register double *Register_12;   /* Has to be first reg ! */
+    register double *Register_11;
+    register long   Register_10;
 
-	Register_12 = (double *) &operand(infop,0)->data;
-	Register_11 = (double *) &operand(infop,1)->data;
-	if ( reserved( *(long *)Register_12 ) ||
-	     reserved( *(long *)Register_11 ) )
-			exception(infop, ILL_OPRND);
-	Register_10=psl;
-	Set_psl(r10);	/* restore the user psl */
-	asm ("	cmpd2	(r12),(r11)");
-	asm ("	movpsl	r10");
-	New_cc (Register_10);
+    Register_12 = (double *) &operand(infop,0)->data;
+    Register_11 = (double *) &operand(infop,1)->data;
+    if ( reserved( *(long *)Register_12 ) ||
+         reserved( *(long *)Register_11 ) )
+            exception(infop, ILL_OPRND);
+    Register_10=psl;
+    Set_psl(r10);   /* restore the user psl */
+    asm ("  cmpd2   (r12),(r11)");
+    asm ("  movpsl  r10");
+    New_cc (Register_10);
 }

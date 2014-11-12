@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Paul Borman at Krystal Technologies.
@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,69 +33,69 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)runetype.h	8.1 (Berkeley) 6/2/93
+ *  @(#)runetype.h  8.1 (Berkeley) 6/2/93
  */
 
-#ifndef	_RUNETYPE_H_
-#define	_RUNETYPE_H_
+#ifndef _RUNETYPE_H_
+#define _RUNETYPE_H_
 
 #include <machine/ansi.h>
 #include <sys/cdefs.h>
 
 #ifdef  _BSD_WCHAR_T_
-typedef _BSD_WCHAR_T_	rune_t;
-typedef _BSD_WCHAR_T_	wchar_t;
+typedef _BSD_WCHAR_T_   rune_t;
+typedef _BSD_WCHAR_T_   wchar_t;
 #undef  _BSD_WCHAR_T_
 #endif
 
-#define	_CACHED_RUNES	(1 <<8 )	/* Must be a power of 2 */
-#define	_CRMASK		(~(_CACHED_RUNES - 1))
+#define _CACHED_RUNES   (1 <<8 )    /* Must be a power of 2 */
+#define _CRMASK     (~(_CACHED_RUNES - 1))
 
 /*
  * The lower 8 bits of runetype[] contain the digit value of the rune.
  */
 typedef struct {
-	rune_t		min;		/* First rune of the range */
-	rune_t		max;		/* Last rune (inclusive) of the range */
-	rune_t		map;		/* What first maps to in maps */
-	unsigned long	*types;		/* Array of types in range */
+    rune_t          min;        /* First rune of the range */
+    rune_t          max;        /* Last rune (inclusive) of the range */
+    rune_t          map;        /* What first maps to in maps */
+    unsigned long   *types;     /* Array of types in range */
 } _RuneEntry;
 
 typedef struct {
-	int		nranges;	/* Number of ranges stored */
-	_RuneEntry	*ranges;	/* Pointer to the ranges */
+    int         nranges;        /* Number of ranges stored */
+    _RuneEntry  *ranges;        /* Pointer to the ranges */
 } _RuneRange;
 
 typedef struct {
-	char		magic[8];	/* Magic saying what version we are */
-	char		encoding[32];	/* ASCII name of this encoding */
+    char        magic[8];       /* Magic saying what version we are */
+    char        encoding[32];   /* ASCII name of this encoding */
 
-	rune_t		(*sgetrune)
-	    __P((const char *, unsigned int, char const **));
-	int		(*sputrune)
-	    __P((rune_t, char *, unsigned int, char **));
-	rune_t		invalid_rune;
+    rune_t      (*sgetrune)
+                    __P((const char *, unsigned int, char const **));
+    int     (*sputrune)
+                    __P((rune_t, char *, unsigned int, char **));
+    rune_t      invalid_rune;
 
-	unsigned long	runetype[_CACHED_RUNES];
-	rune_t		maplower[_CACHED_RUNES];
-	rune_t		mapupper[_CACHED_RUNES];
+    unsigned long   runetype[_CACHED_RUNES];
+    rune_t      maplower[_CACHED_RUNES];
+    rune_t      mapupper[_CACHED_RUNES];
 
-	/*
-	 * The following are to deal with Runes larger than _CACHED_RUNES - 1.
-	 * Their data is actually contiguous with this structure so as to make
-	 * it easier to read/write from/to disk.
-	 */
-	_RuneRange	runetype_ext;
-	_RuneRange	maplower_ext;
-	_RuneRange	mapupper_ext;
+    /*
+     * The following are to deal with Runes larger than _CACHED_RUNES - 1.
+     * Their data is actually contiguous with this structure so as to make
+     * it easier to read/write from/to disk.
+     */
+    _RuneRange  runetype_ext;
+    _RuneRange  maplower_ext;
+    _RuneRange  mapupper_ext;
 
-	void		*variable;	/* Data which depends on the encoding */
-	int		variable_len;	/* how long that data is */
+    void        *variable;      /* Data which depends on the encoding */
+    int         variable_len;   /* how long that data is */
 } _RuneLocale;
 
-#define	_RUNE_MAGIC_1	"RuneMagi"	/* Indicates version 0 of RuneLocale */
+#define _RUNE_MAGIC_1   "RuneMagi"  /* Indicates version 0 of RuneLocale */
 
 extern _RuneLocale _DefaultRuneLocale;
 extern _RuneLocale *_CurrentRuneLocale;
 
-#endif	/* !_RUNETYPE_H_ */
+#endif  /* !_RUNETYPE_H_ */

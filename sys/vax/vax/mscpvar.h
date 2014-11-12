@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,7 +33,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)mscpvar.h	7.3 (Berkeley) 6/28/90
+ *  @(#)mscpvar.h   7.3 (Berkeley) 6/28/90
  */
 
 /*
@@ -77,41 +77,41 @@
  * END OUT OF DATE
  */
 struct mscp_driver {
-	int	md_ndpc;		/* number of drives per ctlr */
-	int	md_nunits;		/* total number drives (all ctlrs) */
-	int	md_unitshift;		/* device number to unit: >> count */
-	struct	buf *md_utab;		/* pointer to device queues */
-	struct	disklabel *md_lab;	/* pointer to devicee disklabels */
-	struct	uba_device **md_dinfo;	/* pointer to device info */
-	int	(*md_dgram)();		/* error datagram */
-	int	(*md_ctlrdone)();	/* controller operation complete */
-	int	(*md_unconf)();		/* response from unconfigured drive */
-	int	(*md_iodone)();		/* normal I/O is done */
-	int	(*md_online)();		/* drive on line */
-	int	(*md_gotstatus)();	/* got unit status */
-	int	(*md_replace)();	/* replace done */
-	int	(*md_ioerr)();		/* read or write failed */
-	int	(*md_bb)();		/* B_BAD io done */
-	char	*md_mname;		/* name of controllers */
-	char	*md_dname;		/* name of drives */
+    int     md_ndpc;                /* number of drives per ctlr */
+    int     md_nunits;              /* total number drives (all ctlrs) */
+    int     md_unitshift;           /* device number to unit: >> count */
+    struct  buf *md_utab;           /* pointer to device queues */
+    struct  disklabel *md_lab;      /* pointer to devicee disklabels */
+    struct  uba_device **md_dinfo;  /* pointer to device info */
+    int     (*md_dgram)();          /* error datagram */
+    int     (*md_ctlrdone)();       /* controller operation complete */
+    int     (*md_unconf)();         /* response from unconfigured drive */
+    int     (*md_iodone)();         /* normal I/O is done */
+    int     (*md_online)();         /* drive on line */
+    int     (*md_gotstatus)();      /* got unit status */
+    int     (*md_replace)();        /* replace done */
+    int     (*md_ioerr)();          /* read or write failed */
+    int     (*md_bb)();             /* B_BAD io done */
+    char    *md_mname;              /* name of controllers */
+    char    *md_dname;              /* name of drives */
 };
 
 /*
  * Return values from functions.
  * MSCP_RESTARTED is peculiar to I/O errors.
  */
-#define	MSCP_DONE	0		/* all ok */
-#define	MSCP_FAILED	1		/* no go */
-#define	MSCP_RESTARTED	2		/* transfer restarted */
+#define MSCP_DONE       0       /* all ok */
+#define MSCP_FAILED     1       /* no go */
+#define MSCP_RESTARTED  2       /* transfer restarted */
 
 /*
  * Ring information, per ring (one each for commands and responses).
  */
 struct mscp_ri {
-	int	mri_size;		/* ring size */
-	int	mri_next;		/* next (expected|free) */
-	long	*mri_desc;		/* base address of descriptors */
-	struct	mscp *mri_ring;		/* base address of packets */
+    int     mri_size;           /* ring size */
+    int     mri_next;           /* next (expected|free) */
+    long    *mri_desc;          /* base address of descriptors */
+    struct  mscp *mri_ring;     /* base address of packets */
 };
 
 /*
@@ -129,21 +129,21 @@ struct mscp_ri {
  * been handed out; mi_wtab is that place.
  */
 struct mscp_info {
-	struct	mscp_driver *mi_md;	/* pointer to driver info */
-	int	mi_ctlr;		/* controller index */
-	struct	buf *mi_tab;		/* pointer to ctlr's drive queue */
-	struct	uba_device **mi_ip;	/* pointer to inverting pointers */
-	struct	mscp_ri mi_cmd;		/* MSCP command ring info */
-	struct	mscp_ri mi_rsp;		/* MSCP response ring info */
-	short	mi_credits;		/* transfer credits */
-	char	mi_wantcmd;		/* waiting for command packet */
-	char	mi_wantcredits;		/* waiting for transfer credits */
-	struct	buf mi_wtab;		/* transfer wait queue */
+    struct  mscp_driver *mi_md;     /* pointer to driver info */
+    int     mi_ctlr;                /* controller index */
+    struct  buf *mi_tab;            /* pointer to ctlr's drive queue */
+    struct  uba_device **mi_ip;     /* pointer to inverting pointers */
+    struct  mscp_ri mi_cmd;         /* MSCP command ring info */
+    struct  mscp_ri mi_rsp;         /* MSCP response ring info */
+    short   mi_credits;             /* transfer credits */
+    char    mi_wantcmd;             /* waiting for command packet */
+    char    mi_wantcredits;         /* waiting for transfer credits */
+    struct  buf mi_wtab;            /* transfer wait queue */
 #ifdef AVOID_EMULEX_BUG
-#define	AEB_MAX_BP	32		/* max pend xfers (power of 2) XXX */
-	struct	buf *mi_bp[AEB_MAX_BP];	/* xfer no. to buffer */
-	u_int	mi_nextbp;		/* generates unique xfer no's */
-	int	mi_ok;			/* for error rate statistics */
+#define AEB_MAX_BP  32              /* max pend xfers (power of 2) XXX */
+    struct  buf *mi_bp[AEB_MAX_BP]; /* xfer no. to buffer */
+    u_int   mi_nextbp;              /* generates unique xfer no's */
+    int     mi_ok;                  /* for error rate statistics */
 #endif AVOID_EMULEX_BUG
 };
 
@@ -153,32 +153,32 @@ struct mscp_info {
  * not be a data transfer.  E.g., `get command status' or `abort command'
  * is legal, while `read' is not.
  */
-#define	MSCP_MINCREDITS	1
+#define MSCP_MINCREDITS 1
 
 /*
  * Flags for mscp_getcp().
  */
-#define	MSCP_WAIT	1
-#define	MSCP_DONTWAIT	0
+#define MSCP_WAIT       1
+#define MSCP_DONTWAIT   0
 
-struct	mscp *mscp_getcp();	/* get a command packet */
+struct  mscp *mscp_getcp(); /* get a command packet */
 
 /*
  * Unit flags
  */
-#define	UNIT_ONLINE	0x01	/* drive is on line */
-#define	UNIT_HAVESTATUS	0x02	/* got unit status */
-#define	UNIT_REQUEUE	0x04	/* requeue after response */
+#define UNIT_ONLINE     0x01    /* drive is on line */
+#define UNIT_HAVESTATUS 0x02    /* got unit status */
+#define UNIT_REQUEUE    0x04    /* requeue after response */
 
 /*
  * Handle a command ring transition: wake up sleepers for command packets.
  * This is too simple to bother with a function call.
  */
-#define	MSCP_DOCMD(mi) { \
-	if ((mi)->mi_wantcmd) { \
-		(mi)->mi_wantcmd = 0; \
-		wakeup((caddr_t) &(mi)->mi_wantcmd); \
-	} \
+#define MSCP_DOCMD(mi) { \
+    if ((mi)->mi_wantcmd) { \
+        (mi)->mi_wantcmd = 0; \
+        wakeup((caddr_t) &(mi)->mi_wantcmd); \
+    } \
 }
 
 /*
@@ -189,11 +189,11 @@ struct	mscp *mscp_getcp();	/* get a command packet */
  * is a controller queue.  (That is, the forward link for controller
  * queues is `b_forw'; for drive queues, it is `av_forw'.)
  */
-#define	APPEND(bp, queue, link) { \
-	(bp)->link = NULL; \
-	if ((queue)->b_actf == NULL) \
-		(queue)->b_actf = (bp); \
-	else \
-		(queue)->b_actl->link = (bp); \
-	(queue)->b_actl = (bp); \
+#define APPEND(bp, queue, link) { \
+    (bp)->link = NULL; \
+    if ((queue)->b_actf == NULL) \
+        (queue)->b_actf = (bp); \
+    else \
+        (queue)->b_actl->link = (bp); \
+    (queue)->b_actl = (bp); \
 }

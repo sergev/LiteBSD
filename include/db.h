@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,46 +30,46 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)db.h	8.4 (Berkeley) 2/21/94
+ *  @(#)db.h    8.4 (Berkeley) 2/21/94
  */
 
 #ifndef _DB_H_
-#define	_DB_H_
+#define _DB_H_
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
 
 #include <limits.h>
 
-#define	RET_ERROR	-1		/* Return values. */
-#define	RET_SUCCESS	 0
-#define	RET_SPECIAL	 1
+#define RET_ERROR   -1      /* Return values. */
+#define RET_SUCCESS  0
+#define RET_SPECIAL  1
 
-#define	MAX_PAGE_NUMBER	0xffffffff	/* >= # of pages in a file */
-typedef u_int32_t	pgno_t;
-#define	MAX_PAGE_OFFSET	65535		/* >= # of bytes in a page */
-typedef u_int16_t	indx_t;
-#define	MAX_REC_NUMBER	0xffffffff	/* >= # of records in a tree */
-typedef u_int32_t	recno_t;
+#define MAX_PAGE_NUMBER 0xffffffff  /* >= # of pages in a file */
+typedef u_int32_t   pgno_t;
+#define MAX_PAGE_OFFSET 65535       /* >= # of bytes in a page */
+typedef u_int16_t   indx_t;
+#define MAX_REC_NUMBER  0xffffffff  /* >= # of records in a tree */
+typedef u_int32_t   recno_t;
 
 /* Key/data structure -- a Data-Base Thang. */
 typedef struct {
-	void	*data;			/* data */
-	size_t	 size;			/* data length */
+    void    *data;          /* data */
+    size_t   size;          /* data length */
 } DBT;
 
 /* Routine flags. */
-#define	R_CURSOR	1		/* del, put, seq */
-#define	__R_UNUSED	2		/* UNUSED */
-#define	R_FIRST		3		/* seq */
-#define	R_IAFTER	4		/* put (RECNO) */
-#define	R_IBEFORE	5		/* put (RECNO) */
-#define	R_LAST		6		/* seq (BTREE, RECNO) */
-#define	R_NEXT		7		/* seq */
-#define	R_NOOVERWRITE	8		/* put */
-#define	R_PREV		9		/* seq (BTREE, RECNO) */
-#define	R_SETCURSOR	10		/* put (RECNO) */
-#define	R_RECNOSYNC	11		/* sync (RECNO) */
+#define R_CURSOR        1       /* del, put, seq */
+#define __R_UNUSED      2       /* UNUSED */
+#define R_FIRST         3       /* seq */
+#define R_IAFTER        4       /* put (RECNO) */
+#define R_IBEFORE       5       /* put (RECNO) */
+#define R_LAST          6       /* seq (BTREE, RECNO) */
+#define R_NEXT          7       /* seq */
+#define R_NOOVERWRITE   8       /* put */
+#define R_PREV          9       /* seq (BTREE, RECNO) */
+#define R_SETCURSOR     10      /* put (RECNO) */
+#define R_RECNOSYNC     11      /* sync (RECNO) */
 
 typedef enum { DB_BTREE, DB_HASH, DB_RECNO } DBTYPE;
 
@@ -87,121 +87,121 @@ typedef enum { DB_BTREE, DB_HASH, DB_RECNO } DBTYPE;
  * the DB_LOCK flag isn't set.
  */
 #if UINT_MAX > 65535
-#define	DB_LOCK		0x20000000	/* Do locking. */
-#define	DB_SHMEM	0x40000000	/* Use shared memory. */
-#define	DB_TXN		0x80000000	/* Do transactions. */
+#define DB_LOCK     0x20000000  /* Do locking. */
+#define DB_SHMEM    0x40000000  /* Use shared memory. */
+#define DB_TXN      0x80000000  /* Do transactions. */
 #else
-#define	DB_LOCK		    0x2000	/* Do locking. */
-#define	DB_SHMEM	    0x4000	/* Use shared memory. */
-#define	DB_TXN		    0x8000	/* Do transactions. */
+#define DB_LOCK         0x2000  /* Do locking. */
+#define DB_SHMEM        0x4000  /* Use shared memory. */
+#define DB_TXN          0x8000  /* Do transactions. */
 #endif
 
 /* Access method description structure. */
 typedef struct __db {
-	DBTYPE type;			/* Underlying db type. */
-	int (*close)	__P((struct __db *));
-	int (*del)	__P((const struct __db *, const DBT *, u_int));
-	int (*get)	__P((const struct __db *, const DBT *, DBT *, u_int));
-	int (*put)	__P((const struct __db *, DBT *, const DBT *, u_int));
-	int (*seq)	__P((const struct __db *, DBT *, DBT *, u_int));
-	int (*sync)	__P((const struct __db *, u_int));
-	void *internal;			/* Access method private. */
-	int (*fd)	__P((const struct __db *));
+    DBTYPE type;            /* Underlying db type. */
+    int (*close)    __P((struct __db *));
+    int (*del)      __P((const struct __db *, const DBT *, u_int));
+    int (*get)      __P((const struct __db *, const DBT *, DBT *, u_int));
+    int (*put)      __P((const struct __db *, DBT *, const DBT *, u_int));
+    int (*seq)      __P((const struct __db *, DBT *, DBT *, u_int));
+    int (*sync)     __P((const struct __db *, u_int));
+    void *internal;         /* Access method private. */
+    int (*fd)       __P((const struct __db *));
 } DB;
 
-#define	BTREEMAGIC	0x053162
-#define	BTREEVERSION	3
+#define BTREEMAGIC  0x053162
+#define BTREEVERSION    3
 
 /* Structure used to pass parameters to the btree routines. */
 typedef struct {
-#define	R_DUP		0x01	/* duplicate keys */
-	u_long	flags;
-	u_int	cachesize;	/* bytes to cache */
-	int	maxkeypage;	/* maximum keys per page */
-	int	minkeypage;	/* minimum keys per page */
-	u_int	psize;		/* page size */
-	int	(*compare)	/* comparison function */
-	    __P((const DBT *, const DBT *));
-	size_t	(*prefix)	/* prefix function */
-	    __P((const DBT *, const DBT *));
-	int	lorder;		/* byte order */
+#define R_DUP       0x01    /* duplicate keys */
+    u_long  flags;
+    u_int   cachesize;      /* bytes to cache */
+    int     maxkeypage;     /* maximum keys per page */
+    int     minkeypage;     /* minimum keys per page */
+    u_int   psize;          /* page size */
+    int     (*compare)      /* comparison function */
+        __P((const DBT *, const DBT *));
+    size_t  (*prefix)       /* prefix function */
+        __P((const DBT *, const DBT *));
+    int     lorder;         /* byte order */
 } BTREEINFO;
 
-#define	HASHMAGIC	0x061561
-#define	HASHVERSION	2
+#define HASHMAGIC   0x061561
+#define HASHVERSION 2
 
 /* Structure used to pass parameters to the hashing routines. */
 typedef struct {
-	u_int	bsize;		/* bucket size */
-	u_int	ffactor;	/* fill factor */
-	u_int	nelem;		/* number of elements */
-	u_int	cachesize;	/* bytes to cache */
-	u_int32_t		/* hash function */
-		(*hash) __P((const void *, size_t));
-	int	lorder;		/* byte order */
+    u_int   bsize;      /* bucket size */
+    u_int   ffactor;    /* fill factor */
+    u_int   nelem;      /* number of elements */
+    u_int   cachesize;  /* bytes to cache */
+    u_int32_t           /* hash function */
+        (*hash) __P((const void *, size_t));
+    int     lorder;     /* byte order */
 } HASHINFO;
 
 /* Structure used to pass parameters to the record routines. */
 typedef struct {
-#define	R_FIXEDLEN	0x01	/* fixed-length records */
-#define	R_NOKEY		0x02	/* key not required */
-#define	R_SNAPSHOT	0x04	/* snapshot the input */
-	u_long	flags;
-	u_int	cachesize;	/* bytes to cache */
-	u_int	psize;		/* page size */
-	int	lorder;		/* byte order */
-	size_t	reclen;		/* record length (fixed-length records) */
-	u_char	bval;		/* delimiting byte (variable-length records */
-	char	*bfname;	/* btree file name */ 
+#define R_FIXEDLEN  0x01    /* fixed-length records */
+#define R_NOKEY     0x02    /* key not required */
+#define R_SNAPSHOT  0x04    /* snapshot the input */
+    u_long  flags;
+    u_int   cachesize;  /* bytes to cache */
+    u_int   psize;      /* page size */
+    int     lorder;     /* byte order */
+    size_t  reclen;     /* record length (fixed-length records) */
+    u_char  bval;       /* delimiting byte (variable-length records */
+    char    *bfname;    /* btree file name */
 } RECNOINFO;
 
 #ifdef __DBINTERFACE_PRIVATE
 /*
  * Little endian <==> big endian 32-bit swap macros.
- *	M_32_SWAP	swap a memory location
- *	P_32_SWAP	swap a referenced memory location
- *	P_32_COPY	swap from one location to another
+ *  M_32_SWAP   swap a memory location
+ *  P_32_SWAP   swap a referenced memory location
+ *  P_32_COPY   swap from one location to another
  */
-#define	M_32_SWAP(a) {							\
-	u_int32_t _tmp = a;						\
-	((char *)&a)[0] = ((char *)&_tmp)[3];				\
-	((char *)&a)[1] = ((char *)&_tmp)[2];				\
-	((char *)&a)[2] = ((char *)&_tmp)[1];				\
-	((char *)&a)[3] = ((char *)&_tmp)[0];				\
+#define M_32_SWAP(a) { \
+    u_int32_t _tmp = a; \
+    ((char *)&a)[0] = ((char *)&_tmp)[3]; \
+    ((char *)&a)[1] = ((char *)&_tmp)[2]; \
+    ((char *)&a)[2] = ((char *)&_tmp)[1]; \
+    ((char *)&a)[3] = ((char *)&_tmp)[0]; \
 }
-#define	P_32_SWAP(a) {							\
-	u_int32_t _tmp = *(u_int32_t *)a;				\
-	((char *)a)[0] = ((char *)&_tmp)[3];				\
-	((char *)a)[1] = ((char *)&_tmp)[2];				\
-	((char *)a)[2] = ((char *)&_tmp)[1];				\
-	((char *)a)[3] = ((char *)&_tmp)[0];				\
+#define P_32_SWAP(a) { \
+    u_int32_t _tmp = *(u_int32_t *)a; \
+    ((char *)a)[0] = ((char *)&_tmp)[3]; \
+    ((char *)a)[1] = ((char *)&_tmp)[2]; \
+    ((char *)a)[2] = ((char *)&_tmp)[1]; \
+    ((char *)a)[3] = ((char *)&_tmp)[0]; \
 }
-#define	P_32_COPY(a, b) {						\
-	((char *)&(b))[0] = ((char *)&(a))[3];				\
-	((char *)&(b))[1] = ((char *)&(a))[2];				\
-	((char *)&(b))[2] = ((char *)&(a))[1];				\
-	((char *)&(b))[3] = ((char *)&(a))[0];				\
+#define P_32_COPY(a, b) { \
+    ((char *)&(b))[0] = ((char *)&(a))[3]; \
+    ((char *)&(b))[1] = ((char *)&(a))[2]; \
+    ((char *)&(b))[2] = ((char *)&(a))[1]; \
+    ((char *)&(b))[3] = ((char *)&(a))[0]; \
 }
 
 /*
  * Little endian <==> big endian 16-bit swap macros.
- *	M_16_SWAP	swap a memory location
- *	P_16_SWAP	swap a referenced memory location
- *	P_16_COPY	swap from one location to another
+ *  M_16_SWAP   swap a memory location
+ *  P_16_SWAP   swap a referenced memory location
+ *  P_16_COPY   swap from one location to another
  */
-#define	M_16_SWAP(a) {							\
-	u_int16_t _tmp = a;						\
-	((char *)&a)[0] = ((char *)&_tmp)[1];				\
-	((char *)&a)[1] = ((char *)&_tmp)[0];				\
+#define M_16_SWAP(a) { \
+    u_int16_t _tmp = a; \
+    ((char *)&a)[0] = ((char *)&_tmp)[1]; \
+    ((char *)&a)[1] = ((char *)&_tmp)[0]; \
 }
-#define	P_16_SWAP(a) {							\
-	u_int16_t _tmp = *(u_int16_t *)a;				\
-	((char *)a)[0] = ((char *)&_tmp)[1];				\
-	((char *)a)[1] = ((char *)&_tmp)[0];				\
+#define P_16_SWAP(a) { \
+    u_int16_t _tmp = *(u_int16_t *)a; \
+    ((char *)a)[0] = ((char *)&_tmp)[1]; \
+    ((char *)a)[1] = ((char *)&_tmp)[0]; \
 }
-#define	P_16_COPY(a, b) {						\
-	((char *)&(b))[0] = ((char *)&(a))[1];				\
-	((char *)&(b))[1] = ((char *)&(a))[0];				\
+#define P_16_COPY(a, b) { \
+    ((char *)&(b))[0] = ((char *)&(a))[1]; \
+    ((char *)&(b))[1] = ((char *)&(a))[0]; \
 }
 #endif
 
@@ -209,10 +209,10 @@ __BEGIN_DECLS
 DB *dbopen __P((const char *, int, int, DBTYPE, const void *));
 
 #ifdef __DBINTERFACE_PRIVATE
-DB	*__bt_open __P((const char *, int, int, const BTREEINFO *, int));
-DB	*__hash_open __P((const char *, int, int, const HASHINFO *, int));
-DB	*__rec_open __P((const char *, int, int, const RECNOINFO *, int));
-void	 __dbpanic __P((DB *dbp));
+DB  *__bt_open __P((const char *, int, int, const BTREEINFO *, int));
+DB  *__hash_open __P((const char *, int, int, const HASHINFO *, int));
+DB  *__rec_open __P((const char *, int, int, const RECNOINFO *, int));
+void     __dbpanic __P((DB *dbp));
 #endif
 __END_DECLS
 #endif /* !_DB_H_ */

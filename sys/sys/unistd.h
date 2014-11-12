@@ -58,7 +58,7 @@
                                 /* too-long path components generate errors */
 #define _POSIX_NO_TRUNC         1
                                 /* may disable terminal special characters */
-#define _POSIX_VDISABLE     (   (unsigned char)'\377')
+#define _POSIX_VDISABLE         ((unsigned char)'\377')
 
 /* access function */
 #define F_OK        0       /* test for existence of file */

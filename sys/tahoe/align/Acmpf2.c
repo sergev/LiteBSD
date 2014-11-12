@@ -15,8 +15,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,29 +33,29 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)Acmpf2.c	7.1 (Berkeley) 12/6/90
+ *  @(#)Acmpf2.c    7.1 (Berkeley) 12/6/90
  */
 
 #include "align.h"
-cmpf2(infop)	process_info *infop;
+cmpf2(infop)    process_info *infop;
 /*
-/*	Compare operand 1 with operand2 (float).
+/*  Compare operand 1 with operand2 (float).
 /*
 /*************************************************/
 {
-	register float	*Register_12;	/* Has to be first reg ! */
-	register float	*Register_11;
-	register long	Register_10;
+    register float  *Register_12;   /* Has to be first reg ! */
+    register float  *Register_11;
+    register long   Register_10;
 
-	Register_12 = (float *) &operand(infop,0)->data;
-	Register_11 = (float *) &operand(infop,1)->data;
-	if ( reserved( *(long *)Register_12 ) ||
-	     reserved( *(long *)Register_11 ) )
-			{exception(infop, ILL_OPRND);}
+    Register_12 = (float *) &operand(infop,0)->data;
+    Register_11 = (float *) &operand(infop,1)->data;
+    if ( reserved( *(long *)Register_12 ) ||
+         reserved( *(long *)Register_11 ) )
+            {exception(infop, ILL_OPRND);}
 
-	Register_10=psl;
-	Set_psl(r10);	/* restore the user psl */
-	asm ("	cmpf2	(r12),(r11)");
-	asm ("	movpsl	r10");
-	New_cc (Register_10);
+    Register_10=psl;
+    Set_psl(r10);   /* restore the user psl */
+    asm ("  cmpf2   (r12),(r11)");
+    asm ("  movpsl  r10");
+    New_cc (Register_10);
 }

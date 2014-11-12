@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1983, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,8 +12,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *  This product includes software developed by the University of
+ *  California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -30,32 +30,32 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)disktab.h	8.1 (Berkeley) 6/2/93
+ *  @(#)disktab.h   8.1 (Berkeley) 6/2/93
  */
 
-#ifndef	_DISKTAB_H_
-#define	_DISKTAB_H_
+#ifndef _DISKTAB_H_
+#define _DISKTAB_H_
 
 /*
  * Disk description table, see disktab(5)
  */
-#define	DISKTAB		"/etc/disktab"
+#define DISKTAB     "/etc/disktab"
 
-struct	disktab {
-	char	*d_name;		/* drive name */
-	char	*d_type;		/* drive type */
-	int	d_secsize;		/* sector size in bytes */
-	int	d_ntracks;		/* # tracks/cylinder */
-	int	d_nsectors;		/* # sectors/track */
-	int	d_ncylinders;		/* # cylinders */
-	int	d_rpm;			/* revolutions/minute */
-	int	d_badsectforw;		/* supports DEC bad144 std */
-	int	d_sectoffset;		/* use sect rather than cyl offsets */
-	struct	partition {
-		int	p_size;		/* #sectors in partition */
-		short	p_bsize;	/* block size in bytes */
-		short	p_fsize;	/* frag size in bytes */
-	} d_partitions[8];
+struct  disktab {
+    char    *d_name;            /* drive name */
+    char    *d_type;            /* drive type */
+    int     d_secsize;          /* sector size in bytes */
+    int     d_ntracks;          /* # tracks/cylinder */
+    int     d_nsectors;         /* # sectors/track */
+    int     d_ncylinders;       /* # cylinders */
+    int     d_rpm;              /* revolutions/minute */
+    int     d_badsectforw;      /* supports DEC bad144 std */
+    int     d_sectoffset;       /* use sect rather than cyl offsets */
+    struct  partition {
+        int     p_size;         /* #sectors in partition */
+        short   p_bsize;        /* block size in bytes */
+        short   p_fsize;        /* frag size in bytes */
+    } d_partitions[8];
 };
 
 #endif /* !_DISKTAB_H_ */
