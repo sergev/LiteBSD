@@ -40,6 +40,7 @@
 #include <sys/errno.h>
 #include <sys/namei.h>
 #include <sys/buf.h>
+#include <sys/proc.h>
 
 /*
  * Prototypes for dead operations on vnodes.
@@ -156,6 +157,7 @@ dead_lookup(ap)
  * Open always fails as if device did not exist.
  */
 /* ARGSUSED */
+int
 dead_open(ap)
     struct vop_open_args /* {
         struct vnode *a_vp;
@@ -169,9 +171,28 @@ dead_open(ap)
 }
 
 /*
+ * We have to wait during times when the vnode is
+ * in a state of change.
+ */
+static int
+chkvnlock(vp)
+    register struct vnode *vp;
+{
+    int locked = 0;
+
+    while (vp->v_flag & VXLOCK) {
+        vp->v_flag |= VXWANT;
+        sleep((caddr_t)vp, PINOD);
+        locked = 1;
+    }
+    return (locked);
+}
+
+/*
  * Vnode op for read
  */
 /* ARGSUSED */
+int
 dead_read(ap)
     struct vop_read_args /* {
         struct vnode *a_vp;
@@ -195,6 +216,7 @@ dead_read(ap)
  * Vnode op for write
  */
 /* ARGSUSED */
+int
 dead_write(ap)
     struct vop_write_args /* {
         struct vnode *a_vp;
@@ -213,6 +235,7 @@ dead_write(ap)
  * Device ioctl operation.
  */
 /* ARGSUSED */
+int
 dead_ioctl(ap)
     struct vop_ioctl_args /* {
         struct vnode *a_vp;
@@ -230,6 +253,7 @@ dead_ioctl(ap)
 }
 
 /* ARGSUSED */
+int
 dead_select(ap)
     struct vop_select_args /* {
         struct vnode *a_vp;
@@ -249,6 +273,7 @@ dead_select(ap)
 /*
  * Just call the device strategy routine
  */
+int
 dead_strategy(ap)
     struct vop_strategy_args /* {
         struct buf *a_bp;
@@ -266,6 +291,7 @@ dead_strategy(ap)
 /*
  * Wait until the vnode has finished changing state.
  */
+int
 dead_lock(ap)
     struct vop_lock_args /* {
         struct vnode *a_vp;
@@ -291,6 +317,7 @@ dead_lock(ap)
 /*
  * Wait until the vnode has finished changing state.
  */
+int
 dead_bmap(ap)
     struct vop_bmap_args /* {
         struct vnode *a_vp;
@@ -310,18 +337,20 @@ dead_bmap(ap)
  * Print out the contents of a dead vnode.
  */
 /* ARGSUSED */
+int
 dead_print(ap)
     struct vop_print_args /* {
         struct vnode *a_vp;
     } */ *ap;
 {
-
     printf("tag VT_NON, dead vnode\n");
+    return 0;
 }
 
 /*
  * Empty vnode failed operation
  */
+int
 dead_ebadf()
 {
 
@@ -331,26 +360,10 @@ dead_ebadf()
 /*
  * Empty vnode bad operation
  */
+int
 dead_badop()
 {
-
     panic("dead_badop called");
     /* NOTREACHED */
-}
-
-/*
- * We have to wait during times when the vnode is
- * in a state of change.
- */
-chkvnlock(vp)
-    register struct vnode *vp;
-{
-    int locked = 0;
-
-    while (vp->v_flag & VXLOCK) {
-        vp->v_flag |= VXWANT;
-        sleep((caddr_t)vp, PINOD);
-        locked = 1;
-    }
-    return (locked);
+    return 0;
 }

@@ -164,9 +164,8 @@ union_lookup(ap)
     struct componentname *cnp = ap->a_cnp;
     struct proc *p = cnp->cn_proc;
     int lockparent = cnp->cn_flags & LOCKPARENT;
-    int rdonly = cnp->cn_flags & RDONLY;
     struct union_mount *um = MOUNTTOUNIONMOUNT(dvp->v_mount);
-    struct ucred *saved_cred;
+    struct ucred *saved_cred = 0;
     int iswhiteout;
     struct vattr va;
 
@@ -781,6 +780,7 @@ union_write(ap)
     return (error);
 }
 
+int
 union_lease(ap)
     struct vop_lease_args /* {
         struct vnode *a_vp;
@@ -843,6 +843,7 @@ union_revoke(ap)
     if (LOWERVP(vp))
         VOP_REVOKE(LOWERVP(vp), ap->a_flags);
     vgone(vp);
+    return 0;
 }
 
 int
@@ -1204,7 +1205,6 @@ union_symlink(ap)
     if (dvp != NULLVP) {
         int error;
         struct vnode *vp;
-        struct mount *mp = ap->a_dvp->v_mount;
 
         FIXUP(un, p);
         VREF(dvp);

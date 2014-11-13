@@ -127,7 +127,8 @@ fdesc_unmount(mp, mntflags, p)
      */
     if (rootvp->v_usecount > 1)
         return (EBUSY);
-    if (error = vflush(mp, rootvp, flags))
+    error = vflush(mp, rootvp, flags);
+    if (error)
         return (error);
 
     /*

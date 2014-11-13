@@ -63,6 +63,7 @@
  * mount system call
  */
 /* ARGSUSED */
+int
 procfs_mount(mp, path, data, ndp, p)
     struct mount *mp;
     char *path;
@@ -97,6 +98,7 @@ procfs_mount(mp, path, data, ndp, p)
 /*
  * unmount system call
  */
+int
 procfs_unmount(mp, mntflags, p)
     struct mount *mp;
     int mntflags;
@@ -108,33 +110,35 @@ procfs_unmount(mp, mntflags, p)
     if (mntflags & MNT_FORCE)
         flags |= FORCECLOSE;
 
-    if (error = vflush(mp, 0, flags))
+    error = vflush(mp, 0, flags);
+    if (error)
         return (error);
 
     return (0);
 }
 
+int
 procfs_root(mp, vpp)
     struct mount *mp;
     struct vnode **vpp;
 {
-
     return (procfs_allocvp(mp, vpp, 0, Proot));
 }
 
 /* ARGSUSED */
+int
 procfs_start(mp, flags, p)
     struct mount *mp;
     int flags;
     struct proc *p;
 {
-
     return (0);
 }
 
 /*
  * Get file system statistics.
  */
+int
 procfs_statfs(mp, sbp, p)
     struct mount *mp;
     struct statfs *sbp;
@@ -158,10 +162,10 @@ procfs_statfs(mp, sbp, p)
     return (0);
 }
 
+int
 procfs_init(vfsp)
     struct vfsconf *vfsp;
 {
-
     return (0);
 }
 

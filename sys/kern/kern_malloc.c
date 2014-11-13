@@ -368,7 +368,6 @@ free(addr, type)
 void
 kmeminit()
 {
-    register long indx;
     int npg;
 
 #if ((MAXALLOCSAVE & (MAXALLOCSAVE - 1)) != 0)
@@ -386,6 +385,7 @@ kmeminit()
     kmem_map = kmem_suballoc(kernel_map, (vm_offset_t *)&kmembase,
         (vm_offset_t *)&kmemlimit, (vm_size_t)(npg * NBPG), FALSE);
 #ifdef KMEMSTATS
+    register long indx;
     for (indx = 0; indx < MINBUCKET + 16; indx++) {
         if (1 << indx >= CLBYTES)
             bucket[indx].kb_elmpercl = 1;

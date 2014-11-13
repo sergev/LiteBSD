@@ -191,4 +191,5 @@ int procfs_print __P((struct vop_print_args *));
 #define procfs_vfree ((int (*) __P((struct vop_vfree_args *))) nullop)
 #define procfs_truncate ((int (*) __P((struct vop_truncate_args *))) procfs_badop)
 #define procfs_update ((int (*) __P((struct vop_update_args *))) nullop)
+int procfs_root __P((struct mount *, struct vnode **));
 #endif /* KERNEL */

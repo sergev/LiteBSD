@@ -55,10 +55,10 @@
 
 dev_t rrootdev = NODEV;
 
+int
 kernfs_init(vfsp)
     struct vfsconf *vfsp;
 {
-
     return (0);
 }
 
@@ -88,6 +88,7 @@ kernfs_get_rrootdev()
 /*
  * Mount the Kernel params filesystem
  */
+int
 kernfs_mount(mp, path, data, ndp, p)
     struct mount *mp;
     char *path;
@@ -138,6 +139,7 @@ kernfs_mount(mp, path, data, ndp, p)
     return (0);
 }
 
+int
 kernfs_start(mp, flags, p)
     struct mount *mp;
     int flags;
@@ -146,6 +148,7 @@ kernfs_start(mp, flags, p)
     return (0);
 }
 
+int
 kernfs_unmount(mp, mntflags, p)
     struct mount *mp;
     int mntflags;
@@ -172,7 +175,8 @@ kernfs_unmount(mp, mntflags, p)
 #ifdef KERNFS_DIAGNOSTIC
     printf("kernfs_unmount: calling vflush\n");
 #endif
-    if (error = vflush(mp, rootvp, flags))
+    error = vflush(mp, rootvp, flags);
+    if (error)
         return (error);
 
 #ifdef KERNFS_DIAGNOSTIC
@@ -194,6 +198,7 @@ kernfs_unmount(mp, mntflags, p)
     return 0;
 }
 
+int
 kernfs_root(mp, vpp)
     struct mount *mp;
     struct vnode **vpp;
@@ -215,6 +220,7 @@ kernfs_root(mp, vpp)
     return (0);
 }
 
+int
 kernfs_statfs(mp, sbp, p)
     struct mount *mp;
     struct statfs *sbp;

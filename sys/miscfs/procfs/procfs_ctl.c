@@ -51,6 +51,7 @@
 #include <sys/resource.h>
 #include <sys/resourcevar.h>
 #include <sys/ptrace.h>
+#include <sys/signalvar.h>
 #include <miscfs/procfs/procfs.h>
 
 #ifndef FIX_SSTEP
@@ -203,7 +204,8 @@ procfs_control(curp, p, op)
      * Step.  Let the target process execute a single instruction.
      */
     case PROCFS_CTL_STEP:
-        if (error = procfs_sstep(p, 1))
+        error = procfs_sstep(p, 1);
+        if (error)
             return (error);
         break;
 

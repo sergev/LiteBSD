@@ -82,12 +82,13 @@ u_long fdhash;
 /*
  * Initialise cache headers
  */
+int
 fdesc_init(vfsp)
     struct vfsconf *vfsp;
 {
-
     devctty = makedev(nchrdev, 0);
     fdhashtbl = hashinit(NFDCACHE, M_CACHE, &fdhash);
+    return 0;
 }
 
 int
@@ -116,7 +117,7 @@ loop:
     /*
      * otherwise lock the array while we call getnewvnode
      * since that can block.
-     */ 
+     */
     if (fdcache_lock & FDL_LOCKED) {
         fdcache_lock |= FDL_WANT;
         sleep((caddr_t) &fdcache_lock, PINOD);
@@ -173,7 +174,7 @@ fdesc_lookup(ap)
     VOP_UNLOCK(dvp, 0, p);
     if (cnp->cn_namelen == 1 && *pname == '.') {
         *vpp = dvp;
-        VREF(dvp);  
+        VREF(dvp);
         vn_lock(dvp, LK_SHARED | LK_RETRY, p);
         return (0);
     }
@@ -250,7 +251,8 @@ fdesc_lookup(ap)
 
     case Fdevfd:
         if (cnp->cn_namelen == 2 && bcmp(pname, "..", 2) == 0) {
-            if (error = fdesc_root(dvp->v_mount, vpp))
+            error = fdesc_root(dvp->v_mount, vpp);
+            if (error)
                 goto bad;
             return (0);
         }
@@ -303,7 +305,7 @@ fdesc_open(ap)
     case Fdesc:
         /*
          * XXX Kludge: set p->p_dupfd to contain the value of the
-         * the file descriptor being sought for duplication. The error 
+         * the file descriptor being sought for duplication. The error
          * return ensures that the vnode for this device will be
          * released by vn_open. Open will detect this special error and
          * take the actions in dupfdopen.  Other callers of vn_open or
@@ -315,6 +317,11 @@ fdesc_open(ap)
 
     case Fctty:
         error = cttyopen(devctty, ap->a_mode, 0, ap->a_p);
+        break;
+
+    case Froot:
+    case Fdevfd:
+    case Flink:
         break;
     }
 
@@ -445,7 +452,7 @@ fdesc_getattr(ap)
 
     default:
         panic("fdesc_getattr");
-        break;  
+        break;
     }
 
     if (error == 0)
@@ -574,7 +581,7 @@ fdesc_readdir(ap)
                 break;
             }
             i++;
-            
+
             switch (dt->d_fileno) {
             case FD_CTTY:
                 if (cttyvp(uio->uio_procp) == NULL)
@@ -678,7 +685,7 @@ fdesc_read(ap)
         error = EOPNOTSUPP;
         break;
     }
-    
+
     return (error);
 }
 
@@ -702,7 +709,7 @@ fdesc_write(ap)
         error = EOPNOTSUPP;
         break;
     }
-    
+
     return (error);
 }
 
@@ -729,7 +736,7 @@ fdesc_ioctl(ap)
         error = EOPNOTSUPP;
         break;
     }
-    
+
     return (error);
 }
 
@@ -754,7 +761,7 @@ fdesc_select(ap)
         error = EOPNOTSUPP;
         break;
     }
-    
+
     return (error);
 }
 
@@ -795,6 +802,7 @@ fdesc_reclaim(ap)
 /*
  * Return POSIX pathconf information applicable to special devices.
  */
+int
 fdesc_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;

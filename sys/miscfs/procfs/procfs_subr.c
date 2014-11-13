@@ -107,7 +107,7 @@ loop:
     /*
      * otherwise lock the vp list while we call getnewvnode
      * since that can block.
-     */ 
+     */
     if (pfsvplock & PROCFS_LOCKED) {
         pfsvplock |= PROCFS_WANT;
         sleep((caddr_t) &pfsvplock, PINOD);
@@ -115,7 +115,8 @@ loop:
     }
     pfsvplock |= PROCFS_LOCKED;
 
-    if (error = getnewvnode(VT_PROCFS, mp, procfs_vnodeop_p, vpp))
+    error = getnewvnode(VT_PROCFS, mp, procfs_vnodeop_p, vpp);
+    if (error)
         goto out;
     vp = *vpp;
 
@@ -283,7 +284,8 @@ vfs_getuserstr(uio, buf, buflenp)
         return (EMSGSIZE);
     xlen = uio->uio_resid;
 
-    if (error = uiomove(buf, xlen, uio))
+    error = uiomove(buf, xlen, uio);
+    if (error)
         return (error);
 
     /* allow multiple writes without seeks */

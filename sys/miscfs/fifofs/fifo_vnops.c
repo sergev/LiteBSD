@@ -46,6 +46,7 @@
 #include <sys/file.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
+#include <sys/un.h>
 #include <miscfs/fifofs/fifo.h>
 
 /*
@@ -113,6 +114,7 @@ struct vnodeopv_desc fifo_vnodeop_opv_desc =
  * Trivial lookup routine that always fails.
  */
 /* ARGSUSED */
+int
 fifo_lookup(ap)
     struct vop_lookup_args /* {
         struct vnode * a_dvp;
@@ -130,6 +132,7 @@ fifo_lookup(ap)
  * to find an active instance of a fifo.
  */
 /* ARGSUSED */
+int
 fifo_open(ap)
     struct vop_open_args /* {
         struct vnode *a_vp;
@@ -148,20 +151,23 @@ fifo_open(ap)
     if ((fip = vp->v_fifoinfo) == NULL) {
         MALLOC(fip, struct fifoinfo *, sizeof(*fip), M_VNODE, M_WAITOK);
         vp->v_fifoinfo = fip;
-        if (error = socreate(AF_LOCAL, &rso, SOCK_STREAM, 0)) {
+        error = socreate(AF_LOCAL, &rso, SOCK_STREAM, 0);
+        if (error) {
             free(fip, M_VNODE);
             vp->v_fifoinfo = NULL;
             return (error);
         }
         fip->fi_readsock = rso;
-        if (error = socreate(AF_LOCAL, &wso, SOCK_STREAM, 0)) {
+        error = socreate(AF_LOCAL, &wso, SOCK_STREAM, 0);
+        if (error) {
             (void)soclose(rso);
             free(fip, M_VNODE);
             vp->v_fifoinfo = NULL;
             return (error);
         }
         fip->fi_writesock = wso;
-        if (error = unp_connect2(wso, rso)) {
+        error = unp_connect2(wso, rso);
+        if (error) {
             (void)soclose(wso);
             (void)soclose(rso);
             free(fip, M_VNODE);
@@ -226,6 +232,7 @@ bad:
  * Vnode op for read
  */
 /* ARGSUSED */
+int
 fifo_read(ap)
     struct vop_read_args /* {
         struct vnode *a_vp;
@@ -266,6 +273,7 @@ fifo_read(ap)
  * Vnode op for write
  */
 /* ARGSUSED */
+int
 fifo_write(ap)
     struct vop_write_args /* {
         struct vnode *a_vp;
@@ -296,6 +304,7 @@ fifo_write(ap)
  * Device ioctl operation.
  */
 /* ARGSUSED */
+int
 fifo_ioctl(ap)
     struct vop_ioctl_args /* {
         struct vnode *a_vp;
@@ -327,6 +336,7 @@ fifo_ioctl(ap)
 }
 
 /* ARGSUSED */
+int
 fifo_select(ap)
     struct vop_select_args /* {
         struct vnode *a_vp;
@@ -369,6 +379,7 @@ fifo_inactive(ap)
 /*
  * This is a noop, simply returning what one has been given.
  */
+int
 fifo_bmap(ap)
     struct vop_bmap_args /* {
         struct vnode *a_vp;
@@ -392,6 +403,7 @@ fifo_bmap(ap)
  * Device close routine
  */
 /* ARGSUSED */
+int
 fifo_close(ap)
     struct vop_close_args /* {
         struct vnode *a_vp;
@@ -428,20 +440,22 @@ fifo_close(ap)
 /*
  * Print out the contents of a fifo vnode.
  */
+int
 fifo_print(ap)
     struct vop_print_args /* {
         struct vnode *a_vp;
     } */ *ap;
 {
-
     printf("tag VT_NON");
     fifo_printinfo(ap->a_vp);
     printf("\n");
+    return 0;
 }
 
 /*
  * Print out internal contents of a fifo vnode.
  */
+int
 fifo_printinfo(vp)
     struct vnode *vp;
 {
@@ -449,11 +463,13 @@ fifo_printinfo(vp)
 
     printf(", fifo with %d readers and %d writers",
         fip->fi_readers, fip->fi_writers);
+    return 0;
 }
 
 /*
  * Return POSIX pathconf information applicable to fifo's.
  */
+int
 fifo_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;
@@ -481,9 +497,9 @@ fifo_pathconf(ap)
 /*
  * Fifo failed operation
  */
+int
 fifo_ebadf()
 {
-
     return (EBADF);
 }
 
@@ -491,6 +507,7 @@ fifo_ebadf()
  * Fifo advisory byte-level locks.
  */
 /* ARGSUSED */
+int
 fifo_advlock(ap)
     struct vop_advlock_args /* {
         struct vnode *a_vp;
@@ -500,16 +517,15 @@ fifo_advlock(ap)
         int  a_flags;
     } */ *ap;
 {
-
     return (EOPNOTSUPP);
 }
 
 /*
  * Fifo bad operation
  */
+int
 fifo_badop()
 {
-
     panic("fifo_badop called");
     /* NOTREACHED */
 }

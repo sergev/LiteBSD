@@ -74,6 +74,7 @@ union_init()
     for (i = 0; i < NHASH; i++)
         LIST_INIT(&unhead[i]);
     bzero((caddr_t) unvplock, sizeof(unvplock));
+    return 0;
 }
 
 static int
@@ -114,7 +115,7 @@ union_updatevp(un, uppervp, lowervp)
     int ohash = UNION_HASH(un->un_uppervp, un->un_lowervp);
     int nhash = UNION_HASH(uppervp, lowervp);
     int docache = (lowervp != NULLVP || uppervp != NULLVP);
-    int lhash, hhash, uhash;
+    int lhash, uhash;
 
     /*
      * Ensure locking is ordered from lower to higher
@@ -279,11 +280,10 @@ union_allocvp(vpp, mp, undvp, dvp, cnp, uppervp, lowervp, docache)
     int docache;
 {
     int error;
-    struct union_node *un;
-    struct union_node **pp;
+    struct union_node *un = 0;
     struct vnode *xlowervp = NULLVP;
     struct union_mount *um = MOUNTTOUNIONMOUNT(mp);
-    int hash;
+    int hash = 0;
     int vflag;
     int try;
 
@@ -446,7 +446,7 @@ loop:
         /*
          * otherwise lock the vp list while we call getnewvnode
          * since that can block.
-         */ 
+         */
         hash = UNION_HASH(uppervp, lowervp);
 
         if (union_list_lock(hash))
@@ -622,6 +622,18 @@ union_copyfile(fvp, tvp, cred, p)
 
     free(buf, M_TEMP);
     return (error);
+}
+
+static int
+union_vn_close(vp, fmode, cred, p)
+    struct vnode *vp;
+    int fmode;
+    struct ucred *cred;
+    struct proc *p;
+{
+    if (fmode & FWRITE)
+        --vp->v_writecount;
+    return (VOP_CLOSE(vp, fmode, cred, p));
 }
 
 /*
@@ -814,7 +826,6 @@ union_mkwhiteout(um, dvp, cnp, path)
     char *path;
 {
     int error;
-    struct vattr va;
     struct proc *p = cnp->cn_proc;
     struct vnode *wvp;
     struct componentname cn;
@@ -866,7 +877,6 @@ union_vn_create(vpp, un, p)
     int fmode = FFLAGS(O_WRONLY|O_CREAT|O_TRUNC|O_EXCL);
     int error;
     int cmode = UN_FILEMODE & ~p->p_fd->fd_cmask;
-    char *cp;
     struct componentname cn;
 
     *vpp = NULLVP;
@@ -892,7 +902,8 @@ union_vn_create(vpp, un, p)
     cn.cn_consume = 0;
 
     VREF(un->un_dirvp);
-    if (error = relookup(un->un_dirvp, &vp, &cn))
+    error = relookup(un->un_dirvp, &vp, &cn);
+    if (error)
         return (error);
     vrele(un->un_dirvp);
 
@@ -920,10 +931,12 @@ union_vn_create(vpp, un, p)
     vap->va_type = VREG;
     vap->va_mode = cmode;
     VOP_LEASE(un->un_dirvp, p, cred, LEASE_WRITE);
-    if (error = VOP_CREATE(un->un_dirvp, &vp, &cn, vap))
+    error = VOP_CREATE(un->un_dirvp, &vp, &cn, vap);
+    if (error)
         return (error);
 
-    if (error = VOP_OPEN(vp, fmode, cred, p)) {
+    error = VOP_OPEN(vp, fmode, cred, p);
+    if (error) {
         vput(vp);
         return (error);
     }
@@ -931,19 +944,6 @@ union_vn_create(vpp, un, p)
     vp->v_writecount++;
     *vpp = vp;
     return (0);
-}
-
-int
-union_vn_close(vp, fmode, cred, p)
-    struct vnode *vp;
-    int fmode;
-    struct ucred *cred;
-    struct proc *p;
-{
-
-    if (fmode & FWRITE)
-        --vp->v_writecount;
-    return (VOP_CLOSE(vp, fmode, cred, p));
 }
 
 void

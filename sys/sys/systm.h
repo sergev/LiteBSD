@@ -189,6 +189,7 @@ struct socket;
 struct stat;
 struct mount;
 struct filedesc;
+enum vtype;
 int     fork __P((struct proc *, void *, register_t *));
 int     execve __P((struct proc *, struct execve_args *, register_t *));
 int     dup2 __P((struct proc *, struct dup2_args *, register_t *));
@@ -206,6 +207,14 @@ int     strcmp __P((const char *, const char *));
 int     dounmount(struct mount *, int, struct proc *);
 int     dupfdopen(struct filedesc *, int, int, int, int);
 int     vn_writechk(struct vnode *);
+int     cttyopen(dev_t, int, int, struct proc *);
+int     cttyread(dev_t, struct uio *, int);
+int     cttywrite(dev_t, struct uio *, int);
+int     cttyioctl(dev_t, u_long, caddr_t, int, struct proc *);
+int     cttyselect(dev_t, int, struct proc *);
+int     fifo_printinfo(struct vnode *);
+int     vfinddev(dev_t, enum vtype, struct vnode **);
+int     iskmemdev(dev_t);
 
 void    timevaladd __P((struct timeval *, struct timeval *));
 void    timevalsub __P((struct timeval *, struct timeval *));
@@ -228,5 +237,7 @@ void    cache_purge(struct vnode *);
 void    cache_purgevfs(struct mount *);
 void    bremfree(struct buf *);
 void    vfs_bufstats(void);
+
+dev_t   chrtoblk(dev_t);
 
 #include <libkern/libkern.h>

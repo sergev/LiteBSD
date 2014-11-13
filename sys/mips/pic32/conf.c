@@ -287,10 +287,10 @@ dev_t   swapdev = makedev(1, 0);
  *
  * A minimal stub routine can always return 0.
  */
+int
 iskmemdev(dev)
     dev_t dev;
 {
-
     return (major(dev) == 2 && minor(dev) < 2);
 }
 
@@ -323,11 +323,13 @@ static int chrtoblktbl[MAXDEV] =  {
     /* 17 */        NODEV,
     /* 18 */        NODEV,
 };
+
 /*
  * Routine to convert from character to block device number.
  *
  * A minimal stub routine can always return NODEV.
  */
+dev_t
 chrtoblk(dev)
     dev_t dev;
 {

@@ -111,6 +111,7 @@ extern int union_vn_create __P((struct vnode **, struct union_node *,
                 struct proc *));
 extern int union_cn_close __P((struct vnode *, int, struct ucred *,
                 struct proc *));
+extern int union_freevp __P((struct vnode *));
 extern void union_removed_upper __P((struct union_node *un));
 extern struct vnode *union_lowervp __P((struct vnode *));
 extern void union_newlower __P((struct union_node *, struct vnode *));

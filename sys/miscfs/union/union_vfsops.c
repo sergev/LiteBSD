@@ -71,8 +71,6 @@ union_mount(mp, path, data, ndp, p)
     struct vnode *upperrootvp = NULLVP;
     struct union_mount *um = 0;
     struct ucred *cred = 0;
-    struct ucred *scred;
-    struct vattr va;
     char *cp;
     int len;
     u_int size;
@@ -97,7 +95,8 @@ union_mount(mp, path, data, ndp, p)
     /*
      * Get argument
      */
-    if (error = copyin(data, (caddr_t)&args, sizeof(struct union_args)))
+    error = copyin(data, (caddr_t)&args, sizeof(struct union_args));
+    if (error)
         goto bad;
 
     lowerrootvp = mp->mnt_vnodecovered;
@@ -108,8 +107,8 @@ union_mount(mp, path, data, ndp, p)
      */
     NDINIT(ndp, LOOKUP, FOLLOW|WANTPARENT,
            UIO_USERSPACE, args.target, p);
-
-    if (error = namei(ndp))
+    error = namei(ndp);
+    if (error)
         goto bad;
 
     upperrootvp = ndp->ni_vp;
@@ -120,7 +119,7 @@ union_mount(mp, path, data, ndp, p)
         error = EINVAL;
         goto bad;
     }
-    
+
     um = (struct union_mount *) malloc(sizeof(struct union_mount),
                 M_UFSMNT, M_WAITOK);    /* XXX */
 
@@ -210,6 +209,7 @@ union_mount(mp, path, data, ndp, p)
         cp = "<below>:";
         break;
     case UNMNT_REPLACE:
+    default:
         cp = "";
         break;
     }
@@ -255,91 +255,7 @@ union_start(mp, flags, p)
     return (0);
 }
 
-/*
- * Free reference to union layer
- */
-int
-union_unmount(mp, mntflags, p)
-    struct mount *mp;
-    int mntflags;
-    struct proc *p;
-{
-    struct union_mount *um = MOUNTTOUNIONMOUNT(mp);
-    struct vnode *um_rootvp;
-    int error;
-    int freeing;
-    int flags = 0;
-
-#ifdef UNION_DIAGNOSTIC
-    printf("union_unmount(mp = %x)\n", mp);
-#endif
-
-    if (mntflags & MNT_FORCE)
-        flags |= FORCECLOSE;
-
-    if (error = union_root(mp, &um_rootvp))
-        return (error);
-
-    /*
-     * Keep flushing vnodes from the mount list.
-     * This is needed because of the un_pvp held
-     * reference to the parent vnode.
-     * If more vnodes have been freed on a given pass,
-     * the try again.  The loop will iterate at most
-     * (d) times, where (d) is the maximum tree depth
-     * in the filesystem.
-     */
-    for (freeing = 0; vflush(mp, um_rootvp, flags) != 0;) {
-        struct vnode *vp;
-        int n;
-
-        /* count #vnodes held on mount list */
-        for (n = 0, vp = mp->mnt_vnodelist.lh_first;
-                vp != NULLVP;
-                vp = vp->v_mntvnodes.le_next)
-            n++;
-
-        /* if this is unchanged then stop */
-        if (n == freeing)
-            break;
-
-        /* otherwise try once more time */
-        freeing = n;
-    }
-
-    /* At this point the root vnode should have a single reference */
-    if (um_rootvp->v_usecount > 1) {
-        vput(um_rootvp);
-        return (EBUSY);
-    }
-
-#ifdef UNION_DIAGNOSTIC
-    vprint("union root", um_rootvp);
-#endif   
-    /*
-     * Discard references to upper and lower target vnodes.
-     */
-    if (um->um_lowervp)
-        vrele(um->um_lowervp);
-    vrele(um->um_uppervp);
-    crfree(um->um_cred);
-    /*
-     * Release reference on underlying root vnode
-     */
-    vput(um_rootvp);
-    /*
-     * And blow it away for future re-use
-     */
-    vgone(um_rootvp);
-    /*
-     * Finally, throw away the union_mount structure
-     */
-    free(mp->mnt_data, M_UFSMNT);   /* XXX */
-    mp->mnt_data = 0;
-    return (0);
-}
-
-int
+static int
 union_root(mp, vpp)
     struct mount *mp;
     struct vnode **vpp;
@@ -383,6 +299,91 @@ union_root(mp, vpp)
     }
 
     return (error);
+}
+
+/*
+ * Free reference to union layer
+ */
+int
+union_unmount(mp, mntflags, p)
+    struct mount *mp;
+    int mntflags;
+    struct proc *p;
+{
+    struct union_mount *um = MOUNTTOUNIONMOUNT(mp);
+    struct vnode *um_rootvp;
+    int error;
+    int freeing;
+    int flags = 0;
+
+#ifdef UNION_DIAGNOSTIC
+    printf("union_unmount(mp = %x)\n", mp);
+#endif
+
+    if (mntflags & MNT_FORCE)
+        flags |= FORCECLOSE;
+
+    error = union_root(mp, &um_rootvp);
+    if (error)
+        return (error);
+
+    /*
+     * Keep flushing vnodes from the mount list.
+     * This is needed because of the un_pvp held
+     * reference to the parent vnode.
+     * If more vnodes have been freed on a given pass,
+     * the try again.  The loop will iterate at most
+     * (d) times, where (d) is the maximum tree depth
+     * in the filesystem.
+     */
+    for (freeing = 0; vflush(mp, um_rootvp, flags) != 0;) {
+        struct vnode *vp;
+        int n;
+
+        /* count #vnodes held on mount list */
+        for (n = 0, vp = mp->mnt_vnodelist.lh_first;
+                vp != NULLVP;
+                vp = vp->v_mntvnodes.le_next)
+            n++;
+
+        /* if this is unchanged then stop */
+        if (n == freeing)
+            break;
+
+        /* otherwise try once more time */
+        freeing = n;
+    }
+
+    /* At this point the root vnode should have a single reference */
+    if (um_rootvp->v_usecount > 1) {
+        vput(um_rootvp);
+        return (EBUSY);
+    }
+
+#ifdef UNION_DIAGNOSTIC
+    vprint("union root", um_rootvp);
+#endif
+    /*
+     * Discard references to upper and lower target vnodes.
+     */
+    if (um->um_lowervp)
+        vrele(um->um_lowervp);
+    vrele(um->um_uppervp);
+    crfree(um->um_cred);
+    /*
+     * Release reference on underlying root vnode
+     */
+    vput(um_rootvp);
+    /*
+     * And blow it away for future re-use
+     */
+    vgone(um_rootvp);
+    /*
+     * Finally, throw away the union_mount structure
+     */
+    free(mp->mnt_data, M_UFSMNT);   /* XXX */
+    mp->mnt_data = 0;
+    return (0);
 }
 
 int

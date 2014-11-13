@@ -119,7 +119,6 @@ spec_lookup(ap)
         struct componentname *a_cnp;
     } */ *ap;
 {
-
     *ap->a_vpp = NULL;
     return (ENOTDIR);
 }
@@ -128,6 +127,7 @@ spec_lookup(ap)
  * Open a special file.
  */
 /* ARGSUSED */
+int
 spec_open(ap)
     struct vop_open_args /* {
         struct vnode *a_vp;
@@ -197,9 +197,19 @@ spec_open(ap)
          * Do not allow opens of block devices that are
          * currently mounted.
          */
-        if (error = vfs_mountedon(vp))
+        error = vfs_mountedon(vp);
+        if (error)
             return (error);
         return ((*bdevsw[maj].d_open)(dev, ap->a_mode, S_IFBLK, p));
+
+    case VNON:
+    case VREG:
+    case VDIR:
+    case VLNK:
+    case VSOCK:
+    case VFIFO:
+    case VBAD:
+        break;
     }
     return (0);
 }
@@ -208,6 +218,7 @@ spec_open(ap)
  * Vnode op for read
  */
 /* ARGSUSED */
+int
 spec_read(ap)
     struct vop_read_args /* {
         struct vnode *a_vp;
@@ -290,6 +301,7 @@ spec_read(ap)
  * Vnode op for write
  */
 /* ARGSUSED */
+int
 spec_write(ap)
     struct vop_write_args /* {
         struct vnode *a_vp;
@@ -370,6 +382,7 @@ spec_write(ap)
  * Device ioctl operation.
  */
 /* ARGSUSED */
+int
 spec_ioctl(ap)
     struct vop_ioctl_args /* {
         struct vnode *a_vp;
@@ -389,11 +402,12 @@ spec_ioctl(ap)
             ap->a_fflag, ap->a_p));
 
     case VBLK:
-        if (ap->a_command == 0 && (int)ap->a_data == B_TAPE)
+        if (ap->a_command == 0 && (int)ap->a_data == B_TAPE) {
             if (bdevsw[major(dev)].d_type == D_TAPE)
                 return (0);
             else
                 return (1);
+        }
         return ((*bdevsw[major(dev)].d_ioctl)(dev, ap->a_command, ap->a_data,
            ap->a_fflag, ap->a_p));
 
@@ -404,6 +418,7 @@ spec_ioctl(ap)
 }
 
 /* ARGSUSED */
+int
 spec_select(ap)
     struct vop_select_args /* {
         struct vnode *a_vp;
@@ -425,6 +440,7 @@ spec_select(ap)
         return (*cdevsw[major(dev)].d_select)(dev, ap->a_which, ap->a_p);
     }
 }
+
 /*
  * Synch buffers associated with a block device
  */
@@ -485,7 +501,6 @@ spec_inactive(ap)
         struct proc *a_p;
     } */ *ap;
 {
-
     VOP_UNLOCK(ap->a_vp, 0, ap->a_p);
     return (0);
 }
@@ -493,12 +508,12 @@ spec_inactive(ap)
 /*
  * Just call the device strategy routine
  */
+int
 spec_strategy(ap)
     struct vop_strategy_args /* {
         struct buf *a_bp;
     } */ *ap;
 {
-
     (*bdevsw[major(ap->a_bp->b_dev)].d_strategy)(ap->a_bp);
     return (0);
 }
@@ -506,6 +521,7 @@ spec_strategy(ap)
 /*
  * This is a noop, simply returning what one has been given.
  */
+int
 spec_bmap(ap)
     struct vop_bmap_args /* {
         struct vnode *a_vp;
@@ -529,6 +545,7 @@ spec_bmap(ap)
  * Device close routine
  */
 /* ARGSUSED */
+int
 spec_close(ap)
     struct vop_close_args /* {
         struct vnode *a_vp;
@@ -576,7 +593,8 @@ spec_close(ap)
          * we must invalidate any in core blocks, so that
          * we can, for instance, change floppy disks.
          */
-        if (error = vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p, 0, 0))
+        error = vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p, 0, 0);
+        if (error)
             return (error);
         /*
          * We do not want to really close the device if it
@@ -603,19 +621,21 @@ spec_close(ap)
 /*
  * Print out the contents of a special device vnode.
  */
+int
 spec_print(ap)
     struct vop_print_args /* {
         struct vnode *a_vp;
     } */ *ap;
 {
-
     printf("tag VT_NON, dev %d, %d\n", major(ap->a_vp->v_rdev),
         minor(ap->a_vp->v_rdev));
+    return 0;
 }
 
 /*
  * Return POSIX pathconf information applicable to special devices.
  */
+int
 spec_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;
@@ -653,6 +673,7 @@ spec_pathconf(ap)
  * Special device advisory byte-level locks.
  */
 /* ARGSUSED */
+int
 spec_advlock(ap)
     struct vop_advlock_args /* {
         struct vnode *a_vp;
@@ -662,25 +683,25 @@ spec_advlock(ap)
         int  a_flags;
     } */ *ap;
 {
-
     return (EOPNOTSUPP);
 }
 
 /*
  * Special device failed operation
  */
+int
 spec_ebadf()
 {
-
     return (EBADF);
 }
 
 /*
  * Special device bad operation
  */
+int
 spec_badop()
 {
-
     panic("spec_badop called");
     /* NOTREACHED */
+    return 0;
 }

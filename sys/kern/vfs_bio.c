@@ -769,17 +769,17 @@ biodone(bp)
 {
     if (ISSET(bp->b_flags, B_DONE))
         panic("biodone already");
-    SET(bp->b_flags, B_DONE);       /* note that it's done */
+    SET(bp->b_flags, B_DONE);               /* note that it's done */
 
-    if (!ISSET(bp->b_flags, B_READ))    /* wake up reader */
+    if (!ISSET(bp->b_flags, B_READ))        /* wake up reader */
         vwakeup(bp);
 
-    if (ISSET(bp->b_flags, B_CALL)) {   /* if necessary, call out */
-        CLR(bp->b_flags, B_CALL);   /* but note callout done */
+    if (ISSET(bp->b_flags, B_CALL)) {       /* if necessary, call out */
+        CLR(bp->b_flags, B_CALL);           /* but note callout done */
         (*bp->b_iodone)(bp);
     } else if (ISSET(bp->b_flags, B_ASYNC)) /* if async, release it */
         brelse(bp);
-    else {                  /* or just wakeup the buffer */
+    else {                                  /* or just wakeup the buffer */
         CLR(bp->b_flags, B_WANTED);
         wakeup(bp);
     }

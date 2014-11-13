@@ -105,6 +105,7 @@ static pid_t atopid __P((const char *, u_int));
  * is to support exclusive open on process
  * memory images.
  */
+int
 procfs_open(ap)
     struct vop_open_args /* {
         struct vnode *a_vp;
@@ -120,8 +121,8 @@ procfs_open(ap)
         if (PFIND(pfs->pfs_pid) == 0)
             return (ENOENT);    /* was ESRCH, jsp */
 
-        if ((pfs->pfs_flags & FWRITE) && (ap->a_mode & O_EXCL) ||
-            (pfs->pfs_flags & O_EXCL) && (ap->a_mode & FWRITE))
+        if (((pfs->pfs_flags & FWRITE) && (ap->a_mode & O_EXCL)) ||
+            ((pfs->pfs_flags & O_EXCL) && (ap->a_mode & FWRITE)))
             return (EBUSY);
 
         if (ap->a_mode & FWRITE)
@@ -143,6 +144,7 @@ procfs_open(ap)
  * nothing to do for procfs other than undo
  * any exclusive open flag (see _open above).
  */
+int
 procfs_close(ap)
     struct vop_close_args /* {
         struct vnode *a_vp;
@@ -158,6 +160,18 @@ procfs_close(ap)
         if ((ap->a_fflag & FWRITE) && (pfs->pfs_flags & O_EXCL))
             pfs->pfs_flags &= ~(FWRITE|O_EXCL);
         break;
+
+    case Proot:
+    case Pcurproc:
+    case Pproc:
+    case Pfile:
+    case Pregs:
+    case Pfpregs:
+    case Pctl:
+    case Pstatus:
+    case Pnote:
+    case Pnotepg:
+        break;
     }
 
     return (0);
@@ -167,6 +181,7 @@ procfs_close(ap)
  * do an ioctl operation on pfsnode (vp).
  * (vp) is not locked on entry or exit.
  */
+int
 procfs_ioctl(ap)
     struct vop_ioctl_args /* {
         struct vnode *a_vp;
@@ -191,6 +206,7 @@ procfs_ioctl(ap)
  * usual no-op bmap, although returning
  * (EIO) would be a reasonable alternative.
  */
+int
 procfs_bmap(ap)
     struct vop_bmap_args /* {
         struct vnode *a_vp;
@@ -226,6 +242,7 @@ procfs_bmap(ap)
  *
  * (vp) is locked on entry, but must be unlocked on exit.
  */
+int
 procfs_inactive(ap)
     struct vop_inactive_args /* {
         struct vnode *a_vp;
@@ -248,6 +265,7 @@ procfs_inactive(ap)
  * to free any private data and remove the node
  * from any private lists.
  */
+int
 procfs_reclaim(ap)
     struct vop_reclaim_args /* {
         struct vnode *a_vp;
@@ -260,6 +278,7 @@ procfs_reclaim(ap)
 /*
  * Return POSIX pathconf information applicable to special devices.
  */
+int
 procfs_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;
@@ -298,6 +317,7 @@ procfs_pathconf(ap)
  * just print a readable description
  * of (vp).
  */
+int
 procfs_print(ap)
     struct vop_print_args /* {
         struct vnode *a_vp;
@@ -307,6 +327,7 @@ procfs_print(ap)
 
     printf("tag VT_PROCFS, type %s, pid %d, mode %x, flags %x\n",
         pfs->pfs_type, pfs->pfs_pid, pfs->pfs_mode, pfs->pfs_flags);
+    return 0;
 }
 
 /*
@@ -315,6 +336,7 @@ procfs_print(ap)
  * for undoing any side-effects caused by the lookup.
  * this will always include freeing the pathname buffer.
  */
+int
 procfs_abortop(ap)
     struct vop_abortop_args /* {
         struct vnode *a_dvp;
@@ -330,9 +352,9 @@ procfs_abortop(ap)
 /*
  * generic entry point for unsupported operations
  */
+int
 procfs_badop()
 {
-
     return (EIO);
 }
 
@@ -345,6 +367,7 @@ procfs_badop()
  *
  * this is relatively minimal for procfs.
  */
+int
 procfs_getattr(ap)
     struct vop_getattr_args /* {
         struct vnode *a_vp;
@@ -418,6 +441,12 @@ procfs_getattr(ap)
         vap->va_uid = procp->p_ucred->cr_uid;
         vap->va_gid = procp->p_ucred->cr_gid;
         break;
+
+    case Proot:
+    case Pcurproc:
+    case Pproc:
+    case Pfile:
+        break;
     }
 
     /*
@@ -490,6 +519,7 @@ procfs_getattr(ap)
     return (error);
 }
 
+int
 procfs_setattr(ap)
     struct vop_setattr_args /* {
         struct vnode *a_vp;
@@ -523,6 +553,7 @@ procfs_setattr(ap)
  * but does mean that the i/o entry points need to check
  * that the operation really does make sense.
  */
+int
 procfs_access(ap)
     struct vop_access_args /* {
         struct vnode *a_vp;
@@ -543,7 +574,8 @@ procfs_access(ap)
         return (0);
 
     vap = &vattr;
-    if (error = VOP_GETATTR(ap->a_vp, vap, ap->a_cred, ap->a_p))
+    error = VOP_GETATTR(ap->a_vp, vap, ap->a_cred, ap->a_p);
+    if (error)
         return (error);
 
     /*
@@ -580,6 +612,7 @@ found:
  * filesystem doesn't do any locking of its own.  otherwise
  * read and inwardly digest ufs_lookup().
  */
+int
 procfs_lookup(ap)
     struct vop_lookup_args /* {
         struct vnode * a_dvp;
@@ -592,7 +625,6 @@ procfs_lookup(ap)
     struct vnode *dvp = ap->a_dvp;
     char *pname = cnp->cn_nameptr;
     struct proc *curp = cnp->cn_proc;
-    int error = 0;
     struct proc_target *pt;
     struct vnode *fvp;
     pid_t pid;
@@ -687,6 +719,7 @@ procfs_validfile(p)
  *
  * this should just be done through read()
  */
+int
 procfs_readdir(ap)
     struct vop_readdir_args /* {
         struct vnode *a_vp;
@@ -702,7 +735,6 @@ procfs_readdir(ap)
     struct pfsdent *dp = &d;
     struct pfsnode *pfs;
     int error;
-    int count;
     int i;
 
     /*
@@ -722,7 +754,6 @@ procfs_readdir(ap)
         return (EINVAL);
 
     error = 0;
-    count = 0;
     i = uio->uio_offset / UIO_MX;
 
     switch (pfs->pfs_type) {
@@ -750,7 +781,8 @@ procfs_readdir(ap)
             bcopy(pt->pt_name, dp->d_name, pt->pt_namlen + 1);
             dp->d_type = pt->pt_type;
 
-            if (error = uiomove((caddr_t)dp, UIO_MX, uio))
+            error = uiomove((caddr_t)dp, UIO_MX, uio);
+            if (error)
                 break;
         }
 
@@ -773,7 +805,9 @@ procfs_readdir(ap)
         int pcnt = 0;
         volatile struct proc *p = allproc.lh_first;
 
+#ifdef PROCFS_ZOMBIE
     again:
+#endif
         for (; p && uio->uio_resid >= UIO_MX; i++, pcnt++) {
             bzero((char *) dp, UIO_MX);
             dp->d_reclen = UIO_MX;
@@ -810,7 +844,8 @@ procfs_readdir(ap)
                 break;
             }
 
-            if (error = uiomove((caddr_t)dp, UIO_MX, uio))
+            error = uiomove((caddr_t)dp, UIO_MX, uio);
+            if (error)
                 break;
         }
     done:
@@ -840,10 +875,10 @@ procfs_readdir(ap)
 /*
  * readlink reads the link of `curproc'
  */
+int
 procfs_readlink(ap)
     struct vop_readlink_args *ap;
 {
-    struct uio *uio = ap->a_uio;
     char buf[16];       /* should be enough */
     int len;
 
