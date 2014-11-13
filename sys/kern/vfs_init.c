@@ -49,6 +49,7 @@
 #include <sys/buf.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
+#include <sys/systm.h>
 
 /*
  * Sigh, such primitive tools are these...
@@ -71,7 +72,7 @@ extern struct vnodeop_desc *vfs_op_descs[];
  */
 int vfs_opv_numops;
 
-typedef (*PFI)();   /* the standard Pointer to a Function returning an Int */
+typedef int (*PFI)();   /* the standard Pointer to a Function returning an Int */
 
 /*
  * A miscellaneous routine.
@@ -176,7 +177,7 @@ vfs_opv_init()
         }
         for (k = 0; k<vfs_opv_numops; k++)
             if (opv_desc_vector[k] == NULL)
-                opv_desc_vector[k] = 
+                opv_desc_vector[k] =
                     opv_desc_vector[VOFFSET(vop_default)];
     }
 }
@@ -216,6 +217,7 @@ struct vattr va_null;
 /*
  * Initialize the vnode structures and initialize each file system type.
  */
+void
 vfsinit()
 {
     struct vfsconf *vfsp;

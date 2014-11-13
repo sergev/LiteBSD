@@ -64,7 +64,7 @@ struct nameidata {
     /*
      * Shared between namei and lookup/commit routines.
      */
-    long    ni_pathlen;         /* remaining chars in path */
+    u_int   ni_pathlen;         /* remaining chars in path */
     char    *ni_next;           /* next location in pathname */
     u_long  ni_loopcnt;         /* count of symlinks encountered */
     /*

@@ -82,10 +82,10 @@ int vttoif_tab[9] = {
 TAILQ_HEAD(freelst, vnode) vnode_free_list; /* vnode free list */
 struct mntlist mountlist;           /* mounted filesystem list */
 struct simplelock mountlist_slock;
-static struct simplelock mntid_slock;
+struct simplelock mntid_slock;
 struct simplelock mntvnode_slock;
 struct simplelock vnode_free_list_slock;
-static struct simplelock spechash_slock;
+struct simplelock spechash_slock;
 
 /*
  * Initialize the vnode management data structures.
@@ -93,7 +93,6 @@ static struct simplelock spechash_slock;
 void
 vntblinit()
 {
-
     simple_lock_init(&mntvnode_slock);
     simple_lock_init(&mntid_slock);
     simple_lock_init(&spechash_slock);
@@ -311,9 +310,7 @@ getnewvnode(tag, mp, vops, vpp)
     struct proc *p = curproc;   /* XXX */
     struct vnode *vp;
     int s;
-    int cnt;
 
-top:
     simple_lock(&vnode_free_list_slock);
     if ((vnode_free_list.tqh_first == NULL &&
          numvnodes < 2 * desiredvnodes) ||
@@ -413,7 +410,8 @@ vwakeup(bp)
     register struct vnode *vp;
 
     bp->b_flags &= ~B_WRITEINPROG;
-    if (vp = bp->b_vp) {
+    vp = bp->b_vp;
+    if (vp) {
         if (--vp->v_numoutput < 0)
             panic("vwakeup: neg numoutput");
         if ((vp->v_flag & VBWAIT) && vp->v_numoutput <= 0) {
@@ -442,7 +440,8 @@ vinvalbuf(vp, flags, cred, p, slpflag, slptimeo)
     int s, error;
 
     if (flags & V_SAVE) {
-        if (error = VOP_FSYNC(vp, cred, MNT_WAIT, p))
+        error = VOP_FSYNC(vp, cred, MNT_WAIT, p);
+        if (error)
             return (error);
         if (vp->v_dirtyblkhd.lh_first != NULL)
             panic("vinvalbuf: dirty bufs");
@@ -596,7 +595,8 @@ bdevvp(dev, vpp)
     }
     vp = nvp;
     vp->v_type = VBLK;
-    if (nvp = checkalias(vp, dev, (struct mount *)0)) {
+    nvp = checkalias(vp, dev, (struct mount *)0);
+    if (nvp) {
         vput(vp);
         vp = nvp;
     }
@@ -710,7 +710,8 @@ vget(vp, flags, p)
     }
     vp->v_usecount++;
     if (flags & LK_TYPE_MASK) {
-        if (error = vn_lock(vp, flags | LK_INTERLOCK, p))
+        error = vn_lock(vp, flags | LK_INTERLOCK, p);
+        if (error)
             vrele(vp);
         return (error);
     }
@@ -1050,7 +1051,8 @@ vclean(vp, flags, p)
      * so that its count cannot fall to zero and generate a
      * race against ourselves to recycle it.
      */
-    if (active = vp->v_usecount)
+    active = vp->v_usecount;
+    if (active)
         vp->v_usecount++;
     /*
      * Prevent the vnode from being recycled or
@@ -1453,7 +1455,6 @@ vfs_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     size_t newlen;
     struct proc *p;
 {
-    struct ctldebug *cdp;
     struct vfsconf *vfsp;
 
     /* all sysctl names at this level are at least name and field */
@@ -1640,7 +1641,8 @@ vfs_hang_addrlist(mp, nep, argp)
     np = (struct netcred *)malloc(i, M_NETADDR, M_WAITOK);
     bzero((caddr_t)np, i);
     saddr = (struct sockaddr *)(np + 1);
-    if (error = copyin(argp->ex_addr, (caddr_t)saddr, argp->ex_addrlen))
+    error = copyin(argp->ex_addr, (caddr_t)saddr, argp->ex_addrlen);
+    if (error)
         goto out;
     if (saddr->sa_len > argp->ex_addrlen)
         saddr->sa_len = argp->ex_addrlen;
@@ -1719,13 +1721,15 @@ vfs_free_addrlist(nep)
     register int i;
     register struct radix_node_head *rnh;
 
-    for (i = 0; i <= AF_MAX; i++)
-        if (rnh = nep->ne_rtable[i]) {
+    for (i = 0; i <= AF_MAX; i++) {
+        rnh = nep->ne_rtable[i];
+        if (rnh) {
             (*rnh->rnh_walktree)(rnh, vfs_free_netcred,
                 (caddr_t)rnh);
             free((caddr_t)rnh, M_RTABLE);
             nep->ne_rtable[i] = 0;
         }
+    }
 }
 
 int
@@ -1741,7 +1745,8 @@ vfs_export(mp, nep, argp)
         mp->mnt_flag &= ~(MNT_EXPORTED | MNT_DEFEXPORTED);
     }
     if (argp->ex_flags & MNT_EXPORTED) {
-        if (error = vfs_hang_addrlist(mp, nep, argp))
+        error = vfs_hang_addrlist(mp, nep, argp);
+        if (error)
             return (error);
         mp->mnt_flag |= MNT_EXPORTED;
     }

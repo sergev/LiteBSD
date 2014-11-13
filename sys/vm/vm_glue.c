@@ -359,6 +359,7 @@ loop:
                    p->p_pid, p->p_comm, p->p_addr,
                    ppri, cnt.v_free_count);
 #endif
+printf("--- swapin: pid %d(%s)@%x, pri %d free %d\n", p->p_pid, p->p_comm, p->p_addr, ppri, cnt.v_free_count);
         vm_map_pageable(kernel_map, addr, addr+size, FALSE);
         /*
          * Some architectures need to be notified when the
@@ -383,6 +384,7 @@ loop:
         printf("scheduler: no room for pid %d(%s), free %d\n",
                p->p_pid, p->p_comm, cnt.v_free_count);
 #endif
+//printf("--- scheduler: no room for pid %d(%s), free %d\n", p->p_pid, p->p_comm, cnt.v_free_count);
     (void) splhigh();
     VM_WAIT;
     (void) spl0();
@@ -451,7 +453,8 @@ swapout_threads()
      */
     if (didswap == 0 &&
         cnt.v_free_count <= atop(round_page(ctob(UPAGES)))) {
-        if ((p = outp) == 0)
+        p = outp;
+        if (p == 0)
             p = outp2;
 #ifdef DEBUG
         if (swapdebug & SDB_SWAPOUT)
@@ -468,6 +471,7 @@ swapout(p)
 {
     vm_offset_t addr;
     vm_size_t size;
+printf("--- %s: pid %d(%s)@%x, stat %x pri %d free %d\n", __func__, p->p_pid, p->p_comm, p->p_addr, p->p_stat, p->p_slptime, cnt.v_free_count);
 
 #ifdef DEBUG
     if (swapdebug & SDB_SWAPOUT)

@@ -48,6 +48,7 @@
 #include <sys/malloc.h>
 #include <sys/filedesc.h>
 #include <sys/proc.h>
+#include <sys/systm.h>
 
 #ifdef KTRACE
 #include <sys/ktrace.h>
@@ -143,7 +144,8 @@ namei(ndp)
             VREF(dp);
         }
         ndp->ni_startdir = dp;
-        if (error = lookup(ndp)) {
+        error = lookup(ndp);
+        if (error) {
             FREE(cnp->cn_pnbuf, M_NAMEI);
             return (error);
         }
@@ -176,7 +178,8 @@ namei(ndp)
         auio.uio_segflg = UIO_SYSSPACE;
         auio.uio_procp = (struct proc *)0;
         auio.uio_resid = MAXPATHLEN;
-        if (error = VOP_READLINK(ndp->ni_vp, &auio, cnp->cn_cred)) {
+        error = VOP_READLINK(ndp->ni_vp, &auio, cnp->cn_cred);
+        if (error) {
             if (ndp->ni_pathlen > 1)
                 free(cp, M_NAMEI);
             break;
@@ -375,7 +378,8 @@ dirloop:
 unionlookup:
     ndp->ni_dvp = dp;
     ndp->ni_vp = NULL;
-    if (error = VOP_LOOKUP(dp, &ndp->ni_vp, cnp)) {
+    error = VOP_LOOKUP(dp, &ndp->ni_vp, cnp);
+    if (error) {
 #ifdef DIAGNOSTIC
         if (ndp->ni_vp != NULL)
             panic("leaf should be empty");
@@ -509,7 +513,6 @@ relookup(dvp, vpp, cnp)
 {
     struct proc *p = cnp->cn_proc;
     struct vnode *dp = 0;       /* the directory we are searching */
-    int docache;            /* == 0 do not cache last component */
     int wantparent;         /* 1 => wantparent or lockparent flag */
     int rdonly;         /* lookup read-only flag bit */
     int error = 0;
@@ -522,10 +525,6 @@ relookup(dvp, vpp, cnp)
      * Setup: break out flag bits into variables.
      */
     wantparent = cnp->cn_flags & (LOCKPARENT|WANTPARENT);
-    docache = (cnp->cn_flags & NOCACHE) ^ NOCACHE;
-    if (cnp->cn_nameiop == DELETE ||
-        (wantparent && cnp->cn_nameiop != CREATE))
-        docache = 0;
     rdonly = cnp->cn_flags & RDONLY;
     cnp->cn_flags &= ~ISSYMLINK;
     dp = dvp;
@@ -581,7 +580,8 @@ relookup(dvp, vpp, cnp)
     /*
      * We now have a segment name to search for, and a directory to search.
      */
-    if (error = VOP_LOOKUP(dp, vpp, cnp)) {
+    error = VOP_LOOKUP(dp, vpp, cnp);
+    if (error) {
 #ifdef DIAGNOSTIC
         if (*vpp != NULL)
             panic("leaf should be empty");

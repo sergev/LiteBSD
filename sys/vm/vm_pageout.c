@@ -102,8 +102,8 @@ vm_pageout_scan()
     register int        page_shortage;
     register int        s;
     register int        pages_freed;
-    int         free;
-    vm_object_t     object;
+    int                 free;
+    vm_object_t         object;
 
     /*
      *  Only continue when we want more pages to be "free"
@@ -321,6 +321,7 @@ vm_pageout_page(m, object)
          * shortage, so we put pause for awhile and try again.
          * XXX could get stuck here.
          */
+//printf("--- %s: again\n", __func__);
         vm_page_unlock_queues();
         vm_object_unlock(object);
         (void) tsleep((caddr_t)&lbolt, PZERO|PCATCH, "pageout", 0);

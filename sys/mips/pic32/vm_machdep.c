@@ -144,10 +144,15 @@ cpu_swapin(p)
  * pcb and stack and never returns.  We block memory allocation
  * until switch_exit has made things safe again.
  */
+void
 cpu_exit(p)
     struct proc *p;
 {
     vmspace_free(p->p_vmspace);
+
+    /* No running processes - activate swapper. */
+    if (whichqs == 0)
+        wakeup((caddr_t)&proc0);
 
     (void) splhigh();
     kmem_free(kernel_map, (vm_offset_t)p->p_addr, ctob(UPAGES));
@@ -173,6 +178,7 @@ cpu_coredump(p, vp, cred)
  * Both addresses are assumed to reside in the Sysmap,
  * and size must be a multiple of CLSIZE.
  */
+void
 pagemove(from, to, size)
     register caddr_t from, to;
     int size;

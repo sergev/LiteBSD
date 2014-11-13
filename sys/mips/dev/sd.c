@@ -695,7 +695,7 @@ sdstrategy(bp)
     if (unit >= NSD || bp->b_blkno < 0) {
         printf("sdstrategy: unit = %d, blkno = %d, bcount = %d\n",
             unit, bp->b_blkno, bp->b_bcount);
-        bp->b_flags |= B_ERROR;
+        bp->b_error = EINVAL;
         goto bad;
     }
     u = &sddrives[unit];
@@ -727,8 +727,10 @@ sdstrategy(bp)
                 }
                 /* or truncate if part of it fits */
                 sz = maxsz - bp->b_blkno;
-                if (sz <= 0)
+                if (sz <= 0) {
+                        bp->b_error = EINVAL;
                         goto bad;
+                }
                 bp->b_bcount = sz << DEV_BSHIFT;
         }
     } else {
@@ -749,7 +751,7 @@ sdstrategy(bp)
     return;
 
 bad:
-    bp->b_error = EINVAL;
+    bp->b_flags |= B_ERROR;
     biodone(bp);
 //printf("%s: failed \n", __func__);
 }

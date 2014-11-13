@@ -149,6 +149,7 @@ bufinit()
  * Read a disk block.
  * This algorithm described in Bach (p.54).
  */
+int
 bread(vp, blkno, size, cred, bpp)
     struct vnode *vp;
     daddr_t blkno;
@@ -188,6 +189,7 @@ bread(vp, blkno, size, cred, bpp)
  * Read-ahead multiple disk blocks. The first is sync, the rest async.
  * Trivial modification to the breada algorithm presented in Bach (p.55).
  */
+int
 breadn(vp, blkno, size, rablks, rasizes, nrablks, cred, bpp)
     struct vnode *vp;
     daddr_t blkno; int size;
@@ -268,6 +270,7 @@ breadn(vp, blkno, size, rablks, rasizes, nrablks, cred, bpp)
 /*
  * Block write.  Described in Bach (p.56)
  */
+int
 bwrite(bp)
     struct buf *bp;
 {
@@ -286,11 +289,12 @@ bwrite(bp)
      * to do this now, because if we don't, the vnode may not
      * be properly notified that it's i/o has completed.
      */
-    if (!sync)
+    if (!sync) {
         if (wasdelayed)
             reassignbuf(bp, bp->b_vp);
         else
             curproc->p_stats->p_ru.ru_oublock++;
+    }
 
     /* Initiate disk write.  Make sure the appropriate party is charged. */
     SET(bp->b_flags, B_WRITEINPROG);
@@ -308,11 +312,12 @@ bwrite(bp)
      * make sure it's on the correct vnode queue. (async operatings
      * were payed for above.)
      */
-    if (sync)
+    if (sync) {
         if (wasdelayed)
             reassignbuf(bp, bp->b_vp);
         else
             curproc->p_stats->p_ru.ru_oublock++;
+    }
 
     /* Release the buffer, or, if async, make sure it gets reused ASAP. */
     if (sync)
@@ -506,7 +511,8 @@ getblk(vp, blkno, size, slpflag, slptimeo)
 
 start:
     s = splbio();
-    if (bp = incore(vp, blkno)) {   /* XXX NFS VOP_BWRITE foolishness */
+    bp = incore(vp, blkno);
+    if (bp) {                           /* XXX NFS VOP_BWRITE foolishness */
         if (ISSET(bp->b_flags, B_BUSY)) {
             SET(bp->b_flags, B_WANTED);
             err = tsleep(bp, slpflag | (PRIBIO + 1), "getblk",
@@ -565,6 +571,7 @@ geteblk(size)
  * start a write.  If the buffer grows, it's the callers
  * responsibility to fill out the buffer's additional contents.
  */
+void
 allocbuf(bp, size)
     struct buf *bp;
     int size;

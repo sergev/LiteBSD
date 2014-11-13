@@ -35,13 +35,13 @@
 
 #include <sys/param.h>
 #include <sys/proc.h>
+#include <sys/systm.h>
 #include <sys/buf.h>
 #include <sys/vnode.h>
 #include <sys/mount.h>
 #include <sys/trace.h>
 #include <sys/malloc.h>
 #include <sys/resourcevar.h>
-#include <libkern/libkern.h>
 
 /*
  * Local declarations
@@ -96,6 +96,7 @@ int doclusterraz = 0;
  *  rbp is the read-ahead block.
  *  If either is NULL, then you don't have to do the I/O.
  */
+int
 cluster_read(vp, filesize, lblkno, size, cred, bpp)
     struct vnode *vp;
     u_quad_t filesize;
@@ -233,18 +234,19 @@ cluster_read(vp, filesize, lblkno, size, cred, bpp)
 
     /* XXX Kirk, do we need to make sure the bp has creds? */
 skip_readahead:
-    if (bp)
+    if (bp) {
         if (bp->b_flags & (B_DONE | B_DELWRI))
             panic("cluster_read: DONE bp");
-        else 
+        else
             error = VOP_STRATEGY(bp);
-
-    if (rbp)
+    }
+    if (rbp) {
         if (error || rbp->b_flags & (B_DONE | B_DELWRI)) {
             rbp->b_flags &= ~(B_ASYNC | B_READ);
             brelse(rbp);
         } else
             (void) VOP_STRATEGY(rbp);
+    }
 
     /*
      * Recalculate our maximum readahead
@@ -353,7 +355,7 @@ cluster_rbuild(vp, filesize, bp, lbn, blkno, size, run, flags)
                     bdata -= CLBYTES;
                     pagemove(bdata, bdata + size, CLBYTES);
                 }
-            } else 
+            } else
                 pagemove(bdata, bdata + size, tbp->b_bufsize);
         }
         tbp->b_blkno = bn;
@@ -670,7 +672,7 @@ redo:
          * case we don't want to write it twice).
          */
         if (!incore(vp, start_lbn) ||
-            last_bp == NULL && start_lbn == lbn)
+            (last_bp == NULL && start_lbn == lbn))
             break;
 
         /*

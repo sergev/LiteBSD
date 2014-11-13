@@ -36,7 +36,8 @@
 #ifndef _SYS_MALLOC_H_
 #define _SYS_MALLOC_H_
 
-#define KMEMSTATS
+/* Better to disable for embedded system: too low memory. */
+/*#define KMEMSTATS*/
 
 /*
  * flags to malloc

@@ -1094,6 +1094,7 @@ LEAF(switch_exit)
         mtc0    v0, MACH_C0_EntryHi             # init high entry
         mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
         mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
+        ehb
         tlbwi                                   # Write the TLB entry.
         sw      zero, curproc
         b       cpu_switch
@@ -1201,6 +1202,7 @@ sw1:
         mtc0    v0, MACH_C0_EntryHi             # init high entry
         mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
         mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
+        ehb
         tlbwi                                   # Write the TLB entry.
 /*
  * Now running on new u struct.
@@ -1430,7 +1432,7 @@ LEAF(spl1)
         li      t1, 1                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1440,7 +1442,7 @@ LEAF(spl2)
         li      t1, 2                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1450,7 +1452,7 @@ LEAF(spl3)
         li      t1, 3                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1460,7 +1462,7 @@ LEAF(spl4)
         li      t1, 4                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1470,7 +1472,7 @@ LEAF(spl5)
         li      t1, 5                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1480,7 +1482,7 @@ LEAF(spl6)
         li      t1, 6                           # new IPL value
         di      t0                              # read Status and disable interrupts
         and     v0, t0, MACH_Status_IPL_MASK | MACH_Status_IE
-        ins     t0, t0, 10, 9                   # set IPL
+        ins     t0, t1, 10, 9                   # set IPL
         mtc0    t0, MACH_C0_Status              # write Status: enable all sources
         jr.hb   ra                              # return (clear hazards)
         nop
@@ -1866,7 +1868,7 @@ kern_interrupt:
         ext     k1, k0, 10, 6                   # Extract Cause.IPL.
         move    k0, a0
 #TODO: something wrong with nested interrupts
-li k1, 7
+//li k1, 7
         ins     k0, k1, 10, 6                   # Raise Status.IPL,
         ins     k0, zero, 1, 1                  # Clear EXL.
         mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
@@ -1958,7 +1960,7 @@ user_interrupt:
         ext     k1, k0, 10, 6                   # Extract Cause.IPL.
         move    k0, a0
 #TODO: something wrong with nested interrupts
-li k1, 7
+//li k1, 7
         ins     k0, k1, 10, 6                   # Raise Status.IPL,
         ins     k0, zero, 1, 4                  # Clear UM and EXL.
         mtc0    k0, MACH_C0_Status              # Set Status, re-enable interrupts.
@@ -2002,7 +2004,7 @@ li k1, 7
         mtc0    a0, MACH_C0_Status              # Restore the SR, disable intrs
         ehb
         lw      v0, astpending                  # any pending interrupts?
-        bne     v0, zero, 1f                    # dont restore, call softintr
+        bne     v0, zero, soft_interrupt        # dont restore, call softintr
         lw      t0, UADDR+U_PCB_REGS+(MULLO * 4)
         lw      t1, UADDR+U_PCB_REGS+(MULHI * 4)
         lw      AT, UADDR+U_PCB_REGS+(AST * 4)
@@ -2034,7 +2036,7 @@ li k1, 7
 /*
  * We have pending software interrupts; save remaining user state in u.u_pcb.
  */
-1:
+soft_interrupt:
         sw      s0, UADDR+U_PCB_REGS+(S0 * 4)
         sw      s1, UADDR+U_PCB_REGS+(S1 * 4)
         sw      s2, UADDR+U_PCB_REGS+(S2 * 4)

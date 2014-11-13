@@ -225,7 +225,7 @@ cache_enter(dvp, vp, cnp)
             malloc((u_long)sizeof *ncp, M_CACHE, M_WAITOK);
         bzero((char *)ncp, sizeof *ncp);
         numcache++;
-    } else if (ncp = nclruhead.tqh_first) {
+    } else if ((ncp = nclruhead.tqh_first)) {
         /* reuse an old entry */
         TAILQ_REMOVE(&nclruhead, ncp, nc_lru);
         if (ncp->nc_hash.le_prev != 0) {
@@ -287,7 +287,7 @@ cache_purge(vp)
     if (nextvnodeid != 0)
         return;
     for (ncpp = &nchashtbl[nchash]; ncpp >= nchashtbl; ncpp--) {
-        while (ncp = ncpp->lh_first)
+        while ((ncp = ncpp->lh_first))
             PURGE(ncp);
     }
     vp->v_id = ++nextvnodeid;

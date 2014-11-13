@@ -48,11 +48,22 @@ int saferss = SAFERSS;
 void
 vmmeter()
 {
+    struct proc *p;
 
     if (time.tv_sec % 5 == 0)
         loadav(&averunnable);
     if (proc0.p_slptime > maxslp/2)
         wakeup((caddr_t)&proc0);
+    else {
+        for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
+            if (p->p_stat == SRUN && (p->p_flag & P_INMEM)) {
+                /* At least one running process in memory. */
+                return;
+            }
+        }
+        /* No running processes in memory - activate swapper. */
+        wakeup((caddr_t)&proc0);
+    }
 }
 
 /*

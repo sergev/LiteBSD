@@ -153,7 +153,7 @@ struct  buf bswlist;        /* Head of swap I/O buffer headers free list. */
 struct  buf *bclnlist;      /* Head of cleaned page list. */
 
 __BEGIN_DECLS
-int     allocbuf __P((struct buf *, int));
+void    allocbuf __P((struct buf *, int));
 void    bawrite __P((struct buf *));
 void    bdwrite __P((struct buf *));
 void    biodone __P((struct buf *));

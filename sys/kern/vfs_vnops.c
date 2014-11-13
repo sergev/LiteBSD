@@ -60,6 +60,7 @@ struct  fileops vnops =
  * Common code for vnode open operations.
  * Check permissions, and call the VOP_OPEN or VOP_CREATE routine.
  */
+int
 vn_open(ndp, fmode, cmode)
     register struct nameidata *ndp;
     int fmode, cmode;
@@ -76,7 +77,8 @@ vn_open(ndp, fmode, cmode)
         ndp->ni_cnd.cn_flags = LOCKPARENT | LOCKLEAF;
         if ((fmode & O_EXCL) == 0)
             ndp->ni_cnd.cn_flags |= FOLLOW;
-        if (error = namei(ndp))
+        error = namei(ndp);
+        if (error)
             return (error);
         if (ndp->ni_vp == NULL) {
             VATTR_NULL(vap);
@@ -85,8 +87,8 @@ vn_open(ndp, fmode, cmode)
             if (fmode & O_EXCL)
                 vap->va_vaflags |= VA_EXCLUSIVE;
             VOP_LEASE(ndp->ni_dvp, p, cred, LEASE_WRITE);
-            if (error = VOP_CREATE(ndp->ni_dvp, &ndp->ni_vp,
-                &ndp->ni_cnd, vap))
+            error = VOP_CREATE(ndp->ni_dvp, &ndp->ni_vp, &ndp->ni_cnd, vap);
+            if (error)
                 return (error);
             fmode &= ~O_TRUNC;
             vp = ndp->ni_vp;
@@ -107,7 +109,8 @@ vn_open(ndp, fmode, cmode)
     } else {
         ndp->ni_cnd.cn_nameiop = LOOKUP;
         ndp->ni_cnd.cn_flags = FOLLOW | LOCKLEAF;
-        if (error = namei(ndp))
+        error = namei(ndp);
+        if (error)
             return (error);
         vp = ndp->ni_vp;
     }
@@ -117,7 +120,8 @@ vn_open(ndp, fmode, cmode)
     }
     if ((fmode & O_CREAT) == 0) {
         if (fmode & FREAD) {
-            if (error = VOP_ACCESS(vp, VREAD, cred, p))
+            error = VOP_ACCESS(vp, VREAD, cred, p);
+            if (error)
                 goto bad;
         }
         if (fmode & (FWRITE | O_TRUNC)) {
@@ -136,10 +140,12 @@ vn_open(ndp, fmode, cmode)
         vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);    /* XXX */
         VATTR_NULL(vap);
         vap->va_size = 0;
-        if (error = VOP_SETATTR(vp, vap, cred, p))
+        error = VOP_SETATTR(vp, vap, cred, p);
+        if (error)
             goto bad;
     }
-    if (error = VOP_OPEN(vp, fmode, cred, p))
+    error = VOP_OPEN(vp, fmode, cred, p);
+    if (error)
         goto bad;
     if (fmode & FWRITE)
         vp->v_writecount++;
@@ -153,6 +159,7 @@ bad:
  * Check for write permissions on the specified vnode.
  * Prototype text segments cannot be written.
  */
+int
 vn_writechk(vp)
     register struct vnode *vp;
 {
@@ -170,6 +177,7 @@ vn_writechk(vp)
 /*
  * Vnode close call
  */
+int
 vn_close(vp, flags, cred, p)
     register struct vnode *vp;
     int flags;
@@ -188,6 +196,7 @@ vn_close(vp, flags, cred, p)
 /*
  * Package up an I/O request on a vnode into a uio and do it.
  */
+int
 vn_rdwr(rw, vp, base, len, offset, segflg, ioflg, cred, aresid, p)
     enum uio_rw rw;
     struct vnode *vp;
@@ -233,6 +242,7 @@ vn_rdwr(rw, vp, base, len, offset, segflg, ioflg, cred, aresid, p)
 /*
  * File table vnode read routine.
  */
+int
 vn_read(fp, uio, cred)
     struct file *fp;
     struct uio *uio;
@@ -256,6 +266,7 @@ vn_read(fp, uio, cred)
 /*
  * File table vnode write routine.
  */
+int
 vn_write(fp, uio, cred)
     struct file *fp;
     struct uio *uio;
@@ -288,6 +299,7 @@ vn_write(fp, uio, cred)
 /*
  * File table vnode stat routine.
  */
+int
 vn_stat(vp, sb, p)
     struct vnode *vp;
     register struct stat *sb;
@@ -352,6 +364,7 @@ vn_stat(vp, sb, p)
 /*
  * File table vnode ioctl routine.
  */
+int
 vn_ioctl(fp, com, data, p)
     struct file *fp;
     u_long com;
@@ -367,7 +380,8 @@ vn_ioctl(fp, com, data, p)
     case VREG:
     case VDIR:
         if (com == FIONREAD) {
-            if (error = VOP_GETATTR(vp, &vattr, p->p_ucred, p))
+            error = VOP_GETATTR(vp, &vattr, p->p_ucred, p);
+            if (error)
                 return (error);
             *(int *)data = vattr.va_size - fp->f_offset;
             return (0);
@@ -396,12 +410,12 @@ vn_ioctl(fp, com, data, p)
 /*
  * File table vnode select routine.
  */
+int
 vn_select(fp, which, p)
     struct file *fp;
     int which;
     struct proc *p;
 {
-
     return (VOP_SELECT(((struct vnode *)fp->f_data), which, fp->f_flag,
         fp->f_cred, p));
 }
@@ -417,7 +431,7 @@ vn_lock(vp, flags, p)
     struct proc *p;
 {
     int error;
-    
+
     do {
         if ((flags & LK_INTERLOCK) == 0)
             simple_lock(&vp->v_interlock);
@@ -439,11 +453,11 @@ vn_lock(vp, flags, p)
 /*
  * File table vnode close routine.
  */
+int
 vn_closefile(fp, p)
     struct file *fp;
     struct proc *p;
 {
-
     return (vn_close(((struct vnode *)fp->f_data), fp->f_flag,
         fp->f_cred, p));
 }
