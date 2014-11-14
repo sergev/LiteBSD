@@ -31,6 +31,7 @@
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/disklabel.h>
+#include <sys/systm.h>
 
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>

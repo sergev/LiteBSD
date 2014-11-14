@@ -100,9 +100,10 @@ ffs_update(ap)
         ip->i_ctime = time.tv_sec;
     ip->i_flag &= ~(IN_ACCESS | IN_CHANGE | IN_MODIFIED | IN_UPDATE);
     fs = ip->i_fs;
-    if (error = bread(ip->i_devvp,
+    error = bread(ip->i_devvp,
         fsbtodb(fs, ino_to_fsba(fs, ip->i_number)),
-        (int)fs->fs_bsize, NOCRED, &bp)) {
+        (int)fs->fs_bsize, NOCRED, &bp);
+    if (error) {
         brelse(bp);
         return (error);
     }
@@ -119,10 +120,12 @@ ffs_update(ap)
 #define SINGLE  0   /* index of single indirect block */
 #define DOUBLE  1   /* index of double indirect block */
 #define TRIPLE  2   /* index of triple indirect block */
+
 /*
  * Truncate the inode oip to at most length size, freeing the
  * disk blocks.
  */
+int
 ffs_truncate(ap)
     struct vop_truncate_args /* {
         struct vnode *a_vp;
@@ -167,7 +170,8 @@ ffs_truncate(ap)
         return (VOP_UPDATE(ovp, &tv, &tv, 0));
     }
 #ifdef QUOTA
-    if (error = getinoquota(oip))
+    error = getinoquota(oip);
+    if (error)
         return (error);
 #endif
     fs = oip->i_fs;
@@ -185,8 +189,8 @@ ffs_truncate(ap)
         aflags = B_CLRBUF;
         if (ap->a_flags & IO_SYNC)
             aflags |= B_SYNC;
-        if (error = ffs_balloc(oip, lbn, offset + 1, ap->a_cred, &bp,
-            aflags))
+        error = ffs_balloc(oip, lbn, offset + 1, ap->a_cred, &bp, aflags);
+        if (error)
             return (error);
         oip->i_size = length;
         vnode_pager_setsize(ovp, (u_long)length);
@@ -213,8 +217,8 @@ ffs_truncate(ap)
         aflags = B_CLRBUF;
         if (ap->a_flags & IO_SYNC)
             aflags |= B_SYNC;
-        if (error = ffs_balloc(oip, lbn, offset, ap->a_cred, &bp,
-            aflags))
+        error = ffs_balloc(oip, lbn, offset, ap->a_cred, &bp, aflags);
+        if (error)
             return (error);
         oip->i_size = length;
         size = blksize(fs, oip, lbn);
@@ -253,7 +257,8 @@ ffs_truncate(ap)
     for (i = NDADDR - 1; i > lastblock; i--)
         oip->i_db[i] = 0;
     oip->i_flag |= IN_CHANGE | IN_UPDATE;
-    if (error = VOP_UPDATE(ovp, &tv, &tv, MNT_WAIT))
+    error = VOP_UPDATE(ovp, &tv, &tv, MNT_WAIT);
+    if (error)
         allerror = error;
     /*
      * Having written the new inode to disk, save its new configuration
@@ -451,8 +456,9 @@ ffs_indirtrunc(ip, lbn, dbn, lastbn, level, countp)
         if (nb == 0)
             continue;
         if (level > SINGLE) {
-            if (error = ffs_indirtrunc(ip, nlbn, fsbtodb(fs, nb),
-                (ufs_daddr_t)-1, level - 1, &blkcount))
+            error = ffs_indirtrunc(ip, nlbn, fsbtodb(fs, nb),
+                (ufs_daddr_t)-1, level - 1, &blkcount);
+            if (error)
                 allerror = error;
             blocksreleased += blkcount;
         }
@@ -467,8 +473,9 @@ ffs_indirtrunc(ip, lbn, dbn, lastbn, level, countp)
         last = lastbn % factor;
         nb = bap[i];
         if (nb != 0) {
-            if (error = ffs_indirtrunc(ip, nlbn, fsbtodb(fs, nb),
-                last, level - 1, &blkcount))
+            error = ffs_indirtrunc(ip, nlbn, fsbtodb(fs, nb),
+                last, level - 1, &blkcount);
+            if (error)
                 allerror = error;
             blocksreleased += blkcount;
         }

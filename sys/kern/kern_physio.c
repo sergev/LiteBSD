@@ -66,7 +66,7 @@ void putphysbuf __P((struct buf *bp));
  */
 int
 physio(strategy, bp, dev, flags, minphys, uio)
-    int (*strategy)();
+    void (*strategy)(struct buf *);
     struct buf *bp;
     dev_t dev;
     int flags;

@@ -55,6 +55,15 @@
 #endif
 #include <net/netisr.h>
 
+#include <sys/socket.h>
+#include <net/if.h>
+#include <net/route.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/if_ether.h>
+#include <netinet/ip.h>
+#include <netinet/ip_var.h>
+
 #include <machine/trap.h>
 #include <machine/psl.h>
 #include <machine/reg.h>
@@ -62,6 +71,7 @@
 #include <machine/pte.h>
 #include <machine/mips_opcode.h>
 #include <machine/pic32mz.h>
+#include <mips/dev/device.h>
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
@@ -84,7 +94,7 @@ exception(statusReg, causeReg, vadr, pc, args)
     register int type, i;
     unsigned ucode = 0;
     register struct proc *p = curproc;
-    u_quad_t sticks;
+    u_quad_t sticks = 0;
     vm_prot_t ftype;
     extern unsigned onfault_table[];
 
@@ -565,6 +575,7 @@ out:
  * Called from kern_interrupt() or user_interrupt()
  * Note: curproc might be NULL.
  */
+void
 interrupt(statusReg, pc)
     unsigned statusReg;     /* status register at time of the exception */
     unsigned pc;            /* program counter where to continue */
@@ -638,6 +649,7 @@ interrupt(statusReg, pc)
  * This is called from user_interrupt() if astpending is set.
  * This is very similar to the tail of exception().
  */
+void
 softintr()
 {
     register struct proc *p = curproc;
@@ -679,6 +691,7 @@ softintr()
 /*
  * This routine is called by procxmt() to single step one instruction.
  */
+int
 cpu_singlestep(p)
     register struct proc *p;
 {

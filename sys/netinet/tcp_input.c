@@ -219,13 +219,15 @@ tcp_input(m, iphlen)
     register struct tcpiphdr *ti;
     register struct inpcb *inp;
     u_char *optp = NULL;
-    int optlen;
+    int optlen = 0;
     int len, tlen, off;
     register struct tcpcb *tp = 0;
     register int tiflags;
     struct socket *so;
     int todrop, acked, ourfinisacked, needoutput = 0;
+#ifdef TCPDEBUG
     short ostate;
+#endif
     struct in_addr laddr;
     int dropsocket = 0;
     int iss = 0;
@@ -257,7 +259,8 @@ tcp_input(m, iphlen)
     ti->ti_x1 = 0;
     ti->ti_len = (u_short)tlen;
     HTONS(ti->ti_len);
-    if (ti->ti_sum = in_cksum(m, len)) {
+    ti->ti_sum = in_cksum(m, len);
+    if (ti->ti_sum) {
         tcpstat.tcps_rcvbadsum++;
         goto drop;
     }
@@ -351,7 +354,9 @@ findpcb:
     so = inp->inp_socket;
     if (so->so_options & (SO_DEBUG|SO_ACCEPTCONN)) {
         if (so->so_options & SO_DEBUG) {
+#ifdef TCPDEBUG
             ostate = tp->t_state;
+#endif
             tcp_saveti = *ti;
         }
         if (so->so_options & SO_ACCEPTCONN) {
@@ -1126,9 +1131,10 @@ step6:
      * Don't look at window if no ACK: TAC's send garbage on first SYN.
      */
     if ((tiflags & TH_ACK) &&
-        (SEQ_LT(tp->snd_wl1, ti->ti_seq) || tp->snd_wl1 == ti->ti_seq &&
-        (SEQ_LT(tp->snd_wl2, ti->ti_ack) ||
-         tp->snd_wl2 == ti->ti_ack && tiwin > tp->snd_wnd))) {
+        (SEQ_LT(tp->snd_wl1, ti->ti_seq) ||
+         (tp->snd_wl1 == ti->ti_seq &&
+          (SEQ_LT(tp->snd_wl2, ti->ti_ack) ||
+           (tp->snd_wl2 == ti->ti_ack && tiwin > tp->snd_wnd))))) {
         /* keep track of pure window updates */
         if (ti->ti_len == 0 &&
             tp->snd_wl2 == ti->ti_ack && tiwin > tp->snd_wnd)

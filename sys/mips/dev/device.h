@@ -116,4 +116,17 @@ typedef struct ScsiCmd {
 #ifdef KERNEL
 extern struct mips_ctlr mips_cinit[];
 extern struct scsi_device scsi_dinit[];
+
+struct tty;
+struct termios;
+
+int uartparam(struct tty *, struct termios *);
+int uart_getc(dev_t);
+void uart_putc(dev_t, int);
+void uartintr(dev_t);
+int gpio_input_map1(int);
+int gpio_input_map2(int);
+int gpio_input_map3(int);
+int gpio_input_map4(int);
+
 #endif

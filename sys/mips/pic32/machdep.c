@@ -114,13 +114,17 @@ int     safepri = PSL_LOWIPL;
 struct  user *proc0paddr;
 struct  proc nullproc;          /* for use by swtch_exit() */
 
+int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
+int     dumpsize = 0;                   /* also for savecore */
+long    dumplo = 0;
+
 /*
  * Do all the stuff that locore normally does before calling main().
  * Return the first page address following the system.
  */
+void
 mach_init()
 {
-    char *cp;
     int i;
     unsigned firstaddr;
     caddr_t v, start;
@@ -313,12 +317,10 @@ mach_init()
     IEC(5) = 0;
 
     /* Interrupt Priority Control */
-    unsigned ipc = PIC32_IPC_IP0(1) | PIC32_IPC_IP1(1) |
-                   PIC32_IPC_IP2(1) | PIC32_IPC_IP3(1);
-#define LSPI    3
-#define LETH    4
-#define LUART   5
-#define LTMR    6
+#define LSPI    3       /* level for SPI interrupts */
+#define LETH    4       /* level for Ethernet interrupts */
+#define LUART   5       /* level for UART interrupts */
+#define LTMR    6       /* level for timer interrupts */
 
     /* 0 - Core Timer Interrupt
      * 1 - Core Software Interrupt 0
@@ -461,7 +463,8 @@ initcpu()
     spl0();         /* safe to turn interrupts on now */
 }
 
-static void identify_cpu()
+static void
+identify_cpu()
 {
     unsigned osccon = OSCCON, spllcon = SPLLCON;
     unsigned pllmult = (spllcon >> 16 & 127) + 1;
@@ -534,7 +537,6 @@ void
 cpu_startup()
 {
     register unsigned i;
-    register caddr_t v;
     int base, residual;
     vm_offset_t minaddr, maxaddr;
     vm_size_t size;
@@ -627,6 +629,7 @@ cpu_startup()
 /*
  * machine dependent system variables.
  */
+int
 cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     int *name;
     u_int namelen;
@@ -666,7 +669,7 @@ setregs(p, entry)
     p->p_md.md_regs[SP] = sp;
     p->p_md.md_regs[PC] = entry & ~3;
     p->p_md.md_regs[SR] = PSL_USERSET | MACH_Status_EXL;
-    p->p_md.md_flags & ~MDP_FPUSED;
+    p->p_md.md_flags &= ~MDP_FPUSED;
 }
 
 /*
@@ -769,6 +772,7 @@ sendsig(catcher, sig, mask, code)
  * a machine fault.
  */
 /* ARGSUSED */
+int
 sigreturn(p, uap, retval)
     struct proc *p;
     struct sigreturn_args /* {
@@ -809,6 +813,56 @@ sigreturn(p, uap, retval)
     return (EJUSTRETURN);
 }
 
+/*
+ * Boot comes here after turning off memory management and
+ * getting on the dump stack, either when called above, or by
+ * the auto-restart code.
+ */
+static void
+dumpsys()
+{
+    int error;
+
+    msgbufmapped = 0;
+    if (dumpdev == NODEV)
+        return;
+    /*
+     * For dumps during autoconfiguration,
+     * if dump device has already configured...
+     */
+    if (dumpsize == 0)
+        dumpconf();
+    if (dumplo < 0)
+        return;
+    printf("\ndumping to dev %x, offset %d\n", dumpdev, dumplo);
+    printf("dump ");
+    switch (error = (*bdevsw[major(dumpdev)].d_dump)(dumpdev)) {
+
+    case ENXIO:
+        printf("device bad\n");
+        break;
+
+    case EFAULT:
+        printf("device not ready\n");
+        break;
+
+    case EINVAL:
+        printf("area improper\n");
+        break;
+
+    case EIO:
+        printf("i/o error\n");
+        break;
+
+    default:
+        printf("error %d\n", error);
+        break;
+
+    case 0:
+        printf("succeeded\n");
+    }
+}
+
 int     waittime = -1;
 
 void
@@ -819,7 +873,7 @@ boot(howto)
 
     /* take a snap shot before clobbering any registers */
     if (curproc)
-        savectx(curproc->p_addr, 0);
+        savectx(curproc->p_addr);
 
     boothowto = howto;
     if ((howto & RB_NOSYNC) == 0 && waittime < 0) {
@@ -886,10 +940,7 @@ boot(howto)
     /*NOTREACHED*/
 }
 
-int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
-int     dumpsize = 0;           /* also for savecore */
-long    dumplo = 0;
-
+void
 dumpconf()
 {
     int nblks;
@@ -908,55 +959,6 @@ dumpconf()
      */
     if (dumplo < btodb(CLBYTES))
         dumplo = btodb(CLBYTES);
-}
-
-/*
- * Doadump comes here after turning off memory management and
- * getting on the dump stack, either when called above, or by
- * the auto-restart code.
- */
-dumpsys()
-{
-    int error;
-
-    msgbufmapped = 0;
-    if (dumpdev == NODEV)
-        return;
-    /*
-     * For dumps during autoconfiguration,
-     * if dump device has already configured...
-     */
-    if (dumpsize == 0)
-        dumpconf();
-    if (dumplo < 0)
-        return;
-    printf("\ndumping to dev %x, offset %d\n", dumpdev, dumplo);
-    printf("dump ");
-    switch (error = (*bdevsw[major(dumpdev)].d_dump)(dumpdev)) {
-
-    case ENXIO:
-        printf("device bad\n");
-        break;
-
-    case EFAULT:
-        printf("device not ready\n");
-        break;
-
-    case EINVAL:
-        printf("area improper\n");
-        break;
-
-    case EIO:
-        printf("i/o error\n");
-        break;
-
-    default:
-        printf("error %d\n", error);
-        break;
-
-    case 0:
-        printf("succeeded\n");
-    }
 }
 
 /*
@@ -1057,7 +1059,8 @@ out:
  * which increments at half CPU rate.
  * We use it to get a precise delay.
  */
-void udelay(unsigned usec)
+void
+udelay(unsigned usec)
 {
     unsigned now = mfc0 (9, 0); // C0_Count
     unsigned final = now + usec * CPU_KHZ / 2000;
@@ -1074,7 +1077,8 @@ void udelay(unsigned usec)
 /*
  * Write the given pid into the TLB pid reg.
  */
-void tlb_set_pid(unsigned pid)
+void
+tlb_set_pid(unsigned pid)
 {
     mtc0_EntryHi(pid);                  /* Set up entry high */
     asm volatile ("ehb");               /* Hazard barrier */
@@ -1083,7 +1087,8 @@ void tlb_set_pid(unsigned pid)
 /*
  * Write the entry into the wired part of TLB at the given index.
  */
-void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1)
+void
+tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1)
 {
     int x = mips_di();                  /* Disable interrupts */
     int pid = mfc0_EntryHi();           /* Save the current PID */
@@ -1105,7 +1110,8 @@ void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1)
 /*
  * Flush the "random" entries from the TLB.
  */
-void tlb_flush()
+void
+tlb_flush()
 {
     int x = mips_di();                  /* Disable interrupts */
     int pid = mfc0_EntryHi();           /* Save the current PID */
@@ -1127,7 +1133,8 @@ void tlb_flush()
 /*
  * Flush any TLB entries for the given address and TLB PID.
  */
-void tlb_flush_addr(unsigned hi)
+void
+tlb_flush_addr(unsigned hi)
 {
 //printf("%s: %08x\n", __func__, hi);
     int x = mips_di();                  /* Disable interrupts */
@@ -1156,7 +1163,8 @@ void tlb_flush_addr(unsigned hi)
 /*
  * Update the TLB entry if highreg is found; otherwise, enter the data.
  */
-void tlb_update (unsigned hi, unsigned lo)
+void
+tlb_update (unsigned hi, unsigned lo)
 {
 //printf("%s: hi=%08x, lo=%08x\n", __func__, hi, lo);
     int x = mips_di();                  /* Disable interrupts */
@@ -1210,7 +1218,8 @@ void tlb_update (unsigned hi, unsigned lo)
  * Flush instruction cache for range of addr to addr + len - 1.
  * The address can be any valid address so long as no TLB misses occur.
  */
-void mips_flush_icache(vm_offset_t addr, vm_offset_t len)
+void
+mips_flush_icache(vm_offset_t addr, vm_offset_t len)
 {
     int x = mips_di();                  /* Disable interrupts */
 
@@ -1224,7 +1233,8 @@ void mips_flush_icache(vm_offset_t addr, vm_offset_t len)
  * The address can be any valid address so long as no TLB misses occur.
  * (Be sure to use cached K0SEG kernel addresses)
  */
-void mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
+void
+mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
 {
     int x = mips_di();                  /* Disable interrupts */
 

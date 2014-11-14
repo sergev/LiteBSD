@@ -115,7 +115,6 @@ ufs_reclaim(vp, p)
     struct proc *p;
 {
     register struct inode *ip;
-    int i;
     extern int prtactive;
 
     if (prtactive && vp->v_usecount != 0)
@@ -134,6 +133,7 @@ ufs_reclaim(vp, p)
         ip->i_devvp = 0;
     }
 #ifdef QUOTA
+    int i;
     for (i = 0; i < MAXQUOTAS; i++) {
         if (ip->i_dquot[i] != NODQUOT) {
             dqrele(vp, ip->i_dquot[i]);

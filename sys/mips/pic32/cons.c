@@ -49,6 +49,8 @@
 #include <sys/file.h>
 #include <sys/conf.h>
 
+#include <mips/dev/device.h>
+
 extern struct tty *constty;     /* virtual console output device */
 
 /*
@@ -56,11 +58,9 @@ extern struct tty *constty;     /* virtual console output device */
  */
 #include "uart.h"
 #if NUART > 0
-extern int uartGetc();
-extern void uartPutc();
 
-#define redirect_getc   uartGetc
-#define redirect_putc   uartPutc
+#define redirect_getc   uart_getc
+#define redirect_putc   uart_putc
 
 dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
 
@@ -76,7 +76,6 @@ dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
 void
 consinit()
 {
-    int unit = minor(cn_dev);
     struct tty ctty;
     struct termios cterm;
 
@@ -89,6 +88,7 @@ consinit()
     udelay(1000);
 }
 
+int
 cnopen(dev, flag, mode, p)
     dev_t dev;
     int flag, mode;
@@ -98,6 +98,7 @@ cnopen(dev, flag, mode, p)
     return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
 }
 
+int
 cnclose(dev, flag, mode, p)
     dev_t dev;
     int flag, mode;
@@ -107,6 +108,7 @@ cnclose(dev, flag, mode, p)
     return ((*cdevsw[major(dev)].d_close)(dev, flag, mode, p));
 }
 
+int
 cnread(dev, uio, flag)
     dev_t dev;
     struct uio *uio;
@@ -115,6 +117,7 @@ cnread(dev, uio, flag)
     return ((*cdevsw[major(dev)].d_read)(dev, uio, flag));
 }
 
+int
 cnwrite(dev, uio, flag)
     dev_t dev;
     struct uio *uio;
@@ -125,6 +128,7 @@ cnwrite(dev, uio, flag)
     return ((*cdevsw[major(dev)].d_write)(dev, uio, flag));
 }
 
+int
 cnioctl(dev, cmd, data, flag, p)
     dev_t dev;
     caddr_t data;
@@ -156,6 +160,7 @@ cnioctl(dev, cmd, data, flag, p)
 }
 
 /*ARGSUSED*/
+int
 cnselect(dev, rw, p)
     dev_t dev;
     int rw;
@@ -167,6 +172,7 @@ cnselect(dev, rw, p)
 /*
  * Get character from console.
  */
+int
 cngetc()
 {
     return (redirect_getc(cn_dev));
@@ -179,8 +185,6 @@ void
 cnputc(c)
     register int c;
 {
-    int s;
-
     if (c) {
         if (c == '\n')
             redirect_putc(cn_dev, '\r');

@@ -73,7 +73,8 @@ ffs_blkatoff(ap)
     bsize = blksize(fs, ip, lbn);
 
     *ap->a_bpp = NULL;
-    if (error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp)) {
+    error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp);
+    if (error) {
         brelse(bp);
         return (error);
     }
@@ -85,7 +86,7 @@ ffs_blkatoff(ap)
 #endif
 
 /*
- * Update the frsum fields to reflect addition or deletion 
+ * Update the frsum fields to reflect addition or deletion
  * of some frags.
  */
 void

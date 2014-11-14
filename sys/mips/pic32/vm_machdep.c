@@ -53,6 +53,7 @@
 #include <vm/vm_page.h>
 
 #include <machine/pte.h>
+#include <machine/cpu.h>
 
 /*
  * Finish a fork operation, with process p2 nearly set up.
@@ -63,6 +64,7 @@
  * address in each process; in the future we will probably relocate
  * the frame pointers on the stack after copying.
  */
+int
 cpu_fork(p1, p2)
     register struct proc *p1, *p2;
 {
@@ -163,14 +165,14 @@ cpu_exit(p)
 /*
  * Dump the machine specific header information at the start of a core dump.
  */
+int
 cpu_coredump(p, vp, cred)
     struct proc *p;
     struct vnode *vp;
     struct ucred *cred;
 {
-    return (vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
-        (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL,
-        p));
+    return vn_rdwr(UIO_WRITE, vp, (caddr_t)p->p_addr, ctob(UPAGES),
+        (off_t)0, UIO_SYSSPACE, IO_NODELOCKED|IO_UNIT, cred, (int *)NULL, p);
 }
 
 /*
@@ -227,7 +229,6 @@ vmapbuf(bp, len)
     vm_size_t len;
 {
     register caddr_t addr;
-    register vm_size_t sz;
     struct proc *p;
     int off;
     vm_offset_t kva;

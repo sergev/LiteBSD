@@ -192,14 +192,14 @@ in_pcbconnect(inp, nam)
         register struct route *ro;
 
         ia = (struct in_ifaddr *)0;
-        /* 
+        /*
          * If route is known or can be allocated now,
          * our src addr is taken from the i/f, else punt.
          */
         ro = &inp->inp_route;
         if (ro->ro_rt &&
             (satosin(&ro->ro_dst)->sin_addr.s_addr !=
-            sin->sin_addr.s_addr || 
+            sin->sin_addr.s_addr ||
             inp->inp_socket->so_options & SO_DONTROUTE)) {
             RTFREE(ro->ro_rt);
             ro->ro_rt = (struct rtentry *)0;
@@ -274,18 +274,17 @@ in_pcbconnect(inp, nam)
     return (0);
 }
 
-int
+void
 in_pcbdisconnect(inp)
     struct inpcb *inp;
 {
-
     inp->inp_faddr.s_addr = INADDR_ANY;
     inp->inp_fport = 0;
     if (inp->inp_socket->so_state & SS_NOFDREF)
         in_pcbdetach(inp);
 }
 
-int
+void
 in_pcbdetach(inp)
     struct inpcb *inp;
 {
@@ -302,13 +301,13 @@ in_pcbdetach(inp)
     FREE(inp, M_PCB);
 }
 
-int
+void
 in_setsockaddr(inp, nam)
     register struct inpcb *inp;
     struct mbuf *nam;
 {
     register struct sockaddr_in *sin;
-    
+
     nam->m_len = sizeof (*sin);
     sin = mtod(nam, struct sockaddr_in *);
     bzero((caddr_t)sin, sizeof (*sin));
@@ -318,13 +317,13 @@ in_setsockaddr(inp, nam)
     sin->sin_addr = inp->inp_laddr;
 }
 
-int
+void
 in_setpeeraddr(inp, nam)
     struct inpcb *inp;
     struct mbuf *nam;
 {
     register struct sockaddr_in *sin;
-    
+
     nam->m_len = sizeof (*sin);
     sin = mtod(nam, struct sockaddr_in *);
     bzero((caddr_t)sin, sizeof (*sin));
@@ -345,7 +344,7 @@ in_setpeeraddr(inp, nam)
  *
  * Must be called at splnet.
  */
-int
+void
 in_pcbnotify(head, dst, fport_arg, laddr, lport_arg, cmd, notify)
     struct inpcb *head;
     struct sockaddr *dst;
@@ -403,7 +402,7 @@ in_pcbnotify(head, dst, fport_arg, laddr, lport_arg, cmd, notify)
  * routing information.  If the route was created dynamically
  * (by a redirect), time to try a default gateway again.
  */
-int
+void
 in_losing(inp)
     struct inpcb *inp;
 {
@@ -420,9 +419,9 @@ in_losing(inp)
         rt_missmsg(RTM_LOSING, &info, rt->rt_flags, 0);
         if (rt->rt_flags & RTF_DYNAMIC)
             (void) rtrequest(RTM_DELETE, rt_key(rt),
-                rt->rt_gateway, rt_mask(rt), rt->rt_flags, 
+                rt->rt_gateway, rt_mask(rt), rt->rt_flags,
                 (struct rtentry **)0);
-        else 
+        else
         /*
          * A new route can be allocated
          * the next time output is attempted.

@@ -4,7 +4,7 @@
  *
  * This code is derived from the Stanford/CMU enet packet filter,
  * (net/enet.c) distributed as part of 4.3BSD, and code contributed
- * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence 
+ * to Berkeley by Steven McCanne and Van Jacobson both of Lawrence
  * Berkeley Laboratory.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -512,10 +512,10 @@ bpfwrite(dev, uio)
 {
     register struct bpf_d *d = &bpf_dtab[minor(dev)];
     struct ifnet *ifp;
-    struct mbuf *m;
+    struct mbuf *m = 0;
     int error, s;
     static struct sockaddr dst;
-    int datlen;
+    int datlen = 0;
 
     if (d->bd_bif == 0)
         return (ENXIO);
@@ -913,7 +913,7 @@ bpf_ifname(ifp, ifr)
     char *s = ifp->if_name;
     char *d = ifr->ifr_name;
 
-    while (*d++ = *s++)
+    while ((*d++ = *s++))
         continue;
     /* XXX Assume that unit number is less than 10. */
     *d++ = ifp->if_unit + '0';

@@ -150,7 +150,20 @@ union   cpuprid fpu;
 u_int   machDataCacheSize;
 u_int   machInstCacheSize;
 
+struct user;
+struct proc;
+
 void setsoftclock __P((void));
+void setsoftnet __P((void));
+void clearsoftclock __P((void));
+void clearsoftnet __P((void));
+void dumpconf __P((void));
+void configure __P((void));
+void mips_flush_icache __P((vm_offset_t addr, vm_offset_t len));
+void switch_exit __P((void));
+int savectx __P((struct user *));
+int copykstack __P((struct user *));
+int cpu_singlestep __P((struct proc *));
 #endif
 
 /*

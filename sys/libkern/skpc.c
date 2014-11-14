@@ -39,7 +39,7 @@ int
 skpc(mask0, size, cp0)
     int mask0;
     int size;
-    char *cp0;
+    u_int8_t *cp0;
 {
     register u_char *cp, *end, mask;
 

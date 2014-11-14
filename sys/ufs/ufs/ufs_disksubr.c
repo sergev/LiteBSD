@@ -43,6 +43,11 @@
 #include <sys/buf.h>
 #include <sys/disklabel.h>
 #include <sys/syslog.h>
+#include <sys/vnode.h>
+
+#include <ufs/ufs/quota.h>
+#include <ufs/ufs/inode.h>
+#include <ufs/ufs/ufs_extern.h>
 
 /*
  * Seek sort for disks.  We depend on the driver which calls us using b_resid
@@ -207,7 +212,7 @@ setdisklabel(olp, nlp, openmask)
     register struct disklabel *olp, *nlp;
     u_long openmask;
 {
-    register i;
+    register int i;
     register struct partition *opp, *npp;
 
     if (nlp->d_magic != DISKMAGIC || nlp->d_magic2 != DISKMAGIC ||
@@ -270,7 +275,8 @@ writedisklabel(dev, strat, lp)
     bp->b_bcount = lp->d_secsize;
     bp->b_flags = B_READ;
     (*strat)(bp);
-    if (error = biowait(bp))
+    error = biowait(bp);
+    if (error)
         goto done;
     for (dlp = (struct disklabel *)bp->b_data;
         dlp <= (struct disklabel *)
@@ -294,6 +300,7 @@ done:
 /*
  * Compute checksum for disk label.
  */
+u_int
 dkcksum(lp)
     register struct disklabel *lp;
 {

@@ -556,7 +556,6 @@ END(strcmp)
  * bzero(s1, n)
  */
 LEAF(bzero)
-ALEAF(blkclr)
         blt     a1, 12, smallclr        # small amount to clear?
         subu    a3, zero, a0            # compute # bytes to word align address
         and     a3, a3, 3

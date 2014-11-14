@@ -210,7 +210,8 @@ vnode_pager_dealloc(pager)
     if (vpagerdebug & VDB_FOLLOW)
         printf("vnode_pager_dealloc(%x)\n", pager);
 #endif
-    if (vp = vnp->vnp_vp) {
+    vp = vnp->vnp_vp;
+    if (vp) {
         vp->v_vmdata = NULL;
         vp->v_flag &= ~VTEXT;
 #if NOTDEF

@@ -45,6 +45,7 @@
 #include <sys/mount.h>
 #include <sys/resourcevar.h>
 #include <sys/trace.h>
+#include <sys/systm.h>
 
 #include <miscfs/specfs/specdev.h>
 
@@ -108,17 +109,17 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
     struct buf *bp;
     struct ufsmount *ump;
     struct mount *mp;
-    struct vnode *devvp;
     struct indir a[NIADDR], *xap;
     ufs_daddr_t daddr;
     long metalbn;
-    int error, maxrun, num;
+    int error, maxrun = 0, num;
 
     ip = VTOI(vp);
     mp = vp->v_mount;
     ump = VFSTOUFS(mp);
 #ifdef DIAGNOSTIC
-    if (ap != NULL && nump == NULL || ap == NULL && nump != NULL)
+    if ((ap != NULL && nump == NULL) ||
+        (ap == NULL && nump != NULL))
         panic("ufs_bmaparray: invalid arguments");
 #endif
 
@@ -136,7 +137,8 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
     xap = ap == NULL ? a : ap;
     if (!nump)
         nump = &num;
-    if (error = ufs_getlbns(vp, bn, xap, nump))
+    error = ufs_getlbns(vp, bn, xap, nump);
+    if (error)
         return (error);
 
     num = *nump;
@@ -155,16 +157,15 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
     /* Get disk address out of indirect block array */
     daddr = ip->i_ib[xap->in_off];
 
-    devvp = VFSTOUFS(vp->v_mount)->um_devvp;
     for (bp = NULL, ++xap; --num; ++xap) {
-        /* 
+        /*
          * Exit the loop if there is no disk address assigned yet and
          * the indirect block isn't in the cache, or if we were
          * looking for an indirect block and we've found it.
          */
 
         metalbn = xap->in_lbn;
-        if (daddr == 0 && !incore(vp, metalbn) || metalbn == bn)
+        if ((daddr == 0 && !incore(vp, metalbn)) || metalbn == bn)
             break;
         /*
          * If we get here, we've either got the block in the cache
@@ -188,7 +189,8 @@ ufs_bmaparray(vp, bn, bnp, ap, nump, runp)
             bp->b_flags |= B_READ;
             VOP_STRATEGY(bp);
             curproc->p_stats->p_ru.ru_inblock++;    /* XXX */
-            if (error = biowait(bp)) {
+            error = biowait(bp);
+            if (error) {
                 brelse(bp);
                 return (error);
             }
@@ -243,7 +245,7 @@ ufs_getlbns(vp, bn, ap, nump)
     if (bn < NDADDR)
         return (0);
 
-    /* 
+    /*
      * Determine the number of levels of indirection.  After this loop
      * is done, blockcnt indicates the number of data blocks possible
      * at the given level of indirection, and NIADDR - i is the number
@@ -263,7 +265,7 @@ ufs_getlbns(vp, bn, ap, nump)
     else
         metalbn = -(-realbn - bn + NIADDR - i);
 
-    /* 
+    /*
      * At each iteration, off is the offset into the bap array which is
      * an array of disk addresses at the current level of indirection.
      * The logical block number and the offset in that block are stored

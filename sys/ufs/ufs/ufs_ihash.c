@@ -139,8 +139,6 @@ void
 ufs_ihashrem(ip)
     struct inode *ip;
 {
-    struct inode *iq;
-
     simple_lock(&ufs_ihash_slock);
     LIST_REMOVE(ip, i_hash);
 #ifdef DIAGNOSTIC

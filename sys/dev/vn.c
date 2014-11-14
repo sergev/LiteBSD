@@ -74,6 +74,9 @@
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/uio.h>
+#include <sys/device.h>
+#include <sys/disklabel.h>
+#include <sys/disk.h>
 
 #include <miscfs/specfs/specdev.h>
 
@@ -155,6 +158,35 @@ vnopen(dev, flags, mode, p)
 }
 
 /*
+ * Feed requests sequentially.
+ * We do it this way to keep from flooding NFS servers if we are connected
+ * to an NFS file.  This places the burden on the client rather than the
+ * server.
+ */
+static void
+vnstart(vn)
+    register struct vn_softc *vn;
+{
+    register struct buf *bp;
+
+    /*
+     * Dequeue now since lower level strategy routine might
+     * queue using same links
+     */
+    bp = vn->sc_tab.b_actf;
+    vn->sc_tab.b_actf = bp->b_actf;
+#ifdef DEBUG
+    if (vndebug & VDB_IO)
+        printf("vnstart(%d): bp %x vp %x blkno %x addr %x cnt %x\n",
+               vn-vn_softc, bp, bp->b_vp, bp->b_blkno, bp->b_data,
+               bp->b_bcount);
+#endif
+    if ((bp->b_flags & B_READ) == 0)
+        bp->b_vp->v_numoutput++;
+    VOP_STRATEGY(bp);
+}
+
+/*
  * Break the request into bsize pieces and submit using VOP_BMAP/VOP_STRATEGY.
  * Note that this driver can only be used for swapping over NFS on the hp
  * since nfs_strategy on the vax cannot handle u-areas and page tables.
@@ -209,8 +241,8 @@ vnstrategy(bp)
         if (!dovncluster)
             nra = 0;
 #endif
-
-        if (off = bn % bsize)
+        off = bn % bsize;
+        if (off)
             sz = bsize - off;
         else
             sz = (1 + nra) * bsize;
@@ -275,34 +307,6 @@ vnstrategy(bp)
     }
 }
 
-/*
- * Feed requests sequentially.
- * We do it this way to keep from flooding NFS servers if we are connected
- * to an NFS file.  This places the burden on the client rather than the
- * server.
- */
-vnstart(vn)
-    register struct vn_softc *vn;
-{
-    register struct buf *bp;
-
-    /*
-     * Dequeue now since lower level strategy routine might
-     * queue using same links
-     */
-    bp = vn->sc_tab.b_actf;
-    vn->sc_tab.b_actf = bp->b_actf;
-#ifdef DEBUG
-    if (vndebug & VDB_IO)
-        printf("vnstart(%d): bp %x vp %x blkno %x addr %x cnt %x\n",
-               vn-vn_softc, bp, bp->b_vp, bp->b_blkno, bp->b_data,
-               bp->b_bcount);
-#endif
-    if ((bp->b_flags & B_READ) == 0)
-        bp->b_vp->v_numoutput++;
-    VOP_STRATEGY(bp);
-}
-
 void
 vniodone(bp)
     register struct buf *bp;
@@ -342,6 +346,7 @@ vniodone(bp)
     splx(s);
 }
 
+int
 vnread(dev, uio, flags, p)
     dev_t dev;
     struct uio *uio;
@@ -356,6 +361,7 @@ vnread(dev, uio, flags, p)
     return(physio(vnstrategy, NULL, dev, B_READ, minphys, uio));
 }
 
+int
 vnwrite(dev, uio, flags, p)
     dev_t dev;
     struct uio *uio;
@@ -370,7 +376,84 @@ vnwrite(dev, uio, flags, p)
     return(physio(vnstrategy, NULL, dev, B_WRITE, minphys, uio));
 }
 
+/*
+ * Duplicate the current processes' credentials.  Since we are called only
+ * as the result of a SET ioctl and only root can do that, any future access
+ * to this "disk" is essentially as root.  Note that credentials may change
+ * if some other uid can write directly to the mapped file (NFS).
+ */
+static int
+vnsetcred(vn, cred)
+    register struct vn_softc *vn;
+    struct ucred *cred;
+{
+    struct uio auio;
+    struct iovec aiov;
+    char *tmpbuf;
+    int error;
+
+    vn->sc_cred = crdup(cred);
+    tmpbuf = malloc(DEV_BSIZE, M_TEMP, M_WAITOK);
+
+    /* XXX: Horrible kludge to establish credentials for NFS */
+    aiov.iov_base = tmpbuf;
+    aiov.iov_len = min(DEV_BSIZE, dbtob(vn->sc_size));
+    auio.uio_iov = &aiov;
+    auio.uio_iovcnt = 1;
+    auio.uio_offset = 0;
+    auio.uio_rw = UIO_READ;
+    auio.uio_segflg = UIO_SYSSPACE;
+    auio.uio_resid = aiov.iov_len;
+    error = VOP_READ(vn->sc_vp, &auio, 0, vn->sc_cred);
+
+    free(tmpbuf, M_TEMP);
+    return (error);
+}
+
+/*
+ * Set maxactive based on FS type
+ */
+static void
+vnthrottle(vn, vp)
+    register struct vn_softc *vn;
+    struct vnode *vp;
+{
+#ifdef NFS
+    extern int (**nfsv2_vnodeop_p)();
+
+    if (vp->v_op == nfsv2_vnodeop_p)
+        vn->sc_maxactive = 2;
+    else
+#endif
+        vn->sc_maxactive = 8;
+
+    if (vn->sc_maxactive < 1)
+        vn->sc_maxactive = 1;
+}
+
+static void
+vnclear(vn)
+    register struct vn_softc *vn;
+{
+    register struct vnode *vp = vn->sc_vp;
+    struct proc *p = curproc;       /* XXX */
+
+#ifdef DEBUG
+    if (vndebug & VDB_FOLLOW)
+        printf("vnclear(%x): vp %x\n", vp);
+#endif
+    vn->sc_flags &= ~VNF_INITED;
+    if (vp == (struct vnode *)0)
+        panic("vnioctl: null vp");
+    (void) vn_close(vp, FREAD|FWRITE, vn->sc_cred, p);
+    crfree(vn->sc_cred);
+    vn->sc_vp = (struct vnode *)0;
+    vn->sc_cred = (struct ucred *)0;
+    vn->sc_size = 0;
+}
+
 /* ARGSUSED */
+int
 vnioctl(dev, cmd, data, flag, p)
     dev_t dev;
     u_long cmd;
@@ -410,9 +493,11 @@ vnioctl(dev, cmd, data, flag, p)
          * have to worry about them.
          */
         NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, vio->vn_file, p);
-        if (error = vn_open(&nd, FREAD|FWRITE, 0))
+        error = vn_open(&nd, FREAD|FWRITE, 0);
+        if (error)
             return(error);
-        if (error = VOP_GETATTR(nd.ni_vp, &vattr, p->p_ucred, p)) {
+        error = VOP_GETATTR(nd.ni_vp, &vattr, p->p_ucred, p);
+        if (error) {
             VOP_UNLOCK(nd.ni_vp, 0, p);
             (void) vn_close(nd.ni_vp, FREAD|FWRITE, p->p_ucred, p);
             return(error);
@@ -420,7 +505,8 @@ vnioctl(dev, cmd, data, flag, p)
         VOP_UNLOCK(nd.ni_vp, 0, p);
         vn->sc_vp = nd.ni_vp;
         vn->sc_size = btodb(vattr.va_size); /* note truncation */
-        if (error = vnsetcred(vn, p->p_ucred)) {
+        error = vnsetcred(vn, p->p_ucred);
+        if (error) {
             (void) vn_close(nd.ni_vp, FREAD|FWRITE, p->p_ucred, p);
             return(error);
         }
@@ -450,59 +536,7 @@ vnioctl(dev, cmd, data, flag, p)
     return(0);
 }
 
-/*
- * Duplicate the current processes' credentials.  Since we are called only
- * as the result of a SET ioctl and only root can do that, any future access
- * to this "disk" is essentially as root.  Note that credentials may change
- * if some other uid can write directly to the mapped file (NFS).
- */
-vnsetcred(vn, cred)
-    register struct vn_softc *vn;
-    struct ucred *cred;
-{
-    struct uio auio;
-    struct iovec aiov;
-    char *tmpbuf;
-    int error;
-
-    vn->sc_cred = crdup(cred);
-    tmpbuf = malloc(DEV_BSIZE, M_TEMP, M_WAITOK);
-
-    /* XXX: Horrible kludge to establish credentials for NFS */
-    aiov.iov_base = tmpbuf;
-    aiov.iov_len = min(DEV_BSIZE, dbtob(vn->sc_size));
-    auio.uio_iov = &aiov;
-    auio.uio_iovcnt = 1;
-    auio.uio_offset = 0;
-    auio.uio_rw = UIO_READ;
-    auio.uio_segflg = UIO_SYSSPACE;
-    auio.uio_resid = aiov.iov_len;
-    error = VOP_READ(vn->sc_vp, &auio, 0, vn->sc_cred);
-
-    free(tmpbuf, M_TEMP);
-    return (error);
-}
-
-/*
- * Set maxactive based on FS type
- */
-vnthrottle(vn, vp)
-    register struct vn_softc *vn;
-    struct vnode *vp;
-{
-#ifdef NFS
-    extern int (**nfsv2_vnodeop_p)();
-
-    if (vp->v_op == nfsv2_vnodeop_p)
-        vn->sc_maxactive = 2;
-    else
-#endif
-        vn->sc_maxactive = 8;
-
-    if (vn->sc_maxactive < 1)
-        vn->sc_maxactive = 1;
-}
-
+void
 vnshutdown()
 {
     register struct vn_softc *vn;
@@ -512,26 +546,7 @@ vnshutdown()
             vnclear(vn);
 }
 
-vnclear(vn)
-    register struct vn_softc *vn;
-{
-    register struct vnode *vp = vn->sc_vp;
-    struct proc *p = curproc;       /* XXX */
-
-#ifdef DEBUG
-    if (vndebug & VDB_FOLLOW)
-        printf("vnclear(%x): vp %x\n", vp);
-#endif
-    vn->sc_flags &= ~VNF_INITED;
-    if (vp == (struct vnode *)0)
-        panic("vnioctl: null vp");
-    (void) vn_close(vp, FREAD|FWRITE, vn->sc_cred, p);
-    crfree(vn->sc_cred);
-    vn->sc_vp = (struct vnode *)0;
-    vn->sc_cred = (struct ucred *)0;
-    vn->sc_size = 0;
-}
-
+int
 vnsize(dev)
     dev_t dev;
 {
@@ -543,6 +558,7 @@ vnsize(dev)
     return(vn->sc_size);
 }
 
+int
 vndump(dev)
 {
     return(ENXIO);

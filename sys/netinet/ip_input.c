@@ -35,14 +35,14 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/domain.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
-#include <sys/time.h>
 #include <sys/kernel.h>
+#include <vm/vm.h>
+#include <sys/sysctl.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -189,7 +189,8 @@ next:
         }
         ip = mtod(m, struct ip *);
     }
-    if (ip->ip_sum = in_cksum(m, hlen)) {
+    ip->ip_sum = in_cksum(m, hlen);
+    if (ip->ip_sum) {
         ipstat.ips_badsum++;
         goto bad;
     }

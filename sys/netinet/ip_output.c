@@ -40,6 +40,7 @@
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
+#include <sys/systm.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -77,7 +78,7 @@ ip_output(m0, opt, ro, flags, imo)
     register struct ifnet *ifp;
     register struct mbuf *m = m0;
     register int hlen = sizeof (struct ip);
-    int len, off, error = 0;
+    int len = 0, off, error = 0;
     struct route iproute;
     struct sockaddr_in *dst;
     struct in_ifaddr *ia;
@@ -379,8 +380,9 @@ sendorfree:
         ipstat.ips_fragmented++;
     }
 done:
-    if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt)
+    if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt) {
         RTFREE(ro->ro_rt);
+    }
     return (error);
 bad:
     m_freem(m0);
@@ -483,7 +485,7 @@ ip_ctloutput(op, so, level, optname, mp)
 {
     register struct inpcb *inp = sotoinpcb(so);
     register struct mbuf *m = *mp;
-    register int optval;
+    register int optval = 0;
     int error = 0;
 
     if (level != IPPROTO_IP) {
@@ -637,7 +639,7 @@ ip_pcbopts(pcbopt, m)
     struct mbuf **pcbopt;
     register struct mbuf *m;
 {
-    register cnt, optlen;
+    register int cnt, optlen;
     register u_char *cp;
     u_char opt;
 

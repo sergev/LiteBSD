@@ -83,7 +83,8 @@ route_usrreq(so, req, m, nam, control)
 
     if (req == PRU_ATTACH) {
         MALLOC(rp, struct rawcb *, sizeof(*rp), M_PCB, M_WAITOK);
-        if (so->so_pcb = (caddr_t)rp)
+        so->so_pcb = (caddr_t)rp;
+        if (so->so_pcb)
             bzero(so->so_pcb, sizeof(*rp));
 
     }
@@ -201,11 +202,13 @@ route_output(m, so)
     case RTM_LOCK:
         if ((rnh = rt_tables[dst->sa_family]) == 0) {
             senderr(EAFNOSUPPORT);
-        } else if (rt = (struct rtentry *)
-                rnh->rnh_lookup(dst, netmask, rnh))
-            rt->rt_refcnt++;
-        else
-            senderr(ESRCH);
+        } else {
+            rt = (struct rtentry *) rnh->rnh_lookup(dst, netmask, rnh);
+            if (rt)
+                rt->rt_refcnt++;
+            else
+                senderr(ESRCH);
+        }
         switch(rtm->rtm_type) {
 
         case RTM_GET:
@@ -215,7 +218,8 @@ route_output(m, so)
             netmask = rt_mask(rt);
             genmask = rt->rt_genmask;
             if (rtm->rtm_addrs & (RTA_IFP | RTA_IFA)) {
-                if (ifp = rt->rt_ifp) {
+                ifp = rt->rt_ifp;
+                if (ifp) {
                     ifpaddr = ifp->if_addrlist->ifa_addr;
                     ifaaddr = rt->rt_ifa->ifa_addr;
                     if (ifp->if_flags & IFF_POINTOPOINT)
@@ -296,7 +300,7 @@ flush:
     if (rtm) {
         if (error)
             rtm->rtm_errno = error;
-        else 
+        else
             rtm->rtm_flags |= RTF_DONE;
     }
     if (rt)
@@ -501,7 +505,8 @@ again:
     default:
         len = sizeof(struct rt_msghdr);
     }
-    if (cp0 = cp)
+    cp0 = cp;
+    if (cp0)
         cp += len;
     for (i = 0; i < RTAX_MAX; i++) {
         register struct sockaddr *sa;
@@ -524,8 +529,8 @@ again:
             if (rw->w_tmemsize < len) {
                 if (rw->w_tmem)
                     free(rw->w_tmem, M_RTABLE);
-                if (rw->w_tmem = (caddr_t)
-                        malloc(len, M_RTABLE, M_NOWAIT))
+                rw->w_tmem = (caddr_t) malloc(len, M_RTABLE, M_NOWAIT);
+                if (rw->w_tmem)
                     rw->w_tmemsize = len;
             }
             if (rw->w_tmem) {
@@ -645,7 +650,7 @@ rt_newaddrmsg(cmd, ifa, error, rt)
         if ((cmd == RTM_ADD && pass == 2) ||
             (cmd == RTM_DELETE && pass == 1)) {
             register struct rt_msghdr *rtm;
-            
+
             if (rt == 0)
                 continue;
             netmask = rt_mask(rt);
@@ -699,7 +704,8 @@ sysctl_dumpentry(rn, w)
         rtm->rtm_index = rt->rt_ifp->if_index;
         rtm->rtm_errno = rtm->rtm_pid = rtm->rtm_seq = 0;
         rtm->rtm_addrs = info.rti_addrs;
-        if (error = copyout((caddr_t)rtm, w->w_where, size))
+        error = copyout((caddr_t)rtm, w->w_where, size);
+        if (error)
             w->w_where = NULL;
         else
             w->w_where += size;
@@ -733,11 +739,12 @@ sysctl_iflist(af, w)
             ifm->ifm_flags = ifp->if_flags;
             ifm->ifm_data = ifp->if_data;
             ifm->ifm_addrs = info.rti_addrs;
-            if (error = copyout((caddr_t)ifm, w->w_where, len))
+            error = copyout((caddr_t)ifm, w->w_where, len);
+            if (error)
                 return (error);
             w->w_where += len;
         }
-        while (ifa = ifa->ifa_next) {
+        while ((ifa = ifa->ifa_next)) {
             if (af && af != ifa->ifa_addr->sa_family)
                 continue;
             ifaaddr = ifa->ifa_addr;
@@ -752,7 +759,8 @@ sysctl_iflist(af, w)
                 ifam->ifam_flags = ifa->ifa_flags;
                 ifam->ifam_metric = ifa->ifa_metric;
                 ifam->ifam_addrs = info.rti_addrs;
-                if (error = copyout(w->w_tmem, w->w_where, len))
+                error = copyout(w->w_tmem, w->w_where, len);
+                if (error)
                     return (error);
                 w->w_where += len;
             }

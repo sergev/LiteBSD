@@ -124,7 +124,7 @@ inittodr(base)
     register int days, yr;
     int sec, min, hour, day, mon, year;
     long deltat;
-    int badbase, s;
+    int badbase;
 
     if (base < 5*SECYR) {
         printf("WARNING: preposterous time in file system");
@@ -138,7 +138,7 @@ inittodr(base)
     // TODO: pic32
     register volatile struct chiptime *c = Mach_clock_addr;
     /* don't read clock registers while they are being updated */
-    s = splclock();
+    int s = splclock();
     while ((c->rega & REGA_UIP) == 1)
         ;
     sec = c->sec;
@@ -148,6 +148,13 @@ inittodr(base)
     mon = c->mon;
     year = c->year + YR_OFFSET;
     splx(s);
+#else
+    sec = 0;
+    min = 0;
+    hour = 0;
+    day = 0;
+    mon = 0;
+    year = 0 + YR_OFFSET;
 #endif
 
     /* simple sanity checks */
@@ -200,9 +207,9 @@ bad:
 void
 resettodr()
 {
+#if 0
     register int t, t2;
     int sec, min, hour, day, mon, year;
-    int s;
 
     /* compute the year */
     t2 = time.tv_sec / SECDAY;
@@ -229,10 +236,10 @@ resettodr()
     t %= 3600;
     min = t / 60;
     sec = t % 60;
-#if 0
+
     // TODO: pic32
     register volatile struct chiptime *c = Mach_clock_addr;
-    s = splclock();
+    int s = splclock();
     t = c->regb;
     c->regb = t | REGB_SET_TIME;
     mips_sync();

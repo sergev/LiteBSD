@@ -79,7 +79,8 @@ ufs_root(mp, vpp)
     struct vnode *nvp;
     int error;
 
-    if (error = VFS_VGET(mp, (ino_t)ROOTINO, &nvp))
+    error = VFS_VGET(mp, (ino_t)ROOTINO, &nvp);
+    if (error)
         return (error);
     *vpp = nvp;
     return (0);
@@ -96,11 +97,11 @@ ufs_quotactl(mp, cmds, uid, arg, p)
     caddr_t arg;
     struct proc *p;
 {
-    int cmd, type, error;
-
 #ifndef QUOTA
     return (EOPNOTSUPP);
 #else
+    int cmd, type, error;
+
     if (uid == -1)
         uid = p->p_cred->p_ruid;
     cmd = cmds >> SUBCMDSHIFT;
@@ -113,7 +114,8 @@ ufs_quotactl(mp, cmds, uid, arg, p)
             break;
         /* fall through */
     default:
-        if (error = suser(p->p_ucred, &p->p_acflag))
+        error = suser(p->p_ucred, &p->p_acflag);
+        if (error)
             return (error);
     }
 
@@ -206,7 +208,8 @@ ufs_check_export(mp, ufhp, nam, vpp, exflagsp, credanonp)
     if (np == NULL)
         return (EACCES);
 
-    if (error = VFS_VGET(mp, ufhp->ufid_ino, &nvp)) {
+    error = VFS_VGET(mp, ufhp->ufid_ino, &nvp);
+    if (error) {
         *vpp = NULLVP;
         return (error);
     }

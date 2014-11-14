@@ -348,7 +348,6 @@ swap_pager_dealloc(pager)
     register int i;
     register sw_blk_t bp;
     register sw_pager_t swp;
-    struct swtab *swt;
     int s;
 
 #ifdef DEBUG
@@ -368,6 +367,7 @@ swap_pager_dealloc(pager)
         swp->sw_flags &= ~SW_NAMED;
     }
 #ifdef DEBUG
+    struct swtab *swt;
     for (swt = swtab; swt->st_osize; swt++)
         if (swp->sw_osize <= swt->st_osize)
             break;
@@ -953,7 +953,6 @@ swap_pager_iodone(bp)
     register struct buf *bp;
 {
     register swp_clean_t spc;
-    daddr_t blk;
     int s;
 
 #ifdef DEBUG
@@ -979,7 +978,6 @@ swap_pager_iodone(bp)
     if (bp->b_flags & B_ERROR)
         spc->spc_flags |= SPC_ERROR;
     spc->spc_bp = NULL;
-    blk = bp->b_blkno;
 
 #ifdef DEBUG
     --swap_pager_poip;

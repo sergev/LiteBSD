@@ -115,7 +115,8 @@ chkdq(ip, change, cred, flags)
         return (0);
     if (change < 0) {
         for (i = 0; i < MAXQUOTAS; i++) {
-            if ((dq = ip->i_dquot[i]) == NODQUOT)
+            dq = ip->i_dquot[i];
+            if (dq == NODQUOT)
                 continue;
             while (dq->dq_flags & DQ_LOCK) {
                 dq->dq_flags |= DQ_WANT;
@@ -133,14 +134,17 @@ chkdq(ip, change, cred, flags)
     }
     if ((flags & FORCE) == 0 && cred->cr_uid != 0) {
         for (i = 0; i < MAXQUOTAS; i++) {
-            if ((dq = ip->i_dquot[i]) == NODQUOT)
+            dq = ip->i_dquot[i];
+            if (dq == NODQUOT)
                 continue;
-            if (error = chkdqchg(ip, change, cred, i))
+            error = chkdqchg(ip, change, cred, i);
+            if (error)
                 return (error);
         }
     }
     for (i = 0; i < MAXQUOTAS; i++) {
-        if ((dq = ip->i_dquot[i]) == NODQUOT)
+        dq = ip->i_dquot[i];
+        if (dq == NODQUOT)
             continue;
         while (dq->dq_flags & DQ_LOCK) {
             dq->dq_flags |= DQ_WANT;
@@ -230,7 +234,8 @@ chkiq(ip, change, cred, flags)
         return (0);
     if (change < 0) {
         for (i = 0; i < MAXQUOTAS; i++) {
-            if ((dq = ip->i_dquot[i]) == NODQUOT)
+            dq = ip->i_dquot[i];
+            if (dq == NODQUOT)
                 continue;
             while (dq->dq_flags & DQ_LOCK) {
                 dq->dq_flags |= DQ_WANT;
@@ -248,14 +253,17 @@ chkiq(ip, change, cred, flags)
     }
     if ((flags & FORCE) == 0 && cred->cr_uid != 0) {
         for (i = 0; i < MAXQUOTAS; i++) {
-            if ((dq = ip->i_dquot[i]) == NODQUOT)
+            dq = ip->i_dquot[i];
+            if (dq == NODQUOT)
                 continue;
-            if (error = chkiqchg(ip, change, cred, i))
+            error = chkiqchg(ip, change, cred, i);
+            if (error)
                 return (error);
         }
     }
     for (i = 0; i < MAXQUOTAS; i++) {
-        if ((dq = ip->i_dquot[i]) == NODQUOT)
+        dq = ip->i_dquot[i];
+        if (dq == NODQUOT)
             continue;
         while (dq->dq_flags & DQ_LOCK) {
             dq->dq_flags |= DQ_WANT;
@@ -370,7 +378,8 @@ quotaon(p, mp, type, fname)
 
     vpp = &ump->um_quotas[type];
     NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, fname, p);
-    if (error = vn_open(&nd, FREAD|FWRITE, 0))
+    error = vn_open(&nd, FREAD|FWRITE, 0);
+    if (error)
         return (error);
     vp = nd.ni_vp;
     VOP_UNLOCK(vp, 0, p);
@@ -411,7 +420,8 @@ again:
             continue;
         if (vget(vp, LK_EXCLUSIVE, p))
             goto again;
-        if (error = getinoquota(VTOI(vp))) {
+        error = getinoquota(VTOI(vp));
+        if (error) {
             vput(vp);
             break;
         }
@@ -440,8 +450,9 @@ quotaoff(p, mp, type)
     struct dquot *dq;
     struct inode *ip;
     int error;
-    
-    if ((qvp = ump->um_quotas[type]) == NULLVP)
+
+    qvp = ump->um_quotas[type];
+    if (qvp == NULLVP)
         return (0);
     ump->um_qflags[type] |= QTF_CLOSING;
     /*
@@ -489,7 +500,8 @@ getquota(mp, id, type, addr)
     struct dquot *dq;
     int error;
 
-    if (error = dqget(NULLVP, id, VFSTOUFS(mp), type, &dq))
+    error = dqget(NULLVP, id, VFSTOUFS(mp), type, &dq);
+    if (error)
         return (error);
     error = copyout((caddr_t)&dq->dq_dqb, addr, sizeof (struct dqblk));
     dqrele(NULLVP, dq);
@@ -512,9 +524,11 @@ setquota(mp, id, type, addr)
     struct dqblk newlim;
     int error;
 
-    if (error = copyin(addr, (caddr_t)&newlim, sizeof (struct dqblk)))
+    error = copyin(addr, (caddr_t)&newlim, sizeof (struct dqblk));
+    if (error)
         return (error);
-    if (error = dqget(NULLVP, id, ump, type, &ndq))
+    error = dqget(NULLVP, id, ump, type, &ndq);
+    if (error)
         return (error);
     dq = ndq;
     while (dq->dq_flags & DQ_LOCK) {
@@ -571,9 +585,11 @@ setuse(mp, id, type, addr)
     struct dqblk usage;
     int error;
 
-    if (error = copyin(addr, (caddr_t)&usage, sizeof (struct dqblk)))
+    error = copyin(addr, (caddr_t)&usage, sizeof (struct dqblk));
+    if (error)
         return (error);
-    if (error = dqget(NULLVP, id, ump, type, &ndq))
+    error = dqget(NULLVP, id, ump, type, &ndq);
+    if (error)
         return (error);
     dq = ndq;
     while (dq->dq_flags & DQ_LOCK) {
@@ -736,7 +752,8 @@ dqget(vp, id, ump, type, dqp)
         bzero((char *)dq, sizeof *dq);
         numdquot++;
     } else {
-        if ((dq = dqfreelist.tqh_first) == NULL) {
+        dq = dqfreelist.tqh_first;
+        if (dq == NULL) {
             tablefull("dquot");
             *dqp = NODQUOT;
             return (EUSERS);
@@ -852,7 +869,8 @@ dqsync(vp, dq)
         panic("dqsync: dquot");
     if ((dq->dq_flags & DQ_MOD) == 0)
         return (0);
-    if ((dqvp = dq->dq_ump->um_quotas[dq->dq_type]) == NULLVP)
+    dqvp = dq->dq_ump->um_quotas[dq->dq_type];
+    if (dqvp == NULLVP)
         panic("dqsync: file");
     if (vp != dqvp)
         vn_lock(dqvp, LK_EXCLUSIVE | LK_RETRY, p);

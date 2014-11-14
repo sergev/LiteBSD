@@ -55,6 +55,7 @@
 #include <vm/vm.h>
 
 /*ARGSUSED*/
+int
 mmrw(dev, uio, flags)
     dev_t dev;
     struct uio *uio;
@@ -96,8 +97,9 @@ mmrw(dev, uio, flags)
                 return (EFAULT);
             c = iov->iov_len;
             if (v + c <= MACH_PHYS_TO_UNCACHED(avail_end) ||
-                v >= MACH_KSEG2_ADDR && kernacc((caddr_t)v, c,
-                uio->uio_rw == UIO_READ ? B_READ : B_WRITE)) {
+                (v >= MACH_KSEG2_ADDR &&
+                 kernacc((caddr_t)v, c, uio->uio_rw == UIO_READ ?
+                    B_READ : B_WRITE))) {
                 error = uiomove((caddr_t)v, (int)c, uio);
                 continue;
             }

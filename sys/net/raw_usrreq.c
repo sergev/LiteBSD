@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/errno.h>
+#include <sys/systm.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -98,8 +99,9 @@ raw_input(m0, proto, src, dst)
         if (rp->rcb_faddr && !equal(rp->rcb_faddr, src))
             continue;
         if (last) {
-            struct mbuf *n;
-            if (n = m_copy(m, 0, (int)M_COPYALL)) {
+            struct mbuf *n = m_copy(m, 0, (int)M_COPYALL);
+
+            if (n) {
                 if (sbappendaddr(&last->so_rcv, src,
                     n, (struct mbuf *)0) == 0)
                     /* should notify about lost packet */
@@ -189,7 +191,7 @@ raw_usrreq(so, req, m, nam, control)
      * If a socket isn't bound to a single address,
      * the raw input routine will hand it anything
      * within that protocol family (assuming there's
-     * nothing else around it should go to). 
+     * nothing else around it should go to).
      */
     case PRU_CONNECT:
         if (rp->rcb_faddr) {

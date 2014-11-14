@@ -44,6 +44,7 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/protosw.h>
+#include <sys/systm.h>
 
 #include <net/if.h>
 #include <net/route.h>

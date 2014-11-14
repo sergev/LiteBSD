@@ -54,6 +54,7 @@
  * by allocating the physical blocks on a device given
  * the inode and the logical block number in a file.
  */
+int
 ffs_balloc(ip, lbn, size, cred, bpp, flags)
     register struct inode *ip;
     register ufs_daddr_t lbn;
@@ -157,7 +158,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
      * Determine the number of levels of indirection.
      */
     pref = 0;
-    if (error = ufs_getlbns(vp, lbn, indirs, &num))
+    error = ufs_getlbns(vp, lbn, indirs, &num);
+    if (error)
         return(error);
 #ifdef DIAGNOSTIC
     if (num < 1)
@@ -172,8 +174,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
     allocblk = allociblk;
     if (nb == 0) {
         pref = ffs_blkpref(ip, lbn, 0, (ufs_daddr_t *)0);
-        if (error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize,
-            cred, &newb))
+        error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred, &newb);
+        if (error)
             return (error);
         nb = newb;
         *allocblk++ = nb;
@@ -184,7 +186,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
          * Write synchronously so that indirect blocks
          * never point at garbage.
          */
-        if (error = bwrite(bp))
+        error = bwrite(bp);
+        if (error)
             goto fail;
         allocib = &ip->i_ib[indirs[0].in_off];
         *allocib = nb;
@@ -211,8 +214,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
         }
         if (pref == 0)
             pref = ffs_blkpref(ip, lbn, 0, (ufs_daddr_t *)0);
-        if (error =
-            ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred, &newb)) {
+        error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred, &newb);
+        if (error) {
             brelse(bp);
             goto fail;
         }
@@ -225,7 +228,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
          * Write synchronously so that indirect blocks
          * never point at garbage.
          */
-        if (error = bwrite(nbp)) {
+        error = bwrite(nbp);
+        if (error) {
             brelse(bp);
             goto fail;
         }
@@ -245,8 +249,8 @@ ffs_balloc(ip, lbn, size, cred, bpp, flags)
      */
     if (nb == 0) {
         pref = ffs_blkpref(ip, lbn, indirs[i].in_off, &bap[0]);
-        if (error = ffs_alloc(ip,
-            lbn, pref, (int)fs->fs_bsize, cred, &newb)) {
+        error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred, &newb);
+        if (error) {
             brelse(bp);
             goto fail;
         }

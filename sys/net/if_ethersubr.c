@@ -105,17 +105,19 @@ ether_output(ifp, m0, dst, rt0)
     register struct rtentry *rt;
     struct mbuf *mcopy = (struct mbuf *)0;
     register struct ether_header *eh;
-    int off, len = m->m_pkthdr.len;
+    int len = m->m_pkthdr.len;
     struct arpcom *ac = (struct arpcom *)ifp;
 
     if ((ifp->if_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
         senderr(ENETDOWN);
     ifp->if_lastchange = time;
-    if (rt = rt0) {
+    rt = rt0;
+    if (rt) {
         if ((rt->rt_flags & RTF_UP) == 0) {
-            if (rt0 = rt = rtalloc1(dst, 1))
+            rt0 = rt = rtalloc1(dst, 1);
+            if (rt)
                 rt->rt_refcnt--;
-            else 
+            else
                 senderr(EHOSTUNREACH);
         }
         if (rt->rt_flags & RTF_GATEWAY) {
@@ -142,7 +144,6 @@ ether_output(ifp, m0, dst, rt0)
         /* If broadcasting on a simplex interface, loopback a copy */
         if ((m->m_flags & M_BCAST) && (ifp->if_flags & IFF_SIMPLEX))
             mcopy = m_copy(m, 0, (int)M_COPYALL);
-        off = m->m_pkthdr.len - m->m_len;
         type = ETHERTYPE_IP;
         break;
 #endif
@@ -205,7 +206,7 @@ ether_output(ifp, m0, dst, rt0)
 #ifdef  LLC
 /*  case AF_NSAP: */
     case AF_CCITT: {
-        register struct sockaddr_dl *sdl = 
+        register struct sockaddr_dl *sdl =
             (struct sockaddr_dl *) rt -> rt_gateway;
 
         if (sdl && sdl->sdl_family == AF_LINK
@@ -233,14 +234,14 @@ ether_output(ifp, m0, dst, rt0)
             printf("ether_output: sending LLC2 pkt to: ");
             for (i=0; i<6; i++)
                 printf("%x ", edst[i] & 0xff);
-            printf(" len 0x%x dsap 0x%x ssap 0x%x control 0x%x\n", 
+            printf(" len 0x%x dsap 0x%x ssap 0x%x control 0x%x\n",
                    type & 0xff, l->llc_dsap & 0xff, l->llc_ssap &0xff,
                    l->llc_control & 0xff);
 
         }
 #endif /* LLC_DEBUG */
         } break;
-#endif /* LLC */    
+#endif /* LLC */
 
     case AF_UNSPEC:
         eh = (struct ether_header *)dst->sa_data;
@@ -308,8 +309,6 @@ ether_input(ifp, eh, m)
     struct mbuf *m;
 {
     register struct ifqueue *inq;
-    register struct llc *l;
-    struct arpcom *ac = (struct arpcom *)ifp;
     int s;
 
     if ((ifp->if_flags & IFF_UP) == 0) {
@@ -349,10 +348,11 @@ ether_input(ifp, eh, m)
 #if defined (ISO) || defined (LLC)
         if (eh->ether_type > ETHERMTU)
             goto dropanyway;
-        l = mtod(m, struct llc *);
+
+        register struct llc *l = mtod(m, struct llc *);
         switch (l->llc_dsap) {
 #ifdef  ISO
-        case LLC_ISO_LSAP: 
+        case LLC_ISO_LSAP:
             switch (l->llc_control) {
             case LLC_UI:
                 /* LLC_UI_P forbidden in class 1 service */
@@ -376,7 +376,7 @@ ether_input(ifp, eh, m)
                     break;
                 }
                 goto dropanyway;
-                
+
             case LLC_XID:
             case LLC_XID_P:
                 if(m->m_len < 6)
@@ -389,6 +389,7 @@ ether_input(ifp, eh, m)
             case LLC_TEST:
             case LLC_TEST_P:
             {
+                struct arpcom *ac = (struct arpcom *)ifp;
                 struct sockaddr sa;
                 register struct ether_header *eh2;
                 int i;
@@ -404,7 +405,7 @@ ether_input(ifp, eh, m)
                 eh2 = (struct ether_header *)sa.sa_data;
                 for (i = 0; i < 6; i++) {
                     eh2->ether_shost[i] = c = eh->ether_dhost[i];
-                    eh2->ether_dhost[i] = 
+                    eh2->ether_dhost[i] =
                         eh->ether_dhost[i] = eh->ether_shost[i];
                     eh->ether_shost[i] = c;
                 }
@@ -426,7 +427,7 @@ ether_input(ifp, eh, m)
             if (m == 0)
                 return;
             if ( !sdl_sethdrif(ifp, eh->ether_shost, LLC_X25_LSAP,
-                        eh->ether_dhost, LLC_X25_LSAP, 6, 
+                        eh->ether_dhost, LLC_X25_LSAP, 6,
                         mtod(m, struct sdl_hdr *)))
                 panic("ETHER cons addr failure");
             mtod(m, struct sdl_hdr *)->sdlhdr_len = eh->ether_type;
@@ -466,7 +467,7 @@ char *
 ether_sprintf(ap)
     register u_char *ap;
 {
-    register i;
+    register int i;
     static char etherbuf[18];
     register char *cp = etherbuf;
 

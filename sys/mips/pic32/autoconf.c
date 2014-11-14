@@ -127,7 +127,6 @@ configure()
 {
     struct mips_ctlr *ctlr;
     struct scsi_device *device;
-    int i;
 
     /* Probe and initialize controllers. */
     for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {

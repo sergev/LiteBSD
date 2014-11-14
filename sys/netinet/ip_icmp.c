@@ -35,12 +35,11 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/kernel.h>
+#include <vm/vm.h>
+#include <sys/sysctl.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -51,6 +50,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp_var.h>
+#include <netinet/ip_var.h>
 
 /*
  * ICMP routines: error generation, receive packet processing, and
@@ -122,7 +122,7 @@ icmp_error(n, type, code, dest, destifp)
         icp->icmp_gwaddr.s_addr = dest;
     else {
         icp->icmp_void = 0;
-        /* 
+        /*
          * The following assignments assume an overlay with the
          * zeroed icmp_void field.
          */
@@ -241,7 +241,7 @@ icmp_input(m, hlen)
             case ICMP_UNREACH_NEEDFRAG:
                 code = PRC_MSGSIZE;
                 break;
-                
+
             case ICMP_UNREACH_NET_UNKNOWN:
             case ICMP_UNREACH_NET_PROHIB:
             case ICMP_UNREACH_TOSNET:
@@ -291,7 +291,8 @@ icmp_input(m, hlen)
             printf("deliver to protocol %d\n", icp->icmp_ip.ip_p);
 #endif
         icmpsrc.sin_addr = icp->icmp_ip.ip_dst;
-        if (ctlfunc = inetsw[ip_protox[icp->icmp_ip.ip_p]].pr_ctlinput)
+        ctlfunc = inetsw[ip_protox[icp->icmp_ip.ip_p]].pr_ctlinput;
+        if (ctlfunc)
             (*ctlfunc)(code, (struct sockaddr *)&icmpsrc,
                 &icp->icmp_ip);
         break;
@@ -313,7 +314,7 @@ icmp_input(m, hlen)
         icp->icmp_rtime = iptime();
         icp->icmp_ttime = icp->icmp_rtime;  /* bogus, do later! */
         goto reflect;
-        
+
     case ICMP_MASKREQ:
 #define satosin(sa) ((struct sockaddr_in *)(sa))
         if (icmpmaskrepl == 0)
@@ -488,7 +489,7 @@ icmp_reflect(m)
                 /*
                  * Should check for overflow, but it "can't happen"
                  */
-                if (opt == IPOPT_RR || opt == IPOPT_TS || 
+                if (opt == IPOPT_RR || opt == IPOPT_TS ||
                 opt == IPOPT_SECURITY) {
                     bcopy((caddr_t)cp,
                     mtod(opts, caddr_t) + opts->m_len, len);
@@ -496,7 +497,8 @@ icmp_reflect(m)
                 }
             }
             /* Terminate & pad, if necessary */
-            if (cnt = opts->m_len % 4) {
+            cnt = opts->m_len % 4;
+            if (cnt) {
                 for (; cnt < 4; cnt++) {
                     *(mtod(opts, caddr_t) + opts->m_len) =
                     IPOPT_EOL;

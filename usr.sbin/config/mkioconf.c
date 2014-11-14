@@ -858,7 +858,7 @@ void pic32_ioconf()
 			dp->d_name, dp->d_unit, dp->d_addr, dp->d_pri,
 			dp->d_flags);
 	}
-	fprintf(fp, "\t0\n};\n");
+	fprintf(fp, "\t{ 0 }\n};\n");
 
 	/* print devices connected to other controllers */
 	fprintf(fp, "\nstruct scsi_device scsi_dinit[] = {\n");
@@ -881,7 +881,7 @@ void pic32_ioconf()
                 fprintf(fp, "%d,\t%d,\t%d,\t0x%x },\n",
                         dp->d_drive, dp->d_slave, dp->d_dk, dp->d_flags);
 	}
-	fprintf(fp, "0\n};\n");
+	fprintf(fp, "{ 0 }\n};\n");
 	pseudo_ioconf(fp);
 	(void) fclose(fp);
 }

@@ -80,6 +80,7 @@
 
 #include <machine/machConst.h>
 #include <machine/pte.h>
+#include <machine/cpu.h>
 
 extern vm_page_t vm_page_alloc1 __P((void));
 extern void vm_page_free1 __P((vm_page_t));
@@ -117,6 +118,8 @@ int             tlbpid_cnt = 2;         /* next available TLB PID */
 pt_entry_t      *Sysmap;                /* kernel pte table */
 u_int           Sysmapsize;             /* number of pte's in Sysmap */
 
+extern int maxmem, physmem;
+
 /*
  *      Bootstrap the system enough to run with virtual memory.
  *      firstaddr is the first unused kseg0 address (not page aligned).
@@ -127,7 +130,6 @@ pmap_bootstrap(firstaddr)
 {
     register int i;
     vm_offset_t start = firstaddr;
-    extern int maxmem, physmem;
 
 #define valloc(name, type, num) \
         (name) = (type *)firstaddr; firstaddr = (vm_offset_t)((name)+(num))
@@ -199,7 +201,7 @@ pmap_bootstrap_alloc(size)
     size = round_page(size);
     avail_start += size;
 
-    blkclr((caddr_t)val, size);
+    bzero((caddr_t)val, size);
     return ((void *)val);
 }
 
@@ -642,7 +644,6 @@ pmap_enter(pmap, va, pa, prot, wired)
 {
     register pt_entry_t *pte;
     register u_int npte;
-    register int j;
     vm_page_t mem;
 
 #ifdef DIAGNOSTIC

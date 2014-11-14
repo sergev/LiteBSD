@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
  *  The Regents of the University of California.  All rights reserved.
  *
@@ -40,17 +40,17 @@
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -293,7 +293,8 @@ vm_map_entry_create(map)
         MALLOC(entry, vm_map_entry_t, sizeof(struct vm_map_entry),
                M_VMMAPENT, M_WAITOK);
     } else {
-        if (entry = kentry_free)
+        entry = kentry_free;
+        if (entry)
             kentry_free = kentry_free->next;
     }
     if (entry == NULL)
@@ -747,11 +748,11 @@ vm_map_simplify_entry(map, entry)
         vm_map_t    my_share_map;
         int     count;
 
-        my_share_map = entry->object.share_map; 
+        my_share_map = entry->object.share_map;
         simple_lock(&my_share_map->ref_lock);
         count = my_share_map->ref_count;
         simple_unlock(&my_share_map->ref_lock);
-        
+
         if (count == 1) {
             /* Can move the region from
              * entry->start to entry->end (+ entry->offset)
@@ -809,7 +810,7 @@ _vm_map_clip_start(map, entry, start)
     /*
      *  See if we can simplify this entry first
      */
-         
+
     vm_map_simplify_entry(map, entry);
 
     /*
@@ -1475,7 +1476,7 @@ vm_map_entry_unwire(map, entry)
  *  vm_map_entry_delete:    [ internal use only ]
  *
  *  Deallocate the given entry from the target map.
- */     
+ */
 void
 vm_map_entry_delete(map, entry)
     register vm_map_t   map;
@@ -1483,7 +1484,7 @@ vm_map_entry_delete(map, entry)
 {
     if (entry->wired_count != 0)
         vm_map_entry_unwire(map, entry);
-        
+
     vm_map_entry_unlink(map, entry);
     map->size -= entry->end - entry->start;
 
@@ -2117,7 +2118,6 @@ vmspace_fork(vm1)
     vm_map_t    new_map;
     vm_map_entry_t  old_entry;
     vm_map_entry_t  new_entry;
-    pmap_t      new_pmap;
 
     vm_map_lock(old_map);
 
@@ -2125,7 +2125,6 @@ vmspace_fork(vm1)
         old_map->entries_pageable);
     bcopy(&vm1->vm_startcopy, &vm2->vm_startcopy,
         (caddr_t) (vm1 + 1) - (caddr_t) &vm1->vm_startcopy);
-    new_pmap = &vm2->vm_pmap;       /* XXX */
     new_map = &vm2->vm_map;         /* XXX */
 
     old_entry = old_map->header.next;
@@ -2146,11 +2145,11 @@ vmspace_fork(vm1)
             if (!old_entry->is_a_map) {
                 vm_map_t    new_share_map;
                 vm_map_entry_t  new_share_entry;
-                
+
                 /*
                  *  Create a new sharing map
                  */
-                 
+
                 new_share_map = vm_map_create(NULL,
                             old_entry->start,
                             old_entry->end,
@@ -2348,7 +2347,7 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
         vm_map_unlock_read(old_map);
         goto RetryLookup;
     }
-        
+
     /*
      *  Check whether this task is allowed to have
      *  this page.
@@ -2362,16 +2361,16 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
      *  If this page is not pageable, we have to get
      *  it for all possible accesses.
      */
-
-    if (*wired = (entry->wired_count != 0))
+    *wired = (entry->wired_count != 0);
+    if (*wired)
         prot = fault_type = entry->protection;
 
     /*
      *  If we don't already have a VM object, track
      *  it down.
      */
-
-    if (su = !entry->is_a_map) {
+    su = !entry->is_a_map;
+    if (su) {
         share_map = map;
         share_offset = vaddr;
     }
@@ -2432,9 +2431,9 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
                 &entry->object.vm_object,
                 &entry->offset,
                 (vm_size_t) (entry->end - entry->start));
-                
+
             entry->needs_copy = FALSE;
-            
+
             lockmgr(&share_map->lock, LK_DOWNGRADE,
                 (void *)0, curproc);
         }
@@ -2488,7 +2487,7 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
     *single_use = su;
 
     return(KERN_SUCCESS);
-    
+
 #undef  RETURN
 }
 
@@ -2556,10 +2555,10 @@ vm_map_simplify(map, start)
         (prev_entry->protection == this_entry->protection) &&
         (prev_entry->max_protection == this_entry->max_protection) &&
         (prev_entry->wired_count == this_entry->wired_count) &&
-        
+
         (prev_entry->copy_on_write == this_entry->copy_on_write) &&
         (prev_entry->needs_copy == this_entry->needs_copy) &&
-        
+
         (prev_entry->object.vm_object == this_entry->object.vm_object) &&
         ((prev_entry->offset + (prev_entry->end - prev_entry->start))
              == this_entry->offset)
@@ -2623,7 +2622,7 @@ vm_map_print(map, full)
                 vm_map_print(entry->object.share_map, full);
                 indent -= 2;
             }
-                
+
         }
         else {
             printf("object=0x%x, offset=0x%x",

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1991, 1993
  *  The Regents of the University of California.  All rights reserved.
  *
@@ -40,17 +40,17 @@
  * All rights reserved.
  *
  * Authors: Avadis Tevanian, Jr., Michael Wayne Young
- * 
+ *
  * Permission to use, copy, modify and distribute this software and
  * its documentation is hereby granted, provided that both the copyright
  * notice and this permission notice appear in all copies of the
  * software, derivative works or modified versions, and any portions
  * thereof, and that both notices appear in supporting documentation.
- * 
- * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" 
- * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND 
+ *
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND
  * FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
- * 
+ *
  * Carnegie Mellon requests users of this software to return to
  *
  *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
@@ -383,7 +383,7 @@ vm_object_page_clean(object, start, end, syncio, de_queue)
     boolean_t       de_queue;
 {
     register vm_page_t  p;
-    int onqueue;
+    int onqueue = 0;
     boolean_t noerror = TRUE;
 
     if (object == NULL)
@@ -423,7 +423,7 @@ again:
      * Loop through the object page list cleaning as necessary.
      */
     for (p = object->memq.tqh_first; p != NULL; p = p->listq.tqe_next) {
-        if ((start == end || p->offset >= start && p->offset < end) &&
+        if ((start == end || (p->offset >= start && p->offset < end)) &&
             !(p->flags & PG_FICTITIOUS)) {
             if ((p->flags & PG_CLEAN) &&
                 pmap_is_modified(VM_PAGE_TO_PHYS(p)))
@@ -661,7 +661,7 @@ vm_object_copy(src_object, src_offset, size,
 
         *dst_object = src_object;
         *dst_offset = src_offset;
-        
+
         /*
          *  Must make a shadow when write is desired
          */
@@ -829,7 +829,7 @@ vm_object_shadow(object, offset, length)
      *  count.
      */
     result->shadow = source;
-    
+
     /*
      *  Store the offset into the source object,
      *  and fix up the offset into the new object.
@@ -991,10 +991,10 @@ vm_object_cache_clear()
     while ((object = vm_object_cached_list.tqh_first) != NULL) {
         vm_object_cache_unlock();
 
-        /* 
+        /*
          * Note: it is important that we use vm_object_lookup
          * to gain a reference, and not vm_object_reference, because
-         * the logic for removing an object from the cache lies in 
+         * the logic for removing an object from the cache lies in
          * lookup.
          */
         if (object != vm_object_lookup(object->pager))
@@ -1047,10 +1047,10 @@ vm_object_collapse(object)
         /*
          *      There is a backing object, and
          */
-    
+
         if ((backing_object = object->shadow) == NULL)
             return;
-    
+
         vm_object_lock(backing_object);
         /*
          *  ...
@@ -1059,13 +1059,13 @@ vm_object_collapse(object)
          *      currently being paged out.
          *      The backing object is internal.
          */
-    
+
         if ((backing_object->flags & OBJ_INTERNAL) == 0 ||
             backing_object->paging_in_progress != 0) {
             vm_object_unlock(backing_object);
             return;
         }
-    
+
         /*
          *  The backing object can't be a copy-object:
          *  the shadow_offset for the copy-object must stay
@@ -1096,7 +1096,7 @@ vm_object_collapse(object)
          *  If there is exactly one reference to the backing
          *  object, we can collapse it into the parent.
          */
-    
+
         if (backing_object->ref_count == 1) {
 
             /*
@@ -1255,12 +1255,12 @@ vm_object_collapse(object)
 
             /*
              *  Backing object might have had a copy pointer
-             *  to us.  If it did, clear it. 
+             *  to us.  If it did, clear it.
              */
             if (backing_object->copy == object) {
                 backing_object->copy = NULL;
             }
-    
+
             /*  Drop the reference count on backing_object.
              *  Since its ref_count was at least 2, it
              *  will not vanish; so we don't need to call
@@ -1409,7 +1409,7 @@ vm_object_print(object, full)
     boolean_t   full;
 {
     register vm_page_t  p;
-    extern indent;
+    extern int indent;
 
     register int count;
 

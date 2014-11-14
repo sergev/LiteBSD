@@ -292,7 +292,7 @@ tcp_close(tp)
     if (SEQ_LT(tp->iss + so->so_snd.sb_hiwat * 16, tp->snd_max) &&
         (rt = inp->inp_route.ro_rt) &&
         ((struct sockaddr_in *)rt_key(rt))->sin_addr.s_addr != INADDR_ANY) {
-        register u_long i;
+        register u_long i = 0;
 
         if ((rt->rt_rmx.rmx_locks & RTV_RTT) == 0) {
             i = tp->t_srtt *
@@ -325,8 +325,8 @@ tcp_close(tp)
          * before we start updating, then update on both good
          * and bad news.
          */
-        if ((rt->rt_rmx.rmx_locks & RTV_SSTHRESH) == 0 &&
-            (i = tp->snd_ssthresh) && rt->rt_rmx.rmx_ssthresh ||
+        if (((rt->rt_rmx.rmx_locks & RTV_SSTHRESH) == 0 &&
+             (i = tp->snd_ssthresh) && rt->rt_rmx.rmx_ssthresh) ||
             i < (rt->rt_rmx.rmx_sendpipe / 2)) {
             /*
              * convert the limit from user data bytes to

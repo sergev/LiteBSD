@@ -73,6 +73,7 @@
 #include <sys/vnode.h>
 #include <machine/psl.h>
 #include <machine/reg.h>
+#include <machine/cpu.h>
 #include <miscfs/procfs/procfs.h>
 
 int

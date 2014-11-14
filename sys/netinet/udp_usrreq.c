@@ -34,13 +34,15 @@
  */
 
 #include <sys/param.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
+#include <sys/systm.h>
+#include <vm/vm.h>
+#include <sys/sysctl.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -142,7 +144,8 @@ udp_input(m, iphlen)
         ((struct ipovly *)ip)->ih_prev = 0;
         ((struct ipovly *)ip)->ih_x1 = 0;
         ((struct ipovly *)ip)->ih_len = uh->uh_ulen;
-        if (uh->uh_sum = in_cksum(m, len + sizeof (struct ip))) {
+        uh->uh_sum = in_cksum(m, len + sizeof (struct ip));
+        if (uh->uh_sum) {
             udpstat.udps_badsum++;
             m_freem(m);
             return;
@@ -217,7 +220,7 @@ udp_input(m, iphlen)
              * port.  It * assumes that an application will never
              * clear these options after setting them.
              */
-            if ((last->so_options&(SO_REUSEPORT|SO_REUSEADDR) == 0))
+            if ((last->so_options & (SO_REUSEPORT|SO_REUSEADDR)) == 0)
                 break;
         }
 
@@ -381,8 +384,8 @@ udp_output(inp, m, addr, control)
 {
     register struct udpiphdr *ui;
     register int len = m->m_pkthdr.len;
-    struct in_addr laddr;
-    int s, error = 0;
+    struct in_addr laddr = {0};
+    int s = 0, error = 0;
 
     if (control)
         m_freem(control);       /* XXX */
@@ -618,6 +621,7 @@ udp_detach(inp)
 /*
  * Sysctl for udp variables.
  */
+int
 udp_sysctl(name, namelen, oldp, oldlenp, newp, newlen)
     int *name;
     u_int namelen;

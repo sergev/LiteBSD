@@ -35,6 +35,7 @@
 
 #include <sys/param.h>
 #include <sys/mbuf.h>
+#include <sys/systm.h>
 
 /*
  * Checksum routine for Internet Protocol family headers (Portable Version).
@@ -75,7 +76,7 @@ in_cksum(m, len)
              * of a word spanning between this mbuf and the
              * last mbuf.
              *
-             * s_util.c[0] is already saved when scanning previous 
+             * s_util.c[0] is already saved when scanning previous
              * mbuf.
              */
             s_util.c[1] = *(char *)w;

@@ -46,6 +46,8 @@
 
 #include <miscfs/specfs/specdev.h>
 
+#include <vm/vm.h>
+
 /*
  * Indirect driver for multi-controller paging.
  */
@@ -135,9 +137,12 @@ swapinit()
 #endif
     if (nswap == 0)
         printf("WARNING: no swap space found\n");
-    else if (error = swfree(p, 0)) {
-        printf("swfree errno %d\n", error); /* XXX */
-        panic("swapinit swfree 0");
+    else {
+        error = swfree(p, 0);
+        if (error) {
+            printf("swfree errno %d\n", error); /* XXX */
+            panic("swapinit swfree 0");
+        }
     }
 
     /*
@@ -243,7 +248,8 @@ swstrategy(bp)
     }
     VHOLD(sp->sw_vp);
     if ((bp->b_flags & B_READ) == 0) {
-        if (vp = bp->b_vp) {
+        vp = bp->b_vp;
+        if (vp) {
             vp->v_numoutput--;
             if ((vp->v_flag & VBWAIT) && vp->v_numoutput <= 0) {
                 vp->v_flag &= ~VBWAIT;
@@ -266,6 +272,7 @@ swstrategy(bp)
 struct swapon_args {
     char    *name;
 };
+
 /* ARGSUSED */
 int
 swapon(p, uap, retval)
@@ -279,10 +286,12 @@ swapon(p, uap, retval)
     int error;
     struct nameidata nd;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
     NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, uap->name, p);
-    if (error = namei(&nd))
+    error = namei(&nd);
+    if (error)
         return (error);
     vp = nd.ni_vp;
     if (vp->v_type != VBLK) {
@@ -301,7 +310,8 @@ swapon(p, uap, retval)
                 return (EBUSY);
             }
             sp->sw_vp = vp;
-            if (error = swfree(p, sp - swdevt)) {
+            error = swfree(p, sp - swdevt);
+            if (error) {
                 vrele(vp);
                 return (error);
             }
@@ -343,7 +353,8 @@ swfree(p, index)
 
     sp = &swdevt[index];
     vp = sp->sw_vp;
-    if (error = VOP_OPEN(vp, FREAD|FWRITE, p->p_ucred, p))
+    error = VOP_OPEN(vp, FREAD|FWRITE, p->p_ucred, p);
+    if (error)
         return (error);
     sp->sw_flags |= SW_FREED;
     nblks = sp->sw_nblks;
@@ -397,10 +408,12 @@ swfree(p, index)
     for (dvbase = 0; dvbase < nblks; dvbase += dmmax) {
         blk = nblks - dvbase;
 #ifdef SEQSWAP
-        if ((vsbase = index*dmmax + dvbase*niswdev) >= niswap)
+        vsbase = index*dmmax + dvbase*niswdev;
+        if (vsbase >= niswap)
             panic("swfree");
 #else
-        if ((vsbase = index*dmmax + dvbase*nswdev) >= nswap)
+        vsbase = index*dmmax + dvbase*nswdev;
+        if (vsbase >= nswap)
             panic("swfree");
 #endif
         if (blk > dmmax)

@@ -48,7 +48,7 @@
 #include <netinet/in.h>
 
 /*
- * Routines to manage the raw protocol control blocks. 
+ * Routines to manage the raw protocol control blocks.
  *
  * TODO:
  *  hash lookups by protocol family/protocol + address family
@@ -78,7 +78,8 @@ raw_attach(so, proto)
      */
     if (rp == 0)
         return (ENOBUFS);
-    if (error = soreserve(so, raw_sendspace, raw_recvspace))
+    error = soreserve(so, raw_sendspace, raw_recvspace);
+    if (error)
         return (error);
     rp->rcb_socket = so;
     rp->rcb_proto.sp_family = so->so_proto->pr_domain->dom_family;

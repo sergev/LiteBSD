@@ -294,6 +294,7 @@ iskmemdev(dev)
     return (major(dev) == 2 && minor(dev) < 2);
 }
 
+int
 iszerodev(dev)
     dev_t dev;
 {

@@ -99,9 +99,9 @@ ufs_create(ap)
 {
     int error;
 
-    if (error =
-        ufs_makeinode(MAKEIMODE(ap->a_vap->va_type, ap->a_vap->va_mode),
-        ap->a_dvp, ap->a_vpp, ap->a_cnp))
+    error = ufs_makeinode(MAKEIMODE(ap->a_vap->va_type, ap->a_vap->va_mode),
+        ap->a_dvp, ap->a_vpp, ap->a_cnp);
+    if (error)
         return (error);
     return (0);
 }
@@ -124,9 +124,9 @@ ufs_mknod(ap)
     struct inode *ip;
     int error;
 
-    if (error =
-        ufs_makeinode(MAKEIMODE(vap->va_type, vap->va_mode),
-        ap->a_dvp, vpp, ap->a_cnp))
+    error = ufs_makeinode(MAKEIMODE(vap->va_type, vap->va_mode),
+        ap->a_dvp, vpp, ap->a_cnp);
+    if (error)
         return (error);
     ip = VTOI(*vpp);
     ip->i_flag |= IN_ACCESS | IN_CHANGE | IN_UPDATE;
@@ -213,7 +213,7 @@ ufs_access(ap)
     struct ucred *cred = ap->a_cred;
     mode_t mask, mode = ap->a_mode;
     register gid_t *gp;
-    int i, error;
+    int i;
 
     /*
      * Disallow write attempts on read-only file systems;
@@ -228,9 +228,18 @@ ufs_access(ap)
             if (vp->v_mount->mnt_flag & MNT_RDONLY)
                 return (EROFS);
 #ifdef QUOTA
-            if (error = getinoquota(ip))
+            int error = getinoquota(ip);
+            if (error)
                 return (error);
 #endif
+            break;
+
+        case VNON:
+        case VBLK:
+        case VCHR:
+        case VSOCK:
+        case VFIFO:
+        case VBAD:
             break;
         }
     }
@@ -384,7 +393,8 @@ ufs_setattr(ap)
     if (vap->va_uid != (uid_t)VNOVAL || vap->va_gid != (gid_t)VNOVAL) {
         if (vp->v_mount->mnt_flag & MNT_RDONLY)
             return (EROFS);
-        if (error = ufs_chown(vp, vap->va_uid, vap->va_gid, cred, p))
+        error = ufs_chown(vp, vap->va_uid, vap->va_gid, cred, p);
+        if (error)
             return (error);
     }
     if (vap->va_size != VNOVAL) {
@@ -401,8 +411,17 @@ ufs_setattr(ap)
             if (vp->v_mount->mnt_flag & MNT_RDONLY)
                 return (EROFS);
             break;
+
+        case VNON:
+        case VBLK:
+        case VCHR:
+        case VSOCK:
+        case VFIFO:
+        case VBAD:
+            break;
         }
-        if (error = VOP_TRUNCATE(vp, vap->va_size, 0, cred, p))
+        error = VOP_TRUNCATE(vp, vap->va_size, 0, cred, p);
+        if (error)
             return (error);
     }
     ip = VTOI(vp);
@@ -411,7 +430,7 @@ ufs_setattr(ap)
             return (EROFS);
         if (cred->cr_uid != ip->i_uid &&
             (error = suser(cred, &p->p_acflag)) &&
-            ((vap->va_vaflags & VA_UTIMES_NULL) == 0 || 
+            ((vap->va_vaflags & VA_UTIMES_NULL) == 0 ||
             (error = VOP_ACCESS(vp, VWRITE, cred, p))))
             return (error);
         if (vap->va_atime.ts_sec != VNOVAL)
@@ -422,7 +441,8 @@ ufs_setattr(ap)
         atimeval.tv_usec = vap->va_atime.ts_nsec / 1000;
         mtimeval.tv_sec = vap->va_mtime.ts_sec;
         mtimeval.tv_usec = vap->va_mtime.ts_nsec / 1000;
-        if (error = VOP_UPDATE(vp, &atimeval, &mtimeval, 1))
+        error = VOP_UPDATE(vp, &atimeval, &mtimeval, 1);
+        if (error)
             return (error);
     }
     error = 0;
@@ -502,7 +522,8 @@ ufs_chown(vp, uid, gid, cred, p)
     ogid = ip->i_gid;
     ouid = ip->i_uid;
 #ifdef QUOTA
-    if (error = getinoquota(ip))
+    error = getinoquota(ip);
+    if (error)
         return (error);
     if (ouid == uid) {
         dqrele(vp, ip->i_dquot[USRQUOTA]);
@@ -523,7 +544,8 @@ ufs_chown(vp, uid, gid, cred, p)
     ip->i_gid = gid;
     ip->i_uid = uid;
 #ifdef QUOTA
-    if ((error = getinoquota(ip)) == 0) {
+    error = getinoquota(ip);
+    if (error == 0) {
         if (ouid == uid) {
             dqrele(vp, ip->i_dquot[USRQUOTA]);
             ip->i_dquot[USRQUOTA] = NODQUOT;
@@ -532,8 +554,10 @@ ufs_chown(vp, uid, gid, cred, p)
             dqrele(vp, ip->i_dquot[GRPQUOTA]);
             ip->i_dquot[GRPQUOTA] = NODQUOT;
         }
-        if ((error = chkdq(ip, change, cred, CHOWN)) == 0) {
-            if ((error = chkiq(ip, 1, cred, CHOWN)) == 0)
+        error = chkdq(ip, change, cred, CHOWN);
+        if (error == 0) {
+            error = chkiq(ip, 1, cred, CHOWN);
+            if (error == 0)
                 goto good;
             else
                 (void) chkdq(ip, -change, cred, CHOWN|FORCE);
@@ -663,7 +687,8 @@ ufs_remove(ap)
         error = EPERM;
         goto out;
     }
-    if ((error = ufs_dirremove(dvp, ap->a_cnp)) == 0) {
+    error = ufs_dirremove(dvp, ap->a_cnp);
+    if (error == 0) {
         ip->i_nlink--;
         ip->i_flag |= IN_CHANGE;
     }
@@ -704,9 +729,12 @@ ufs_link(ap)
         error = EXDEV;
         goto out2;
     }
-    if (tdvp != vp && (error = vn_lock(vp, LK_EXCLUSIVE, p))) {
-        VOP_ABORTOP(tdvp, cnp);
-        goto out2;
+    if (tdvp != vp) {
+        error = vn_lock(vp, LK_EXCLUSIVE, p);
+        if (error) {
+            VOP_ABORTOP(tdvp, cnp);
+            goto out2;
+        }
     }
     ip = VTOI(vp);
     if ((nlink_t)ip->i_nlink >= LINK_MAX) {
@@ -752,7 +780,7 @@ ufs_whiteout(ap)
     struct vnode *dvp = ap->a_dvp;
     struct componentname *cnp = ap->a_cnp;
     struct direct newdir;
-    int error;
+    int error = 0;
 
     switch (ap->a_flags) {
     case LOOKUP:
@@ -900,7 +928,8 @@ abortit:
         (void) relookup(fdvp, &fvp, fcnp);
         return (VOP_REMOVE(fdvp, fvp, fcnp));
     }
-    if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
+    error = vn_lock(fvp, LK_EXCLUSIVE, p);
+    if (error)
         goto abortit;
     dp = VTOI(fdvp);
     ip = VTOI(fvp);
@@ -944,7 +973,8 @@ abortit:
     ip->i_nlink++;
     ip->i_flag |= IN_CHANGE;
     tv = time;
-    if (error = VOP_UPDATE(fvp, &tv, &tv, 1)) {
+    error = VOP_UPDATE(fvp, &tv, &tv, 1);
+    if (error) {
         VOP_UNLOCK(fvp, 0, p);
         goto bad;
     }
@@ -955,7 +985,7 @@ abortit:
      * directory heirarchy above the target, as this would
      * orphan everything below the source directory. Also
      * the user must have write permission in the source so
-     * as to be able to change "..". We must repeat the call 
+     * as to be able to change "..". We must repeat the call
      * to namei, as the parent directory is unlocked by the
      * call to checkpath().
      */
@@ -968,11 +998,13 @@ abortit:
             goto bad;
         if (xp != NULL)
             vput(tvp);
-        if (error = ufs_checkpath(ip, dp, tcnp->cn_cred))
+        error = ufs_checkpath(ip, dp, tcnp->cn_cred);
+        if (error)
             goto out;
         if ((tcnp->cn_flags & SAVESTART) == 0)
             panic("ufs_rename: lost to startdir");
-        if (error = relookup(tdvp, &tvp, tcnp))
+        error = relookup(tdvp, &tvp, tcnp);
+        if (error)
             goto out;
         dp = VTOI(tdvp);
         xp = NULL;
@@ -981,7 +1013,7 @@ abortit:
     }
     /*
      * 2) If target doesn't exist, link the target
-     *    to the source and unlink the source. 
+     *    to the source and unlink the source.
      *    Otherwise, rewrite the target directory
      *    entry to reference the source inode and
      *    expunge the original entry's existence.
@@ -1001,10 +1033,12 @@ abortit:
             }
             dp->i_nlink++;
             dp->i_flag |= IN_CHANGE;
-            if (error = VOP_UPDATE(tdvp, &tv, &tv, 1))
+            error = VOP_UPDATE(tdvp, &tv, &tv, 1);
+            if (error)
                 goto bad;
         }
-        if (error = ufs_direnter(ip, tdvp, tcnp)) {
+        error = ufs_direnter(ip, tdvp, tcnp);
+        if (error) {
             if (doingdirectory && newparent) {
                 dp->i_nlink--;
                 dp->i_flag |= IN_CHANGE;
@@ -1039,7 +1073,7 @@ abortit:
          * (both directories, or both not directories).
          */
         if ((xp->i_mode&IFMT) == IFDIR) {
-            if (!ufs_dirempty(xp, dp->i_number, tcnp->cn_cred) || 
+            if (!ufs_dirempty(xp, dp->i_number, tcnp->cn_cred) ||
                 xp->i_nlink > 2) {
                 error = ENOTEMPTY;
                 goto bad;
@@ -1053,7 +1087,8 @@ abortit:
             error = EISDIR;
             goto bad;
         }
-        if (error = ufs_dirrewrite(dp, ip, tcnp))
+        error = ufs_dirrewrite(dp, ip, tcnp);
+        if (error)
             goto bad;
         /*
          * If the target directory is in the same
@@ -1133,7 +1168,7 @@ abortit:
             dp->i_flag |= IN_CHANGE;
             error = vn_rdwr(UIO_READ, fvp, (caddr_t)&dirbuf,
                 sizeof (struct dirtemplate), (off_t)0,
-                UIO_SYSSPACE, IO_NODELOCKED, 
+                UIO_SYSSPACE, IO_NODELOCKED,
                 tcnp->cn_cred, (int *)0, (struct proc *)0);
             if (error == 0) {
 #               if (BYTE_ORDER == LITTLE_ENDIAN)
@@ -1241,13 +1276,15 @@ ufs_mkdir(ap)
      * but not have it entered in the parent directory. The entry is
      * made later after writing "." and ".." entries.
      */
-    if (error = VOP_VALLOC(dvp, dmode, cnp->cn_cred, &tvp))
+    error = VOP_VALLOC(dvp, dmode, cnp->cn_cred, &tvp);
+    if (error)
         goto out;
     ip = VTOI(tvp);
     ip->i_uid = cnp->cn_cred->cr_uid;
     ip->i_gid = dp->i_gid;
 #ifdef QUOTA
-    if ((error = getinoquota(ip)) ||
+    error = getinoquota(ip);
+    if (error ||
         (error = chkiq(ip, 1, cnp->cn_cred, 0))) {
         free(cnp->cn_pnbuf, M_NAMEI);
         VOP_VFREE(tvp, ip->i_number, dmode);
@@ -1273,7 +1310,8 @@ ufs_mkdir(ap)
      */
     dp->i_nlink++;
     dp->i_flag |= IN_CHANGE;
-    if (error = VOP_UPDATE(dvp, &tv, &tv, 1))
+    error = VOP_UPDATE(dvp, &tv, &tv, 1);
+    if (error)
         goto bad;
 
     /* Initialize directory with "." and ".." from static template. */
@@ -1300,7 +1338,8 @@ ufs_mkdir(ap)
     }
 
     /* Directory set up, now install it's entry in the parent directory. */
-    if (error = ufs_direnter(ip, dvp, cnp)) {
+    error = ufs_direnter(ip, dvp, cnp);
+    if (error) {
         dp->i_nlink--;
         dp->i_flag |= IN_CHANGE;
     }
@@ -1370,7 +1409,8 @@ ufs_rmdir(ap)
      * inode.  If we crash in between, the directory
      * will be reattached to lost+found,
      */
-    if (error = ufs_dirremove(dvp, cnp))
+    error = ufs_dirremove(dvp, cnp);
+    if (error)
         goto out;
     dp->i_nlink--;
     dp->i_flag |= IN_CHANGE;
@@ -1416,8 +1456,9 @@ ufs_symlink(ap)
     register struct inode *ip;
     int len, error;
 
-    if (error = ufs_makeinode(IFLNK | ap->a_vap->va_mode, ap->a_dvp,
-        vpp, ap->a_cnp))
+    error = ufs_makeinode(IFLNK | ap->a_vap->va_mode, ap->a_dvp,
+        vpp, ap->a_cnp);
+    if (error)
         return (error);
     vp = *vpp;
     len = strlen(ap->a_target);
@@ -1436,7 +1477,7 @@ ufs_symlink(ap)
 
 /*
  * Vnode op for reading directories.
- * 
+ *
  * The routine below assumes that the on-disk format of a directory
  * is the same as that defined by <sys/dirent.h>. If the on-disk
  * format changes, then it will be necessary to do a conversion
@@ -1655,8 +1696,8 @@ ufs_strategy(ap)
     if (vp->v_type == VBLK || vp->v_type == VCHR)
         panic("ufs_strategy: spec");
     if (bp->b_blkno == bp->b_lblkno) {
-        if (error =
-            VOP_BMAP(vp, bp->b_lblkno, NULL, &bp->b_blkno, NULL)) {
+        error = VOP_BMAP(vp, bp->b_lblkno, NULL, &bp->b_blkno, NULL);
+        if (error) {
             bp->b_error = error;
             bp->b_flags |= B_ERROR;
             biodone(bp);
@@ -1810,6 +1851,7 @@ ufsfifo_write(ap)
  *
  * Update the times on the inode then do device close.
  */
+int
 ufsfifo_close(ap)
     struct vop_close_args /* {
         struct vnode *a_vp;
@@ -1833,6 +1875,7 @@ ufsfifo_close(ap)
 /*
  * Return POSIX pathconf information applicable to ufs filesystems.
  */
+int
 ufs_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;
@@ -1949,7 +1992,7 @@ ufs_advlock(ap)
         error = lf_getlock(lock, fl);
         FREE(lock, M_LOCKF);
         return (error);
-    
+
     default:
         free(lock, M_LOCKF);
         return (EINVAL);
@@ -1968,7 +2011,6 @@ ufs_vinit(mntp, specops, fifoops, vpp)
     int (**fifoops)();
     struct vnode **vpp;
 {
-    struct proc *p = curproc;   /* XXX */
     struct inode *ip;
     struct vnode *vp, *nvp;
 
@@ -1978,7 +2020,8 @@ ufs_vinit(mntp, specops, fifoops, vpp)
     case VCHR:
     case VBLK:
         vp->v_op = specops;
-        if (nvp = checkalias(vp, ip->i_rdev, mntp)) {
+        nvp = checkalias(vp, ip->i_rdev, mntp);
+        if (nvp) {
             /*
              * Discard unneeded vnode, but save its inode.
              * Note that the lock is carried over in the inode
@@ -2003,6 +2046,14 @@ ufs_vinit(mntp, specops, fifoops, vpp)
 #else
         return (EOPNOTSUPP);
 #endif
+
+    case VNON:
+    case VREG:
+    case VDIR:
+    case VLNK:
+    case VSOCK:
+    case VBAD:
+        break;
     }
     if (ip->i_number == ROOTINO)
         vp->v_flag |= VROOT;
@@ -2039,7 +2090,8 @@ ufs_makeinode(mode, dvp, vpp, cnp)
     if ((mode & IFMT) == 0)
         mode |= IFREG;
 
-    if (error = VOP_VALLOC(dvp, mode, cnp->cn_cred, &tvp)) {
+    error = VOP_VALLOC(dvp, mode, cnp->cn_cred, &tvp);
+    if (error) {
         free(cnp->cn_pnbuf, M_NAMEI);
         vput(dvp);
         return (error);
@@ -2051,7 +2103,8 @@ ufs_makeinode(mode, dvp, vpp, cnp)
     else
         ip->i_uid = cnp->cn_cred->cr_uid;
 #ifdef QUOTA
-    if ((error = getinoquota(ip)) ||
+    error = getinoquota(ip);
+    if (error ||
         (error = chkiq(ip, 1, cnp->cn_cred, 0))) {
         free(cnp->cn_pnbuf, M_NAMEI);
         VOP_VFREE(tvp, ip->i_number, mode);
@@ -2075,9 +2128,11 @@ ufs_makeinode(mode, dvp, vpp, cnp)
      * Make sure inode goes to disk before directory entry.
      */
     tv = time;
-    if (error = VOP_UPDATE(tvp, &tv, &tv, 1))
+    error = VOP_UPDATE(tvp, &tv, &tv, 1);
+    if (error)
         goto bad;
-    if (error = ufs_direnter(ip, dvp, cnp))
+    error = ufs_direnter(ip, dvp, cnp);
+    if (error)
         goto bad;
     if ((cnp->cn_flags & SAVESTART) == 0)
         FREE(cnp->cn_pnbuf, M_NAMEI);

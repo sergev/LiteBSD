@@ -57,6 +57,7 @@
  * Vnode op for reading.
  */
 /* ARGSUSED */
+int
 READ(ap)
     struct vop_read_args /* {
         struct vnode *a_vp;
@@ -143,8 +144,8 @@ READ(ap)
                 break;
             xfersize = size;
         }
-        if (error =
-            uiomove((char *)bp->b_data + blkoffset, (int)xfersize, uio))
+        error = uiomove((char *)bp->b_data + blkoffset, (int)xfersize, uio);
+        if (error)
             break;
 
         if (S_ISREG(mode) && (xfersize + blkoffset == fs->fs_bsize ||
@@ -161,6 +162,7 @@ READ(ap)
 /*
  * Vnode op for writing.
  */
+int
 WRITE(ap)
     struct vop_write_args /* {
         struct vnode *a_vp;

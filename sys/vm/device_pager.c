@@ -217,7 +217,6 @@ dev_pager_dealloc(pager)
     vm_pager_t pager;
 {
     dev_pager_t devp;
-    vm_object_t object;
     vm_page_t m;
 
 #ifdef DEBUG
@@ -231,10 +230,9 @@ dev_pager_dealloc(pager)
      * been removed from the hash chain.
      */
     devp = (dev_pager_t)pager->pg_data;
-    object = devp->devp_object;
 #ifdef DEBUG
     if (dpagerdebug & DDB_ALLOC)
-        printf("dev_pager_dealloc: devp %x object %x\n", devp, object);
+        printf("dev_pager_dealloc: devp %x object %x\n", devp, devp->devp_object);
 #endif
     /*
      * Free up our fake pages.
@@ -317,9 +315,9 @@ dev_pager_putpage(pager, mlist, npages, sync)
         printf("dev_pager_putpage(%x, %x, %x, %x)\n",
                pager, mlist, npages, sync);
 #endif
-    if (pager == NULL)
-        return;
-    panic("dev_pager_putpage called");
+    if (pager != NULL)
+        panic("dev_pager_putpage called");
+    return 0;
 }
 
 static boolean_t

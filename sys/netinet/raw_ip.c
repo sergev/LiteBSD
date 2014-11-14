@@ -99,8 +99,9 @@ rip_input(m)
             inp->inp_faddr.s_addr != ip->ip_src.s_addr)
             continue;
         if (last) {
-            struct mbuf *n;
-            if (n = m_copy(m, 0, (int)M_COPYALL)) {
+            struct mbuf *n = m_copy(m, 0, (int)M_COPYALL);
+
+            if (n) {
                 if (sbappendaddr(&last->so_rcv,
                     (struct sockaddr *)&ripsrc, n,
                     (struct mbuf *)0) == 0)

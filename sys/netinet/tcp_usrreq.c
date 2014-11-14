@@ -80,7 +80,9 @@ tcp_usrreq(so, req, m, nam, control)
     register struct tcpcb *tp;
     int s;
     int error = 0;
-    int ostate;
+#ifdef TCPDEBUG
+    int ostate = 0;
+#endif
 
     if (req == PRU_CONTROL)
         return (in_control(so, (u_long)m, (caddr_t)nam,
@@ -121,9 +123,10 @@ tcp_usrreq(so, req, m, nam, control)
 #ifdef KPROF
         tcp_acounts[tp->t_state][req]++;
 #endif
+#ifdef TCPDEBUG
         ostate = tp->t_state;
-    } else
-        ostate = 0;
+#endif
+    }
     switch (req) {
 
     /*

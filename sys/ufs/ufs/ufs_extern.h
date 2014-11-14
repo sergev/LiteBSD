@@ -63,6 +63,8 @@ int     ufs_abortop __P((struct vop_abortop_args *));
 int     ufs_access __P((struct vop_access_args *));
 int     ufs_advlock __P((struct vop_advlock_args *));
 int     ufs_bmap __P((struct vop_bmap_args *));
+int     ufs_bmaparray __P((struct vnode *, ufs_daddr_t, ufs_daddr_t *,
+                         struct indir *, int *, int *));
 int     ufs_check_export __P((struct mount *, struct ufid *, struct mbuf *,
                             struct vnode **, int *exflagsp, struct ucred **));
 int     ufs_checkpath __P((struct inode *, struct inode *, struct ucred *));
@@ -72,6 +74,8 @@ void    ufs_dirbad __P((struct inode *, doff_t, char *));
 int     ufs_dirbadentry __P((struct vnode *, struct direct *, int));
 int     ufs_dirempty __P((struct inode *, ino_t, struct ucred *));
 int     ufs_direnter __P((struct inode *, struct vnode *,struct componentname *));
+int     ufs_direnter2 __P((struct vnode *, struct direct *, struct ucred *,
+                         struct proc *));
 int     ufs_dirremove __P((struct vnode *, struct componentname*));
 int     ufs_dirrewrite
         __P((struct inode *, struct inode *, struct componentname *));

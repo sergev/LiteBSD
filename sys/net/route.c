@@ -217,7 +217,7 @@ rtredirect(dst, gateway, netmask, flags, src, rtp)
         goto create;
     /*
      * Don't listen to the redirect if it's
-     * for a route to an interface. 
+     * for a route to an interface.
      */
     if (rt->rt_flags & RTF_GATEWAY) {
         if (((rt->rt_flags & RTF_HOST) == 0) && (flags & RTF_HOST)) {
@@ -261,6 +261,7 @@ out:
     info.rti_info[RTAX_NETMASK] = netmask;
     info.rti_info[RTAX_AUTHOR] = src;
     rt_missmsg(RTM_REDIRECT, &info, flags, error);
+    return 0;
 }
 
 /*
@@ -290,7 +291,7 @@ ifa_ifwithroute(flags, dst, gateway)
          * we can use the local address.
          */
         ifa = 0;
-        if (flags & RTF_HOST) 
+        if (flags & RTF_HOST)
             ifa = ifa_ifwithdstaddr(dst);
         if (ifa == 0)
             ifa = ifa_ifwithaddr(gateway);
@@ -497,7 +498,8 @@ rtinit(ifa, cmd, flags)
             rt_maskedcopy(dst, deldst, ifa->ifa_netmask);
             dst = deldst;
         }
-        if (rt = rtalloc1(dst, 0)) {
+        rt = rtalloc1(dst, 0);
+        if (rt) {
             rt->rt_refcnt--;
             if (rt->rt_ifa != ifa) {
                 if (m)

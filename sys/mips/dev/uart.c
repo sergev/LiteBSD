@@ -29,6 +29,7 @@
 #include <sys/proc.h>
 #include <sys/conf.h>
 #include <sys/file.h>
+#include <sys/systm.h>
 
 #include <mips/dev/device.h>
 #include <machine/pic32mz.h>
@@ -99,6 +100,7 @@ static const char pin_name[16] = "?ABCDEFGHJK?????";
  * Control modem signals.
  * No hardware modem signals are actually present.
  */
+int
 uartmctl(dev, bits, how)
     dev_t dev;
     int bits, how;
@@ -147,7 +149,7 @@ uartparam(tp, t)
     /* Check whether the port is configured. */
     if (! reg) {
         if (tp->t_dev != cn_dev)
-            return;
+            return ENXIO;
         reg = uart_base[unit];
     }
 
@@ -415,8 +417,6 @@ void
 uartstop(tp, flag)
     struct tty *tp;
 {
-    int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = tp->t_sc;
     int s;
 
     s = spltty();
@@ -471,7 +471,7 @@ uartintr(dev)
  * Get a char off the appropriate line via. a busy wait loop.
  */
 int
-uartGetc(dev)
+uart_getc(dev)
     dev_t dev;
 {
     int unit = minor(dev);
@@ -505,7 +505,7 @@ uartGetc(dev)
  * Send a char on a port, via a busy wait loop.
  */
 void
-uartPutc(dev, c)
+uart_putc(dev, c)
     dev_t dev;
     int c;
 {
@@ -671,6 +671,7 @@ static void assign_tx(int channel, int pin)
  * Test to see if device is present.
  * Return true if found and initialized ok.
  */
+int
 uartprobe(config)
     struct scsi_device *config;
 {

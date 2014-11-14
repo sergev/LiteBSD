@@ -95,7 +95,7 @@ lf_setlock(lock)
     /*
      * Scan lock list for this file looking for locks that would block us.
      */
-    while (block = lf_getblock(lock)) {
+    while ((block = lf_getblock(lock))) {
         /*
          * Free the structure and return if nonblocking.
          */
@@ -159,7 +159,8 @@ lf_setlock(lock)
             lf_printlist("lf_setlock", block);
         }
 #endif /* LOCKF_DEBUG */
-        if (error = tsleep((caddr_t)lock, priority, lockstr, 0)) {
+        error = tsleep((caddr_t)lock, priority, lockstr, 0);
+        if (error) {
             /*
              * We may have been awakened by a signal (in
              * which case we must remove ourselves from the
@@ -187,7 +188,8 @@ lf_setlock(lock)
     block = ip->i_lockf;
     needtolink = 1;
     for (;;) {
-        if (ovcase = lf_findoverlap(block, lock, SELF, &prev, &overlap))
+        ovcase = lf_findoverlap(block, lock, SELF, &prev, &overlap);
+        if (ovcase)
             block = overlap->lf_next;
         /*
          * Six cases:
@@ -246,7 +248,7 @@ lf_setlock(lock)
                 overlap->lf_type == F_WRLCK) {
                 lf_wakelock(overlap);
             } else {
-                while (ltmp = overlap->lf_blkhd.tqh_first) {
+                while ((ltmp = overlap->lf_blkhd.tqh_first)) {
                     TAILQ_REMOVE(&overlap->lf_blkhd, ltmp,
                         lf_block);
                     TAILQ_INSERT_TAIL(&lock->lf_blkhd,
@@ -325,7 +327,7 @@ lf_clearlock(unlock)
         lf_print("lf_clearlock", unlock);
 #endif /* LOCKF_DEBUG */
     prev = &ip->i_lockf;
-    while (ovcase = lf_findoverlap(lf, unlock, SELF, &prev, &overlap)) {
+    while ((ovcase = lf_findoverlap(lf, unlock, SELF, &prev, &overlap))) {
         /*
          * Wakeup the list of locks to be retried.
          */
@@ -388,7 +390,8 @@ lf_getlock(lock, fl)
         lf_print("lf_getlock", lock);
 #endif /* LOCKF_DEBUG */
 
-    if (block = lf_getblock(lock)) {
+    block = lf_getblock(lock);
+    if (block) {
         fl->l_type = block->lf_type;
         fl->l_whence = SEEK_SET;
         fl->l_start = block->lf_start;
@@ -418,7 +421,7 @@ lf_getblock(lock)
     int ovcase;
 
     prev = &lock->lf_inode->i_lockf;
-    while (ovcase = lf_findoverlap(lf, lock, OTHERS, &prev, &overlap)) {
+    while ((ovcase = lf_findoverlap(lf, lock, OTHERS, &prev, &overlap))) {
         /*
          * We've found an overlap, see if it blocks us
          */
@@ -603,7 +606,7 @@ lf_wakelock(listhead)
 {
     register struct lockf *wakelock;
 
-    while (wakelock = listhead->lf_blkhd.tqh_first) {
+    while ((wakelock = listhead->lf_blkhd.tqh_first)) {
         TAILQ_REMOVE(&listhead->lf_blkhd, wakelock, lf_block);
         wakelock->lf_next = NOLOCKF;
 #ifdef LOCKF_DEBUG
@@ -622,7 +625,7 @@ lf_print(tag, lock)
     char *tag;
     register struct lockf *lock;
 {
-    
+
     printf("%s: lock 0x%lx for ", tag, lock);
     if (lock->lf_flags & F_POSIX)
         printf("proc %d", ((struct proc *)(lock->lf_id))->p_pid);

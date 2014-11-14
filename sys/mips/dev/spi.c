@@ -27,6 +27,7 @@
 #include <sys/param.h>
 #include <sys/proc.h>
 #include <sys/spi.h>
+#include <sys/systm.h>
 
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
@@ -293,7 +294,8 @@ void spi_bulk_rw(struct spiio *io, unsigned int nbytes, unsigned char *data)
     unsigned int i;
 
     for(i=0; i<nbytes; i++) {
-        *data++ = spi_transfer(io, *data);
+        *data = spi_transfer(io, *data);
+        data++;
     }
 }
 
@@ -607,10 +609,6 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
     unsigned char *cval = (unsigned char *)addr;
     struct spiio *io;
     int nelem;
-    static unsigned volatile *const tris[8] = {
-        0, &TRISA,&TRISB,&TRISC,&TRISD,&TRISE,&TRISF,&TRISG,
-    };
-    int mask, portnum;
 
     //PRINTDBG ("spi%d: ioctl (cmd=%08x, addr=%08x)\n", channel+1, cmd, addr);
     if (channel >= NSPI)
@@ -642,10 +640,6 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         return 0;
 
     case SPICTL_SETSELPIN:      /* set select pin */
-        mask = 1 << ((unsigned int) addr & 15);
-        portnum = ((unsigned int) addr >> 8) & 7;
-        if (! portnum)
-            return 0;
         spi_set_cspin(io, (unsigned) addr & 0xFF);
         return 0;
 

@@ -40,6 +40,7 @@ struct vmspace;
 struct vmtotal;
 struct mount;
 struct vnode;
+struct swapon_args;
 
 #ifdef KGDB
 void    chgkprot __P((caddr_t, int, int));
@@ -81,7 +82,7 @@ int         svm_deallocate __P((struct proc *, void *, int *));
 int         svm_inherit __P((struct proc *, void *, int *));
 int         svm_protect __P((struct proc *, void *, int *));
 void        swapinit __P((void));
-int         swapon __P((struct proc *, void *, int *));
+int         swapon __P((struct proc *, struct swapon_args *, int *));
 void        swapout __P((struct proc *));
 void        swapout_threads __P((void));
 int         swfree __P((struct proc *, int));
