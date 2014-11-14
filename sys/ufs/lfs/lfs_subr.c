@@ -40,6 +40,7 @@
 #include <sys/mount.h>
 #include <sys/malloc.h>
 #include <sys/proc.h>
+#include <sys/systm.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
@@ -72,7 +73,8 @@ lfs_blkatoff(ap)
     bsize = blksize(fs, ip, lbn);
 
     *ap->a_bpp = NULL;
-    if (error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp)) {
+    error = bread(ap->a_vp, lbn, bsize, NOCRED, &bp);
+    if (error) {
         brelse(bp);
         return (error);
     }
@@ -95,14 +97,15 @@ lfs_seglock(fs, flags)
     struct segment *sp;
     int s;
 
-    if (fs->lfs_seglock)
+    if (fs->lfs_seglock) {
         if (fs->lfs_lockpid == curproc->p_pid) {
             ++fs->lfs_seglock;
             fs->lfs_sp->seg_flags |= flags;
-            return;         
+            return;
         } else while (fs->lfs_seglock)
             (void)tsleep(&fs->lfs_seglock, PRIBIO + 1,
                 "lfs seglock", 0);
+    }
 
     fs->lfs_seglock = 1;
     fs->lfs_lockpid = curproc->p_pid;

@@ -245,8 +245,8 @@ struct segsum {
     ((int)((loc) & (fs)->lfs_ffmask))
 #define fsbtodb(fs, b)      ((b) << (fs)->lfs_fsbtodb)
 #define dbtofsb(fs, b)      ((b) >> (fs)->lfs_fsbtodb)
-#define fragstodb(fs, b)    ((b) << (fs)->lfs_fsbtodb - (fs)->lfs_fbshift)
-#define dbtofrags(fs, b)    ((b) >> (fs)->lfs_fsbtodb - (fs)->lfs_fbshift)
+#define fragstodb(fs, b)    ((b) << ((fs)->lfs_fsbtodb - (fs)->lfs_fbshift))
+#define dbtofrags(fs, b)    ((b) >> ((fs)->lfs_fsbtodb - (fs)->lfs_fbshift))
 #define lblkno(fs, loc)     ((loc) >> (fs)->lfs_bshift)
 #define lblktosize(fs, blk) ((blk) << (fs)->lfs_bshift)
 #define numfrags(fs, loc)       /* calculates (loc / fs->lfs_fsize) */ \
@@ -286,9 +286,9 @@ struct segsum {
 #define LFS_IENTRY(IP, F, IN, BP) { \
     int _e; \
     VTOI((F)->lfs_ivnode)->i_flag |= IN_ACCESS; \
-    if (_e = bread((F)->lfs_ivnode, \
+    if ((_e = bread((F)->lfs_ivnode, \
         (IN) / (F)->lfs_ifpb + (F)->lfs_cleansz + (F)->lfs_segtabsz,\
-        (F)->lfs_bsize, NOCRED, &(BP))) \
+        (F)->lfs_bsize, NOCRED, &(BP)))) \
         panic("lfs: ifile read %d", _e); \
     (IP) = (IFILE *)(BP)->b_data + (IN) % (F)->lfs_ifpb; \
 }
@@ -297,11 +297,11 @@ struct segsum {
 #define LFS_SEGENTRY(SP, F, IN, BP) { \
     int _e; \
     VTOI((F)->lfs_ivnode)->i_flag |= IN_ACCESS; \
-    if (_e = bread((F)->lfs_ivnode, \
+    if ((_e = bread((F)->lfs_ivnode, \
         ((IN) >> (F)->lfs_sushift) + (F)->lfs_cleansz, \
-        (F)->lfs_bsize, NOCRED, &(BP))) \
+        (F)->lfs_bsize, NOCRED, &(BP)))) \
         panic("lfs: ifile read: %d", _e); \
-    (SP) = (SEGUSE *)(BP)->b_data + ((IN) & (F)->lfs_sepb - 1); \
+    (SP) = (SEGUSE *)(BP)->b_data + ((IN) & ((F)->lfs_sepb - 1)); \
 }
 
 /*

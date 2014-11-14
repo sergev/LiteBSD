@@ -96,7 +96,7 @@ extern struct mbuf *nfsm_reqh();
         if (t1 >= (s)) { \
             (a) = (c)(dpos); \
             dpos += (s); \
-        } else if (t1 = nfsm_disct(&md, &dpos, (s), t1, &cp2)) { \
+        } else if ((t1 = nfsm_disct(&md, &dpos, (s), t1, &cp2))) { \
             error = t1; \
             m_freem(mrep); \
             goto nfsmout; \
@@ -113,8 +113,8 @@ extern struct mbuf *nfsm_reqh();
                 *(tl + ((t2>>2) - 2)) = 0; \
                 bcopy((caddr_t)VTONFS(v)->n_fhp,(caddr_t)tl, \
                     VTONFS(v)->n_fhsize); \
-            } else if (t2 = nfsm_strtmbuf(&mb, &bpos, \
-                (caddr_t)VTONFS(v)->n_fhp, VTONFS(v)->n_fhsize)) { \
+            } else if ((t2 = nfsm_strtmbuf(&mb, &bpos, \
+                (caddr_t)VTONFS(v)->n_fhp, VTONFS(v)->n_fhsize))) { \
                 error = t2; \
                 m_freem(mreq); \
                 goto nfsmout; \
@@ -150,8 +150,8 @@ extern struct mbuf *nfsm_reqh();
             (f) = 1; \
         if (f) { \
             nfsm_getfh(ttfhp, ttfhsize, (v3)); \
-            if (t1 = nfs_nget((d)->v_mount, ttfhp, ttfhsize, \
-                &ttnp)) { \
+            if ((t1 = nfs_nget((d)->v_mount, ttfhp, ttfhsize, \
+                &ttnp))) { \
                 error = t1; \
                 m_freem(mrep); \
                 goto nfsmout; \
@@ -184,7 +184,7 @@ extern struct mbuf *nfsm_reqh();
 
 #define nfsm_loadattr(v, a) \
         { struct vnode *ttvp = (v); \
-        if (t1 = nfs_loadattrcache(&ttvp, &md, &dpos, (a))) { \
+        if ((t1 = nfs_loadattrcache(&ttvp, &md, &dpos, (a)))) { \
             error = t1; \
             m_freem(mrep); \
             goto nfsmout; \
@@ -194,9 +194,9 @@ extern struct mbuf *nfsm_reqh();
 #define nfsm_postop_attr(v, f) \
         { struct vnode *ttvp = (v); \
         nfsm_dissect(tl, u_long *, NFSX_UNSIGNED); \
-        if ((f) = fxdr_unsigned(int, *tl)) { \
-            if (t1 = nfs_loadattrcache(&ttvp, &md, &dpos, \
-                (struct vattr *)0)) { \
+        if (((f) = fxdr_unsigned(int, *tl))) { \
+            if ((t1 = nfs_loadattrcache(&ttvp, &md, &dpos, \
+                (struct vattr *)0))) { \
                 error = t1; \
                 (f) = 0; \
                 m_freem(mrep); \
@@ -273,7 +273,7 @@ extern struct mbuf *nfsm_reqh();
         }
 
 #define nfsm_uiotom(p,s) \
-        if (t1 = nfsm_uiotombuf((p),&mb,(s),&bpos)) { \
+        if ((t1 = nfsm_uiotombuf((p),&mb,(s),&bpos))) { \
             error = t1; \
             m_freem(mreq); \
             goto nfsmout; \
@@ -283,13 +283,13 @@ extern struct mbuf *nfsm_reqh();
         mb = mreq = nfsm_reqh((v),(a),(s),&bpos)
 
 #define nfsm_reqdone    m_freem(mrep); \
-        nfsmout: 
+        nfsmout:
 
 #define nfsm_rndup(a)   (((a)+3)&(~0x3))
 
 #define nfsm_request(v, t, p, c)    \
-        if (error = nfs_request((v), mreq, (t), (p), \
-           (c), &mrep, &md, &dpos)) { \
+        if ((error = nfs_request((v), mreq, (t), (p), \
+           (c), &mrep, &md, &dpos))) { \
             if (error & NFSERR_RETERR) \
                 error &= ~NFSERR_RETERR; \
             else \
@@ -308,7 +308,7 @@ extern struct mbuf *nfsm_reqh();
             *tl++ = txdr_unsigned(s); \
             *(tl+((t2>>2)-2)) = 0; \
             bcopy((caddr_t)(a), (caddr_t)tl, (s)); \
-        } else if (t2 = nfsm_strtmbuf(&mb, &bpos, (a), (s))) { \
+        } else if ((t2 = nfsm_strtmbuf(&mb, &bpos, (a), (s)))) { \
             error = t2; \
             m_freem(mreq); \
             goto nfsmout; \
@@ -349,7 +349,7 @@ extern struct mbuf *nfsm_reqh();
         { t1 = mtod(md, caddr_t)+md->m_len-dpos; \
         if (t1 >= (s)) { \
             dpos += (s); \
-        } else if (t1 = nfs_adv(&md, &dpos, (s), t1)) { \
+        } else if ((t1 = nfs_adv(&md, &dpos, (s), t1))) { \
             error = t1; \
             m_freem(mrep); \
             goto nfsmout; \

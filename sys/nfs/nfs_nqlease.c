@@ -605,7 +605,6 @@ nqnfs_serverd()
     register struct nqhost *lph;
     struct nqlease *nextlp;
     struct nqm *lphnext, *olphnext;
-    struct mbuf *n;
     int i, len, ok;
 
     for (lp = nqtimerhead.cqh_first; lp != (void *)&nqtimerhead;
@@ -649,6 +648,7 @@ nqnfs_serverd()
             i = 0;
             ok = 1;
             while (ok && (lph->lph_flag & LC_VALID)) {
+                struct mbuf *n __attribute__((unused));
                 if (lph->lph_flag & LC_CLTP)
                     MFREE(lph->lph_nam, n);
                 if (lph->lph_flag & LC_SREF)
@@ -706,7 +706,7 @@ nqnfsrv_getlease(nfsd, slp, procp, mrq)
     caddr_t bpos;
     int error = 0;
     char *cp2;
-    struct mbuf *mb, *mb2, *mreq;
+    struct mbuf *mb, *mb2, *mreq __attribute__((unused));
     int flags, rdonly, cache;
 
     fhp = &nfh.fh_generic;
@@ -751,7 +751,6 @@ nqnfsrv_vacated(nfsd, slp, procp, mrq)
     struct mbuf *mrep = nfsd->nd_mrep, *md = nfsd->nd_md;
     struct mbuf *nam = nfsd->nd_nam;
     caddr_t dpos = nfsd->nd_dpos;
-    struct ucred *cred = &nfsd->nd_cr;
     register struct nqlease *lp;
     register struct nqhost *lph;
     struct nqlease *tlp = (struct nqlease *)0;
@@ -760,7 +759,7 @@ nqnfsrv_vacated(nfsd, slp, procp, mrq)
     register u_long *tl;
     register long t1;
     struct nqm *lphnext;
-    struct mbuf *mreq, *mb;
+    struct mbuf *mb, *mreq __attribute__((unused));
     int error = 0, i, len, ok, gotit = 0, cache = 0;
     char *cp2, *bpos;
     u_quad_t frev;
@@ -836,7 +835,7 @@ nqnfs_getlease(vp, rwflag, cred, p)
     struct mbuf *mreq, *mrep, *md, *mb, *mb2;
     int cachable;
     u_quad_t frev;
-    
+
     nfsstats.rpccnt[NQNFSPROC_GETLEASE]++;
     mb = mreq = nfsm_reqh(vp, NQNFSPROC_GETLEASE, NFSX_V3FH+2*NFSX_UNSIGNED,
          &bpos);
@@ -872,14 +871,14 @@ nqnfs_vacated(vp, cred)
     register struct mbuf *m;
     register int i;
     register u_long *tl;
-    register long t1, t2;
+    register long t2;
     caddr_t bpos;
     u_long xid;
     int error = 0;
     struct mbuf *mreq, *mb, *mb2, *mheadend;
     struct nfsmount *nmp;
     struct nfsreq myrep;
-    
+
     nmp = VFSTONFS(vp->v_mount);
     nfsstats.rpccnt[NQNFSPROC_VACATED]++;
     nfsm_reqhead(vp, NQNFSPROC_VACATED, NFSX_V3FH);
@@ -928,7 +927,7 @@ nqnfs_callback(nmp, mrep, md, dpos)
     struct nfssvc_sock *slp;
     struct nfsrv_descript ndesc;
     register struct nfsrv_descript *nfsd = &ndesc;
-    struct mbuf **mrq = (struct mbuf **)0, *mb, *mreq;
+    struct mbuf **mrq = (struct mbuf **)0, *mb, *mreq __attribute__((unused));
     int error = 0, cache = 0;
     char *cp2, *bpos;
     u_quad_t frev;
@@ -1132,7 +1131,7 @@ nqnfs_clientd(nmp, cred, ncd, flag, argp, p)
  * Called from the settimeofday() syscall.
  */
 void
-nqnfs_lease_updatetime(deltat)
+lease_updatetime(deltat)
     register int deltat;
 {
     struct proc *p = curproc;   /* XXX */

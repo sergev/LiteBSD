@@ -94,10 +94,12 @@ portal_mount(mp, path, data, ndp, p)
     if (mp->mnt_flag & MNT_UPDATE)
         return (EOPNOTSUPP);
 
-    if (error = copyin(data, (caddr_t) &args, sizeof(struct portal_args)))
+    error = copyin(data, (caddr_t) &args, sizeof(struct portal_args));
+    if (error)
         return (error);
 
-    if (error = getsock(p->p_fd, args.pa_socket, &fp))
+    error = getsock(p->p_fd, args.pa_socket, &fp);
+    if (error)
         return (error);
     so = (struct socket *) fp->f_data;
     if (so->so_proto->pr_domain->dom_family != AF_UNIX)
@@ -166,13 +168,14 @@ portal_unmount(mp, mntflags, p)
      * moment, but who knows...
      */
 #ifdef notyet
-    mntflushbuf(mp, 0); 
+    mntflushbuf(mp, 0);
     if (mntinvalbuf(mp, 1))
         return (EBUSY);
 #endif
     if (rootvp->v_usecount > 1)
         return (EBUSY);
-    if (error = vflush(mp, rootvp, flags))
+    error = vflush(mp, rootvp, flags);
+    if (error)
         return (error);
 
     /*

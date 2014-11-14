@@ -37,6 +37,7 @@
 #include <sys/systm.h>
 #include <sys/namei.h>
 #include <sys/resourcevar.h>
+#include <sys/signalvar.h>
 #include <sys/kernel.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -223,6 +224,7 @@ struct vnodeopv_desc lfs_fifoop_opv_desc =
  * Synch an open file.
  */
 /* ARGSUSED */
+int
 lfs_fsync(ap)
     struct vop_fsync_args /* {
         struct vnode *a_vp;
@@ -494,7 +496,8 @@ lfs_reclaim(ap)
     register struct vnode *vp = ap->a_vp;
     int error;
 
-    if (error = ufs_reclaim(vp, ap->a_p))
+    error = ufs_reclaim(vp, ap->a_p);
+    if (error)
         return (error);
     FREE(vp->v_data, M_LFSNODE);
     vp->v_data = NULL;

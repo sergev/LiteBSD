@@ -249,7 +249,7 @@ mfs_close(ap)
     /*
      * Finish any pending I/O requests.
      */
-    while (bp = mfsp->mfs_buflist) {
+    while ((bp = mfsp->mfs_buflist)) {
         mfsp->mfs_buflist = bp->b_actf;
         mfs_doio(bp, mfsp->mfs_baseoff);
         wakeup((caddr_t)bp);
@@ -259,7 +259,8 @@ mfs_close(ap)
      * we must invalidate any in core blocks, so that
      * we can, free up its vnode.
      */
-    if (error = vinvalbuf(vp, 1, ap->a_cred, ap->a_p, 0, 0))
+    error = vinvalbuf(vp, 1, ap->a_cred, ap->a_p, 0, 0);
+    if (error)
         return (error);
     /*
      * There should be no way to have any more uses of this
@@ -336,7 +337,6 @@ mfs_print(ap)
 int
 mfs_badop()
 {
-
     panic("mfs_badop called\n");
     /* NOTREACHED */
 }
@@ -344,9 +344,9 @@ mfs_badop()
 /*
  * Memory based filesystem initialization.
  */
+int
 mfs_init(vfsp)
     struct vfsconf *vfsp;
 {
-
-    return;
+    return 0;
 }

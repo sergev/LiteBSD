@@ -55,13 +55,59 @@ ktrgetheader(type)
     register struct ktr_header *kth;
     struct proc *p = curproc;   /* XXX */
 
-    MALLOC(kth, struct ktr_header *, sizeof (struct ktr_header), 
+    MALLOC(kth, struct ktr_header *, sizeof (struct ktr_header),
         M_TEMP, M_WAITOK);
     kth->ktr_type = type;
     microtime(&kth->ktr_time);
     kth->ktr_pid = p->p_pid;
     bcopy(p->p_comm, kth->ktr_comm, MAXCOMLEN);
     return (kth);
+}
+
+static void
+ktrwrite(vp, kth)
+    struct vnode *vp;
+    register struct ktr_header *kth;
+{
+    struct uio auio;
+    struct iovec aiov[2];
+    register struct proc *p = curproc;  /* XXX */
+    int error;
+
+    if (vp == NULL)
+        return;
+    auio.uio_iov = &aiov[0];
+    auio.uio_offset = 0;
+    auio.uio_segflg = UIO_SYSSPACE;
+    auio.uio_rw = UIO_WRITE;
+    aiov[0].iov_base = (caddr_t)kth;
+    aiov[0].iov_len = sizeof(struct ktr_header);
+    auio.uio_resid = sizeof(struct ktr_header);
+    auio.uio_iovcnt = 1;
+    auio.uio_procp = (struct proc *)0;
+    if (kth->ktr_len > 0) {
+        auio.uio_iovcnt++;
+        aiov[1].iov_base = kth->ktr_buf;
+        aiov[1].iov_len = kth->ktr_len;
+        auio.uio_resid += kth->ktr_len;
+    }
+    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+    error = VOP_WRITE(vp, &auio, IO_UNIT|IO_APPEND, p->p_ucred);
+    VOP_UNLOCK(vp, 0, p);
+    if (!error)
+        return;
+    /*
+     * If error encountered, give up tracing on this vnode.
+     */
+    log(LOG_NOTICE, "ktrace write failed, errno %d, tracing stopped\n",
+        error);
+    for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
+        if (p->p_tracep == vp) {
+            p->p_tracep = NULL;
+            p->p_traceflag = 0;
+            vrele(vp);
+        }
+    }
 }
 
 void
@@ -72,7 +118,7 @@ ktrsyscall(vp, code, argsize, args)
 {
     struct  ktr_header *kth;
     struct  ktr_syscall *ktp;
-    register len = sizeof(struct ktr_syscall) + argsize;
+    register int len = sizeof(struct ktr_syscall) + argsize;
     struct proc *p = curproc;   /* XXX */
     register_t *argp;
     int i;
@@ -147,7 +193,7 @@ ktrgenio(vp, fd, rw, iov, len, error)
     register caddr_t cp;
     register int resid = len, cnt;
     struct proc *p = curproc;   /* XXX */
-    
+
     if (error)
         return;
     p->p_traceflag |= KTRFAC_ACTIVE;
@@ -222,6 +268,102 @@ ktrcsw(vp, out, user)
     p->p_traceflag &= ~KTRFAC_ACTIVE;
 }
 
+/*
+ * Return true if caller has permission to set the ktracing state
+ * of target.  Essentially, the target can't possess any
+ * more permissions than the caller.  KTRFAC_ROOT signifies that
+ * root previously set the tracing status on the target process, and
+ * so, only root may further change it.
+ *
+ * TODO: check groups.  use caller effective gid.
+ */
+static int
+ktrcanset(callp, targetp)
+    struct proc *callp, *targetp;
+{
+    register struct pcred *caller = callp->p_cred;
+    register struct pcred *target = targetp->p_cred;
+
+    if ((caller->pc_ucred->cr_uid == target->p_ruid &&
+         target->p_ruid == target->p_svuid &&
+         caller->p_rgid == target->p_rgid &&    /* XXX */
+         target->p_rgid == target->p_svgid &&
+         (targetp->p_traceflag & KTRFAC_ROOT) == 0) ||
+         caller->pc_ucred->cr_uid == 0)
+        return (1);
+
+    return (0);
+}
+
+static int
+ktrops(curp, p, ops, facs, vp)
+    struct proc *p, *curp;
+    int ops, facs;
+    struct vnode *vp;
+{
+
+    if (!ktrcanset(curp, p))
+        return (0);
+    if (ops == KTROP_SET) {
+        if (p->p_tracep != vp) {
+            /*
+             * if trace file already in use, relinquish
+             */
+            if (p->p_tracep != NULL)
+                vrele(p->p_tracep);
+            VREF(vp);
+            p->p_tracep = vp;
+        }
+        p->p_traceflag |= facs;
+        if (curp->p_ucred->cr_uid == 0)
+            p->p_traceflag |= KTRFAC_ROOT;
+    } else {
+        /* KTROP_CLEAR */
+        if (((p->p_traceflag &= ~facs) & KTRFAC_MASK) == 0) {
+            /* no more tracing */
+            p->p_traceflag = 0;
+            if (p->p_tracep != NULL) {
+                vrele(p->p_tracep);
+                p->p_tracep = NULL;
+            }
+        }
+    }
+
+    return (1);
+}
+
+static int
+ktrsetchildren(curp, top, ops, facs, vp)
+    struct proc *curp, *top;
+    int ops, facs;
+    struct vnode *vp;
+{
+    register struct proc *p;
+    register int ret = 0;
+
+    p = top;
+    for (;;) {
+        ret |= ktrops(curp, p, ops, facs, vp);
+        /*
+         * If this process has children, descend to them next,
+         * otherwise do any siblings, and if done with this level,
+         * follow back up the tree (but not past top).
+         */
+        if (p->p_children.lh_first)
+            p = p->p_children.lh_first;
+        else for (;;) {
+            if (p == top)
+                return (ret);
+            if (p->p_sibling.le_next) {
+                p = p->p_sibling.le_next;
+                break;
+            }
+            p = p->p_pptr;
+        }
+    }
+    /*NOTREACHED*/
+}
+
 /* Interface and common routines */
 
 /*
@@ -240,7 +382,7 @@ ktrace(curp, uap, retval)
     register_t *retval;
 {
     register struct vnode *vp = NULL;
-    register struct proc *p;
+    register struct proc *p = NULL;
     struct pgrp *pg;
     int facs = SCARG(uap, facs) & ~KTRFAC_ROOT;
     int ops = KTROP(SCARG(uap, ops));
@@ -256,7 +398,8 @@ ktrace(curp, uap, retval)
          */
         NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, SCARG(uap, fname),
             curp);
-        if (error = vn_open(&nd, FREAD|FWRITE, 0)) {
+        error = vn_open(&nd, FREAD|FWRITE, 0);
+        if (error) {
             curp->p_traceflag &= ~KTRFAC_ACTIVE;
             return (error);
         }
@@ -292,7 +435,7 @@ ktrace(curp, uap, retval)
         error = EINVAL;
         goto done;
     }
-    /* 
+    /*
      * do it
      */
     if (SCARG(uap, pid) < 0) {
@@ -307,9 +450,9 @@ ktrace(curp, uap, retval)
         for (p = pg->pg_members.lh_first; p != 0; p = p->p_pglist.le_next)
             if (descend)
                 ret |= ktrsetchildren(curp, p, ops, facs, vp);
-            else 
+            else
                 ret |= ktrops(curp, p, ops, facs, vp);
-                    
+
     } else {
         /*
          * by pid
@@ -331,145 +474,6 @@ done:
         (void) vn_close(vp, FWRITE, curp->p_ucred, curp);
     curp->p_traceflag &= ~KTRFAC_ACTIVE;
     return (error);
-}
-
-int
-ktrops(curp, p, ops, facs, vp)
-    struct proc *p, *curp;
-    int ops, facs;
-    struct vnode *vp;
-{
-
-    if (!ktrcanset(curp, p))
-        return (0);
-    if (ops == KTROP_SET) {
-        if (p->p_tracep != vp) { 
-            /*
-             * if trace file already in use, relinquish
-             */
-            if (p->p_tracep != NULL)
-                vrele(p->p_tracep);
-            VREF(vp);
-            p->p_tracep = vp;
-        }
-        p->p_traceflag |= facs;
-        if (curp->p_ucred->cr_uid == 0)
-            p->p_traceflag |= KTRFAC_ROOT;
-    } else {    
-        /* KTROP_CLEAR */
-        if (((p->p_traceflag &= ~facs) & KTRFAC_MASK) == 0) {
-            /* no more tracing */
-            p->p_traceflag = 0;
-            if (p->p_tracep != NULL) {
-                vrele(p->p_tracep);
-                p->p_tracep = NULL;
-            }
-        }
-    }
-
-    return (1);
-}
-
-ktrsetchildren(curp, top, ops, facs, vp)
-    struct proc *curp, *top;
-    int ops, facs;
-    struct vnode *vp;
-{
-    register struct proc *p;
-    register int ret = 0;
-
-    p = top;
-    for (;;) {
-        ret |= ktrops(curp, p, ops, facs, vp);
-        /*
-         * If this process has children, descend to them next,
-         * otherwise do any siblings, and if done with this level,
-         * follow back up the tree (but not past top).
-         */
-        if (p->p_children.lh_first)
-            p = p->p_children.lh_first;
-        else for (;;) {
-            if (p == top)
-                return (ret);
-            if (p->p_sibling.le_next) {
-                p = p->p_sibling.le_next;
-                break;
-            }
-            p = p->p_pptr;
-        }
-    }
-    /*NOTREACHED*/
-}
-
-ktrwrite(vp, kth)
-    struct vnode *vp;
-    register struct ktr_header *kth;
-{
-    struct uio auio;
-    struct iovec aiov[2];
-    register struct proc *p = curproc;  /* XXX */
-    int error;
-
-    if (vp == NULL)
-        return;
-    auio.uio_iov = &aiov[0];
-    auio.uio_offset = 0;
-    auio.uio_segflg = UIO_SYSSPACE;
-    auio.uio_rw = UIO_WRITE;
-    aiov[0].iov_base = (caddr_t)kth;
-    aiov[0].iov_len = sizeof(struct ktr_header);
-    auio.uio_resid = sizeof(struct ktr_header);
-    auio.uio_iovcnt = 1;
-    auio.uio_procp = (struct proc *)0;
-    if (kth->ktr_len > 0) {
-        auio.uio_iovcnt++;
-        aiov[1].iov_base = kth->ktr_buf;
-        aiov[1].iov_len = kth->ktr_len;
-        auio.uio_resid += kth->ktr_len;
-    }
-    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-    error = VOP_WRITE(vp, &auio, IO_UNIT|IO_APPEND, p->p_ucred);
-    VOP_UNLOCK(vp, 0, p);
-    if (!error)
-        return;
-    /*
-     * If error encountered, give up tracing on this vnode.
-     */
-    log(LOG_NOTICE, "ktrace write failed, errno %d, tracing stopped\n",
-        error);
-    for (p = allproc.lh_first; p != 0; p = p->p_list.le_next) {
-        if (p->p_tracep == vp) {
-            p->p_tracep = NULL;
-            p->p_traceflag = 0;
-            vrele(vp);
-        }
-    }
-}
-
-/*
- * Return true if caller has permission to set the ktracing state
- * of target.  Essentially, the target can't possess any
- * more permissions than the caller.  KTRFAC_ROOT signifies that
- * root previously set the tracing status on the target process, and 
- * so, only root may further change it.
- *
- * TODO: check groups.  use caller effective gid.
- */
-ktrcanset(callp, targetp)
-    struct proc *callp, *targetp;
-{
-    register struct pcred *caller = callp->p_cred;
-    register struct pcred *target = targetp->p_cred;
-
-    if ((caller->pc_ucred->cr_uid == target->p_ruid &&
-         target->p_ruid == target->p_svuid &&
-         caller->p_rgid == target->p_rgid &&    /* XXX */
-         target->p_rgid == target->p_svgid &&
-         (targetp->p_traceflag & KTRFAC_ROOT) == 0) ||
-         caller->pc_ucred->cr_uid == 0)
-        return (1);
-
-    return (0);
 }
 
 #endif

@@ -285,8 +285,8 @@ vm_map_entry_create(map)
 
     isspecial = (map == kernel_map || map == kmem_map ||
              map == mb_map || map == pager_map);
-    if (isspecial && map->entries_pageable ||
-        !isspecial && !map->entries_pageable)
+    if ((isspecial && map->entries_pageable) ||
+        (!isspecial && !map->entries_pageable))
         panic("vm_map_entry_create: bogus map");
 #endif
     if (map->entries_pageable) {
@@ -319,8 +319,8 @@ vm_map_entry_dispose(map, entry)
 
     isspecial = (map == kernel_map || map == kmem_map ||
              map == mb_map || map == pager_map);
-    if (isspecial && map->entries_pageable ||
-        !isspecial && !map->entries_pageable)
+    if ((isspecial && map->entries_pageable) ||
+        (!isspecial && !map->entries_pageable))
         panic("vm_map_entry_dispose: bogus map");
 #endif
     if (map->entries_pageable) {

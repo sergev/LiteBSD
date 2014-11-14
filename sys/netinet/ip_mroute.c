@@ -61,6 +61,7 @@ int ip_mrtproto;                /* for netstat only */
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/time.h>
+#include <sys/systm.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -511,7 +512,8 @@ add_mrt(mrtcp)
     u_long hash;
     int s;
 
-    if (rt = mrtfind(mrtcp->mrtc_origin)) {
+    rt = mrtfind(mrtcp->mrtc_origin);
+    if (rt) {
         /* Just update the route */
         s = splnet();
         rt->mrt_parent = mrtcp->mrtc_parent;
@@ -697,7 +699,8 @@ ip_mforward(m, ifp)
     /*
      * Don't forward if we don't have a route for the packet's origin.
      */
-    if (!(rt = mrtfind(ip->ip_src))) {
+    rt = mrtfind(ip->ip_src);
+    if (!rt) {
         mrtstat.mrts_no_route++;
         return ((int)tunnel_src);
     }
@@ -749,7 +752,6 @@ phyint_send(m, vifp)
     register struct ip *ip = mtod(m, struct ip *);
     register struct mbuf *mb_copy;
     register struct ip_moptions *imo;
-    register int error;
     struct ip_moptions simo;
 
     mb_copy = m_copy(m, 0, M_COPYALL);
@@ -761,7 +763,7 @@ phyint_send(m, vifp)
     imo->imo_multicast_ttl = ip->ip_ttl - 1;
     imo->imo_multicast_loop = 1;
 
-    error = ip_output(mb_copy, NULL, NULL, IP_FORWARDING, imo);
+    ip_output(mb_copy, NULL, NULL, IP_FORWARDING, imo);
 }
 
 static void
@@ -772,7 +774,6 @@ tunnel_send(m, vifp)
     register struct ip *ip = mtod(m, struct ip *);
     register struct mbuf *mb_copy, *mb_opts;
     register struct ip *ip_copy;
-    register int error;
     register u_char *cp;
 
     /*
@@ -784,8 +785,8 @@ tunnel_send(m, vifp)
         return;
     }
 
-    /* 
-     * Get a private copy of the IP header so that changes to some 
+    /*
+     * Get a private copy of the IP header so that changes to some
      * of the IP fields don't damage the original header, which is
      * examined later in ip_input.c.
      */
@@ -829,6 +830,6 @@ tunnel_send(m, vifp)
     cp += 4;
     *(u_long*)cp = ip->ip_dst.s_addr;       /* destination group */
 
-    error = ip_output(mb_opts, NULL, NULL, IP_FORWARDING, NULL);
+    ip_output(mb_opts, NULL, NULL, IP_FORWARDING, NULL);
 }
 #endif

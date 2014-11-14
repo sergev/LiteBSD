@@ -83,6 +83,7 @@ struct vfsops mfs_vfsops = {
 /*
  * Called by main() when mfs is going to be mounted as root.
  */
+int
 mfs_mountroot()
 {
     extern struct vnode *rootvp;
@@ -96,12 +97,14 @@ mfs_mountroot()
     /*
      * Get vnodes for swapdev and rootdev.
      */
-    if ((error = bdevvp(swapdev, &swapdev_vp)) ||
+    error = bdevvp(swapdev, &swapdev_vp);
+    if (error ||
         (error = bdevvp(rootdev, &rootvp))) {
         printf("mfs_mountroot: can't setup bdevvp's");
         return (error);
     }
-    if (error = vfs_rootmountalloc("mfs", "mfs_root", &mp))
+    error = vfs_rootmountalloc("mfs", "mfs_root", &mp);
+    if (error)
         return (error);
     mfsp = malloc(sizeof *mfsp, M_MFSNODE, M_WAITOK);
     rootvp->v_data = mfsp;
@@ -112,7 +115,8 @@ mfs_mountroot()
     mfsp->mfs_vnode = rootvp;
     mfsp->mfs_pid = p->p_pid;
     mfsp->mfs_buflist = (struct buf *)0;
-    if (error = ffs_mountfs(rootvp, mp, p)) {
+    error = ffs_mountfs(rootvp, mp, p);
+    if (error) {
         mp->mnt_vfc->vfc_refcount--;
         vfs_unbusy(mp, p);
         free(mp, M_MOUNT);
@@ -135,6 +139,7 @@ mfs_mountroot()
  * This is called early in boot to set the base address and size
  * of the mini-root.
  */
+int
 mfs_initminiroot(base)
     caddr_t base;
 {
@@ -174,7 +179,8 @@ mfs_mount(mp, path, data, ndp, p)
     u_int size;
     int flags, error;
 
-    if (error = copyin(data, (caddr_t)&args, sizeof (struct mfs_args)))
+    error = copyin(data, (caddr_t)&args, sizeof (struct mfs_args));
+    if (error)
         return (error);
 
     /*
@@ -188,7 +194,8 @@ mfs_mount(mp, path, data, ndp, p)
             flags = WRITECLOSE;
             if (mp->mnt_flag & MNT_FORCE)
                 flags |= FORCECLOSE;
-            if (error = ffs_flushfiles(mp, flags, p))
+            error = ffs_flushfiles(mp, flags, p);
+            if (error)
                 return (error);
         }
         if (fs->fs_ronly && (mp->mnt_flag & MNT_WANTRDWR))
@@ -212,7 +219,8 @@ mfs_mount(mp, path, data, ndp, p)
     mfsp->mfs_vnode = devvp;
     mfsp->mfs_pid = p->p_pid;
     mfsp->mfs_buflist = (struct buf *)0;
-    if (error = ffs_mountfs(devvp, mp, p)) {
+    error = ffs_mountfs(devvp, mp, p);
+    if (error) {
         mfsp->mfs_buflist = (struct buf *)-1;
         vrele(devvp);
         return (error);
@@ -254,7 +262,7 @@ mfs_start(mp, flags, p)
 
     base = mfsp->mfs_baseoff;
     while (mfsp->mfs_buflist != (struct buf *)(-1)) {
-        while (bp = mfsp->mfs_buflist) {
+        while ((bp = mfsp->mfs_buflist)) {
             mfsp->mfs_buflist = bp->b_actf;
             mfs_doio(bp, base);
             wakeup((caddr_t)bp);
@@ -275,6 +283,7 @@ mfs_start(mp, flags, p)
 /*
  * Get file system statistics.
  */
+int
 mfs_statfs(mp, sbp, p)
     struct mount *mp;
     struct statfs *sbp;

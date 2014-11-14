@@ -94,6 +94,12 @@ int     lfs_vptofh __P((struct vnode *, struct fid *));
 int     lfs_vref __P((struct vnode *));
 void    lfs_vunref __P((struct vnode *));
 int     lfs_write __P((struct vop_write_args *));
+void    lfs_writesuper __P((struct lfs *));
+void    lfs_updatemeta __P((struct segment *));
+int     lfs_writeinode __P((struct lfs *, struct segment *, struct inode *));
+int     lfs_writeseg __P((struct lfs *, struct segment *));
+int     lfs_gatherblock __P((struct segment *, struct buf *, int *));
+
 #ifdef DEBUG
 void    lfs_dump_dinode __P((struct dinode *));
 void    lfs_dump_super __P((struct lfs *));

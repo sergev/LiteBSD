@@ -68,10 +68,10 @@ u_long umap_node_hash;
 /*
  * Initialise cache headers
  */
+void
 umapfs_init(vfsp)
     struct vfsconf *vfsp;
 {
-
 #ifdef UMAPFS_DIAGNOSTIC
     printf("umapfs_init\n");        /* printed during system boot */
 #endif
@@ -193,7 +193,8 @@ umap_node_alloc(mp, lowervp, vpp)
     struct vnode *othervp, *vp;
     int error;
 
-    if (error = getnewvnode(VT_UMAP, mp, umap_vnodeop_p, vpp))
+    error = getnewvnode(VT_UMAP, mp, umap_vnodeop_p, vpp);
+    if (error)
         return (error);
     vp = *vpp;
 
@@ -208,7 +209,8 @@ umap_node_alloc(mp, lowervp, vpp)
      * check to see if someone else has beaten us to it.
      * (We could have slept in MALLOC.)
      */
-    if (othervp = umap_node_find(lowervp)) {
+    othervp = umap_node_find(lowervp);
+    if (othervp) {
         FREE(xp, M_TEMP);
         vp->v_type = VBAD;  /* node is discarded */
         vp->v_usecount = 0; /* XXX */
@@ -220,7 +222,6 @@ umap_node_alloc(mp, lowervp, vpp)
     LIST_INSERT_HEAD(hd, xp, umap_hash);
     return (0);
 }
-
 
 /*
  * Try to find an existing umap_node vnode refering
@@ -235,7 +236,8 @@ umap_node_create(mp, targetvp, newvpp)
 {
     struct vnode *aliasvp;
 
-    if (aliasvp = umap_node_find(mp, targetvp)) {
+    aliasvp = umap_node_find(mp, targetvp);
+    if (aliasvp) {
         /*
          * Take another reference to the alias vnode
          */
@@ -255,7 +257,8 @@ umap_node_create(mp, targetvp, newvpp)
         /*
          * Make new vnode reference the umap_node.
          */
-        if (error = umap_node_alloc(mp, targetvp, &aliasvp))
+        error = umap_node_alloc(mp, targetvp, &aliasvp);
+        if (error)
             return (error);
 
         /*
@@ -276,6 +279,7 @@ umap_node_create(mp, targetvp, newvpp)
 
 #ifdef UMAPFS_DIAGNOSTIC
 int umap_checkvp_barrier = 1;
+
 struct vnode *
 umap_checkvp(vp, fil, lno)
     struct vnode *vp;
@@ -364,7 +368,7 @@ umap_mapids(v_mount, credp)
         credp->cr_gid = NULLGROUP;
 #endif
 
-    /* Now we must map each of the set of groups in the cr_groups 
+    /* Now we must map each of the set of groups in the cr_groups
         structure. */
 
     i = 0;

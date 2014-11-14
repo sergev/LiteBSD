@@ -561,6 +561,11 @@ void    nfsrvw_sort __P((gid_t [],int));
 void    nfsrv_setcred __P((struct ucred *,struct ucred *));
 int     nfs_flush __P((struct vnode *,struct ucred *,int,struct proc *,int));
 int     nfs_writebp __P((struct buf *,int));
+int     nfs_fsinfo __P((struct nfsmount *, struct vnode *, struct ucred *,
+                      struct proc *));
+int     nfsrv_writegather __P((struct nfsrv_descript **, struct nfssvc_sock *,
+                             struct proc *, struct mbuf **));
+
 #endif  /* KERNEL */
 
 #endif

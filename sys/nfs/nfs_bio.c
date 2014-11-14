@@ -79,10 +79,9 @@ nfs_bioread(vp, uio, ioflag, cred)
     struct vattr vattr;
     struct proc *p;
     struct nfsmount *nmp = VFSTONFS(vp->v_mount);
-    daddr_t lbn, bn, bn2, rabn;
+    daddr_t lbn, bn, rabn;
     caddr_t baddr;
     int got_buf = 0, nra, error = 0, n = 0, on = 0, not_readin;
-    nfsquad_t tquad;
 
 #ifdef DIAGNOSTIC
     if (uio->uio_rw != UIO_READ)
@@ -180,7 +179,7 @@ nfs_bioread(vp, uio, ioflag, cred)
         case VDIR:
             break;
         default:
-            printf(" NQNFSNONCACHE: type %x unexpected\n",  
+            printf(" NQNFSNONCACHE: type %x unexpected\n",
                 vp->v_type);
         };
         }
@@ -701,7 +700,7 @@ nfs_asyncio(bp, cred)
                 bp->b_wcred = cred;
             }
         }
-    
+
         TAILQ_INSERT_TAIL(&nfs_bufq, bp, b_freelist);
         nfs_iodwant[i] = (struct proc *)0;
         wakeup((caddr_t)&nfs_iodwant[i]);
@@ -745,7 +744,6 @@ nfs_doio(bp, cr, p)
     int error = 0, diff, len, iomode, must_commit = 0;
     struct uio uio;
     struct iovec io;
-    nfsquad_t tquad;
 
     vp = bp->b_vp;
     np = VTONFS(vp);

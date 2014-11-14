@@ -121,7 +121,7 @@
  * this or other null vnode stacks.
  *
  * New vnode stacks come into existance as a result of
- * an operation which returns a vnode.  
+ * an operation which returns a vnode.
  * The bypass routine stacks a null-node above the new
  * vnode before returning it to the caller.
  *
@@ -131,7 +131,7 @@
  * the root null-node (which was created when the null layer was mounted).
  * Now consider opening "sys".  A vop_lookup would be
  * done on the root null-node.  This operation would bypass through
- * to the lower layer which would return a vnode representing 
+ * to the lower layer which would return a vnode representing
  * the UFS "sys".  Null_bypass then builds a null-node
  * aliasing the UFS "sys" and returns this to the caller.
  * Later operations on the null-node "sys" will repeat this
@@ -145,13 +145,13 @@
  * then begin modifing the copy.  Sed can be used to easily rename
  * all variables.
  *
- * The umap layer is an example of a layer descended from the 
+ * The umap layer is an example of a layer descended from the
  * null layer.
  *
  *
  * INVOKING OPERATIONS ON LOWER LAYERS
  *
- * There are two techniques to invoke operations on a lower layer 
+ * There are two techniques to invoke operations on a lower layer
  * when the operation cannot be completely bypassed.  Each method
  * is appropriate in different situations.  In both cases,
  * it is the responsibility of the aliasing layer to make
@@ -211,7 +211,7 @@ int null_bug_bypass = 0;   /* for debugging: enables bypass printf'ing */
  *   to determine what implementation of the op should be invoked
  * - all mapped vnodes are of our vnode-type (NEEDSWORK:
  *   problems on rmdir'ing mount points and renaming?)
- */ 
+ */
 int
 null_bypass(ap)
     struct vop_generic_args /* {
@@ -249,7 +249,7 @@ null_bypass(ap)
     for (i = 0; i < VDESC_MAX_VPS; reles >>= 1, i++) {
         if (descp->vdesc_vp_offsets[i] == VDESC_NO_OFFSET)
             break;   /* bail out at end of list */
-        vps_p[i] = this_vp_p = 
+        vps_p[i] = this_vp_p =
             VOPARG_OFFSETTO(struct vnode**,descp->vdesc_vp_offsets[i],ap);
         /*
          * We're not guaranteed that any but the first vnode
@@ -270,7 +270,7 @@ null_bypass(ap)
             if (reles & 1)
                 VREF(*this_vp_p);
         }
-            
+
     }
 
     /*
@@ -325,6 +325,7 @@ null_bypass(ap)
  * as we progress through the tree. We also have to enforce read-only
  * if this layer is mounted read-only.
  */
+int
 null_lookup(ap)
     struct vop_lookup_args /* {
         struct vnode * a_dvp;
@@ -343,16 +344,16 @@ null_lookup(ap)
     if ((flags & ISLASTCN) && (ap->a_dvp->v_mount->mnt_flag & MNT_RDONLY) &&
         (cnp->cn_nameiop == DELETE || cnp->cn_nameiop == RENAME))
         return (EROFS);
-    error = null_bypass(ap);
+    error = null_bypass((struct vop_generic_args *) ap);
     if (error == EJUSTRETURN && (flags & ISLASTCN) &&
         (ap->a_dvp->v_mount->mnt_flag & MNT_RDONLY) &&
         (cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME))
         error = EROFS;
     /*
-     * We must do the same locking and unlocking at this layer as 
-     * is done in the layers below us. We could figure this out 
+     * We must do the same locking and unlocking at this layer as
+     * is done in the layers below us. We could figure this out
      * based on the error return and the LASTCN, LOCKPARENT, and
-     * LOCKLEAF flags. However, it is more expidient to just find 
+     * LOCKLEAF flags. However, it is more expidient to just find
      * out the state of the lower level vnodes and set ours to the
      * same state.
      */
@@ -416,7 +417,7 @@ null_setattr(ap)
                 return (EROFS);
         }
     }
-    return (null_bypass(ap));
+    return (null_bypass((struct vop_generic_args *) ap));
 }
 
 /*
@@ -433,7 +434,8 @@ null_getattr(ap)
 {
     int error;
 
-    if (error = null_bypass(ap))
+    error = null_bypass((struct vop_generic_args *) ap);
+    if (error)
         return (error);
     /* Requires that arguments be restored. */
     ap->a_vap->va_fsid = ap->a_vp->v_mount->mnt_stat.f_fsid.val[0];
@@ -465,9 +467,17 @@ null_access(ap)
             if (vp->v_mount->mnt_flag & MNT_RDONLY)
                 return (EROFS);
             break;
+
+        case VNON:
+        case VBLK:
+        case VCHR:
+        case VSOCK:
+        case VFIFO:
+        case VBAD:
+            break;
         }
     }
-    return (null_bypass(ap));
+    return (null_bypass((struct vop_generic_args *) ap));
 }
 
 /*
@@ -488,7 +498,7 @@ null_lock(ap)
     if ((ap->a_flags & LK_TYPE_MASK) == LK_DRAIN)
         return (0);
     ap->a_flags &= ~LK_INTERLOCK;
-    return (null_bypass(ap));
+    return (null_bypass((struct vop_generic_args *) ap));
 }
 
 /*
@@ -504,11 +514,9 @@ null_unlock(ap)
         struct proc *a_p;
     } */ *ap;
 {
-    struct vnode *vp = ap->a_vp;
-
     vop_nounlock(ap);
     ap->a_flags &= ~LK_INTERLOCK;
-    return (null_bypass(ap));
+    return (null_bypass((struct vop_generic_args *) ap));
 }
 
 int

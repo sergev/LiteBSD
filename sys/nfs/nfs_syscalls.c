@@ -358,7 +358,7 @@ nfssvc_addsock(fp, mynam)
         siz = NFS_MAXPACKET + sizeof (u_long);
     else
         siz = NFS_MAXPACKET;
-    error = soreserve(so, siz, siz); 
+    error = soreserve(so, siz, siz);
     if (error) {
         m_freem(mynam);
         return (error);
@@ -426,7 +426,6 @@ nfssvc_nfsd(nsd, argp, p)
     struct nfsd *nfsd = nsd->nsd_nfsd;
     struct nfsrv_descript *nd = NULL;
     struct mbuf *mreq;
-    struct nfsuid *uidp;
     int error = 0, cacherep, s, sotype, writes_todo;
     u_quad_t cur_usec;
 
@@ -734,7 +733,7 @@ nfssvc_iod(p)
             (void) nfs_doio(bp, bp->b_rcred, (struct proc *)0);
         else do {
             /*
-             * Look for a delayed write for the same vnode, so I can do 
+             * Look for a delayed write for the same vnode, so I can do
              * it now. We must grab it before calling nfs_doio() to
              * avoid any risk of the vnode getting vclean()'d while
              * we are doing the write rpc.
@@ -761,7 +760,7 @@ nfssvc_iod(p)
             nbp->b_vp->v_numoutput++;
             }
             (void) nfs_doio(bp, bp->b_wcred, (struct proc *)0);
-        } while (bp = nbp);
+        } while ((bp = nbp));
         }
         if (error) {
         nfs_asyncdaemon[myiod] = 0;
@@ -786,7 +785,7 @@ nfsrv_zapsock(slp)
     register struct nfsrv_descript *nwp, *nnwp;
     struct socket *so;
     struct file *fp;
-    struct mbuf *m;
+    struct mbuf *m __attribute__((unused));
     int s;
 
     slp->ns_flag &= ~SLP_ALLFLAGS;
@@ -899,7 +898,6 @@ nfs_getnickauth(nmp, cred, auth_str, auth_len, verf_str, verf_len)
     register struct nfsuid *nuidp;
     register u_long *nickp, *verfp;
     struct timeval ktvin, ktvout;
-    NFSKERBKEYSCHED_T keys; /* stores key schedule */
 
 #ifdef DIAGNOSTIC
     if (verf_len < (4 * NFSX_UNSIGNED))
@@ -945,6 +943,8 @@ nfs_getnickauth(nmp, cred, auth_str, auth_len, verf_str, verf_len)
      */
 #ifdef NFSKERB
     XXX
+#else
+    ktvout = ktvin;
 #endif
 
     *verfp++ = ktvout.tv_sec;
@@ -972,7 +972,6 @@ nfs_savenickauth(nmp, cred, len, key, mdp, dposp, mrep)
     struct mbuf *md = *mdp;
     struct timeval ktvin, ktvout;
     u_long nick;
-    NFSKERBKEYSCHED_T keys;
     char *dpos = *dposp, *cp2;
     int deltasec, error = 0;
 
@@ -987,6 +986,8 @@ nfs_savenickauth(nmp, cred, len, key, mdp, dposp, mrep)
          */
 #ifdef NFSKERB
         XXX
+#else
+        ktvout = ktvin;
 #endif
         ktvout.tv_sec = fxdr_unsigned(long, ktvout.tv_sec);
         ktvout.tv_usec = fxdr_unsigned(long, ktvout.tv_usec);

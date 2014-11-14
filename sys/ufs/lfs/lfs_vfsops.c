@@ -79,25 +79,28 @@ struct vfsops lfs_vfsops = {
 /*
  * Called by main() when ufs is going to be mounted as root.
  */
+int
 lfs_mountroot()
 {
     extern struct vnode *rootvp;
-    struct fs *fs;
     struct mount *mp;
     struct proc *p = curproc;   /* XXX */
     int error;
-    
+
     /*
      * Get vnodes for swapdev and rootdev.
      */
-    if ((error = bdevvp(swapdev, &swapdev_vp)) ||
+    error = bdevvp(swapdev, &swapdev_vp);
+    if (error ||
         (error = bdevvp(rootdev, &rootvp))) {
         printf("lfs_mountroot: can't setup bdevvp's");
         return (error);
     }
-    if (error = vfs_rootmountalloc("lfs", "root_device", &mp))
+    error = vfs_rootmountalloc("lfs", "root_device", &mp);
+    if (error)
         return (error);
-    if (error = lfs_mountfs(rootvp, mp, p)) {
+    error = lfs_mountfs(rootvp, mp, p);
+    if (error) {
         mp->mnt_vfc->vfc_refcount--;
         vfs_unbusy(mp, p);
         free(mp, M_MOUNT);
@@ -116,6 +119,7 @@ lfs_mountroot()
  *
  * mount system call
  */
+int
 lfs_mount(mp, path, data, ndp, p)
     register struct mount *mp;
     char *path;
@@ -131,7 +135,8 @@ lfs_mount(mp, path, data, ndp, p)
     int error;
     mode_t accessmode;
 
-    if (error = copyin(data, (caddr_t)&args, sizeof (struct ufs_args)))
+    error = copyin(data, (caddr_t)&args, sizeof (struct ufs_args));
+    if (error)
         return (error);
 
     /* Until LFS can do NFS right.      XXX */
@@ -144,6 +149,7 @@ lfs_mount(mp, path, data, ndp, p)
      */
     if (mp->mnt_flag & MNT_UPDATE) {
         ump = VFSTOUFS(mp);
+        fs = ump->um_lfs;                   /* LFS */
         if (fs->lfs_ronly && (mp->mnt_flag & MNT_WANTRDWR)) {
             /*
              * If upgrade to read-write by non-root, then verify
@@ -152,8 +158,9 @@ lfs_mount(mp, path, data, ndp, p)
             if (p->p_ucred->cr_uid != 0) {
                 vn_lock(ump->um_devvp, LK_EXCLUSIVE | LK_RETRY,
                     p);
-                if (error = VOP_ACCESS(ump->um_devvp,
-                    VREAD | VWRITE, p->p_ucred, p)) {
+                error = VOP_ACCESS(ump->um_devvp,
+                    VREAD | VWRITE, p->p_ucred, p);
+                if (error) {
                     VOP_UNLOCK(ump->um_devvp, 0, p);
                     return (error);
                 }
@@ -173,7 +180,8 @@ lfs_mount(mp, path, data, ndp, p)
      * and verify that it refers to a sensible block device.
      */
     NDINIT(ndp, LOOKUP, FOLLOW, UIO_USERSPACE, args.fspec, p);
-    if (error = namei(ndp))
+    error = namei(ndp);
+    if (error)
         return (error);
     devvp = ndp->ni_vp;
     if (devvp->v_type != VBLK) {
@@ -193,7 +201,8 @@ lfs_mount(mp, path, data, ndp, p)
         if ((mp->mnt_flag & MNT_RDONLY) == 0)
             accessmode |= VWRITE;
         vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-        if (error = VOP_ACCESS(devvp, accessmode, p->p_ucred, p)) {
+        error = VOP_ACCESS(devvp, accessmode, p->p_ucred, p);
+        if (error) {
             vput(devvp);
             return (error);
         }
@@ -202,6 +211,7 @@ lfs_mount(mp, path, data, ndp, p)
     if ((mp->mnt_flag & MNT_UPDATE) == 0)
         error = lfs_mountfs(devvp, mp, p);      /* LFS */
     else {
+        ump = VFSTOUFS(mp);
         if (devvp != ump->um_devvp)
             error = EINVAL; /* needs translation */
         else
@@ -262,15 +272,18 @@ lfs_mountfs(devvp, mp, p)
      * (except for root, which might share swap device for miniroot).
      * Flush out any old buffers remaining from a previous use.
      */
-    if (error = vfs_mountedon(devvp))
+    error = vfs_mountedon(devvp);
+    if (error)
         return (error);
     if (vcount(devvp) > 1 && devvp != rootvp)
         return (EBUSY);
-    if (error = vinvalbuf(devvp, V_SAVE, cred, p, 0, 0))
+    error = vinvalbuf(devvp, V_SAVE, cred, p, 0, 0);
+    if (error)
         return (error);
 
     ronly = (mp->mnt_flag & MNT_RDONLY) != 0;
-    if (error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p))
+    error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p);
+    if (error)
         return (error);
 
     if (VOP_IOCTL(devvp, DIOCGPART, (caddr_t)&dpart, FREAD, cred, p) != 0)
@@ -290,7 +303,8 @@ lfs_mountfs(devvp, mp, p)
     ump = NULL;
 
     /* Read in the superblock. */
-    if (error = bread(devvp, LFS_LABELPAD / size, LFS_SBPAD, cred, &bp))
+    error = bread(devvp, LFS_LABELPAD / size, LFS_SBPAD, cred, &bp);
+    if (error)
         goto out;
     fs = (struct lfs *)bp->b_data;
 
@@ -347,7 +361,8 @@ lfs_mountfs(devvp, mp, p)
      * artificially increment the reference count and keep a pointer
      * to it in the incore copy of the superblock.
      */
-    if (error = VFS_VGET(mp, LFS_IFILE_INUM, &vp))
+    error = VFS_VGET(mp, LFS_IFILE_INUM, &vp);
+    if (error)
         goto out;
     fs->lfs_ivnode = vp;
     VREF(vp);
@@ -369,15 +384,15 @@ out:
 /*
  * unmount system call
  */
+int
 lfs_unmount(mp, mntflags, p)
     struct mount *mp;
     int mntflags;
     struct proc *p;
 {
-    extern int doforce;
     register struct ufsmount *ump;
     register struct lfs *fs;
-    int i, error, flags, ronly;
+    int error, flags, ronly;
 
     flags = 0;
     if (mntflags & MNT_FORCE)
@@ -387,8 +402,10 @@ lfs_unmount(mp, mntflags, p)
     fs = ump->um_lfs;
 #ifdef QUOTA
     if (mp->mnt_flag & MNT_QUOTA) {
-        if (error = vflush(mp, fs->lfs_ivnode, SKIPSYSTEM|flags))
+        error = vflush(mp, fs->lfs_ivnode, SKIPSYSTEM|flags);
+        if (error)
             return (error);
+        int i;
         for (i = 0; i < MAXQUOTAS; i++) {
             if (ump->um_quotas[i] == NULLVP)
                 continue;
@@ -400,10 +417,12 @@ lfs_unmount(mp, mntflags, p)
          */
     }
 #endif
-    if (error = vflush(mp, fs->lfs_ivnode, flags))
+    error = vflush(mp, fs->lfs_ivnode, flags);
+    if (error)
         return (error);
     fs->lfs_clean = 1;
-    if (error = VFS_SYNC(mp, 1, p->p_ucred, p))
+    error = VFS_SYNC(mp, 1, p->p_ucred, p);
+    if (error)
         return (error);
     if (fs->lfs_ivnode->v_dirtyblkhd.lh_first)
         panic("lfs_unmount: still dirty blocks on ifile vnode\n");
@@ -425,6 +444,7 @@ lfs_unmount(mp, mntflags, p)
 /*
  * Get file system statistics.
  */
+int
 lfs_statfs(mp, sbp, p)
     struct mount *mp;
     register struct statfs *sbp;
@@ -469,6 +489,7 @@ lfs_statfs(mp, sbp, p)
  *
  * Note: we are always called with the filesystem marked `MPBUSY'.
  */
+int
 lfs_sync(mp, waitfor, cred, p)
     struct mount *mp;
     int waitfor;
@@ -524,7 +545,8 @@ lfs_vget(mp, ino, vpp)
     }
 
     /* Allocate new vnode/inode. */
-    if (error = lfs_vcreate(mp, ino, &vp)) {
+    error = lfs_vcreate(mp, ino, &vp);
+    if (error) {
         *vpp = NULL;
         return (error);
     }
@@ -547,8 +569,8 @@ lfs_vget(mp, ino, vpp)
     ip->i_lfs = ump->um_lfs;
 
     /* Read in the disk contents for the inode, copy into the inode. */
-    if (error =
-        bread(ump->um_devvp, daddr, (int)fs->lfs_bsize, NOCRED, &bp)) {
+    error = bread(ump->um_devvp, daddr, (int)fs->lfs_bsize, NOCRED, &bp);
+    if (error) {
         /*
          * The inode does not contain anything useful, so it would
          * be misleading to leave it on its hash chain. With mode
@@ -567,7 +589,8 @@ lfs_vget(mp, ino, vpp)
      * Initialize the vnode from the inode, check for aliases.  In all
      * cases re-init ip, the underlying vnode/inode may have changed.
      */
-    if (error = ufs_vinit(mp, lfs_specop_p, LFS_FIFOOPS, &vp)) {
+    error = ufs_vinit(mp, lfs_specop_p, LFS_FIFOOPS, &vp);
+    if (error) {
         vput(vp);
         *vpp = NULL;
         return (error);
@@ -617,6 +640,7 @@ lfs_fhtovp(mp, fhp, nam, vpp, exflagsp, credanonp)
  * Vnode pointer to File handle
  */
 /* ARGSUSED */
+int
 lfs_vptofh(vp, fhp)
     struct vnode *vp;
     struct fid *fhp;

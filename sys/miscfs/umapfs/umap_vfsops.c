@@ -87,7 +87,8 @@ umapfs_mount(mp, path, data, ndp, p)
     /*
      * Get argument
      */
-    if (error = copyin(data, (caddr_t)&args, sizeof(struct umap_args)))
+    error = copyin(data, (caddr_t)&args, sizeof(struct umap_args));
+    if (error)
         return (error);
 
     /*
@@ -95,7 +96,8 @@ umapfs_mount(mp, path, data, ndp, p)
      */
     NDINIT(ndp, LOOKUP, FOLLOW|WANTPARENT|LOCKLEAF,
         UIO_USERSPACE, args.target, p);
-    if (error = namei(ndp))
+    error = namei(ndp);
+    if (error)
         return (error);
 
     /*
@@ -125,12 +127,12 @@ umapfs_mount(mp, path, data, ndp, p)
      */
     amp->umapm_vfs = lowerrootvp->v_mount;
 
-    /* 
+    /*
      * Now copy in the number of entries and maps for umap mapping.
      */
     amp->info_nentries = args.nentries;
     amp->info_gnentries = args.gnentries;
-    error = copyin(args.mapdata, (caddr_t)amp->info_mapdata, 
+    error = copyin(args.mapdata, (caddr_t)amp->info_mapdata,
         2*sizeof(u_long)*args.nentries);
     if (error)
         return (error);
@@ -142,7 +144,7 @@ umapfs_mount(mp, path, data, ndp, p)
             amp->info_mapdata[i][1]);
 #endif
 
-    error = copyin(args.gmapdata, (caddr_t)amp->info_gmapdata, 
+    error = copyin(args.gmapdata, (caddr_t)amp->info_gmapdata,
         2*sizeof(u_long)*args.nentries);
     if (error)
         return (error);
@@ -150,7 +152,7 @@ umapfs_mount(mp, path, data, ndp, p)
 #ifdef UMAP_DIAGNOSTIC
     printf("umap_mount:gnentries %d\n",args.gnentries);
     for (i = 0; i < args.gnentries; i++)
-        printf("    group %d maps to %d\n", 
+        printf("    group %d maps to %d\n",
             amp->info_gmapdata[i][0],
             amp->info_gmapdata[i][1]);
 #endif
@@ -188,7 +190,7 @@ umapfs_mount(mp, path, data, ndp, p)
 
     (void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
-    (void) copyinstr(args.target, mp->mnt_stat.f_mntfromname, MNAMELEN - 1, 
+    (void) copyinstr(args.target, mp->mnt_stat.f_mntfromname, MNAMELEN - 1,
         &size);
     bzero(mp->mnt_stat.f_mntfromname + size, MNAMELEN - size);
 #ifdef UMAPFS_DIAGNOSTIC
@@ -239,18 +241,19 @@ umapfs_unmount(mp, mntflags, p)
      * moment, but who knows...
      */
 #ifdef notyet
-    mntflushbuf(mp, 0); 
+    mntflushbuf(mp, 0);
     if (mntinvalbuf(mp, 1))
         return (EBUSY);
 #endif
     if (umapm_rootvp->v_usecount > 1)
         return (EBUSY);
-    if (error = vflush(mp, umapm_rootvp, flags))
+    error = vflush(mp, umapm_rootvp, flags);
+    if (error)
         return (error);
 
 #ifdef UMAPFS_DIAGNOSTIC
     vprint("alias root of lower", umapm_rootvp);
-#endif   
+#endif
     /*
      * Release reference on underlying root vnode
      */
@@ -362,7 +365,7 @@ umapfs_vget(mp, ino, vpp)
     ino_t ino;
     struct vnode **vpp;
 {
-    
+
     return (VFS_VGET(MOUNTTOUMAPMOUNT(mp)->umapm_vfs, ino, vpp));
 }
 

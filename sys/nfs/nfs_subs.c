@@ -1154,7 +1154,6 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
     register struct nfs_fattr *fp;
     extern int (**spec_nfsv2nodeop_p)();
     register struct nfsnode *np;
-    register struct nfsnodehashhead *nhpp;
     register long t1;
     caddr_t cp2;
     int error = 0, rdev;
@@ -1163,12 +1162,12 @@ nfs_loadattrcache(vpp, mdp, dposp, vaper)
     u_short vmode;
     struct timespec mtime;
     struct vnode *nvp;
-    quad_t tval;
     int v3 = NFS_ISV3(vp);
 
     md = *mdp;
     t1 = (mtod(md, caddr_t) + md->m_len) - *dposp;
-    if (error = nfsm_disct(mdp, dposp, NFSX_FATTR(v3), t1, &cp2))
+    error = nfsm_disct(mdp, dposp, NFSX_FATTR(v3), t1, &cp2);
+    if (error)
         return (error);
     fp = (struct nfs_fattr *)cp2;
     if (v3) {
@@ -1391,16 +1390,20 @@ nfs_namei(ndp, fhp, len, slp, nam, mdp, dposp, retdirp, p, kerbflag)
     if (len > 0) {
         if (rem >= len)
             *dposp += len;
-        else if (error = nfs_adv(mdp, dposp, len, rem))
-            goto out;
+        else {
+            error = nfs_adv(mdp, dposp, len, rem);
+            if (error)
+                goto out;
+        }
     }
     ndp->ni_pathlen = tocp - cnp->cn_pnbuf;
     cnp->cn_nameptr = cnp->cn_pnbuf;
     /*
      * Extract and set starting directory.
      */
-    if (error = nfsrv_fhtovp(fhp, FALSE, &dp, ndp->ni_cnd.cn_cred, slp,
-        nam, &rdonly, kerbflag))
+    error = nfsrv_fhtovp(fhp, FALSE, &dp, ndp->ni_cnd.cn_cred, slp,
+        nam, &rdonly, kerbflag);
+    if (error)
         goto out;
     if (dp->v_type != VDIR) {
         vrele(dp);
@@ -1418,7 +1421,8 @@ nfs_namei(ndp, fhp, len, slp, nam, mdp, dposp, retdirp, p, kerbflag)
      * And call lookup() to do the real work
      */
     cnp->cn_proc = p;
-    if (error = lookup(ndp))
+    error = lookup(ndp);
+    if (error)
         goto out;
     /*
      * Check for encountering a symbolic link
@@ -1630,7 +1634,6 @@ nfsrv_fhtovp(fhp, lockflag, vpp, cred, slp, nam, rdonlyp, kerbflag)
 {
     struct proc *p = curproc;   /* XXX */
     register struct mount *mp;
-    register struct nfsuid *uidp;
     register int i;
     struct ucred *credanon;
     int error, exflags;
@@ -1711,7 +1714,8 @@ netaddr_match(family, haddr, nam)
     return (0);
 }
 
-static nfsuint64 nfs_nullcookie = { 0, 0 };
+static nfsuint64 nfs_nullcookie = { {0, 0} };
+
 /*
  * This function finds the directory cookie that corresponds to the
  * logical byte offset given.

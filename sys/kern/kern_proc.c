@@ -351,14 +351,16 @@ orphanpg(pg)
 }
 
 #ifdef DEBUG
+void
 pgrpdump()
 {
     register struct pgrp *pgrp;
     register struct proc *p;
-    register i;
+    register int i;
 
     for (i = 0; i <= pgrphash; i++) {
-        if (pgrp = pgrphashtbl[i].lh_first) {
+        pgrp = pgrphashtbl[i].lh_first;
+        if (pgrp) {
             printf("\tindx %d\n", i);
             for (; pgrp != 0; pgrp = pgrp->pg_hash.le_next) {
                 printf("\tpgrp %x, pgid %d, sess %x, sesscnt %d, mem %x\n",

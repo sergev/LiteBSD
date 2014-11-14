@@ -245,8 +245,9 @@ lfs_segwrite(mp, flags)
             /* printf ("segs clean: %d\n", clean); */
             wakeup(&lfs_allclean_wakeup);
             wakeup(&fs->lfs_nextseg);
-            if (error = tsleep(&fs->lfs_avail, PRIBIO + 1,
-                "lfs writer", 0))
+            error = tsleep(&fs->lfs_avail, PRIBIO + 1,
+                "lfs writer", 0);
+            if (error)
                 return (error);
         }
     } while (clean <= 2 || fs->lfs_avail <= 0);
@@ -392,7 +393,7 @@ lfs_writeinode(fs, sp, ip)
     SEGUSE *sup;
     ufs_daddr_t daddr;
     ino_t ino;
-    int error, i, ndx;
+    int i, ndx;
     int redo_ifile = 0;
 
     if (!(ip->i_flag & (IN_ACCESS | IN_CHANGE | IN_MODIFIED | IN_UPDATE)))
@@ -450,7 +451,7 @@ lfs_writeinode(fs, sp, ip)
         LFS_IENTRY(ifp, fs, ino, ibp);
         daddr = ifp->if_daddr;
         ifp->if_daddr = bp->b_blkno;
-        error = VOP_BWRITE(ibp);
+        VOP_BWRITE(ibp);
     }
 
     /*
@@ -471,7 +472,7 @@ lfs_writeinode(fs, sp, ip)
         sup->su_nbytes -= sizeof(struct dinode);
         redo_ifile =
             (ino == LFS_IFILE_INUM && !(bp->b_flags & B_GATHERED));
-        error = VOP_BWRITE(bp);
+        VOP_BWRITE(bp);
     }
     return (redo_ifile);
 }
@@ -615,7 +616,8 @@ lfs_updatemeta(sp)
         fs->lfs_offset +=
             fragstodb(fs, numfrags(fs, (*sp->start_bpp)->b_bcount));
 
-        if (error = ufs_bmaparray(vp, lbn, &daddr, a, &num, NULL))
+        error = ufs_bmaparray(vp, lbn, &daddr, a, &num, NULL);
+        if (error)
             panic("lfs_updatemeta: ufs_bmaparray %d", error);
         ip = VTOI(vp);
         switch (num) {
@@ -1110,7 +1112,7 @@ lfs_shellsort(bp_array, lb_array, nmemb)
     struct buf *bp_temp;
     u_long lb_temp;
 
-    for (incrp = __rsshell_increments; incr = *incrp++;)
+    for (incrp = __rsshell_increments; (incr = *incrp++);)
         for (t1 = incr; t1 < nmemb; ++t1)
             for (t2 = t1 - incr; t2 >= 0;)
                 if (lb_array[t2] > lb_array[t2 + incr]) {
@@ -1128,6 +1130,7 @@ lfs_shellsort(bp_array, lb_array, nmemb)
 /*
  * Check VXLOCK.  Return 1 if the vnode is locked.  Otherwise, vget it.
  */
+int
 lfs_vref(vp)
     register struct vnode *vp;
 {
@@ -1146,7 +1149,6 @@ void
 lfs_vunref(vp)
     register struct vnode *vp;
 {
-    struct proc *p = curproc;               /* XXX */
     extern struct simplelock vnode_free_list_slock;     /* XXX */
     extern TAILQ_HEAD(freelst, vnode) vnode_free_list;  /* XXX */
 

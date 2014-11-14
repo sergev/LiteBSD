@@ -45,6 +45,13 @@
 
 #include <machine/cpu.h>
 
+#ifdef NFS
+#include <nfs/rpcv2.h>
+#include <nfs/nfsproto.h>
+#include <nfs/nfs.h>
+#include <nfs/nqnfs.h>
+#endif
+
 /*
  * Time of day and interval timer support.
  *

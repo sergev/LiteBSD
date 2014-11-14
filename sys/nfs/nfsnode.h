@@ -213,7 +213,6 @@ int nfs_lookitup __P((struct vnode *,char *,int,struct ucred *,struct proc *,str
 int nfs_sillyrename __P((struct vnode *,struct vnode *,struct componentname *));
 nfsuint64 *nfs_getcookie __P((struct nfsnode *, off_t, int));
 void nfs_invaldir __P((struct vnode *));
-#define nqnfs_lease_updatetime  lease_updatetime
 
 #endif /* KERNEL */
 

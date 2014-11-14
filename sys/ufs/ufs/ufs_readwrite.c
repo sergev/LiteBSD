@@ -71,7 +71,7 @@ READ(ap)
     register struct uio *uio;
     register FS *fs;
     struct buf *bp;
-    ufs_daddr_t lbn, nextlbn;
+    ufs_daddr_t lbn;
     off_t bytesinfile;
     long size, xfersize, blkoffset;
     int error;
@@ -101,7 +101,6 @@ READ(ap)
         if ((bytesinfile = ip->i_size - uio->uio_offset) <= 0)
             break;
         lbn = lblkno(fs, uio->uio_offset);
-        nextlbn = lbn + 1;
         size = BLKSIZE(fs, ip, lbn);
         blkoffset = blkoff(fs, uio->uio_offset);
         xfersize = fs->fs_bsize - blkoffset;
@@ -115,6 +114,7 @@ READ(ap)
         (void)lfs_check(vp, lbn);
         error = cluster_read(vp, ip->i_size, lbn, size, NOCRED, &bp);
 #else
+        ufs_daddr_t nextlbn = lbn + 1;
         if (lblktosize(fs, nextlbn) >= ip->i_size)
             error = bread(vp, lbn, size, NOCRED, &bp);
         else if (doclusterread)
@@ -179,7 +179,7 @@ WRITE(ap)
     struct proc *p;
     ufs_daddr_t lbn;
     off_t osize;
-    int blkoffset, error, flags, ioflag, resid, size, xfersize;
+    int blkoffset, error, ioflag, resid, size, xfersize;
 
     ioflag = ap->a_ioflag;
     uio = ap->a_uio;
@@ -226,8 +226,9 @@ WRITE(ap)
 
     resid = uio->uio_resid;
     osize = ip->i_size;
-    flags = ioflag & IO_SYNC ? B_SYNC : 0;
-
+#ifndef LFS_READWRITE
+    int flags = ioflag & IO_SYNC ? B_SYNC : 0;
+#endif
     for (error = 0; uio->uio_resid > 0;) {
         lbn = lblkno(fs, uio->uio_offset);
         blkoffset = blkoff(fs, uio->uio_offset);

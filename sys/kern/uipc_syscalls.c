@@ -95,7 +95,7 @@ socket(p, uap, retval)
     return (error);
 }
 
-static int
+int
 getsock(fdp, fdes, fpp)
     struct filedesc *fdp;
     int fdes;
@@ -112,7 +112,7 @@ getsock(fdp, fdes, fpp)
     return (0);
 }
 
-static int
+int
 sockargs(mp, buf, buflen, type)
     struct mbuf **mp;
     caddr_t buf;

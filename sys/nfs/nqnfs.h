@@ -198,7 +198,7 @@ u_long nqfhhash;
 #define NQNFS_TRYLATER  501
 
 #ifdef KERNEL
-void    nqnfs_lease_updatetime __P((int));
+void    lease_updatetime __P((int));
 int     nqsrv_cmpnam __P((struct nfssvc_sock *,struct mbuf *,struct nqhost *));
 int     nqsrv_getlease __P((struct vnode *, u_long *, int,
             struct nfssvc_sock *, struct proc *, struct mbuf *, int *,

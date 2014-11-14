@@ -40,6 +40,7 @@
 #include <sys/syslog.h>
 #include <sys/mount.h>
 #include <sys/malloc.h>
+#include <sys/systm.h>
 
 #include <vm/vm.h>
 
@@ -112,14 +113,15 @@ lfs_valloc(ap)
         }
         ifp--;
         ifp->if_nextfree = LFS_UNUSED_INUM;
-        if (error = VOP_BWRITE(bp))
+        error = VOP_BWRITE(bp);
+        if (error)
             return (error);
     }
 
     /* Create a vnode to associate with the inode. */
-    if (error = lfs_vcreate(ap->a_pvp->v_mount, new_ino, &vp))
+    error = lfs_vcreate(ap->a_pvp->v_mount, new_ino, &vp);
+    if (error)
         return (error);
-
 
     ip = VTOI(vp);
     /* Zero out the direct and indirect block addresses. */
@@ -134,7 +136,8 @@ lfs_valloc(ap)
     /* Insert into the inode hash table. */
     ufs_ihashins(ip);
 
-    if (error = ufs_vinit(vp->v_mount, lfs_specop_p, LFS_FIFOOPS, &vp)) {
+    error = ufs_vinit(vp->v_mount, lfs_specop_p, LFS_FIFOOPS, &vp);
+    if (error) {
         vput(vp);
         *ap->a_vpp = NULL;
         return (error);
@@ -160,10 +163,11 @@ lfs_vcreate(mp, ino, vpp)
     extern int (**lfs_vnodeop_p)();
     struct inode *ip;
     struct ufsmount *ump;
-    int error, i;
+    int error;
 
     /* Create the vnode. */
-    if (error = getnewvnode(VT_LFS, mp, lfs_vnodeop_p, vpp)) {
+    error = getnewvnode(VT_LFS, mp, lfs_vnodeop_p, vpp);
+    if (error) {
         *vpp = NULL;
         return (error);
     }
@@ -182,6 +186,7 @@ lfs_vcreate(mp, ino, vpp)
     ip->i_number = ip->i_din.di_inumber = ino;
     ip->i_lfs = ump->um_lfs;
 #ifdef QUOTA
+    int i;
     for (i = 0; i < MAXQUOTAS; i++)
         ip->i_dquot[i] = NODQUOT;
 #endif

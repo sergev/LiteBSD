@@ -39,15 +39,59 @@
 #include <sys/mount.h>
 #include <sys/resourcevar.h>
 #include <sys/trace.h>
+#include <sys/systm.h>
+
+#include <vm/vm.h>
 
 #include <miscfs/specfs/specdev.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
+#include <ufs/ufs/ufs_extern.h>
 
 #include <ufs/lfs/lfs.h>
 #include <ufs/lfs/lfs_extern.h>
+
+static int
+lfs_fragextend(vp, osize, nsize, lbn, bpp)
+    struct vnode *vp;
+    int osize;
+    int nsize;
+    daddr_t lbn;
+    struct buf **bpp;
+{
+    struct inode *ip;
+    struct lfs *fs;
+    long bb;
+    int error;
+
+    ip = VTOI(vp);
+    fs = ip->i_lfs;
+    bb = (long)fragstodb(fs, numfrags(fs, nsize - osize));
+    if (!ISSPACE(fs, bb, curproc->p_ucred)) {
+        return(ENOSPC);
+    }
+
+    error = bread(vp, lbn, osize, NOCRED, bpp);
+    if (error) {
+        brelse(*bpp);
+        return(error);
+    }
+#ifdef QUOTA
+    error = chkdq(ip, bb, curproc->p_ucred, 0);
+    if (error) {
+        brelse(*bpp);
+        return (error);
+    }
+#endif
+    ip->i_blocks += bb;
+    ip->i_flag |= IN_CHANGE | IN_UPDATE;
+    fs->lfs_bfree -= fragstodb(fs, numfrags(fs, (nsize - osize)));
+    allocbuf(*bpp, nsize);
+    bzero((char *)((*bpp)->b_data) + osize, (u_int)(nsize - osize));
+    return(0);
+}
 
 int
 lfs_balloc(vp, offset, iosize, lbn, bpp)
@@ -68,7 +112,7 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
     ip = VTOI(vp);
     fs = ip->i_lfs;
 
-    /* 
+    /*
      * Three cases: it's a block beyond the end of file, it's a block in
      * the file that may or may not have been assigned a disk address or
      * we're writing an entire block.  Note, if the daddr is unassigned,
@@ -82,7 +126,8 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
      */
 
     *bpp = NULL;
-    if (error = ufs_bmaparray(vp, lbn, &daddr, &indirs[0], &num, NULL ))
+    error = ufs_bmaparray(vp, lbn, &daddr, &indirs[0], &num, NULL );
+    if (error)
         return (error);
 
     /* Check for block beyond end of file and fragment extension needed. */
@@ -90,8 +135,9 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
     if (lastblock < NDADDR && lastblock < lbn) {
         osize = blksize(fs, ip, lastblock);
         if (osize < fs->lfs_bsize && osize > 0) {
-            if (error = lfs_fragextend(vp, osize, fs->lfs_bsize,
-                lastblock, &bp))
+            error = lfs_fragextend(vp, osize, fs->lfs_bsize,
+                lastblock, &bp);
+            if (error)
                 return(error);
             ip->i_size = (lastblock + 1) * fs->lfs_bsize;
             vnode_pager_setsize(vp, (u_long)ip->i_size);
@@ -107,7 +153,7 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
             if (!indirs[i].in_exists) {
                 ibp = getblk(vp, indirs[i].in_lbn, fs->lfs_bsize,
                     0, 0);
-                if ((ibp->b_flags & (B_DONE | B_DELWRI))) 
+                if ((ibp->b_flags & (B_DONE | B_DELWRI)))
                     panic ("Indirect block should not exist");
 
                 if (!ISSPACE(fs, bb, curproc->p_ucred)){
@@ -118,7 +164,8 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
                     ip->i_blocks += bb;
                     ip->i_lfs->lfs_bfree -= bb;
                     clrbuf(ibp);
-                    if(error = VOP_BWRITE(ibp))
+                    error = VOP_BWRITE(ibp);
+                    if (error)
                         return(error);
                 }
             }
@@ -140,8 +187,9 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
             *bpp = bp = getblk(vp, lbn, nsize, 0, 0);
         else {
             /* Extend existing block */
-            if (error = lfs_fragextend(vp, (int)blksize(fs, ip, lbn), 
-                nsize, lbn, &bp))
+            error = lfs_fragextend(vp, (int)blksize(fs, ip, lbn),
+                nsize, lbn, &bp);
+            if (error)
                 return(error);
             *bpp = bp;
         }
@@ -155,13 +203,13 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
         *bpp = bp = getblk(vp, lbn, blksize(fs, ip, lbn), 0, 0);
     }
 
-    /* 
+    /*
      * The block we are writing may be a brand new block
      * in which case we need to do accounting (i.e. check
      * for free space and update the inode number of blocks.
      */
     if (!(bp->b_flags & (B_CACHE | B_DONE | B_DELWRI))) {
-        if (daddr == UNASSIGNED) 
+        if (daddr == UNASSIGNED)
             if (!ISSPACE(fs, bb, curproc->p_ucred)) {
                 bp->b_flags |= B_INVAL;
                 brelse(bp);
@@ -187,41 +235,4 @@ lfs_balloc(vp, offset, iosize, lbn, bpp)
         }
     }
     return (0);
-}
-
-lfs_fragextend(vp, osize, nsize, lbn, bpp)
-    struct vnode *vp;
-    int osize;
-    int nsize;
-    daddr_t lbn;
-    struct buf **bpp;
-{
-    struct inode *ip;
-    struct lfs *fs;
-    long bb;
-    int error;
-
-    ip = VTOI(vp);
-    fs = ip->i_lfs;
-    bb = (long)fragstodb(fs, numfrags(fs, nsize - osize));
-    if (!ISSPACE(fs, bb, curproc->p_ucred)) {
-        return(ENOSPC);
-    }
-
-    if (error = bread(vp, lbn, osize, NOCRED, bpp)) {
-        brelse(*bpp);
-        return(error);
-    }
-#ifdef QUOTA
-    if (error = chkdq(ip, bb, curproc->p_ucred, 0)) {
-        brelse(*bpp);
-        return (error);
-    }
-#endif
-    ip->i_blocks += bb;
-    ip->i_flag |= IN_CHANGE | IN_UPDATE;
-    fs->lfs_bfree -= fragstodb(fs, numfrags(fs, (nsize - osize)));
-    allocbuf(*bpp, nsize);
-    bzero((char *)((*bpp)->b_data) + osize, (u_int)(nsize - osize));
-    return(0);
 }

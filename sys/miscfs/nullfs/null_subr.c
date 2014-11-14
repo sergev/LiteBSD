@@ -68,6 +68,7 @@ u_long null_node_hash;
 /*
  * Initialise cache headers
  */
+void
 nullfs_init()
 {
 
@@ -134,7 +135,8 @@ null_node_alloc(mp, lowervp, vpp)
     struct vnode *othervp, *vp;
     int error;
 
-    if (error = getnewvnode(VT_NULL, mp, null_vnodeop_p, vpp))
+    error = getnewvnode(VT_NULL, mp, null_vnodeop_p, vpp);
+    if (error)
         return (error);
     vp = *vpp;
 
@@ -148,7 +150,8 @@ null_node_alloc(mp, lowervp, vpp)
      * check to see if someone else has beaten us to it.
      * (We could have slept in MALLOC.)
      */
-    if (othervp = null_node_find(lowervp)) {
+    othervp = null_node_find(lowervp);
+    if (othervp) {
         FREE(xp, M_TEMP);
         vp->v_type = VBAD;  /* node is discarded */
         vp->v_usecount = 0; /* XXX */
@@ -175,7 +178,8 @@ null_node_create(mp, lowervp, newvpp)
 {
     struct vnode *aliasvp;
 
-    if (aliasvp = null_node_find(mp, lowervp)) {
+    aliasvp = null_node_find(mp, lowervp);
+    if (aliasvp) {
         /*
          * null_node_find has taken another reference
          * to the alias vnode.
@@ -197,7 +201,8 @@ null_node_create(mp, lowervp, newvpp)
         /*
          * Make new vnode reference the null_node.
          */
-        if (error = null_node_alloc(mp, lowervp, &aliasvp))
+        error = null_node_alloc(mp, lowervp, &aliasvp);
+        if (error)
             return error;
 
         /*

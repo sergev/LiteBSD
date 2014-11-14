@@ -38,13 +38,14 @@
 #include <sys/namei.h>
 #include <sys/vnode.h>
 #include <sys/mount.h>
+#include <sys/systm.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/lfs/lfs.h>
 #include <ufs/lfs/lfs_extern.h>
 
-void 
+void
 lfs_dump_super(lfsp)
     struct lfs *lfsp;
 {
@@ -85,7 +86,7 @@ lfs_dump_super(lfsp)
         "fbmask   ", lfsp->lfs_fbmask,
         "fbshift  ", lfsp->lfs_fbshift);
 
-    (void)printf("%s%d\t%s%d\t%s%lx\t%s%qx\n", 
+    (void)printf("%s%d\t%s%d\t%s%lx\t%s%qx\n",
         "sushift  ", lfsp->lfs_sushift,
         "fsbtodb  ", lfsp->lfs_fsbtodb,
         "cksum    ", lfsp->lfs_cksum,

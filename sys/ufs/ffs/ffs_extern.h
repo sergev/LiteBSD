@@ -105,6 +105,7 @@ int     ffs_vfree __P((struct vop_vfree_args *));
 int     ffs_vget __P((struct mount *, ino_t, struct vnode **));
 int     ffs_vptofh __P((struct vnode *, struct fid *));
 int     ffs_write __P((struct vop_write_args *));
+int     ffs_flushfiles __P((struct mount *, int, struct proc *));
 
 int bwrite();       /* FFS needs a bwrite routine.  XXX */
 

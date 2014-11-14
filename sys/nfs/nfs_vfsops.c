@@ -93,13 +93,11 @@ struct vfsops nfs_vfsops = {
  * server for a diskless/dataless machine. It is initialized below just
  * to ensure that it is allocated to initialized data (.data not .bss).
  */
-struct nfs_diskless nfs_diskless = { 0 };
+struct nfs_diskless nfs_diskless = { { {0} } };
 int nfs_diskless_valid = 0;
 
 void nfs_disconnect __P((struct nfsmount *));
 void nfsargs_ntoh __P((struct nfs_args *));
-int nfs_fsinfo __P((struct nfsmount *, struct vnode *, struct ucred *, 
-    struct proc *));
 static int nfs_mountdiskless __P((char *, char *, int, struct sockaddr_in *,
     struct nfs_args *, struct proc *, struct vnode **, struct mount **));
 
@@ -267,7 +265,7 @@ nfs_mountroot()
     if (time.tv_sec == 0)
         time.tv_sec = 1;
 
-    /* 
+    /*
      * XXX splnet, so networks will receive...
      */
     splnet();
@@ -301,11 +299,11 @@ nfs_mountroot()
      */
 
     for (i = strlen(nd->myif.ifra_name) - 1;
-        nd->myif.ifra_name[i] >= '0' && 
+        nd->myif.ifra_name[i] >= '0' &&
         nd->myif.ifra_name[i] <= '9';
         nd->myif.ifra_name[i] ++) {
         error = ifioctl(so, SIOCAIFADDR, (caddr_t)&nd->myif, p);
-        if(!error) 
+        if(!error)
             break;
     }
     if (error) {
@@ -351,8 +349,9 @@ nfs_mountroot()
             (l >> 24) & 0xff, (l >> 16) & 0xff,
             (l >>  8) & 0xff, (l >>  0) & 0xff,nd->swap_hostnam);
         printf("NFS SWAP: %s\n",buf);
-        if (error = nfs_mountdiskless(buf, "/swap", 0,
-            &nd->swap_saddr, &nd->swap_args, p, &vp, &swap_mp))
+        error = nfs_mountdiskless(buf, "/swap", 0,
+            &nd->swap_saddr, &nd->swap_args, p, &vp, &swap_mp);
+        if (error)
             return (error);
         vfs_unbusy(swap_mp, p);
 
@@ -390,8 +389,9 @@ nfs_mountroot()
         (l >> 24) & 0xff, (l >> 16) & 0xff,
         (l >>  8) & 0xff, (l >>  0) & 0xff,nd->root_hostnam);
     printf("NFS ROOT: %s\n",buf);
-    if (error = nfs_mountdiskless(buf, "/", MNT_RDONLY,
-        &nd->root_saddr, &nd->root_args, p, &vp, &mp)) {
+    error = nfs_mountdiskless(buf, "/", MNT_RDONLY,
+        &nd->root_saddr, &nd->root_args, p, &vp, &mp);
+    if (error) {
         if (swap_mp) {
             mp->mnt_vfc->vfc_refcount--;
             free(swap_mp, M_MOUNT);
@@ -438,7 +438,8 @@ nfs_mountdiskless(path, which, mountflag, sin, args, p, vpp, mpp)
     struct mbuf *m;
     int error;
 
-    if (error = vfs_rootmountalloc("nfs", path, &mp)) {
+    error = vfs_rootmountalloc("nfs", path, &mp);
+    if (error) {
         printf("nfs_mountroot: NFS not configured");
         return (error);
     }
@@ -446,7 +447,8 @@ nfs_mountdiskless(path, which, mountflag, sin, args, p, vpp, mpp)
     MGET(m, MT_SONAME, M_WAITOK);
     bcopy((caddr_t)sin, mtod(m, caddr_t), sin->sin_len);
     m->m_len = sin->sin_len;
-    if (error = mountnfs(args, mp, m, which, path, vpp)) {
+    error = mountnfs(args, mp, m, which, path, vpp);
+    if (error) {
         printf("nfs_mountroot: mount %s on %s: %d", path, which, error);
         mp->mnt_vfc->vfc_refcount--;
         vfs_unbusy(mp, p);
@@ -928,4 +930,3 @@ nfs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
         return EOPNOTSUPP;
     }
 }
-

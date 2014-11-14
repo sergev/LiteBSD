@@ -1180,38 +1180,40 @@ nfs_rephead(siz, nd, slp, err, cache, frev, mrq, mbp, bposp)
         if (nd->nd_flag & ND_KERBFULL) {
             register struct nfsuid *nuidp;
             struct timeval ktvin, ktvout;
-            NFSKERBKEYSCHED_T keys; /* stores key schedule */
 
             for (nuidp = NUIDHASH(slp, nd->nd_cr.cr_uid)->lh_first;
-            nuidp != 0; nuidp = nuidp->nu_hash.le_next) {
-            if (nuidp->nu_cr.cr_uid == nd->nd_cr.cr_uid &&
-                (!nd->nd_nam2 || netaddr_match(NU_NETFAM(nuidp),
-                 &nuidp->nu_haddr, nd->nd_nam2)))
-                break;
+                nuidp != 0; nuidp = nuidp->nu_hash.le_next) {
+
+                if (nuidp->nu_cr.cr_uid == nd->nd_cr.cr_uid &&
+                    (!nd->nd_nam2 || netaddr_match(NU_NETFAM(nuidp),
+                     &nuidp->nu_haddr, nd->nd_nam2)))
+                    break;
             }
             if (nuidp) {
-            ktvin.tv_sec =
-                txdr_unsigned(nuidp->nu_timestamp.tv_sec - 1);
-            ktvin.tv_usec =
-                txdr_unsigned(nuidp->nu_timestamp.tv_usec);
+                ktvin.tv_sec =
+                    txdr_unsigned(nuidp->nu_timestamp.tv_sec - 1);
+                ktvin.tv_usec =
+                    txdr_unsigned(nuidp->nu_timestamp.tv_usec);
 
-            /*
-             * Encrypt the timestamp in ecb mode using the
-             * session key.
-             */
+                /*
+                 * Encrypt the timestamp in ecb mode using the
+                 * session key.
+                 */
 #ifdef NFSKERB
-            XXX
+                XXX
+#else
+                ktvout = ktvin;
 #endif
 
-            *tl++ = rpc_auth_kerb;
-            *tl++ = txdr_unsigned(3 * NFSX_UNSIGNED);
-            *tl = ktvout.tv_sec;
-            nfsm_build(tl, u_long *, 3 * NFSX_UNSIGNED);
-            *tl++ = ktvout.tv_usec;
-            *tl++ = txdr_unsigned(nuidp->nu_cr.cr_uid);
+                *tl++ = rpc_auth_kerb;
+                *tl++ = txdr_unsigned(3 * NFSX_UNSIGNED);
+                *tl = ktvout.tv_sec;
+                nfsm_build(tl, u_long *, 3 * NFSX_UNSIGNED);
+                *tl++ = ktvout.tv_usec;
+                *tl++ = txdr_unsigned(nuidp->nu_cr.cr_uid);
             } else {
-            *tl++ = 0;
-            *tl++ = 0;
+                *tl++ = 0;
+                *tl++ = 0;
             }
         } else {
             *tl++ = 0;
@@ -1915,7 +1917,6 @@ nfs_getreq(nd, nfsd, has_header)
     struct mbuf *mrep, *md;
     register struct nfsuid *nuidp;
     struct timeval tvin, tvout;
-    NFSKERBKEYSCHED_T keys; /* stores key schedule */
 
     mrep = nd->nd_mrep;
     md = nd->nd_md;
@@ -2094,6 +2095,8 @@ nfs_getreq(nd, nfsd, has_header)
              */
 #ifdef NFSKERB
             XXX
+#else
+            tvout = tvin;
 #endif
 
             tvout.tv_sec = fxdr_unsigned(long, tvout.tv_sec);

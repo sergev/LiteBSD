@@ -88,7 +88,8 @@ nullfs_mount(mp, path, data, ndp, p)
     /*
      * Get argument
      */
-    if (error = copyin(data, (caddr_t)&args, sizeof(struct null_args)))
+    error = copyin(data, (caddr_t)&args, sizeof(struct null_args));
+    if (error)
         return (error);
 
     /*
@@ -96,7 +97,8 @@ nullfs_mount(mp, path, data, ndp, p)
      */
     NDINIT(ndp, LOOKUP, FOLLOW|WANTPARENT|LOCKLEAF,
         UIO_USERSPACE, args.target, p);
-    if (error = namei(ndp))
+    error = namei(ndp);
+    if (error)
         return (error);
 
     /*
@@ -147,7 +149,7 @@ nullfs_mount(mp, path, data, ndp, p)
 
     (void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
-    (void) copyinstr(args.target, mp->mnt_stat.f_mntfromname, MNAMELEN - 1, 
+    (void) copyinstr(args.target, mp->mnt_stat.f_mntfromname, MNAMELEN - 1,
         &size);
     bzero(mp->mnt_stat.f_mntfromname + size, MNAMELEN - size);
 #ifdef NULLFS_DIAGNOSTIC
@@ -198,18 +200,19 @@ nullfs_unmount(mp, mntflags, p)
      * moment, but who knows...
      */
 #if 0
-    mntflushbuf(mp, 0); 
+    mntflushbuf(mp, 0);
     if (mntinvalbuf(mp, 1))
         return (EBUSY);
 #endif
     if (nullm_rootvp->v_usecount > 1)
         return (EBUSY);
-    if (error = vflush(mp, nullm_rootvp, flags))
+    error = vflush(mp, nullm_rootvp, flags);
+    if (error)
         return (error);
 
 #ifdef NULLFS_DIAGNOSTIC
     vprint("alias root of lower", nullm_rootvp);
-#endif   
+#endif
     /*
      * Release reference on underlying root vnode
      */
@@ -321,7 +324,7 @@ nullfs_vget(mp, ino, vpp)
     ino_t ino;
     struct vnode **vpp;
 {
-    
+
     return VFS_VGET(MOUNTTONULLMOUNT(mp)->nullm_vfs, ino, vpp);
 }
 

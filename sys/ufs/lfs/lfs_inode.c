@@ -209,17 +209,20 @@ lfs_truncate(ap)
         ip->i_size = length;
     else {
 #ifdef QUOTA
-        if (e1 = getinoquota(ip))
+        e1 = getinoquota(ip);
+        if (e1)
             return (e1);
-#endif  
-        if (e1 = bread(vp, lbn, oldsize_newlast, NOCRED, &bp))
+#endif
+        e1 = bread(vp, lbn, oldsize_newlast, NOCRED, &bp);
+        if (e1)
             return (e1);
         ip->i_size = length;
         (void)vnode_pager_uncache(vp);
         newsize = blksize(fs, ip, lbn);
         bzero((char *)bp->b_data + offset, (u_int)(newsize - offset));
         allocbuf(bp, newsize);
-        if (e1 = VOP_BWRITE(bp))
+        e1 = VOP_BWRITE(bp);
+        if (e1)
             return (e1);
     }
     /*
@@ -277,9 +280,10 @@ lfs_truncate(ap)
                     brelse (bp);
                 else {
                     bzero((ufs_daddr_t *)bp->b_data +
-                        inp->in_off, fs->lfs_bsize - 
+                        inp->in_off, fs->lfs_bsize -
                         inp->in_off * sizeof(ufs_daddr_t));
-                    if (e1 = VOP_BWRITE(bp)) 
+                    e1 = VOP_BWRITE(bp);
+                    if (e1)
                         return (e1);
                 }
             }
@@ -362,7 +366,7 @@ lfs_truncate(ap)
 #endif
     fs->lfs_avail += fragstodb(fs, a_released);
     e1 = vinvalbuf(vp, (length > 0) ? V_SAVE : 0, ap->a_cred, ap->a_p,
-        0, 0); 
+        0, 0);
     e2 = VOP_UPDATE(vp, &tv, &tv, 0);
     return (e1 ? e1 : e2 ? e2 : 0);
 }

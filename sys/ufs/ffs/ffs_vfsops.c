@@ -125,7 +125,7 @@ ffs_mountroot()
 /*
  * Flush out all the files in a filesystem.
  */
-static int
+int
 ffs_flushfiles(mp, flags, p)
     register struct mount *mp;
     int flags;

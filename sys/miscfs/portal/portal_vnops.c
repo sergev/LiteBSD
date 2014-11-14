@@ -60,6 +60,7 @@
 #include <sys/socketvar.h>
 #include <sys/un.h>
 #include <sys/unpcb.h>
+#include <sys/syscallargs.h>
 #include <miscfs/portal/portal.h>
 
 static int portal_fileid = PORTAL_ROOTFILEID+1;
@@ -70,12 +71,10 @@ portal_closefd(p, fd)
     int fd;
 {
     int error;
-    struct {
-        int fd;
-    } ua;
+    struct close_args ua;
     int rc;
 
-    ua.fd = fd;
+    SCARG(&ua, fd) = fd;
     error = close(p, &ua, &rc);
     /*
      * We should never get an error, and there isn't anything
@@ -543,6 +542,7 @@ portal_reclaim(ap)
 /*
  * Return POSIX pathconf information applicable to special devices.
  */
+int
 portal_pathconf(ap)
     struct vop_pathconf_args /* {
         struct vnode *a_vp;

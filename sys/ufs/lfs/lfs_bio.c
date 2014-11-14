@@ -40,6 +40,7 @@
 #include <sys/resourcevar.h>
 #include <sys/mount.h>
 #include <sys/kernel.h>
+#include <sys/systm.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
@@ -100,8 +101,8 @@ lfs_bwrite(ap)
             /* Out of space, need cleaner to run */
             wakeup(&lfs_allclean_wakeup);
             wakeup(&fs->lfs_nextseg);
-            if (error = tsleep(&fs->lfs_avail, PCATCH | PUSER,
-                "cleaner", NULL)) {
+            error = tsleep(&fs->lfs_avail, PCATCH | PUSER, "cleaner", NULL);
+            if (error) {
                 brelse(bp);
                 return (error);
             }

@@ -40,6 +40,7 @@
 #include <sys/vnode.h>
 #include <sys/malloc.h>
 #include <sys/kernel.h>
+#include <sys/systm.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
@@ -69,6 +70,119 @@ int clean_vnlocked = 0;
 int clean_inlocked = 0;
 
 /*
+ * VFS_VGET call specialized for the cleaner.  The cleaner already knows the
+ * daddr from the ifile, so don't look it up again.  If the cleaner is
+ * processing IINFO structures, it may have the ondisk inode already, so
+ * don't go retrieving it again.
+ */
+static int
+lfs_fastvget(mp, ino, daddr, vpp, dinp)
+    struct mount *mp;
+    ino_t ino;
+    ufs_daddr_t daddr;
+    struct vnode **vpp;
+    struct dinode *dinp;
+{
+    register struct inode *ip;
+    struct vnode *vp;
+    struct ufsmount *ump;
+    struct buf *bp;
+    dev_t dev;
+    int error;
+
+    ump = VFSTOUFS(mp);
+    dev = ump->um_dev;
+    /*
+     * This is playing fast and loose.  Someone may have the inode
+     * locked, in which case they are going to be distinctly unhappy
+     * if we trash something.
+     */
+    if ((*vpp = ufs_ihashlookup(dev, ino)) != NULL) {
+        lfs_vref(*vpp);
+        if ((*vpp)->v_flag & VXLOCK)
+            clean_vnlocked++;
+        ip = VTOI(*vpp);
+        if (lockstatus(&ip->i_lock))
+            clean_inlocked++;
+        if (!(ip->i_flag & IN_MODIFIED))
+            ++ump->um_lfs->lfs_uinodes;
+        ip->i_flag |= IN_MODIFIED;
+        return (0);
+    }
+
+    /* Allocate new vnode/inode. */
+    error = lfs_vcreate(mp, ino, &vp);
+    if (error) {
+        *vpp = NULL;
+        return (error);
+    }
+
+    /*
+     * Put it onto its hash chain and lock it so that other requests for
+     * this inode will block if they arrive while we are sleeping waiting
+     * for old data structures to be purged or for the contents of the
+     * disk portion of this inode to be read.
+     */
+    ip = VTOI(vp);
+    ufs_ihashins(ip);
+
+    /*
+     * XXX
+     * This may not need to be here, logically it should go down with
+     * the i_devvp initialization.
+     * Ask Kirk.
+     */
+    ip->i_lfs = ump->um_lfs;
+
+    /* Read in the disk contents for the inode, copy into the inode. */
+    if (dinp) {
+        error = copyin(dinp, &ip->i_din, sizeof(struct dinode));
+        if (error)
+            return (error);
+    } else {
+        error = bread(ump->um_devvp, daddr,
+            (int)ump->um_lfs->lfs_bsize, NOCRED, &bp);
+        if (error) {
+            /*
+             * The inode does not contain anything useful, so it
+             * would be misleading to leave it on its hash chain.
+             * Iput() will return it to the free list.
+             */
+            ufs_ihashrem(ip);
+
+            /* Unlock and discard unneeded inode. */
+            lfs_vunref(vp);
+            brelse(bp);
+            *vpp = NULL;
+            return (error);
+        }
+        ip->i_din =
+            *lfs_ifind(ump->um_lfs, ino, (struct dinode *)bp->b_data);
+        brelse(bp);
+    }
+
+    /*
+     * Initialize the vnode from the inode, check for aliases.  In all
+     * cases re-init ip, the underlying vnode/inode may have changed.
+     */
+    error = ufs_vinit(mp, lfs_specop_p, LFS_FIFOOPS, &vp);
+    if (error) {
+        lfs_vunref(vp);
+        *vpp = NULL;
+        return (error);
+    }
+    /*
+     * Finish inode initialization now that aliasing has been resolved.
+     */
+    ip->i_devvp = ump->um_devvp;
+    ip->i_flag |= IN_MODIFIED;
+    ++ump->um_lfs->lfs_uinodes;
+    VREF(ip->i_devvp);
+    *vpp = vp;
+    return (0);
+}
+
+/*
  * lfs_markv:
  *
  * This will mark inodes and blocks dirty, so they are written into the log.
@@ -86,6 +200,7 @@ struct lfs_markv_args {
     BLOCK_INFO *blkiov; /* block array */
     int blkcnt;     /* count of block array entries */
 };
+
 int
 lfs_markv(p, uap, retval)
     struct proc *p;
@@ -96,10 +211,10 @@ lfs_markv(p, uap, retval)
     BLOCK_INFO *blkp;
     IFILE *ifp;
     struct buf *bp, **bpp;
-    struct inode *ip;
+    struct inode *ip = 0;
     struct lfs *fs;
     struct mount *mntp;
-    struct vnode *vp;
+    struct vnode *vp = 0;
     fsid_t fsid;
     void *start;
     ino_t lastino;
@@ -107,17 +222,20 @@ lfs_markv(p, uap, retval)
     u_long bsize;
     int cnt, error;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
 
-    if (error = copyin(uap->fsidp, &fsid, sizeof(fsid_t)))
+    error = copyin(uap->fsidp, &fsid, sizeof(fsid_t));
+    if (error)
         return (error);
     if ((mntp = vfs_getvfs(&fsid)) == NULL)
         return (EINVAL);
 
     cnt = uap->blkcnt;
     start = malloc(cnt * sizeof(BLOCK_INFO), M_SEGMENT, M_WAITOK);
-    if (error = copyin(uap->blkiov, start, cnt * sizeof(BLOCK_INFO)))
+    error = copyin(uap->blkiov, start, cnt * sizeof(BLOCK_INFO));
+    if (error)
         goto err1;
 
     /* Mark blocks/inodes dirty.  */
@@ -171,7 +289,7 @@ lfs_markv(p, uap, retval)
 
             /* Get the vnode/inode. */
             if (lfs_fastvget(mntp, blkp->bi_inode, v_daddr, &vp,
-                blkp->bi_lbn == LFS_UNUSED_LBN ? 
+                blkp->bi_lbn == LFS_UNUSED_LBN ?
                 blkp->bi_bp : NULL)) {
 #ifdef DIAGNOSTIC
                 printf("lfs_markv: VFS_VGET failed (%d)\n",
@@ -209,7 +327,8 @@ lfs_markv(p, uap, retval)
                 (error = copyin(blkp->bi_bp, bp->b_data,
                 blkp->bi_size)))
                 goto err2;
-            if (error = VOP_BWRITE(bp))
+            error = VOP_BWRITE(bp);
+            if (error)
                 goto err2;
         }
         while (lfs_gatherblock(sp, bp, NULL));
@@ -236,8 +355,8 @@ lfs_markv(p, uap, retval)
  * updated and now have bad block pointers.  I don't know what to do
  * about this.
  */
-
-err2:   lfs_vunref(vp);
+err2:
+    lfs_vunref(vp);
     /* Free up fakebuffers */
     for (bpp = --sp->cbpp; bpp >= sp->bpp; --bpp)
         if ((*bpp)->b_flags & B_CALL) {
@@ -246,7 +365,7 @@ err2:   lfs_vunref(vp);
         } else
             brelse(*bpp);
     lfs_segunlock(fs);
-err1:   
+err1:
     free(start, M_SEGMENT);
     return (error);
 }
@@ -279,17 +398,20 @@ lfs_bmapv(p, uap, retval)
     ufs_daddr_t daddr;
     int cnt, error, step;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
 
-    if (error = copyin(uap->fsidp, &fsid, sizeof(fsid_t)))
+    error = copyin(uap->fsidp, &fsid, sizeof(fsid_t));
+    if (error)
         return (error);
     if ((mntp = vfs_getvfs(&fsid)) == NULL)
         return (EINVAL);
 
     cnt = uap->blkcnt;
     start = blkp = malloc(cnt * sizeof(BLOCK_INFO), M_SEGMENT, M_WAITOK);
-    if (error = copyin(uap->blkiov, blkp, cnt * sizeof(BLOCK_INFO))) {
+    error = copyin(uap->blkiov, blkp, cnt * sizeof(BLOCK_INFO));
+    if (error) {
         free(blkp, M_SEGMENT);
         return (error);
     }
@@ -331,7 +453,7 @@ lfs_bmapv(p, uap, retval)
 struct lfs_segclean_args {
     fsid_t *fsidp;      /* file system */
     u_long segment;     /* segment number */
-}; 
+};
 int
 lfs_segclean(p, uap, retval)
     struct proc *p;
@@ -346,10 +468,12 @@ lfs_segclean(p, uap, retval)
     fsid_t fsid;
     int error;
 
-    if (error = suser(p->p_ucred, &p->p_acflag))
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error)
         return (error);
 
-    if (error = copyin(uap->fsidp, &fsid, sizeof(fsid_t)))
+    error = copyin(uap->fsidp, &fsid, sizeof(fsid_t));
+    if (error)
         return (error);
     if ((mntp = vfs_getvfs(&fsid)) == NULL)
         return (EINVAL);
@@ -393,6 +517,7 @@ struct lfs_segwait_args {
     fsid_t *fsidp;      /* file system */
     struct timeval *tv; /* timeout */
 };
+
 int
 lfs_segwait(p, uap, retval)
     struct proc *p;
@@ -407,11 +532,13 @@ lfs_segwait(p, uap, retval)
     u_long timeout;
     int error, s;
 
-    if (error = suser(p->p_ucred, &p->p_acflag)) {
+    error = suser(p->p_ucred, &p->p_acflag);
+    if (error) {
         return (error);
-}
+    }
 #ifdef WHEN_QUADS_WORK
-    if (error = copyin(uap->fsidp, &fsid, sizeof(fsid_t)))
+    error = copyin(uap->fsidp, &fsid, sizeof(fsid_t))
+    if (error)
         return (error);
     if (fsid == (fsid_t)-1)
         addr = &lfs_allclean_wakeup;
@@ -421,7 +548,8 @@ lfs_segwait(p, uap, retval)
         addr = &VFSTOUFS(mntp)->um_lfs->lfs_nextseg;
     }
 #else
-    if (error = copyin(uap->fsidp, &fsid, sizeof(fsid_t)))
+    error = copyin(uap->fsidp, &fsid, sizeof(fsid_t));
+    if (error)
         return (error);
     if ((mntp = vfs_getvfs(&fsid)) == NULL)
         addr = &lfs_allclean_wakeup;
@@ -430,7 +558,8 @@ lfs_segwait(p, uap, retval)
 #endif
 
     if (uap->tv) {
-        if (error = copyin(uap->tv, &atv, sizeof(struct timeval)))
+        error = copyin(uap->tv, &atv, sizeof(struct timeval));
+        if (error)
             return (error);
         if (itimerfix(&atv))
             return (EINVAL);
@@ -445,114 +574,6 @@ lfs_segwait(p, uap, retval)
     return (error == ERESTART ? EINTR : 0);
 }
 
-/*
- * VFS_VGET call specialized for the cleaner.  The cleaner already knows the
- * daddr from the ifile, so don't look it up again.  If the cleaner is
- * processing IINFO structures, it may have the ondisk inode already, so
- * don't go retrieving it again.
- */
-int
-lfs_fastvget(mp, ino, daddr, vpp, dinp)
-    struct mount *mp;
-    ino_t ino;
-    ufs_daddr_t daddr;
-    struct vnode **vpp;
-    struct dinode *dinp;
-{
-    register struct inode *ip;
-    struct vnode *vp;
-    struct ufsmount *ump;
-    struct buf *bp;
-    dev_t dev;
-    int error;
-
-    ump = VFSTOUFS(mp);
-    dev = ump->um_dev;
-    /*
-     * This is playing fast and loose.  Someone may have the inode
-     * locked, in which case they are going to be distinctly unhappy
-     * if we trash something.
-     */
-    if ((*vpp = ufs_ihashlookup(dev, ino)) != NULL) {
-        lfs_vref(*vpp);
-        if ((*vpp)->v_flag & VXLOCK)
-            clean_vnlocked++;
-        ip = VTOI(*vpp);
-        if (lockstatus(&ip->i_lock))
-            clean_inlocked++;
-        if (!(ip->i_flag & IN_MODIFIED))
-            ++ump->um_lfs->lfs_uinodes;
-        ip->i_flag |= IN_MODIFIED;
-        return (0);
-    }
-
-    /* Allocate new vnode/inode. */
-    if (error = lfs_vcreate(mp, ino, &vp)) {
-        *vpp = NULL;
-        return (error);
-    }
-
-    /*
-     * Put it onto its hash chain and lock it so that other requests for
-     * this inode will block if they arrive while we are sleeping waiting
-     * for old data structures to be purged or for the contents of the
-     * disk portion of this inode to be read.
-     */
-    ip = VTOI(vp);
-    ufs_ihashins(ip);
-
-    /*
-     * XXX
-     * This may not need to be here, logically it should go down with
-     * the i_devvp initialization.
-     * Ask Kirk.
-     */
-    ip->i_lfs = ump->um_lfs;
-
-    /* Read in the disk contents for the inode, copy into the inode. */
-    if (dinp)
-        if (error = copyin(dinp, &ip->i_din, sizeof(struct dinode)))
-            return (error);
-    else {
-        if (error = bread(ump->um_devvp, daddr,
-            (int)ump->um_lfs->lfs_bsize, NOCRED, &bp)) {
-            /*
-             * The inode does not contain anything useful, so it
-             * would be misleading to leave it on its hash chain.
-             * Iput() will return it to the free list.
-             */
-            ufs_ihashrem(ip);
-
-            /* Unlock and discard unneeded inode. */
-            lfs_vunref(vp);
-            brelse(bp);
-            *vpp = NULL;
-            return (error);
-        }
-        ip->i_din =
-            *lfs_ifind(ump->um_lfs, ino, (struct dinode *)bp->b_data);
-        brelse(bp);
-    }
-
-    /*
-     * Initialize the vnode from the inode, check for aliases.  In all
-     * cases re-init ip, the underlying vnode/inode may have changed.
-     */
-    if (error = ufs_vinit(mp, lfs_specop_p, LFS_FIFOOPS, &vp)) {
-        lfs_vunref(vp);
-        *vpp = NULL;
-        return (error);
-    }
-    /*
-     * Finish inode initialization now that aliasing has been resolved.
-     */
-    ip->i_devvp = ump->um_devvp;
-    ip->i_flag |= IN_MODIFIED;
-    ++ump->um_lfs->lfs_uinodes;
-    VREF(ip->i_devvp);
-    *vpp = vp;
-    return (0);
-}
 struct buf *
 lfs_fakebuf(vp, lbn, size, uaddr)
     struct vnode *vp;
