@@ -76,53 +76,23 @@ struct nlist nl[] = {
 	{ "_udpstat" },
 #define	N_IFNET		6
 	{ "_ifnet" },
-#define	N_IMP		7
-	{ "_imp_softc" },
-#define	N_ICMPSTAT	8
+#define	N_ICMPSTAT	7
 	{ "_icmpstat" },
-#define	N_RTSTAT	9
+#define	N_RTSTAT	8
 	{ "_rtstat" },
-#define	N_UNIXSW	10
+#define	N_UNIXSW	9
 	{ "_unixsw" },
-#define N_IDP		11
-	{ "_nspcb"},
-#define N_IDPSTAT	12
-	{ "_idpstat"},
-#define N_SPPSTAT	13
-	{ "_spp_istat"},
-#define N_NSERR		14
-	{ "_ns_errstat"},
-#define	N_CLNPSTAT	15
-	{ "_clnp_stat"},
-#define	IN_NOTUSED	16
-	{ "_tp_inpcb" },
-#define	ISO_TP		17
-	{ "_tp_refinfo" },
-#define	N_TPSTAT	18  /* TODO: delete */
-	{ "_tp_stat" },
-#define	N_ESISSTAT	19  /* TODO: delete */
-	{ "_esis_stat"},
-#define N_NIMP		20
-	{ "_nimp"},
-#define N_RTREE		21
+#define N_RTREE		10
 	{ "_rt_tables"},
-#define N_CLTP		22  /* TODO: delete */
-	{ "_cltb"},
-#define N_CLTPSTAT	23  /* TODO: delete */
-	{ "_cltpstat"},
-#define	N_NFILE		24
-	{ "_nfile" },
-#define	N_FILE		25
-	{ "_file" },
-#define N_IGMPSTAT	26
+#define N_IGMPSTAT	11
 	{ "_igmpstat" },
-#define N_MRTPROTO	27
+#define N_MRTPROTO	12
 	{ "_ip_mrtproto" },
-#define N_MRTSTAT	28
+#define N_MRTSTAT	13
 	{ "_mrtstat" },
-#define N_MRTTABLE	29
+#define N_MRTTABLE	14
 	{ "_mrttable" },
-#define N_VIFTABLE	30
+#define N_VIFTABLE	15
 	{ "_viftable" },
 	"",
 };
@@ -149,42 +119,8 @@ struct protox {
 	  0,		0 }
 };
 
-#ifdef USE_NS
-struct protox nsprotox[] = {
-	{ N_IDP,	N_IDPSTAT,	1,	nsprotopr,
-	  idp_stats,	"idp" },
-	{ N_IDP,	N_SPPSTAT,	1,	nsprotopr,
-	  spp_stats,	"spp" },
-	{ -1,		N_NSERR,	1,	0,
-	  nserr_stats,	"ns_err" },
-	{ -1,		-1,		0,	0,
-	  0,		0 }
-};
-#endif
-
-#ifdef USE_ISO
-struct protox isoprotox[] = {
-	{ ISO_TP,	N_TPSTAT,	1,	iso_protopr,
-	  tp_stats,	"tp" },
-	{ N_CLTP,	N_CLTPSTAT,	1,	iso_protopr,
-	  cltp_stats,	"cltp" },
-	{ -1,		N_CLNPSTAT,	1,	 0,
-	  clnp_stats,	"clnp"},
-	{ -1,		N_ESISSTAT,	1,	 0,
-	  esis_stats,	"esis"},
-	{ -1,		-1,		0,	0,
-	  0,		0 }
-};
-#endif
-
 struct protox *protoprotox[] = {
     protox,
-#ifdef USE_NS
-    nsprotox,
-#endif
-#ifdef USE_ISO
-    isoprotox,
-#endif
     NULL
 };
 
@@ -391,16 +327,6 @@ main(argc, argv)
 		}
 		endprotoent();
 	}
-#ifdef USE_NS
-	if (af == AF_NS || af == AF_UNSPEC)
-		for (tp = nsprotox; tp->pr_name; tp++)
-			printproto(tp, tp->pr_name);
-#endif
-#ifdef USE_ISO
-	if (af == AF_ISO || af == AF_UNSPEC)
-		for (tp = isoprotox; tp->pr_name; tp++)
-			printproto(tp, tp->pr_name);
-#endif
 	if ((af == AF_UNIX || af == AF_UNSPEC) && !sflag)
 		unixpr(nl[N_UNIXSW].n_value);
 	exit(0);

@@ -107,9 +107,6 @@ static const struct {
     { "_boottime",      (int) &boottime     },
     { "_bucket",        (int) &bucket       },
     { "_ccpu",          (int) &ccpu         },
-    { "_clnp_stat",     0                   },  /* until netstat fixed */
-    { "_cltb",          0                   },  /* until netstat fixed */
-    { "_cltpstat",      0                   },  /* until netstat fixed */
     { "_cnt",           (int) &cnt          },
     { "_cons",          0                   },  /* not for mips */
     { "_cp_time",       (int) &cp_time      },
@@ -123,8 +120,6 @@ static const struct {
     { "_dmmax",         (int) &dmmax        },
     { "_eintrcnt",      (int) &intrcnt + sizeof(intrcnt) },
     { "_eintrnames",    (int) &intrnames + sizeof(intrnames) },
-    { "_esis_stat",     0                   },  /* until netstat fixed */
-    { "_file",          0                   },  /* until netstat fixed */
     { "_filehead",      (int) &filehead     },
     { "_fscale",        (int) &fscale       },
 #ifdef GPROF
@@ -132,10 +127,8 @@ static const struct {
 #endif
     { "_hz",            (int) &hz           },
     { "_icmpstat",      (int) &icmpstat     },
-    { "_idpstat",       0                   },  /* until netstat fixed */
     { "_ifnet",         (int) &ifnet        },
     { "_igmpstat",      (int) &igmpstat     },
-    { "_imp_softc",     0                   },  /* until netstat fixed */
     { "_intrcnt",       (int) &intrcnt      },
     { "_intrnames",     (int) &intrnames    },
     { "_ip_mrtproto",   (int) &ip_mrtproto  },
@@ -148,18 +141,14 @@ static const struct {
     { "_mrttable",      (int) &mrttable     },
     { "_msgbufp",       (int) &msgbufp      },
     { "_nchstats",      (int) &nchstats     },
-    { "_nfile",         0                   },  /* until netstat fixed */
     { "_nfiles",        (int) &nfiles       },
     { "_nfsstats",      (int) &nfsstats     },
-    { "_nimp",          0                   },  /* until netstat fixed */
 #ifdef SEQSWAP
     { "_niswap",        (int) &niswap       },
     { "_niswdev",       (int) &niswdev      },
 #endif
     { "_nprocs",        (int) &nprocs       },
     { "_npty",          (int) &npty         },
-    { "_ns_errstat",    0                   },  /* until netstat fixed */
-    { "_nspcb",         0                   },  /* until netstat fixed */
     { "_nswap",         (int) &nswap        },
     { "_nswapmap",      (int) &nswapmap     },
     { "_nswdev",        (int) &nswdev       },
@@ -169,7 +158,6 @@ static const struct {
     { "_rtstat",        (int) &rtstat       },
     { "_rt_tables",     (int) &rt_tables    },
     { "_scsi_dinit",    (int) &scsi_dinit   },
-    { "_spp_istat",     0                   },  /* until netstat fixed */
     { "_stathz",        (int) &stathz       },
     { "_swapmap",       (int) &swapmap      },
     { "_swdevt",        (int) &swdevt       },
@@ -180,9 +168,6 @@ static const struct {
     { "_tk_nin",        (int) &tk_nin       },
     { "_tk_nout",       (int) &tk_nout      },
     { "_total",         (int) &total        },
-    { "_tp_inpcb",      0                   },  /* until netstat fixed */
-    { "_tp_refinfo",    0                   },  /* until netstat fixed */
-    { "_tp_stat",       0                   },  /* until netstat fixed */
     { "_uart_cnt",      (int) &uart_cnt     },
     { "_uart_tty",      (int) &uart_tty     },
     { "_udb",           (int) &udb          },
