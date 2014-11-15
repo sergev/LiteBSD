@@ -108,7 +108,6 @@ static const struct {
     { "_bucket",        (int) &bucket       },
     { "_ccpu",          (int) &ccpu         },
     { "_cnt",           (int) &cnt          },
-    { "_cons",          0                   },  /* not for mips */
     { "_cp_time",       (int) &cp_time      },
     { "_dk_busy",       (int) &dk_busy      },
     { "_dk_ndrive",     (int) &dk_ndrive    },

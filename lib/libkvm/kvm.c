@@ -51,6 +51,7 @@ static char sccsid[] = "@(#)kvm.c	8.2 (Berkeley) 2/13/94";
 #include <vm/swap_pager.h>
 
 #include <machine/vmparam.h>
+#include <machine/cpu.h>
 
 #include <ctype.h>
 #include <db.h>
@@ -232,10 +233,18 @@ _kvm_open(kd, uf, mf, sf, flag, errout)
 		 * If the database cannot be opened, open the namelist
 		 * argument so we revert to slow nlist() calls.
 		 */
-		if (kvm_dbopen(kd, uf) < 0 &&
-		    (kd->nlfd = open(uf, O_RDONLY, 0)) < 0) {
-			_kvm_syserr(kd, kd->program, "%s", uf);
-			goto failed;
+		if (kvm_dbopen(kd, uf) < 0) {
+                        if (uf == _PATH_UNIX) {
+                                /* Don't open /vmunix binary,
+                                 * use sysctl() instead. */
+                                kd->nlfd = -1;
+                        } else {
+                                kd->nlfd = open(uf, O_RDONLY, 0);
+                                if (kd->nlfd < 0) {
+                                        _kvm_syserr(kd, kd->program, "%s", uf);
+                                        goto failed;
+                                }
+                        }
 		}
 	} else {
 		/*
@@ -390,6 +399,29 @@ close:
 	return (-1);
 }
 
+static int
+sysctl_nlist(list)
+        struct nlist *list;
+{
+        register struct nlist *p;
+        int mib[2], entries = 0;
+        size_t size;
+
+        mib[0] = CTL_MACHDEP;
+        mib[1] = CPU_NLIST;
+
+        for (p=list; p->n_name && p->n_name[0]; ++p) {
+                size = sizeof(p->n_value);
+                if (sysctl(mib, 2, &p->n_value, &size,
+                    p->n_name, 1 + strlen(p->n_name)) < 0) {
+                        p->n_value = 0;
+                        continue;
+                }
+                ++entries;
+        }
+        return entries;
+}
+
 int
 kvm_nlist(kd, nl)
 	kvm_t *kd;
@@ -402,8 +434,13 @@ kvm_nlist(kd, nl)
 	 * If we can't use the data base, revert to the
 	 * slow library call.
 	 */
-	if (kd->db == 0)
+	if (kd->db == 0) {
+	        if (kd->nlfd < 0) {
+		        /* Use sysctl() instead of nlist(). */
+                        return sysctl_nlist(nl);
+		}
 		return (__fdnlist(kd->nlfd, nl));
+        }
 
 	/*
 	 * We can use the kvm data base.  Go through each nlist entry
