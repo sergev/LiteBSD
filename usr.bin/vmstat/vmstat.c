@@ -374,7 +374,7 @@ getuptime()
 		kread(X_BOOTTIME, &boottime, sizeof(boottime));
 	(void)time(&now);
 	uptime = now - boottime;
-	if (uptime <= 0 || uptime > 60*60*24*365*10) {
+	if (uptime < 0 || uptime > 60*60*24*365*20) {
 		(void)fprintf(stderr,
 		    "vmstat: time makes no sense; namelist must be wrong.\n");
 		exit(1);
@@ -763,7 +763,7 @@ domem()
 		if (kp->kb_calls == 0)
 			continue;
 		size = 1 << i;
-		(void)printf("%8d %8ld %6ld %10ld %7ld %10ld\n", size, 
+		(void)printf("%8d %8ld %6ld %10ld %7ld %10ld\n", size,
 			kp->kb_total - kp->kb_totalfree,
 			kp->kb_totalfree, kp->kb_calls,
 			kp->kb_highwat, kp->kb_couldfree);

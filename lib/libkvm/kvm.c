@@ -404,7 +404,7 @@ sysctl_nlist(list)
         struct nlist *list;
 {
         register struct nlist *p;
-        int mib[2], entries = 0;
+        int mib[2], missing = 0;
         size_t size;
 
         mib[0] = CTL_MACHDEP;
@@ -415,11 +415,13 @@ sysctl_nlist(list)
                 if (sysctl(mib, 2, &p->n_value, &size,
                     p->n_name, 1 + strlen(p->n_name)) < 0) {
                         p->n_value = 0;
+                        p->n_type = 0;
+                        ++missing;
                         continue;
                 }
-                ++entries;
+                p->n_type = N_DATA | N_BSS;
         }
-        return entries;
+        return missing;
 }
 
 int
