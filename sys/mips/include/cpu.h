@@ -120,7 +120,8 @@ union cpuprid {
  * CTL_MACHDEP definitions.
  */
 #define CPU_CONSDEV             1       /* dev_t: console terminal device */
-#define CPU_MAXID               2       /* number of valid machdep ids */
+#define CPU_NLIST               2       /* int: address of kernel symbol */
+#define CPU_MAXID               3       /* number of valid machdep ids */
 
 #define CTL_MACHDEP_NAMES { \
         { 0, 0 }, \
@@ -149,6 +150,17 @@ union   cpuprid cpu;
 union   cpuprid fpu;
 u_int   machDataCacheSize;
 u_int   machInstCacheSize;
+
+struct intrcnt {
+    u_int softclock;
+    u_int softnet;
+    u_int uart;
+    u_int ether;
+    u_int disk;
+    u_int memory;
+    u_int clock;
+    u_int fp;
+} intrcnt;
 
 struct user;
 struct proc;

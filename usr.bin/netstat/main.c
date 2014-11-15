@@ -98,17 +98,17 @@ struct nlist nl[] = {
 	{ "_tp_inpcb" },
 #define	ISO_TP		17
 	{ "_tp_refinfo" },
-#define	N_TPSTAT	18
+#define	N_TPSTAT	18  /* TODO: delete */
 	{ "_tp_stat" },
-#define	N_ESISSTAT	19
+#define	N_ESISSTAT	19  /* TODO: delete */
 	{ "_esis_stat"},
 #define N_NIMP		20
 	{ "_nimp"},
 #define N_RTREE		21
 	{ "_rt_tables"},
-#define N_CLTP		22
+#define N_CLTP		22  /* TODO: delete */
 	{ "_cltb"},
-#define N_CLTPSTAT	23
+#define N_CLTPSTAT	23  /* TODO: delete */
 	{ "_cltpstat"},
 #define	N_NFILE		24
 	{ "_nfile" },

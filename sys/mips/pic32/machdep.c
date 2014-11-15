@@ -44,24 +44,17 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/signalvar.h>
 #include <sys/kernel.h>
 #include <sys/map.h>
-#include <sys/proc.h>
 #include <sys/buf.h>
 #include <sys/reboot.h>
 #include <sys/conf.h>
-#include <sys/file.h>
 #include <sys/clist.h>
 #include <sys/callout.h>
-#include <sys/malloc.h>
 #include <sys/mbuf.h>
 #include <sys/msgbuf.h>
-#include <sys/ioctl.h>
-#include <sys/tty.h>
 #include <sys/user.h>
 #include <sys/exec.h>
-#include <sys/sysctl.h>
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 #ifdef SYSVSHM
@@ -75,8 +68,6 @@
 #include <machine/psl.h>
 #include <machine/pte.h>
 #include <machine/pic32mz.h>
-
-#include <mips/dev/device.h>
 
 /* the following is used externally (sysctl_hw) */
 char    machine[] = "MIPS";     /* cpu "architecture" */
@@ -102,8 +93,6 @@ int     bufpages = BUFPAGES;
 int     msgbufmapped = 0;       /* set when safe to use msgbuf */
 int     maxmem;                 /* max memory per process */
 int     physmem;                /* max supported memory, changes to actual */
-
-extern dev_t cn_dev;
 
 /*
  * safepri is a safe priority for sleep to set for a spin-wait
@@ -624,34 +613,6 @@ cpu_startup()
      * Configure the system.
      */
     configure();
-}
-
-/*
- * machine dependent system variables.
- */
-int
-cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
-    int *name;
-    u_int namelen;
-    void *oldp;
-    size_t *oldlenp;
-    void *newp;
-    size_t newlen;
-    struct proc *p;
-{
-
-    /* all sysctl names at this level are terminal */
-    if (namelen != 1)
-        return (ENOTDIR);               /* overloaded */
-
-    switch (name[0]) {
-    case CPU_CONSDEV:
-        return (sysctl_rdstruct(oldp, oldlenp, newp, &cn_dev,
-            sizeof cn_dev));
-    default:
-        return (EOPNOTSUPP);
-    }
-    /* NOTREACHED */
 }
 
 /*

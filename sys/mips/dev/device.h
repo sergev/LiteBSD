@@ -116,6 +116,8 @@ typedef struct ScsiCmd {
 #ifdef KERNEL
 extern struct mips_ctlr mips_cinit[];
 extern struct scsi_device scsi_dinit[];
+extern dev_t cn_dev;
+extern int uart_cnt;
 
 struct tty;
 struct termios;

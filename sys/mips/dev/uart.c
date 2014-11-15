@@ -88,8 +88,7 @@ static const struct uart_irq uartirq[6] = {
 };
 
 struct tty uart_tty[NUART];
-
-extern dev_t cn_dev;
+int uart_cnt = NUART;           /* Needed for pstat */
 
 static const char pin_name[16] = "?ABCDEFGHJK?????";
 

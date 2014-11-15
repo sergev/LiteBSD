@@ -146,6 +146,9 @@ extern int          page_shift;
 extern vm_size_t    mem_size;   /* size of physical memory (bytes) */
 extern vm_offset_t  first_addr; /* first physical page */
 extern vm_offset_t  last_addr;  /* last physical page */
+extern vm_offset_t  avail_start, avail_end;
+extern int          niswap;     /* size of interleaved swap area */
+extern int          niswdev;    /* number of interleaved swap devices */
 
 #else
 /* out-of-kernel versions of round_page and trunc_page */

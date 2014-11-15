@@ -179,6 +179,9 @@ struct speedtab {
 
 #ifdef KERNEL
 extern  struct ttychars ttydefaults;
+extern  int npty;                   /* for pstat -t */
+extern  struct tty pt_tty[];        /* for pstat -t */
+extern  struct tty uart_tty[];      /* for pstat -t */
 
 /* Symbolic sleep message strings. */
 extern   char ttyin[], ttyout[], ttopen[], ttclos[], ttybg[], ttybuf[];

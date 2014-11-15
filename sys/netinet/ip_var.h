@@ -150,7 +150,7 @@ struct  ipstat {
 struct  ipstat  ipstat;
 struct  ipq ipq;            /* ip reass. queue */
 u_short ip_id;              /* ip packet ctr, for ids */
-int ip_defttl;              /* default IP ttl */
+int     ip_defttl;          /* default IP ttl */
 
 int     in_control __P((struct socket *, u_long, caddr_t, struct ifnet *));
 int     ip_ctloutput __P((int, struct socket *, int, int, struct mbuf **));

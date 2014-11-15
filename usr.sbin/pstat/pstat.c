@@ -130,10 +130,10 @@ struct nlist nl[] = {
 #endif
 
 #ifdef mips
-#define SDC	(SNPTY+1)
-	{ "_dc_tty" },
-#define SNDC	(SNPTY+2)
-	{ "_dc_cnt" },
+#define SUART	(SNPTY+1)
+	{ "_uart_tty" },
+#define SNUART	(SNPTY+2)
+	{ "_uart_cnt" },
 #endif
 
 	{ "" }
@@ -728,8 +728,8 @@ ttymode()
 		ttytype(tty, "dcl", SDCL, SNDCL);
 #endif
 #ifdef mips
-	if (nl[SNDC].n_type != 0)
-		ttytype(tty, "dc", SDC, SNDC);
+	if (nl[SNUART].n_type != 0)
+		ttytype(tty, "uart", SUART, SNUART);
 #endif
 	if (nl[SNPTY].n_type != 0)
 		ttytype(tty, "pty", SPTY, SNPTY);

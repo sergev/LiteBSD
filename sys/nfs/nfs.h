@@ -291,6 +291,8 @@ struct nfsstats {
 
 struct uio; struct buf; struct vattr; struct nameidata; /* XXX */
 
+struct nfsstats nfsstats;
+
 #define NFSINT_SIGMASK  (sigmask(SIGINT)|sigmask(SIGTERM)|sigmask(SIGKILL)| \
                          sigmask(SIGHUP)|sigmask(SIGQUIT))
 

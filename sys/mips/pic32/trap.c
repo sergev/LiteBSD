@@ -597,6 +597,7 @@ interrupt(statusReg, pc)
         int c = mfc0_Compare();
         c += (CPU_KHZ * 1000 / hz + 1) / 2;
         mtc0_Compare (c);
+        intrcnt.clock++;
 
         cf.pc = pc;
         cf.sr = statusReg;
@@ -606,12 +607,14 @@ interrupt(statusReg, pc)
     case PIC32_IRQ_CS0:                 /* Core software interrupt 0 */
         clearsoftclock();
         cnt.v_soft++;
+        intrcnt.softclock++;
         softclock();
         break;
 
     case PIC32_IRQ_CS1:                 /* Core software interrupt 1 */
         clearsoftnet();
         cnt.v_soft++;
+        intrcnt.softnet++;
 #ifdef INET
         if (netisr & (1 << NETISR_ARP)) {
             netisr &= ~(1 << NETISR_ARP);
@@ -625,21 +628,27 @@ interrupt(statusReg, pc)
         break;
 
     case PIC32_IRQ_U1E: case PIC32_IRQ_U1RX: case PIC32_IRQ_U1TX: /* UART1 */
+        intrcnt.uart++;
         uartintr(0);
         break;
     case PIC32_IRQ_U2E: case PIC32_IRQ_U2RX: case PIC32_IRQ_U2TX: /* UART2 */
+        intrcnt.uart++;
         uartintr(1);
         break;
     case PIC32_IRQ_U3E: case PIC32_IRQ_U3RX: case PIC32_IRQ_U3TX: /* UART3 */
+        intrcnt.uart++;
         uartintr(2);
         break;
     case PIC32_IRQ_U4E: case PIC32_IRQ_U4RX: case PIC32_IRQ_U4TX: /* UART4 */
+        intrcnt.uart++;
         uartintr(3);
         break;
     case PIC32_IRQ_U5E: case PIC32_IRQ_U5RX: case PIC32_IRQ_U5TX: /* UART5 */
+        intrcnt.uart++;
         uartintr(4);
         break;
     case PIC32_IRQ_U6E: case PIC32_IRQ_U6RX: case PIC32_IRQ_U6TX: /* UART6 */
+        intrcnt.uart++;
         uartintr(5);
         break;
     }

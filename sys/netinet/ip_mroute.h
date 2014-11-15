@@ -166,6 +166,10 @@ struct mrtstat {
     u_long  mrts_wrong_if;      /* arrived on the wrong interface */
 };
 
+int     ip_mrtproto;
+struct  mrtstat mrtstat;
+struct  mrt *mrttable[MRTHASHSIZ];
+struct  vif viftable[MAXVIFS];
 
 int ip_mrouter_cmd __P((int, struct socket *, struct mbuf *));
 int ip_mrouter_done __P((void));

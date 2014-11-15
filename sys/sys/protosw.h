@@ -206,5 +206,7 @@ char    *prcorequests[] = {
 #endif
 
 #ifdef KERNEL
+extern  struct protosw unixsw[];
+
 extern  struct protosw *pffindproto(), *pffindtype();
 #endif
