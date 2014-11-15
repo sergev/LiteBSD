@@ -135,8 +135,8 @@ realinstall: _PROGSUBDIR
 .if defined(LINKS) && !empty(LINKS)
 	@set ${LINKS}; \
 	while test $$# -ge 2; do \
-		l=$$1; shift; \
-		t=$$1; shift; \
+		l=${DESTDIR}$$1; shift; \
+		t=${DESTDIR}$$1; shift; \
 		echo $$t -\> $$l; \
 		rm -f $$t; \
 		ln $$l $$t; \

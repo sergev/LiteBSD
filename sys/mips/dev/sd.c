@@ -402,7 +402,7 @@ static int card_size(int unit)
         default:                /* Unknown version. */
             return 0;
     }
-    return nsectors>>1;
+    return nsectors;
 }
 
 /*
@@ -571,6 +571,60 @@ again:
 }
 
 /*
+ * Setup the SD card interface.
+ * Get the card type and size.
+ * Read a partition table.
+ * Return 0 on failure.
+ */
+static int
+sd_setup(struct disk *u)
+{
+    int unit = u->dk_unit;
+
+    if (! card_init(unit)) {
+        printf ("sd%d: no SD card detected\n", unit);
+        return 0;
+    }
+    /* Get the size of raw partition. */
+    bzero (u->dk_part, sizeof(u->dk_part));
+    u->dk_part[RAWPART].lba_start = 0;
+    u->dk_part[RAWPART].lba_length = card_size(unit);
+    if (u->dk_part[RAWPART].lba_length == 0) {
+        printf ("sd%d: cannot get card size\n", unit);
+        return 0;
+    }
+    printf ("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
+        sd_type[unit]==TYPE_SDHC ? "SDHC" :
+        sd_type[unit]==TYPE_II ? "II" : "I",
+        u->dk_part[RAWPART].lba_length,
+        spi_get_speed(&u->spiio) / 1000);
+
+    /* Read partition table. */
+    u_int16_t buf[256];
+    int s = splbio();
+    if (! card_read(unit, 0, (char*)buf, sizeof(buf))) {
+        splx(s);
+        printf ("sd%d: cannot read partition table\n", unit);
+        return 0;
+    }
+    splx(s);
+    if (buf[255] == MBR_MAGIC) {
+        bcopy (&buf[223], &u->dk_part[1], 64);
+#if 1
+        int i;
+        for (i=1; i<=NPARTITIONS; i++) {
+            if (u->dk_part[i].type != 0)
+                printf ("sd%d%c: partition type %02x, sector %u, size %u kbytes\n",
+                    unit, i+'a'-1, u->dk_part[i].type,
+                    u->dk_part[i].lba_start,
+                    u->dk_part[i].lba_length / 2);
+        }
+#endif
+    }
+    return 1;
+}
+
+/*
  * Initialize a drive.
  */
 int
@@ -580,59 +634,21 @@ sdopen(dev, flags, mode, p)
     struct proc *p;
 {
     struct disk *u;
-    struct spiio *io;
     int unit = sdunit(dev);
-    unsigned part = sdpart(dev);
+    int part = sdpart(dev);
     unsigned mask, i;
 
     if (unit >= NSD || part > NPARTITIONS)
         return ENXIO;
     u = &sddrives[unit];
     u->dk_unit = unit;
-    io = &u->spiio;
 
     /*
-     * Initialize the SD card interface.
-     * Get the card type and size.
+     * Setup the SD card interface.
      */
-    if (u->dk_open == 0) {
-        if (! card_init(unit)) {
-            printf ("sd%d: no SD card detected\n", unit);
+    if (u->dk_part[RAWPART].lba_length == 0) {
+        if (! sd_setup(u)) {
             return ENODEV;
-        }
-        /* Get the size of raw partition. */
-        bzero (u->dk_part, sizeof(u->dk_part));
-        u->dk_part[RAWPART].lba_start = 0;
-        u->dk_part[RAWPART].lba_length = card_size(unit);
-        if (u->dk_part[RAWPART].lba_length == 0) {
-            printf ("sd%d: cannot get card size\n", unit);
-            return ENODEV;
-        }
-        printf ("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
-            sd_type[unit]==TYPE_SDHC ? "SDHC" :
-            sd_type[unit]==TYPE_II ? "II" : "I",
-            u->dk_part[RAWPART].lba_length, spi_get_speed(io) / 1000);
-
-        /* Read partition table. */
-        u_int16_t buf[256];
-        int s = splbio();
-        if (! card_read(unit, 0, (char*)buf, sizeof(buf))) {
-            splx(s);
-            printf ("sd%d: cannot read partition table\n", unit);
-            return ENODEV;
-        }
-        splx(s);
-        if (buf[255] == MBR_MAGIC) {
-            bcopy (&buf[223], &u->dk_part[1], 64);
-#if 1
-            for (i=1; i<=NPARTITIONS; i++) {
-                if (u->dk_part[i].type != 0)
-                    printf ("sd%d%c: partition type %02x, sector %u, size %u kbytes\n",
-                        unit, i+'a'-1, u->dk_part[i].type,
-                        u->dk_part[i].lba_start,
-                        u->dk_part[i].lba_length / 2);
-            }
-#endif
         }
     }
     u->dk_open++;
@@ -762,8 +778,21 @@ sdsize(dev)
     dev_t dev;
 {
     int unit = sdunit(dev);
+    int part = sdpart(dev);
+    struct disk *u = &sddrives[unit];
 
-    return card_size(unit);
+    if (unit >= NSD || part > NPARTITIONS)
+        return -1;
+
+    /*
+     * Setup the SD card interface, if not done yet.
+     */
+    if (u->dk_part[RAWPART].lba_length == 0) {
+        if (! sd_setup(u)) {
+            return -1;
+        }
+    }
+    return u->dk_part[part].lba_length;
 }
 
 int
