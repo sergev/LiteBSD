@@ -36,8 +36,7 @@
 #ifndef _SYS_MALLOC_H_
 #define _SYS_MALLOC_H_
 
-/* Better to disable for embedded system: too low memory. */
-/*#define KMEMSTATS*/
+#define KMEMSTATS
 
 /*
  * flags to malloc
@@ -179,7 +178,7 @@
     "NFSV3 diroff", /* 60 M_NFSDIROFF */ \
     "NFSV3 bigfh",  /* 61 M_NFSBIGFH */ \
     "ttys",         /* 62 M_TTYS */ \
-    NULL, \
+    "exec",         /* 63 M_EXEC */ \
     NULL, NULL, NULL, NULL, NULL, \
     NULL, NULL, NULL, NULL, NULL, \
     "temp",         /* 74 M_TEMP */ \

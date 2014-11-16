@@ -107,8 +107,10 @@ main(argc, argv)
 		errx(1, "kvm_nlist: %s", kvm_geterr(kd));
 	if (nl[X_MSGBUF].n_type == 0)
 		errx(1, "%s: msgbufp not found", nlistf ? nlistf : "namelist");
-	if (KREAD(nl[X_MSGBUF].n_value, bufp) || KREAD((long)bufp, cur))
-		errx(1, "kvm_read: %s", kvm_geterr(kd));
+	if (KREAD(nl[X_MSGBUF].n_value, bufp))
+		errx(1, "msgbufp: %s", kvm_geterr(kd));
+	if (KREAD((long)bufp, cur))
+		errx(1, "msgbuf: %s", kvm_geterr(kd));
 	kvm_close(kd);
 	if (cur.msg_magic != MSG_MAGIC)
 		errx(1, "magic number incorrect");

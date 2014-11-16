@@ -92,7 +92,7 @@ int     bufpages = BUFPAGES;
 
 int     msgbufmapped = 0;       /* set when safe to use msgbuf */
 int     maxmem;                 /* max memory per process */
-int     physmem;                /* max supported memory, changes to actual */
+int     physmem;                /* max supported memory, in pages */
 
 /*
  * safepri is a safe priority for sleep to set for a spin-wait

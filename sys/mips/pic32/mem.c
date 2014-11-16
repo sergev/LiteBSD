@@ -66,7 +66,6 @@ mmrw(dev, uio, flags)
     register struct iovec *iov;
     int error = 0;
     caddr_t zbuf = NULL;
-    extern vm_offset_t avail_end;
 
     while (uio->uio_resid > 0 && error == 0) {
         iov = uio->uio_iov;
@@ -83,10 +82,9 @@ mmrw(dev, uio, flags)
         case 0:
             v = (u_long)uio->uio_offset;
             c = iov->iov_len;
-            if (v + c <= btoc(physmem))
-                v += MACH_CACHED_MEMORY_ADDR;
-            else
+            if (v + c > ctob(physmem))
                 return (EFAULT);
+            v += MACH_UNCACHED_MEMORY_ADDR;
             error = uiomove((caddr_t)v, (int)c, uio);
             continue;
 
@@ -96,7 +94,8 @@ mmrw(dev, uio, flags)
             if (v < MACH_CACHED_MEMORY_ADDR)
                 return (EFAULT);
             c = iov->iov_len;
-            if (v + c <= MACH_PHYS_TO_UNCACHED(avail_end) ||
+            if ((v >= MACH_UNCACHED_MEMORY_ADDR &&
+                 v + c <= MACH_PHYS_TO_UNCACHED(ctob(physmem))) ||
                 (v >= MACH_KSEG2_ADDR &&
                  kernacc((caddr_t)v, c, uio->uio_rw == UIO_READ ?
                     B_READ : B_WRITE))) {

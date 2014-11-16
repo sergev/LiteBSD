@@ -176,7 +176,8 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     size_t newlen;
     struct proc *p;
 {
-    int i;
+    int i, error;
+    char buf[16];
 
     /* all sysctl names at this level are terminal */
     if (namelen != 1)
@@ -190,7 +191,10 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
     case CPU_NLIST:
         /* Get address of a kernel symbol. */
         for (i=0; nlist[i].name; i++) {
-            if (bcmp(newp, nlist[i].name, newlen) == 0) {
+            error = copyinstr(newp, buf, sizeof(buf), 0);
+            if (error)
+                return error;
+            if (bcmp(buf, nlist[i].name, newlen) == 0) {
                 int addr = nlist[i].addr;
                 if (! oldp)
                     return 0;

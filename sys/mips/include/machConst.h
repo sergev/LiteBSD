@@ -59,19 +59,14 @@
 #ifndef _MACHCONST
 #define _MACHCONST
 
-#define MACH_KUSEG_ADDR                 0x0
 #define MACH_CACHED_MEMORY_ADDR         0x80000000
 #define MACH_UNCACHED_MEMORY_ADDR       0xa0000000
 #define MACH_KSEG2_ADDR                 0xc0000000
-#define MACH_MAX_MEM_ADDR               0xbe000000
-#define MACH_RESERVED_ADDR              0xbfc80000
 
-#define MACH_CACHED_TO_PHYS(x)  ((unsigned)(x) & 0x1fffffff)
-#define MACH_PHYS_TO_CACHED(x)  ((unsigned)(x) | MACH_CACHED_MEMORY_ADDR)
+#define MACH_CACHED_TO_PHYS(x)   ((unsigned)(x) & 0x1fffffff)
+#define MACH_PHYS_TO_CACHED(x)   ((unsigned)(x) | MACH_CACHED_MEMORY_ADDR)
 #define MACH_UNCACHED_TO_PHYS(x) ((unsigned)(x) & 0x1fffffff)
 #define MACH_PHYS_TO_UNCACHED(x) ((unsigned)(x) | MACH_UNCACHED_MEMORY_ADDR)
-
-#define MACH_CODE_START                 0x80030000
 
 /*
  * The bits in the cause register.
@@ -154,12 +149,6 @@
                                 (MACH_BREAK_SSTEP_VAL << MACH_BREAK_VAL_SHIFT))
 #define MACH_BREAK_BRKPT        (MACH_BREAK_INSTR | \
                                 (MACH_BREAK_BRKPT_VAL << MACH_BREAK_VAL_SHIFT))
-
-/*
- * Mininum and maximum cache sizes.
- */
-#define MACH_MIN_CACHE_SIZE     (16 * 1024)
-#define MACH_MAX_CACHE_SIZE     (256 * 1024)
 
 /*
  * The floating point version and status registers.
