@@ -1,62 +1,48 @@
 /*
- * Copyright (c) 1988 University of Utah.
- * Copyright (c) 1992, 1993
- *      The Regents of the University of California.  All rights reserved.
+ * MIPS exception codes.
  *
- * This code is derived from software contributed to Berkeley by
- * the Systems Programming Group of the University of Utah Computer
- * Science Department and Ralph Campbell.
+ * Copyright (c) 2014 Serge Vakulenko
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * Permission to use, copy, modify, and distribute this software
+ * and its documentation for any purpose and without fee is hereby
+ * granted, provided that the above copyright notice appear in all
+ * copies and that both that the copyright notice and this
+ * permission notice and warranty disclaimer appear in supporting
+ * documentation, and that the name of the author not be used in
+ * advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * from: Utah $Hdr: trap.h 1.1 90/07/09$
- *
- *      @(#)trap.h      8.1 (Berkeley) 6/10/93
+ * The author disclaim all warranties with regard to this
+ * software, including all implied warranties of merchantability
+ * and fitness.  In no event shall the author be liable for any
+ * special, indirect or consequential damages or any damages
+ * whatsoever resulting from loss of use, data or profits, whether
+ * in an action of contract, negligence or other tortious action,
+ * arising out of or in connection with the use or performance of
+ * this software.
  */
 
 /*
- * Trap codes
- * also known in trap.c for name strings
+ * See MIPS achitecture docs for description of Cause.ExcCode field.
  */
+#define TRAP_Int    0       /* Interrupt */
+#define TRAP_MOD    1       /* TLB modified */
+#define TRAP_TLBL   2       /* TLB refill (load or fetch) */
+#define TRAP_TLBS   3       /* TLB refill (store) */
+#define TRAP_AdEL   4       /* Address error (load or fetch) */
+#define TRAP_AdES   5       /* Address error (store) */
+#define TRAP_IBE    6       /* Bus error (instruction fetch) */
+#define TRAP_DBE    7       /* Bus error (data load or store) */
+#define TRAP_Sys    8       /* Syscall */
+#define TRAP_Bp     9       /* Breakpoint */
+#define TRAP_RI     10      /* Reserved instruction */
+#define TRAP_CPU    11      /* Coprocessor Unusable */
+#define TRAP_Ov     12      /* Arithmetic Overflow */
+#define TRAP_Tr     13      /* Trap */
+#define TRAP_TLBRI  19      /* TLB read-inhibit */
+#define TRAP_TLBEI  20      /* TLB execute-inhibit */
+#define TRAP_WATCH  23      /* Reference to WatchHi/WatchLo address */
+#define TRAP_MCheck 24      /* Machine check */
+#define TRAP_DSPDis 26      /* DSP disabled */
 
-#define T_INT                   0       /* Interrupt pending */
-#define T_TLB_MOD               1       /* TLB modified fault */
-#define T_TLB_LD_MISS           2       /* TLB miss on load or ifetch */
-#define T_TLB_ST_MISS           3       /* TLB miss on a store */
-#define T_ADDR_ERR_LD           4       /* Address error on a load or ifetch */
-#define T_ADDR_ERR_ST           5       /* Address error on a store */
-#define T_BUS_ERR_IFETCH        6       /* Bus error on an ifetch */
-#define T_BUS_ERR_LD_ST         7       /* Bus error on a load or store */
-#define T_SYSCALL               8       /* System call */
-#define T_BREAK                 9       /* Breakpoint */
-#define T_RES_INST              10      /* Reserved instruction exception */
-#define T_COP_UNUSABLE          11      /* Coprocessor unusable */
-#define T_OVFLOW                12      /* Arithmetic overflow */
-
-#define T_USER                  0x10    /* user-mode flag or'ed with type */
+#define TRAP_USER   0x80    /* user-mode flag or'ed with type */

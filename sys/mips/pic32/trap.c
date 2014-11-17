@@ -114,11 +114,11 @@ exception(statusReg, causeReg, vadr, pc, args)
 
     type = (causeReg & MACH_Cause_ExcCode) >> MACH_Cause_ExcCode_SHIFT;
     if (USERMODE(statusReg)) {
-        type |= T_USER;
+        type |= TRAP_USER;
         sticks = p->p_sticks;
     }
     switch (type) {
-    case T_TLB_MOD:
+    case TRAP_MOD:                      /* Kernel: TLB modified */
         /* check for kernel address */
         if ((int)vadr < 0) {
             register pt_entry_t *pte;
@@ -152,7 +152,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         }
         /* FALLTHROUGH */
 
-    case T_TLB_MOD+T_USER:
+    case TRAP_MOD + TRAP_USER:          /* User: TLB modified */
         {
         register pt_entry_t *pte;
         register unsigned entry;
@@ -188,15 +188,15 @@ exception(statusReg, causeReg, vadr, pc, args)
         goto out;
         }
 
-    case T_TLB_LD_MISS:
-    case T_TLB_ST_MISS:
-        ftype = (type == T_TLB_ST_MISS) ? VM_PROT_WRITE : VM_PROT_READ;
+    case TRAP_TLBL:                     /* Kernel: TLB refill */
+    case TRAP_TLBS:
+        ftype = (type == TRAP_TLBS) ? VM_PROT_WRITE : VM_PROT_READ;
         /* check for kernel address */
         if ((int)vadr < 0) {
             register vm_offset_t va;
             int rv;
 
-        kernel_fault:
+kernel_fault:
             va = trunc_page((vm_offset_t)vadr);
             rv = vm_fault(kernel_map, va, ftype, FALSE);
             if (rv == KERN_SUCCESS)
@@ -220,13 +220,13 @@ exception(statusReg, causeReg, vadr, pc, args)
             return (onfault_table[i]);
         goto dofault;
 
-    case T_TLB_LD_MISS+T_USER:
+    case TRAP_TLBL + TRAP_USER:         /* User: TLB refill load/fetch */
         ftype = VM_PROT_READ;
         goto dofault;
 
-    case T_TLB_ST_MISS+T_USER:
+    case TRAP_TLBS + TRAP_USER:         /* User: TLB refill store */
         ftype = VM_PROT_WRITE;
-    dofault:
+dofault:
         {
         register vm_offset_t va;
         register struct vmspace *vm;
@@ -278,10 +278,10 @@ exception(statusReg, causeReg, vadr, pc, args)
         break;
         }
 
-    case T_ADDR_ERR_LD+T_USER:      /* misaligned or kseg access */
-    case T_ADDR_ERR_ST+T_USER:      /* misaligned or kseg access */
-    case T_BUS_ERR_IFETCH+T_USER:   /* BERR asserted to cpu */
-    case T_BUS_ERR_LD_ST+T_USER:    /* BERR asserted to cpu */
+    case TRAP_AdEL + TRAP_USER:     /* User: address error on load/fetch */
+    case TRAP_AdES + TRAP_USER:     /* User: address error on store */
+    case TRAP_IBE + TRAP_USER:      /* User: bus error on fetch */
+    case TRAP_DBE + TRAP_USER:      /* User: bus error on load/store */
         i = SIGSEGV;
 #if 1
         // Terminate the process.
@@ -291,7 +291,7 @@ exception(statusReg, causeReg, vadr, pc, args)
 #endif
         break;
 
-    case T_SYSCALL+T_USER:
+    case TRAP_Sys + TRAP_USER:      /* User: syscall */
         {
         register int *locr0 = p->p_md.md_regs;
         register struct sysent *callp;
@@ -446,7 +446,7 @@ exception(statusReg, causeReg, vadr, pc, args)
             locr0[V0] = i;
             locr0[A3] = 1;
         }
-    done:
+done:
 #ifdef KTRACE
         if (KTRPOINT(p, KTR_SYSRET))
             ktrsysret(p->p_tracep, code, i, rval[0]);
@@ -454,7 +454,7 @@ exception(statusReg, causeReg, vadr, pc, args)
         goto out;
         }
 
-    case T_BREAK+T_USER:
+    case TRAP_Bp + TRAP_USER:           /* User: breakpoint */
         {
         register unsigned va, instr;
 
@@ -500,21 +500,22 @@ exception(statusReg, causeReg, vadr, pc, args)
         break;
         }
 
-    case T_RES_INST+T_USER:
+    case TRAP_RI + TRAP_USER:           /* User: reserved instruction */
         i = SIGILL;
         break;
 
-    case T_COP_UNUSABLE+T_USER:
-        i = SIGILL;
-        break;
-
-    case T_OVFLOW+T_USER:
+    case TRAP_CPU + TRAP_USER:          /* User: coprocessor unusable */
+printf ("--- (%u) coprocessor unusable at pc=%08x\n", p->p_pid, pc);
         i = SIGFPE;
         break;
 
-    case T_ADDR_ERR_LD:     /* misaligned access */
-    case T_ADDR_ERR_ST:     /* misaligned access */
-    case T_BUS_ERR_LD_ST:   /* BERR asserted to cpu */
+    case TRAP_Ov + TRAP_USER:           /* User: overflow */
+        i = SIGFPE;
+        break;
+
+    case TRAP_AdEL:                     /* Kernel: address error on load/fetch */
+    case TRAP_AdES:                     /* Kernel: address error on store */
+    case TRAP_DBE:                      /* Kernel: bus error on load/store */
         i = ((struct pcb *)UADDR)->pcb_onfault;
         if (i) {
             ((struct pcb *)UADDR)->pcb_onfault = 0;
@@ -523,8 +524,8 @@ exception(statusReg, causeReg, vadr, pc, args)
         /* FALLTHROUGH */
 
     default:
-    err:
-        printf("kernel fault at pc=%08x, badvaddr=%08x\n", pc, vadr);
+err:
+        printf("kernel fault 0x%x at pc=%08x, badvaddr=%08x\n", type, pc, vadr);
         panic("trap");
     }
     trapsignal(p, i, ucode);
