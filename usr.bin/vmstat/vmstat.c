@@ -379,6 +379,9 @@ getuptime()
 		    "vmstat: time makes no sense; namelist must be wrong.\n");
 		exit(1);
 	}
+        /* Avoid division by zero */
+	if (uptime == 0)
+	        uptime = 1;
 	return(uptime);
 }
 

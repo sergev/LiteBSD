@@ -30,11 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)tputs.c	8.1 (Berkeley) 6/4/93";
-#endif /* not lint */
-
 #include <sgtty.h>
 #include <ctype.h>
 
@@ -56,6 +51,7 @@ char	PC;
  * The number of affected lines is affcnt, and the routine
  * used to output one character is outc.
  */
+void
 tputs(cp, affcnt, outc)
 	register char *cp;
 	int affcnt;

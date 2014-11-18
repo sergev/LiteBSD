@@ -30,11 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)tgoto.c	8.1 (Berkeley) 6/4/93";
-#endif /* not lint */
-
 #include <string.h>
 
 #define	CTRL(c)	((c) & 037)
@@ -89,7 +84,7 @@ toohard:
 		return ("OOPS");
 	}
 	added[0] = 0;
-	while (c = *cp++) {
+	while ((c = *cp++)) {
 		if (c != '%') {
 			*dp++ = c;
 			continue;
@@ -140,7 +135,6 @@ setwhich:
 			/* fall into... */
 
 		case '.':
-casedot:
 			/*
 			 * This code is worth scratching your head at for a
 			 * while.  The idea is that various weird things can

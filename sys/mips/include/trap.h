@@ -45,4 +45,4 @@
 #define TRAP_MCheck 24      /* Machine check */
 #define TRAP_DSPDis 26      /* DSP disabled */
 
-#define TRAP_USER   0x80    /* user-mode flag or'ed with type */
+#define TRAP_USER   0x20    /* user-mode flag or'ed with type */

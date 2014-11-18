@@ -30,11 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)termcap.c	8.1 (Berkeley) 6/4/93";
-#endif /* not lint */
-
 #define	PBUFSIZ		512	/* max length of filename path */
 #define	PVECSIZ		32	/* max number of names in path */
 
@@ -69,17 +64,15 @@ tgetent(bp, name)
 {
 	register char *p;
 	register char *cp;
-	char  *dummy;
+	char  *dummy = 0;
 	char **fname;
 	char  *home;
 	int    i;
 	char   pathbuf[PBUFSIZ];	/* holds raw path of filenames */
 	char  *pathvec[PVECSIZ];	/* to point to names in pathbuf */
-	char **pvec;			/* holds usable tail of path vector */
 	char  *termpath;
 
 	fname = pathvec;
-	pvec = pathvec;
 	tbuf = bp;
 	p = pathbuf;
 	cp = getenv("TERMCAP");
@@ -94,10 +87,12 @@ tgetent(bp, name)
 	 * becomes "$HOME/.termcap /etc/termcap" if no TERMPATH exists.
 	 */
 	if (!cp || *cp != '/') {	/* no TERMCAP or it holds an entry */
-		if (termpath = getenv("TERMPATH"))
+	        termpath = getenv("TERMPATH");
+		if (termpath)
 			strncpy(pathbuf, termpath, PBUFSIZ);
 		else {
-			if (home = getenv("HOME")) {	/* set up default */
+		        home = getenv("HOME");
+			if (home) {	/* set up default */
 				p += strlen(home);	/* path, looking in */
 				strcpy(pathbuf, home);	/* $HOME first */
 				*p++ = '/';
@@ -128,11 +123,11 @@ tgetent(bp, name)
 		if (cgetset(cp) < 0)
 			return(-2);
 
-	i = cgetent(&dummy, pathvec, name);      
-	
+	i = cgetent(&dummy, pathvec, name);
+
 	if (i == 0)
 		strcpy(bp, dummy);
-	
+
 	if (dummy)
 		free(dummy);
 	/* no tc reference loop return code in libterm XXX */
@@ -189,7 +184,7 @@ tgetstr(id, area)
 	char ids[3];
 	char *s;
 	int i;
-	
+
 	/*
 	 * XXX
 	 * This is for all the boneheaded programs that relied on tgetstr
@@ -201,7 +196,7 @@ tgetstr(id, area)
 
 	if ((i = cgetstr(tbuf, ids, &s)) < 0)
 		return NULL;
-	
+
 	strcpy(*area, s);
 	*area += i + 1;
 	return(s);

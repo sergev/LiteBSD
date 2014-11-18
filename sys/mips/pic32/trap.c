@@ -77,6 +77,162 @@
 #include <vm/vm_kern.h>
 #include <vm/vm_page.h>
 
+static void
+syscall(p, causeReg, codep)
+    register struct proc *p;
+    unsigned causeReg;      /* cause register at time of exception */
+{
+    register int *locr0 = p->p_md.md_regs;
+    register struct sysent *callp;
+    unsigned int code = locr0[V0];
+    struct args {
+        int i[8];
+    } args;
+    int rval[2], error;
+//printf ("--- %s(pid=%u) syscall code=%u, RA=%08x \n", __func__, p->p_pid, code, locr0[RA]);
+
+    if ((int)causeReg < 0) {
+        /* Don't use syscall in branch delay slot. */
+        exit1(p, W_EXITCODE(0, SIGABRT));
+        error = EINVAL;
+        goto done;
+    }
+    /* Compute next PC after syscall instruction. */
+    locr0[PC] += 4;
+
+    switch (code) {
+    case SYS_syscall:
+        /*
+         * Code is first argument, followed by actual args.
+         */
+        code = locr0[A0];
+        if (code >= nsysent)
+            callp = &sysent[SYS_syscall]; /* (illegal) */
+        else
+            callp = &sysent[code];
+        args.i[0] = locr0[A1];
+        args.i[1] = locr0[A2];
+        args.i[2] = locr0[A3];
+        if (callp->sy_argsize > 3 * sizeof(register_t)) {
+            error = copyin((caddr_t)(locr0[SP] +
+                    4 * sizeof(register_t)),
+                (caddr_t)&args.i[3],
+                (u_int)(callp->sy_argsize - 3 * sizeof(register_t)));
+            if (error) {
+                locr0[V0] = error;
+                locr0[A3] = 1;
+#ifdef KTRACE
+                if (KTRPOINT(p, KTR_SYSCALL))
+                    ktrsyscall(p->p_tracep, code,
+                        callp->sy_argsize,
+                        args.i);
+#endif
+                goto done;
+            }
+        }
+        break;
+
+    case SYS___syscall:
+        /*
+         * Like syscall, but code is a quad, so as to maintain
+         * quad alignment for the rest of the arguments.
+         */
+        code = locr0[A0 + _QUAD_LOWWORD];
+        if (code >= nsysent)
+            callp = &sysent[SYS_syscall]; /* (illegal) */
+        else
+            callp = &sysent[code];
+        args.i[0] = locr0[A2];
+        args.i[1] = locr0[A3];
+        if (callp->sy_argsize > 2 * sizeof(register_t)) {
+            error = copyin((caddr_t)(locr0[SP] +
+                    4 * sizeof(register_t)),
+                (caddr_t)&args.i[2],
+                (u_int)(callp->sy_argsize - 2 * sizeof(register_t)));
+            if (error) {
+                locr0[V0] = error;
+                locr0[A3] = 1;
+#ifdef KTRACE
+                if (KTRPOINT(p, KTR_SYSCALL))
+                    ktrsyscall(p->p_tracep, code,
+                        callp->sy_argsize,
+                        args.i);
+#endif
+                goto done;
+            }
+        }
+        break;
+
+    default:
+        if (code >= nsysent)
+            callp = &sysent[SYS_syscall]; /* (illegal) */
+        else
+            callp = &sysent[code];
+        args.i[0] = locr0[A0];
+        args.i[1] = locr0[A1];
+        args.i[2] = locr0[A2];
+        args.i[3] = locr0[A3];
+        if (callp->sy_argsize > 4 * sizeof(register_t)) {
+            error = copyin((caddr_t)(locr0[SP] +
+                    4 * sizeof(register_t)),
+                (caddr_t)&args.i[4],
+                (u_int)(callp->sy_argsize - 4 * sizeof(register_t)));
+            if (error) {
+                locr0[V0] = error;
+                locr0[A3] = 1;
+#ifdef KTRACE
+                if (KTRPOINT(p, KTR_SYSCALL))
+                    ktrsyscall(p->p_tracep, code,
+                        callp->sy_argsize,
+                        args.i);
+#endif
+                goto done;
+            }
+        }
+    }
+#ifdef KTRACE
+    if (KTRPOINT(p, KTR_SYSCALL))
+        ktrsyscall(p->p_tracep, code, callp->sy_argsize, args.i);
+#endif
+    rval[0] = 0;
+    rval[1] = locr0[V1];
+
+    error = (*callp->sy_call)(p, &args, rval);
+    /*
+     * Reinitialize proc pointer `p' as it may be different
+     * if this is a child returning from fork syscall.
+     */
+    p = curproc;
+    locr0 = p->p_md.md_regs;
+
+    switch (error) {
+    case 0:
+//printf ("--- (%u) syscall succeded, return %u \n", p->p_pid, rval[0]);
+        locr0[V0] = rval[0];
+        locr0[V1] = rval[1];
+        locr0[A3] = 0;
+        break;
+
+    case ERESTART:
+//printf ("--- (%u) syscall restarted \n", p->p_pid);
+        break;
+
+    case EJUSTRETURN:
+//printf ("--- (%u) syscall just return \n", p->p_pid);
+        break;  /* nothing to do */
+
+    default:
+//printf ("--- (%u) syscall failed, error %u \n", p->p_pid, error);
+        locr0[V0] = error;
+        locr0[A3] = 1;
+    }
+done:;
+#ifdef KTRACE
+    if (KTRPOINT(p, KTR_SYSRET))
+        ktrsysret(p->p_tracep, code, error, rval[0]);
+#endif
+}
+
 /*
  * Handle an exception.
  * Called from kern_exception() or user_exception()
@@ -272,11 +428,19 @@ dofault:
 #if 1
         // Terminate the process.
         printf("PID %d (%s) protection violation at %x: BadVAddr = %08x \n",
-            p->p_comm, p->p_pid, pc, vadr);
+            p->p_pid, p->p_comm, pc, vadr);
         exit1(p, W_EXITCODE(0, i));
 #endif
         break;
         }
+
+    case TRAP_TLBRI + TRAP_USER:        /* TLB read-inhibit */
+        ftype = VM_PROT_READ;
+        goto dofault;
+
+    case TRAP_TLBEI + TRAP_USER:        /* TLB execute-inhibit */
+        ftype = VM_PROT_EXECUTE;
+        goto dofault;
 
     case TRAP_AdEL + TRAP_USER:     /* User: address error on load/fetch */
     case TRAP_AdES + TRAP_USER:     /* User: address error on store */
@@ -292,167 +456,13 @@ dofault:
         break;
 
     case TRAP_Sys + TRAP_USER:      /* User: syscall */
-        {
-        register int *locr0 = p->p_md.md_regs;
-        register struct sysent *callp;
-        unsigned int code;
-        int numsys;
-        struct args {
-            int i[8];
-        } args;
-        int rval[2];
-        struct sysent *systab;
-        extern int nsysent;
-//printf ("--- %s(pid=%u) syscall code=%u, RA=%08x \n", __func__, p->p_pid, locr0[V0], locr0[RA]);
-
         cnt.v_syscall++;
+        syscall(p, causeReg);
 
-        /* Don't use syscall in branch delay slot. */
-        if ((int)causeReg < 0) {
-            exit1(p, W_EXITCODE(0, SIGABRT));
-        }
-        /* Compute next PC after syscall instruction. */
-        locr0[PC] += 4;
-
-        systab = sysent;
-        numsys = nsysent;
-        code = locr0[V0];
-        switch (code) {
-        case SYS_syscall:
-            /*
-             * Code is first argument, followed by actual args.
-             */
-            code = locr0[A0];
-            if (code >= numsys)
-                callp = &systab[SYS_syscall]; /* (illegal) */
-            else
-                callp = &systab[code];
-            i = callp->sy_argsize;
-            args.i[0] = locr0[A1];
-            args.i[1] = locr0[A2];
-            args.i[2] = locr0[A3];
-            if (i > 3 * sizeof(register_t)) {
-                i = copyin((caddr_t)(locr0[SP] +
-                        4 * sizeof(register_t)),
-                    (caddr_t)&args.i[3],
-                    (u_int)(i - 3 * sizeof(register_t)));
-                if (i) {
-                    locr0[V0] = i;
-                    locr0[A3] = 1;
-#ifdef KTRACE
-                    if (KTRPOINT(p, KTR_SYSCALL))
-                        ktrsyscall(p->p_tracep, code,
-                            callp->sy_argsize,
-                            args.i);
-#endif
-                    goto done;
-                }
-            }
-            break;
-
-        case SYS___syscall:
-            /*
-             * Like syscall, but code is a quad, so as to maintain
-             * quad alignment for the rest of the arguments.
-             */
-            code = locr0[A0 + _QUAD_LOWWORD];
-            if (code >= numsys)
-                callp = &systab[SYS_syscall]; /* (illegal) */
-            else
-                callp = &systab[code];
-            i = callp->sy_argsize;
-            args.i[0] = locr0[A2];
-            args.i[1] = locr0[A3];
-            if (i > 2 * sizeof(register_t)) {
-                i = copyin((caddr_t)(locr0[SP] +
-                        4 * sizeof(register_t)),
-                    (caddr_t)&args.i[2],
-                    (u_int)(i - 2 * sizeof(register_t)));
-                if (i) {
-                    locr0[V0] = i;
-                    locr0[A3] = 1;
-#ifdef KTRACE
-                    if (KTRPOINT(p, KTR_SYSCALL))
-                        ktrsyscall(p->p_tracep, code,
-                            callp->sy_argsize,
-                            args.i);
-#endif
-                    goto done;
-                }
-            }
-            break;
-
-        default:
-            if (code >= numsys)
-                callp = &systab[SYS_syscall]; /* (illegal) */
-            else
-                callp = &systab[code];
-            i = callp->sy_argsize;
-            args.i[0] = locr0[A0];
-            args.i[1] = locr0[A1];
-            args.i[2] = locr0[A2];
-            args.i[3] = locr0[A3];
-            if (i > 4 * sizeof(register_t)) {
-                i = copyin((caddr_t)(locr0[SP] +
-                        4 * sizeof(register_t)),
-                    (caddr_t)&args.i[4],
-                    (u_int)(i - 4 * sizeof(register_t)));
-                if (i) {
-                    locr0[V0] = i;
-                    locr0[A3] = 1;
-#ifdef KTRACE
-                    if (KTRPOINT(p, KTR_SYSCALL))
-                        ktrsyscall(p->p_tracep, code,
-                            callp->sy_argsize,
-                            args.i);
-#endif
-                    goto done;
-                }
-            }
-        }
-#ifdef KTRACE
-        if (KTRPOINT(p, KTR_SYSCALL))
-            ktrsyscall(p->p_tracep, code, callp->sy_argsize, args.i);
-#endif
-        rval[0] = 0;
-        rval[1] = locr0[V1];
-
-        i = (*callp->sy_call)(p, &args, rval);
-        /*
-         * Reinitialize proc pointer `p' as it may be different
-         * if this is a child returning from fork syscall.
-         */
+        /* Reinitialize proc pointer `p' as it may be different
+         * if this is a child returning from fork syscall. */
         p = curproc;
-        locr0 = p->p_md.md_regs;
-
-        switch (i) {
-        case 0:
-//printf ("--- (%u) syscall succeded, return %u \n", p->p_pid, rval[0]);
-            locr0[V0] = rval[0];
-            locr0[V1] = rval[1];
-            locr0[A3] = 0;
-            break;
-
-        case ERESTART:
-//printf ("--- (%u) syscall restarted \n", p->p_pid);
-            break;
-
-        case EJUSTRETURN:
-//printf ("--- (%u) syscall just return \n", p->p_pid);
-            break;  /* nothing to do */
-
-        default:
-//printf ("--- (%u) syscall failed, error %u \n", p->p_pid, i);
-            locr0[V0] = i;
-            locr0[A3] = 1;
-        }
-done:
-#ifdef KTRACE
-        if (KTRPOINT(p, KTR_SYSRET))
-            ktrsysret(p->p_tracep, code, i, rval[0]);
-#endif
         goto out;
-        }
 
     case TRAP_Bp + TRAP_USER:           /* User: breakpoint */
         {
@@ -511,6 +521,27 @@ printf ("--- (%u) coprocessor unusable at pc=%08x\n", p->p_pid, pc);
 
     case TRAP_Ov + TRAP_USER:           /* User: overflow */
         i = SIGFPE;
+        break;
+
+    case TRAP_Tr + TRAP_USER:           /* User: trap */
+        i = SIGTRAP;
+#if 1
+        // Terminate the process.
+        printf("PID %d (%s) trap at %x \n", p->p_pid, p->p_comm, pc);
+        exit1(p, W_EXITCODE(0, i));
+#endif
+        break;
+
+    case TRAP_DSPDis + TRAP_USER:       /* User: DSP disabled */
+printf ("--- (%u) DSP disabled pc=%08x\n", p->p_pid, pc);
+        i = SIGFPE;
+        break;
+
+    case TRAP_WATCH + TRAP_USER:        /* User: access to WatchHi/Lo address */
+        i = SIGTRAP;
+#if 1
+        printf("PID %d (%s) watch exception at %x \n", p->p_pid, p->p_comm, pc);
+#endif
         break;
 
     case TRAP_AdEL:                     /* Kernel: address error on load/fetch */

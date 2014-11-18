@@ -99,7 +99,7 @@ subwin(orig, nl, nc, by, bx)
 #ifdef	DEBUG
 	__CTRACE("subwin: (%0.2o, %d, %d, %d, %d)\n", orig, nl, nc, by, bx);
 #endif
-	if (by < orig->begy || bx < orig->begx
+	if (orig == NULL || by < orig->begy || bx < orig->begx
 	    || by + nl > orig->maxy + orig->begy
 	    || bx + nc > orig->maxx + orig->begx)
 		return (NULL);
@@ -158,7 +158,7 @@ __makenew(nl, nc, by, bx, sub)
 	register WINDOW *win;
 	register __LINE *lp;
 	int i;
-	
+
 
 #ifdef	DEBUG
 	__CTRACE("makenew: (%d, %d, %d, %d)\n", nl, nc, by, bx);
@@ -169,7 +169,7 @@ __makenew(nl, nc, by, bx, sub)
 	__CTRACE("makenew: nl = %d\n", nl);
 #endif
 
-	/* 
+	/*
 	 * Set up line pointer array and line space.
 	 */
 	if ((win->lines = malloc (nl * sizeof(__LINE *))) == NULL) {
@@ -187,14 +187,14 @@ __makenew(nl, nc, by, bx, sub)
 		/*
 		 * Allocate window space in one chunk.
 		 */
-		if ((win->wspace = 
+		if ((win->wspace =
 		    malloc(nc * nl * sizeof(__LDATA))) == NULL) {
 			free(win->lines);
 			free(win->lspace);
 			free(win);
 			return NULL;
 		}
-		
+
 		/*
 		 * Point line pointers to line space, and lines themselves into
 		 * window space.

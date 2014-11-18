@@ -126,6 +126,10 @@ main(argc, argv)
 	 * routines to minimize update work by curses.
 	 */
 	initscr();
+	if (stdscr == NULL) {
+		fprintf(stderr, "Couldn't initialize curses.\n");
+		exit(0);
+	}
 	CMDLINE = LINES - 1;
 	wnd = (*curcmd->c_open)();
 	if (wnd == NULL) {
