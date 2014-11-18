@@ -1021,12 +1021,10 @@ file /usr/include/machine/kdbparam.h
 file /usr/include/machine/limits.h
 file /usr/include/machine/machAsmDefs.h
 file /usr/include/machine/machConst.h
-file /usr/include/machine/mips_opcode.h
 file /usr/include/machine/param.h
 file /usr/include/machine/pcb.h
 file /usr/include/machine/pic32mz.h
 file /usr/include/machine/pmap.h
-file /usr/include/machine/pmioctl.h
 file /usr/include/machine/proc.h
 file /usr/include/machine/profile.h
 file /usr/include/machine/psl.h
@@ -1121,7 +1119,6 @@ file /usr/include/sys/acct.h
 file /usr/include/sys/buf.h
 file /usr/include/sys/callout.h
 file /usr/include/sys/cdefs.h
-file /usr/include/sys/clist.h
 file /usr/include/sys/conf.h
 file /usr/include/sys/device.h
 file /usr/include/sys/dirent.h
