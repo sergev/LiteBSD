@@ -115,31 +115,18 @@
 #define F31     67
 #define FSR     68
 
-#ifdef IPCREG
-#define NIPCREG 69
-int ipcreg[NIPCREG] = {
-        ZERO, AST, V0, V1, A0, A1, A2, A3, T0, T1, T2, T3, T4, T5, T6, T7,
-        S0, S1, S2, S3, S4, S5, S6, S7, T8, T9, K0, K1, GP, SP, S8, RA,
-        MULLO, MULHI, PC,
-        F0, F1, F2, F3, F4, F5, F6, F7,
-        F8, F9, F10, F11, F12, F13, F14, F15,
-        F16, F17, F18, F19, F20, F21, F22, F23,
-        F24, F25, F26, F27, F28, F29, F30, F31, FSR,
-};
-#endif
-
 #ifdef LANGUAGE_C
 /*
  * Register set accessible via /proc/$pid/reg
  */
 struct reg {
-        int     r_regs[69];     /* numbered as above */
+    int r_regs[69];             /* numbered as above */
 };
 
 /*
  * Register set accessible via /proc/$pid/fpreg
  */
 struct fpreg {
-        int     r_fpregs[33];   /* not implemented */
+    int r_fpregs[33];           /* not implemented */
 };
 #endif /* LANGUAGE_C */

@@ -45,7 +45,6 @@
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/callout.h>
-#include <sys/clist.h>
 #include <sys/mbuf.h>
 #include <sys/kernel.h>
 
@@ -74,17 +73,16 @@ int tick = 1000000 / HZ;
 int tickadj = 30000 / (60 * HZ);        /* can adjust 30ms in 60s */
 struct  timezone tz = { TIMEZONE, DST };
 
-#define NPROC (20 + 16 * MAXUSERS)
+#define NPROC (8 + 8 * MAXUSERS)
 
 int maxproc = NPROC;
 
-#define NTEXT (80 + NPROC / 8)          /* actually the object cache */
-#define NVNODE (NPROC + NTEXT + 100)
+#define NTEXT (8 + NPROC / 4)           /* actually the object cache */
+#define NVNODE (NPROC + NTEXT + 16)
 
 int desiredvnodes = NVNODE;
-int maxfiles = 3 * (NPROC + MAXUSERS) + 80;
+int maxfiles = 2 * NPROC + 16;
 int ncallout = 16 + NPROC;
-int nclist = 60 + 12 * MAXUSERS;
 int nmbclusters = NMBCLUSTERS;
 int fscale = FSCALE;    /* kernel uses `FSCALE', user uses `fscale' */
 

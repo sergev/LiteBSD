@@ -36,7 +36,6 @@
 #include <sys/buf.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
-#include <sys/clist.h>
 #include <sys/malloc.h>
 
 /*

@@ -49,7 +49,6 @@
 #include <sys/buf.h>
 #include <sys/reboot.h>
 #include <sys/conf.h>
-#include <sys/clist.h>
 #include <sys/callout.h>
 #include <sys/mbuf.h>
 #include <sys/msgbuf.h>
@@ -135,14 +134,6 @@ mach_init()
     /* Copy .data image from flash to RAM.
      * Linker places it at the end of .text segment. */
     bcopy(_etext, __data_start, _edata - __data_start);
-#if 0
-    unsigned *src = (unsigned*) _etext;
-    unsigned *dest = (unsigned*) __data_start;
-    unsigned *limit = (unsigned*) _edata;
-    while (dest < limit) {
-        *dest++ = *src++;
-    }
-#endif
 
     /* Clear .bss segment. */
     v = (caddr_t)mips_round_page(_end);
@@ -192,19 +183,19 @@ mach_init()
     bzero(start, v - start);
 
     switch (DEVID & 0x0fffffff) {
-    case 0x05104053: strcpy (cpu_model, "2048ECG064"); break;
-    case 0x0510E053: strcpy (cpu_model, "2048ECG100"); break;
-    case 0x05118053: strcpy (cpu_model, "2048ECG124"); break;
-    case 0x05122053: strcpy (cpu_model, "2048ECG144"); break;
-    case 0x05109053: strcpy (cpu_model, "2048ECH064"); break;
-    case 0x05113053: strcpy (cpu_model, "2048ECH100"); break;
-    case 0x0511D053: strcpy (cpu_model, "2048ECH124"); break;
-    case 0x05127053: strcpy (cpu_model, "2048ECH144"); break;
-    case 0x05131053: strcpy (cpu_model, "2048ECM064"); break;
-    case 0x0513B053: strcpy (cpu_model, "2048ECM100"); break;
-    case 0x05145053: strcpy (cpu_model, "2048ECM124"); break;
-    case 0x0514F053: strcpy (cpu_model, "2048ECM144"); break;
-    default:         sprintf(cpu_model, "DevID %08x", DEVID);
+    case 0x05104053: strcpy (cpu_model, "PIC32MZ2048ECG064"); break;
+    case 0x0510E053: strcpy (cpu_model, "PIC32MZ2048ECG100"); break;
+    case 0x05118053: strcpy (cpu_model, "PIC32MZ2048ECG124"); break;
+    case 0x05122053: strcpy (cpu_model, "PIC32MZ2048ECG144"); break;
+    case 0x05109053: strcpy (cpu_model, "PIC32MZ2048ECH064"); break;
+    case 0x05113053: strcpy (cpu_model, "PIC32MZ2048ECH100"); break;
+    case 0x0511D053: strcpy (cpu_model, "PIC32MZ2048ECH124"); break;
+    case 0x05127053: strcpy (cpu_model, "PIC32MZ2048ECH144"); break;
+    case 0x05131053: strcpy (cpu_model, "PIC32MZ2048ECM064"); break;
+    case 0x0513B053: strcpy (cpu_model, "PIC32MZ2048ECM100"); break;
+    case 0x05145053: strcpy (cpu_model, "PIC32MZ2048ECM124"); break;
+    case 0x0514F053: strcpy (cpu_model, "PIC32MZ2048ECM144"); break;
+    default:         sprintf(cpu_model, "PIC32MZ DevID %08x", DEVID);
     }
 
     /*
@@ -235,7 +226,6 @@ mach_init()
         (name) = (type *)v; v = (caddr_t)((name)+(num))
 #define valloclim(name, type, num, lim) \
         (name) = (type *)v; v = (caddr_t)((lim) = ((name)+(num)))
-    valloc(cfree, struct cblock, nclist);
     valloc(callout, struct callout, ncallout);
     valloc(swapmap, struct map, nswapmap = maxproc * 2);
 #ifdef SYSVSHM
@@ -259,7 +249,7 @@ mach_init()
     if (nswbuf == 0) {
         nswbuf = (nbuf / 2) &~ 1;       /* force even */
         if (nswbuf > 256)
-            nswbuf = 256;           /* sanity */
+            nswbuf = 256;               /* sanity */
     }
     valloc(swbuf, struct buf, nswbuf);
     valloc(buf, struct buf, nbuf);
@@ -449,7 +439,9 @@ initcpu()
     c->regb = REGB_DATA_MODE | REGB_HOURS_FORMAT;
     (void) c->regc;
 #endif
-    spl0();         /* safe to turn interrupts on now */
+
+    /* Safe to turn interrupts on now. */
+    spl0();
 }
 
 static void
@@ -462,7 +454,7 @@ identify_cpu()
     static const char *poscmod[] = { "external clock", "(reserved)",
                                      "crystal", "(disabled)" };
 
-    printf ("cpu: PIC32MZ%s rev A%u, %u MHz\n",
+    printf ("cpu: %s rev A%u, %u MHz\n",
         cpu_model, DEVID >> 28, CPU_KHZ/1000);
 
     /* COSC: current oscillator selection bits */
@@ -676,7 +668,7 @@ sendsig(catcher, sig, mask, code)
         (psp->ps_sigstk.ss_flags & SA_ONSTACK) == 0 &&
         (psp->ps_sigonstack & sigmask(sig))) {
         fp = (struct sigframe *)(psp->ps_sigstk.ss_base +
-                     psp->ps_sigstk.ss_size - fsize);
+            psp->ps_sigstk.ss_size - fsize);
         psp->ps_sigstk.ss_flags |= SA_ONSTACK;
     } else
         fp = (struct sigframe *)(regs[SP] - fsize);
@@ -706,6 +698,7 @@ sendsig(catcher, sig, mask, code)
         psignal(p, SIGILL);
         return;
     }
+
     /*
      * Build the argument list for the signal handler.
      */
@@ -713,9 +706,9 @@ sendsig(catcher, sig, mask, code)
     regs[A1] = code;
     regs[A2] = (int)&fp->sf_sc;
     regs[A3] = (int)catcher;
-
     regs[PC] = (int)catcher;
     regs[SP] = (int)fp;
+
     /*
      * Signal trampoline code is at base of user stack.
      */
@@ -914,6 +907,7 @@ dumpconf()
         else if (dumplo == 0)
             dumplo = nblks - btodb(ctob(physmem));
     }
+
     /*
      * Don't dump on the first CLBYTES (why CLBYTES?)
      * in case the dump device includes a disk label.
@@ -954,67 +948,6 @@ microtime(tvp)
 }
 
 /*
- * Convert an ASCII string into an integer.
- */
-int
-atoi(s)
-    char *s;
-{
-    int c;
-    unsigned base = 10, d;
-    int neg = 0, val = 0;
-
-    if (s == 0 || (c = *s++) == 0)
-        goto out;
-
-    /* skip spaces if any */
-    while (c == ' ' || c == '\t')
-        c = *s++;
-
-    /* parse sign, allow more than one (compat) */
-    while (c == '-') {
-        neg = !neg;
-        c = *s++;
-    }
-
-    /* parse base specification, if any */
-    if (c == '0') {
-        c = *s++;
-        switch (c) {
-        case 'X':
-        case 'x':
-            base = 16;
-            break;
-        case 'B':
-        case 'b':
-            base = 2;
-            break;
-        default:
-            base = 8;
-        }
-    }
-
-    /* parse number proper */
-    for (;;) {
-        if (c >= '0' && c <= '9')
-            d = c - '0';
-        else if (c >= 'a' && c <= 'z')
-            d = c - 'a' + 10;
-        else if (c >= 'A' && c <= 'Z')
-            d = c - 'A' + 10;
-        else
-            break;
-        val *= base;
-        val += d;
-        c = *s++;
-    }
-    if (neg)
-        val = -val;
-out:
-    return val;
-}
-
-/*
  * Delay for a given number of microseconds.
  * The processor has a 32-bit hardware Count register,
  * which increments at half CPU rate.
@@ -1023,16 +956,14 @@ out:
 void
 udelay(unsigned usec)
 {
-    unsigned now = mfc0 (9, 0); // C0_Count
+    unsigned now = mfc0_Count();
     unsigned final = now + usec * CPU_KHZ / 2000;
 
-    for (;;) {
-    now = mfc0 (9, 0); // C0_Count
+    do {
+        now = mfc0_Count();
 
-    /* This comparison is valid only when using a signed type. */
-    if ((int) (now - final) >= 0)
-        break;
-    }
+        /* This comparison is valid only when using a signed type. */
+    } while ((int) (now - final) < 0);
 }
 
 /*

@@ -44,8 +44,8 @@
 /*
  * Define the order of 32-bit words in 64-bit words.
  */
-#define _QUAD_HIGHWORD 1
-#define _QUAD_LOWWORD 0
+#define _QUAD_HIGHWORD  1
+#define _QUAD_LOWWORD   0
 
 #ifndef _POSIX_SOURCE
 /*

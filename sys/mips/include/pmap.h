@@ -62,37 +62,37 @@
  * dynamically allocated at boot time.
  */
 
-#define mips_trunc_seg(x)       ((vm_offset_t)(x) & ~SEGOFSET)
-#define pmap_segmap(m, v)       ((m)->pm_segtab->seg_tab[((v) >> SEGSHIFT)])
+#define mips_trunc_seg(x)   ((vm_offset_t)(x) & ~SEGOFSET)
+#define pmap_segmap(m, v)   ((m)->pm_segtab->seg_tab[((v) >> SEGSHIFT)])
 
-#define PMAP_SEGTABSIZE         512
+#define PMAP_SEGTABSIZE     512
 
 union pt_entry;
 
 struct segtab {
-        union pt_entry  *seg_tab[PMAP_SEGTABSIZE];
+    union pt_entry  *seg_tab[PMAP_SEGTABSIZE];
 };
 
 /*
  * Machine dependent pmap structure.
  */
 typedef struct pmap {
-        int                     pm_count;       /* pmap reference count */
-        simple_lock_data_t      pm_lock;        /* lock on pmap */
-        struct pmap_statistics  pm_stats;       /* pmap statistics */
-        int                     pm_tlbpid;      /* address space tag */
-        u_int                   pm_tlbgen;      /* TLB PID generation number */
-        struct segtab           *pm_segtab;     /* pointers to pages of PTEs */
+    int                     pm_count;       /* pmap reference count */
+    simple_lock_data_t      pm_lock;        /* lock on pmap */
+    struct pmap_statistics  pm_stats;       /* pmap statistics */
+    int                     pm_tlbpid;      /* address space tag */
+    u_int                   pm_tlbgen;      /* TLB PID generation number */
+    struct segtab           *pm_segtab;     /* pointers to pages of PTEs */
 } *pmap_t;
 
 /*
  * Defines for pmap_attributes[phys_mach_page];
  */
-#define PMAP_ATTR_MOD   0x01    /* page has been modified */
-#define PMAP_ATTR_REF   0x02    /* page has been referenced */
+#define PMAP_ATTR_MOD       0x01            /* page has been modified */
+#define PMAP_ATTR_REF       0x02            /* page has been referenced */
 
 #ifdef  KERNEL
-extern  char *pmap_attributes;          /* reference and modify bits */
+extern  char *pmap_attributes;              /* reference and modify bits */
 extern  struct pmap kernel_pmap_store;
 #define kernel_pmap (&kernel_pmap_store)
 #define pmap_wired_count(pmap)  ((pmap)->pm_stats.wired_count)

@@ -187,28 +187,28 @@
 /*
  * Read C0 coprocessor register.
  */
-#define mips_mfc0(reg, sel) ({ int __value;                     \
-        asm volatile (                                          \
-        "mfc0   %0, $%1, %2"                                    \
-        : "=r" (__value) : "K" (reg), "K" (sel));               \
-        __value; })
+#define mips_mfc0(reg, sel) ({ int __value; \
+    asm volatile ( \
+    "mfc0   %0, $%1, %2" \
+    : "=r" (__value) : "K" (reg), "K" (sel)); \
+    __value; })
 
 /*
  * Write coprocessor 0 register.
  */
-#define mips_mtc0(reg, sel, value) asm volatile (               \
-        "mtc0   %z0, $%1, %2"                                   \
-        : : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
+#define mips_mtc0(reg, sel, value) asm volatile ( \
+    "mtc0   %z0, $%1, %2" \
+    : : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
 
 /*
  * Disable the hardware interrupts,
  * saving the value of Status register.
  */
-#define mips_di() ({ int __value;                               \
-        asm volatile (                                          \
-        "di     %0"                                             \
-        : "=r" (__value));                                      \
-        __value; })
+#define mips_di() ({ int __value; \
+    asm volatile ( \
+    "di     %0" \
+    : "=r" (__value)); \
+    __value; })
 
 /*
  * Count a number of leading (most significant) zero bits in a word.
@@ -216,11 +216,11 @@
 static int inline __attribute__ ((always_inline))
 mips_clz (unsigned x)
 {
-        int n;
+    int n;
 
-        asm volatile ("clz      %0, %1"
-                : "=r" (n) : "r" (x));
-        return n;
+    asm volatile ("clz      %0, %1"
+            : "=r" (n) : "r" (x));
+    return n;
 }
 
 /*
@@ -229,13 +229,13 @@ mips_clz (unsigned x)
 static unsigned inline __attribute__ ((always_inline))
 mips_bswap (unsigned x)
 {
-        int n;
+    int n;
 
-        asm volatile (
-        "wsbh   %0, %1 \n"
-        "rotr   %0, 16"
-                : "=r" (n) : "r" (x));
-        return n;
+    asm volatile (
+    "wsbh   %0, %1 \n"
+    "rotr   %0, 16"
+            : "=r" (n) : "r" (x));
+    return n;
 }
 
 /*--------------------------------------

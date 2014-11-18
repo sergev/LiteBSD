@@ -134,12 +134,6 @@
 #define clrnd(i)        (((i) + (CLSIZE-1)) &~ (CLSIZE-1))
 #endif
 
-#define CBLOCK  64              /* Clist block size, must be a power of 2. */
-#define CBQSIZE (CBLOCK/NBBY)   /* Quote bytes/cblock - can do better. */
-                                /* Data chars/clist. */
-#define CBSIZE  (CBLOCK - sizeof(struct cblock *) - CBQSIZE)
-#define CROUND  (CBLOCK - 1)    /* Clist rounding. */
-
 /*
  * File system parameters and macros.
  *
@@ -199,7 +193,7 @@
  * MAXALLOCSIZE must be a power of two.
  */
 #define MINBUCKET       4       /* 4 => min allocation of 16 bytes */
-#define MAXALLOCSAVE    (2 * CLBYTES)
+#define MAXALLOCSAVE    (1 * CLBYTES)
 
 /*
  * Scale factor for scaled integers used to count %cpu time and load avgs.

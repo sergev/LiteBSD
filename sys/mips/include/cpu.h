@@ -62,8 +62,8 @@
  * machine state in an opaque clockframe.
  */
 struct clockframe {
-        int     pc;     /* program counter at time of interrupt */
-        int     sr;     /* status register at time of interrupt */
+    int pc;     /* program counter at time of interrupt */
+    int sr;     /* status register at time of interrupt */
 };
 
 #define CLKF_USERMODE(framep)   ((framep)->sr & MACH_Status_UM)
@@ -76,74 +76,58 @@ struct clockframe {
  * Preempt the current process if in interrupt from user mode,
  * or after the current trap/syscall if in system mode.
  */
-#define need_resched()  { want_resched = 1; aston(); }
+#define need_resched()      { want_resched = 1; aston(); }
 
 /*
  * Give a profiling tick to the current process when the user profiling
  * buffer pages are invalid.  On MIPS, request an ast to send us
  * through trap, marking the proc as needing a profiling tick.
  */
-#define need_proftick(p)        { (p)->p_flag |= P_OWEUPC; aston(); }
+#define need_proftick(p)    { (p)->p_flag |= P_OWEUPC; aston(); }
 
 /*
  * Notify the current process (p) that it has a signal pending,
  * process as soon as possible.
  */
-#define signotify(p)    aston()
+#define signotify(p)        aston()
 
-#define aston()         (astpending = 1)
+#define aston()             (astpending = 1)
 
-int     astpending;     /* need to trap before returning to user mode */
-int     want_resched;   /* resched() was called */
+int astpending;             /* need to trap before returning to user mode */
+int want_resched;           /* resched() was called */
 
 /*
  * CPU identification, from PRID register.
  */
 union cpuprid {
-        int     cpuprid;
-        struct {
+    int     cpuprid;
+    struct {
 #if BYTE_ORDER == BIG_ENDIAN
-                u_int   pad1:16;        /* reserved */
-                u_int   cp_imp:8;       /* implementation identifier */
-                u_int   cp_majrev:4;    /* major revision identifier */
-                u_int   cp_minrev:4;    /* minor revision identifier */
+        u_int   pad1:16;        /* reserved */
+        u_int   cp_imp:8;       /* implementation identifier */
+        u_int   cp_majrev:4;    /* major revision identifier */
+        u_int   cp_minrev:4;    /* minor revision identifier */
 #else
-                u_int   cp_minrev:4;    /* minor revision identifier */
-                u_int   cp_majrev:4;    /* major revision identifier */
-                u_int   cp_imp:8;       /* implementation identifier */
-                u_int   pad1:16;        /* reserved */
+        u_int   cp_minrev:4;    /* minor revision identifier */
+        u_int   cp_majrev:4;    /* major revision identifier */
+        u_int   cp_imp:8;       /* implementation identifier */
+        u_int   pad1:16;        /* reserved */
 #endif
-        } cpu;
+    } cpu;
 };
 
 /*
  * CTL_MACHDEP definitions.
  */
-#define CPU_CONSDEV             1       /* dev_t: console terminal device */
-#define CPU_NLIST               2       /* int: address of kernel symbol */
-#define CPU_MAXID               3       /* number of valid machdep ids */
+#define CPU_CONSDEV     1       /* dev_t: console terminal device */
+#define CPU_NLIST       2       /* int: address of kernel symbol */
+#define CPU_MAXID       3       /* number of valid machdep ids */
 
 #define CTL_MACHDEP_NAMES { \
-        { 0, 0 }, \
-        { "console_device", CTLTYPE_STRUCT }, \
+    { 0, 0 }, \
+    { "console_device", CTLTYPE_STRUCT }, \
+    { "nlist", CTLTYPE_STRUCT }, \
 }
-
-/*
- * MIPS CPU types (cp_imp).
- */
-#define MIPS_R2000      0x01
-#define MIPS_R3000      0x02
-#define MIPS_R6000      0x03
-#define MIPS_R4000      0x04
-#define MIPS_R6000A     0x06
-
-/*
- * MIPS FPU types
- */
-#define MIPS_R2010      0x02
-#define MIPS_R3010      0x03
-#define MIPS_R6010      0x04
-#define MIPS_R4010      0x05
 
 #ifdef KERNEL
 union   cpuprid cpu;
@@ -177,26 +161,5 @@ int savectx __P((struct user *));
 int copykstack __P((struct user *));
 int cpu_singlestep __P((struct proc *));
 #endif
-
-/*
- * Enable realtime clock (always enabled).
- */
-#define enablertclock()
-
-/*
- * Read C0 coprocessor register.
- */
-#define mfc0(reg, sel) ({ int __value;                          \
-        asm volatile (                                          \
-        "mfc0   %0, $%1, %2"                                    \
-        : "=r" (__value) : "K" (reg), "K" (sel));               \
-        __value; })
-
-/*
- * Write coprocessor 0 register.
- */
-#define mtc0(reg, sel, value) asm volatile (                    \
-        "mtc0   %z0, $%1, %2"                                   \
-        : : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
 
 #endif /* _CPU_H_ */

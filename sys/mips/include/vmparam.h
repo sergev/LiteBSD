@@ -60,19 +60,19 @@
  * Virtual memory related constants, all in bytes
  */
 #ifndef MAXTSIZ
-#define MAXTSIZ         (4*1024*1024)           /* max text size */
+#define MAXTSIZ         (4*1024*1024)   /* max text size */
 #endif
 #ifndef DFLDSIZ
-#define DFLDSIZ         (4*1024*1024)           /* initial data size limit */
+#define DFLDSIZ         (4*1024*1024)   /* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define MAXDSIZ         (4*1024*1024)           /* max data size */
+#define MAXDSIZ         (4*1024*1024)   /* max data size */
 #endif
 #ifndef DFLSSIZ
-#define DFLSSIZ         (1024*1024)             /* initial stack size limit */
+#define DFLSSIZ         (1024*1024)     /* initial stack size limit */
 #endif
 #ifndef MAXSSIZ
-#define MAXSSIZ         (4*1024*1024)           /* max stack size */
+#define MAXSSIZ         (4*1024*1024)   /* max stack size */
 #endif
 
 /*
@@ -82,8 +82,8 @@
  * DMMIN should be at least ctod(1) so that vtod() works.
  * vminit() insures this.
  */
-#define DMMIN   32                      /* smallest swap allocation */
-#define DMMAX   4096                    /* largest potential swap allocation */
+#define DMMIN           32              /* smallest swap allocation */
+#define DMMAX           4096            /* largest potential swap allocation */
 
 /*
  * Sizes of the system and user portions of the system page table.
@@ -146,12 +146,6 @@
  */
 #define SAFERSS         4               /* nominal ``small'' resident set size
                                            protected against replacement */
-
-/*
- * DISKRPM is used to estimate the number of paging i/o operations
- * which one can expect from a single disk controller.
- */
-#define DISKRPM         60
 
 /*
  * Klustering constants.  Klustering is the gathering
@@ -234,9 +228,6 @@
 #define VM_MBUF_SIZE            (NMBCLUSTERS*MCLBYTES)
 #define VM_KMEM_SIZE            (NKMEMCLUSTERS*CLBYTES)
 #define VM_PHYS_SIZE            (USRIOSIZE*CLBYTES)
-
-/* pcb base */
-#define pcbb(p)         ((u_int)(p)->p_addr)
 
 extern void tlb_set_pid(unsigned asid);
 extern void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1);

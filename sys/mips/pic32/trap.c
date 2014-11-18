@@ -69,7 +69,6 @@
 #include <machine/reg.h>
 #include <machine/cpu.h>
 #include <machine/pte.h>
-#include <machine/mips_opcode.h>
 #include <machine/pic32mz.h>
 #include <mips/dev/device.h>
 

@@ -52,7 +52,6 @@
 #include <sys/vnode.h>
 #include <sys/conf.h>
 #include <sys/buf.h>
-#include <sys/clist.h>
 #include <sys/device.h>
 #include <sys/protosw.h>
 #include <sys/reboot.h>

@@ -115,8 +115,8 @@ struct tty {
 #define TTYHOG  1024
 
 #ifdef KERNEL
-#define TTMAXHIWAT  roundup(2048, CBSIZE)
-#define TTMINHIWAT  roundup(100, CBSIZE)
+#define TTMAXHIWAT  2048
+#define TTMINHIWAT  100
 #define TTMAXLOWAT  256
 #define TTMINLOWAT  32
 #endif

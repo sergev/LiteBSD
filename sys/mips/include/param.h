@@ -64,12 +64,11 @@
 #define SEGOFSET        (NBSEG-1)       /* byte offset into segment */
 #define SEGSHIFT        22              /* LOG2(NBSEG) */
 
-#define KERNBASE        0x80000000      /* start of kernel virtual */
-#define BTOPKERNBASE    ((u_long)KERNBASE >> PGSHIFT)
+#define KERNBASE        0x9d000000      /* start of kernel code, virtual */
 
 #define DEV_BSIZE       512
 #define DEV_BSHIFT      9               /* log2(DEV_BSIZE) */
-#define BLKDEV_IOSIZE   2048
+#define BLKDEV_IOSIZE   4096
 #define MAXPHYS         (64 * 1024)     /* max raw I/O transfer size */
 
 #define CLSIZE          1
@@ -137,16 +136,14 @@
 /*
  * Mach derived conversion macros
  */
-#define mips_round_page(x)      ((((unsigned)(x)) + NBPG - 1) & ~(NBPG-1))
-#define mips_trunc_page(x)      ((unsigned)(x) & ~(NBPG-1))
-#define mips_btop(x)            ((unsigned)(x) >> PGSHIFT)
-#define mips_ptob(x)            ((unsigned)(x) << PGSHIFT)
+#define mips_round_page(x)  ((((unsigned)(x)) + NBPG - 1) & ~(NBPG-1))
+#define mips_trunc_page(x)  ((unsigned)(x) & ~(NBPG-1))
+#define mips_btop(x)        ((unsigned)(x) >> PGSHIFT)
+#define mips_ptob(x)        ((unsigned)(x) << PGSHIFT)
 
 #ifndef LOCORE
 #ifdef KERNEL
-/*
- * Generic MIPSr2.
- */
+
 extern int spl0(void), spl1(void), spl2(void), spl3(void);
 extern int spl4(void), spl5(void), spl6(void), splhigh(void);
 extern void splx(int);
@@ -161,10 +158,7 @@ extern void splx(int);
 
 extern void udelay(unsigned);
 
-#define DELAY(usec)     udelay(usec)
-#else /* !KERNEL */
-#define DELAY(n)        { register int N = (n); while (--N > 0); }
-#endif /* !KERNEL */
+#endif /* KERNEL */
 
 #ifndef _SIMPLELOCK_H_
 #define _SIMPLELOCK_H_
@@ -178,7 +172,7 @@ extern void udelay(unsigned);
  * of these locks while a process is sleeping.
  */
 struct simplelock {
-        int     lock_data;
+    int lock_data;
 };
 
 #if !defined(DEBUG) && NCPUS > 1
@@ -192,31 +186,31 @@ struct simplelock {
  */
 static __inline void
 simple_lock_init(lkp)
-        struct simplelock *lkp;
+    struct simplelock *lkp;
 {
-        lkp->lock_data = 0;
+    lkp->lock_data = 0;
 }
 
 static __inline void
 simple_lock(lkp)
-        __volatile struct simplelock *lkp;
+    __volatile struct simplelock *lkp;
 {
-        while (test_and_set(&lkp->lock_data))
-                continue;
+    while (test_and_set(&lkp->lock_data))
+        continue;
 }
 
 static __inline int
 simple_lock_try(lkp)
-        __volatile struct simplelock *lkp;
+    __volatile struct simplelock *lkp;
 {
-        return (!test_and_set(&lkp->lock_data))
+    return (!test_and_set(&lkp->lock_data))
 }
 
 static __inline void
 simple_unlock(lkp)
-        __volatile struct simplelock *lkp;
+    __volatile struct simplelock *lkp;
 {
-        lkp->lock_data = 0;
+    lkp->lock_data = 0;
 }
 #endif /* NCPUS > 1 */
 #endif /* !_SIMPLELOCK_H_ */

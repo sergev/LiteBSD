@@ -40,13 +40,11 @@
 #define _MACHTYPES_H_
 
 #if !defined(_ANSI_SOURCE) && !defined(_POSIX_SOURCE)
-typedef struct _physadr {
-        int r[1];
-} *physadr;
 
 typedef struct label_t {
-        int val[12];
+    int val[12];
 } label_t;
+
 #endif
 
 typedef unsigned long   vm_offset_t;

@@ -42,9 +42,8 @@
 
 #ifndef LOCORE
 typedef union pt_entry {
-        unsigned int    pt_entry;       /* for copying, etc. */
-//      struct pte      pt_pte;         /* for getting to bits by name */
-} pt_entry_t;   /* Mach page table entry */
+    unsigned int pt_entry;          /* for copying, etc. */
+} pt_entry_t;                       /* Mach page table entry */
 #endif /* LOCORE */
 
 #define PT_ENTRY_NULL   ((pt_entry_t *) 0)
@@ -72,10 +71,10 @@ typedef union pt_entry {
  * Kernel virtual address to page table entry and visa versa.
  */
 #define kvtopte(va) \
-        (Sysmap + (((vm_offset_t)(va) - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT))
+    (Sysmap + (((vm_offset_t)(va) - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT))
 #define ptetokv(pte) \
-        ((((pt_entry_t *)(pte) - Sysmap) << PGSHIFT) + VM_MIN_KERNEL_ADDRESS)
+    ((((pt_entry_t *)(pte) - Sysmap) << PGSHIFT) + VM_MIN_KERNEL_ADDRESS)
 
-extern  pt_entry_t *Sysmap;             /* kernel pte table */
-extern  u_int Sysmapsize;               /* number of pte's in Sysmap */
+extern  pt_entry_t *Sysmap;         /* kernel pte table */
+extern  u_int Sysmapsize;           /* number of pte's in Sysmap */
 #endif

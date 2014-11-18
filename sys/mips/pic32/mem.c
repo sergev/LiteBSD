@@ -78,7 +78,7 @@ mmrw(dev, uio, flags)
         }
         switch (minor(dev)) {
 
-/* minor device 0 is physical memory */
+        /* minor device 0 is physical memory */
         case 0:
             v = (u_long)uio->uio_offset;
             c = iov->iov_len;
@@ -88,7 +88,7 @@ mmrw(dev, uio, flags)
             error = uiomove((caddr_t)v, (int)c, uio);
             continue;
 
-/* minor device 1 is kernel memory */
+        /* minor device 1 is kernel memory */
         case 1:
             v = (u_long)uio->uio_offset;
             if (v < MACH_CACHED_MEMORY_ADDR)
@@ -104,13 +104,13 @@ mmrw(dev, uio, flags)
             }
             return (EFAULT);
 
-/* minor device 2 is EOF/RATHOLE */
+        /* minor device 2 is EOF/RATHOLE */
         case 2:
             if (uio->uio_rw == UIO_WRITE)
                 uio->uio_resid = 0;
             return (0);
 
-/* minor device 12 (/dev/zero) is source of nulls on read, rathole on write */
+        /* minor device 12 (/dev/zero) is source of nulls on read, rathole on write */
         case 12:
             if (uio->uio_rw == UIO_WRITE) {
                 c = iov->iov_len;

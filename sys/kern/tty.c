@@ -920,7 +920,7 @@ ttselect(device, rw, p)
         break;
     case FWRITE:
         if (tp->t_outq.c_cc <= tp->t_lowat) {
-win:            splx(s);
+win:        splx(s);
             return (1);
         }
         selrecord(p, &tp->t_wsel);
@@ -1753,7 +1753,7 @@ ttsetwater(tp)
     tp->t_lowat = x = CLAMP(cps / 2, TTMAXLOWAT, TTMINLOWAT);
     x += cps;
     x = CLAMP(x, TTMAXHIWAT, TTMINHIWAT);
-    tp->t_hiwat = roundup(x, CBSIZE);
+    tp->t_hiwat = x;
 #undef  CLAMP
 }
 

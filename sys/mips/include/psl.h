@@ -40,7 +40,6 @@
 #include <machine/machConst.h>
 
 #define PSL_LOWIPL      (MACH_Status_IE)
-
 #define PSL_USERSET     (MACH_Status_IE | MACH_Status_UM)
 
 /*

@@ -36,5 +36,5 @@
 /*
  * Machine dependent trace commands.
  *
- * None for the MIPS at this time.
+ * None for MIPS at this time.
  */

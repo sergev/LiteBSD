@@ -45,10 +45,10 @@
  */
 struct pcb
 {
-        int     pcb_regs[69];   /* saved CPU and floating point registers */
-        label_t pcb_context;    /* kernel context for resume */
-        int     pcb_onfault;    /* for copyin/copyout faults */
-        void    *pcb_segtab;    /* copy of pmap pm_segtab */
+    int     pcb_regs[69];   /* saved CPU and floating point registers */
+    label_t pcb_context;    /* kernel context for resume */
+    int     pcb_onfault;    /* for copyin/copyout faults */
+    void    *pcb_segtab;    /* copy of pmap pm_segtab */
 };
 
 /*
@@ -56,5 +56,5 @@ struct pcb
  * core dumps. For MIPS, there is nothing to add.
  */
 struct md_coredump {
-        long    md_pad[8];
+    long    md_pad[8];
 };
