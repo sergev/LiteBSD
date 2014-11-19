@@ -137,7 +137,7 @@ mach_init()
 
     /* Clear .bss segment. */
     v = (caddr_t)mips_round_page(_end);
-    bzero (_edata, v - _edata);
+    bzero(_edata, v - _edata);
 
     /*
      * Autoboot by default.
@@ -183,18 +183,18 @@ mach_init()
     bzero(start, v - start);
 
     switch (DEVID & 0x0fffffff) {
-    case 0x05104053: strcpy (cpu_model, "PIC32MZ2048ECG064"); break;
-    case 0x0510E053: strcpy (cpu_model, "PIC32MZ2048ECG100"); break;
-    case 0x05118053: strcpy (cpu_model, "PIC32MZ2048ECG124"); break;
-    case 0x05122053: strcpy (cpu_model, "PIC32MZ2048ECG144"); break;
-    case 0x05109053: strcpy (cpu_model, "PIC32MZ2048ECH064"); break;
-    case 0x05113053: strcpy (cpu_model, "PIC32MZ2048ECH100"); break;
-    case 0x0511D053: strcpy (cpu_model, "PIC32MZ2048ECH124"); break;
-    case 0x05127053: strcpy (cpu_model, "PIC32MZ2048ECH144"); break;
-    case 0x05131053: strcpy (cpu_model, "PIC32MZ2048ECM064"); break;
-    case 0x0513B053: strcpy (cpu_model, "PIC32MZ2048ECM100"); break;
-    case 0x05145053: strcpy (cpu_model, "PIC32MZ2048ECM124"); break;
-    case 0x0514F053: strcpy (cpu_model, "PIC32MZ2048ECM144"); break;
+    case 0x05104053: strcpy(cpu_model, "PIC32MZ2048ECG064"); break;
+    case 0x0510E053: strcpy(cpu_model, "PIC32MZ2048ECG100"); break;
+    case 0x05118053: strcpy(cpu_model, "PIC32MZ2048ECG124"); break;
+    case 0x05122053: strcpy(cpu_model, "PIC32MZ2048ECG144"); break;
+    case 0x05109053: strcpy(cpu_model, "PIC32MZ2048ECH064"); break;
+    case 0x05113053: strcpy(cpu_model, "PIC32MZ2048ECH100"); break;
+    case 0x0511D053: strcpy(cpu_model, "PIC32MZ2048ECH124"); break;
+    case 0x05127053: strcpy(cpu_model, "PIC32MZ2048ECH144"); break;
+    case 0x05131053: strcpy(cpu_model, "PIC32MZ2048ECM064"); break;
+    case 0x0513B053: strcpy(cpu_model, "PIC32MZ2048ECM100"); break;
+    case 0x05145053: strcpy(cpu_model, "PIC32MZ2048ECM124"); break;
+    case 0x0514F053: strcpy(cpu_model, "PIC32MZ2048ECM144"); break;
     default:         sprintf(cpu_model, "PIC32MZ DevID %08x", DEVID);
     }
 
@@ -454,34 +454,34 @@ identify_cpu()
     static const char *poscmod[] = { "external clock", "(reserved)",
                                      "crystal", "(disabled)" };
 
-    printf ("cpu: %s rev A%u, %u MHz\n",
+    printf("cpu: %s rev A%u, %u MHz\n",
         cpu_model, DEVID >> 28, CPU_KHZ/1000);
 
     /* COSC: current oscillator selection bits */
-    printf ("oscillator: ");
+    printf("oscillator: ");
     switch (osccon >> 12 & 7) {
     case 0:
     case 7:
-        printf ("internal Fast RC, divided\n");
+        printf("internal Fast RC, divided\n");
         break;
     case 1:
-        printf ("system PLL div 1:%d mult x%d\n",
+        printf("system PLL div 1:%d mult x%d\n",
                 pllidiv * pllodiv, pllmult);
         break;
     case 2:
-        printf ("%s\n", poscmod [DEVCFG1 >> 8 & 3]);
+        printf("%s\n", poscmod [DEVCFG1 >> 8 & 3]);
         break;
     case 3:
-        printf ("reserved\n");
+        printf("reserved\n");
         break;
     case 4:
-        printf ("secondary\n");
+        printf("secondary\n");
         break;
     case 5:
-        printf ("internal Low-Power RC\n");
+        printf("internal Low-Power RC\n");
         break;
     case 6:
-        printf ("back-up Fast RC\n");
+        printf("back-up Fast RC\n");
         break;
     }
 
@@ -505,7 +505,7 @@ identify_cpu()
         machDataCacheSize = 64 * (1<<ds) * 2 * (1<<dl) * (da+1);
     }
     if (machInstCacheSize > 0 || machDataCacheSize > 0) {
-        printf ("cache: %u/%u kbytes\n",
+        printf("cache: %u/%u kbytes\n",
             machInstCacheSize >> 10, machDataCacheSize >> 10);
     }
 }
@@ -790,7 +790,8 @@ dumpsys()
         return;
     printf("\ndumping to dev %x, offset %d\n", dumpdev, dumplo);
     printf("dump ");
-    switch (error = (*bdevsw[major(dumpdev)].d_dump)(dumpdev)) {
+    error = (*bdevsw[major(dumpdev)].d_dump)(dumpdev);
+    switch (error) {
 
     case ENXIO:
         printf("device bad\n");
@@ -1022,24 +1023,28 @@ tlb_flush()
  * Flush any TLB entries for the given address and TLB PID.
  */
 void
-tlb_flush_addr(unsigned hi)
+tlb_flush_addr(unsigned hi, unsigned lo)
 {
-//printf("%s: %08x\n", __func__, hi);
-    int x = mips_di();                  /* Disable interrupts */
-    int pid = mfc0_EntryHi();           /* Save the current PID */
-    int index;
+    int x, pid, index;
+
+//printf("%s: hi=%08x, lo=%08x\n", __func__, hi, lo);
+    x = mips_di();                      /* Disable interrupts */
+    pid = mfc0_EntryHi();               /* Save the current PID */
 
     mtc0_EntryHi(hi);                   /* Look for addr & PID */
     asm volatile ("tlbp");              /* Probe for the entry */
-
     index = mfc0_Index();               /* See what we got */
+
     if (index >= 0) {
-        /* Entry found - mark it as invalid.
-         * Use invalid memory address, unique for every entry */
-        mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR ^ 0x3c000 ^ (index << 14));
-        mtc0_EntryLo0(0);               /* Zero out low entry 0 */
-        mtc0_EntryLo1(0);               /* Zero out low entry 1 */
-        asm volatile ("tlbwi");         /* Write the TLB entry */
+        /* Entry found. */
+        asm volatile ("tlbr");          /* Read existing entry */
+        mtc0_EntryHi(hi);               /* Restore addr & PID */
+        if (hi & (1 << PGSHIFT)) {
+            mtc0_EntryLo1(lo);          /* Clear low entry 1 */
+        } else {
+            mtc0_EntryLo0(lo);          /* Clear low entry 0 */
+        }
+        asm volatile ("tlbwi");         /* Update TLB entry */
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */
@@ -1054,6 +1059,7 @@ tlb_update (unsigned hi, pt_entry_t *pte)
     unsigned lo0, lo1;
     int x, pid, index;
 
+    /* Replicate G bit to paired even/odd entry. */
     if (hi & (1 << PGSHIFT)) {
         lo1 = pte[0].pt_entry;
         lo0 = pte[-1].pt_entry | (lo1 & PG_G);

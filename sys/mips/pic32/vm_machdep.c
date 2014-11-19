@@ -193,11 +193,12 @@ pagemove(from, to, size)
     fpte = kvtopte(from);
     tpte = kvtopte(to);
     while (size > 0) {
-        tlb_flush_addr((unsigned) from);
-        tlb_update((unsigned) to, fpte);
-        *tpte++ = *fpte;
-        fpte->pt_entry = 0;
+        *tpte = *fpte;
+        fpte->pt_entry &= PG_G;
+        tlb_flush_addr((unsigned) from, fpte->pt_entry);
+        tlb_update((unsigned) to, tpte);
         fpte++;
+        tpte++;
         size -= NBPG;
         from += NBPG;
         to += NBPG;

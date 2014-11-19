@@ -427,7 +427,7 @@ pmap_remove(pmap, sva, eva)
             /*
              * Flush the TLB for the given address.
              */
-            tlb_flush_addr(sva);
+            tlb_flush_addr(sva, PG_G);
         }
         return;
     }
@@ -468,7 +468,7 @@ pmap_remove(pmap, sva, eva)
              * Flush the TLB for the given address.
              */
             if (pmap->pm_tlbgen == tlbpid_gen) {
-                tlb_flush_addr(sva | pmap->pm_tlbpid);
+                tlb_flush_addr(sva | pmap->pm_tlbpid, 0);
             }
         }
     }
@@ -783,18 +783,19 @@ pmap_enter(pmap, va, pa, prot, wired)
                 panic("pmap_enter: kernel wired");
 #endif
         }
-        /*
-         * Update the same virtual address entry.
-         */
         pte->pt_entry = npte;
-//printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
-        tlb_update(va, pte);
 
         /* Replicate G bit to paired even/odd entry. */
         if (va & (1 << PGSHIFT))
             pte[-1].pt_entry |= PG_G;
         else
             pte[1].pt_entry |= PG_G;
+
+        /*
+         * Update the same virtual address entry.
+         */
+//printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
+        tlb_update(va, pte);
         return;
     }
 

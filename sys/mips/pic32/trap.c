@@ -273,48 +273,30 @@ exception(statusReg, causeReg, vadr, pc, args)
         sticks = p->p_sticks;
     }
     switch (type) {
-    case TRAP_MOD:                      /* Kernel: TLB modified */
+    case TRAP_MOD:                      /* Kernel: TLB modify */
         /* check for kernel address */
         if ((int)vadr < 0) {
-            register pt_entry_t *pte;
-            register unsigned entry;
-            register vm_offset_t pa;
-
-            pte = kvtopte(vadr);
-            entry = pte->pt_entry;
 #ifdef DIAGNOSTIC
+            register pt_entry_t *pte = kvtopte(vadr);
+            register unsigned entry = pte->pt_entry;
+
             if (!(entry & PG_V) || (entry & PG_D))
                 panic("trap: ktlbmod: invalid pte");
 #endif
-            if (! (entry & PG_D)) {
-                /* write to read only page in the kernel */
-                ftype = VM_PROT_WRITE;
-                goto kernel_fault;
-            }
-            entry |= PG_D;
-            pte->pt_entry = entry;
-            vadr &= ~PGOFSET;
-            tlb_update(vadr, pte);
-            pa = PG_FRAME(entry);
-#ifdef ATTR
-            pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
-#else
-            if (!IS_VM_PHYSADDR(pa))
-                panic("trap: ktlbmod: unmanaged page");
-            PHYS_TO_VM_PAGE(pa)->flags &= ~PG_CLEAN;
-#endif
-            return (pc);
+            /* write to read only page in the kernel */
+            ftype = VM_PROT_WRITE;
+            goto kernel_fault;
         }
         /* FALLTHROUGH */
 
-    case TRAP_MOD + TRAP_USER:          /* User: TLB modified */
+    case TRAP_MOD + TRAP_USER:          /* User: TLB modify */
         {
-        register pt_entry_t *pte;
+        pmap_t pmap = &p->p_vmspace->vm_pmap;
+        register pt_entry_t *pte = pmap_segmap(pmap, vadr);
         register unsigned entry;
         register vm_offset_t pa;
-        pmap_t pmap = &p->p_vmspace->vm_pmap;
 
-        if (!(pte = pmap_segmap(pmap, vadr)))
+        if (!pte)
             panic("trap: utlbmod: invalid segmap");
         pte += (vadr >> PGSHIFT) & (NPTEPG - 1);
         entry = pte->pt_entry;
@@ -331,16 +313,9 @@ exception(statusReg, causeReg, vadr, pc, args)
             panic("trap: utlbmod: unmanaged page");
         PHYS_TO_VM_PAGE(pa)->flags &= ~PG_CLEAN;
 #endif
-        if (! (entry & PG_D)) {
-            /* write to read only page */
-            ftype = VM_PROT_WRITE;
-            goto dofault;
-        }
-        vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
-        tlb_update(vadr, pte);
-        if (!USERMODE(statusReg))
-            return (pc);
-        goto out;
+        /* write to read only page */
+        ftype = VM_PROT_WRITE;
+        goto dofault;
         }
 
     case TRAP_TLBL:                     /* Kernel: TLB refill */
