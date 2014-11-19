@@ -182,7 +182,7 @@ getdiskpart(s, fd)
 	static struct diskpart lab;
 
 	if (ioctl(fd, DIOCGETPART, (char *)&lab) < 0) {
-		warn("ioctl (GDINFO)");
+		warn("ioctl (DIOCGETPART)");
 		fatal("%s: can't read disk label", s);
 	}
 	return (&lab);

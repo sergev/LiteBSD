@@ -294,7 +294,7 @@ exception(statusReg, causeReg, vadr, pc, args)
             entry |= PG_D;
             pte->pt_entry = entry;
             vadr &= ~PGOFSET;
-            tlb_update(vadr, entry);
+            tlb_update(vadr, pte);
             pa = PG_FRAME(entry);
 #ifdef ATTR
             pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
@@ -337,7 +337,7 @@ exception(statusReg, causeReg, vadr, pc, args)
             goto dofault;
         }
         vadr = (vadr & ~PGOFSET) | pmap->pm_tlbpid;
-        tlb_update(vadr, entry);
+        tlb_update(vadr, pte);
         if (!USERMODE(statusReg))
             return (pc);
         goto out;

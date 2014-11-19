@@ -210,9 +210,6 @@
  */
 #define LOTSOFMEM       2
 
-#define mapin(pte, v, pfnum, prot) \
-        (*(int *)(pte) = ((pfnum) << PG_SHIFT) | (prot), tlb_flush_addr(v))
-
 /*
  * Mach derived constants
  */
@@ -228,9 +225,3 @@
 #define VM_MBUF_SIZE            (NMBCLUSTERS*MCLBYTES)
 #define VM_KMEM_SIZE            (NKMEMCLUSTERS*CLBYTES)
 #define VM_PHYS_SIZE            (USRIOSIZE*CLBYTES)
-
-extern void tlb_set_pid(unsigned asid);
-extern void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1);
-extern void tlb_flush(void);
-extern void tlb_flush_addr(unsigned hi);
-extern void tlb_update(unsigned hi, unsigned lo);

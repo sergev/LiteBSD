@@ -989,14 +989,12 @@ tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1)
     mtc0_EntryHi(hi);                   /* Set up entry high */
     mtc0_EntryLo0(lo0);                 /* Set up entry low 0 */
     mtc0_EntryLo1(lo1);                 /* Set up entry low 1 */
-    asm volatile ("ehb");               /* Hazard barrier */
     asm volatile ("tlbwi");             /* Write the TLB entry */
 
     mtc0_Wired(index + 1);              /* Set the number of wired entries */
 
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }
 
 /*
@@ -1014,12 +1012,10 @@ tlb_flush()
     mtc0_EntryLo1(0);                   /* Zero out low entry 1 */
     for (index=VMMACH_FIRST_RAND_ENTRY; index<VMMACH_NUM_TLB_ENTRIES; index++) {
         mtc0_Index(index);              /* Set the index */
-        asm volatile ("ehb");           /* Hazard barrier */
         asm volatile ("tlbwi");         /* Write the TLB entry */
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }
 
 /*
@@ -1034,7 +1030,6 @@ tlb_flush_addr(unsigned hi)
     int index;
 
     mtc0_EntryHi(hi);                   /* Look for addr & PID */
-    asm volatile ("ehb");               /* Hazard barrier */
     asm volatile ("tlbp");              /* Probe for the entry */
 
     index = mfc0_Index();               /* See what we got */
@@ -1044,66 +1039,47 @@ tlb_flush_addr(unsigned hi)
         mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR ^ 0x3c000 ^ (index << 14));
         mtc0_EntryLo0(0);               /* Zero out low entry 0 */
         mtc0_EntryLo1(0);               /* Zero out low entry 1 */
-        asm volatile ("ehb");           /* Hazard barrier */
         asm volatile ("tlbwi");         /* Write the TLB entry */
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }
 
 /*
  * Update the TLB entry if highreg is found; otherwise, enter the data.
  */
 void
-tlb_update (unsigned hi, unsigned lo)
+tlb_update (unsigned hi, pt_entry_t *pte)
 {
-//printf("%s: hi=%08x, lo=%08x\n", __func__, hi, lo);
-    int x = mips_di();                  /* Disable interrupts */
-    int pid = mfc0_EntryHi();           /* Save the current PID */
-    int index;
+    unsigned lo0, lo1;
+    int x, pid, index;
+
+    if (hi & (1 << PGSHIFT)) {
+        lo1 = pte[0].pt_entry;
+        lo0 = pte[-1].pt_entry | (lo1 & PG_G);
+    } else {
+        lo0 = pte[0].pt_entry;
+        lo1 = pte[1].pt_entry | (lo0 & PG_G);
+    }
+//printf("%s: hi=%08x, lo0=%08x, lo1=%08x\n", __func__, hi, lo0, lo1);
+    x = mips_di();                      /* Disable interrupts */
+    pid = mfc0_EntryHi();               /* Save the current PID */
 
     mtc0_EntryHi(hi);                   /* Look for addr & PID */
-    asm volatile ("ehb");               /* Hazard barrier */
     asm volatile ("tlbp");              /* Probe for the entry */
     index = mfc0_Index();               /* See what we got */
 
-    if (hi & (1 << PGSHIFT)) {
-        /* Odd page. */
-        if (index >= 0) {
-            /* Entry found - update EntryLo1. */
-            asm volatile ("tlbr");      /* Read old entry */
-            mtc0_EntryHi(hi);           /* Restore high reg */
-            mtc0_EntryLo1(lo);          /* Setup low entry 1 */
-            asm volatile ("ehb");       /* Hazard barrier */
-            asm volatile ("tlbwi");     /* Write the TLB entry */
-        } else {
-            /* Not found - install new entry. */
-            mtc0_EntryLo0(lo & PG_G);   /* Clear low entry 0 */
-            mtc0_EntryLo1(lo);          /* Setup low entry 1 */
-            asm volatile ("ehb");       /* Hazard barrier */
-            asm volatile ("tlbwr");     /* Enter into a random slot */
-        }
+    mtc0_EntryLo0(lo0);                 /* Setup low entry 0 */
+    mtc0_EntryLo1(lo1);                 /* Setup low entry 1 */
+
+    if (index >= 0) {
+        /* Entry found. */
+        asm volatile ("tlbwi");         /* Overwrite existing TLB entry */
     } else {
-        /* Even page. */
-        if (index >= 0) {
-            /* Entry found - update EntryLo0. */
-            asm volatile ("tlbr");      /* Read old entry */
-            mtc0_EntryHi(hi);           /* Restore high reg */
-            mtc0_EntryLo0(lo);          /* Setup low entry 0 */
-            asm volatile ("ehb");       /* Hazard barrier */
-            asm volatile ("tlbwi");     /* Write the TLB entry */
-        } else {
-            /* Not found - install new entry. */
-            mtc0_EntryLo0(lo);          /* Setup low entry 0 */
-            mtc0_EntryLo1(lo & PG_G);   /* Clear low entry 1 */
-            asm volatile ("ehb");       /* Hazard barrier */
-            asm volatile ("tlbwr");     /* Enter into a random slot */
-        }
+        asm volatile ("tlbwr");         /* Enter into a random slot */
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }
 
 /*
@@ -1117,7 +1093,6 @@ mips_flush_icache(vm_offset_t addr, vm_offset_t len)
 
     // TODO
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }
 
 /*
@@ -1132,5 +1107,4 @@ mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
 
     // TODO
     mtc0_Status(x);                     /* Restore interrupts */
-    asm volatile ("ehb");               /* Hazard barrier */
 }

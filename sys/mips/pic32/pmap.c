@@ -582,7 +582,7 @@ pmap_protect(pmap, sva, eva, prot)
             /*
              * Update the TLB if the given address is in the cache.
              */
-            tlb_update(sva, entry);
+            tlb_update(sva, pte);
         }
         return;
     }
@@ -617,7 +617,7 @@ pmap_protect(pmap, sva, eva, prot)
              * Update the TLB if the given address is in the cache.
              */
             if (pmap->pm_tlbgen == tlbpid_gen)
-                tlb_update(sva | pmap->pm_tlbpid, entry);
+                tlb_update(sva | pmap->pm_tlbpid, pte);
         }
     }
 }
@@ -786,9 +786,9 @@ pmap_enter(pmap, va, pa, prot, wired)
         /*
          * Update the same virtual address entry.
          */
-//printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
-        tlb_update(va, npte);
         pte->pt_entry = npte;
+//printf ("--- %s(pa = %08x) update tlb: va = %08x, npte = %08x \n", __func__, pa, va, npte);
+        tlb_update(va, pte);
 
         /* Replicate G bit to paired even/odd entry. */
         if (va & (1 << PGSHIFT))
@@ -819,7 +819,7 @@ pmap_enter(pmap, va, pa, prot, wired)
     }
     pte->pt_entry = npte;
     if (pmap->pm_tlbgen == tlbpid_gen)
-        tlb_update(va | pmap->pm_tlbpid, npte);
+        tlb_update(va | pmap->pm_tlbpid, pte);
 }
 
 /*

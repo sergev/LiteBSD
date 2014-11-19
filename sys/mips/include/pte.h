@@ -77,4 +77,10 @@ typedef union pt_entry {
 
 extern  pt_entry_t *Sysmap;         /* kernel pte table */
 extern  u_int Sysmapsize;           /* number of pte's in Sysmap */
+
+extern void tlb_set_pid(unsigned asid);
+extern void tlb_write_wired(unsigned index, unsigned hi, unsigned lo0, unsigned lo1);
+extern void tlb_flush(void);
+extern void tlb_flush_addr(unsigned hi);
+extern void tlb_update(unsigned hi, pt_entry_t *loptr);
 #endif
