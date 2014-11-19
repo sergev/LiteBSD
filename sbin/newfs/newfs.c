@@ -85,8 +85,6 @@ void	fatal(const char *fmt, ...);
 void	fatal();
 #endif
 
-#define	COMPAT			/* allow non-labeled disks */
-
 /*
  * The following two constants set the default block and fragment sizes.
  * Both constants must be a power of 2 and meet the following constraints:
@@ -172,13 +170,23 @@ int	sbsize = SBSIZE;	/* superblock size */
 int	mntflags = MNT_ASYNC;	/* flags to be passed to mount */
 u_long	memleft;		/* virtual memory available */
 caddr_t	membase;		/* start address of memory based filesystem */
-#ifdef COMPAT
-char	*disktype;
-int	unlabeled;
-#endif
 
 char	device[MAXPATHLEN];
 char	*progname;
+
+static struct diskpart *
+getdiskpart(s, fd)
+	char *s;
+	int fd;
+{
+	static struct diskpart lab;
+
+	if (ioctl(fd, DIOCGETPART, (char *)&lab) < 0) {
+		warn("ioctl (GDINFO)");
+		fatal("%s: can't read disk label", s);
+	}
+	return (&lab);
+}
 
 int
 main(argc, argv)
@@ -188,10 +196,7 @@ main(argc, argv)
 	extern char *optarg;
 	extern int optind;
 	register int ch;
-	register struct partition *pp;
-	register struct disklabel *lp;
-	struct disklabel *getdisklabel();
-	struct partition oldpartition;
+	register struct diskpart *pp;
 	struct stat st;
 	struct statfs *mp;
 	int fsi, fso, len, n;
@@ -208,8 +213,8 @@ main(argc, argv)
 	}
 
 	opstring = mfs ?
-	    "NT:a:b:c:d:e:f:i:m:o:s:" :
-	    "NOS:T:a:b:c:d:e:f:i:k:l:m:n:o:p:r:s:t:u:x:";
+	    "Na:b:c:d:e:f:i:m:o:s:" :
+	    "NOS:a:b:c:d:e:f:i:k:l:m:n:o:p:r:s:t:u:x:";
 	while ((ch = getopt(argc, argv, opstring)) != EOF)
 		switch (ch) {
 		case 'N':
@@ -222,11 +227,6 @@ main(argc, argv)
 			if ((sectorsize = atoi(optarg)) <= 0)
 				fatal("%s: bad sector size", optarg);
 			break;
-#ifdef COMPAT
-		case 'T':
-			disktype = optarg;
-			break;
-#endif
 		case 'a':
 			if ((maxcontig = atoi(optarg)) <= 0)
 				fatal("%s: bad maximum contiguous blocks\n",
@@ -363,85 +363,57 @@ main(argc, argv)
 			++mp;
 		}
 	}
-	if (mfs && disktype != NULL) {
-		lp = (struct disklabel *)getdiskbyname(disktype);
-		if (lp == NULL)
-			fatal("%s: unknown disk type", disktype);
-		pp = &lp->d_partitions[1];
-	} else {
-		fsi = open(special, O_RDONLY);
-		if (fsi < 0)
-			fatal("%s: %s", special, strerror(errno));
-		if (fstat(fsi, &st) < 0)
-			fatal("%s: %s", special, strerror(errno));
-		if ((st.st_mode & S_IFMT) != S_IFCHR && !mfs)
-			printf("%s: %s: not a character-special device\n",
-			    progname, special);
-		cp = strchr(argv[0], '\0') - 1;
-		if (cp == (char *)-1 ||
-		    (*cp < 'a' || *cp > 'h') && !isdigit(*cp))
-			fatal("%s: can't figure out file system partition",
-			    argv[0]);
-#ifdef COMPAT
-		if (!mfs && disktype == NULL)
-			disktype = argv[1];
-#endif
-		lp = getdisklabel(special, fsi);
-		if (isdigit(*cp))
-			pp = &lp->d_partitions[0];
-		else
-			pp = &lp->d_partitions[*cp - 'a'];
-		if (pp->p_size == 0)
-			fatal("%s: `%c' partition is unavailable",
-			    argv[0], *cp);
-		if (pp->p_fstype == FS_BOOT)
-			fatal("%s: `%c' partition overlaps boot program",
-			      argv[0], *cp);
-	}
+        fsi = open(special, O_RDONLY);
+        if (fsi < 0)
+                fatal("%s: %s", special, strerror(errno));
+        if (fstat(fsi, &st) < 0)
+                fatal("%s: %s", special, strerror(errno));
+        if ((st.st_mode & S_IFMT) != S_IFCHR && !mfs)
+                printf("%s: %s: not a character-special device\n",
+                    progname, special);
+        cp = strchr(argv[0], '\0') - 1;
+        if (cp == (char *)-1 ||
+            (*cp < 'a' || *cp > 'h') && !isdigit(*cp))
+                fatal("%s: can't figure out file system partition",
+                    argv[0]);
+        pp = getdiskpart(special, fsi);
+        if (pp->dp_size == 0)
+                fatal("%s: `%c' partition is unavailable",
+                    argv[0], *cp);
 	if (fssize == 0)
-		fssize = pp->p_size;
-	if (fssize > pp->p_size && !mfs)
+		fssize = pp->dp_size;
+	if (fssize > pp->dp_size && !mfs)
 	       fatal("%s: maximum file system size on the `%c' partition is %d",
-			argv[0], *cp, pp->p_size);
+			argv[0], *cp, pp->dp_size);
 	if (rpm == 0) {
-		rpm = lp->d_rpm;
-		if (rpm <= 0)
-			rpm = 3600;
+		rpm = 3600;
 	}
 	if (ntracks == 0) {
-		ntracks = lp->d_ntracks;
-		if (ntracks <= 0)
-			fatal("%s: no default #tracks", argv[0]);
+		ntracks = 32;
+//		if (ntracks <= 0)
+//			fatal("%s: no default #tracks", argv[0]);
 	}
 	if (nsectors == 0) {
-		nsectors = lp->d_nsectors;
-		if (nsectors <= 0)
-			fatal("%s: no default #sectors/track", argv[0]);
+		nsectors = 32;
+//		if (nsectors <= 0)
+//			fatal("%s: no default #sectors/track", argv[0]);
 	}
 	if (sectorsize == 0) {
-		sectorsize = lp->d_secsize;
-		if (sectorsize <= 0)
-			fatal("%s: no default sector size", argv[0]);
+		sectorsize = DEV_BSIZE;
+//		if (sectorsize <= 0)
+//			fatal("%s: no default sector size", argv[0]);
 	}
 	if (trackskew == -1) {
-		trackskew = lp->d_trackskew;
-		if (trackskew < 0)
-			trackskew = 0;
+		trackskew = 0;
 	}
 	if (interleave == 0) {
-		interleave = lp->d_interleave;
-		if (interleave <= 0)
-			interleave = 1;
+		interleave = 1;
 	}
 	if (fsize == 0) {
-		fsize = pp->p_fsize;
-		if (fsize <= 0)
-			fsize = MAX(DFL_FRAGSIZE, lp->d_secsize);
+		fsize = MAX(DFL_FRAGSIZE, DEV_BSIZE);
 	}
 	if (bsize == 0) {
-		bsize = pp->p_frag * pp->p_fsize;
-		if (bsize <= 0)
-			bsize = MIN(DFL_BLKSIZE, 8 * fsize);
+		bsize = MIN(DFL_BLKSIZE, 8 * fsize);
 	}
 	/*
 	 * Maxcontig sets the default for the maximum number of blocks
@@ -459,30 +431,17 @@ main(argc, argv)
 		opt = FS_OPTSPACE;
 	}
 	if (trackspares == -1) {
-		trackspares = lp->d_sparespertrack;
-		if (trackspares < 0)
-			trackspares = 0;
+		trackspares = 0;
 	}
 	nphyssectors = nsectors + trackspares;
 	if (cylspares == -1) {
-		cylspares = lp->d_sparespercyl;
-		if (cylspares < 0)
-			cylspares = 0;
+		cylspares = 0;
 	}
 	secpercyl = nsectors * ntracks - cylspares;
-	if (secpercyl != lp->d_secpercyl)
-		fprintf(stderr, "%s (%d) %s (%lu)\n",
-			"Warning: calculated sectors per cylinder", secpercyl,
-			"disagrees with disk label", lp->d_secpercyl);
 	if (maxbpg == 0)
 		maxbpg = MAXBLKPG(bsize);
-	headswitch = lp->d_headswitch;
-	trackseek = lp->d_trkseek;
-#ifdef notdef /* label may be 0 if faked up by kernel */
-	bbsize = lp->d_bbsize;
-	sbsize = lp->d_sbsize;
-#endif
-	oldpartition = *pp;
+	headswitch = 0;
+	trackseek = 0;
 #ifdef tahoe
 	realsectorsize = sectorsize;
 	if (sectorsize != DEV_BSIZE) {		/* XXX */
@@ -493,16 +452,14 @@ main(argc, argv)
 		nphyssectors /= secperblk;
 		secpercyl /= secperblk;
 		fssize /= secperblk;
-		pp->p_size /= secperblk;
+		pp->dp_size /= secperblk;
 	}
 #endif
 	mkfs(pp, special, fsi, fso);
 #ifdef tahoe
 	if (realsectorsize != DEV_BSIZE)
-		pp->p_size *= DEV_BSIZE / realsectorsize;
+		pp->dp_size *= DEV_BSIZE / realsectorsize;
 #endif
-	if (!Nflag && memcmp(pp, &oldpartition, sizeof(oldpartition)))
-		rewritelabel(special, fso, lp);
 	if (!Nflag)
 		close(fso);
 	close(fsi);
@@ -524,87 +481,6 @@ main(argc, argv)
 	}
 #endif
 	exit(0);
-}
-
-#ifdef COMPAT
-char lmsg[] = "%s: can't read disk label; disk type must be specified";
-#else
-char lmsg[] = "%s: can't read disk label";
-#endif
-
-struct disklabel *
-getdisklabel(s, fd)
-	char *s;
-	int fd;
-{
-	static struct disklabel lab;
-
-	if (ioctl(fd, DIOCGDINFO, (char *)&lab) < 0) {
-#ifdef COMPAT
-		if (disktype) {
-			struct disklabel *lp, *getdiskbyname();
-
-			unlabeled++;
-			lp = getdiskbyname(disktype);
-			if (lp == NULL)
-				fatal("%s: unknown disk type", disktype);
-			return (lp);
-		}
-#endif
-		warn("ioctl (GDINFO)");
-		fatal(lmsg, s);
-	}
-	return (&lab);
-}
-
-rewritelabel(s, fd, lp)
-	char *s;
-	int fd;
-	register struct disklabel *lp;
-{
-#ifdef COMPAT
-	if (unlabeled)
-		return;
-#endif
-	lp->d_checksum = 0;
-	lp->d_checksum = dkcksum(lp);
-	if (ioctl(fd, DIOCWDINFO, (char *)lp) < 0) {
-		warn("ioctl (WDINFO)");
-		fatal("%s: can't rewrite disk label", s);
-	}
-#if vax
-	if (lp->d_type == DTYPE_SMD && lp->d_flags & D_BADSECT) {
-		register i;
-		int cfd;
-		daddr_t alt;
-		char specname[64];
-		char blk[1024];
-		char *cp;
-
-		/*
-		 * Make name for 'c' partition.
-		 */
-		strcpy(specname, s);
-		cp = specname + strlen(specname) - 1;
-		if (!isdigit(*cp))
-			*cp = 'c';
-		cfd = open(specname, O_WRONLY);
-		if (cfd < 0)
-			fatal("%s: %s", specname, strerror(errno));
-		memset(blk, 0, sizeof(blk));
-		*(struct disklabel *)(blk + LABELOFFSET) = *lp;
-		alt = lp->d_ncylinders * lp->d_secpercyl - lp->d_nsectors;
-		for (i = 1; i < 11 && i < lp->d_nsectors; i += 2) {
-			if (lseek(cfd, (off_t)(alt + i) * lp->d_secsize,
-			    L_SET) == -1)
-				fatal("lseek to badsector area: %s",
-				    strerror(errno));
-			if (write(cfd, blk, lp->d_secsize) < lp->d_secsize)
-				warn("alternate label %d write", i/2);
-		}
-		close(cfd);
-	}
-#endif
 }
 
 /*VARARGS*/
@@ -644,21 +520,14 @@ usage()
 			progname);
 	} else
 		fprintf(stderr,
-		    "usage: %s [ -fsoptions ] special-device%s\n",
-		    progname,
-#ifdef COMPAT
-		    " [device-type]");
-#else
-		    "");
-#endif
+                    "usage: %s [ -fsoptions ] special-device\n",
+                        progname);
+
 	fprintf(stderr, "where fsoptions are:\n");
 	fprintf(stderr,
 	    "\t-N do not create file system, just print out parameters\n");
 	fprintf(stderr, "\t-O create a 4.3BSD format filesystem\n");
 	fprintf(stderr, "\t-S sector size\n");
-#ifdef COMPAT
-	fprintf(stderr, "\t-T disktype\n");
-#endif
 	fprintf(stderr, "\t-a maximum contiguous blocks\n");
 	fprintf(stderr, "\t-b block size\n");
 	fprintf(stderr, "\t-c cylinders/group\n");

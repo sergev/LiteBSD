@@ -287,6 +287,7 @@ pass5()
 		cstotal.cs_nifree += newcg->cg_cs.cs_nifree;
 		cstotal.cs_ndir += newcg->cg_cs.cs_ndir;
 		cs = &fs->fs_cs(fs, c);
+//printf("=1= c=%d, cs=%08x\n", c, cs);
 		if (memcmp(&newcg->cg_cs, cs, sizeof *cs) != 0 &&
 		    dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN SUPERBLK")) {
 			memmove(cs, &newcg->cg_cs, sizeof *cs);

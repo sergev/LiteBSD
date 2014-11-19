@@ -64,7 +64,6 @@ struct dkdevice {
     int     dk_byteshift;           /* shift to convert bytes to blks */
     struct  dkdriver *dk_driver;    /* pointer to driver */
     daddr_t dk_labelsector;         /* sector containing label */
-    struct  disklabel dk_label;     /* label */
 };
 
 struct dkdriver {
@@ -105,8 +104,5 @@ struct disksort_stats {
 
 #ifdef KERNEL
 void    disksort __P((struct buf *, struct buf *));
-char    *readdisklabel __P((struct dkdevice *, int));
-int     setdisklabel __P((struct dkdevice *, struct disklabel *));
-int     writedisklabel __P((struct dkdevice *, int));
 int     diskerr __P((struct dkdevice *, struct buf *, char *, int, int));
 #endif

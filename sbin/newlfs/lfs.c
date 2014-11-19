@@ -166,10 +166,9 @@ static void make_dir __P(( void *, struct direct *, int));
 static void put __P((int, off_t, void *, size_t));
 
 int
-make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
+make_lfs(fd, partp, minfree, block_size, frag_size, seg_size)
 	int fd;
-	struct disklabel *lp;
-	struct partition *partp;
+	struct diskpart *partp;
 	int minfree;
 	int block_size;
 	int frag_size;
@@ -255,10 +254,10 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	 * Fill in parts of superblock that can be computed from file system
 	 * size, disk geometry and current time.
 	 */
-	db_per_fb = bsize/lp->d_secsize;
+	db_per_fb = bsize/DEV_BSIZE;
 	lfsp->lfs_fsbtodb = lg2(db_per_fb);
 	lfsp->lfs_sushift = lg2(lfsp->lfs_sepb);
-	lfsp->lfs_size = partp->p_size >> lfsp->lfs_fsbtodb;
+	lfsp->lfs_size = partp->dp_size >> lfsp->lfs_fsbtodb;
 	lfsp->lfs_dsize = lfsp->lfs_size - (LFS_LABELPAD >> lfsp->lfs_bshift);
 	lfsp->lfs_nseg = lfsp->lfs_dsize / lfsp->lfs_ssize;
 	lfsp->lfs_maxfilesize = maxtable[lfsp->lfs_bshift] << lfsp->lfs_bshift;
@@ -288,12 +287,12 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	 */
 
 	/* Figure out where the superblocks are going to live */
-	lfsp->lfs_sboffs[0] = LFS_LABELPAD/lp->d_secsize;
+	lfsp->lfs_sboffs[0] = LFS_LABELPAD/DEV_BSIZE;
 	for (i = 1; i < LFS_MAXNUMSB; i++) {
 		sb_addr = ((i * sb_interval) <<
 		    (lfsp->lfs_segshift - lfsp->lfs_bshift + lfsp->lfs_fsbtodb))
 		    + lfsp->lfs_sboffs[0];
-		if (sb_addr > partp->p_size)
+		if (sb_addr > partp->dp_size)
 			break;
 		lfsp->lfs_sboffs[i] = sb_addr;
 	}
@@ -325,7 +324,7 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	segp->su_nsums = 1;	/* 1 summary blocks */
 	segp->su_ninos = 1;	/* 1 inode block */
 	segp->su_flags = SEGUSE_SUPERBLOCK | SEGUSE_DIRTY;
-	lfsp->lfs_bfree -= LFS_SUMMARY_SIZE / lp->d_secsize;
+	lfsp->lfs_bfree -= LFS_SUMMARY_SIZE / DEV_BSIZE;
 	lfsp->lfs_bfree -=
 	     fsbtodb(lfsp, lfsp->lfs_cleansz + lfsp->lfs_segtabsz + 4);
 
@@ -334,12 +333,12 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	 * appears immediately after the segment summary.
 	 */
 	lfsp->lfs_idaddr = (LFS_LABELPAD + LFS_SBPAD + LFS_SUMMARY_SIZE) /
-	    lp->d_secsize;
+	    DEV_BSIZE;
 
 	for (segp = segtable + 1, i = 1; i < lfsp->lfs_nseg; i++, segp++) {
 		if ((i % sb_interval) == 0) {
 			segp->su_flags = SEGUSE_SUPERBLOCK;
-			lfsp->lfs_bfree -= (LFS_SBPAD / lp->d_secsize);
+			lfsp->lfs_bfree -= (LFS_SBPAD / DEV_BSIZE);
 		} else
 			segp->su_flags = 0;
 		segp->su_lastmod = 0;
@@ -387,7 +386,7 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	 * block of inodes (whose address has been calculated in
 	 * lfsp->lfs_idaddr;
 	 */
-	sb_addr = lfsp->lfs_idaddr + lfsp->lfs_bsize / lp->d_secsize;
+	sb_addr = lfsp->lfs_idaddr + lfsp->lfs_bsize / DEV_BSIZE;
 	sb_addr = make_dinode(LFS_IFILE_INUM, dip,
 	    lfsp->lfs_cleansz + lfsp->lfs_segtabsz+1, sb_addr, lfsp);
 	dip->di_mode = IFREG|IREAD|IWRITE;
@@ -481,7 +480,7 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 	put(fd, off, ipagep, lfsp->lfs_bsize);
 
 	/* Write Supberblock */
-	lfsp->lfs_offset = (off + lfsp->lfs_bsize) / lp->d_secsize;
+	lfsp->lfs_offset = (off + lfsp->lfs_bsize) / DEV_BSIZE;
 	put(fd, LFS_LABELPAD, lfsp, sizeof(struct lfs));
 
 	/*
@@ -580,7 +579,7 @@ make_lfs(fd, lp, partp, minfree, block_size, frag_size, seg_size)
 		seg_addr += lfsp->lfs_ssize << lfsp->lfs_fsbtodb;
 		sp->ss_next = last_addr;
 		last_addr = seg_addr;
-		seg_seek = seg_addr * lp->d_secsize;
+		seg_seek = seg_addr * DEV_BSIZE;
 
 		if (seg_addr == lfsp->lfs_sboffs[j]) {
 			if (j < (LFS_MAXNUMSB - 2))

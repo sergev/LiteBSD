@@ -1,6 +1,6 @@
 #	@(#)Makefile	5.20 (Berkeley) 6/12/93
 
-SUBDIR=	accton amd arp chown chroot dev_mkdb diskpart edquota \
+SUBDIR=	accton amd arp chown chroot dev_mkdb edquota \
 	inetd kgmon kvm_mkdb lpr mtree portmap pstat pwd_mkdb \
 	quotaon repquota rmt rwhod sliplogin sysctl \
 	syslogd traceroute trpt update vipw

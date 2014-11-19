@@ -4,7 +4,7 @@
 .PATH: ${.CURDIR}/${MACHINE}/gen ${.CURDIR}/gen
 
 SRCS+=	alarm.c assert.c clock.c closedir.c confstr.c crypt.c ctermid.c \
-	ctime.c daemon.c devname.c difftime.c disklabel.c err.c errlst.c \
+	ctime.c daemon.c devname.c difftime.c err.c errlst.c \
 	exec.c fnmatch.c frexp.c fstab.c fts.c getbsize.c getcap.c getcwd.c \
 	getgrent.c getgrouplist.c gethostname.c getloadavg.c getlogin.c \
 	getmntinfo.c getnetgrent.c getpagesize.c getpass.c getpwent.c \

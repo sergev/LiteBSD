@@ -1,1 +1,0 @@
-../disklabel/dkcksum.c

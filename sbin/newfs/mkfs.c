@@ -615,14 +615,6 @@ next:
 		wtfs(fsbtodb(&sblock, cgsblock(&sblock, cylno)),
 		    sbsize, (char *)&sblock);
 	/*
-	 * Update information about this partion in pack
-	 * label, to that it may be updated on disk.
-	 */
-	pp->p_fstype = FS_BSDFFS;
-	pp->p_fsize = sblock.fs_fsize;
-	pp->p_frag = sblock.fs_frag;
-	pp->p_cpg = sblock.fs_cpg;
-	/*
 	 * Notify parent process of success.
 	 * Dissociate from session and tty.
 	 */

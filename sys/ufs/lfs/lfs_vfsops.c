@@ -43,7 +43,6 @@
 #include <sys/buf.h>
 #include <sys/mbuf.h>
 #include <sys/file.h>
-#include <sys/disklabel.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
@@ -260,7 +259,6 @@ lfs_mountfs(devvp, mp, p)
     register struct ufsmount *ump;
     struct vnode *vp;
     struct buf *bp;
-    struct partinfo dpart;
     dev_t dev;
     int error, i, ronly, size;
     struct ucred *cred;
@@ -286,17 +284,7 @@ lfs_mountfs(devvp, mp, p)
     if (error)
         return (error);
 
-    if (VOP_IOCTL(devvp, DIOCGPART, (caddr_t)&dpart, FREAD, cred, p) != 0)
-        size = DEV_BSIZE;
-    else {
-        size = dpart.disklab->d_secsize;
-#ifdef NEVER_USED
-        dpart.part->p_fstype = FS_LFS;
-        dpart.part->p_fsize = fs->lfs_fsize;    /* frag size */
-        dpart.part->p_frag = fs->lfs_frag;  /* frags per block */
-        dpart.part->p_cpg = fs->lfs_segshift;   /* segment shift */
-#endif
-    }
+    size = DEV_BSIZE;
 
     /* Don't free random space on error. */
     bp = NULL;

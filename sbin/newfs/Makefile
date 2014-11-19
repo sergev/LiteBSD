@@ -1,7 +1,7 @@
 #	@(#)Makefile	8.2 (Berkeley) 3/27/94
 
 PROG=	newfs
-SRCS=	dkcksum.c getmntopts.c newfs.c mkfs.c
+SRCS=	getmntopts.c newfs.c mkfs.c
 MAN8=	newfs.0
 
 MOUNT=	${.CURDIR}/../mount

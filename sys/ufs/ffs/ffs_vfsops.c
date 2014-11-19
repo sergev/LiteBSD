@@ -44,7 +44,6 @@
 #include <sys/buf.h>
 #include <sys/mbuf.h>
 #include <sys/file.h>
-#include <sys/disklabel.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 #include <vm/vm.h>
@@ -195,7 +194,6 @@ ffs_reload(mountp, cred, p)
     struct inode *ip;
     struct buf *bp;
     struct fs *fs, *newfs;
-    struct partinfo dpart;
     int i, blks, size, error;
     int32_t *lp;
 
@@ -210,10 +208,7 @@ ffs_reload(mountp, cred, p)
     /*
      * Step 2: re-read superblock from disk.
      */
-    if (VOP_IOCTL(devvp, DIOCGPART, (caddr_t)&dpart, FREAD, NOCRED, p) != 0)
-        size = DEV_BSIZE;
-    else
-        size = dpart.disklab->d_secsize;
+    size = DEV_BSIZE;
     error = bread(devvp, (ufs_daddr_t)(SBOFF/size), SBSIZE, NOCRED,&bp);
     if (error)
         return (error);
@@ -452,7 +447,6 @@ ffs_mountfs(devvp, mp, p)
     struct buf *bp;
     register struct fs *fs;
     dev_t dev;
-    struct partinfo dpart;
     caddr_t base, space;
     int error, i, blks, size, ronly;
     int32_t *lp;
@@ -481,10 +475,7 @@ ffs_mountfs(devvp, mp, p)
     error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p);
     if (error)
         return (error);
-    if (VOP_IOCTL(devvp, DIOCGPART, (caddr_t)&dpart, FREAD, cred, p) != 0)
-        size = DEV_BSIZE;
-    else
-        size = dpart.disklab->d_secsize;
+    size = DEV_BSIZE;
 
     bp = NULL;
     ump = NULL;

@@ -639,7 +639,6 @@ file /bin/test
 #
 file /sbin/badsect
 file /sbin/clri
-file /sbin/disklabel
 file /sbin/dmesg
 mode 02555
 file /sbin/dump
@@ -904,7 +903,6 @@ file /usr/sbin/arp
 file /usr/sbin/chown
 file /usr/sbin/chroot
 file /usr/sbin/dev_mkdb
-file /usr/sbin/diskpart
 file /usr/sbin/edquota
 file /usr/sbin/fsinfo
 file /usr/sbin/inetd
@@ -2429,7 +2427,6 @@ file /usr/share/man/cat5/a.out.0
 file /usr/share/man/cat5/ar.0
 file /usr/share/man/cat5/core.0
 file /usr/share/man/cat5/dir.0
-file /usr/share/man/cat5/disklabel.0
 file /usr/share/man/cat5/disktab.0
 file /usr/share/man/cat5/dump.0
 file /usr/share/man/cat5/dumpdates.0
@@ -2499,8 +2496,6 @@ file /usr/share/man/cat8/clri.0
 file /usr/share/man/cat8/comsat.0
 file /usr/share/man/cat8/config.0
 file /usr/share/man/cat8/dev_mkdb.0
-file /usr/share/man/cat8/disklabel.0
-file /usr/share/man/cat8/diskpart.0
 file /usr/share/man/cat8/dmesg.0
 file /usr/share/man/cat8/dump.0
 file /usr/share/man/cat8/dumpfs.0

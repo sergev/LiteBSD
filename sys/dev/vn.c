@@ -75,7 +75,6 @@
 #include <sys/file.h>
 #include <sys/uio.h>
 #include <sys/device.h>
-#include <sys/disklabel.h>
 #include <sys/disk.h>
 
 #include <miscfs/specfs/specdev.h>

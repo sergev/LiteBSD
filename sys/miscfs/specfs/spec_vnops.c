@@ -46,7 +46,6 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
-#include <sys/disklabel.h>
 #include <miscfs/specfs/specdev.h>
 
 /* symbolic sleep message strings for devices */
@@ -233,10 +232,8 @@ spec_read(ap)
     struct buf *bp;
     daddr_t bn, nextbn;
     long bsize, bscale;
-    struct partinfo dpart;
-    int n, on, majordev, (*ioctl)();
+    int n, on;
     int error = 0;
-    dev_t dev;
 
 #ifdef DIAGNOSTIC
     if (uio->uio_rw != UIO_READ)
@@ -260,13 +257,6 @@ spec_read(ap)
         if (uio->uio_offset < 0)
             return (EINVAL);
         bsize = BLKDEV_IOSIZE;
-        dev = vp->v_rdev;
-        if ((majordev = major(dev)) < nblkdev &&
-            (ioctl = bdevsw[majordev].d_ioctl) != NULL &&
-            (*ioctl)(dev, DIOCGPART, (caddr_t)&dpart, FREAD, p) == 0 &&
-            dpart.part->p_fstype == FS_BSDFFS &&
-            dpart.part->p_frag != 0 && dpart.part->p_fsize != 0)
-            bsize = dpart.part->p_frag * dpart.part->p_fsize;
         bscale = bsize / DEV_BSIZE;
         do {
             bn = (uio->uio_offset / DEV_BSIZE) &~ (bscale - 1);
@@ -316,7 +306,6 @@ spec_write(ap)
     struct buf *bp;
     daddr_t bn;
     int bsize, blkmask;
-    struct partinfo dpart;
     register int n, on;
     int error = 0;
 
@@ -342,13 +331,6 @@ spec_write(ap)
         if (uio->uio_offset < 0)
             return (EINVAL);
         bsize = BLKDEV_IOSIZE;
-        if ((*bdevsw[major(vp->v_rdev)].d_ioctl)(vp->v_rdev, DIOCGPART,
-            (caddr_t)&dpart, FREAD, p) == 0) {
-            if (dpart.part->p_fstype == FS_BSDFFS &&
-                dpart.part->p_frag != 0 && dpart.part->p_fsize != 0)
-                bsize = dpart.part->p_frag *
-                    dpart.part->p_fsize;
-        }
         blkmask = (bsize / DEV_BSIZE) - 1;
         do {
             bn = (uio->uio_offset / DEV_BSIZE) &~ blkmask;

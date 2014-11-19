@@ -35,7 +35,6 @@
 
 struct buf;
 struct direct;
-struct disklabel;
 struct fid;
 struct flock;
 struct inode;
@@ -51,13 +50,8 @@ struct vfsconf;
 struct vnode;
 
 __BEGIN_DECLS
-void    diskerr
-        __P((struct buf *, char *, char *, int, int, struct disklabel *));
+void    diskerr __P((struct buf *, char *, char *, int, int));
 void    disksort __P((struct buf *, struct buf *));
-u_int   dkcksum __P((struct disklabel *));
-char    *readdisklabel __P((dev_t, int (*)(), struct disklabel *));
-int     setdisklabel __P((struct disklabel *, struct disklabel *, u_long));
-int     writedisklabel __P((dev_t, int (*)(), struct disklabel *));
 
 int     ufs_abortop __P((struct vop_abortop_args *));
 int     ufs_access __P((struct vop_access_args *));

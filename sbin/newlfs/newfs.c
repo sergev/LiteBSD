@@ -109,10 +109,22 @@ int	unlabeled;
 char	device[MAXPATHLEN];
 char	*progname, *special;
 
-static struct disklabel *getdisklabel __P((char *, int));
-static struct disklabel *debug_readlabel __P((int));
-static void rewritelabel __P((char *, int, struct disklabel *));
 static void usage __P((void));
+
+static struct diskpart *
+getdiskpart(s, fd)
+	char *s;
+	int fd;
+{
+	static struct diskpart lab;
+
+	if (ioctl(fd, DIOCGETPART, (char *)&lab) < 0) {
+		(void)fprintf(stderr,
+		    "%s: ioctl (GDINFO): %s\n", progname, strerror(errno));
+		fatal("%s: can't read disk label", s);
+	}
+	return (&lab);
+}
 
 int
 main(argc, argv)
@@ -120,9 +132,7 @@ main(argc, argv)
 	char *argv[];
 {
 	register int ch;
-	register struct partition *pp;
-	register struct disklabel *lp;
-	struct partition oldpartition;
+	register struct diskpart *pp;
 	struct stat st;
 	int debug, lfs, fsi, fso, segsize;
 	char *cp, *opstring;
@@ -301,122 +311,12 @@ main(argc, argv)
 	if (!mfs && disktype == NULL)
 		disktype = argv[1];
 #endif
-	if (debug)
-		lp = debug_readlabel(fsi);
-	else
-		lp = getdisklabel(special, fsi);
-
-	if (isdigit(*cp))
-		pp = &lp->d_partitions[0];
-	else
-		pp = &lp->d_partitions[*cp - 'a'];
-	if (pp->p_size == 0)
+	pp = getdiskpart(special, fsi);
+	if (pp->dp_size == 0)
 		fatal("%s: `%c' partition is unavailable", argv[0], *cp);
 
 	/* If we're making a LFS, we break out here */
-	exit(make_lfs(fso, lp, pp, minfree, bsize, fsize, segsize));
-}
-
-#ifdef COMPAT
-char lmsg[] = "%s: can't read disk label; disk type must be specified";
-#else
-char lmsg[] = "%s: can't read disk label";
-#endif
-
-static struct disklabel *
-getdisklabel(s, fd)
-	char *s;
-	int fd;
-{
-	static struct disklabel lab;
-
-	if (ioctl(fd, DIOCGDINFO, (char *)&lab) < 0) {
-#ifdef COMPAT
-		if (disktype) {
-			struct disklabel *lp, *getdiskbyname();
-
-			unlabeled++;
-			lp = getdiskbyname(disktype);
-			if (lp == NULL)
-				fatal("%s: unknown disk type", disktype);
-			return (lp);
-		}
-#endif
-		(void)fprintf(stderr,
-		    "%s: ioctl (GDINFO): %s\n", progname, strerror(errno));
-		fatal(lmsg, s);
-	}
-	return (&lab);
-}
-
-
-static struct disklabel *
-debug_readlabel(fd)
-	int fd;
-{
-	static struct disklabel lab;
-	int n;
-
-	if ((n = read(fd, &lab, sizeof(struct disklabel))) < 0)
-		fatal("unable to read disk label: %s", strerror(errno));
-	else if (n < sizeof(struct disklabel))
-		fatal("short read of disklabel: %d of %d bytes", n,
-			sizeof(struct disklabel));
-	return(&lab);
-}
-
-static void
-rewritelabel(s, fd, lp)
-	char *s;
-	int fd;
-	register struct disklabel *lp;
-{
-#ifdef COMPAT
-	if (unlabeled)
-		return;
-#endif
-	lp->d_checksum = 0;
-	lp->d_checksum = dkcksum(lp);
-	if (ioctl(fd, DIOCWDINFO, (char *)lp) < 0) {
-		(void)fprintf(stderr,
-		    "%s: ioctl (WDINFO): %s\n", progname, strerror(errno));
-		fatal("%s: can't rewrite disk label", s);
-	}
-#if vax
-	if (lp->d_type == DTYPE_SMD && lp->d_flags & D_BADSECT) {
-		register i;
-		int cfd;
-		daddr_t alt;
-		char specname[64];
-		char blk[1024];
-		char *cp;
-
-		/*
-		 * Make name for 'c' partition.
-		 */
-		strcpy(specname, s);
-		cp = specname + strlen(specname) - 1;
-		if (!isdigit(*cp))
-			*cp = 'c';
-		cfd = open(specname, O_WRONLY);
-		if (cfd < 0)
-			fatal("%s: %s", specname, strerror(errno));
-		memset(blk, 0, sizeof(blk));
-		*(struct disklabel *)(blk + LABELOFFSET) = *lp;
-		alt = lp->d_ncylinders * lp->d_secpercyl - lp->d_nsectors;
-		for (i = 1; i < 11 && i < lp->d_nsectors; i += 2) {
-			if (lseek(cfd, (off_t)(alt + i) * lp->d_secsize,
-			    L_SET) == -1)
-				fatal("lseek to badsector area: %s",
-				    strerror(errno));
-			if (write(cfd, blk, lp->d_secsize) < lp->d_secsize)
-				fprintf(stderr,
-				    "%s: alternate label %d write: %s\n",
-				    progname, i/2, strerror(errno));
-		}
-		close(cfd);
-	}
-#endif
+	exit(make_lfs(fso, pp, minfree, bsize, fsize, segsize));
 }
 
 void

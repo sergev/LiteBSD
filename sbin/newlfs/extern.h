@@ -34,12 +34,10 @@
  */
 
 u_long	cksum __P((void *, size_t));
-u_short	dkcksum __P((struct disklabel *));
 void	fatal __P((const char *fmt, ...));
 u_int	lg2 __P((u_int));
-int	make_lfs __P((int, struct disklabel *, struct partition *, int,
-		int, int, int));
-int	mkfs __P((struct partition *, char *, int, int));
+int	make_lfs __P((int, struct diskpart *, int, int, int, int));
+int	mkfs __P((struct diskpart *, char *, int, int));
 
 extern char	*progname;
 extern char	*special;

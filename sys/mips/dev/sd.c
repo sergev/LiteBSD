@@ -53,22 +53,12 @@
 #error Only 512-byte block size supported.
 #endif
 
-struct part {
-    u_int8_t status;        /* active (bootable) flag */
-#define P_ACTIVE 0x80
-    u_int8_t start[3];      /* ignored */
-    u_int8_t type;          /* type of partition */
-    u_int8_t end[3];        /* ignored */
-    u_int32_t lba_start;    /* offset in 512-byte sectors */
-    u_int32_t lba_length;   /* length in 512-byte sectors */
-};
-
 /*
  * The structure of a disk drive.
  */
 struct disk {
     /* the partition table */
-    struct part dk_part [NPARTITIONS+1];
+    struct diskpart dk_part [NPARTITIONS+1];
 
     struct spiio spiio;     /* interface to SPI port */
     int     dk_bc;          /* byte count left */
@@ -587,16 +577,16 @@ sd_setup(struct disk *u)
     }
     /* Get the size of raw partition. */
     bzero (u->dk_part, sizeof(u->dk_part));
-    u->dk_part[RAWPART].lba_start = 0;
-    u->dk_part[RAWPART].lba_length = card_size(unit);
-    if (u->dk_part[RAWPART].lba_length == 0) {
+    u->dk_part[RAWPART].dp_offset = 0;
+    u->dk_part[RAWPART].dp_size = card_size(unit);
+    if (u->dk_part[RAWPART].dp_size == 0) {
         printf ("sd%d: cannot get card size\n", unit);
         return 0;
     }
     printf ("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
         sd_type[unit]==TYPE_SDHC ? "SDHC" :
         sd_type[unit]==TYPE_II ? "II" : "I",
-        u->dk_part[RAWPART].lba_length,
+        u->dk_part[RAWPART].dp_size,
         spi_get_speed(&u->spiio) / 1000);
 
     /* Read partition table. */
@@ -613,11 +603,11 @@ sd_setup(struct disk *u)
 #if 1
         int i;
         for (i=1; i<=NPARTITIONS; i++) {
-            if (u->dk_part[i].type != 0)
+            if (u->dk_part[i].dp_type != 0)
                 printf ("sd%d%c: partition type %02x, sector %u, size %u kbytes\n",
-                    unit, i+'a'-1, u->dk_part[i].type,
-                    u->dk_part[i].lba_start,
-                    u->dk_part[i].lba_length / 2);
+                    unit, i+'a'-1, u->dk_part[i].dp_type,
+                    u->dk_part[i].dp_offset,
+                    u->dk_part[i].dp_size / 2);
         }
 #endif
     }
@@ -646,7 +636,7 @@ sdopen(dev, flags, mode, p)
     /*
      * Setup the SD card interface.
      */
-    if (u->dk_part[RAWPART].lba_length == 0) {
+    if (u->dk_part[RAWPART].dp_size == 0) {
         if (! sd_setup(u)) {
             return ENODEV;
         }
@@ -660,18 +650,18 @@ sdopen(dev, flags, mode, p)
      */
     mask = 1 << part;
     if (part != RAWPART && ! (u->dk_openpart & mask)) {
-        unsigned start = u->dk_part[part].lba_start;
-        unsigned end = start + u->dk_part[part].lba_length;
+        unsigned start = u->dk_part[part].dp_offset;
+        unsigned end = start + u->dk_part[part].dp_size;
 
         /* Check for overlapped partitions. */
         for (i=0; i<=NPARTITIONS; i++) {
-            struct part *pp = &u->dk_part[i];
+            struct diskpart *pp = &u->dk_part[i];
 
             if (i == part || i == RAWPART)
                 continue;
 
-            if (pp->lba_start + pp->lba_length <= start ||
-                pp->lba_start >= end)
+            if (pp->dp_offset + pp->dp_size <= start ||
+                pp->dp_offset >= end)
                 continue;
 
             if (u->dk_openpart & (1 << i))
@@ -722,11 +712,11 @@ sdstrategy(bp)
          * Determine the size of the transfer, and make sure it is
          * within the boundaries of the partition.
          */
-        struct part *p = &u->dk_part[sdpart(bp->b_dev)];
-        long maxsz = p->lba_length;
+        struct diskpart *p = &u->dk_part[sdpart(bp->b_dev)];
+        long maxsz = p->dp_size;
         long sz = (bp->b_bcount + DEV_BSIZE - 1) >> DEV_BSHIFT;
 
-        offset += p->lba_start;
+        offset += p->dp_offset;
 //printf("%s: sdpart=%u, offset=%u, maxsz=%u, sz=%u\n", __func__, sdpart(bp->b_dev), offset, maxsz, sz);
         if (offset == 0 &&
             ! (bp->b_flags & B_READ) && ! u->dk_wlabel) {
@@ -787,12 +777,12 @@ sdsize(dev)
     /*
      * Setup the SD card interface, if not done yet.
      */
-    if (u->dk_part[RAWPART].lba_length == 0) {
+    if (u->dk_part[RAWPART].dp_size == 0) {
         if (! sd_setup(u)) {
             return -1;
         }
     }
-    return u->dk_part[part].lba_length;
+    return u->dk_part[part].dp_size;
 }
 
 int
@@ -804,18 +794,17 @@ sdioctl(dev, cmd, data, flag, p)
     struct proc *p;
 {
     int unit = sdunit(dev);
-    struct disk *du = &sddrives[unit];
+    int part = sdpart(dev);
+    struct diskpart *pp;
     int error = 0;
 
     switch (cmd) {
 
-    case DIOCWLABEL:
-        if (! (flag & FWRITE)) {
-            error = EBADF;
-            break;
-        }
-        /* Enable/disable modification of partition table. */
-        du->dk_wlabel = *(int *)data;
+    case DIOCGETPART:
+        /* Get partition table entry. */
+        pp = &sddrives[unit].dk_part[part];
+//printf("--- %s: DIOCGETPART unit = %d, part = %d, type = %u, size = %u\n", __func__, unit, part, pp->dp_type, pp->dp_size);
+        *(struct diskpart*) data = *pp;
         break;
 
     default:
