@@ -480,28 +480,6 @@ baderr:
 END(badaddr)
 
 /*
- * netorder = htonl(hostorder)
- * hostorder = ntohl(netorder)
- */
-LEAF(htonl)                             # a0 = 0x11223344, return 0x44332211
-ALEAF(ntohl)
-        wsbh    a0, a0                  # word swap bytes within halfwords
-        j       ra
-        rotr    v0, a0, 16              # rotate word 16bits
-END(htonl)
-
-/*
- * netorder = htons(hostorder)
- * hostorder = ntohs(netorder)
- */
-LEAF(htons)
-ALEAF(ntohs)
-        wsbh    a0, a0                  # word swap bytes within halfwords
-        j       ra
-        and     v0, a0, 0xffff          # bound it to 16bits
-END(htons)
-
-/*
  * bit = ffs(value)
  */
 LEAF(ffs)
@@ -1339,34 +1317,6 @@ LEAF(fswintrberr)
         j       ra
         li      v0, -1
 END(fswintrberr)
-
-/*
- * Insert 'p' after 'q'.
- *      _insque(p, q)
- *              caddr_t p, q;
- */
-LEAF(_insque)
-        lw      v0, 0(a1)               # v0 = q->next
-        sw      a1, 4(a0)               # p->prev = q
-        sw      v0, 0(a0)               # p->next = q->next
-        sw      a0, 4(v0)               # q->next->prev = p
-        j       ra
-        sw      a0, 0(a1)               # q->next = p
-END(_insque)
-
-/*
- * Remove item 'p' from queue.
- *      _remque(p)
- *              caddr_t p;
- */
-LEAF(_remque)
-        lw      v0, 0(a0)               # v0 = p->next
-        lw      v1, 4(a0)               # v1 = p->prev
-        nop
-        sw      v0, 0(v1)               # p->prev->next = p->next
-        j       ra
-        sw      v1, 4(v0)               # p->next->prev = p->prev
-END(_remque)
 
 /*-----------------------------------
  * Exception handlers and data for bootloader.

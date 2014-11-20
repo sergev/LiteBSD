@@ -380,15 +380,25 @@ mips_clz (unsigned x)
  * Swap bytes in a word: ABCD to DCBA.
  */
 static unsigned inline __attribute__ ((always_inline))
-mips_bswap (unsigned x)
+mips_bswap32 (unsigned x)
 {
-    int n;
-
     asm volatile (
     "wsbh    %0, %1 \n"
     "rotr    %0, 16"
-            : "=r" (n) : "r" (x));
-    return n;
+            : "=r" (x) : "r" (x));
+    return x;
+}
+
+/*
+ * Swap bytes in a halfword: AB to BA.
+ */
+static unsigned short inline __attribute__ ((always_inline))
+mips_bswap16 (unsigned short x)
+{
+    asm volatile (
+    "wsbh    %0, %1"
+            : "=r" (x) : "r" (x));
+    return x;
 }
 #endif /* ASSEMBLER */
 

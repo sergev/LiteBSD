@@ -60,17 +60,10 @@
 
 #include <sys/cdefs.h>
 
-__BEGIN_DECLS
-unsigned long   htonl __P((unsigned long));
-unsigned short  htons __P((unsigned short));
-unsigned long   ntohl __P((unsigned long));
-unsigned short  ntohs __P((unsigned short));
-__END_DECLS
-
 /*
  * Macros for network/external number representation conversion.
  */
-#if BYTE_ORDER == BIG_ENDIAN && !defined(lint)
+#if BYTE_ORDER == BIG_ENDIAN
 #define ntohl(x)        (x)
 #define ntohs(x)        (x)
 #define htonl(x)        (x)
@@ -82,6 +75,11 @@ __END_DECLS
 #define HTONS(x)        (x)
 
 #else
+
+#define ntohl(x)        mips_bswap32(x)
+#define ntohs(x)        mips_bswap16(x)
+#define htonl(x)        mips_bswap32(x)
+#define htons(x)        mips_bswap16(x)
 
 #define NTOHL(x)        (x) = ntohl((u_long)x)
 #define NTOHS(x)        (x) = ntohs((u_short)x)

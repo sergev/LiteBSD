@@ -101,10 +101,6 @@ extern int nsysent;
 
 extern int boothowto;           /* reboot flags, from console subsystem */
 
-/* casts to keep lint happy */
-#define insque(q,p) _insque((caddr_t)q,(caddr_t)p)
-#define remque(q)   _remque((caddr_t)q)
-
 /*
  * General function declarations.
  */
@@ -257,8 +253,6 @@ void    cache_purgevfs(struct mount *);
 void    bremfree(struct buf *);
 void    vfs_bufstats(void);
 void    pfctlinput(int, struct sockaddr *);
-void    _insque __P((caddr_t, caddr_t));
-void    _remque __P((caddr_t));
 void    inittodr(time_t);
 void    cache_enter(struct vnode *, struct vnode *, struct componentname *);
 void    lockmgr_printinfo(struct lock *);
@@ -271,5 +265,48 @@ void    ktrsyscall(struct vnode *, int, int, register_t []);
 void    ktrsysret(struct vnode *, int, int, int);
 
 dev_t   chrtoblk(dev_t);
+
+/*
+ * Routines to manipulate queues built from doubly linked lists.
+ * These routines expect to be passed pointers to structures which
+ * have as their first members a forward pointer and a back pointer.
+ */
+
+/*
+ * Insert `elem' in the queue immediately `pred'.
+ */
+static __inline void
+insque (e, p)
+    caddr_t e, p;
+{
+    struct qelem {
+        struct qelem *forw;
+        struct qelem *back;
+    };
+    register struct qelem *elem = (struct qelem *) e;
+    register struct qelem *pred = (struct qelem *) p;
+
+    elem->forw       = pred->forw;
+    pred->forw->back = elem;
+    elem->back       = pred;
+    pred->forw       = elem;
+}
+
+/*
+ * Remove `elem' from its containing queue.
+ */
+static __inline void
+remque (e)
+    caddr_t e;
+{
+    struct qelem {
+        struct qelem *forw;
+        struct qelem *back;
+    };
+    register struct qelem *elem = (struct qelem *) e;
+
+    elem->forw->back = elem->back;
+    elem->back->forw = elem->forw;
+}
 
 #include <libkern/libkern.h>
