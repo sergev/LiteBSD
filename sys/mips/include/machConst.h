@@ -288,8 +288,8 @@
 /*
  * Constants to determine if have a floating point instruction.
  */
-#define MACH_OPCODE_SHIFT       26
-#define MACH_OPCODE_C1          0x11
+#define MACH_OPCODE_SHIFT               26
+#define MACH_OPCODE_C1                  0x11
 
 /*
  * The number of TLB entries and the first one that write random hits.

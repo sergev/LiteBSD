@@ -480,18 +480,6 @@ baderr:
 END(badaddr)
 
 /*
- * bit = ffs(value)
- */
-LEAF(ffs)
-        negu    a1, a0                  # negate value
-        and     a0, a1                  # value & -value -> pick trailing 1
-        clz     v0, a0                  # count leading zeroes
-        li      v1, 32                  # load constant 32
-        j       ra
-        subu    v0, v1, v0              # return 32-clz
-END(ffs)
-
-/*
  * strlen(str)
  */
 LEAF(strlen)

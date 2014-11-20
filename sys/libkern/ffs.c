@@ -36,6 +36,10 @@ static char sccsid[] = "@(#)ffs.c   8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
 #include <string.h>
+#ifdef mips
+#   include <sys/types.h>
+#   include <machine/cpu.h>
+#endif
 
 /*
  * ffs -- vax ffs instruction
@@ -45,10 +49,17 @@ ffs(mask)
     register int mask;
 {
     register int bit;
+#ifdef mips
+    /* value & -value -> pick trailing 1 */
+    mask = mask & -(unsigned)mask;
 
+    /* count leading zeroes */
+    bit = 32 - mips_clz(mask);
+#else
     if (mask == 0)
         return(0);
     for (bit = 1; !(mask & 1); bit++)
         mask >>= 1;
+#endif
     return(bit);
 }
