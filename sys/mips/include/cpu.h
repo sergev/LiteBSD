@@ -149,10 +149,6 @@ struct intrcnt {
 struct user;
 struct proc;
 
-void setsoftclock __P((void));
-void setsoftnet __P((void));
-void clearsoftclock __P((void));
-void clearsoftnet __P((void));
 void dumpconf __P((void));
 void configure __P((void));
 void mips_flush_icache __P((vm_offset_t addr, vm_offset_t len));
@@ -160,6 +156,131 @@ void switch_exit __P((void));
 int savectx __P((struct user *));
 int copykstack __P((struct user *));
 int cpu_singlestep __P((struct proc *));
+
+/*
+ * Enable all interrupts.
+ * Return previous value of interrupt mask.
+ *      Status.IE = 1
+ *      Status.IPL = 0
+ */
+static __inline int
+spl0()
+{
+    int status, prev = mips_di();       /* read Status and disable interrupts */
+
+    status = prev | MACH_Status_IE;     /* set Status.IE bit */
+    mips_clear_bits(status, 10, 9);     /* clear Status.IPL field */
+    mtc0_Status(status);                /* write Status: enable all interrupts */
+    return prev & (MACH_Status_IPL_MASK | MACH_Status_IE);
+}
+
+/*
+ * Disable all interrupts.
+ * Return previous value of interrupt mask.
+ *      Status.IE = 0
+ *      Status.IPL = unchanged
+ */
+static __inline int
+splhigh()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+
+    return status & (MACH_Status_IPL_MASK | MACH_Status_IE);
+}
+
+/*
+ * Set interrupt level 1...6.
+ * Return previous value of interrupt mask.
+ *      Status.IE = unchanged
+ *      Status.IPL = 1...6
+ */
+#define __splN__(n) \
+    int status, prev = mips_di();       /* read Status and disable interrupts */ \
+    \
+    status = prev; \
+    mips_ins(status, n, 10, 9);         /* set Status.IPL field */ \
+    mtc0_Status(status);                /* write Status */ \
+    return prev & (MACH_Status_IPL_MASK | MACH_Status_IE)
+
+static __inline int spl1() { __splN__(1); }
+static __inline int spl2() { __splN__(2); }
+static __inline int spl3() { __splN__(3); }
+static __inline int spl4() { __splN__(4); }
+static __inline int spl5() { __splN__(5); }
+static __inline int spl6() { __splN__(6); }
+
+/*
+ * Restore saved interrupt mask.
+ *      Status.IE = restored
+ *      Status.IPL = restored
+ */
+static __inline void
+splx(x)
+    int x;
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+
+    /* Use XOR to save one instruction. */
+    status |= MACH_Status_IPL_MASK | MACH_Status_IE;
+    mtc0_Status(status ^ x ^ (MACH_Status_IPL_MASK | MACH_Status_IE));
+}
+
+#define splsoftclock()  spl1()          /* low-priority clock processing */
+#define splnet()        spl2()          /* network protocol processing */
+#define splbio()        spl3()          /* disk controllers */
+#define splimp()        spl4()          /* network device controllers */
+#define spltty()        spl5()          /* uarts and terminal multiplexers */
+#define splclock()      spl6()          /* high-priority clock processing */
+#define splstatclock()  splhigh()       /* blocks all interrupt activity */
+
+/*
+ * Set/clear software interrupt routines.
+ */
+static __inline void
+setsoftclock()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+    int cause = mfc0_Cause();           /* read Cause */
+    cause |= MACH_Cause_IP0;            /* set Cause.IP0 bit */
+    mtc0_Cause(cause);                  /* write Cause */
+    mtc0_Status(status);                /* restore Status, re-enable interrrupts */
+}
+
+static __inline void
+clearsoftclock()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+    int cause = mfc0_Cause();           /* read Cause */
+    cause &= ~MACH_Cause_IP0;           /* clear Cause.IP0 bit */
+    mtc0_Cause(cause);                  /* write Cause */
+    mtc0_Status(status);                /* restore Status, re-enable interrrupts */
+}
+
+static __inline void
+setsoftnet()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+    int cause = mfc0_Cause();           /* read Cause */
+    cause |= MACH_Cause_IP1;            /* set Cause.IP1 bit */
+    mtc0_Cause(cause);                  /* write Cause */
+    mtc0_Status(status);                /* restore Status, re-enable interrrupts */
+}
+
+static __inline void
+clearsoftnet()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+    int cause = mfc0_Cause();           /* read Cause */
+    cause &= ~MACH_Cause_IP1;           /* clear Cause.IP1 bit */
+    mtc0_Cause(cause);                  /* write Cause */
+    mtc0_Status(status);                /* restore Status, re-enable interrrupts */
+}
+
+/*
+ * Spin loop for a given number of microseconds.
+ */
+void udelay(unsigned);
+
 #endif
 
 #endif /* _CPU_H_ */

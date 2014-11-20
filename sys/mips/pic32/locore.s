@@ -1093,7 +1093,6 @@ LEAF(switch_exit)
         mtc0    v0, MACH_C0_EntryHi             # init high entry
         mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
         mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
-        ehb
         tlbwi                                   # Write the TLB entry.
         sw      zero, curproc
         b       cpu_switch
@@ -1118,9 +1117,8 @@ LEAF(idle)
         lw      t0, whichqs                     # look for non-empty queue
         beq     t0, zero, 1b
         nop
-        mtc0    v0, MACH_C0_Status              # Restore interrupt mask
         b       sw1
-        ehb
+        mtc0    v0, MACH_C0_Status              # Restore interrupt mask
 END(idle)
 
 /*
@@ -1201,7 +1199,6 @@ sw1:
         mtc0    v0, MACH_C0_EntryHi             # init high entry
         mtc0    t0, MACH_C0_EntryLo0            # init low entry 0
         mtc0    t1, MACH_C0_EntryLo1            # init low entry 1
-        ehb
         tlbwi                                   # Write the TLB entry.
 /*
  * Now running on new u struct.
@@ -1371,46 +1368,6 @@ LEAF(_remque)
         sw      v1, 4(v0)               # p->next->prev = p->prev
 END(_remque)
 
-/*
- * Set/clear software interrupt routines.
- */
-
-LEAF(setsoftclock)
-        di      v1                              # save Status, disable interrupts
-        mfc0    v0, MACH_C0_Cause               # read cause register
-        or      v0, v0, MACH_Cause_IP0          # set soft clock interrupt
-        mtc0    v0, MACH_C0_Cause               # save it
-        j       ra
-        mtc0    v1, MACH_C0_Status
-END(setsoftclock)
-
-LEAF(clearsoftclock)
-        di      v1                              # save Status, disable interrupts
-        mfc0    v0, MACH_C0_Cause               # read cause register
-        and     v0, v0, ~MACH_Cause_IP0         # clear soft clock interrupt
-        mtc0    v0, MACH_C0_Cause               # save it
-        j       ra
-        mtc0    v1, MACH_C0_Status
-END(clearsoftclock)
-
-LEAF(setsoftnet)
-        di      v1                              # save Status, disable interrupts
-        mfc0    v0, MACH_C0_Cause               # read cause register
-        or      v0, v0, MACH_Cause_IP1          # set soft net interrupt
-        mtc0    v0, MACH_C0_Cause               # save it
-        j       ra
-        mtc0    v1, MACH_C0_Status
-END(setsoftnet)
-
-LEAF(clearsoftnet)
-        di      v1                              # save Status, disable interrupts
-        mfc0    v0, MACH_C0_Cause               # read cause register
-        and     v0, v0, ~MACH_Cause_IP1         # clear soft net interrupt
-        mtc0    v0, MACH_C0_Cause               # save it
-        j       ra
-        mtc0    v1, MACH_C0_Status
-END(clearsoftnet)
-
 /*-----------------------------------
  * Exception handlers and data for bootloader.
  */
@@ -1446,7 +1403,6 @@ user_tlb_refill:
         lw      k1, 4(k1)                       # get odd page PTE
         mtc0    k0, MACH_C0_EntryLo0
         mtc0    k1, MACH_C0_EntryLo1
-        ehb
         tlbwr                                   # update TLB
         eret
 /*
@@ -1472,7 +1428,6 @@ even_page:
         and     k0, PG_V                        # check for valid entry
         beqz    k0, kern_exception              # PTE invalid
         mtc0    k1, MACH_C0_EntryLo1
-        ehb
         tlbwr                                   # update TLB
         eret
 odd_page:
@@ -1484,7 +1439,6 @@ odd_page:
         and     k1, PG_V                        # check for valid entry
         beqz    k1, kern_exception              # PTE invalid
         mtc0    k0, MACH_C0_EntryLo0            # save PTE entry
-        ehb
         tlbwr                                   # update TLB
         eret
 
