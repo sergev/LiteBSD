@@ -143,10 +143,78 @@
 
 #ifndef LOCORE
 #ifdef KERNEL
+/*
+ * Set/change interrupt priority routines.
+ */
+#include <machine/machConst.h>
 
-extern int spl0(void), spl1(void), spl2(void), spl3(void);
-extern int spl4(void), spl5(void), spl6(void), splhigh(void);
-extern void splx(int);
+/*
+ * Enable all interrupts.
+ * Return previous value of interrupt mask.
+ *      Status.IE = 1
+ *      Status.IPL = 0
+ */
+static __inline int
+spl0()
+{
+    int status, prev = mips_di();       /* read Status and disable interrupts */
+
+    status = prev | MACH_Status_IE;     /* set IE bit */
+    mips_clear_bits(status, 10, 9);     /* clear IPL field */
+    mtc0_Status(status);                /* write Status: enable all interrupts */
+    return prev & (MACH_Status_IPL_MASK | MACH_Status_IE);
+}
+
+/*
+ * Set interrupt level 1...6.
+ * Return previous value of interrupt mask.
+ *      Status.IE = unchanged
+ *      Status.IPL = 1...6
+ */
+#define __splN__(n) \
+    int status, prev = mips_di();       /* read Status and disable interrupts */ \
+    \
+    status = prev; \
+    mips_ins(status, n, 10, 9);         /* set IPL field */ \
+    mtc0_Status(status);                /* write Status */ \
+    return prev & (MACH_Status_IPL_MASK | MACH_Status_IE)
+
+static __inline int spl1() { __splN__(1); }
+static __inline int spl2() { __splN__(2); }
+static __inline int spl3() { __splN__(3); }
+static __inline int spl4() { __splN__(4); }
+static __inline int spl5() { __splN__(5); }
+static __inline int spl6() { __splN__(6); }
+
+/*
+ * Disable all interrupts.
+ * Return previous value of interrupt mask.
+ *      Status.IE = 0
+ *      Status.IPL = unchanged
+ */
+static __inline int
+splhigh()
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+
+    return status & (MACH_Status_IPL_MASK | MACH_Status_IE);
+}
+
+/*
+ * Restore saved interrupt mask.
+ *      Status.IE = restored
+ *      Status.IPL = restored
+ */
+static __inline void
+splx(x)
+    int x;
+{
+    int status = mips_di();             /* read Status and disable interrupts */
+
+    /* Use XOR to save one instruction. */
+    status |= MACH_Status_IPL_MASK | MACH_Status_IE;
+    mtc0_Status(status ^ x ^ (MACH_Status_IPL_MASK | MACH_Status_IE));
+}
 
 #define splsoftclock()  spl1()      /* low-priority clock processing */
 #define splnet()        spl2()      /* network protocol processing */

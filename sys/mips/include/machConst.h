@@ -68,6 +68,105 @@
 #define MACH_UNCACHED_TO_PHYS(x) ((unsigned)(x) & 0x1fffffff)
 #define MACH_PHYS_TO_UNCACHED(x) ((unsigned)(x) | MACH_UNCACHED_MEMORY_ADDR)
 
+/*--------------------------------------
+ * Coprocessor 0 registers.
+ */
+#define mfc0_Index()        mips_mfc0(0,0)     /* Index into the TLB array */
+#define mtc0_Index(v)       mips_mtc0(0,0,v)
+
+#define mfc0_Random()       mips_mfc0(1,0)     /* Randomly generated index into the TLB array */
+
+#define mfc0_EntryLo0()     mips_mfc0(2,0)     /* Low-order portion of the TLB entry for */
+#define mtc0_EntryLo0(v)    mips_mtc0(2,0,v)   /* even-numbered virtual pages */
+
+#define mfc0_EntryLo1()     mips_mfc0(3,0)     /* Low-order portion of the TLB entry for */
+#define mtc0_EntryLo1(v)    mips_mtc0(3,0,v)   /* odd-numbered virtual pages */
+
+#define C0_CONTEXT          4,0     /* Pointer to the page table entry in memory */
+#define C0_USERLOCAL        4,2     /* User information that can be written by
+                                     * privileged software and read via the RDHWR instruction */
+#define C0_PAGEMASK         5,0     /* Variable page sizes in TLB entries */
+#define C0_PAGEGRAIN        5,1     /* Support of 1 KB pages in the TLB */
+
+#define mtc0_Wired(v)       mips_mtc0(6,0,v)    /* Controls the number of fixed TLB entries */
+
+#define C0_HWRENA           7,0     /* Enables access via the RDHWR instruction
+                                     * to selected hardware registers in Non-privileged mode */
+#define C0_BADVADDR         8,0     /* Reports the address for the most recent
+                                     * address-related exception */
+#define mfc0_Count()        mips_mfc0(9,0)      /* Processor cycle count */
+#define mtc0_Count(v)       mips_mtc0(9,0,v)
+
+#define mfc0_EntryHi()      mips_mfc0(10,0)     /* High-order portion of the TLB entry */
+#define mtc0_EntryHi(v)     mips_mtc0(10,0,v)
+
+#define mfc0_Compare()      mips_mfc0(11,0)     /* Core timer interrupt control */
+#define mtc0_Compare(v)     mips_mtc0(11,0,v)
+
+#define mfc0_Status()       mips_mfc0(12,0)     /* Processor status and control */
+#define mtc0_Status(v)      mips_mtc0(12,0,v)
+
+#define mfc0_IntCtl()       mips_mfc0(12,1)     /* Interrupt control of vector spacing */
+#define mtc0_IntCtl(v)      mips_mtc0(12,1,v)
+
+#define C0_SRSCTL           12,2    /* Shadow register set control */
+#define C0_SRSMAP           12,3    /* Shadow register mapping control */
+#define C0_VIEW_IPL         12,4    /* Allows the Priority Level to be read/written
+                                     * without extracting or inserting that bit from/to the Status register */
+#define C0_SRSMAP2          12,5    /* Contains two 4-bit fields that provide
+                                     * the mapping from a vector number to
+                                     * the shadow set number to use when servicing such an interrupt */
+
+#define mfc0_Cause()        mips_mfc0(13,0)     /* Describes the cause of the last exception */
+#define mtc0_Cause(v)       mips_mtc0(13,0,v)
+
+#define C0_NESTEDEXC        13,1    /* Contains the error and exception level
+                                     * status bit values that existed prior to the current exception */
+#define C0_VIEW_RIPL        13,2    /* Enables read access to the RIPL bit that
+                                     * is available in the Cause register */
+#define C0_EPC              14,0    /* Program counter at last exception */
+#define C0_NESTEDEPC        14,1    /* Contains the exception program counter
+                                     * that existed prior to the current exception */
+
+#define mfc0_PRId()         mips_mfc0(15,0)     /* Processor identification and revision */
+
+#define mfc0_EBase()        mips_mfc0(15,1)     /* Exception base address of exception vectors */
+#define mtc0_EBase(v)       mips_mtc0(15,1,v)
+
+#define C0_CDMMBASE         15,2    /* Common device memory map base */
+
+#define mfc0_Config()       mips_mfc0(16,0)     /* Configuration register */
+#define mtc0_Config(v)      mips_mtc0(16,0,v)
+
+#define mfc0_Config1()      mips_mfc0(16,1)     /* Configuration register 1 */
+
+#define C0_CONFIG2          16,2    /* Configuration register 2 */
+#define C0_CONFIG3          16,3    /* Configuration register 3 */
+#define C0_CONFIG4          16,4    /* Configuration register 4 */
+#define C0_CONFIG5          16,5    /* Configuration register 5 */
+#define C0_CONFIG7          16,7    /* Configuration register 7 */
+#define C0_LLADDR           17,0    /* Load link address */
+#define C0_WATCHLO          18,0    /* Low-order watchpoint address */
+#define C0_WATCHHI          19,0    /* High-order watchpoint address */
+#define C0_DEBUG            23,0    /* EJTAG debug register */
+#define C0_TRACECONTROL     23,1    /* EJTAG trace control */
+#define C0_TRACECONTROL2    23,2    /* EJTAG trace control 2 */
+#define C0_USERTRACEDATA1   23,3    /* EJTAG user trace data 1 register */
+#define C0_TRACEBPC         23,4    /* EJTAG trace breakpoint register */
+#define C0_DEBUG2           23,5    /* Debug control/exception status 1 */
+#define C0_DEPC             24,0    /* Program counter at last debug exception */
+#define C0_USERTRACEDATA2   24,1    /* EJTAG user trace data 2 register */
+#define C0_PERFCTL0         25,0    /* Performance counter 0 control */
+#define C0_PERFCNT0         25,1    /* Performance counter 0 */
+#define C0_PERFCTL1         25,2    /* Performance counter 1 control */
+#define C0_PERFCNT1         25,3    /* Performance counter 1 */
+#define C0_ERRCTL           26,0    /* Software test enable of way-select and data
+                                     * RAM arrays for I-Cache and D-Cache */
+#define C0_TAGLO            28,0    /* Low-order portion of cache tag interface */
+#define C0_DATALO           28,1    /* Low-order portion of cache tag interface */
+#define C0_ERROREPC         30,0    /* Program counter at last error exception */
+#define C0_DESAVE           31,0    /* Debug exception save */
+
 /*
  * The bits in the cause register.
  */
@@ -217,9 +316,80 @@
  */
 #define VMMACH_PTE_BASE         0xFFC00000
 
+
 /*
  * Empty memory write buffer.
  */
 #define mips_sync()             asm volatile("sync")
+
+/*
+ * Read C0 coprocessor register.
+ */
+#define mips_mfc0(reg, sel) ({ int __value; \
+    asm volatile ( \
+    "mfc0    %0, $%1, %2" \
+    : "=r" (__value) : "K" (reg), "K" (sel)); \
+    __value; })
+
+/*
+ * Write coprocessor 0 register.
+ */
+#define mips_mtc0(reg, sel, value) asm volatile ( \
+    "mtc0    %z0, $%1, %2" \
+    : : "r" ((unsigned) (value)), "K" (reg), "K" (sel))
+
+/*
+ * Disable the hardware interrupts,
+ * saving the value of Status register.
+ */
+#define mips_di() ({ int __value; \
+    asm volatile ( \
+    "di      %0" \
+    : "=r" (__value)); \
+    __value; })
+
+/*
+ * Clear a range of bits.
+ */
+#define mips_clear_bits(word, offset, width) asm volatile ( \
+    "ins     %0, $zero, %2, %3" \
+    : "=r" (word) : "0" (word), "K" (offset), "K" (width))
+
+/*
+ * Modify a range of bits.
+ */
+#define mips_ins(word, value, offset, width) asm volatile ( \
+    "ins     %0, %2, %3, %4" \
+    : "=r" (word) : "0" (word), "r" (value), "K" (offset), "K" (width))
+
+#ifndef LOCORE
+/*
+ * Count a number of leading (most significant) zero bits in a word.
+ */
+static int inline __attribute__ ((always_inline))
+mips_clz (unsigned x)
+{
+    int n;
+
+    asm volatile ("clz     %0, %1"
+            : "=r" (n) : "r" (x));
+    return n;
+}
+
+/*
+ * Swap bytes in a word: ABCD to DCBA.
+ */
+static unsigned inline __attribute__ ((always_inline))
+mips_bswap (unsigned x)
+{
+    int n;
+
+    asm volatile (
+    "wsbh    %0, %1 \n"
+    "rotr    %0, 16"
+            : "=r" (n) : "r" (x));
+    return n;
+}
+#endif /* ASSEMBLER */
 
 #endif /* _MACHCONST */

@@ -121,15 +121,15 @@ mach_init()
 
     /* Initialize STATUS register: master interrupt disable.
      * Setup interrupt vector base. */
-    mtc0_Status(ST_CU0 | ST_BEV);
+    mtc0_Status(MACH_Status_CU0 | MACH_Status_BEV);
     mtc0_EBase(_tlb_vector);
-    mtc0_Status(ST_CU0);
+    mtc0_Status(MACH_Status_CU0);
 
     /* Set vector spacing: not used really, but must be nonzero. */
     mtc0_IntCtl(32);
 
     /* Clear CAUSE register: use special interrupt vector 0x200. */
-    mtc0_Cause(CA_IV);
+    mtc0_Cause(MACH_Cause_IV);
 
     /* Copy .data image from flash to RAM.
      * Linker places it at the end of .text segment. */
