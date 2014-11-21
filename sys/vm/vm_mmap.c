@@ -605,6 +605,8 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
     struct vnode *vp = NULL;
     int type;
     int rv = KERN_SUCCESS;
+//printf("%s: map=%08x, addr=%08x, size=%u, prot=%u, maxprot=%u, flags=0x%x, handle=%08x, foff=%u\n",
+//__func__, map, *addr, size, prot, maxprot, flags, handle, (unsigned)foff);
 
     if (size == 0)
         return (0);
@@ -639,6 +641,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
      * Find object and release extra reference gained by lookup
      */
     object = vm_object_lookup(pager);
+if (! object) panic("no object in vm_mmap");
     vm_object_deallocate(object);
 
     /*
@@ -661,6 +664,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
          * this is ok since vm_allocate_with_pager has made
          * sure that these objects are uncached.
          */
+printf("--- %s: anon memory, uncache object=%08x\n", __func__, object);
         (void) pager_cache(object, FALSE);
 #ifdef DEBUG
         if (mmapdebug & MDB_MAPIT)
@@ -684,6 +688,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
          * the deallocate call below will terminate the
          * object which is fine.
          */
+printf("--- %s: VCHR, uncache object=%08x\n", __func__, object);
         (void) pager_cache(object, FALSE);
         if (rv != KERN_SUCCESS)
             goto out;
@@ -715,9 +720,10 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
              * because vnode_pager_deallocate() will fsync the
              * vnode.  pager_cache() will lose the extra ref.
              */
-            if (prot & VM_PROT_WRITE)
+            if (prot & VM_PROT_WRITE) {
+printf("--- %s: writable memory, uncache object=%08x\n", __func__, object);
                 pager_cache(object, FALSE);
-            else
+            } else
                 vm_object_deallocate(object);
         }
         /*
@@ -749,6 +755,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                 vm_map_deallocate(tmap);
                 goto out;
             }
+
             /*
              * (XXX)
              * MAP_PRIVATE implies that we see changes made by
@@ -764,6 +771,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
             rv = vm_map_copy(map, tmap, *addr, size, off,
                      FALSE, FALSE);
             object->flags &= ~OBJ_INTERNAL;
+
             /*
              * (XXX)
              * My oh my, this only gets worse...
@@ -784,6 +792,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                           &tprot, &twired, &tsu);
                 vm_map_lookup_done(tmap, tentry);
             }
+
             /*
              * (XXX)
              * Map copy code cannot detect sharing unless a

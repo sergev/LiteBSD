@@ -187,6 +187,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
     vm_object_lock(first_object);
 
     first_object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, first_object, first_object->ref_count);
     first_object->paging_in_progress++;
 
     /*
@@ -566,6 +567,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  copy.
              */
             copy_object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, copy_object, copy_object->ref_count);
 
             /*
              *  Does the page exist in the copy?
@@ -586,6 +588,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
                     PAGE_ASSERT_WAIT(copy_m, !change_wiring);
                     RELEASE_PAGE(m);
                     copy_object->ref_count--;
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, copy_object, copy_object->ref_count);
                     vm_object_unlock(copy_object);
                     UNLOCK_THINGS;
                     thread_block();
@@ -602,6 +605,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
                     PAGE_ASSERT_WAIT(copy_m, !change_wiring);
                     RELEASE_PAGE(m);
                     copy_object->ref_count--;
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, copy_object, copy_object->ref_count);
                     vm_object_unlock(copy_object);
                     UNLOCK_THINGS;
                     thread_block();
@@ -637,6 +641,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
                      */
                     RELEASE_PAGE(m);
                     copy_object->ref_count--;
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, copy_object, copy_object->ref_count);
                     vm_object_unlock(copy_object);
                     UNLOCK_AND_DEALLOCATE;
                     VM_WAIT;
@@ -720,6 +725,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  copy_object).
              */
             copy_object->ref_count--;
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, copy_object, copy_object->ref_count);
             vm_object_unlock(copy_object);
             m->flags &= ~PG_COPYONWRITE;
         }

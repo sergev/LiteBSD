@@ -167,6 +167,7 @@ _vm_object_allocate(size, object)
     TAILQ_INIT(&object->memq);
     vm_object_lock_init(object);
     object->ref_count = 1;
+//printf("(1) %s: object=%08x, ref count=%u\n", __func__, object, object->ref_count);
     object->resident_page_count = 0;
     object->size = size;
     object->flags = OBJ_INTERNAL;   /* vm_allocate_with_pager will reset */
@@ -177,6 +178,7 @@ _vm_object_allocate(size, object)
      *  Object starts out read-write, with no pager.
      */
 
+printf("--- %s: object=%08x, clear pager\n", __func__, object);
     object->pager = NULL;
     object->paging_offset = 0;
     object->shadow = NULL;
@@ -203,6 +205,7 @@ vm_object_reference(object)
 
     vm_object_lock(object);
     object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, object, object->ref_count);
     vm_object_unlock(object);
 }
 
@@ -238,6 +241,7 @@ vm_object_deallocate(object)
          */
         vm_object_lock(object);
         if (--(object->ref_count) != 0) {
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, object, object->ref_count);
 
             /*
              *  If there are still references, then
@@ -247,6 +251,7 @@ vm_object_deallocate(object)
             vm_object_cache_unlock();
             return;
         }
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, object, object->ref_count);
 
         /*
          *  See if this object can persist.  If so, enter
@@ -255,6 +260,7 @@ vm_object_deallocate(object)
          */
 
         if (object->flags & OBJ_CANPERSIST) {
+//printf("--- %s: object=%08x CAN PERSIST\n", __func__, object);
 
             TAILQ_INSERT_TAIL(&vm_object_cached_list, object,
                 cached_list);
@@ -267,11 +273,13 @@ vm_object_deallocate(object)
             vm_object_cache_trim();
             return;
         }
+printf("--- %s: object=%08x deallocate, pager=%08x\n", __func__, object, object->pager);
 
         /*
          *  Make sure no one can look us up now.
          */
-        vm_object_remove(object->pager);
+        if (object->pager)
+            vm_object_remove(object->pager);
         vm_object_cache_unlock();
 
         temp = object->shadow;
@@ -534,6 +542,7 @@ vm_object_cache_trim()
         if (object != vm_object_lookup(object->pager))
             panic("vm_object_deactivate: I'm sooo confused.");
 
+printf("--- %s: uncache object=%08x, pager=%08x\n", __func__, object, object->pager);
         pager_cache(object, FALSE);
 
         vm_object_cache_lock();
@@ -649,6 +658,7 @@ vm_object_copy(src_object, src_offset, size,
          *  Make another reference to the object
          */
         src_object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, src_object, src_object->ref_count);
 
         /*
          *  Mark all of the pages copy-on-write.
@@ -706,6 +716,7 @@ vm_object_copy(src_object, src_offset, size,
              *  the existing copy-object.
              */
             old_copy->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, old_copy, old_copy->ref_count);
             vm_object_unlock(old_copy);
             vm_object_unlock(src_object);
             *dst_object = old_copy;
@@ -759,9 +770,11 @@ vm_object_copy(src_object, src_offset, size,
          */
 
         src_object->ref_count--;    /* remove ref. from old_copy */
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, src_object, src_object->ref_count);
         old_copy->shadow = new_copy;
         new_copy->ref_count++;      /* locking not needed - we
-                           have the only pointer */
+                                       have the only pointer */
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, new_copy, new_copy->ref_count);
         vm_object_unlock(old_copy); /* done with old_copy */
     }
 
@@ -775,6 +788,7 @@ vm_object_copy(src_object, src_offset, size,
     new_copy->shadow = src_object;
     new_copy->shadow_offset = new_start;
     src_object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, src_object, src_object->ref_count);
     src_object->copy = new_copy;
 
     /*
@@ -862,6 +876,7 @@ vm_object_setpager(object, pager, paging_offset,
 #endif
 
     vm_object_lock(object);         /* XXX ? */
+printf("--- %s: object=%08x, set pager=%08x to %08x\n", __func__, object, object->pager, pager);
     object->pager = pager;
     object->paging_offset = paging_offset;
     vm_object_unlock(object);           /* XXX ? */
@@ -888,10 +903,12 @@ vm_object_lookup(pager)
 
     vm_object_cache_lock();
 
+//printf("--- %s: pager=%08x, hash=%u, first entry=%08x\n", __func__,  pager, vm_object_hash(pager), vm_object_hashtable[vm_object_hash(pager)].tqh_first);
     for (entry = vm_object_hashtable[vm_object_hash(pager)].tqh_first;
          entry != NULL;
          entry = entry->hash_links.tqe_next) {
         object = entry->object;
+//printf("---     object=%08x, pager=%08x, searching for %08x\n", object, object->pager, pager);
         if (object->pager == pager) {
             vm_object_lock(object);
             if (object->ref_count == 0) {
@@ -900,6 +917,7 @@ vm_object_lookup(pager)
                 vm_object_cached--;
             }
             object->ref_count++;
+//printf("(+) %s: object=%08x, ref count=%u\n", __func__, object, object->ref_count);
             vm_object_unlock(object);
             vm_object_cache_unlock();
             return(object);
@@ -932,6 +950,7 @@ vm_object_enter(object, pager)
         return;
     if (pager == NULL)
         return;
+//printf("--- %s: object=%08x, pager=%08x, hash=%u\n", __func__, object, pager, vm_object_hash(pager));
 
     bucket = &vm_object_hashtable[vm_object_hash(pager)];
     entry = (vm_object_hash_entry_t)
@@ -959,6 +978,7 @@ vm_object_remove(pager)
     struct vm_object_hash_head  *bucket;
     register vm_object_hash_entry_t entry;
     register vm_object_t        object;
+//printf("--- %s: pager=%08x, hash=%u\n", __func__, pager, vm_object_hash(pager));
 
     bucket = &vm_object_hashtable[vm_object_hash(pager)];
 
@@ -967,6 +987,7 @@ vm_object_remove(pager)
          entry = entry->hash_links.tqe_next) {
         object = entry->object;
         if (object->pager == pager) {
+printf("--- %s: remove object=%08x from hash table, pager=%08x, hash=%u\n", __func__, object, pager, vm_object_hash(pager));
             TAILQ_REMOVE(bucket, entry, hash_links);
             free((caddr_t)entry, M_VMOBJHASH);
             break;
@@ -999,6 +1020,7 @@ vm_object_cache_clear()
          */
         if (object != vm_object_lookup(object->pager))
             panic("vm_object_cache_clear: I'm sooo confused.");
+printf("--- %s: uncache object=%08x, pager=%08x\n", __func__, object, object->pager);
         pager_cache(object, FALSE);
 
         vm_object_cache_lock();
@@ -1007,6 +1029,7 @@ vm_object_cache_clear()
 }
 
 boolean_t   vm_object_collapse_allowed = TRUE;
+
 /*
  *  vm_object_collapse:
  *
@@ -1153,6 +1176,7 @@ vm_object_collapse(object)
              */
 
             if (backing_object->pager) {
+printf("--- %s: object=%08x, set pager=%08x to %08x\n", __func__, object, object->pager, backing_object->pager);
                 object->pager = backing_object->pager;
                 object->paging_offset = backing_offset +
                     backing_object->paging_offset;
@@ -1267,6 +1291,7 @@ vm_object_collapse(object)
              *  vm_object_deallocate.
              */
             backing_object->ref_count--;
+//printf("(-) %s: object=%08x, ref count=%u\n", __func__, backing_object, backing_object->ref_count);
             vm_object_unlock(backing_object);
 
             object_bypasses ++;

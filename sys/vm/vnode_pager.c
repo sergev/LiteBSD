@@ -123,6 +123,7 @@ vnode_pager_alloc(handle, size, prot, foff)
     struct vattr vattr;
     struct vnode *vp;
     struct proc *p = curproc;   /* XXX */
+//printf("%s: handle=%08x, size=%u, prot=%u, foff=%u\n", __func__, handle, size, prot, (unsigned)foff);
 
 #ifdef DEBUG
     if (vpagerdebug & (VDB_FOLLOW|VDB_ALLOC))
@@ -131,8 +132,10 @@ vnode_pager_alloc(handle, size, prot, foff)
     /*
      * Pageout to vnode, no can do yet.
      */
-    if (handle == NULL)
+    if (handle == NULL) {
+//printf("--- bad handle\n");
         return(NULL);
+    }
 
     /*
      * Vnodes keep a pointer to any associated pager so no need to
@@ -145,13 +148,17 @@ vnode_pager_alloc(handle, size, prot, foff)
          * Allocate pager structures
          */
         pager = (vm_pager_t)malloc(sizeof *pager, M_VMPAGER, M_WAITOK);
-        if (pager == NULL)
+        if (pager == NULL) {
+//printf("--- cannot allocate VMPAGER\n");
             return(NULL);
+        }
         vnp = (vn_pager_t)malloc(sizeof *vnp, M_VMPGDATA, M_WAITOK);
         if (vnp == NULL) {
             free((caddr_t)pager, M_VMPAGER);
+//printf("--- cannot allocate VMPGDATA\n");
             return(NULL);
         }
+
         /*
          * And an object of the appropriate size
          */
@@ -159,9 +166,11 @@ vnode_pager_alloc(handle, size, prot, foff)
             object = vm_object_allocate(round_page(vattr.va_size));
             vm_object_enter(object, pager);
             vm_object_setpager(object, pager, 0, TRUE);
+printf("--- %s: allocated object=%08x, pager=%08x\n", __func__, object, pager);
         } else {
             free((caddr_t)vnp, M_VMPGDATA);
             free((caddr_t)pager, M_VMPAGER);
+printf("--- VOP_GETATTR failed\n");
             return(NULL);
         }
         /*
@@ -184,12 +193,30 @@ vnode_pager_alloc(handle, size, prot, foff)
          * cache if found and also gain a reference to the object.
          */
         object = vm_object_lookup(pager);
-#ifdef DEBUG
         vnp = (vn_pager_t)pager->pg_data;
+#if 0
+        if (! object) {
+            /* Object has been deallocated.
+             * Create a new one. */
+            if (VOP_GETATTR(vp, &vattr, p->p_ucred, p) == 0) {
+                object = vm_object_allocate(round_page(vattr.va_size));
+                vm_object_enter(object, pager);
+                vm_object_setpager(object, pager, 0, TRUE);
+printf("--- %s: allocated object=%08x, pager=%08x\n", __func__, object, pager);
+            } else {
+printf("--- VOP_GETATTR failed\n");
+                vp->v_vmdata = NULL;
+                vp->v_flag &= ~VTEXT;
+                TAILQ_REMOVE(&vnode_pager_list, pager, pg_list);
+                free((caddr_t)vnp, M_VMPGDATA);
+                free((caddr_t)pager, M_VMPAGER);
+                return(NULL);
+            }
+        }
 #endif
     }
 #ifdef DEBUG
-    if (vpagerdebug & VDB_ALLOC)
+//    if (vpagerdebug & VDB_ALLOC)
         printf("vnode_pager_setup: vp %x sz %x pager %x object %x\n",
                vp, vnp->vnp_size, pager, object);
 #endif
@@ -207,7 +234,7 @@ vnode_pager_dealloc(pager)
 #endif
 
 #ifdef DEBUG
-    if (vpagerdebug & VDB_FOLLOW)
+//    if (vpagerdebug & VDB_FOLLOW)
         printf("vnode_pager_dealloc(%x)\n", pager);
 #endif
     vp = vnp->vnp_vp;
@@ -438,6 +465,7 @@ vnode_pager_umount(mp)
         vp = ((vn_pager_t)pager->pg_data)->vnp_vp;
         if (mp == (struct mount *)0 || vp->v_mount == mp) {
             vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+printf("--- %s: uncache pager=%08x\n", __func__, vp->v_vmdata);
             (void) vnode_pager_uncache(vp);
             VOP_UNLOCK(vp, 0, p);
         }
@@ -484,6 +512,7 @@ vnode_pager_uncache(vp)
     if (object) {
         uncached = (object->ref_count <= 1);
         VOP_UNLOCK(vp, 0, p);
+printf("--- %s: uncache object=%08x, pager=%08x\n", __func__, object, object->pager);
         pager_cache(object, FALSE);
         vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
     } else
