@@ -1460,13 +1460,8 @@ loop:
                 if (ce == 0) {
                     tp->t_rocount = 0;
                     if (ttyoutput(*cp, tp) >= 0) {
-                        /* No Clists, wait a bit. */
-                        ttstart(tp);
-                        error = ttysleep(tp, &lbolt,
-                            TTOPRI | PCATCH, ttybuf, 0);
-                        if (error)
-                            break;
-                        goto loop;
+                        /* out of space */
+                        goto overfull;
                     }
                     cp++;
                     cc--;
@@ -1491,12 +1486,8 @@ loop:
             cp += ce, cc -= ce, tk_nout += ce;
             tp->t_outcc += ce;
             if (i > 0) {
-                /* No Clists, wait a bit. */
-                ttstart(tp);
-                error = ttysleep(tp, &lbolt, TTOPRI | PCATCH, ttybuf, 0);
-                if (error)
-                    break;
-                goto loop;
+                /* out of space */
+                goto overfull;
             }
             if (ISSET(tp->t_lflag, FLUSHO) ||
                 tp->t_outq.c_cc > hiwat)
@@ -1512,6 +1503,15 @@ out:
      */
     uio->uio_resid += cc;
     return (error);
+
+overfull:
+    /*
+     * Since we are using ring buffers, if we can't insert any more into
+     * the output queue, we can assume the ring is full and that someone
+     * forgot to set the high water mark correctly.  We set it and then
+     * proceed as normal.
+     */
+    hiwat = tp->t_outq.c_cc - 1;
 
 ovhiwat:
     ttstart(tp);
