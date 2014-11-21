@@ -21,10 +21,12 @@ options         SWAPPAGER               # swap pager (anonymous and swap space)
 options         VNODEPAGER              # vnode pager (mapped files)
 options         DEVPAGER                # device pager (mapped devices)
 options         DIAGNOSTIC              # extra kernel debugging checks
-#options        DEBUG                   # extra kernel debugging support
+options         DEBUG                   # extra kernel debugging support
 #options        KTRACE                  # system call tracing support
 options         "NKMEMCLUSTERS=32"      # 4K pages in kernel malloc pool, default 128 pages
 options         "NMBCLUSTERS=16"        # 4K pages in network mbuf pool, default 256/512 pages
+#options        "NBUF=10"               # Number of i/o buffers (4k), default 10
+#options        "BUFPAGES=12"           # Number of buffer pages, default 12
 options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
 options         "HZ=20"                 # Frequency of clock interrupt
 

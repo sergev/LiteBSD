@@ -242,9 +242,7 @@ mach_init()
     if (bufpages == 0)
         bufpages = physmem / 10 / CLSIZE;
     if (nbuf == 0) {
-        nbuf = bufpages;
-        if (nbuf < 16)
-            nbuf = 16;
+        nbuf = bufpages - 2;
     }
     if (nswbuf == 0) {
         nswbuf = (nbuf / 2) &~ 1;       /* force even */
