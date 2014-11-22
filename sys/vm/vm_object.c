@@ -260,8 +260,26 @@ vm_object_deallocate(object)
          */
 
         if (object->flags & OBJ_CANPERSIST) {
-//printf("--- %s: object=%08x CAN PERSIST\n", __func__, object);
+printf("--- %s: object=%08x CAN PERSIST\n", __func__, object);
+#if 1
 
+            /*
+             * Check for dirty pages in object
+             * Print warning as this may signify kernel bugs
+             * pk@cs.few.eur.nl - 4/15/93
+             */
+            vm_page_t p;
+
+            for (p = object->memq.tqh_first; p != NULL; p = p->listq.tqe_next) {
+                VM_PAGE_CHECK(p);
+                if (pmap_is_modified(VM_PAGE_TO_PHYS(p)) ||
+                    ! (p->flags & PG_CLEAN)) {
+                    printf("--- %s: persistent object %x isn't clean\n", __func__, object);
+                    object->flags &= ~OBJ_CANPERSIST;
+                    goto cant_persist;
+                }
+            }
+#endif
             TAILQ_INSERT_TAIL(&vm_object_cached_list, object,
                 cached_list);
             vm_object_cached++;
@@ -273,6 +291,7 @@ vm_object_deallocate(object)
             vm_object_cache_trim();
             return;
         }
+cant_persist:
 printf("--- %s: object=%08x deallocate, pager=%08x\n", __func__, object, object->pager);
 
         /*
