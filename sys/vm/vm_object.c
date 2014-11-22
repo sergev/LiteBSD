@@ -253,9 +253,29 @@ vm_object_deallocate(object)
          *  it in the cache, then deactivate all of its
          *  pages.
          */
-
         if (object->flags & OBJ_CANPERSIST) {
-
+            /*
+             * Check for dirty pages in persistent object
+             */
+            vm_page_t p, pnext;
+            for (p = object->memq.tqh_first; p != NULL; p = pnext) {
+                pnext = p->listq.tqe_next;
+                VM_PAGE_CHECK(p);
+                if (pmap_is_modified(VM_PAGE_TO_PHYS(p)) ||
+                    ! (p->flags & PG_CLEAN)) {
+                    /* Dirty page found - remove it from the object. */
+//printf("--- %s: dirty page offset=%x removed from persistent object %x\n", __func__, p->offset + object->paging_offset, object);
+                    vm_page_lock_queues();
+                    vm_page_free(p);
+                    cnt.v_pfree++;
+                    vm_page_unlock_queues();
+                }
+            }
+            /* No pages remained - remove the object from cache. */
+            if (object->memq.tqh_first == NULL)
+                object->flags &= ~OBJ_CANPERSIST;
+        }
+        if (object->flags & OBJ_CANPERSIST) {
             TAILQ_INSERT_TAIL(&vm_object_cached_list, object,
                 cached_list);
             vm_object_cached++;
