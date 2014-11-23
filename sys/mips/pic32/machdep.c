@@ -1004,14 +1004,16 @@ tlb_flush()
 {
     int x = mips_di();                  /* Disable interrupts */
     int pid = mfc0_EntryHi();           /* Save the current PID */
-    int index;
+    int index = VMMACH_NUM_TLB_ENTRIES;
+    int addr = MACH_CACHED_MEMORY_ADDR;
 
-    mtc0_EntryHi(MACH_CACHED_MEMORY_ADDR);  /* Use invalid memory address */
     mtc0_EntryLo0(0);                   /* Zero out low entry 0 */
     mtc0_EntryLo1(0);                   /* Zero out low entry 1 */
-    for (index=VMMACH_FIRST_RAND_ENTRY; index<VMMACH_NUM_TLB_ENTRIES; index++) {
+    while (--index >= VMMACH_FIRST_RAND_ENTRY) {
         mtc0_Index(index);              /* Set the index */
+        mtc0_EntryHi(addr);             /* Use invalid memory address */
         asm volatile ("tlbwi");         /* Write the TLB entry */
+        addr += 2 << 13;                /* Increment address to avoid MCheck */
     }
     mtc0_EntryHi(pid);                  /* Restore the PID */
     mtc0_Status(x);                     /* Restore interrupts */

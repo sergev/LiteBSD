@@ -464,6 +464,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              */
             vm_page_copy(m, first_m);
             first_m->flags &= ~PG_FAKE;
+            first_m->flags &= ~PG_CLEAN;
 
             /*
              *  If another map is truly sharing this
