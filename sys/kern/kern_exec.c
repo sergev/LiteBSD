@@ -656,6 +656,7 @@ again:
 
     ndp->ni_vp->v_flag |= VTEXT;        /* mark vnode pure text */
     vput(ndp->ni_vp);
+    FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
 
     /* if tracing process, pass control back to debugger so breakpoints
        can be set before the program "runs" */
@@ -669,6 +670,7 @@ exec_fail:
     if (argbuf)
         FREE(argbuf, M_EXEC);
     vput(ndp->ni_vp);
+    FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
     return rv;
 
 exec_abort:
@@ -676,6 +678,7 @@ exec_abort:
     if (argbuf)
         FREE(argbuf, M_EXEC);
     vput(ndp->ni_vp);
+    FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
     exit1(p, W_EXITCODE(0, SIGABRT));
 
     /* NOTREACHED */
