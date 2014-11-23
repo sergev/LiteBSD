@@ -90,7 +90,7 @@ struct vm_object {
     int                     resident_page_count;
                                                 /* number of resident pages */
     struct vm_object        *copy;              /* Object that holds copies of
-                                                  my changed pages */
+                                                   my changed pages */
     vm_pager_t              pager;              /* Where to get data */
     vm_offset_t             paging_offset;      /* Offset into paging space */
     struct vm_object        *shadow;            /* My shadow */
@@ -116,16 +116,16 @@ typedef struct vm_object_hash_entry *vm_object_hash_entry_t;
 #ifdef  KERNEL
 TAILQ_HEAD(object_q, vm_object);
 
-struct object_q vm_object_cached_list;  /* list of objects persisting */
-int     vm_object_cached;   /* size of cached list */
-simple_lock_data_t  vm_cache_lock;  /* lock for object cache */
+struct object_q     vm_object_cached_list;  /* list of objects persisting */
+int                 vm_object_cached;   /* size of cached list */
+simple_lock_data_t  vm_cache_lock;      /* lock for object cache */
 
-struct object_q vm_object_list;     /* list of allocated objects */
-long        vm_object_count;    /* count of all objects */
+struct object_q     vm_object_list;     /* list of allocated objects */
+long                vm_object_count;    /* count of all objects */
 simple_lock_data_t  vm_object_list_lock;
-                    /* lock for object list and count */
+                                        /* lock for object list and count */
 
-vm_object_t kernel_object;      /* the single kernel object */
+vm_object_t kernel_object;              /* the single kernel object */
 vm_object_t kmem_object;
 
 #define vm_object_cache_lock()      simple_lock(&vm_cache_lock)

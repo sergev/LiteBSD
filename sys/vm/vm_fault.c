@@ -93,20 +93,20 @@
  */
 int
 vm_fault(map, vaddr, fault_type, change_wiring)
-    vm_map_t    map;
-    vm_offset_t vaddr;
-    vm_prot_t   fault_type;
-    boolean_t   change_wiring;
+    vm_map_t        map;
+    vm_offset_t     vaddr;
+    vm_prot_t       fault_type;
+    boolean_t       change_wiring;
 {
     vm_object_t     first_object;
     vm_offset_t     first_offset;
-    vm_map_entry_t      entry;
-    register vm_object_t    object;
-    register vm_offset_t    offset;
-    register vm_page_t  m;
+    vm_map_entry_t  entry;
+    vm_object_t     object;
+    vm_offset_t     offset;
+    vm_page_t       m;
     vm_page_t       first_m;
     vm_prot_t       prot;
-    int         result;
+    int             result;
     boolean_t       wired;
     boolean_t       su;
     boolean_t       lookup_still_valid;
@@ -163,10 +163,10 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  Find the backing store object and offset into
      *  it to begin the search.
      */
-
-    if ((result = vm_map_lookup(&map, vaddr, fault_type, &entry,
+    result = vm_map_lookup(&map, vaddr, fault_type, &entry,
             &first_object, &first_offset,
-            &prot, &wired, &su)) != KERN_SUCCESS) {
+            &prot, &wired, &su);
+    if (result != KERN_SUCCESS) {
         return(result);
     }
     lookup_still_valid = TRUE;
@@ -183,7 +183,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  to be diddled.  Since objects reference their
      *  shadows (and copies), they will stay around as well.
      */
-
     vm_object_lock(first_object);
 
     first_object->ref_count++;
@@ -226,16 +225,14 @@ vm_fault(map, vaddr, fault_type, change_wiring)
     /*
      *  Search for the page at object/offset.
      */
-
     object = first_object;
     offset = first_offset;
 
     /*
      *  See whether this page is resident
      */
-
     while (TRUE) {
-//printf("<lookup object=%08x, offset=%08x>\n", object, offset);
+//printf("---     lookup object=%08x, offset=%08x\n", object, offset);
         m = vm_page_lookup(object, offset);
         if (m != NULL) {
             /*
@@ -268,7 +265,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  Remove the page from the pageout daemon's
              *  reach while we play with it.
              */
-
             vm_page_lock_queues();
             if (m->flags & PG_INACTIVE) {
                 TAILQ_REMOVE(&vm_page_queue_inactive, m, pageq);
@@ -290,7 +286,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
             m->flags |= PG_BUSY;
             break;
         }
-//printf("=object->pager = %08x=\n", object->pager);
+//printf("---     object->pager = %08x\n", object->pager);
 
         if (((object->pager != NULL) &&
                 (!change_wiring || wired))
@@ -300,7 +296,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  Allocate a new page for this object/offset
              *  pair.
              */
-
             m = vm_page_alloc(object, offset);
 
             if (m == NULL) {
@@ -391,7 +386,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
          *  Move on to the next object.  Lock the next
          *  object before unlocking the current one.
          */
-
         offset += object->shadow_offset;
         next_object = object->shadow;
         if (next_object == NULL) {
@@ -433,7 +427,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  [Loop invariant still holds -- the object lock
      *  is held.]
      */
-
     old_m = m;  /* save page that would be copied */
 
     /*
@@ -442,15 +435,12 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  we have to copy it into a new page owned
      *  by the top-level object.
      */
-
     if (object != first_object) {
         /*
          *  We only really need to copy if we
          *  want to write it.
          */
-
         if (fault_type & VM_PROT_WRITE) {
-
             /*
              *  If we try to collapse first_object at this
              *  point, we may deadlock when we try to get
@@ -466,12 +456,12 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  Note that we copy the page even if we didn't
              *  need to... that's the breaks.
              */
+//printf("---     copying page to shadow object, vaddr=%08x\n", vaddr);
 
             /*
              *  We already have an empty page in
              *  first_object - use it.
              */
-
             vm_page_copy(m, first_m);
             first_m->flags &= ~PG_FAKE;
 
@@ -487,7 +477,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  access to this page, then we could
              *  avoid the pmap_page_protect() call.
              */
-
             vm_page_lock_queues();
             vm_page_activate(m);
             vm_page_deactivate(m);
@@ -504,7 +493,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
             /*
              *  Only use the new page below...
              */
-
             cnt.v_cow_faults++;
             m = first_m;
             object = first_object;
@@ -515,6 +503,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
              *  way, let's try to collapse the top object.
              */
             vm_object_lock(object);
+
             /*
              *  But we have to play ugly games with
              *  paging_in_progress to do that...
@@ -536,7 +525,7 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  If the page is being written, but hasn't been
      *  copied to the copy-object, we have to copy it there.
      */
-    RetryCopy:
+RetryCopy:
     if (first_object->copy != NULL) {
         vm_object_t copy_object = first_object->copy;
         vm_offset_t copy_offset;
@@ -732,7 +721,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  We must verify that the maps have not changed
      *  since our last lookup.
      */
-
     if (!lookup_still_valid) {
         vm_object_t retry_object;
         vm_offset_t retry_offset;
@@ -765,7 +753,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
          *  active list (the easiest thing to do here).  If no
          *  one needs it, pageout will grab it eventually.
          */
-
         if (result != KERN_SUCCESS) {
             RELEASE_PAGE(m);
             UNLOCK_AND_DEALLOCATE;
@@ -808,7 +795,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  It's critically important that a wired-down page be faulted
      *  only once in each map for which it is wired.
      */
-
     if (m->flags & (PG_ACTIVE | PG_INACTIVE))
         panic("vm_fault: active or inactive before pmap_enter");
 
@@ -821,7 +807,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
      *  page back on the active queue until later so
      *  that the page-out daemon won't find us (yet).
      */
-
     pmap_enter(map->pmap, vaddr, VM_PAGE_TO_PHYS(m), prot, wired);
 
     /*
@@ -843,7 +828,6 @@ vm_fault(map, vaddr, fault_type, change_wiring)
     /*
      *  Unlock everything, and return
      */
-
     PAGE_WAKEUP(m);
     UNLOCK_AND_DEALLOCATE;
 

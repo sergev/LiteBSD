@@ -78,11 +78,11 @@
 
 static void
 syscall(p, causeReg, codep)
-    register struct proc *p;
+    struct proc *p;
     unsigned causeReg;      /* cause register at time of exception */
 {
-    register int *locr0 = p->p_md.md_regs;
-    register struct sysent *callp;
+    int *locr0 = p->p_md.md_regs;
+    struct sysent *callp;
     unsigned int code = locr0[V0];
     struct args {
         int i[8];
@@ -246,9 +246,9 @@ exception(statusReg, causeReg, vadr, pc, args)
     unsigned vadr;          /* address (if any) the fault occured on */
     unsigned pc;            /* program counter where to continue */
 {
-    register int type, i;
+    int type, i;
     unsigned ucode = 0;
-    register struct proc *p = curproc;
+    struct proc *p = curproc;
     u_quad_t sticks = 0;
     vm_prot_t ftype;
     extern unsigned onfault_table[];
@@ -277,8 +277,8 @@ exception(statusReg, causeReg, vadr, pc, args)
         /* check for kernel address */
         if ((int)vadr < 0) {
 #ifdef DIAGNOSTIC
-            register pt_entry_t *pte = kvtopte(vadr);
-            register unsigned entry = pte->pt_entry;
+            pt_entry_t *pte = kvtopte(vadr);
+            unsigned entry = pte->pt_entry;
 
             if (!(entry & PG_V) || (entry & PG_D))
                 panic("trap: ktlbmod: invalid pte");
@@ -290,40 +290,16 @@ exception(statusReg, causeReg, vadr, pc, args)
         /* FALLTHROUGH */
 
     case TRAP_MOD + TRAP_USER:          /* User: TLB modify */
-        {
-        pmap_t pmap = &p->p_vmspace->vm_pmap;
-        register pt_entry_t *pte = pmap_segmap(pmap, vadr);
-        register unsigned entry;
-        register vm_offset_t pa;
-
-        if (!pte)
-            panic("trap: utlbmod: invalid segmap");
-        pte += (vadr >> PGSHIFT) & (NPTEPG - 1);
-        entry = pte->pt_entry;
-#ifdef DIAGNOSTIC
-        if (!(entry & PG_V) || (entry & PG_D))
-            panic("trap: utlbmod: invalid pte");
-#endif
-        /* Mark page as dirty. */
-        pa = PG_FRAME(entry);
-#ifdef ATTR
-        pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
-#else
-        if (!IS_VM_PHYSADDR(pa))
-            panic("trap: utlbmod: unmanaged page");
-        PHYS_TO_VM_PAGE(pa)->flags &= ~PG_CLEAN;
-#endif
         /* write to read only page */
         ftype = VM_PROT_WRITE;
         goto dofault;
-        }
 
     case TRAP_TLBL:                     /* Kernel: TLB refill */
     case TRAP_TLBS:
         ftype = (type == TRAP_TLBS) ? VM_PROT_WRITE : VM_PROT_READ;
         /* check for kernel address */
         if ((int)vadr < 0) {
-            register vm_offset_t va;
+            vm_offset_t va;
             int rv;
 
 kernel_fault:
@@ -358,9 +334,9 @@ kernel_fault:
         ftype = VM_PROT_WRITE;
 dofault:
         {
-        register vm_offset_t va;
-        register struct vmspace *vm;
-        register vm_map_t map;
+        vm_offset_t va;
+        struct vmspace *vm;
+        vm_map_t map;
         int rv;
 
         vm = p->p_vmspace;
@@ -385,6 +361,24 @@ dofault:
                 rv = KERN_INVALID_ADDRESS;
         }
         if (rv == KERN_SUCCESS) {
+            if (type == TRAP_MOD || type == TRAP_MOD + TRAP_USER) {
+                /*
+                 * Mark page as dirty.
+                 */
+                pt_entry_t *pte = pmap_segmap(&p->p_vmspace->vm_pmap, vadr);
+                if (!pte)
+                    panic("trap: utlbmod: invalid segmap");
+                pte += (vadr >> PGSHIFT) & (NPTEPG - 1);
+
+                vm_offset_t pa = PG_FRAME(pte->pt_entry);
+#ifdef ATTR
+                pmap_attributes[atop(pa)] |= PMAP_ATTR_MOD;
+#else
+                if (!IS_VM_PHYSADDR(pa))
+                    panic("trap: utlbmod: unmanaged page");
+                PHYS_TO_VM_PAGE(pa)->flags &= ~PG_CLEAN;
+#endif
+            }
             if (!USERMODE(statusReg))
                 return (pc);
             goto out;
@@ -440,7 +434,7 @@ dofault:
 
     case TRAP_Bp + TRAP_USER:           /* User: breakpoint */
         {
-        register unsigned va, instr;
+        unsigned va, instr;
 
         /* compute address of break instruction */
         va = pc;
@@ -667,7 +661,7 @@ interrupt(statusReg, pc)
 void
 softintr()
 {
-    register struct proc *p = curproc;
+    struct proc *p = curproc;
     int sig;
 
     cnt.v_soft++;
@@ -708,7 +702,7 @@ softintr()
  */
 int
 cpu_singlestep(p)
-    register struct proc *p;
+    struct proc *p;
 {
     // TODO: use Debug.SST bit.
     return (0);

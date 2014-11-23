@@ -654,6 +654,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                 vm_object_deallocate(object);
             goto out;
         }
+
         /*
          * Don't cache anonymous objects.
          * Loses the reference gained by vm_pager_allocate.
@@ -709,6 +710,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                 vm_object_deallocate(object);
                 goto out;
             }
+
             /*
              * Don't cache the object.  This is the easiest way
              * of ensuring that data gets back to the filesystem
@@ -749,6 +751,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                 vm_map_deallocate(tmap);
                 goto out;
             }
+
             /*
              * (XXX)
              * MAP_PRIVATE implies that we see changes made by
@@ -764,6 +767,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
             rv = vm_map_copy(map, tmap, *addr, size, off,
                      FALSE, FALSE);
             object->flags &= ~OBJ_INTERNAL;
+
             /*
              * (XXX)
              * My oh my, this only gets worse...
@@ -784,6 +788,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                           &tprot, &twired, &tsu);
                 vm_map_lookup_done(tmap, tentry);
             }
+
             /*
              * (XXX)
              * Map copy code cannot detect sharing unless a
@@ -802,6 +807,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
                    curproc->p_pid, *addr, size, pager);
 #endif
     }
+
     /*
      * Correct protection (default is VM_PROT_ALL).
      * If maxprot is different than prot, we must set both explicitly.
@@ -815,6 +821,7 @@ vm_mmap(map, addr, size, prot, maxprot, flags, handle, foff)
         (void) vm_deallocate(map, *addr, size);
         goto out;
     }
+
     /*
      * Shared memory is also shared with children.
      */

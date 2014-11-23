@@ -353,7 +353,7 @@ void spi_bulk_write32_be(struct spiio *io, unsigned int words, int *data)
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
-            reg->buf = mips_bswap32(*data++);
+            reg->buf = __bswap32__(*data++);
             nwrite--;
         }
         if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
@@ -381,7 +381,7 @@ void spi_bulk_read32_be(struct spiio *io, unsigned int words, int *data)
             nwrite--;
         }
         if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
-            *data++ = mips_bswap32(reg->buf);
+            *data++ = __bswap32__(reg->buf);
             nread++;
         }
     }
@@ -421,7 +421,7 @@ void spi_bulk_read16(struct spiio *io, unsigned int words, short *data)
             nwrite--;
         }
         if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
-            *data++ = mips_bswap16(reg->buf);
+            *data++ = __bswap16__(reg->buf);
             nread++;
         }
     }
@@ -442,7 +442,7 @@ void spi_bulk_rw32_be(struct spiio *io, unsigned int words, int *writep)
             nwrite--;
         }
         if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
-            *readp++ = mips_bswap32(reg->buf);
+            *readp++ = __bswap32__(reg->buf);
             nread++;
         }
     }
@@ -484,7 +484,7 @@ void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
             nwrite--;
         }
         if (! (reg->stat & PIC32_SPISTAT_SPIRBE)) {
-            *readp++ = mips_bswap16(reg->buf);
+            *readp++ = __bswap16__(reg->buf);
             nread++;
         }
     }

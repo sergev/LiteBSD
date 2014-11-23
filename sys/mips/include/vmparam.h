@@ -34,27 +34,16 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * from: Utah $Hdr: vmparam.h 1.16 91/01/18$
- *
- *      @(#)vmparam.h   8.2 (Berkeley) 4/22/94
  */
 
 /*
- * Machine dependent constants for DEC Station 3100.
+ * Machine dependent constants for Microchip PIC32MZ.
  */
+
 /*
- * USRTEXT is the start of the user text/data space, while USRSTACK
- * is the top (end) of the user stack.  LOWPAGES and HIGHPAGES are
- * the number of pages from the beginning of the P0 region to the
- * beginning of the text and from the beginning of the P1 region to the
- * beginning of the stack respectively.
+ * USRSTACK is the top (end) of the user stack.
  */
-#define USRTEXT         0x00001000
 #define USRSTACK        0x80000000      /* Start of user stack */
-#define BTOPUSRSTACK    0x80000         /* btop(USRSTACK) */
-#define LOWPAGES        0x00001
-#define HIGHPAGES       0
 
 /*
  * Virtual memory related constants, all in bytes
@@ -107,13 +96,6 @@
 #ifndef SHMMAXPGS
 #define SHMMAXPGS       1024            /* 4mb */
 #endif
-
-/*
- * Boundary at which to place first MAPMEM segment if not explicitly
- * specified.  Should be a power of two.  This allows some slop for
- * the data segment to grow underneath the first mapped segment.
- */
-#define MMSEG           0x200000
 
 /*
  * The size of the clock loop.
@@ -174,12 +156,6 @@
 #endif
 
 /*
- * KLSDIST is the advance or retard of the fifo reclaim for sequential
- * processes data space.
- */
-#define KLSDIST 3               /* klusters advance/retard for seq. fifo */
-
-/*
  * Paging thresholds (see vm_sched.c).
  * Strategy of 1/19/85:
  *      lotsfree is 512k bytes, but at most 1/4 of memory
@@ -215,7 +191,7 @@
  */
 
 /* user/kernel map constants */
-#define VM_MIN_ADDRESS          ((vm_offset_t)0x1000)
+#define VM_MIN_ADDRESS          ((vm_offset_t)0x00001000)
 #define VM_MAXUSER_ADDRESS      ((vm_offset_t)0x80000000)
 #define VM_MAX_ADDRESS          ((vm_offset_t)0x80000000)
 #define VM_MIN_KERNEL_ADDRESS   ((vm_offset_t)0xC0000000)

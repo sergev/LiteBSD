@@ -822,7 +822,6 @@ vm_object_copy(src_object, src_offset, size,
  *  The new object and offset into that object
  *  are returned in the source parameters.
  */
-
 void
 vm_object_shadow(object, offset, length)
     vm_object_t *object;    /* IN/OUT */
@@ -837,8 +836,8 @@ vm_object_shadow(object, offset, length)
     /*
      *  Allocate a new object with the given length
      */
-
-    if ((result = vm_object_allocate(length)) == NULL)
+    result = vm_object_allocate(length);
+    if (result == NULL)
         panic("vm_object_shadow: no object for shadowing");
 
     /*

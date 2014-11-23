@@ -166,9 +166,8 @@ int cpu_singlestep __P((struct proc *));
 static __inline int
 spl0()
 {
-    int status, prev = mips_di();       /* read Status and disable interrupts */
-
-    status = prev | MACH_Status_IE;     /* set Status.IE bit */
+    int prev = mips_di();               /* read Status and disable interrupts */
+    int status = prev | MACH_Status_IE; /* set Status.IE bit */
     mips_clear_bits(status, 10, 9);     /* clear Status.IPL field */
     mtc0_Status(status);                /* write Status: enable all interrupts */
     return prev & (MACH_Status_IPL_MASK | MACH_Status_IE);
@@ -195,11 +194,10 @@ splhigh()
  *      Status.IPL = 1...6
  */
 #define __splN__(n) \
-    int status, prev = mips_di();       /* read Status and disable interrupts */ \
-    \
-    status = prev; \
-    mips_ins(status, n, 10, 9);         /* set Status.IPL field */ \
-    mtc0_Status(status);                /* write Status */ \
+    int status = mips_di();         /* read Status and disable interrupts */ \
+    int prev = status; \
+    mips_ins(status, n, 10, 9);     /* set Status.IPL field */ \
+    mtc0_Status(status);            /* write Status */ \
     return prev & (MACH_Status_IPL_MASK | MACH_Status_IE)
 
 static __inline int spl1() { __splN__(1); }
@@ -222,7 +220,8 @@ splx(x)
 
     /* Use XOR to save one instruction. */
     status |= MACH_Status_IPL_MASK | MACH_Status_IE;
-    mtc0_Status(status ^ x ^ (MACH_Status_IPL_MASK | MACH_Status_IE));
+    x      ^= MACH_Status_IPL_MASK | MACH_Status_IE;
+    mtc0_Status(status ^ x);
 }
 
 #define splsoftclock()  spl1()          /* low-priority clock processing */

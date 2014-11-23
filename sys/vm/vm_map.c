@@ -427,9 +427,10 @@ vm_map_insert(map, object, offset, start, end)
     vm_offset_t start;
     vm_offset_t end;
 {
-    register vm_map_entry_t     new_entry;
-    register vm_map_entry_t     prev_entry;
+    register vm_map_entry_t new_entry;
+    register vm_map_entry_t prev_entry;
     vm_map_entry_t          temp_entry;
+//printf("--- %s: offset=%08x, start=%08x, end=%08x\n", __func__, offset, start, end);
 
     /*
      *  Check that the start and end points are not bogus.
@@ -487,6 +488,7 @@ vm_map_insert(map, object, offset, start, end)
                  *  the previous map entry to include the
                  *  new range.
                  */
+//printf("--- %s: coalesce objects, extend %08x-%08x with %08x-%08x\n", __func__, prev_entry->start, prev_entry->end, start, end);
                 map->size += (end - prev_entry->end);
                 prev_entry->end = end;
                 return(KERN_SUCCESS);
@@ -497,7 +499,6 @@ vm_map_insert(map, object, offset, start, end)
     /*
      *  Create a new entry
      */
-
     new_entry = vm_map_entry_create(map);
     new_entry->start = start;
     new_entry->end = end;
@@ -520,14 +521,12 @@ vm_map_insert(map, object, offset, start, end)
     /*
      *  Insert the new entry into the list
      */
-
     vm_map_entry_link(map, prev_entry, new_entry);
     map->size += new_entry->end - new_entry->start;
 
     /*
      *  Update the free space hint
      */
-
     if ((map->first_free == prev_entry) && (prev_entry->end >= new_entry->start))
         map->first_free = new_entry;
 
@@ -1157,7 +1156,6 @@ vm_map_pageable(map, start, end, new_pageable)
      *  have to make sure we're actually changing the pageability
      *  for the entire region.  We do so before making any changes.
      */
-
     if (vm_map_lookup_entry(map, start, &start_entry) == FALSE) {
         vm_map_unlock(map);
         return(KERN_INVALID_ADDRESS);
@@ -1168,7 +1166,6 @@ vm_map_pageable(map, start, end, new_pageable)
      *  Actions are rather different for wiring and unwiring,
      *  so we have two separate cases.
      */
-
     if (new_pageable) {
 
         vm_map_clip_start(map, entry, start);
@@ -1181,11 +1178,12 @@ vm_map_pageable(map, start, end, new_pageable)
         while ((entry != &map->header) && (entry->start < end)) {
 
             if (entry->wired_count == 0 ||
-            (entry->end < end &&
-             (entry->next == &map->header ||
-              entry->next->start > entry->end))) {
-            vm_map_unlock(map);
-            return(KERN_INVALID_ARGUMENT);
+                (entry->end < end &&
+                 (entry->next == &map->header ||
+                  entry->next->start > entry->end))) {
+
+                vm_map_unlock(map);
+                return(KERN_INVALID_ARGUMENT);
             }
             entry = entry->next;
         }
@@ -1203,13 +1201,12 @@ vm_map_pageable(map, start, end, new_pageable)
 
             entry->wired_count--;
             if (entry->wired_count == 0)
-            vm_fault_unwire(map, entry->start, entry->end);
+                vm_fault_unwire(map, entry->start, entry->end);
 
             entry = entry->next;
         }
         vm_map_clear_recursive(&map->lock);
     }
-
     else {
         /*
          *  Wiring.  We must do this in two passes:
@@ -1242,34 +1239,34 @@ vm_map_pageable(map, start, end, new_pageable)
          */
         while ((entry != &map->header) && (entry->start < end)) {
             if (entry->wired_count == 0) {
+                /*
+                 *  Perform actions of vm_map_lookup that need
+                 *  the write lock on the map: create a shadow
+                 *  object for a copy-on-write region, or an
+                 *  object for a zero-fill region.
+                 *
+                 *  We don't have to do this for entries that
+                 *  point to sharing maps, because we won't hold
+                 *  the lock on the sharing map.
+                 */
+                if (!entry->is_a_map) {
+                    if (entry->needs_copy &&
+                        ((entry->protection & VM_PROT_WRITE) != 0)) {
 
-            /*
-             *  Perform actions of vm_map_lookup that need
-             *  the write lock on the map: create a shadow
-             *  object for a copy-on-write region, or an
-             *  object for a zero-fill region.
-             *
-             *  We don't have to do this for entries that
-             *  point to sharing maps, because we won't hold
-             *  the lock on the sharing map.
-             */
-            if (!entry->is_a_map) {
-                if (entry->needs_copy &&
-                ((entry->protection & VM_PROT_WRITE) != 0)) {
-
-                vm_object_shadow(&entry->object.vm_object,
-                        &entry->offset,
-                        (vm_size_t)(entry->end
-                            - entry->start));
-                entry->needs_copy = FALSE;
+//printf("--- %s: creating shadow object at offset=%08x, size=%08x\n", __func__, entry->offset, entry->end - entry->start);
+                        vm_object_shadow(&entry->object.vm_object,
+                            &entry->offset,
+                            (vm_size_t)(entry->end
+                                - entry->start));
+                        entry->needs_copy = FALSE;
+                    }
+                    else if (entry->object.vm_object == NULL) {
+                        entry->object.vm_object =
+                            vm_object_allocate((vm_size_t)(entry->end
+                                - entry->start));
+                        entry->offset = (vm_offset_t)0;
+                    }
                 }
-                else if (entry->object.vm_object == NULL) {
-                entry->object.vm_object =
-                    vm_object_allocate((vm_size_t)(entry->end
-                            - entry->start));
-                entry->offset = (vm_offset_t)0;
-                }
-            }
             }
             vm_map_clip_start(map, entry, start);
             vm_map_clip_end(map, entry, end);
@@ -1279,19 +1276,19 @@ vm_map_pageable(map, start, end, new_pageable)
              * Check for holes
              */
             if (entry->end < end &&
-            (entry->next == &map->header ||
-             entry->next->start > entry->end)) {
-            /*
-             *  Found one.  Object creation actions
-             *  do not need to be undone, but the
-             *  wired counts need to be restored.
-             */
-            while (entry != &map->header && entry->end > start) {
-                entry->wired_count--;
-                entry = entry->prev;
-            }
-            vm_map_unlock(map);
-            return(KERN_INVALID_ARGUMENT);
+                (entry->next == &map->header ||
+                 entry->next->start > entry->end)) {
+                /*
+                 *  Found one.  Object creation actions
+                 *  do not need to be undone, but the
+                 *  wired counts need to be restored.
+                 */
+                while (entry != &map->header && entry->end > start) {
+                    entry->wired_count--;
+                    entry = entry->prev;
+                }
+                vm_map_unlock(map);
+                return(KERN_INVALID_ARGUMENT);
             }
             entry = entry->next;
         }
@@ -1333,13 +1330,13 @@ vm_map_pageable(map, start, end, new_pageable)
              * needs to be fixed.
              */
             if (rv)
-            entry->wired_count--;
-            else if (entry->wired_count == 1) {
-            rv = vm_fault_wire(map, entry->start, entry->end);
-            if (rv) {
-                failed = entry->start;
                 entry->wired_count--;
-            }
+            else if (entry->wired_count == 1) {
+                rv = vm_fault_wire(map, entry->start, entry->end);
+                if (rv) {
+                    failed = entry->start;
+                    entry->wired_count--;
+                }
             }
             entry = entry->next;
         }
@@ -1899,8 +1896,9 @@ vm_map_copy(dst_map, src_map,
 
         if (dst_alloc) {
             /* XXX Consider making this a vm_map_find instead */
-            if ((result = vm_map_insert(dst_map, NULL,
-                    (vm_offset_t) 0, dst_start, dst_end)) != KERN_SUCCESS)
+            result = vm_map_insert(dst_map, NULL, (vm_offset_t) 0,
+                                   dst_start, dst_end);
+            if (result != KERN_SUCCESS)
                 goto Return;
         }
         else if (!vm_map_check_protection(dst_map, dst_start, dst_end,
@@ -2278,30 +2276,28 @@ vmspace_fork(vm1)
 int
 vm_map_lookup(var_map, vaddr, fault_type, out_entry,
                 object, offset, out_prot, wired, single_use)
-    vm_map_t        *var_map;   /* IN/OUT */
-    register vm_offset_t    vaddr;
-    register vm_prot_t  fault_type;
+    vm_map_t       *var_map;       /* IN/OUT */
+    vm_offset_t    vaddr;
+    vm_prot_t      fault_type;
 
-    vm_map_entry_t      *out_entry; /* OUT */
-    vm_object_t     *object;    /* OUT */
-    vm_offset_t     *offset;    /* OUT */
-    vm_prot_t       *out_prot;  /* OUT */
-    boolean_t       *wired;     /* OUT */
-    boolean_t       *single_use;    /* OUT */
+    vm_map_entry_t *out_entry;     /* OUT */
+    vm_object_t    *object;        /* OUT */
+    vm_offset_t    *offset;        /* OUT */
+    vm_prot_t      *out_prot;      /* OUT */
+    boolean_t      *wired;         /* OUT */
+    boolean_t      *single_use;    /* OUT */
 {
-    vm_map_t            share_map;
-    vm_offset_t         share_offset;
-    register vm_map_entry_t     entry;
-    register vm_map_t       map = *var_map;
-    register vm_prot_t      prot;
-    register boolean_t      su;
-
-    RetryLookup: ;
+    vm_map_t       share_map;
+    vm_offset_t    share_offset;
+    vm_map_entry_t entry;
+    vm_map_t       map = *var_map;
+    vm_prot_t      prot;
+    boolean_t      su;
 
     /*
      *  Lookup the faulting address.
      */
-
+RetryLookup:
     vm_map_lock_read(map);
 
 #define RETURN(why) \
@@ -2314,7 +2310,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
      *  If the map has an interesting hint, try it before calling
      *  full blown lookup routine.
      */
-
     simple_lock(&map->hint_lock);
     entry = map->hint;
     simple_unlock(&map->hint_lock);
@@ -2339,7 +2334,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
     /*
      *  Handle submaps.
      */
-
     if (entry->is_sub_map) {
         vm_map_t    old_map = map;
 
@@ -2352,7 +2346,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
      *  Check whether this task is allowed to have
      *  this page.
      */
-
     prot = entry->protection;
     if ((fault_type & (prot)) != fault_type)
         RETURN(KERN_PROTECTION_FAILURE);
@@ -2380,14 +2373,12 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
         /*
          *  Compute the sharing map, and offset into it.
          */
-
         share_map = entry->object.share_map;
         share_offset = (vaddr - entry->start) + entry->offset;
 
         /*
          *  Look for the backing store object and offset
          */
-
         vm_map_lock_read(share_map);
 
         if (!vm_map_lookup_entry(share_map, share_offset,
@@ -2401,7 +2392,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
     /*
      *  If the entry was copy-on-write, we either ...
      */
-
     if (entry->needs_copy) {
         /*
          *  If we want to write the page, we may as well
@@ -2419,7 +2409,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
              *  have appeared -- one just moved from the
              *  share map to the new object.
              */
-
             if (lockmgr(&share_map->lock, LK_EXCLUPGRADE,
                     (void *)0, curproc)) {
                 if (share_map != map)
@@ -2427,10 +2416,12 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
                 goto RetryLookup;
             }
 
+//printf("--- %s: creating shadow object at offset=%08x, size=%08x\n", __func__, entry->offset, entry->end - entry->start);
             vm_object_shadow(
                 &entry->object.vm_object,
                 &entry->offset,
                 (vm_size_t) (entry->end - entry->start));
+//printf("---     new object=%08x\n", entry->object.vm_object);
 
             entry->needs_copy = FALSE;
 
@@ -2442,7 +2433,6 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
              *  We're attempting to read a copy-on-write
              *  page -- don't allow writes.
              */
-
             prot &= (~VM_PROT_WRITE);
         }
     }
@@ -2469,14 +2459,12 @@ vm_map_lookup(var_map, vaddr, fault_type, out_entry,
      *  Return the object/offset from this entry.  If the entry
      *  was copy-on-write or empty, it has been fixed up.
      */
-
     *offset = (share_offset - entry->start) + entry->offset;
     *object = entry->object.vm_object;
 
     /*
      *  Return whether this is the only map sharing this data.
      */
-
     if (!su) {
         simple_lock(&share_map->ref_lock);
         su = (share_map->ref_count == 1);

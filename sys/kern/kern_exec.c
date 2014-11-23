@@ -576,7 +576,7 @@ again:
     /* map text as being read/execute only and demand paged */
     rv = vm_mmap(&vs->vm_map, &addr, tsize,
         VM_PROT_READ | VM_PROT_EXECUTE,
-        VM_PROT_DEFAULT, MAP_FIXED | MAP_COPY,
+        VM_PROT_DEFAULT, MAP_FIXED | MAP_FILE | MAP_PRIVATE,
         (caddr_t)ndp->ni_vp, hdr.file_offset);
     if (rv)
         goto exec_abort;
@@ -586,7 +586,7 @@ again:
     /* map data as being read/write and demand paged */
     rv = vm_mmap(&vs->vm_map, &addr, dsize,
         tsize ? (VM_PROT_READ | VM_PROT_WRITE) : VM_PROT_ALL,
-        VM_PROT_DEFAULT, MAP_FIXED | MAP_COPY,
+        VM_PROT_DEFAULT, MAP_FIXED | MAP_FILE | MAP_PRIVATE,
         (caddr_t)ndp->ni_vp, hdr.file_offset + tsize);
     if (rv)
         goto exec_abort;

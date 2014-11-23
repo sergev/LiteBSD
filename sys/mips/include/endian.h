@@ -76,10 +76,35 @@
 
 #else
 
-#define ntohl(x)        mips_bswap32(x)
-#define ntohs(x)        mips_bswap16(x)
-#define htonl(x)        mips_bswap32(x)
-#define htons(x)        mips_bswap16(x)
+/*
+ * Swap bytes in a word: ABCD to DCBA.
+ */
+static unsigned inline __attribute__ ((always_inline))
+__bswap32__(unsigned x)
+{
+    asm volatile (
+    "wsbh    %0, %1 \n"
+    "rotr    %0, 16"
+            : "=r" (x) : "r" (x));
+    return x;
+}
+
+/*
+ * Swap bytes in a halfword: AB to BA.
+ */
+static unsigned short inline __attribute__ ((always_inline))
+__bswap16__(unsigned short x)
+{
+    asm volatile (
+    "wsbh    %0, %1"
+            : "=r" (x) : "r" (x));
+    return x;
+}
+
+#define ntohl(x)        __bswap32__(x)
+#define ntohs(x)        __bswap16__(x)
+#define htonl(x)        __bswap32__(x)
+#define htons(x)        __bswap16__(x)
 
 #define NTOHL(x)        (x) = ntohl((u_long)x)
 #define NTOHS(x)        (x) = ntohs((u_short)x)
