@@ -41,8 +41,10 @@
  */
 
 /*
- * USRSTACK is the top (end) of the user stack.
+ * USRTEXT is the start of the user text/data space, while USRSTACK
+ * is the top (end) of the user stack.
  */
+#define USRTEXT         0x00400000      /* Start of user text */
 #define USRSTACK        0x80000000      /* Start of user stack */
 
 /*
