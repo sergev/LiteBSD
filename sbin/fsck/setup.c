@@ -186,54 +186,25 @@ setup(dev)
 			dirty(&asblk);
 		}
 	}
-	if (sblock.fs_inodefmt >= FS_44INODEFMT) {
-		newinofmt = 1;
-	} else {
-		sblock.fs_qbmask = ~sblock.fs_bmask;
-		sblock.fs_qfmask = ~sblock.fs_fmask;
-		newinofmt = 0;
+	if (sblock.fs_inodefmt < FS_44INODEFMT) {
+		pwarn("Format of filesystem is too old.\n");
+		exit(8);
 	}
-	/*
-	 * Convert to new inode format.
-	 */
-	if (cvtlevel >= 2 && sblock.fs_inodefmt < FS_44INODEFMT) {
-		printf("converting to new inode format not supported\n");
-		return(0);
-	}
-	/*
-	 * Convert to new cylinder group format.
-	 */
-	if (cvtlevel >= 1 && sblock.fs_postblformat == FS_42POSTBLFMT) {
-		if (preen)
-			pwarn("CONVERTING TO NEW CYLINDER GROUP FORMAT\n");
-		else if (!reply("CONVERT TO NEW CYLINDER GROUP FORMAT"))
-			return(0);
-		doinglevel1++;
-		sblock.fs_postblformat = FS_DYNAMICPOSTBLFMT;
-		sblock.fs_nrpos = 8;
-		sblock.fs_postbloff =
-		    (char *)(&sblock.fs_opostbl[0][0]) -
-		    (char *)(&sblock.fs_firstfield);
-		sblock.fs_rotbloff = &sblock.fs_space[0] -
-		    (u_char *)(&sblock.fs_firstfield);
-		sblock.fs_cgsize =
-			fragroundup(&sblock, CGSIZE(&sblock));
-		sbdirty();
-		dirty(&asblk);
-	}
-	if (asblk.b_dirty && !bflag) {
-		memmove(&altsblock, &sblock, (size_t)sblock.fs_sbsize);
-		flush(fswritefd, &asblk);
-	}
+
 	/*
 	 * read in the summary info.
 	 */
 	asked = 0;
+	sblock.fs_csp = calloc(1, sblock.fs_cssize);
+	if (sblock.fs_csp == NULL) {
+		printf("cannot alloc %u bytes for cylinder group summary area\n",
+		    (unsigned)sblock.fs_cssize);
+		goto badsb;
+	}
 	for (i = 0, j = 0; i < sblock.fs_cssize; i += sblock.fs_bsize, j++) {
 		size = sblock.fs_cssize - i < sblock.fs_bsize ?
 		    sblock.fs_cssize - i : sblock.fs_bsize;
-		sblock.fs_csp[j] = (struct csum *)calloc(1, (unsigned)size);
-		if (bread(fsreadfd, (char *)sblock.fs_csp[j],
+		if (bread(fsreadfd, (char *)sblock.fs_csp + i,
 		    fsbtodb(&sblock, sblock.fs_csaddr + j * sblock.fs_frag),
 		    size) != 0 && !asked) {
 			pfatal("BAD SUMMARY INFORMATION");

@@ -224,7 +224,7 @@ ffs_reload(mountp, cred, p)
      * new superblock. These should really be in the ufsmount.  XXX
      * Note that important parameters (eg fs_ncg) are unchanged.
      */
-    bcopy(&fs->fs_csp[0], &newfs->fs_csp[0], sizeof(fs->fs_csp));
+    newfs->fs_csp = fs->fs_csp;
     newfs->fs_maxcluster = fs->fs_maxcluster;
     bcopy(newfs, fs, (u_int)fs->fs_sbsize);
     if (fs->fs_sbsize < SBSIZE)
@@ -236,6 +236,7 @@ ffs_reload(mountp, cred, p)
      * Step 3: re-read summary information from disk.
      */
     blks = howmany(fs->fs_cssize, fs->fs_fsize);
+    caddr_t space = (caddr_t)fs->fs_csp;
     for (i = 0; i < blks; i += fs->fs_frag) {
         size = fs->fs_bsize;
         if (i + fs->fs_frag > blks)
@@ -244,7 +245,8 @@ ffs_reload(mountp, cred, p)
             NOCRED, &bp);
         if (error)
             return (error);
-        bcopy(bp->b_data, fs->fs_csp[fragstoblks(fs, i)], (u_int)size);
+        bcopy(bp->b_data, space, size);
+        space += size;
         brelse(bp);
     }
     /*
@@ -513,6 +515,7 @@ ffs_mountfs(devvp, mp, p)
     if (fs->fs_contigsumsize > 0)
         size += fs->fs_ncg * sizeof(int32_t);
     base = space = malloc((u_long)size, M_UFSMNT, M_WAITOK);
+    fs->fs_csp = (struct csum *)space;
     for (i = 0; i < blks; i += fs->fs_frag) {
         size = fs->fs_bsize;
         if (i + fs->fs_frag > blks)
@@ -523,7 +526,6 @@ ffs_mountfs(devvp, mp, p)
             goto out;
         }
         bcopy(bp->b_data, space, (u_int)size);
-        fs->fs_csp[fragstoblks(fs, i)] = (struct csum *)space;
         space += size;
         brelse(bp);
         bp = NULL;
@@ -601,7 +603,7 @@ ffs_unmount(mp, mntflags, p)
     error = VOP_CLOSE(ump->um_devvp, fs->fs_ronly ? FREAD : FREAD|FWRITE,
         NOCRED, p);
     vrele(ump->um_devvp);
-    free(fs->fs_csp[0], M_UFSMNT);
+    free(fs->fs_csp, M_UFSMNT);
     free(fs, M_UFSMNT);
     free(ump, M_UFSMNT);
     mp->mnt_data = (qaddr_t)0;
@@ -947,7 +949,7 @@ ffs_sbupdate(mp, waitfor)
      * First write back the summary information.
      */
     blks = howmany(fs->fs_cssize, fs->fs_fsize);
-    space = (caddr_t)fs->fs_csp[0];
+    space = (caddr_t)fs->fs_csp;
     for (i = 0; i < blks; i += fs->fs_frag) {
         size = fs->fs_bsize;
         if (i + fs->fs_frag > blks)

@@ -89,7 +89,7 @@ main(argc, argv)
 		case 'c':
 			cvtlevel = argtoi('c', "conversion level", optarg, 10);
 			break;
-		
+
 		case 'd':
 			debug++;
 			break;
@@ -284,11 +284,11 @@ checkfilesys(filesys, mntpt, auxdata, child)
 	muldup = (struct dups *)0;
 	inocleanup();
 	if (fsmodified) {
-		(void)time(&sblock.fs_time);
+		sblock.fs_time = (time_t)time(NULL);
 		sbdirty();
 	}
 	if (cvtlevel && sblk.b_dirty) {
-		/* 
+		/*
 		 * Write out the duplicate super blocks
 		 */
 		for (cylno = 0; cylno < sblock.fs_ncg; cylno++)

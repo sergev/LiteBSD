@@ -534,8 +534,7 @@ allocino(request, type)
 	dp->di_blocks = btodb(sblock.fs_fsize);
 	n_files++;
 	inodirty();
-	if (newinofmt)
-		typemap[ino] = IFTODT(type);
+	typemap[ino] = IFTODT(type);
 	return (ino);
 }
 

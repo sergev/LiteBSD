@@ -173,7 +173,6 @@ int	bflag;			/* location of alternate super block */
 int	debug;			/* output debugging info */
 int	cvtlevel;		/* convert to newer file system format */
 int	doinglevel1;		/* converting to new cylinder group format */
-int	newinofmt;		/* filesystem has new inode format */
 char	preen;			/* just fix normal inconsistencies */
 char	hotroot;		/* checking root device */
 char	havesb;			/* superblock has been read */
