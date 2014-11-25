@@ -151,6 +151,16 @@
 #define DEFAULTOPT  FS_OPTTIME
 
 /*
+ * The directory preference algorithm(dirpref) can be tuned by adjusting
+ * the following parameters which tell the system the average file size
+ * and the average number of files per directory. These defaults are well
+ * selected for typical filesystems, but may need to be tuned for odd
+ * cases like filesystems being used for squid caches or news spools.
+ */
+#define AVFILESIZ   16384   /* expected average file size */
+#define AFPDIR      64      /* expected number of files per directory */
+
+/*
  * Size of superblock space reserved for snapshots.
  */
 #define FSMAXSNAP   20

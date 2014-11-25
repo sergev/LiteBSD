@@ -74,6 +74,11 @@
 #define MADV_WILLNEED   3   /* will need these pages */
 #define MADV_DONTNEED   4   /* dont need these pages */
 
+/*
+ * Error return from mmap()
+ */
+#define MAP_FAILED	((void *)-1)
+
 #ifndef KERNEL
 
 #include <sys/cdefs.h>
