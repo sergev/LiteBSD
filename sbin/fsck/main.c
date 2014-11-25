@@ -1,3 +1,6 @@
+/*	$OpenBSD: main.c,v 1.41 2013/11/01 17:36:18 krw Exp $	*/
+/*	$NetBSD: main.c,v 1.22 1996/10/11 20:15:48 thorpej Exp $	*/
+
 /*
  * Copyright (c) 1980, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -10,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,77 +30,70 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1980, 1986, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 5/14/95";
-#endif /* not lint */
-
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/mount.h>
-
 #include <ufs/ufs/dinode.h>
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ffs/fs.h>
-
-#include <ctype.h>
-#include <err.h>
-#include <fstab.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "fsck.h"
+#include "extern.h"
+#include "fsutil.h"
 
-int	returntosingle;
+volatile sig_atomic_t returntosingle;
 
-static int argtoi __P((int flag, char *req, char *str, int base));
-static int docheck __P((struct fstab *fsp));
-static int checkfilesys __P((char *filesys, char *mntpt, long auxdata,
-		int child));
-void main __P((int argc, char *argv[]));
+int	argtoi(int, char *, char *, int);
+int	checkfilesys(char *, char *, long, int);
+int	main(int, char *[]);
 
-void
-main(argc, argv)
-	int	argc;
-	char	*argv[];
+extern char *__progname;
+
+int
+main(int argc, char *argv[])
 {
 	int ch;
-	int ret, maxrun = 0;
-	extern char *optarg;
-	extern int optind;
+	int ret = 0;
 
 	sync();
-	while ((ch = getopt(argc, argv, "dpnNyYb:c:l:m:")) != EOF) {
+	skipclean = 1;
+	while ((ch = getopt(argc, argv, "dfpnNyYb:c:m:")) != -1) {
 		switch (ch) {
 		case 'p':
 			preen++;
 			break;
 
 		case 'b':
+			skipclean = 0;
 			bflag = argtoi('b', "number", optarg, 10);
 			printf("Alternate super block location: %d\n", bflag);
 			break;
 
 		case 'c':
+			skipclean = 0;
 			cvtlevel = argtoi('c', "conversion level", optarg, 10);
+			if (cvtlevel < 3)
+				errexit("cannot do level %d conversion\n",
+				    cvtlevel);
 			break;
 
 		case 'd':
 			debug++;
 			break;
 
-		case 'l':
-			maxrun = argtoi('l', "number", optarg, 10);
+		case 'f':
+			skipclean = 0;
 			break;
 
 		case 'm':
 			lfmode = argtoi('m', "mode", optarg, 8);
 			if (lfmode &~ 07777)
-				errx(EEXIT, "bad mode to -m: %o", lfmode);
+				errexit("bad mode to -m: %o\n", lfmode);
 			printf("** lost+found creation mode %o\n", lfmode);
 			break;
 
@@ -118,7 +110,8 @@ main(argc, argv)
 			break;
 
 		default:
-			errx(EEXIT, "%c option?", ch);
+			errexit("usage: %s [-fnpy] [-b block#] [-c level] "
+			    "[-m mode] filesystem ...\n", __progname);
 		}
 	}
 	argc -= optind;
@@ -127,82 +120,77 @@ main(argc, argv)
 		(void)signal(SIGINT, catch);
 	if (preen)
 		(void)signal(SIGQUIT, catchquit);
-	if (argc) {
+	(void)signal(SIGINFO, catchinfo);
+
+	if (argc)
 		while (argc-- > 0)
 			(void)checkfilesys(blockcheck(*argv++), 0, 0L, 0);
-		exit(0);
-	}
-	ret = checkfstab(preen, maxrun, docheck, checkfilesys);
+
 	if (returntosingle)
-		exit(2);
+		ret = 2;
+
 	exit(ret);
 }
 
-static int
-argtoi(flag, req, str, base)
-	int flag;
-	char *req, *str;
-	int base;
+int
+argtoi(int flag, char *req, char *str, int base)
 {
 	char *cp;
 	int ret;
 
 	ret = (int)strtol(str, &cp, base);
 	if (cp == str || *cp)
-		errx(EEXIT, "-%c flag requires a %s", flag, req);
+		errexit("-%c flag requires a %s\n", flag, req);
 	return (ret);
-}
-
-/*
- * Determine whether a filesystem should be checked.
- */
-static int
-docheck(fsp)
-	register struct fstab *fsp;
-{
-
-	if (strcmp(fsp->fs_vfstype, "ufs") ||
-	    (strcmp(fsp->fs_type, FSTAB_RW) &&
-	     strcmp(fsp->fs_type, FSTAB_RO)) ||
-	    fsp->fs_passno == 0)
-		return (0);
-	return (1);
 }
 
 /*
  * Check the specified filesystem.
  */
 /* ARGSUSED */
-static int
-checkfilesys(filesys, mntpt, auxdata, child)
-	char *filesys, *mntpt;
-	long auxdata;
-	int child;
+int
+checkfilesys(char *filesys, char *mntpt, long auxdata, int child)
 {
-	ufs_daddr_t n_ffree, n_bfree;
+	daddr_t n_ffree, n_bfree;
 	struct dups *dp;
 	struct zlncnt *zlnp;
-	int cylno, flags;
+	int cylno;
 
 	if (preen && child)
 		(void)signal(SIGQUIT, voidquit);
-	cdevname = filesys;
+	setcdevname(filesys, NULL, preen);
 	if (debug && preen)
 		pwarn("starting\n");
 	switch (setup(filesys)) {
 	case 0:
 		if (preen)
 			pfatal("CAN'T CHECK FILE SYSTEM.");
-		/* fall through */
+		/* FALLTHROUGH */
 	case -1:
+		if (fsreadfd != -1) {
+			(void)close(fsreadfd);
+			fsreadfd = -1;
+		}
+		if (fswritefd != -1) {
+			(void)close(fswritefd);
+			fswritefd = -1;
+		}
 		return (0);
 	}
+	info_filesys = filesys;
+
+	/*
+	 * Cleared if any questions answered no. Used to decide if
+	 * the superblock should be marked clean.
+	 */
+	resolved = 1;
+
 	/*
 	 * 1: scan inodes tallying blocks used
 	 */
 	if (preen == 0) {
 		printf("** Last Mounted on %s\n", sblock.fs_fsmnt);
-		if (hotroot)
+		if (hotroot())
 			printf("** Root file system\n");
 		printf("** Phase 1 - Check Blocks and Sizes\n");
 	}
@@ -212,7 +200,7 @@ checkfilesys(filesys, mntpt, auxdata, child)
 	 * 1b: locate first references to duplicates, if any
 	 */
 	if (duplist) {
-		if (preen)
+		if (preen || usedsoftdep)
 			pfatal("INTERNAL ERROR: dups with -p");
 		printf("** Phase 1b - Rescan For More DUPS\n");
 		pass1b();
@@ -251,37 +239,41 @@ checkfilesys(filesys, mntpt, auxdata, child)
 	 */
 	n_ffree = sblock.fs_cstotal.cs_nffree;
 	n_bfree = sblock.fs_cstotal.cs_nbfree;
-	pwarn("%ld files, %ld used, %ld free ",
-	    n_files, n_blks, n_ffree + sblock.fs_frag * n_bfree);
-	printf("(%ld frags, %ld blocks, %d.%d%% fragmentation)\n",
-	    n_ffree, n_bfree, (n_ffree * 100) / sblock.fs_dsize,
-	    ((n_ffree * 1000 + sblock.fs_dsize / 2) / sblock.fs_dsize) % 10);
+	pwarn("%lld files, %lld used, %lld free ",
+	    n_files, (long long)n_blks,
+	    (long long)(n_ffree + sblock.fs_frag * n_bfree));
+	printf("(%lld frags, %lld blocks, %lld.%lld%% fragmentation)\n",
+	    (long long)n_ffree, (long long)n_bfree,
+	    (long long)((n_ffree * 100) / sblock.fs_dsize),
+	    (long long)(((n_ffree * 1000 + sblock.fs_dsize / 2) /
+	    sblock.fs_dsize) % 10));
 	if (debug &&
 	    (n_files -= maxino - ROOTINO - sblock.fs_cstotal.cs_nifree))
-		printf("%ld files missing\n", n_files);
+		printf("%lld files missing\n", n_files);
 	if (debug) {
 		n_blks += sblock.fs_ncg *
 			(cgdmin(&sblock, 0) - cgsblock(&sblock, 0));
 		n_blks += cgsblock(&sblock, 0) - cgbase(&sblock, 0);
 		n_blks += howmany(sblock.fs_cssize, sblock.fs_fsize);
 		if (n_blks -= maxfsblock - (n_ffree + sblock.fs_frag * n_bfree))
-			printf("%ld blocks missing\n", n_blks);
+			printf("%lld blocks missing\n", (long long)n_blks);
 		if (duplist != NULL) {
 			printf("The following duplicate blocks remain:");
 			for (dp = duplist; dp; dp = dp->next)
-				printf(" %ld,", dp->dup);
+				printf(" %lld,", (long long)dp->dup);
 			printf("\n");
 		}
 		if (zlnhead != NULL) {
 			printf("The following zero link count inodes remain:");
 			for (zlnp = zlnhead; zlnp; zlnp = zlnp->next)
-				printf(" %lu,", zlnp->zlncnt);
+				printf(" %llu,",
+				    (unsigned long long)zlnp->zlncnt);
 			printf("\n");
 		}
 	}
-	zlnhead = (struct zlncnt *)0;
-	duplist = (struct dups *)0;
-	muldup = (struct dups *)0;
+	zlnhead = NULL;
+	duplist = NULL;
+	muldup = NULL;
 	inocleanup();
 	if (fsmodified) {
 		sblock.fs_time = (time_t)time(NULL);
@@ -295,41 +287,47 @@ checkfilesys(filesys, mntpt, auxdata, child)
 			bwrite(fswritefd, (char *)&sblock,
 			    fsbtodb(&sblock, cgsblock(&sblock, cylno)), SBSIZE);
 	}
-	if (!hotroot) {
-		ckfini(1);
-	} else {
-		struct statfs stfs_buf;
-		/*
-		 * Check to see if root is mounted read-write.
-		 */
-		if (statfs("/", &stfs_buf) == 0)
-			flags = stfs_buf.f_flags;
-		else
-			flags = 0;
-		ckfini(flags & MNT_RDONLY);
-	}
+	if (rerun)
+		resolved = 0;
+	ckfini(resolved); /* Don't mark fs clean if fsck needs to be re-run */
+
+	for (cylno = 0; cylno < sblock.fs_ncg; cylno++)
+		free(inostathead[cylno].il_stat);
+	free(inostathead);
+	inostathead = NULL;
+
 	free(blockmap);
-	free(statemap);
-	free((char *)lncntp);
+	blockmap = NULL;
+	free(sblock.fs_csp);
+	free(sblk.b_un.b_buf);
+	free(asblk.b_un.b_buf);
+
 	if (!fsmodified)
 		return (0);
 	if (!preen)
 		printf("\n***** FILE SYSTEM WAS MODIFIED *****\n");
-	if (hotroot) {
-		struct ufs_args args;
-		int ret;
+	if (rerun || !resolved)
+		printf("\n***** PLEASE RERUN FSCK *****\n");
+	if (hotroot()) {
+		struct statfs stfs_buf;
 		/*
 		 * We modified the root.  Do a mount update on
 		 * it, unless it is read-write, so we can continue.
 		 */
-		if (flags & MNT_RDONLY) {
-			args.fspec = 0;
-			args.export.ex_flags = 0;
-			args.export.ex_root = 0;
-			flags |= MNT_UPDATE | MNT_RELOAD;
-			ret = mount("ufs", "/", flags, &args);
-			if (ret == 0)
-				return (0);
+		if (statfs("/", &stfs_buf) == 0) {
+			long flags = stfs_buf.f_flags;
+			struct ufs_args args;
+			int ret;
+
+			if (flags & MNT_RDONLY) {
+				args.fspec = 0;
+				args.export.ex_flags = 0;
+				args.export.ex_root = 0;
+				flags |= MNT_UPDATE | MNT_RELOAD;
+				ret = mount("ufs", "/", flags, &args);
+				if (ret == 0)
+					return(0);
+			}
 		}
 		if (!preen)
 			printf("\n***** REBOOT NOW *****\n");

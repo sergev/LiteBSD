@@ -1,3 +1,6 @@
+/*	$OpenBSD: pass3.c,v 1.16 2011/05/08 14:38:40 otto Exp $	*/
+/*	$NetBSD: pass3.c,v 1.8 1995/03/18 14:55:54 cgd Exp $	*/
+
 /*
  * Copyright (c) 1980, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -10,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,44 +30,56 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)pass3.c	8.2 (Berkeley) 4/27/95";
-#endif /* not lint */
-
 #include <sys/param.h>
 #include <sys/time.h>
-
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
-
+#include <stdio.h>
 #include "fsck.h"
+#include "extern.h"
+
+static int info_pos;
+
+static int
+pass3_info(char *buf, size_t buflen)
+{
+	return (snprintf(buf, buflen, "phase 3, directory %d/%ld",
+	    info_pos, inplast) > 0);
+}
 
 void
-pass3()
+pass3(void)
 {
-	register struct inoinfo **inpp, *inp;
+	struct inoinfo **inpp, *inp, *pinp;
 	ino_t orphan;
 	int loopcnt;
 
+	info_fn = pass3_info;
 	for (inpp = &inpsort[inplast - 1]; inpp >= inpsort; inpp--) {
+		info_pos++;
 		inp = *inpp;
 		if (inp->i_number == ROOTINO ||
-		    !(inp->i_parent == 0 || statemap[inp->i_number] == DSTATE))
+		    (inp->i_parent != 0 && GET_ISTATE(inp->i_number) != DSTATE))
 			continue;
-		if (statemap[inp->i_number] == DCLEAR)
+		if (GET_ISTATE(inp->i_number) == DCLEAR)
 			continue;
 		for (loopcnt = 0; ; loopcnt++) {
 			orphan = inp->i_number;
 			if (inp->i_parent == 0 ||
-			    statemap[inp->i_parent] != DSTATE ||
+			    GET_ISTATE(inp->i_parent) != DSTATE ||
 			    loopcnt > numdirs)
 				break;
 			inp = getinoinfo(inp->i_parent);
 		}
-		(void)linkup(orphan, inp->i_dotdot);
-		inp->i_parent = inp->i_dotdot = lfdir;
-		lncntp[lfdir]--;
-		statemap[orphan] = DFOUND;
-		propagate();
+		if (linkup(orphan, inp->i_dotdot)) {
+			inp->i_parent = inp->i_dotdot = lfdir;
+			ILNCOUNT(lfdir)--;
+			pinp = getinoinfo(inp->i_parent);
+			inp->i_sibling = pinp->i_child;
+			pinp->i_child = inp;
+			SET_ISTATE(orphan, GET_ISTATE(inp->i_parent));
+		}
+		propagate(orphan);
 	}
+	info_fn = NULL;
 }

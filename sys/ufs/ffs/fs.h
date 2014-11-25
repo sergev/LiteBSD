@@ -57,12 +57,17 @@
  * The first boot and super blocks are given in absolute disk addresses.
  * The byte-offset forms are preferred, as they don't imply a sector size.
  */
-#define BBSIZE      8192
-#define SBSIZE      8192
-#define BBOFF       ((off_t)(0))
-#define SBOFF       ((off_t)(BBOFF + BBSIZE))
-#define BBLOCK      ((ufs_daddr_t)(0))
-#define SBLOCK      ((ufs_daddr_t)(BBLOCK + BBSIZE / DEV_BSIZE))
+#define BBSIZE          8192
+#define SBSIZE          8192
+#define BBOFF           ((off_t)(0))
+#define SBOFF           ((off_t)(BBOFF + BBSIZE))
+#define BBLOCK          ((ufs_daddr_t)(0))
+#define SBLOCK          ((ufs_daddr_t)(BBLOCK + BBSIZE / DEV_BSIZE))
+#define SBLOCK_UFS1     8192
+#define SBLOCK_UFS2     65536
+#define SBLOCK_PIGGY    262144
+#define SBLOCKSEARCH \
+    { SBLOCK_UFS2, SBLOCK_UFS1, SBLOCK_PIGGY, -1 }
 
 /*
  * Addresses stored in inodes are capable of addressing fragments
@@ -298,10 +303,26 @@ struct fs {
 #define FS_44INODEFMT   2           /* 4.4BSD inode format */
 
 /*
+ * Filesystem clean flags
+ */
+#define FS_ISCLEAN      0x01
+
+/*
  * Preference for optimization.
  */
-#define FS_OPTTIME      0   /* minimize allocation time */
-#define FS_OPTSPACE     1   /* minimize disk fragmentation */
+#define FS_OPTTIME      0           /* minimize allocation time */
+#define FS_OPTSPACE     1           /* minimize disk fragmentation */
+
+/*
+ * Filesystem flags.
+ */
+#define FS_DOSOFTDEP    0x02        /* filesystem using soft dependencies */
+
+/*
+ * The following flag is used to detect a FFS1 file system that had its flags
+ * moved to the new (FFS2) location for compatibility.
+ */
+#define FS_FLAGS_UPDATED    0x80    /* file system has FFS2-like flags */
 
 /*
  * Rotational layout table format types
@@ -364,7 +385,11 @@ struct cg {
     int32_t  cg_clustersumoff;  /* (u_int32) counts of avail clusters */
     int32_t  cg_clusteroff;     /* (u_int8) free cluster map */
     int32_t  cg_nclusterblks;   /* number of clusters this cg */
-    int32_t  cg_sparecon[13];   /* reserved for future use */
+    int32_t  cg_ffs2_niblk;     /* number of inode blocks this cg */
+    int32_t  cg_initediblk;     /* last initialized inode */
+    int32_t  cg_sparecon32[3];  /* reserved for future use */
+    int64_t  cg_ffs2_time;      /* time last written */
+    int64_t  cg_sparecon64[3];  /* reserved for future use */
     u_int8_t cg_space[1];       /* space for cylinder group maps */
 /* actually longer */
 };
@@ -520,6 +545,11 @@ struct ocg {
         ? (fs)->fs_bsize \
         : (fragroundup(fs, blkoff(fs, (dip)->di_size))))
 
+#define sblksize(fs, size, lbn) \
+        (((lbn) >= NDADDR || (size) >= ((lbn) + 1) << (fs)->fs_bshift) \
+            ? (fs)->fs_bsize \
+            : (fragroundup(fs, blkoff(fs, (size)))))
+
 /*
  * Number of disk sectors per block/fragment; assumes DEV_BSIZE byte
  * sector size.
@@ -537,6 +567,14 @@ struct ocg {
  * Number of indirects in a file system block.
  */
 #define NINDIR(fs)  ((fs)->fs_nindir)
+
+/* Maximum file size the kernel allows.
+ * Even though ffs can handle files up to 16TB, we do limit the max file
+ * to 2^31 pages to prevent overflow of a 32-bit unsigned int.  The buffer
+ * cache has its own checks but a little added paranoia never hurts.
+ */
+#define FS_KERNMAXFILESIZE(pgsiz, fs) \
+    ((u_int64_t)0x80000000 * MIN((pgsiz), (fs)->fs_bsize) - 1)
 
 extern int inside[], around[];
 extern u_char *fragtbl[];
