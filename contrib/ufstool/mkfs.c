@@ -695,7 +695,7 @@ initcg(ufs_t *disk, int cylno, time_t utime)
     if (mkfs_Oflag == 2) {
         acg.cg_iusedoff = start;
     } else {
-        acg.cg_old_ncyl = sblock.fs_old_cpg;
+        acg.cg_old_ncyl = 0;
         acg.cg_old_time = acg.cg_time;
         acg.cg_time = 0;
         acg.cg_old_niblk = acg.cg_niblk;

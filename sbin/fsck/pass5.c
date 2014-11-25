@@ -55,6 +55,80 @@ pass5_info(char *buf, size_t buflen)
 	    info_cg, info_maxcg) > 0);
 }
 
+#if 0
+static void dumpcg(char *title, struct cg *cg)
+{
+        int j;
+
+        printf("--- %s ---\n", title);
+        printf("                      First field: %#x\n", cg->cg_firstfield);
+        printf("                     Magic number: %#x\n", cg->cg_magic);
+        printf("                Last time written: %u\n", cg->cg_time);
+        printf("             Cylinder group index: %d\n", cg->cg_cgx);
+        printf("              Number of cylinders: %d\n", cg->cg_ncyl);
+        printf("          Number of inode sectors: %d\n", cg->cg_niblk);
+        printf("           Number of data sectors: %d\n", cg->cg_ndblk);
+
+        /* Cylinder summary information */
+        printf("            Number of directories: %d\n", cg->cg_cs.cs_ndir);
+        printf("            Number of free blocks: %d\n", cg->cg_cs.cs_nbfree);
+        printf("            Number of free inodes: %d\n", cg->cg_cs.cs_nifree);
+        printf("             Number of free frags: %d\n", cg->cg_cs.cs_nffree);
+
+        printf("Rotational pos of last used block: %d\n", cg->cg_rotor);
+        printf(" Rotational pos of last used frag: %d\n", cg->cg_frotor);
+        printf("Rotational pos of last used inode: %d\n", cg->cg_irotor);
+
+        printf("        Counts of available frags:");
+        for (j = 0; j < MAXFRAG; j++) {
+                if (j)
+                        printf(",");
+                printf(" %d", cg->cg_frsum[j]);
+        }
+        printf("\n");
+
+        printf("   Offset of block totals per cyl: %d bytes\n", cg->cg_btotoff);
+        printf("   Offset of free block positions: %d bytes\n", cg->cg_boff);
+        printf("         Offset of used inode map: %d bytes\n", cg->cg_iusedoff);
+        printf("         Offset of free block map: %d bytes\n", cg->cg_freeoff);
+        printf("   Offset of next available space: %d bytes\n", cg->cg_nextfreeoff);
+        printf(" Offset of counts of avail blocks: %d bytes\n", cg->cg_clustersumoff);
+        printf("         Offset of free block map: %d bytes\n", cg->cg_clusteroff);
+        printf("                 Number of blocks: %d\n", cg->cg_nclusterblks);
+
+        printf("    (FFS2) Number of inode blocks: %d\n", cg->cg_ffs2_niblk);
+        printf("           Last initialized inode: %d\n", cg->cg_initediblk);
+        printf("          Reserved for future use: %d %d %d\n", cg->cg_sparecon32[0],
+                                        cg->cg_sparecon32[1], cg->cg_sparecon32[2]);
+        printf("    (FFS2)      Last time written: %u\n", cg->cg_ffs2_time);
+        printf("          Reserved for future use: %lld %lld %lld\n", cg->cg_sparecon64[0],
+                                        cg->cg_sparecon64[1], cg->cg_sparecon64[2]);
+}
+
+static void dumpcstotal(char *title, struct csum *cstotal)
+{
+        printf("--- %s ---\n", title);
+        printf("  Total # of directories: %lld\n", cstotal->cs_ndir);
+        printf("  Total # of free blocks: %lld\n", cstotal->cs_nbfree);
+        printf("  Total # of free inodes: %lld\n", cstotal->cs_nifree);
+        printf("   Total # of free frags: %lld\n", cstotal->cs_nffree);
+}
+
+static void dump(char *title, void *ptr, unsigned nbytes)
+{
+        unsigned char *data = ptr;
+        int j;
+
+        printf("--- %s: ", title);
+        for (j = 0; j < nbytes; j++) {
+                if (j)
+                        printf("-");
+                printf("%02x", *data++);
+        }
+        printf("\n");
+}
+#endif
+
 void
 pass5(void)
 {
@@ -66,11 +140,10 @@ pass5(void)
 	daddr_t d;
 	long i, j, k, rewritecg = 0;
 	struct csum *cs;
-	struct csum_total cstotal;
+	struct csum cstotal;
 	struct inodesc idesc[3];
 	char buf[MAXBSIZE];
 	struct cg *newcg = (struct cg *)buf;
-	struct ocg *ocg = (struct ocg *)buf;
 
 	memset(newcg, 0, (size_t)fs->fs_cgsize);
 	if (cvtlevel >= 3) {
@@ -115,16 +188,8 @@ pass5(void)
 	switch ((int)fs->fs_postblformat) {
 
 	case FS_42POSTBLFMT:
-		basesize = (char *)(&ocg->cg_btot[0]) -
-		    (char *)(&ocg->cg_firstfield);
-		sumsize = &ocg->cg_iused[0] - (u_int8_t *)(&ocg->cg_btot[0]);
-		mapsize = &ocg->cg_free[howmany(fs->fs_fpg, NBBY)] -
-			(u_char *)&ocg->cg_iused[0];
-		blkmapsize = howmany(fs->fs_fpg, NBBY);
-		inomapsize = sizeof(ocg->cg_iused);
-		ocg->cg_magic = CG_MAGIC;
-		savednrpos = fs->fs_nrpos;
-		fs->fs_nrpos = 8;
+		inomapsize = blkmapsize = sumsize = 0;
+		errexit("4.2BSD ROTATIONAL TABLE FORMAT NOT SUPPORTED\n");
 		break;
 
 	case FS_DYNAMICPOSTBLFMT:
@@ -161,7 +226,7 @@ pass5(void)
 	memset(&idesc[0], 0, sizeof idesc);
 	for (i = 0; i < 3; i++)
 		idesc[i].id_type = ADDR;
-	memset(&cstotal, 0, sizeof(struct csum_total));
+	memset(&cstotal, 0, sizeof(cstotal));
 	dmax = blknum(fs, fs->fs_size + fs->fs_frag - 1);
 	for (d = fs->fs_size; d < dmax; d++)
 		setbmap(d);
@@ -180,10 +245,6 @@ pass5(void)
 		newcg->cg_time = cg->cg_time;
 		newcg->cg_ffs2_time = cg->cg_ffs2_time;
 		newcg->cg_cgx = c;
-		if (c == fs->fs_ncg - 1)
-			newcg->cg_ncyl = fs->fs_ncyl % fs->fs_cpg;
-		else
-			newcg->cg_ncyl = fs->fs_cpg;
 		newcg->cg_ndblk = dmax - dbase;
 		if (fs->fs_contigsumsize > 0)
 			newcg->cg_nclusterblks = newcg->cg_ndblk / fs->fs_frag;
@@ -207,8 +268,6 @@ pass5(void)
 			newcg->cg_irotor = cg->cg_irotor;
 		memset(&newcg->cg_frsum[0], 0, sizeof newcg->cg_frsum);
 		memset(cg_inosused(newcg), 0, (size_t)(mapsize));
-		if (fs->fs_postblformat == FS_42POSTBLFMT)
-			ocg->cg_magic = CG_MAGIC;
 		j = fs->fs_ipg * c;
 		for (i = 0; i < inostathead[c].il_numalloced; j++, i++) {
 			switch (GET_ISTATE(j)) {
@@ -296,7 +355,7 @@ pass5(void)
 		cstotal.cs_ndir += newcg->cg_cs.cs_ndir;
 		cs = &fs->fs_cs(fs, c);
 		if (memcmp(&newcg->cg_cs, cs, sizeof *cs) != 0 &&
-		    dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN SUPERBLK")) {
+		    dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN CGROUP")) {
 			memcpy(cs, &newcg->cg_cs, sizeof *cs);
 			sbdirty();
 		}
@@ -350,8 +409,8 @@ pass5(void)
 	if (fs->fs_postblformat == FS_42POSTBLFMT)
 		fs->fs_nrpos = savednrpos;
 
-	sumsize = sizeof(cstotal) - sizeof(cstotal.cs_spare);
-	if (memcmp(&cstotal, &fs->fs_cstotal, sumsize) != 0
+	sumsize = sizeof(cstotal);
+	if (memcmp(&cstotal, &fs->fs_cstotal, sizeof(cstotal)) != 0
 	    && dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN SUPERBLK")) {
 		memcpy(&fs->fs_cstotal, &cstotal, sumsize);
 		fs->fs_ronly = 0;

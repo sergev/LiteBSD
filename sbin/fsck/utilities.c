@@ -272,20 +272,16 @@ ckfini(int markclean)
 		sigprocmask(SIG_SETMASK, &oset, NULL);
 		return;
 	}
-        sblock.fs_ffs1_time = sblock.fs_time;
-        sblock.fs_ffs1_size = sblock.fs_size;
-        sblock.fs_ffs1_dsize = sblock.fs_dsize;
-        sblock.fs_ffs1_csaddr = sblock.fs_csaddr;
-        sblock.fs_ffs1_cstotal.cs_ndir = sblock.fs_cstotal.cs_ndir;
-        sblock.fs_ffs1_cstotal.cs_nbfree = sblock.fs_cstotal.cs_nbfree;
-        sblock.fs_ffs1_cstotal.cs_nifree = sblock.fs_cstotal.cs_nifree;
-        sblock.fs_ffs1_cstotal.cs_nffree = sblock.fs_cstotal.cs_nffree;
-        /* Force update on next mount */
-        sblock.fs_ffs1_flags &= ~FS_FLAGS_UPDATED;
+        sblock.fs_ufs2_time = sblock.fs_time;
+        sblock.fs_ufs2_size = sblock.fs_size;
+        sblock.fs_ufs2_dsize = sblock.fs_dsize;
+        sblock.fs_ufs2_csaddr = sblock.fs_csaddr;
+        sblock.fs_ufs2_cstotal.cs_ndir = sblock.fs_cstotal.cs_ndir;
+        sblock.fs_ufs2_cstotal.cs_nbfree = sblock.fs_cstotal.cs_nbfree;
+        sblock.fs_ufs2_cstotal.cs_nifree = sblock.fs_cstotal.cs_nifree;
+        sblock.fs_ufs2_cstotal.cs_nffree = sblock.fs_cstotal.cs_nffree;
 
 	flush(fswritefd, &sblk);
-printf("sblk.b_bno = %u\n", sblk.b_bno);
-printf("SBLOCK = %u\n", SBLOCK);
 	if (havesb && sblk.b_bno != SBLOCK && !preen &&
 	    reply("UPDATE STANDARD SUPERBLOCK")) {
 		sblk.b_bno = SBLOCK;

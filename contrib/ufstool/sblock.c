@@ -120,13 +120,25 @@ ufs_superblock_write(ufs_t *disk, int all)
     unsigned i;
 
     if (!disk->d_sblock) {
-        disk->d_sblock = disk->d_fs.fs_sblockloc / disk->d_secsize;
+        disk->d_sblock = fs->fs_sblockloc / disk->d_secsize;
+    }
+
+    if (fs->fs_magic == FS_UFS1_MAGIC) {
+        fs->fs_old_time = fs->fs_time;
+        fs->fs_old_size = fs->fs_size;
+        fs->fs_old_dsize = fs->fs_dsize;
+        fs->fs_old_csaddr = fs->fs_csaddr;
+        fs->fs_old_cstotal.cs_ndir = fs->fs_cstotal.cs_ndir;
+        fs->fs_old_cstotal.cs_nbfree = fs->fs_cstotal.cs_nbfree;
+        fs->fs_old_cstotal.cs_nifree = fs->fs_cstotal.cs_nifree;
+        fs->fs_old_cstotal.cs_nffree = fs->fs_cstotal.cs_nffree;
     }
 
     if (ufs_sector_write(disk, disk->d_sblock, fs, SBLOCKSIZE) == -1) {
         fprintf (stderr, "%s: failed to write superblock\n", __func__);
         return (-1);
     }
+
     /*
      * Write superblock summary information.
      */
@@ -144,12 +156,13 @@ ufs_superblock_write(ufs_t *disk, int all)
         space += size;
     }
     if (all) {
-        for (i = 0; i < fs->fs_ncg; i++)
+        for (i = 0; i < fs->fs_ncg; i++) {
             if (ufs_sector_write(disk, fsbtodb(fs, cgsblock(fs, i)),
                 fs, SBLOCKSIZE) == -1) {
                 fprintf (stderr, "%s: failed to update a superblock\n", __func__);
                 return (-1);
             }
+        }
     }
     return (0);
 }

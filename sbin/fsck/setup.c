@@ -511,16 +511,6 @@ readsb(int listerr)
 		return (0);
 	}
 out:
-	if (sblock.fs_magic == FS_MAGIC) {
-		sblock.fs_time = sblock.fs_ffs1_time;
-		sblock.fs_size = sblock.fs_ffs1_size;
-		sblock.fs_dsize = sblock.fs_ffs1_dsize;
-		sblock.fs_csaddr = sblock.fs_ffs1_csaddr;
-		sblock.fs_cstotal.cs_ndir = sblock.fs_ffs1_cstotal.cs_ndir;
-		sblock.fs_cstotal.cs_nbfree = sblock.fs_ffs1_cstotal.cs_nbfree;
-		sblock.fs_cstotal.cs_nifree = sblock.fs_ffs1_cstotal.cs_nifree;
-		sblock.fs_cstotal.cs_nffree = sblock.fs_ffs1_cstotal.cs_nffree;
-	}
 	havesb = 1;
 	return (1);
 }

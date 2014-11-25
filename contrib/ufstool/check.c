@@ -1032,7 +1032,7 @@ check_cgmagic(int cg, struct bufarea *cgbp)
     if (check_sblk.b_un.b_fs->fs_magic == FS_UFS1_MAGIC) {
         cgp->cg_niblk = 0;
         cgp->cg_initediblk = 0;
-        cgp->cg_old_ncyl = check_sblk.b_un.b_fs->fs_old_cpg;
+        cgp->cg_old_ncyl = 0;
         cgp->cg_old_niblk = check_sblk.b_un.b_fs->fs_ipg;
         cgp->cg_old_btotoff = cgp->cg_iusedoff;
         cgp->cg_old_boff = cgp->cg_old_btotoff +
@@ -4033,11 +4033,7 @@ check_pass5(void)
             dmax = fs->fs_size;
         newcg->cg_ndblk = dmax - dbase;
         if (fs->fs_magic == FS_UFS1_MAGIC) {
-            if (c == fs->fs_ncg - 1)
-                newcg->cg_old_ncyl = howmany(newcg->cg_ndblk,
-                    fs->fs_fpg / fs->fs_old_cpg);
-            else
-                newcg->cg_old_ncyl = fs->fs_old_cpg;
+            newcg->cg_old_ncyl = 0;
             newcg->cg_old_niblk = fs->fs_ipg;
             newcg->cg_niblk = 0;
         }
