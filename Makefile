@@ -9,7 +9,7 @@ afterinstall:
 #
 # Build the whole DESTDIR tree.
 #
-build:
+build ${DESTDIR}:
 	${MAKE} -Cetc distribution
 	${MAKE} -Cinclude install
 	${MAKE} cleandir
@@ -28,11 +28,14 @@ UFSTOOL     = contrib/ufstool/ufstool
 fs:     sdcard.img
 
 .PHONY: sdcard.img
-sdcard.img: ${UFSTOOL} etc/rootfs.manifest
+sdcard.img: ${UFSTOOL} etc/rootfs.manifest ${DESTDIR}
 	rm -f $@
 	${UFSTOOL} --repartition=fs=${ROOT_MBYTES}M:swap=${SWAP_MBYTES}M:fs=${U_MBYTES}M $@
 	${UFSTOOL} --new --partition=1 --manifest=etc/rootfs.manifest $@ ${DESTDIR}
 	${UFSTOOL} --new --partition=3 $@
+
+${UFSTOOL}:
+	make -C`dirname ${UFSTOOL}`
 
 #
 # Write disk image to SD card.
