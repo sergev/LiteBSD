@@ -258,7 +258,7 @@ mkfs(char *fsys, int fi, int fo, mode_t mfsmode, uid_t mfsuid, gid_t mfsgid)
 	 * geometry fields are set to fake values.  This is for compatibility
 	 * with really ancient kernels that might still inspect these values.
 	 */
-        sblock.fs_sblockloc = SBLOCK;
+        sblock.fs_sblockloc = SBLOCK * DEV_BSIZE;
         sblock.fs_nindir = sblock.fs_bsize / sizeof(int32_t);
         sblock.fs_inopb = sblock.fs_bsize / sizeof(struct dinode);
         sblock.fs_maxsymlinklen = MAXSYMLINKLEN;
@@ -272,9 +272,10 @@ mkfs(char *fsys, int fi, int fo, mode_t mfsmode, uid_t mfsuid, gid_t mfsgid)
         sblock.fs_trackskew = 0;
         sblock.fs_cpc = 0;
 
-	sblock.fs_sblkno =
-	    roundup(howmany(sblock.fs_sblockloc + SBSIZE, sblock.fs_fsize),
-		sblock.fs_frag);
+	sblock.fs_sblkno = roundup(
+                howmany(sblock.fs_sblockloc + SBSIZE,
+                        sblock.fs_fsize),
+                sblock.fs_frag);
 	sblock.fs_cblkno = (int32_t)(sblock.fs_sblkno +
 	    roundup(howmany(SBSIZE, sblock.fs_fsize), sblock.fs_frag));
 	sblock.fs_iblkno = sblock.fs_cblkno + sblock.fs_frag;
@@ -534,7 +535,7 @@ mkfs(char *fsys, int fi, int fo, mode_t mfsmode, uid_t mfsuid, gid_t mfsgid)
 	 */
         if (fsinit1(utime, mfsmode, mfsuid, mfsgid))
                 errx(32, "fsinit1 failed");
-        sblock.fs_ufs2_cstotal.cs_ndir = sblock.fs_cstotal.cs_ndir;
+        sblock.fs_ufs2_cstotal.cs_ndir   = sblock.fs_cstotal.cs_ndir;
         sblock.fs_ufs2_cstotal.cs_nbfree = sblock.fs_cstotal.cs_nbfree;
         sblock.fs_ufs2_cstotal.cs_nifree = sblock.fs_cstotal.cs_nifree;
         sblock.fs_ufs2_cstotal.cs_nffree = sblock.fs_cstotal.cs_nffree;
@@ -586,11 +587,6 @@ initcg(int cylno, time_t utime)
 
 	start = sizeof(struct cg);
 
-        /* Hack to maintain compatibility with old fsck. */
-        if (cylno == sblock.fs_ncg - 1)
-                acg.cg_ncyl = 0;
-        else
-                acg.cg_ncyl = sblock.fs_cpg;
         acg.cg_time = acg.cg_ffs2_time;
         acg.cg_ffs2_time = 0;
         acg.cg_niblk = acg.cg_ffs2_niblk;

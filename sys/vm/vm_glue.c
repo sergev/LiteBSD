@@ -427,10 +427,12 @@ swapout_threads()
             continue;
         switch (p->p_stat) {
         case SRUN:
+#if 0 /* Don't swap out active processes. */
             if (p->p_swtime > outpri2) {
                 outp2 = p;
                 outpri2 = p->p_swtime;
             }
+#endif
             continue;
 
         case SSLEEP:
