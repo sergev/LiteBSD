@@ -534,8 +534,10 @@ again:
     rv = getheader(p, ndp, attr.va_size, &hdr);
     if (rv > 0)
         goto exec_fail;
-    if (rv < 0)
+    if (rv < 0) {
+        FREE(ndp->ni_cnd.cn_pnbuf, M_NAMEI);
         goto again;
+    }
 
     /*----------------------------------------------------------------
      * Step 3.  File and header are valid. Now, dig out the strings
