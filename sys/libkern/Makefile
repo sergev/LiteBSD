@@ -1,7 +1,7 @@
 #	@(#)Makefile	7.9 (Berkeley) 6/1/93
 
 LIB=	kern
-CFLAGS+= -I${.CURDIR} -I${.CURDIR}/..
+CFLAGS+= -I${.CURDIR} -I${.CURDIR}/.. -I${.CURDIR}/../../include
 SRCS=	adddi3.c anddi3.c ashldi3.c ashrdi3.c bcmp.c cmpdi2.c divdi3.c \
 	ffs.c iordi3.c locc.c lshldi3.c lshrdi3.c mcount.c moddi3.c \
 	muldi3.c negdi2.c notdi2.c qdivrem.c random.c rindex.c scanc.c \
@@ -12,6 +12,11 @@ SRCS=	adddi3.c anddi3.c ashldi3.c ashrdi3.c bcmp.c cmpdi2.c divdi3.c \
 .PATH: ${.CURDIR}/${MACHINE}
 .include "${.CURDIR}/${MACHINE}/Makefile.inc"
 .endif
+
+all:    machine
+
+machine:
+	ln -s ../${MACHINE}/include $@
 
 # mcount cannot be compiled with profiling
 mcount.po: mcount.o
