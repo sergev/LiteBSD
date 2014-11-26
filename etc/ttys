@@ -5,21 +5,16 @@
 #
 # If the console is marked insecure, single-user requires
 # the root password.
-console	"/usr/libexec/getty std.9600"	unknown	on secure
-
-#tahoe's only
-#remote	"/usr/libexec/getty std.1200"	pt	on		# diagnostics
+#console	"/usr/libexec/getty std.9600"	unknown	on secure
 
 # Hardwired lines are marked off, by default, so getty(8)
 # is quiet when they don't exist.
-tty00	"/usr/libexec/getty std.9600"	unknown	off secure
-tty01	"/usr/libexec/getty std.9600"	unknown	off secure
-tty02	"/usr/libexec/getty std.9600"	unknown	off secure
-tty03	"/usr/libexec/getty std.9600"	unknown	off secure
-tty04	"/usr/libexec/getty std.9600"	unknown	off secure
-tty05	"/usr/libexec/getty std.9600"	unknown	off secure
-tty06	"/usr/libexec/getty std.9600"	unknown	off secure
-tty07	"/usr/libexec/getty std.9600"	unknown	off secure
+tty1	"/usr/libexec/getty std.115200"	xterm	off secure
+tty2	"/usr/libexec/getty std.115200"	xterm	off secure
+tty3	"/usr/libexec/getty std.115200"	xterm	off secure
+tty4	"/usr/libexec/getty std.115200"	xterm	on  secure
+tty5	"/usr/libexec/getty std.115200"	xterm	off secure
+tty6	"/usr/libexec/getty std.115200"	xterm	off secure
 
 ttyp0	none			network
 ttyp1	none			network

@@ -67,7 +67,7 @@ distribution:
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/maillog
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/lpd-errs
 	install -c -m 664 /dev/null ${DESTDIR}/var/run/utmp
-	(cd etc.${MACHINE}; install -c -m 444 fstab.* ${DESTDIR}/etc)
+	(cd etc.${MACHINE}; install -c -m 444 fstab ${DESTDIR}/etc)
 .if ${MACHINE} == "hp300"
 	(cd etc.hp300; install -c -m 444 ${RBOOTD} ${DESTDIR}/etc)
 .endif

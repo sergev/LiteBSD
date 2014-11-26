@@ -195,6 +195,13 @@ pagemove(from, to, size)
     while (size > 0) {
         *tpte = *fpte;
         fpte->pt_entry &= PG_G;
+
+        /* Replicate G bit to paired even/odd entry. */
+        if ((unsigned) tpte & (1 << sizeof(*tpte)))
+            tpte[-1].pt_entry |= PG_G;
+        else
+            tpte[1].pt_entry |= PG_G;
+
         tlb_flush_addr((unsigned) from, fpte->pt_entry);
         tlb_update((unsigned) to, tpte);
         fpte++;

@@ -21,18 +21,6 @@ default:\
 #	autobaud code in getty, and likewise can
 #	be assigned to any table desired (hopefully the same speed).
 #
-a|std.110|110-baud:\
-	:nd#1:cd#1:uc:sp#110:
-b|std.134|134.5-baud:\
-	:ep:nd#1:cd#2:ff#1:td#1:sp#134:ht:nl:
-1|std.150|150-baud:\
-	:ep:nd#1:cd#2:td#1:fd#1:sp#150:ht:nl:lm=\E\72\6\6\17login\72 :
-c|std.300|300-baud:\
-	:nd#1:cd#1:sp#300:
-d|std.600|600-baud:\
-	:nd#1:cd#1:sp#600:
-f|std.1200|1200-baud:\
-	:fd#1:sp#1200:
 6|std.2400|2400-baud:\
 	:sp#2400:
 7|std.4800|4800-baud:\
@@ -41,6 +29,8 @@ f|std.1200|1200-baud:\
 	:sp#9600:
 g|std.19200|19200-baud:\
 	:sp#19200:
+k|std.115200|115200-baud:\
+	:sp#115200:
 
 #
 # Dial in rotary tables, speed selection via 'break'

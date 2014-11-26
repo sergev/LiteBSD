@@ -554,7 +554,7 @@ file /etc/daily
 file /etc/dm.conf
 file /etc/dumpdates
 file /etc/exports
-file /etc/fstab.sd
+file /etc/fstab
 file /etc/ftpusers
 file /etc/ftpwelcome
 file /etc/gettytab

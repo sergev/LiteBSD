@@ -108,6 +108,7 @@ dumpfs(name)
 	char *name;
 {
 	int fd, c, i, j, k, size;
+	time_t fs_time;
 
 	if ((fd = open(name, O_RDONLY, 0)) < 0)
 		goto err;
@@ -125,8 +126,9 @@ dumpfs(name)
 	if (afs.fs_postblformat == FS_42POSTBLFMT)
 		afs.fs_nrpos = 8;
 	dev_bsize = afs.fs_fsize / fsbtodb(&afs, 1);
+	fs_time = afs.fs_time;
 	printf("magic\t%x\ttime\t%s", afs.fs_magic,
-	    ctime(&afs.fs_time));
+	    ctime(&fs_time));
 	printf("cylgrp\t%s\tinodes\t%s\n",
 	    afs.fs_postblformat == FS_42POSTBLFMT ? "static" : "dynamic",
 	    afs.fs_inodefmt < FS_44INODEFMT ? "4.2/4.3BSD" : "4.4BSD");
@@ -146,8 +148,8 @@ dumpfs(name)
 	printf("minfree\t%d%%\toptim\t%s\tmaxcontig %d\tmaxbpg\t%d\n",
 	    afs.fs_minfree, afs.fs_optim == FS_OPTSPACE ? "space" : "time",
 	    afs.fs_maxcontig, afs.fs_maxbpg);
-	printf("rotdelay %dms\theadswitch %dus\ttrackseek %dus\trps\t%d\n",
-	    afs.fs_rotdelay, afs.fs_headswitch, afs.fs_trkseek, afs.fs_rps);
+	printf("rotdelay %dms\trps\t%d\n",
+	    afs.fs_rotdelay, afs.fs_rps);
 	printf("ntrak\t%d\tnsect\t%d\tnpsect\t%d\tspc\t%d\n",
 	    afs.fs_ntrak, afs.fs_nsect, afs.fs_npsect, afs.fs_spc);
 	printf("symlinklen %d\ttrackskew %d\tinterleave %d\tcontigsumsize %d\n",
@@ -185,15 +187,15 @@ dumpfs(name)
 		}
 	}
 	printf("\ncs[].cs_(nbfree,ndir,nifree,nffree):\n\t");
+	afs.fs_csp = calloc(1, afs.fs_cssize);
 	for (i = 0, j = 0; i < afs.fs_cssize; i += afs.fs_bsize, j++) {
 		size = afs.fs_cssize - i < afs.fs_bsize ?
 		    afs.fs_cssize - i : afs.fs_bsize;
-		afs.fs_csp[j] = calloc(1, size);
 		if (lseek(fd,
 		    (off_t)(fsbtodb(&afs, (afs.fs_csaddr + j * afs.fs_frag)) *
 		    dev_bsize), SEEK_SET) == (off_t)-1)
 			goto err;
-		if (read(fd, afs.fs_csp[j], size) != size)
+		if (read(fd, (char *)afs.fs_csp + i, size) != size)
 			goto err;
 	}
 	for (i = 0; i < afs.fs_ncg; i++) {
@@ -240,9 +242,7 @@ dumpcg(name, fd, c)
 		return (1);
 	}
 	printf("magic\t%x\ttell\t%qx\ttime\t%s",
-	    afs.fs_postblformat == FS_42POSTBLFMT ?
-	    ((struct ocg *)&acg)->cg_magic : acg.cg_magic,
-	    cur, ctime(&acg.cg_time));
+	    acg.cg_magic, cur, ctime(&acg.cg_time));
 	printf("cgx\t%d\tncyl\t%d\tniblk\t%d\tndblk\t%d\n",
 	    acg.cg_cgx, acg.cg_ncyl, acg.cg_niblk, acg.cg_ndblk);
 	printf("nbfree\t%d\tndir\t%d\tnifree\t%d\tnffree\t%d\n",

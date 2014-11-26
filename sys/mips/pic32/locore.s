@@ -1462,6 +1462,8 @@ _interrupt_vector:
 kern_exception:
         subu    sp, sp, KERN_EXC_FRAME_SIZE
         la      gp, _gp                         # switch to kernel GP
+
+        //TODO: in case of MCheck, set up SP to _eram-16.
 /*
  * Save the relevant kernel registers onto the stack.
  * We do not need to save s0 - s8, sp and gp because
