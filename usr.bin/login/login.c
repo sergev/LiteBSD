@@ -291,7 +291,9 @@ main(argc, argv)
 				badlogin(username);
 				sleepexit(1);
 			}
-			sleep((u_int)((cnt - 3) * 5));
+			/* One sec is enough for embedded OS. */
+			sleep(1);
+			//sleep((u_int)((cnt - 3) * 5));
 		}
 	}
 
@@ -588,7 +590,6 @@ void
 sleepexit(eval)
 	int eval;
 {
-
-	(void)sleep(5);
+	(void)sleep(1);
 	exit(eval);
 }

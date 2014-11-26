@@ -5,6 +5,7 @@
 # Output and error are redirected to console by init,
 # and the console is the controlling terminal.
 
+echo
 stty status '^T'
 
 # Set shell to ignore SIGINT (2), but not children;
@@ -97,12 +98,12 @@ fi
 #echo ' done.'
 #quotaon -a
 
-# build ps databases
-kvm_mkdb
+# build device database
 dev_mkdb
 
 # build password database
 if [ ! -f /etc/pwd.db ]; then
+    echo creating passwd database
     pwd_mkdb /etc/master.passwd
 fi
 

@@ -211,14 +211,14 @@ main(argc, argv)
 		/*
 		 * Delay the open so DTR stays down long enough to be detected.
 		 */
-		sleep(2);
+		usleep(300000);
 		while ((i = open(ttyn, O_RDWR)) == -1) {
 			if (repcnt % 10 == 0) {
 				syslog(LOG_ERR, "%s: %m", ttyn);
 				closelog();
 			}
 			repcnt++;
-			sleep(60);
+			sleep(10);
 		}
 		login_tty(i);
 	    }
@@ -473,11 +473,13 @@ putchr(cc)
 	char c;
 
 	c = cc;
+#if 0                                   // No parity these days
 	if (!NP) {
 		c |= partab[c&0177] & 0200;
 		if (OP)
 			c ^= 0200;
 	}
+#endif
 	if (!UB) {
 		outbuf[obufcnt++] = c;
 		if (obufcnt >= OBUFSIZ)

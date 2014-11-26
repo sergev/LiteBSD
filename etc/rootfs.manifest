@@ -610,6 +610,7 @@ file /bin/date
 file /bin/dd
 file /bin/df
 mode 02555
+group 5                 operator
 file /bin/echo
 file /bin/ed
 file /bin/expr
@@ -622,9 +623,11 @@ file /bin/mv
 file /bin/pax
 file /bin/ps
 mode 02555
+group 2                 kmem
 file /bin/pwd
 file /bin/rcp
 mode 04555
+owner 0                 root
 file /bin/rm
 file /bin/rmail
 file /bin/rmdir
@@ -641,8 +644,11 @@ file /sbin/badsect
 file /sbin/clri
 file /sbin/dmesg
 mode 02555
+group 2                 kmem
 file /sbin/dump
 mode 06555
+owner 0                 root
+group 4                 tty
 file /sbin/dumpfs
 file /sbin/dumplfs
 file /sbin/fastboot
@@ -673,21 +679,31 @@ file /sbin/nfsiod
 file /sbin/nologin
 file /sbin/ping
 mode 04555
+owner 0                 root
 file /sbin/quotacheck
 file /sbin/rdump
 mode 06555
+owner 0                 root
+group 4                 tty
 file /sbin/reboot
 file /sbin/restore
 mode 06555
+owner 0                 root
+group 4                 tty
 file /sbin/route
 mode 04555
+owner 0                 root
 file /sbin/routed
 file /sbin/rrestore
 mode 06555
+owner 0                 root
+group 4                 tty
 file /sbin/savecore
 file /sbin/scsiformat
 file /sbin/shutdown
 mode 04550
+owner 0                 root
+group 5                 operator
 file /sbin/slattach
 file /sbin/startslip
 file /sbin/swapon
@@ -711,11 +727,14 @@ file /usr/bin/checknr
 file /usr/bin/chflags
 file /usr/bin/chfn
 mode 04555
+owner 0                 root
 file /usr/bin/chgrp
 file /usr/bin/chpass
 mode 04555
+owner 0                 root
 file /usr/bin/chsh
 mode 04555
+owner 0                 root
 file /usr/bin/cksum
 file /usr/bin/clear
 file /usr/bin/cmp
@@ -728,6 +747,8 @@ file /usr/bin/cpp
 file /usr/bin/ctags
 file /usr/bin/cu
 mode 04510
+owner 66                uucp
+group 117               dialer
 file /usr/bin/cut
 file /usr/bin/diff
 file /usr/bin/diff3
@@ -748,6 +769,7 @@ file /usr/bin/from
 file /usr/bin/fsplit
 file /usr/bin/fstat
 mode 02555
+group 2                 kmem
 file /usr/bin/ftp
 file /usr/bin/gcore
 file /usr/bin/gprof
@@ -769,18 +791,26 @@ file /usr/bin/leave
 file /usr/bin/locate
 file /usr/bin/lock
 mode 04555
+owner 0                 root
 file /usr/bin/logger
 file /usr/bin/login
 mode 04555
+owner 0                 root
 file /usr/bin/logname
 file /usr/bin/look
 file /usr/bin/lorder
 file /usr/bin/lpq
 mode 06555
+owner 0                 root
+group 1                 daemon
 file /usr/bin/lpr
 mode 06555
+owner 0                 root
+group 1                 daemon
 file /usr/bin/lprm
 mode 06555
+owner 0                 root
+group 1                 daemon
 file /usr/bin/m4
 file /usr/bin/mail
 file /usr/bin/Mail
@@ -796,8 +826,10 @@ file /usr/bin/msgs
 file /usr/bin/mt
 file /usr/bin/netstat
 mode 02555
+group 2                 kmem
 file /usr/bin/nfsstat
 mode 02555
+group 2                 kmem
 file /usr/bin/nice
 file /usr/bin/nm
 file /usr/bin/nohup
@@ -805,6 +837,7 @@ file /usr/bin/od
 file /usr/bin/pagesize
 file /usr/bin/passwd
 mode 04555
+owner 0                 root
 file /usr/bin/paste
 file /usr/bin/patch
 file /usr/bin/pr
@@ -812,17 +845,21 @@ file /usr/bin/printenv
 file /usr/bin/printf
 file /usr/bin/quota
 mode 04555
+owner 0                 root
 file /usr/bin/ranlib
 file /usr/bin/rdist
 mode 04555
+owner 0                 root
 file /usr/bin/renice
 file /usr/bin/reset
 file /usr/bin/rev
 file /usr/bin/rlogin
 mode 04555
+owner 0                 root
 file /usr/bin/rs
 file /usr/bin/rsh
 mode 04555
+owner 0                 root
 file /usr/bin/ruptime
 file /usr/bin/rwho
 file /usr/bin/sccs
@@ -839,9 +876,11 @@ file /usr/bin/strings
 file /usr/bin/strip
 file /usr/bin/su
 mode 04555
+owner 0                 root
 file /usr/bin/sum
 file /usr/bin/systat
 mode 02555
+group 2                 kmem
 file /usr/bin/tail
 file /usr/bin/talk
 file /usr/bin/tcopy
@@ -851,6 +890,8 @@ file /usr/bin/tftp
 file /usr/bin/time
 file /usr/bin/tip
 mode 04510
+owner 66                uucp
+group 117               dialer
 file /usr/bin/touch
 file /usr/bin/tput
 file /usr/bin/tr
@@ -866,6 +907,7 @@ file /usr/bin/uniq
 file /usr/bin/unvis
 file /usr/bin/uptime
 mode 02555
+group 2                 kmem
 file /usr/bin/users
 file /usr/bin/uudecode
 file /usr/bin/uuencode
@@ -873,10 +915,13 @@ file /usr/bin/vacation
 file /usr/bin/vis
 file /usr/bin/vmstat
 mode 02555
+group 2                 kmem
 file /usr/bin/w
 mode 02555
+group 2                 kmem
 file /usr/bin/wall
 mode 02555
+group 4                 tty
 file /usr/bin/wc
 file /usr/bin/what
 file /usr/bin/whatis
@@ -887,6 +932,7 @@ file /usr/bin/whois
 file /usr/bin/window
 file /usr/bin/write
 mode 02555
+group 4                 tty
 file /usr/bin/xargs
 file /usr/bin/xstr
 file /usr/bin/yacc
@@ -908,10 +954,13 @@ file /usr/sbin/fsinfo
 file /usr/sbin/inetd
 file /usr/sbin/iostat
 mode 02555
+group 2                 kmem
 file /usr/sbin/kgmon
-file /usr/sbin/kvm_mkdb
+mode 04555
+owner 0                 root
 file /usr/sbin/lpc
 mode 02555
+group 1                 daemon
 file /usr/sbin/lpd
 file /usr/sbin/lptest
 file /usr/sbin/mk-amd-map
@@ -920,6 +969,7 @@ file /usr/sbin/pac
 file /usr/sbin/portmap
 file /usr/sbin/pstat
 mode 02555
+group 2                 kmem
 file /usr/sbin/pwd_mkdb
 file /usr/sbin/quotaoff
 file /usr/sbin/quotaon
@@ -928,15 +978,19 @@ file /usr/sbin/rmt
 file /usr/sbin/rwhod
 file /usr/sbin/sliplogin
 mode 04555
+owner 0                 root
 file /usr/sbin/sysctl
 file /usr/sbin/syslogd
 file /usr/sbin/timed
 file /usr/sbin/timedc
 mode 04555
+owner 0                 root
 file /usr/sbin/traceroute
 mode 04555
+owner 0                 root
 file /usr/sbin/trpt
 mode 02555
+group 2                 kmem
 file /usr/sbin/update
 file /usr/sbin/vipw
 
@@ -1287,6 +1341,7 @@ filemode 0775
 dir /usr/libexec/lpr
 file /usr/libexec/bugfiler
 mode 0x4555
+owner 0                 root
 file /usr/libexec/comsat
 file /usr/libexec/diffh
 file /usr/libexec/fingerd
@@ -1300,6 +1355,7 @@ file /usr/libexec/locate.updatedb
 file /usr/libexec/lpr/lpf
 file /usr/libexec/mail.local
 mode 0x4555
+owner 0                 root
 file /usr/libexec/makekey
 file /usr/libexec/ntalkd
 file /usr/libexec/rexecd
@@ -2515,7 +2571,6 @@ file /usr/share/man/cat8/init.0
 file /usr/share/man/cat8/intro.0
 file /usr/share/man/cat8/iostat.0
 file /usr/share/man/cat8/kgmon.0
-file /usr/share/man/cat8/kvm_mkdb.0
 file /usr/share/man/cat8/lfs_cleanerd.0
 file /usr/share/man/cat8/lpc.0
 file /usr/share/man/cat8/lpd.0
@@ -2759,6 +2814,12 @@ file /usr/share/zoneinfo/US/Samoa
 #
 # Files: /var
 #
+default
+owner 0             root
+group 0             wheel
+dirmode 0775
+filemode 0444
+
 dir /var/db
 file /var/db/libc.tags
 
@@ -2767,6 +2828,13 @@ file /var/log/lastlog
 file /var/log/lpd-errs
 file /var/log/maillog
 file /var/log/messages
+file /var/log/secure
+mode 0440
+file /var/log/ftp.log
+
+dir /var/spool
+dir /var/spool/uucp
+file /var/spool/uucp/ERRORS
 
 dir /var/run
 file /var/run/utmp

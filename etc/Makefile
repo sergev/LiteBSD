@@ -24,23 +24,15 @@ all clean cleandir depend etc install lint:
 distribution:
 	# Hand-craft the password file first.
 	-mkdir -p ${DESTDIR}/etc/namedb ${DESTDIR}/dev ${DESTDIR}/tmp
-	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys
-	-mkdir -p ${DESTDIR}/root ${DESTDIR}/var/log ${DESTDIR}/var/run
-# TODO: run pwd_mkdb from /etc/rc on first boot
-#	cp master.passwd ${DESTDIR}/tmp/p
-#	-pwd_mkdb -p ${DESTDIR}/tmp/p
-#	rm -f ${DESTDIR}/tmp/p
+	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys ${DESTDIR}/root
+	-mkdir -p ${DESTDIR}/var/log ${DESTDIR}/var/run ${DESTDIR}/var/spool/uucp
 	cp master.passwd ${DESTDIR}/etc/master.passwd
 	cp group ${DESTDIR}/etc/group
-	# Build the tree.
-#	-mtree -def mtree/4.4BSD.dist -p ${DESTDIR}/ -u
 	# install devices
 .if ${MACHINE} == "hp300"
 	(cd etc.hp300; install -c -m 444 MAKEDEV.hpux ${DESTDIR}/dev)
 .endif
 	install -c -m 555 MAKEDEV.local etc.${MACHINE}/MAKEDEV ${DESTDIR}/dev
-# TODO: use uftsool manifest file instead of MAKEDEV
-#	(cd ${DESTDIR}/dev && ./MAKEDEV std)
 	install -c -m 444 COPYRIGHT ${DESTDIR}/
 	install -c -m 600 master.passwd ${DESTDIR}/etc
 	install -c -m 600 hosts.equiv ${DESTDIR}/etc
@@ -67,6 +59,9 @@ distribution:
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/maillog
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/lpd-errs
 	install -c -m 664 /dev/null ${DESTDIR}/var/run/utmp
+	install -c -m 664 /dev/null ${DESTDIR}/var/log/secure
+	install -c -m 664 /dev/null ${DESTDIR}/var/log/ftp.log
+	install -c -m 664 /dev/null ${DESTDIR}/var/spool/uucp/ERRORS
 	(cd etc.${MACHINE}; install -c -m 444 fstab ${DESTDIR}/etc)
 .if ${MACHINE} == "hp300"
 	(cd etc.hp300; install -c -m 444 ${RBOOTD} ${DESTDIR}/etc)

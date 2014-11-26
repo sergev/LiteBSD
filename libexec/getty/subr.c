@@ -70,7 +70,7 @@ gettable(name, buf)
 	if (cgetent(&buf, dba, name) != 0)
 		return;
 
-	for (sp = gettystrs; sp->field; sp++) 
+	for (sp = gettystrs; sp->field; sp++)
 		cgetstr(buf, sp->field, &sp->value);
 	for (np = gettynums; np->field; np++) {
 		if (cgetnum(buf, np->field, &n) == -1)
@@ -95,7 +95,7 @@ gettable(name, buf)
 	for (np = gettynums; np->field; np++)
 		printf("cgetnum: %s=%d\n", np->field, np->value);
 	for (fp = gettyflags; fp->field; fp++)
-		printf("cgetflags: %s='%c' set='%c'\n", fp->field, 
+		printf("cgetflags: %s='%c' set='%c'\n", fp->field,
 		       fp->value + '0', fp->set + '0');
 	exit(1);
 #endif /* DEBUG */
@@ -394,7 +394,7 @@ speed(val)
 	for (sp = speedtab; sp->speed; sp++)
 		if (sp->speed == val)
 			return (sp->uxname);
-	
+
 	return (B300);		/* default in impossible cases */
 }
 
@@ -471,7 +471,7 @@ portselector()
 			type = ps->ps_type;
 			break;
 		}
-	sleep(2);	/* wait for connection to complete */
+	sleep(1);	/* wait for connection to complete */
 	return (type);
 }
 

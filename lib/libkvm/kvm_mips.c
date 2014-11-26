@@ -56,7 +56,6 @@ static char sccsid[] = "@(#)kvm_mips.c	8.1 (Berkeley) 6/4/93";
 #include <vm/vm_param.h>
 
 #include <limits.h>
-#include <db.h>
 
 #include "kvm_private.h"
 

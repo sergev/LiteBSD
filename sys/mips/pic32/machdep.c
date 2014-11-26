@@ -143,7 +143,7 @@ mach_init()
      * Autoboot by default.
      */
     boothowto = 0;
-    if (1) {                        // TODO
+    if (0) {                        // TODO: check whether button pressed
         /* Boot to single user mode. */
         boothowto |= RB_SINGLE;
     }

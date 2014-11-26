@@ -66,7 +66,6 @@ static char sccsid[] = "@(#)kvm_proc.c	8.4 (Berkeley) 8/20/94";
 #include <sys/sysctl.h>
 
 #include <limits.h>
-#include <db.h>
 #include <paths.h>
 
 #include "kvm_private.h"
