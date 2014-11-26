@@ -22,7 +22,7 @@ dir /etc
 dir /root
 dir /sbin
 dir /tmp
-dir /u
+dir /home
 dir /usr
 dir /usr/bin
 dir /usr/lib
