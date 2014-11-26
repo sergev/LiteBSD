@@ -654,6 +654,7 @@ file /sbin/dumplfs
 file /sbin/fastboot
 file /sbin/fasthalt
 file /sbin/fsck
+file /sbin/fsck_ffs
 file /sbin/halt
 file /sbin/ifconfig
 file /sbin/init
@@ -2561,6 +2562,7 @@ file /usr/share/man/cat8/fastboot.0
 file /usr/share/man/cat8/fasthalt.0
 file /usr/share/man/cat8/fingerd.0
 file /usr/share/man/cat8/fsck.0
+file /usr/share/man/cat8/fsck_ffs.0
 file /usr/share/man/cat8/fsinfo.0
 file /usr/share/man/cat8/ftpd.0
 file /usr/share/man/cat8/getty.0

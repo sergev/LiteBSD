@@ -20,8 +20,7 @@ export PATH
 if [ -r /fastboot ]
 then
     echo "Fast boot: skipping disk checks."
-elif [ $1x = autobootx ]
-then
+else
     echo "Automatic boot in progress: starting file system checks."
     fsck -p
     case $? in

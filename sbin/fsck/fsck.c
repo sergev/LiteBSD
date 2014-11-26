@@ -38,6 +38,7 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/queue.h>
+#include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 
@@ -49,7 +50,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <util.h>
+//#include <util.h>
 
 #include "pathnames.h"
 #include "fsutil.h"
@@ -90,7 +91,7 @@ main(int argc, char *argv[])
 	struct fstab *fs;
 	int i, rval = 0;
 	char *vfstype = NULL;
-	char *p, globopt[3];
+	char *p, globopt[3], buf[128];
 	struct rlimit rl;
 
 	/* Increase our data size to the max */
@@ -131,9 +132,8 @@ main(int argc, char *argv[])
 			break;
 
 		case 'b':
-			if (asprintf(&p, "-b %s", optarg) == -1)
-				err(1, "malloc failed");
-			options = catopt(options, p, 1);
+			sprintf(buf, "-b %s", optarg);
+			options = catopt(options, buf, 1);
 			free(p);
 			break;
 
@@ -174,15 +174,14 @@ main(int argc, char *argv[])
 	(strcmp(type, FSTAB_RO) &&					\
 	    strcmp(type, FSTAB_RW) && strcmp(type, FSTAB_RQ))
 
-
 	for (; argc--; argv++) {
 		char *spec, *type;
 
-		if ((strncmp(*argv, "/dev/", 5) == 0 || isduid(*argv, 0)) &&
-		    (type = readlabelfs(*argv, 0))) {
-			spec = *argv;
-		} else if ((fs = getfsfile(*argv)) == NULL &&
-		    (fs = getfsspec(*argv)) == NULL) {
+		fs = getfsfile(*argv);
+		if (fs == NULL)
+		    fs = getfsspec(*argv);
+
+		if (fs == NULL) {
 			if (vfstype == NULL)
 				errx(1,
 				    "%s: unknown special file or file system.",
@@ -246,8 +245,9 @@ checkfs(const char *vfstype, const char *spec, const char *mntpt, void *auxarg,
 	char *optbuf = NULL, fsname[MAXPATHLEN], execname[MAXPATHLEN];
 	const char *extra = getoptions(vfstype);
 
+	/* For compatibility. */
 	if (strcmp(vfstype, "ufs") == 0)
-		vfstype = MOUNT_UFS;
+		vfstype = "ffs";
 
 	maxargc = 100;
 	argv = emalloc(sizeof(char *) * maxargc);
@@ -334,7 +334,7 @@ checkfs(const char *vfstype, const char *spec, const char *mntpt, void *auxarg,
 				return (WEXITSTATUS(status));
 		}
 		else if (WIFSIGNALED(status)) {
-			warnx("%s: %s", spec, strsignal(WTERMSIG(status)));
+			warnx("%s: Killed by signal %d", spec, WTERMSIG(status));
 			return (1);
 		}
 		break;
@@ -429,8 +429,8 @@ catopt(char *s0, const char *s1, int fr)
 	char *cp;
 
 	if (s0 && *s0) {
-		if (asprintf(&cp, "%s,%s", s0, s1) == -1)
-			err(1, "malloc failed");
+	        cp = malloc(strlen(s0) + strlen(s1) + 2);
+		sprintf(cp, "%s,%s", s0, s1);
 	} else
 		cp = estrdup(s1);
 
