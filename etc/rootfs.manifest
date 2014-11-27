@@ -814,7 +814,6 @@ owner 0                 root
 group 1                 daemon
 file /usr/bin/m4
 file /usr/bin/mail
-file /usr/bin/Mail
 file /usr/bin/make
 file /usr/bin/man
 file /usr/bin/mesg
@@ -1577,7 +1576,6 @@ file /usr/share/man/cat1/lptest.0
 file /usr/share/man/cat1/ls.0
 file /usr/share/man/cat1/m4.0
 file /usr/share/man/cat1/mail.0
-file /usr/share/man/cat1/Mail.0
 file /usr/share/man/cat1/make.0
 file /usr/share/man/cat1/man.0
 file /usr/share/man/cat1/mesg.0
