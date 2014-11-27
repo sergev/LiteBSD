@@ -72,6 +72,12 @@ disk            sd0     at spi3 drive 0 flags 0x33      # select pin RC3
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 #device         mrf0    at spi4 flags 0x71641f49
 
+# Buttons
+options         "BUTTON1_PORT=PORTA"    # button 1 at pin RA5
+options         "BUTTON1_PIN=5"
+options         "BUTTON2_PORT=PORTA"    # button 2 at pin RA4
+options         "BUTTON2_PIN=4"
+
 pseudo-device   pty             4       # pseudo ptys
 pseudo-device   bpfilter        1       # packet filter ports
 pseudo-device   loop

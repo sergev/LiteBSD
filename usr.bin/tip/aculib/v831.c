@@ -205,7 +205,7 @@ dialit(phonenum, acu)
 		return ('K');
 	}
         ioctl(AC, TIOCGETP, &cntrl);
-        cntrl.sg_ispeed = cntrl.sg_ospeed = B2400;
+        cntrl.sg_ispeed = cntrl.sg_ospeed = 2400;
         cntrl.sg_flags = RAW | EVENP | ODDP;
         ioctl(AC, TIOCSETP, &cntrl);
 	ioctl(AC, TIOCFLUSH, &two);

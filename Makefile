@@ -54,15 +54,15 @@ installfs:
 ARCH    = mips
 BOARD   = WIFIRE.pic32
 
-kernel: usr.sbin/config/config sys/compile/${BOARD}/vnode_if.c
+kernel: usr.sbin/config/config sys/compile/${BOARD}/.depend
 	${MAKE} -Csys/compile/${BOARD}
 
 usr.sbin/config/config:
 	${MAKE} -Cusr.sbin/config
 
-sys/compile/${BOARD}/vnode_if.c: sys/${ARCH}/conf/${BOARD}
+sys/compile/${BOARD}/.depend: sys/${ARCH}/conf/${BOARD}
 	(cd sys/${ARCH}/conf; ../../../usr.sbin/config/config -g ${BOARD})
-	${MAKE} -Csys/compile/${BOARD} depend
+	${MAKE} -Csys/compile/${BOARD} depend clean
 
 #
 # Upload the kernel to chipKIT Wi-Fire board.

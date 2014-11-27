@@ -1237,7 +1237,6 @@ file /usr/include/sys/trace.h
 file /usr/include/sys/ttychars.h
 file /usr/include/sys/ttycom.h
 file /usr/include/sys/ttydefaults.h
-file /usr/include/sys/ttydev.h
 file /usr/include/sys/tty.h
 file /usr/include/sys/types.h
 file /usr/include/sys/ucred.h

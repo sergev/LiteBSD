@@ -81,9 +81,10 @@ df_dialer(num, acu, df03)
 		int st = TIOCM_ST;	/* secondary Transmit flag */
 
 		ioctl(f, TIOCGETP, &buf);
-		if (buf.sg_ospeed != B1200) {	/* must dial at 1200 baud */
+		if (buf.sg_ospeed != 1200) {	/* must dial at 1200 baud */
 			speed = buf.sg_ospeed;
-			buf.sg_ospeed = buf.sg_ispeed = B1200;
+			buf.sg_ospeed = 1200;
+			buf.sg_ispeed = 1200;
 			ioctl(f, TIOCSETP, &buf);
 			ioctl(f, TIOCMBIC, &st); /* clear ST for 300 baud */
 		} else

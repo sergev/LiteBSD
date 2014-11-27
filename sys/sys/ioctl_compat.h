@@ -42,7 +42,6 @@
 #define _SYS_IOCTL_COMPAT_H_
 
 #include <sys/ttychars.h>
-#include <sys/ttydev.h>
 
 struct tchars {
     char    t_intrc;    /* interrupt */
@@ -68,8 +67,8 @@ struct ltchars {
 #ifndef _SGTTYB_
 #define _SGTTYB_
 struct sgttyb {
-    char    sg_ispeed;      /* input speed */
-    char    sg_ospeed;      /* output speed */
+    int     sg_ispeed;      /* input speed */
+    int     sg_ospeed;      /* output speed */
     char    sg_erase;       /* erase character */
     char    sg_kill;        /* kill character */
     short   sg_flags;       /* mode flags */

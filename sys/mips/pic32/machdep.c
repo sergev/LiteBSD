@@ -107,6 +107,19 @@ int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
 /*
+ * Check whether button 1 is pressed.
+ */
+static inline int
+button1_pressed()
+{
+#ifdef BUTTON1_PORT
+    if ((BUTTON1_PORT >> BUTTON1_PIN) & 1)
+        return 1;
+#endif
+    return 0;
+}
+
+/*
  * Do all the stuff that locore normally does before calling main().
  * Return the first page address following the system.
  */
@@ -143,7 +156,7 @@ mach_init()
      * Autoboot by default.
      */
     boothowto = 0;
-    if (0) {                        // TODO: check whether button pressed
+    if (button1_pressed()) {
         /* Boot to single user mode. */
         boothowto |= RB_SINGLE;
     }

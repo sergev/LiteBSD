@@ -102,7 +102,7 @@ static int	 tof;		/* true if at top of form */
 static char	class[32];		/* classification field */
 static char	fromhost[32];		/* user's host machine */
 				/* indentation size in static characters */
-static char	indent[10] = "-i0"; 
+static char	indent[10] = "-i0";
 static char	jobname[100];		/* job or file name */
 static char	length[10] = "-l";	/* page length in lines */
 static char	logname[32];		/* user's login name */
@@ -991,7 +991,7 @@ scan_out(scfd, scsp, dlm)
 		while (*--strp == BACKGND && strp >= outbuf)
 			;
 		strp++;
-		*strp++ = '\n';	
+		*strp++ = '\n';
 		(void) write(scfd, outbuf, strp-outbuf);
 	}
 }
@@ -1385,28 +1385,6 @@ openrem()
 	pstatus("sending to %s", RM);
 }
 
-struct bauds {
-	int	baud;
-	int	speed;
-} bauds[] = {
-	50,	B50,
-	75,	B75,
-	110,	B110,
-	134,	B134,
-	150,	B150,
-	200,	B200,
-	300,	B300,
-	600,	B600,
-	1200,	B1200,
-	1800,	B1800,
-	2400,	B2400,
-	4800,	B4800,
-	9600,	B9600,
-	19200,	EXTA,
-	38400,	EXTB,
-	0,	0
-};
-
 /*
  * setup tty lines.
  */
@@ -1425,14 +1403,7 @@ setty()
 		exit(1);
 	}
 	if (BR > 0) {
-		for (bp = bauds; bp->baud; bp++)
-			if (BR == bp->baud)
-				break;
-		if (!bp->baud) {
-			syslog(LOG_ERR, "%s: illegal baud rate %d", printer, BR);
-			exit(1);
-		}
-		ttybuf.sg_ispeed = ttybuf.sg_ospeed = bp->speed;
+		ttybuf.sg_ispeed = ttybuf.sg_ospeed = BR;
 	}
 	ttybuf.sg_flags &= ~FC;
 	ttybuf.sg_flags |= FS;

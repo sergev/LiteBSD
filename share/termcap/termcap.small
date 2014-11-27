@@ -61,3 +61,7 @@ xterm|linux|modern xterm:\
 xterm-color|generic "ANSI" color xterm:\
 	:Co#8:NC@:pa#64:\
 	:AB=\E[4%dm:AF=\E[3%dm:ac=:op=\E[m:tc=xterm:
+
+#
+# To make libedit happy.
+dumb:tc=xterm:

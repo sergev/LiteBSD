@@ -241,13 +241,13 @@ main(argc, argv)
 		ioctl(0, FIONBIO, &off);	/* turn off non-blocking mode */
 		ioctl(0, FIOASYNC, &off);	/* ditto for async mode */
 		if (IS)
-			tmode.sg_ispeed = speed(IS);
+			tmode.sg_ispeed = IS;
 		else if (SP)
-			tmode.sg_ispeed = speed(SP);
+			tmode.sg_ispeed = SP;
 		if (OS)
-			tmode.sg_ospeed = speed(OS);
+			tmode.sg_ospeed = OS;
 		else if (SP)
-			tmode.sg_ospeed = speed(SP);
+			tmode.sg_ospeed = SP;
 		tmode.sg_flags = setflags(0);
 		ioctl(0, TIOCSETP, &tmode);
 		setchars();
@@ -373,19 +373,13 @@ getname()
 		else if (c == ERASE || c == '#' || c == '\b') {
 			if (np > name) {
 				np--;
-				if (tmode.sg_ospeed >= B1200)
-					putstr("\b \b");
-				else
-					putchr(cs);
+				putstr("\b \b");
 			}
 			continue;
 		} else if (c == KILL || c == '@') {
 			putchr(cs);
 			putchr('\r');
-			if (tmode.sg_ospeed < B1200)
-				putchr('\n');
-			/* this is the way they do it down under ... */
-			else if (np > name)
+			if (np > name)
 				putstr("                                     \r");
 			prompt();
 			np = name;
