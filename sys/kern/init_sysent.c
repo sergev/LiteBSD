@@ -176,72 +176,7 @@ int shmget();
 #else
 #endif
 
-#ifdef COMPAT_43
-#define compat_43(func) __CONCAT(compat_43_,func)
-
-int compat_43(creat)();
-int compat_43(lseek)();
-int compat_43(stat)();
-int compat_43(lstat)();
-#ifdef KTRACE
-#else
-#endif
-int compat_43(fstat)();
-int compat_43(getkerninfo)();
-int compat_43(getpagesize)();
-int compat_43(mmap)();
-int compat_43(wait)();
-int compat_43(gethostname)();
-int compat_43(sethostname)();
-int compat_43(accept)();
-int compat_43(send)();
-int compat_43(recv)();
-int compat_43(sigvec)();
-int compat_43(sigblock)();
-int compat_43(sigsetmask)();
-int compat_43(sigstack)();
-int compat_43(recvmsg)();
-int compat_43(sendmsg)();
-#ifdef TRACE
-#else
-#endif
-#ifdef vax
-#else
-#endif
-int compat_43(recvfrom)();
-int compat_43(setreuid)();
-int compat_43(setregid)();
-int compat_43(truncate)();
-int compat_43(ftruncate)();
-int compat_43(getpeername)();
-int compat_43(gethostid)();
-int compat_43(sethostid)();
-int compat_43(getrlimit)();
-int compat_43(setrlimit)();
-int compat_43(killpg)();
-int compat_43(quota)();
-int compat_43(getsockname)();
-#ifdef NFS
-#else
-#endif
-int compat_43(getdirentries)();
-#ifdef NFS
-#else
-#endif
-#if defined(SYSVSHM) && !defined(alpha)
-int compat_43(shmsys)();
-#else
-#endif
-#ifdef LFS
-#else
-#endif
-#if defined(SYSVSHM) && 0
-#else
-#endif
-
-#else /* COMPAT_43 */
 #define compat_43(func) nosys
-#endif /* COMPAT_43 */
 
 #define s(type) sizeof(type)
 

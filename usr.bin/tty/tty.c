@@ -43,13 +43,14 @@ static char sccsid[] = "@(#)tty.c	8.1 (Berkeley) 6/6/93";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 main(argc, argv)
 	int argc;
 	char **argv;
 {
 	int ch, sflag;
-	char *t, *ttyname();
+	char *t;
 
 	sflag = 0;
 	while ((ch = getopt(argc, argv, "s")) != EOF)

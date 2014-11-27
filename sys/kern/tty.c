@@ -641,7 +641,6 @@ ttioctl(tp, cmd, data, flag)
 #endif
     case  TIOCSTI:
     case  TIOCSWINSZ:
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
     case  TIOCLBIC:
     case  TIOCLBIS:
     case  TIOCLSET:
@@ -650,7 +649,6 @@ ttioctl(tp, cmd, data, flag)
     case  TIOCSETN:
     case  TIOCSETP:
     case  TIOCSLTC:
-#endif
         while (isbackground(curproc, tp) &&
             p->p_pgrp->pg_jobc && (p->p_flag & P_PPWAIT) == 0 &&
             (p->p_sigignore & sigmask(SIGTTOU)) == 0 &&
@@ -889,11 +887,7 @@ ttioctl(tp, cmd, data, flag)
         }
         break;
     default:
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
         return (ttcompat(tp, cmd, data, flag));
-#else
-        return (-1);
-#endif
     }
     return (0);
 }

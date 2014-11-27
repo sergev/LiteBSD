@@ -197,54 +197,6 @@ donice(curp, chgp, n)
     return (0);
 }
 
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-/* ARGSUSED */
-int
-compat_43_setrlimit(p, uap, retval)
-    struct proc *p;
-    struct compat_43_setrlimit_args /* {
-        syscallarg(u_int) which;
-        syscallarg(struct ogetrlimit *) rlp;
-    } */ *uap;
-    register_t *retval;
-{
-    struct orlimit olim;
-    struct rlimit lim;
-    int error;
-
-    if (error = copyin((caddr_t)SCARG(uap, rlp), (caddr_t)&olim,
-        sizeof (struct orlimit)))
-        return (error);
-    lim.rlim_cur = olim.rlim_cur;
-    lim.rlim_max = olim.rlim_max;
-    return (dosetrlimit(p, SCARG(uap, which), &lim));
-}
-
-/* ARGSUSED */
-int
-compat_43_getrlimit(p, uap, retval)
-    struct proc *p;
-    register struct compat_43_getrlimit_args /* {
-        syscallarg(u_int) which;
-        syscallarg(struct ogetrlimit *) rlp;
-    } */ *uap;
-    register_t *retval;
-{
-    struct orlimit olim;
-
-    if (SCARG(uap, which) >= RLIM_NLIMITS)
-        return (EINVAL);
-    olim.rlim_cur = p->p_rlimit[SCARG(uap, which)].rlim_cur;
-    if (olim.rlim_cur == -1)
-        olim.rlim_cur = 0x7fffffff;
-    olim.rlim_max = p->p_rlimit[SCARG(uap, which)].rlim_max;
-    if (olim.rlim_max == -1)
-        olim.rlim_max = 0x7fffffff;
-    return (copyout((caddr_t)&olim, (caddr_t)SCARG(uap, rlp),
-        sizeof(olim)));
-}
-#endif /* COMPAT_43 || COMPAT_SUNOS */
-
 /* ARGSUSED */
 int
 setrlimit(p, uap, retval)

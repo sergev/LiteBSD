@@ -226,4 +226,5 @@ int      ttysleep __P((struct tty *tp,
                     void *chan, int pri, char *wmesg, int timeout));
 int      ttywait __P((struct tty *tp));
 int      ttywflush __P((struct tty *tp));
+int      ttcompat __P((struct tty *tp, u_long com, caddr_t data, int flag));
 #endif

@@ -36,8 +36,6 @@
 /*
  * mapping routines for old line discipline (yuck)
  */
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/ioctl.h>
@@ -75,19 +73,209 @@ static int compatspcodes[16] = {
     1800, 2400, 4800, 9600, 19200, 38400,
 };
 
+static int
+ttcompatgetflags(tp)
+    register struct tty *tp;
+{
+    register long iflag = tp->t_iflag;
+    register long lflag = tp->t_lflag;
+    register long oflag = tp->t_oflag;
+    register long cflag = tp->t_cflag;
+    register int flags = 0;
+
+    if (iflag&IXOFF)
+        flags |= TANDEM;
+    if (iflag&ICRNL || oflag&ONLCR)
+        flags |= CRMOD;
+    if (cflag&PARENB) {
+        if (iflag&INPCK) {
+            if (cflag&PARODD)
+                flags |= ODDP;
+            else
+                flags |= EVENP;
+        } else
+            flags |= EVENP | ODDP;
+    } else {
+        if ((tp->t_flags&LITOUT) && !(oflag&OPOST))
+            flags |= LITOUT;
+        if (tp->t_flags&PASS8)
+            flags |= PASS8;
+    }
+
+    if ((lflag&ICANON) == 0) {
+        /* fudge */
+        if (iflag&IXON || lflag&ISIG || lflag&IEXTEN || cflag&PARENB)
+            flags |= CBREAK;
+        else
+            flags |= RAW;
+    }
+    if (cflag&MDMBUF)
+        flags |= MDMBUF;
+    if ((cflag&HUPCL) == 0)
+        flags |= NOHANG;
+    if (oflag&OXTABS)
+        flags |= XTABS;
+    if (lflag&ECHOE)
+        flags |= CRTERA|CRTBS;
+    if (lflag&ECHOKE)
+        flags |= CRTKIL|CRTBS;
+    if (lflag&ECHOPRT)
+        flags |= PRTERA;
+    if (lflag&ECHOCTL)
+        flags |= CTLECH;
+    if ((iflag&IXANY) == 0)
+        flags |= DECCTQ;
+    flags |= lflag&(ECHO|TOSTOP|FLUSHO|PENDIN|NOFLSH);
+    if (ttydebug)
+        printf("getflags: %x\n", flags);
+    return (flags);
+}
+
+static void
+ttcompatsetflags(tp, t)
+    register struct tty *tp;
+    register struct termios *t;
+{
+    register int flags = tp->t_flags;
+    register long iflag = t->c_iflag;
+    register long oflag = t->c_oflag;
+    register long lflag = t->c_lflag;
+    register long cflag = t->c_cflag;
+
+    if (flags & RAW) {
+        iflag &= IXOFF;
+        oflag &= ~OPOST;
+        lflag &= ~(ECHOCTL|ISIG|ICANON|IEXTEN);
+    } else {
+        iflag |= BRKINT|IXON|IMAXBEL;
+        oflag |= OPOST;
+        lflag |= ISIG|IEXTEN|ECHOCTL;   /* XXX was echoctl on ? */
+        if (flags & XTABS)
+            oflag |= OXTABS;
+        else
+            oflag &= ~OXTABS;
+        if (flags & CBREAK)
+            lflag &= ~ICANON;
+        else
+            lflag |= ICANON;
+        if (flags&CRMOD) {
+            iflag |= ICRNL;
+            oflag |= ONLCR;
+        } else {
+            iflag &= ~ICRNL;
+            oflag &= ~ONLCR;
+        }
+    }
+    if (flags&ECHO)
+        lflag |= ECHO;
+    else
+        lflag &= ~ECHO;
+
+    if (flags&(RAW|LITOUT|PASS8)) {
+        cflag &= ~(CSIZE|PARENB);
+        cflag |= CS8;
+        if ((flags&(RAW|PASS8)) == 0)
+            iflag |= ISTRIP;
+        else
+            iflag &= ~ISTRIP;
+    } else {
+        cflag &= ~CSIZE;
+        cflag |= CS7|PARENB;
+        iflag |= ISTRIP;
+    }
+    if ((flags&(EVENP|ODDP)) == EVENP) {
+        iflag |= INPCK;
+        cflag &= ~PARODD;
+    } else if ((flags&(EVENP|ODDP)) == ODDP) {
+        iflag |= INPCK;
+        cflag |= PARODD;
+    } else
+        iflag &= ~INPCK;
+    if (flags&LITOUT)
+        oflag &= ~OPOST;    /* move earlier ? */
+    if (flags&TANDEM)
+        iflag |= IXOFF;
+    else
+        iflag &= ~IXOFF;
+    t->c_iflag = iflag;
+    t->c_oflag = oflag;
+    t->c_lflag = lflag;
+    t->c_cflag = cflag;
+}
+
+static void
+ttcompatsetlflags(tp, t)
+    register struct tty *tp;
+    register struct termios *t;
+{
+    register int flags = tp->t_flags;
+    register long iflag = t->c_iflag;
+    register long oflag = t->c_oflag;
+    register long lflag = t->c_lflag;
+    register long cflag = t->c_cflag;
+
+    if (flags&CRTERA)
+        lflag |= ECHOE;
+    else
+        lflag &= ~ECHOE;
+    if (flags&CRTKIL)
+        lflag |= ECHOKE;
+    else
+        lflag &= ~ECHOKE;
+    if (flags&PRTERA)
+        lflag |= ECHOPRT;
+    else
+        lflag &= ~ECHOPRT;
+    if (flags&CTLECH)
+        lflag |= ECHOCTL;
+    else
+        lflag &= ~ECHOCTL;
+    if ((flags&DECCTQ) == 0)
+        iflag |= IXANY;
+    else
+        iflag &= ~IXANY;
+    if (flags & MDMBUF)
+        cflag |= MDMBUF;
+    else
+        cflag &= ~MDMBUF;
+    if (flags&NOHANG)
+        cflag &= ~HUPCL;
+    else
+        cflag |= HUPCL;
+    lflag &= ~(TOSTOP|FLUSHO|PENDIN|NOFLSH);
+    lflag |= flags&(TOSTOP|FLUSHO|PENDIN|NOFLSH);
+    if (flags&(LITOUT|PASS8)) {
+        iflag &= ~ISTRIP;
+        cflag &= ~(CSIZE|PARENB);
+        cflag |= CS8;
+        if (flags&LITOUT)
+            oflag &= ~OPOST;
+        if ((flags&(PASS8|RAW)) == 0)
+            iflag |= ISTRIP;
+    } else if ((flags&RAW) == 0) {
+        cflag &= ~CSIZE;
+        cflag |= CS7|PARENB;
+        oflag |= OPOST;
+    }
+    t->c_iflag = iflag;
+    t->c_oflag = oflag;
+    t->c_lflag = lflag;
+    t->c_cflag = cflag;
+}
+
 /*ARGSUSED*/
+int
 ttcompat(tp, com, data, flag)
     register struct tty *tp;
     u_long com;
     caddr_t data;
     int flag;
 {
-
     switch (com) {
     case TIOCGETP: {
         register struct sgttyb *sg = (struct sgttyb *)data;
         register u_char *cc = tp->t_cc;
-        register speed;
+        register int speed;
 
         speed = ttspeedtab(tp->t_ospeed, compatspeeds);
         sg->sg_ospeed = (speed == -1) ? 15 : speed;
@@ -120,7 +308,7 @@ ttcompat(tp, com, data, flag)
             term.c_ospeed = compatspcodes[speed];
         term.c_cc[VERASE] = sg->sg_erase;
         term.c_cc[VKILL] = sg->sg_kill;
-        tp->t_flags = tp->t_flags&0xffff0000 | sg->sg_flags&0xffff;
+        tp->t_flags = (tp->t_flags & 0xffff0000) | (sg->sg_flags & 0xffff);
         ttcompatsetflags(tp, &term);
         return (ttioctl(tp, com == TIOCSETP ? TIOCSETAF : TIOCSETA,
             &term, flag));
@@ -221,191 +409,3 @@ ttcompat(tp, com, data, flag)
     }
     return (0);
 }
-
-ttcompatgetflags(tp)
-    register struct tty *tp;
-{
-    register long iflag = tp->t_iflag;
-    register long lflag = tp->t_lflag;
-    register long oflag = tp->t_oflag;
-    register long cflag = tp->t_cflag;
-    register flags = 0;
-
-    if (iflag&IXOFF)
-        flags |= TANDEM;
-    if (iflag&ICRNL || oflag&ONLCR)
-        flags |= CRMOD;
-    if (cflag&PARENB) {
-        if (iflag&INPCK) {
-            if (cflag&PARODD)
-                flags |= ODDP;
-            else
-                flags |= EVENP;
-        } else
-            flags |= EVENP | ODDP;
-    } else {
-        if ((tp->t_flags&LITOUT) && !(oflag&OPOST))
-            flags |= LITOUT;
-        if (tp->t_flags&PASS8)
-            flags |= PASS8;
-    }
-
-    if ((lflag&ICANON) == 0) {
-        /* fudge */
-        if (iflag&IXON || lflag&ISIG || lflag&IEXTEN || cflag&PARENB)
-            flags |= CBREAK;
-        else
-            flags |= RAW;
-    }
-    if (cflag&MDMBUF)
-        flags |= MDMBUF;
-    if ((cflag&HUPCL) == 0)
-        flags |= NOHANG;
-    if (oflag&OXTABS)
-        flags |= XTABS;
-    if (lflag&ECHOE)
-        flags |= CRTERA|CRTBS;
-    if (lflag&ECHOKE)
-        flags |= CRTKIL|CRTBS;
-    if (lflag&ECHOPRT)
-        flags |= PRTERA;
-    if (lflag&ECHOCTL)
-        flags |= CTLECH;
-    if ((iflag&IXANY) == 0)
-        flags |= DECCTQ;
-    flags |= lflag&(ECHO|TOSTOP|FLUSHO|PENDIN|NOFLSH);
-if (ttydebug)
-    printf("getflags: %x\n", flags);
-    return (flags);
-}
-
-ttcompatsetflags(tp, t)
-    register struct tty *tp;
-    register struct termios *t;
-{
-    register flags = tp->t_flags;
-    register long iflag = t->c_iflag;
-    register long oflag = t->c_oflag;
-    register long lflag = t->c_lflag;
-    register long cflag = t->c_cflag;
-
-    if (flags & RAW) {
-        iflag &= IXOFF;
-        oflag &= ~OPOST;
-        lflag &= ~(ECHOCTL|ISIG|ICANON|IEXTEN);
-    } else {
-        iflag |= BRKINT|IXON|IMAXBEL;
-        oflag |= OPOST;
-        lflag |= ISIG|IEXTEN|ECHOCTL;   /* XXX was echoctl on ? */
-        if (flags & XTABS)
-            oflag |= OXTABS;
-        else
-            oflag &= ~OXTABS;
-        if (flags & CBREAK)
-            lflag &= ~ICANON;
-        else
-            lflag |= ICANON;
-        if (flags&CRMOD) {
-            iflag |= ICRNL;
-            oflag |= ONLCR;
-        } else {
-            iflag &= ~ICRNL;
-            oflag &= ~ONLCR;
-        }
-    }
-    if (flags&ECHO)
-        lflag |= ECHO;
-    else
-        lflag &= ~ECHO;
-
-    if (flags&(RAW|LITOUT|PASS8)) {
-        cflag &= ~(CSIZE|PARENB);
-        cflag |= CS8;
-        if ((flags&(RAW|PASS8)) == 0)
-            iflag |= ISTRIP;
-        else
-            iflag &= ~ISTRIP;
-    } else {
-        cflag &= ~CSIZE;
-        cflag |= CS7|PARENB;
-        iflag |= ISTRIP;
-    }
-    if ((flags&(EVENP|ODDP)) == EVENP) {
-        iflag |= INPCK;
-        cflag &= ~PARODD;
-    } else if ((flags&(EVENP|ODDP)) == ODDP) {
-        iflag |= INPCK;
-        cflag |= PARODD;
-    } else
-        iflag &= ~INPCK;
-    if (flags&LITOUT)
-        oflag &= ~OPOST;    /* move earlier ? */
-    if (flags&TANDEM)
-        iflag |= IXOFF;
-    else
-        iflag &= ~IXOFF;
-    t->c_iflag = iflag;
-    t->c_oflag = oflag;
-    t->c_lflag = lflag;
-    t->c_cflag = cflag;
-}
-
-ttcompatsetlflags(tp, t)
-    register struct tty *tp;
-    register struct termios *t;
-{
-    register flags = tp->t_flags;
-    register long iflag = t->c_iflag;
-    register long oflag = t->c_oflag;
-    register long lflag = t->c_lflag;
-    register long cflag = t->c_cflag;
-
-    if (flags&CRTERA)
-        lflag |= ECHOE;
-    else
-        lflag &= ~ECHOE;
-    if (flags&CRTKIL)
-        lflag |= ECHOKE;
-    else
-        lflag &= ~ECHOKE;
-    if (flags&PRTERA)
-        lflag |= ECHOPRT;
-    else
-        lflag &= ~ECHOPRT;
-    if (flags&CTLECH)
-        lflag |= ECHOCTL;
-    else
-        lflag &= ~ECHOCTL;
-    if ((flags&DECCTQ) == 0)
-        iflag |= IXANY;
-    else
-        iflag &= ~IXANY;
-    if (flags & MDMBUF)
-        cflag |= MDMBUF;
-    else
-        cflag &= ~MDMBUF;
-    if (flags&NOHANG)
-        cflag &= ~HUPCL;
-    else
-        cflag |= HUPCL;
-    lflag &= ~(TOSTOP|FLUSHO|PENDIN|NOFLSH);
-    lflag |= flags&(TOSTOP|FLUSHO|PENDIN|NOFLSH);
-    if (flags&(LITOUT|PASS8)) {
-        iflag &= ~ISTRIP;
-        cflag &= ~(CSIZE|PARENB);
-        cflag |= CS8;
-        if (flags&LITOUT)
-            oflag &= ~OPOST;
-        if ((flags&(PASS8|RAW)) == 0)
-            iflag |= ISTRIP;
-    } else if ((flags&RAW) == 0) {
-        cflag &= ~CSIZE;
-        cflag |= CS7|PARENB;
-        oflag |= OPOST;
-    }
-    t->c_iflag = iflag;
-    t->c_oflag = oflag;
-    t->c_lflag = lflag;
-    t->c_cflag = cflag;
-}
-#endif  /* COMPAT_43 || COMPAT_SUNOS */

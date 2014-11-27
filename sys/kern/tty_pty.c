@@ -622,10 +622,8 @@ ptyioctl(dev, cmd, data, flag, p)
             ttyflush(tp, FREAD|FWRITE);
             return (0);
 
-#ifdef COMPAT_43
         case TIOCSETP:
         case TIOCSETN:
-#endif
         case TIOCSETD:
         case TIOCSETA:
         case TIOCSETAW:
@@ -666,17 +664,13 @@ ptyioctl(dev, cmd, data, flag, p)
         case TIOCSETA:
         case TIOCSETAW:
         case TIOCSETAF:
-#ifdef COMPAT_43
         case TIOCSETP:
         case TIOCSETN:
-#endif
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
         case TIOCSETC:
         case TIOCSLTC:
         case TIOCLBIS:
         case TIOCLBIC:
         case TIOCLSET:
-#endif
             pti->pt_send |= TIOCPKT_IOCTL;
             ptcwakeup(tp, FREAD);
         default:

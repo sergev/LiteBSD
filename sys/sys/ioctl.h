@@ -75,10 +75,5 @@ __END_DECLS
 /*
  * Keep outside _SYS_IOCTL_H_
  * Compatability with old terminal driver
- *
- * Source level -> #define USE_OLD_TTY
- * Kernel level -> options COMPAT_43 or COMPAT_SUNOS
  */
-#if defined(USE_OLD_TTY) || defined(COMPAT_43) || defined(COMPAT_SUNOS)
 #include <sys/ioctl_compat.h>
-#endif

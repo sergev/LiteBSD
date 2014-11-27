@@ -63,9 +63,6 @@ getpid(p, uap, retval)
 {
 
     *retval = p->p_pid;
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-    retval[1] = p->p_pptr->p_pid;
-#endif
     return (0);
 }
 
@@ -102,9 +99,6 @@ getuid(p, uap, retval)
 {
 
     *retval = p->p_cred->p_ruid;
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-    retval[1] = p->p_ucred->cr_uid;
-#endif
     return (0);
 }
 
@@ -129,9 +123,6 @@ getgid(p, uap, retval)
 {
 
     *retval = p->p_cred->p_rgid;
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-    retval[1] = p->p_ucred->cr_groups[0];
-#endif
     return (0);
 }
 
@@ -378,86 +369,6 @@ setgroups(p, uap, retval)
     p->p_flag |= P_SUGID;
     return (0);
 }
-
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-/* ARGSUSED */
-int
-compat_43_setreuid(p, uap, retval)
-    register struct proc *p;
-    struct compat_43_setreuid_args /* {
-        syscallarg(int) ruid;
-        syscallarg(int) euid;
-    } */ *uap;
-    register_t *retval;
-{
-    register struct pcred *pc = p->p_cred;
-    union {
-        struct setuid_args sa;
-        struct seteuid_args ea;
-    } args;
-
-    /*
-     * If ruid == euid then setreuid is being used to emulate setuid,
-     * just do it.
-     */
-    if (SCARG(uap, ruid) != -1 && SCARG(uap, ruid) == SCARG(uap, euid)) {
-        SCARG(&args.sa, uid) = SCARG(uap, ruid);
-        return (setuid(p, &args.sa, retval));
-    }
-    /*
-     * Otherwise we assume that the intent of setting ruid is to be
-     * able to get back ruid priviledge (i.e. swapping ruid and euid).
-     * So we make sure that we will be able to do so, but do not
-     * actually set the ruid.
-     */
-    if (SCARG(uap, ruid) != (uid_t)-1 && SCARG(uap, ruid) != pc->p_ruid &&
-        SCARG(uap, ruid) != pc->p_svuid)
-        return (EPERM);
-    if (SCARG(uap, euid) == (uid_t)-1)
-        return (0);
-    SCARG(&args.ea, euid) = SCARG(uap, euid);
-    return (seteuid(p, &args.ea, retval));
-}
-
-/* ARGSUSED */
-int
-compat_43_setregid(p, uap, retval)
-    register struct proc *p;
-    struct compat_43_setregid_args /* {
-        syscallarg(int) rgid;
-        syscallarg(int) egid;
-    } */ *uap;
-    register_t *retval;
-{
-    register struct pcred *pc = p->p_cred;
-    union {
-        struct setgid_args sa;
-        struct setegid_args ea;
-    } args;
-
-    /*
-     * If rgid == egid then setreuid is being used to emulate setgid,
-     * just do it.
-     */
-    if (SCARG(uap, rgid) != -1 && SCARG(uap, rgid) == SCARG(uap, egid)) {
-        SCARG(&args.sa, gid) = SCARG(uap, rgid);
-        return (setgid(p, &args.sa, retval));
-    }
-    /*
-     * Otherwise we assume that the intent of setting rgid is to be
-     * able to get back rgid priviledge (i.e. swapping rgid and egid).
-     * So we make sure that we will be able to do so, but do not
-     * actually set the rgid.
-     */
-    if (SCARG(uap, rgid) != (gid_t)-1 && SCARG(uap, rgid) != pc->p_rgid &&
-        SCARG(uap, rgid) != pc->p_svgid)
-        return (EPERM);
-    if (SCARG(uap, egid) == (gid_t)-1)
-        return (0);
-    SCARG(&args.ea, egid) = SCARG(uap, egid);
-    return (setegid(p, &args.ea, retval));
-}
-#endif /* defined(COMPAT_43) || defined(COMPAT_SUNOS) */
 
 /*
  * Check if gid is a member of the group set.

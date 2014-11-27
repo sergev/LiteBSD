@@ -60,10 +60,6 @@
 #include <sys/acct.h>
 
 #include <machine/cpu.h>
-#ifdef COMPAT_43
-#include <machine/reg.h>
-#include <machine/psl.h>
-#endif
 
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
@@ -265,55 +261,9 @@ struct wait_args {
     int *status;
     int options;
     struct  rusage *rusage;
-#ifdef COMPAT_43
-    int compat;     /* pseudo */
-#endif
 };
 
-#ifdef COMPAT_43
-#if defined(hp300) || defined(luna68k)
-#include <machine/frame.h>
-#define GETPS(rp)   ((struct frame *)(rp))->f_sr
-#else
-#define GETPS(rp)   (rp)[PS]
-#endif
-
-compat_43_wait(p, uap, retval)
-    struct proc *p;
-    register struct wait_args *uap;
-    int *retval;
-{
-
-#ifdef PSL_ALLCC
-    if ((GETPS(p->p_md.md_regs) & PSL_ALLCC) != PSL_ALLCC) {
-        uap->options = 0;
-        uap->rusage = NULL;
-    } else {
-        uap->options = p->p_md.md_regs[R0];
-        uap->rusage = (struct rusage *)p->p_md.md_regs[R1];
-    }
-#else
-    uap->options = 0;
-    uap->rusage = NULL;
-#endif
-    uap->pid = WAIT_ANY;
-    uap->status = NULL;
-    uap->compat = 1;
-    return (wait1(p, uap, retval));
-}
-
-wait4(p, uap, retval)
-    struct proc *p;
-    struct wait_args *uap;
-    int *retval;
-{
-
-    uap->compat = 0;
-    return (wait1(p, uap, retval));
-}
-#else
 #define wait1   wait4
-#endif
 
 int
 wait1(q, uap, retval)
@@ -340,11 +290,6 @@ loop:
         nfound++;
         if (p->p_stat == SZOMB) {
             retval[0] = p->p_pid;
-#ifdef COMPAT_43
-            if (uap->compat)
-                retval[1] = p->p_xstat;
-            else
-#endif
             if (uap->status) {
                 status = p->p_xstat;    /* convert to int */
                 error = copyout((caddr_t)&status,
@@ -411,12 +356,6 @@ loop:
             (p->p_flag & P_TRACED || uap->options & WUNTRACED)) {
             p->p_flag |= P_WAITED;
             retval[0] = p->p_pid;
-#ifdef COMPAT_43
-            if (uap->compat) {
-                retval[1] = W_STOPCODE(p->p_xstat);
-                error = 0;
-            } else
-#endif
             if (uap->status) {
                 status = W_STOPCODE(p->p_xstat);
                 error = copyout((caddr_t)&status,

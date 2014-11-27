@@ -56,10 +56,6 @@
 /*
  * System call interface to the socket abstraction.
  */
-#if defined(COMPAT_43) || defined(COMPAT_SUNOS)
-#define COMPAT_OLDSOCK
-#endif
-
 extern  struct fileops socketops;
 
 int
