@@ -6,23 +6,24 @@
 #
 MAN5=	termcap.0
 
-all: termcap ${MAN5} #termcap.db
+all: termcap.small termcap.full ${MAN5} #termcap.db
 
-termcap: reorder termcap.src
+termcap.full: reorder termcap.src
 	ex - ${.CURDIR}/termcap.src < ${.CURDIR}/reorder > /dev/null
 
-termcap.db: termcap
-	cap_mkdb termcap
+termcap.db: termcap.full
+	cap_mkdb termcap.full
 
 clean:
-	rm -f termcap termcap.db
+	rm -f termcap.full termcap.db
 
 cleandir: clean
 	rm -f ${MAN5}
 
 beforeinstall:
 	install -d ${DESTDIR}${BINDIR}/misc
-	install -m 444 termcap ${DESTDIR}${BINDIR}/misc/termcap
+	install -m 444 termcap.small ${DESTDIR}${BINDIR}/misc/termcap
+	install -m 444 termcap.full ${DESTDIR}${BINDIR}/misc/termcap.full
 #	install -m 444 termcap.db ${DESTDIR}${BINDIR}/misc
 	install -m 444 map3270 ${DESTDIR}${BINDIR}/misc
 

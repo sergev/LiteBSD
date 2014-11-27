@@ -59,6 +59,7 @@ distribution:
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/maillog
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/lpd-errs
 	install -c -m 664 /dev/null ${DESTDIR}/var/run/utmp
+	install -c -m 664 /dev/null ${DESTDIR}/var/log/wtmp
 	install -c -m 664 /dev/null ${DESTDIR}/var/log/secure
 	install -c -m 664 /dev/null ${DESTDIR}/var/log/ftp.log
 	install -c -m 664 /dev/null ${DESTDIR}/var/spool/uucp/ERRORS

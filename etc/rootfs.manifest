@@ -1411,6 +1411,7 @@ file /usr/share/misc/more.help
 file /usr/share/misc/na.phone
 file /usr/share/misc/operator
 file /usr/share/misc/termcap
+file /usr/share/misc/termcap.full
 file /usr/share/misc/zipcodes
 
 dir /usr/share/mk
@@ -2826,13 +2827,14 @@ dir /var/db
 file /var/db/libc.tags
 
 dir /var/log
+file /var/log/ftp.log
 file /var/log/lastlog
 file /var/log/lpd-errs
 file /var/log/maillog
 file /var/log/messages
 file /var/log/secure
 mode 0440
-file /var/log/ftp.log
+file /var/log/wtmp
 
 dir /var/spool
 dir /var/spool/uucp

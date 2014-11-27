@@ -4,8 +4,11 @@ export PATH
 BLOCKSIZE=1k
 export BLOCKSIZE
 
-#export TERM for single user shells.
+# Export TERM for single user shells.
 export TERM
+
+# Enable command line editing mode.
+set -E
 
 echo 'erase ^H, kill ^U, intr ^C status ^T'
 stty erase '^H' kill '^U' intr '^C' status '^T' crt

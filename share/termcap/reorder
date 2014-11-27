@@ -58,5 +58,5 @@
 /^dmd|/;.,/^[^	]/-m'a
 /^s/;.,/^#/-m'a
 'ad
-w! termcap
+w! termcap.full
 q

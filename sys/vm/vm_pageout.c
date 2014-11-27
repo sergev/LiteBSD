@@ -553,7 +553,7 @@ vm_pageout()
          * inactive list to better simulate LRU behavior.
          */
         cnt.v_inactive_target =
-            (cnt.v_active_count + cnt.v_inactive_count) / 3;
+            (cnt.v_active_count + cnt.v_inactive_count) / 5;
         if (cnt.v_inactive_target <= cnt.v_free_target)
             cnt.v_inactive_target = cnt.v_free_target + 1;
 //printf("--- %s: free=%u/%u, inactive=%u/%u\n", __func__, cnt.v_free_count, cnt.v_free_target, cnt.v_inactive_count, cnt.v_inactive_target);
