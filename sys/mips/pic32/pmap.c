@@ -738,6 +738,8 @@ pmap_enter(pmap, va, pa, prot, wired)
             /* can this cause us to recurse forever? */
             npv = (pv_entry_t)
                 malloc(sizeof *npv, M_VMPVENT, M_NOWAIT);
+            if (! npv)
+                panic("pmap_enter: malloc failed");
             npv->pv_va = va;
             npv->pv_pmap = pmap;
             npv->pv_next = pv->pv_next;
