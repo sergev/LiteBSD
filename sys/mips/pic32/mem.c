@@ -66,6 +66,7 @@ mmrw(dev, uio, flags)
     register struct iovec *iov;
     int error = 0;
     caddr_t zbuf = NULL;
+    extern void _etext();
 
     while (uio->uio_resid > 0 && error == 0) {
         iov = uio->uio_iov;
@@ -96,6 +97,7 @@ mmrw(dev, uio, flags)
             c = iov->iov_len;
             if ((v >= MACH_UNCACHED_MEMORY_ADDR &&
                  v + c <= MACH_PHYS_TO_UNCACHED(ctob(physmem))) ||
+                (v >= KERNBASE && v + c <= (u_long)_etext) ||
                 (v >= MACH_KSEG2_ADDR &&
                  kernacc((caddr_t)v, c, uio->uio_rw == UIO_READ ?
                     B_READ : B_WRITE))) {

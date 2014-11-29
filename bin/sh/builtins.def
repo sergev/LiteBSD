@@ -63,7 +63,7 @@ expcmd		exp let
 exportcmd	export readonly
 #exprcmd	expr test [
 falsecmd	false
-histcmd -h	fc
+#histcmd -h	fc
 fgcmd -j	fg
 getoptscmd	getopts
 hashcmd		hash

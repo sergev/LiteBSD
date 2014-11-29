@@ -4,13 +4,16 @@ SUBDIR=	bin contrib games include lib libexec old sbin \
 	share usr.bin usr.sbin
 
 afterinstall:
-	(cd share/man && ${MAKE} makedb)
+	${MAKE} -Cshare/man makedb
+
+beforeinstall:
+	${MAKE} -Cetc install
 
 #
 # Build the whole DESTDIR tree.
 #
 build ${DESTDIR}:
-	${MAKE} -Cetc distribution
+	${MAKE} -Cetc install
 	${MAKE} -Cinclude install
 	${MAKE} cleandir
 	${MAKE} -Clib depend all install

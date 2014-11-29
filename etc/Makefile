@@ -19,9 +19,9 @@ WCS1=	wcs fppwcs poc poc1 poc2 fppoc
 WCS2=	fpevent fppwcs fppwcs_dual hdcwcs load_diags start_fpp wcs wcs_dual
 RBOOTD=	rbootd.conf
 
-all clean cleandir depend etc install lint:
+all clean cleandir depend etc lint:
 
-distribution:
+install:
 	# Hand-craft the password file first.
 	-mkdir -p ${DESTDIR}/etc/namedb ${DESTDIR}/dev ${DESTDIR}/tmp
 	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys ${DESTDIR}/root

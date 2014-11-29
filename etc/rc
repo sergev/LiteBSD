@@ -19,9 +19,9 @@ export PATH
 
 if [ -r /fastboot ]
 then
-    echo "Fast boot: skipping disk checks."
+    echo "skipping disk checks."
 else
-    echo "Automatic boot in progress: starting file system checks."
+    echo "starting file system checks."
     fsck -p
     case $? in
     0)

@@ -59,7 +59,9 @@ static char sccsid[] = "@(#)input.c	8.3 (Berkeley) 6/9/95";
 #include "error.h"
 #include "alias.h"
 #include "parser.h"
+#ifndef NO_HISTORY
 #include "myhistedit.h"
+#endif
 
 #define EOF_NLEFT -99		/* value of parsenleft when EOF pushed back */
 
@@ -100,7 +102,9 @@ int pushednleft;		/* copy of parsenleft when text pushed back */
 int init_editline = 0;		/* editline library initialized? */
 int whichprompt;		/* 1 == PS1, 2 == PS2 */
 
+#ifndef NO_HISTORY
 EditLine *el;			/* cookie for editline package */
+#endif
 
 STATIC void pushfile __P((void));
 
@@ -182,7 +186,6 @@ preadbuffer() {
 	register char *p, *q;
 	register int i;
 	register int something;
-	extern EditLine *el;
 
 	if (parsefile->strpush) {
 		popstring();
@@ -195,6 +198,8 @@ preadbuffer() {
 	flushout(&errout);
 retry:
 	p = parsenextc = parsefile->buf;
+
+#ifndef NO_HISTORY
 	if (parsefile->fd == 0 && el) {
 		const char *rl_cp;
 		int len;
@@ -207,7 +212,9 @@ retry:
 		strcpy(p, rl_cp);  /* XXX - BUFSIZE should redesign so not necessary */
 		i = len;
 
-	} else {
+	} else
+#endif
+        {
 		i = read(parsefile->fd, p, BUFSIZ - 1);
 	}
 eof:
@@ -259,12 +266,14 @@ eof:
 	parsenleft = q - parsefile->buf - 1;
 
 done:
+#ifndef NO_HISTORY
 	if (parsefile->fd == 0 && hist && something) {
 		INTOFF;
-		history(hist, whichprompt == 1 ? H_ENTER : H_ADD, 
+		history(hist, whichprompt == 1 ? H_ENTER : H_ADD,
 			   parsefile->buf);
 		INTON;
 	}
+#endif
 	if (vflag) {
 		/*
 		 * This isn't right.  Most shells coordinate it with
@@ -273,7 +282,7 @@ done:
 		 */
 		i = parsenleft + 1;
 		p = parsefile->buf;
-		for (; i--; p++) 
+		for (; i--; p++)
 			out2c(*p)
 		flushout(out2);
 	}

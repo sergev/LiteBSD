@@ -2,7 +2,7 @@
 
 PROG=	sh
 SRCS=	alias.c builtins.c cd.c echo.c error.c eval.c exec.c expand.c \
-	histedit.c input.c jobs.c mail.c main.c memalloc.c miscbltin.c \
+	input.c jobs.c mail.c main.c memalloc.c miscbltin.c \
 	mystring.c nodes.c options.c parser.c redir.c show.c syntax.c \
 	trap.c output.c var.c
 OBJS+=	init.o arith.o arith_lex.o
@@ -13,6 +13,10 @@ CFLAGS+=-DSHELL -I. -I${.CURDIR}
 CLEANFILES+=\
 	builtins.c builtins.h init.c mkinit mknodes mksyntax \
 	nodes.c nodes.h printf.o syntax.c syntax.h token.def y.tab.h
+
+# Disable command line editor.
+CFLAGS+=-DNO_HISTORY
+#SRCS+=  histedit.c
 
 .depend parser.o: token.def
 token.def: mktokens
