@@ -69,7 +69,7 @@
 #define DEV_BSIZE       512
 #define DEV_BSHIFT      9               /* log2(DEV_BSIZE) */
 #define BLKDEV_IOSIZE   4096
-#define MAXPHYS         (64 * 1024)     /* max raw I/O transfer size */
+#define MAXPHYS         (8 * 1024)      /* max raw I/O transfer size */
 
 #define CLSIZE          1
 #define CLSIZELOG2      0

@@ -25,8 +25,8 @@ options         DEBUG                   # extra kernel debugging support
 #options        KTRACE                  # system call tracing support
 options         "NKMEMCLUSTERS=32"      # 4K pages in kernel malloc pool, default 128 pages
 options         "NMBCLUSTERS=16"        # 4K pages in network mbuf pool, default 256/512 pages
-options         "NBUF=8"                # Number of i/o buffers (4k), default 10
-options         "BUFPAGES=10"           # Number of buffer pages, default 12
+options         "NBUF=18"               # Number of i/o buffers (4k), min 16
+options         "BUFPAGES=18"           # Number of i/o pages, default 10% of ram, min 16
 options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
 options         "HZ=100"                # Frequency of clock interrupt
 
