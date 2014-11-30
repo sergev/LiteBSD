@@ -900,6 +900,7 @@ boot(howto)
         RSWRSTSET = 1;
         (void) RSWRST;
     }
+    printf ("halted\n");
 
     for (;;) {
         asm volatile ("wait");

@@ -628,27 +628,27 @@ interrupt(statusReg, pc)
         break;
 
     case PIC32_IRQ_U1E: case PIC32_IRQ_U1RX: case PIC32_IRQ_U1TX: /* UART1 */
-        intrcnt.uart++;
+        intrcnt.uart1++;
         uartintr(0);
         break;
     case PIC32_IRQ_U2E: case PIC32_IRQ_U2RX: case PIC32_IRQ_U2TX: /* UART2 */
-        intrcnt.uart++;
+        intrcnt.uart2++;
         uartintr(1);
         break;
     case PIC32_IRQ_U3E: case PIC32_IRQ_U3RX: case PIC32_IRQ_U3TX: /* UART3 */
-        intrcnt.uart++;
+        intrcnt.uart3++;
         uartintr(2);
         break;
     case PIC32_IRQ_U4E: case PIC32_IRQ_U4RX: case PIC32_IRQ_U4TX: /* UART4 */
-        intrcnt.uart++;
+        intrcnt.uart4++;
         uartintr(3);
         break;
     case PIC32_IRQ_U5E: case PIC32_IRQ_U5RX: case PIC32_IRQ_U5TX: /* UART5 */
-        intrcnt.uart++;
+        intrcnt.uart5++;
         uartintr(4);
         break;
     case PIC32_IRQ_U6E: case PIC32_IRQ_U6RX: case PIC32_IRQ_U6TX: /* UART6 */
-        intrcnt.uart++;
+        intrcnt.uart6++;
         uartintr(5);
         break;
     }

@@ -70,14 +70,16 @@
  * Names for intrcnt data.
  */
 static char intrnames[] =
+    "clock\0"
     "softclock\0"
     "softnet\0"
-    "uart\0"
-    "ether\0"
-    "disk\0"
-    "memory\0"
-    "clock\0"
-    "fp\0";
+    "uart1\0"
+    "uart2\0"
+    "uart3\0"
+    "uart4\0"
+    "uart5\0"
+    "uart6\0"
+    "ether\0";
 
 /*
  * List of kernel symbols, exported via sysctl() call.

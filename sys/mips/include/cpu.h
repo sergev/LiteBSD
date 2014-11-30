@@ -136,14 +136,16 @@ u_int   machDataCacheSize;
 u_int   machInstCacheSize;
 
 struct intrcnt {
+    u_int clock;
     u_int softclock;
     u_int softnet;
-    u_int uart;
+    u_int uart1;
+    u_int uart2;
+    u_int uart3;
+    u_int uart4;
+    u_int uart5;
+    u_int uart6;
     u_int ether;
-    u_int disk;
-    u_int memory;
-    u_int clock;
-    u_int fp;
 } intrcnt;
 
 struct user;

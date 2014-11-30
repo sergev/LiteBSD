@@ -74,9 +74,9 @@ rm -f /var/spool/uucp/LCK.*
 rm -f /var/spool/uucp/STST/*
 (cd /var/run && { rm -rf -- *; install -c -m 664 -g utmp /dev/null utmp; })
 
-echo -n 'starting system logger'
-rm -f /dev/log
-syslogd
+#echo -n 'starting system logger'
+#rm -f /dev/log
+#syslogd
 
 # $timedflags is imported from /etc/netstart;
 # if $timedflags == NO, timed isn't run.

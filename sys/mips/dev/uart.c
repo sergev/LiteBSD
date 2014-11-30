@@ -69,22 +69,46 @@ static uart_regmap_t *const uart_base[6] = {
     (uart_regmap_t*) &U3MODE,
     (uart_regmap_t*) &U4MODE,
     (uart_regmap_t*) &U5MODE,
-    (uart_regmap_t*) &U6MODE
+    (uart_regmap_t*) &U6MODE,
 };
 
 struct uart_irq {
-    int er;
-    int rx;
-    int tx;
+    int er;                             /* Receive error interrupt number */
+    int rx;                             /* Receive interrupt number */
+    int tx;                             /* Transmit interrupt number */
+    unsigned er_mask;                   /* Receive error irq bitmask */
+    unsigned rx_mask;                   /* Receive irq bitmask */
+    unsigned tx_mask;                   /* Transmit irq bitmask */
+    volatile unsigned *enable_rx_intr;  /* IECSET pointer for receive */
+    volatile unsigned *enable_tx_intr;  /* IECSET pointer for transmit */
+    volatile unsigned *disable_tx_intr; /* IECCLR pointer for transmit */
+    volatile unsigned *clear_er_intr;   /* IFSCLR pointer for receive error */
+    volatile unsigned *clear_rx_intr;   /* IFSCLR pointer for receive */
+    volatile unsigned *clear_tx_intr;   /* IFSCLR pointer for transmit */
 };
 
+#define UART_IRQ_INIT(name) { \
+        name##E,  \
+        name##RX, \
+        name##TX, \
+        1 << (name##E  & 31), \
+        1 << (name##RX & 31), \
+        1 << (name##TX & 31), \
+        &IECSET(name##RX >> 5), \
+        &IECSET(name##TX >> 5), \
+        &IECCLR(name##TX >> 5), \
+        &IFSCLR(name##E  >> 5), \
+        &IFSCLR(name##RX >> 5), \
+        &IFSCLR(name##TX >> 5), \
+    }
+
 static const struct uart_irq uartirq[6] = {
-    { PIC32_IRQ_U1E, PIC32_IRQ_U1RX, PIC32_IRQ_U1TX },
-    { PIC32_IRQ_U2E, PIC32_IRQ_U2RX, PIC32_IRQ_U2TX },
-    { PIC32_IRQ_U3E, PIC32_IRQ_U3RX, PIC32_IRQ_U3TX },
-    { PIC32_IRQ_U4E, PIC32_IRQ_U4RX, PIC32_IRQ_U4TX },
-    { PIC32_IRQ_U5E, PIC32_IRQ_U5RX, PIC32_IRQ_U5TX },
-    { PIC32_IRQ_U6E, PIC32_IRQ_U6RX, PIC32_IRQ_U6TX },
+    UART_IRQ_INIT(PIC32_IRQ_U1),
+    UART_IRQ_INIT(PIC32_IRQ_U2),
+    UART_IRQ_INIT(PIC32_IRQ_U3),
+    UART_IRQ_INIT(PIC32_IRQ_U4),
+    UART_IRQ_INIT(PIC32_IRQ_U5),
+    UART_IRQ_INIT(PIC32_IRQ_U6),
 };
 
 struct tty uart_tty[NUART];
@@ -141,7 +165,7 @@ uartparam(tp, t)
 {
     int unit = minor(tp->t_dev);
     uart_regmap_t *reg = tp->t_sc;
-    unsigned rxirq = uartirq[unit].rx;
+    const struct uart_irq *irq = &uartirq[unit];
     unsigned cflag = t->c_cflag;
     unsigned mode;
 
@@ -172,7 +196,7 @@ uartparam(tp, t)
     }
 
     /* Reset line. */
-    reg->sta = 0;
+    reg->sta = PIC32_USTA_UTXISEL_EMP;  /* TX interrupt when buffer empty */
     reg->mode = 0;
     udelay(25);
 
@@ -194,7 +218,7 @@ uartparam(tp, t)
     reg->staset = PIC32_USTA_URXEN | PIC32_USTA_UTXEN;
 
     /* Enable receive interrupt. */
-    IECSET(rxirq >> 5) = 1 << (rxirq & 31);
+    *irq->enable_rx_intr = irq->rx_mask;
     return 0;
 }
 
@@ -207,7 +231,7 @@ uartstart(tp)
 {
     int unit = minor(tp->t_dev);
     uart_regmap_t *reg = tp->t_sc;
-    unsigned txirq = uartirq[unit].tx;
+    const struct uart_irq *irq = &uartirq[unit];
     int c, s;
 
     s = spltty();
@@ -224,15 +248,21 @@ uartstart(tp)
     if (tp->t_outq.c_cc == 0)
         goto out;
 
-    if (reg->sta & PIC32_USTA_TRMT) {
-        /* Send the first char. */
+    while (! (reg->sta & PIC32_USTA_UTXBF)) {
+        /* Send next char. */
         c = getc(&tp->t_outq);
         reg->txreg = (unsigned char) c;
+
+        /* Clear tx interrupt flag. */
+        *irq->clear_tx_intr = irq->tx_mask;
+
         tp->t_state |= TS_BUSY;
+        if (tp->t_outq.c_cc == 0)
+            break;
     }
 
     /* Enable transmit interrupt. */
-    IECSET(txirq >> 5) = 1 << (txirq & 31);
+    *irq->enable_tx_intr = irq->tx_mask;
 out:
     splx(s);
 }
@@ -437,9 +467,7 @@ uartintr(dev)
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
     uart_regmap_t *reg = tp->t_sc;
-    unsigned rxirq = uartirq[unit].rx;
-    unsigned txirq = uartirq[unit].tx;
-    unsigned erirq = uartirq[unit].er;
+    const struct uart_irq *irq = &uartirq[unit];
     int c;
 
     /* Receive */
@@ -451,13 +479,14 @@ uartintr(dev)
         reg->staclr = PIC32_USTA_OERR;
     }
     /* Clear RX interrupt. */
-    IFSCLR(rxirq >> 5) = 1 << (rxirq & 31) | 1 << (erirq & 31);
+    *irq->clear_rx_intr = irq->rx_mask;
+    *irq->clear_er_intr = irq->er_mask;
 
     /* Transmit */
-    if (reg->sta & PIC32_USTA_TRMT) {
-        /* Clear TX interrupt. */
-        IECCLR(txirq >> 5) = 1 << (txirq & 31);
-        IFSCLR(txirq >> 5) = 1 << (txirq & 31);
+    if (! (reg->sta & PIC32_USTA_UTXBF)) {
+        /* Clear and disable TX interrupt. */
+        *irq->disable_tx_intr = irq->tx_mask;
+        *irq->clear_tx_intr = irq->tx_mask;
 
         if (tp->t_state & TS_BUSY) {
             tp->t_state &= ~TS_BUSY;
@@ -475,8 +504,7 @@ uart_getc(dev)
 {
     int unit = minor(dev);
     uart_regmap_t *reg = uart_tty[unit].t_sc;
-    unsigned rxirq = uartirq[unit].rx;
-    unsigned erirq = uartirq[unit].er;
+    const struct uart_irq *irq = &uartirq[unit];
     int s, c;
 
     /* Check whether the port is configured. */
@@ -495,7 +523,8 @@ uart_getc(dev)
         }
     }
 
-    IFSCLR(rxirq >> 5) = 1 << (rxirq & 31) | 1 << (erirq & 31);
+    *irq->clear_rx_intr = irq->rx_mask;
+    *irq->clear_er_intr = irq->er_mask;
     splx(s);
     return c;
 }
@@ -511,7 +540,7 @@ uart_putc(dev, c)
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
     uart_regmap_t *reg = tp->t_sc;
-    unsigned txirq = uartirq[unit].tx;
+    const struct uart_irq *irq = &uartirq[unit];
     int timo, s;
 
     /* Check whether the port is configured. */
@@ -538,13 +567,13 @@ again:
     }
     reg->txreg = (unsigned char) c;
 
+    /* Clear TX interrupt. */
+    *irq->clear_tx_intr = irq->tx_mask;
+
     timo = 30000;
     while (! (reg->sta & PIC32_USTA_TRMT))
         if (--timo == 0)
             break;
-
-    /* Clear TX interrupt. */
-    IECCLR(txirq >> 5) = 1 << (txirq & 31);
     splx(s);
 }
 
