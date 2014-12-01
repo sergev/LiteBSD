@@ -77,9 +77,10 @@
 #include <vm/vm_page.h>
 
 static void
-syscall(p, causeReg, codep)
+syscall(p, causeReg, pc)
     struct proc *p;
     unsigned causeReg;      /* cause register at time of exception */
+    unsigned pc;            /* program counter where to continue */
 {
     int *locr0 = p->p_md.md_regs;
     struct sysent *callp;
@@ -214,6 +215,7 @@ syscall(p, causeReg, codep)
 
     case ERESTART:
 //printf ("--- (%u) syscall restarted \n", p->p_pid);
+        locr0[PC] = pc;
         break;
 
     case EJUSTRETURN:
@@ -425,7 +427,7 @@ dofault:
 
     case TRAP_Sys + TRAP_USER:      /* User: syscall */
         cnt.v_syscall++;
-        syscall(p, causeReg);
+        syscall(p, causeReg, pc);
 
         /* Reinitialize proc pointer `p' as it may be different
          * if this is a child returning from fork syscall. */
