@@ -936,32 +936,25 @@ dumpconf()
 
 /*
  * Return the best possible estimate of the time in the timeval
- * to which tvp points.  Unfortunately, we can't read the hardware registers.
- * We guarantee that the time will be greater than the value obtained by a
- * previous call.
+ * to which tvp points.
  */
 void
 microtime(tvp)
     struct timeval *tvp;
 {
-    int s = splclock();
-    static struct timeval lasttime;
+    int s = splhigh();
+    unsigned delta = (mfc0_Count() - cpu_last_microtime) / (CPU_KHZ / 2000);
+
+    /* Sanity check. */
+    if (delta > 250000)
+        panic("microtime stuck");
 
     *tvp = time;
-#ifdef notdef
-    tvp->tv_usec += clkread();
+    tvp->tv_usec += delta;
     while (tvp->tv_usec > 1000000) {
         tvp->tv_sec++;
         tvp->tv_usec -= 1000000;
     }
-#endif
-    if (tvp->tv_sec == lasttime.tv_sec &&
-        tvp->tv_usec <= lasttime.tv_usec &&
-        (tvp->tv_usec = lasttime.tv_usec + 1) > 1000000) {
-        tvp->tv_sec++;
-        tvp->tv_usec -= 1000000;
-    }
-    lasttime = *tvp;
     splx(s);
 }
 

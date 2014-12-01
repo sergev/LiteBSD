@@ -134,6 +134,7 @@ union   cpuprid cpu;
 union   cpuprid fpu;
 u_int   machDataCacheSize;
 u_int   machInstCacheSize;
+u_int   cpu_last_microtime;
 
 struct intrcnt {
     u_int clock;

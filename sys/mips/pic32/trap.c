@@ -571,6 +571,20 @@ out:
 }
 
 /*
+ * Bump a timeval by a small number of usec's.
+ */
+#define BUMPTIME(t, usec) { \
+    register volatile struct timeval *tp = (t); \
+    register long us; \
+ \
+    tp->tv_usec = us = tp->tv_usec + (usec); \
+    if (us >= 1000000) { \
+        tp->tv_usec = us - 1000000; \
+        tp->tv_sec++; \
+    } \
+}
+
+/*
  * Handle an interrupt.
  * Called from kern_interrupt() or user_interrupt()
  * Note: curproc might be NULL.
@@ -594,11 +608,18 @@ interrupt(statusReg, pc)
     case PIC32_IRQ_CT:                  /* Core Timer */
         /* Increment COMPARE register. */
         IFSCLR(0) = 1 << PIC32_IRQ_CT;
+        intrcnt.clock++;
         int c = mfc0_Compare();
+again:
+        cpu_last_microtime = c;
         c += (CPU_KHZ * 1000 / hz + 1) / 2;
         mtc0_Compare (c);
-        intrcnt.clock++;
-
+        if ((int) (c - (unsigned)mfc0_Count()) < 0) {
+            /* Lost one tick. */
+            BUMPTIME(&time, tick);
+            BUMPTIME(&mono_time, tick);
+            goto again;
+        }
         cf.pc = pc;
         cf.sr = statusReg;
         hardclock(&cf);

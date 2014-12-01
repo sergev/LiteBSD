@@ -82,6 +82,7 @@ cpu_initclocks()
     tickadj = 240000 / (60 * HZ);
 
     unsigned count = mfc0_Count();
+    cpu_last_microtime = count;
     count += (CPU_KHZ * 1000 / HZ + 1) / 2;
     mtc0_Compare (count);
     IECSET(0) = 1 << PIC32_IRQ_CT;
