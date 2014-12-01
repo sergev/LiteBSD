@@ -605,6 +605,7 @@ interrupt(statusReg, pc)
         break;
 
     case PIC32_IRQ_CS0:                 /* Core software interrupt 0 */
+        IFSCLR(0) = 1 << PIC32_IRQ_CS0;
         clearsoftclock();
         cnt.v_soft++;
         intrcnt.softclock++;
@@ -612,6 +613,7 @@ interrupt(statusReg, pc)
         break;
 
     case PIC32_IRQ_CS1:                 /* Core software interrupt 1 */
+        IFSCLR(0) = 1 << PIC32_IRQ_CS1;
         clearsoftnet();
         cnt.v_soft++;
         intrcnt.softnet++;

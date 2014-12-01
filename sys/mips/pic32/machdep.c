@@ -452,6 +452,10 @@ initcpu()
     (void) c->regc;
 #endif
 
+    /* Enable software interrupts. */
+    IECSET(0) = 1 << PIC32_IRQ_CS0;     /* softclock */
+    IECSET(0) = 1 << PIC32_IRQ_CS1;     /* softnet */
+
     /* Safe to turn interrupts on now. */
     spl0();
 }
