@@ -597,6 +597,8 @@ interrupt(statusReg, pc)
     unsigned pc;            /* program counter where to continue */
 {
     struct clockframe cf;
+    int clk;
+    unsigned count;
 
     cnt.v_intr++;
 
@@ -610,18 +612,21 @@ interrupt(statusReg, pc)
     case PIC32_IRQ_CT:                  /* Core Timer */
         /* Increment COMPARE register. */
         IFSCLR(0) = 1 << PIC32_IRQ_CT;
-        intrcnt.clock++;
-        int c = mfc0_Compare();
+        clk = mfc0_Compare();
 again:
-        cpu_last_microtime = c;
-        c += (CPU_KHZ * 1000 / hz + 1) / 2;
-        mtc0_Compare (c);
-        if ((int) (c - (unsigned)mfc0_Count()) < 0) {
+        count = mfc0_Count();
+        if ((int) (clk - count) > 0) {
+            /* Spurious interrupt, ignore. */
+            break;
+        }
+        clk += (CPU_KHZ * 1000 / HZ + 1) / 2;
+        mtc0_Compare (clk);
+        if ((int) (clk - count) < 0) {
             /* Lost one tick. */
             BUMPTIME(&time, tick);
-            BUMPTIME(&mono_time, tick);
             goto again;
         }
+        intrcnt.clock++;
         cf.pc = pc;
         cf.sr = statusReg;
         hardclock(&cf);

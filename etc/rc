@@ -80,10 +80,10 @@ rm -f /var/spool/uucp/STST/*
 
 # $timedflags is imported from /etc/netstart;
 # if $timedflags == NO, timed isn't run.
-if [ X${timedflags} != X"NO" ]; then
-    echo -n ', time daemon'; timed $timedflags
-fi
-echo '.'
+#if [ X${timedflags} != X"NO" ]; then
+#    echo -n ', time daemon'; timed $timedflags
+#fi
+#echo '.'
 
 # /var/crash should be a directory or a symbolic link
 # to the crash directory if core dumps are to be saved.

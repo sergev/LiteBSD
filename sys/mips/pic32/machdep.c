@@ -943,19 +943,22 @@ microtime(tvp)
     struct timeval *tvp;
 {
     int s = splhigh();
-    unsigned delta = (mfc0_Count() - cpu_last_microtime) / (CPU_KHZ / 2000);
-
-    /* Sanity check. */
-    if (delta > 250000)
-        panic("microtime stuck");
-
+    int delta = mfc0_Count() - mfc0_Compare();
     *tvp = time;
+    splx(s);
+
+    delta += (CPU_KHZ * 1000 / HZ + 1) / 2;
+    delta /= CPU_KHZ / 2000;
+    if (delta < 0) {                    /* cannot happen */
+        delta = 0;
+    } else if (delta >= 1000000) {      /* sanity check */
+        panic("microtime stuck");
+    }
     tvp->tv_usec += delta;
     while (tvp->tv_usec > 1000000) {
         tvp->tv_sec++;
         tvp->tv_usec -= 1000000;
     }
-    splx(s);
 }
 
 /*
