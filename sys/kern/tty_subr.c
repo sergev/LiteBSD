@@ -282,7 +282,7 @@ putc(c, clp)
 #if defined(DIAGNOSTIC) || 1
             printf("putc: required clalloc\n");
 #endif
-            if (clalloc(clp, 1024, 1)) {
+            if (clalloc(clp, 256, 1)) {
 out:
                 splx(s);
                 return -1;
@@ -380,7 +380,7 @@ b_to_q(cp, count, clp)
 #if defined(DIAGNOSTIC) || 1
             printf("b_to_q: required clalloc\n");
 #endif
-            if (clalloc(clp, 1024, 1))
+            if (clalloc(clp, 256, 1))
                 goto out;
         }
         clp->c_cf = clp->c_cl = clp->c_cs;

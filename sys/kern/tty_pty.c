@@ -136,6 +136,14 @@ ptsopen(dev, flag, devtype, p)
     if (minor(dev) >= npty)
         return (ENXIO);
     tp = &pt_tty[minor(dev)];
+    if (!tp->t_rawq.c_cs)
+        clalloc(&tp->t_rawq, 256, 1);
+    if (!tp->t_canq.c_cs)
+        clalloc(&tp->t_canq, 256, 1);
+    /* output queue doesn't need quoting */
+    if (!tp->t_outq.c_cs)
+        clalloc(&tp->t_outq, 256, 0);
+
     if ((tp->t_state & TS_ISOPEN) == 0) {
         tp->t_state |= TS_WOPEN;
         ttychars(tp);       /* Set up default chars */
@@ -282,6 +290,14 @@ ptcopen(dev, flag, devtype, p)
     if (minor(dev) >= npty)
         return (ENXIO);
     tp = &pt_tty[minor(dev)];
+    if (!tp->t_rawq.c_cs)
+        clalloc(&tp->t_rawq, 256, 1);
+    if (!tp->t_canq.c_cs)
+        clalloc(&tp->t_canq, 256, 1);
+    /* output queue doesn't need quoting */
+    if (!tp->t_outq.c_cs)
+        clalloc(&tp->t_outq, 256, 0);
+
     if (tp->t_oproc)
         return (EIO);
     tp->t_oproc = ptsstart;

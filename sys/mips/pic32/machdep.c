@@ -949,10 +949,13 @@ microtime(tvp)
 
     delta += (CPU_KHZ * 1000 / HZ + 1) / 2;
     delta /= CPU_KHZ / 2000;
-    if (delta < 0) {                    /* cannot happen */
+    if (delta < 0) {
+        /* Cannot happen. */
         delta = 0;
-    } else if (delta >= 1000000) {      /* sanity check */
-        panic("microtime stuck");
+    } else if (delta >= 1000000) {
+        /* The kernel missed the timer interrupt for a whole second.
+         * Something definitely went wrong. */
+        panic("microtime watchdog");
     }
     tvp->tv_usec += delta;
     while (tvp->tv_usec > 1000000) {

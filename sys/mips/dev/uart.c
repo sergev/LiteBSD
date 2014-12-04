@@ -284,12 +284,12 @@ uartopen(dev, flag, mode, p)
         return ENXIO;
 
     if (!tp->t_rawq.c_cs)
-        clalloc(&tp->t_rawq, 1024, 1);
+        clalloc(&tp->t_rawq, 256, 1);
     if (!tp->t_canq.c_cs)
-        clalloc(&tp->t_canq, 1024, 1);
+        clalloc(&tp->t_canq, 256, 1);
     /* output queue doesn't need quoting */
     if (!tp->t_outq.c_cs)
-        clalloc(&tp->t_outq, 1024, 0);
+        clalloc(&tp->t_outq, 256, 0);
 
     tp->t_oproc = uartstart;
     tp->t_param = uartparam;
