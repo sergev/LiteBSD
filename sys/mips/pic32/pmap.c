@@ -809,6 +809,8 @@ pmap_enter(pmap, va, pa, prot, wired)
         pmap_segmap(pmap, va) = pte;
     }
     pte += (va >> PGSHIFT) & (NPTEPG - 1);
+    if (!(pte->pt_entry & PG_V))
+        pmap->pm_stats.resident_count++;
 
     /*
      * Now validate mapping with desired protection/wiring.
