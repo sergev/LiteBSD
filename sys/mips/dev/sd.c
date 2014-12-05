@@ -37,6 +37,8 @@
 #include <mips/dev/spi.h>
 #include <machine/pic32mz.h>
 
+#include <machine/pic32_gpio.h>
+
 #define sdunit(dev)     ((minor(dev) & 8) >> 3)
 #define sdpart(dev)     ((minor(dev) & 7))
 #define RAWPART         0               /* 'x' partition */
@@ -208,6 +210,23 @@ static int card_cmd(unsigned int unit, unsigned int cmd, unsigned int addr)
 }
 
 /*
+ * Control an LED to show SD activity
+ */
+static inline void
+sd_led(int val)
+{
+#ifdef SD_LED_ANSEL
+    struct gpioreg *led_port = (struct gpioreg*) &SD_LED_ANSEL;
+    led_port->trisclr = (1<<SD_LED_PIN);
+    if (val) {
+        led_port->latset = (1<<SD_LED_PIN);
+    } else {
+        led_port->latclr = (1<<SD_LED_PIN);
+    }
+#endif
+}
+
+/*
  * Add extra clocks after a deselect
  */
 static inline void
@@ -215,6 +234,17 @@ sd_deselect(struct spiio *io)
 {
     spi_deselect(io);
     spi_transfer(io, 0xFF);
+    sd_led(0);
+}
+
+/*
+ * Select the SPI port, and light the LED
+ */
+static inline void
+sd_select(struct spiio *io)
+{
+    sd_led(1);
+    spi_select(io);
 }
 
 /*
@@ -242,7 +272,7 @@ static int card_init(int unit)
             spi_transfer(io, 0xFF);
 
         /* Select the card and send a single GO_IDLE command. */
-        spi_select(io);
+        sd_select(io);
         timeout--;
         reply = card_cmd(unit, CMD_GO_IDLE, 0);
 
@@ -256,7 +286,7 @@ static int card_init(int unit)
     }
 
     /* Check SD version. */
-    spi_select(io);
+    sd_select(io);
     reply = card_cmd(unit, CMD_SEND_IF_COND, 0x1AA);
     if (reply & 4)
     {
@@ -282,11 +312,11 @@ static int card_init(int unit)
     /* Send repeatedly SEND_OP until Idle terminates. */
     for (i=0; ; i++)
     {
-        spi_select(io);
+        sd_select(io);
         card_cmd(unit,CMD_APP, 0);
         reply = card_cmd(unit,CMD_SEND_OP_SDC,
                          (sd_type[unit] == TYPE_II) ? 0x40000000 : 0);
-        spi_select(io);
+        sd_select(io);
         if (reply == 0)
             break;
         if (i >= TIMO_SEND_OP)
@@ -302,7 +332,7 @@ static int card_init(int unit)
     /* If SD2 read OCR register to check for SDHC card. */
     if (sd_type[unit] == TYPE_II)
     {
-        spi_select(io);
+        sd_select(io);
         reply = card_cmd(unit, CMD_READ_OCR, 0);
         if (reply != 0)
         {
@@ -338,7 +368,7 @@ static int card_size(int unit)
     int reply, i;
     int nsectors;
 
-    spi_select(io);
+    sd_select(io);
     reply = card_cmd(unit,CMD_SEND_CSD, 0);
     if (reply != 0)
     {
@@ -407,7 +437,7 @@ card_read(int unit, unsigned int offset, char *data, unsigned int bcount)
 //printf("--- %s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
 
     /* Send read-multiple command. */
-    spi_select(io);
+    sd_select(io);
     if (sd_type[unit] != TYPE_SDHC)
         offset <<= 9;
 //printf("%s: sd_type = %u, offset = %08x\n", __func__, sd_type[unit], offset);
@@ -485,7 +515,7 @@ card_write (int unit, unsigned offset, char *data, unsigned bcount)
 //printf("--- %s: unit = %d, blkno = %d, bcount = %d\n", __func__, unit, offset, bcount);
 
     /* Send pre-erase count. */
-    spi_select(io);
+    sd_select(io);
     card_cmd(unit, CMD_APP, 0);
     reply = card_cmd(unit, CMD_SET_WBECNT, (bcount + SECTSIZE - 1) / SECTSIZE);
     if (reply != 0)
@@ -511,7 +541,7 @@ card_write (int unit, unsigned offset, char *data, unsigned bcount)
     sd_deselect(io);
 again:
     /* Select, wait while busy. */
-    spi_select(io);
+    sd_select(io);
     spi_wait_ready(unit, TIMO_WAIT_WDATA, &sd_timo_wait_wdata);
 
     /* Send data. */
@@ -552,7 +582,7 @@ again:
     }
 
     /* Stop a write-multiple sequence. */
-    spi_select(io);
+    sd_select(io);
     spi_wait_ready(unit, TIMO_WAIT_WSTOP, &sd_timo_wait_wstop);
     spi_transfer(io, STOP_TRAN_TOKEN);
     spi_wait_ready(unit, TIMO_WAIT_WIDLE, &sd_timo_wait_widle);

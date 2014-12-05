@@ -32,6 +32,7 @@
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
 #include <machine/pic32mz.h>
+#include <machine/pic32_gpio.h>
 
 /*
  * To enable debug output, uncomment the first line.
@@ -40,53 +41,6 @@
 #ifndef PRINTDBG
 #   define PRINTDBG(...) /*empty*/
 #endif
-
-/*
- * PIC32 port i/o registers.
- */
-struct gpioreg {
-    volatile unsigned ansel;            /* Analog select */
-    volatile unsigned anselclr;
-    volatile unsigned anselset;
-    volatile unsigned anselinv;
-    volatile unsigned tris;             /* Mask of inputs */
-    volatile unsigned trisclr;
-    volatile unsigned trisset;
-    volatile unsigned trisinv;
-    volatile unsigned port;             /* Read inputs, write outputs */
-    volatile unsigned portclr;
-    volatile unsigned portset;
-    volatile unsigned portinv;
-    volatile unsigned lat;              /* Read/write outputs */
-    volatile unsigned latclr;
-    volatile unsigned latset;
-    volatile unsigned latinv;
-    volatile unsigned odc;              /* Open drain configuration */
-    volatile unsigned odcclr;
-    volatile unsigned odcset;
-    volatile unsigned odcinv;
-    volatile unsigned cnpu;             /* Input pin pull-up enable */
-    volatile unsigned cnpuclr;
-    volatile unsigned cnpuset;
-    volatile unsigned cnpuinv;
-    volatile unsigned cnpd;             /* Input pin pull-down enable */
-    volatile unsigned cnpdclr;
-    volatile unsigned cnpdset;
-    volatile unsigned cnpdinv;
-    volatile unsigned cncon;            /* Interrupt-on-change control */
-    volatile unsigned cnconclr;
-    volatile unsigned cnconset;
-    volatile unsigned cnconinv;
-    volatile unsigned cnen;             /* Input change interrupt enable */
-    volatile unsigned cnenclr;
-    volatile unsigned cnenset;
-    volatile unsigned cneninv;
-    volatile unsigned cnstat;           /* Change notification status */
-    volatile unsigned cnstatclr;
-    volatile unsigned cnstatset;
-    volatile unsigned cnstatinv;
-    volatile unsigned unused[6*4];
-};
 
 #if NSPI > 6
 #error Max 6 SPI ports supported.
