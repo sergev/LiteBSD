@@ -79,7 +79,6 @@ extern int selwait;             /* select timeout address */
 
 extern u_char curpriority;      /* priority of current process */
 
-extern int maxmem;              /* max memory per process */
 extern int physmem;             /* physical memory */
 
 extern dev_t dumpdev;           /* dump device */

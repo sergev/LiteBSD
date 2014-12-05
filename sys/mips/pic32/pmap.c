@@ -70,6 +70,7 @@
 #include <sys/malloc.h>
 #include <sys/user.h>
 #include <sys/buf.h>
+#include <sys/msgbuf.h>
 #ifdef SYSVSHM
 #include <sys/shm.h>
 #endif
@@ -118,8 +119,6 @@ int             tlbpid_cnt = 2;         /* next available TLB PID */
 pt_entry_t      *Sysmap;                /* kernel pte table */
 u_int           Sysmapsize;             /* number of pte's in Sysmap */
 
-extern int maxmem, physmem;
-
 /*
  *      Bootstrap the system enough to run with virtual memory.
  *      firstaddr is the first unused kseg0 address (not page aligned).
@@ -155,7 +154,8 @@ pmap_bootstrap(firstaddr)
      * phys_start and phys_end but its better to use kseg0 addresses
      * rather than kernel virtual addresses mapped through the TLB.
      */
-    i = maxmem - mips_btop(MACH_CACHED_TO_PHYS(firstaddr));
+    i = physmem - mips_btop(MACH_CACHED_TO_PHYS(firstaddr)) -
+        btoc(sizeof(struct msgbuf));
     valloc(pv_table, struct pv_entry, i);
 
     /*
@@ -165,7 +165,7 @@ pmap_bootstrap(firstaddr)
     bzero((caddr_t)start, firstaddr - start);
 
     avail_start = MACH_CACHED_TO_PHYS(firstaddr);
-    avail_end = mips_ptob(maxmem);
+    avail_end = mips_ptob(physmem - btoc(sizeof(struct msgbuf)));
     mem_size = avail_end - avail_start;
 
     virtual_avail = VM_MIN_KERNEL_ADDRESS;

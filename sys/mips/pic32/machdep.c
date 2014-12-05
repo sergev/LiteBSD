@@ -90,7 +90,6 @@ int     nbuf = NBUF;
 int     bufpages = BUFPAGES;
 
 int     msgbufmapped = 0;       /* set when safe to use msgbuf */
-int     maxmem;                 /* max memory per process */
 int     physmem;                /* max supported memory, in pages */
 
 /*
@@ -215,13 +214,11 @@ mach_init()
      * Find out how much memory is available.
      */
     physmem = btoc(512 * 1024);
-    maxmem = physmem;
 
     /*
      * Initialize error message buffer (at end of core).
      */
-    maxmem -= btoc(sizeof (struct msgbuf));
-    msgbufp = (struct msgbuf *)(MACH_PHYS_TO_UNCACHED(maxmem << PGSHIFT));
+    msgbufp = (struct msgbuf *)MACH_PHYS_TO_UNCACHED(mips_ptob(physmem)) - 1;
     msgbufmapped = 1;
 
     /*
