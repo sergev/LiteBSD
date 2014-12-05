@@ -67,6 +67,8 @@ controller      spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - SD card
 controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
 
 disk            sd0     at spi3 drive 0 flags 0x33      # select pin RC3
+options         "SD_LED_ANSEL=ANSELG"   # LED4 is G15
+options         "SD_LED_PIN=15" 
 #disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
