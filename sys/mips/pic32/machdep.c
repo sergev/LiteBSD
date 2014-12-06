@@ -590,18 +590,12 @@ printf("avail_start = %08x, avail_end = %08x\n", avail_start, avail_end);
         vm_map_pageable(buffer_map, curbuf, curbuf+curbufsize, FALSE);
         vm_map_simplify(buffer_map, curbuf);
     }
-    /*
-     * Allocate a submap for exec arguments.  This map effectively
-     * limits the number of processes exec'ing at any time.
-     */
-    exec_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr,
-                 16 * NCARGS, TRUE);
+
     /*
      * Allocate a submap for physio
      */
     phys_map = kmem_suballoc(kernel_map, &minaddr, &maxaddr,
                  VM_PHYS_SIZE, TRUE);
-
     /*
      * Finally, allocate mbuf pool.  Since mclrefcnt is an off-size
      * we use the more space efficient malloc in place of kmem_alloc.
