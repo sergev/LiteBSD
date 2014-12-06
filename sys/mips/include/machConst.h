@@ -63,9 +63,8 @@
 #define MACH_UNCACHED_MEMORY_ADDR       0xa0000000
 #define MACH_KSEG2_ADDR                 0xc0000000
 
-#define MACH_CACHED_TO_PHYS(x)   ((unsigned)(x) & 0x1fffffff)
+#define MACH_VIRT_TO_PHYS(x)     ((unsigned)(x) & 0x1fffffff)
 #define MACH_PHYS_TO_CACHED(x)   ((unsigned)(x) | MACH_CACHED_MEMORY_ADDR)
-#define MACH_UNCACHED_TO_PHYS(x) ((unsigned)(x) & 0x1fffffff)
 #define MACH_PHYS_TO_UNCACHED(x) ((unsigned)(x) | MACH_UNCACHED_MEMORY_ADDR)
 
 /*--------------------------------------

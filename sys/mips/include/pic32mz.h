@@ -1361,14 +1361,8 @@
 /*
  * Interrupt Prority Control register.
  */
-#define PIC32_IPC_IS0(x)        (x)             /* Interrupt 0 subpriority */
-#define PIC32_IPC_IP0(x)        ((x)<<2)        /* Interrupt 0 priority */
-#define PIC32_IPC_IS1(x)        ((x)<<8)        /* Interrupt 1 subpriority */
-#define PIC32_IPC_IP1(x)        ((x)<<10)       /* Interrupt 1 priority */
-#define PIC32_IPC_IS2(x)        ((x)<<16)       /* Interrupt 2 subpriority */
-#define PIC32_IPC_IP2(x)        ((x)<<18)       /* Interrupt 2 priority */
-#define PIC32_IPC_IS3(x)        ((x)<<24)       /* Interrupt 3 subpriority */
-#define PIC32_IPC_IP3(x)        ((x)<<26)       /* Interrupt 3 priority */
+#define PIC32_IPC_IP(a,b,c,d)   ((a)<<2 | (b)<<10 | (c)<<18 | (d)<<26)  /* Priority */
+#define PIC32_IPC_IS(a,b,c,d)   ((a) | (b)<<8 | (c)<<16 | (d)<<24)      /* Subpriority */
 
 /*
  * IRQ numbers for PIC32MZ

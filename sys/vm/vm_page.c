@@ -189,6 +189,7 @@ vm_page_startup(start, end)
     vm_page_buckets = (struct pglist *)
         pmap_bootstrap_alloc(vm_page_bucket_count * sizeof(struct pglist));
     bucket = vm_page_buckets;
+//printf("vm_page_buckets = %08x, %u entries, %u bytes\n", vm_page_buckets, vm_page_bucket_count, vm_page_bucket_count * sizeof(struct pglist));
 
     for (i = vm_page_bucket_count; i--;) {
         TAILQ_INIT(bucket);
@@ -218,6 +219,7 @@ vm_page_startup(start, end)
     kentry_data_size = round_page(MAX_KMAP*sizeof(struct vm_map) +
                       MAX_KMAPENT*sizeof(struct vm_map_entry));
     kentry_data = (vm_offset_t) pmap_bootstrap_alloc(kentry_data_size);
+//printf("kentry_data = %08x, %u+%u entries, %u+%u bytes\n", kentry_data, MAX_KMAP, MAX_KMAPENT, sizeof(struct vm_map), sizeof(struct vm_map_entry));
 
     /*
      *  Compute the number of pages of memory that will be
@@ -248,6 +250,7 @@ vm_page_startup(start, end)
 
     m = vm_page_array = (vm_page_t)
         pmap_bootstrap_alloc(npages * sizeof(struct vm_page));
+//printf("vm_page_array = %08x, %u entries, %u bytes\n", vm_page_array, npages, npages * sizeof(struct vm_page));
 
     /*
      *  Initialize the mem entry structures now, and
