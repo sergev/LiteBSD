@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #define NULL    0
 #define FNSIZE  64
@@ -1611,7 +1612,8 @@ char **argv;
         globp = "r";
     }
     zero = (int *)malloc(nlall*sizeof(int));
-    tfname = mktemp("/tmp/ed.XXXXXX");
+    tfname = strdup("/tmp/ed.XXXXXX");
+    tfname = mktemp(tfname);
     if (! tfname) {
         putstr ("ed: cannot create /tmp/file");
         printf("Error: %d\n", errno);
