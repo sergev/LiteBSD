@@ -140,7 +140,7 @@ _kvm_kvatop(kd, va, pa)
 	    va >= VM_MIN_KERNEL_ADDRESS + vm->Sysmapsize * NBPG)
 		goto invalid;
 	if (va < VM_MIN_KERNEL_ADDRESS) {
-		*pa = MACH_CACHED_TO_PHYS(va);
+		*pa = MACH_VIRT_TO_PHYS(va);
 		return (NBPG - offset);
 	}
 	addr = (u_long)(vm->Sysmap + ((va - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT));
