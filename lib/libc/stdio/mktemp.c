@@ -58,7 +58,7 @@ mktemp_internal(char *path, int slen, int mode)
 	do {
 		cp = start;
 		while (cp != ep)
-                        *cp++ = random() % NUM_CHARS;
+                        *cp++ = tempchars[random() % NUM_CHARS];
 
 		switch (mode) {
 		case MKTEMP_NAME:
