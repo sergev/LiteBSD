@@ -47,9 +47,8 @@ static ino_t info_inumber;
 static int
 pass4_info(char *buf, size_t buflen)
 {
-	return (snprintf(buf, buflen, "phase 4, inode %llu/%llu",
-	    (unsigned long long)info_inumber,
-	    (unsigned long long)lastino) > 0);
+	return (snprintf(buf, buflen, "phase 4, inode %u/%u",
+            info_inumber, lastino) > 0);
 }
 
 void
@@ -110,9 +109,8 @@ pass4(void)
 				break;
 
 			default:
-				errexit("BAD STATE %d FOR INODE I=%llu\n",
-				    GET_ISTATE(inumber),
-				    (unsigned long long)inumber);
+				errexit("BAD STATE %d FOR INODE I=%u\n",
+				    GET_ISTATE(inumber), inumber);
 			}
 		}
 	}

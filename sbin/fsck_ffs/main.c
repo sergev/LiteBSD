@@ -239,35 +239,32 @@ checkfilesys(char *filesys, char *mntpt, long auxdata, int child)
 	 */
 	n_ffree = sblock.fs_cstotal.cs_nffree;
 	n_bfree = sblock.fs_cstotal.cs_nbfree;
-	pwarn("%lld files, %lld used, %lld free ",
-	    n_files, (long long)n_blks,
-	    (long long)(n_ffree + sblock.fs_frag * n_bfree));
-	printf("(%lld frags, %lld blocks, %lld.%lld%% fragmentation)\n",
-	    (long long)n_ffree, (long long)n_bfree,
-	    (long long)((n_ffree * 100) / sblock.fs_dsize),
-	    (long long)(((n_ffree * 1000 + sblock.fs_dsize / 2) /
-	    sblock.fs_dsize) % 10));
+	pwarn("%d files, %d used, %d free ",
+	    n_files, n_blks, n_ffree + sblock.fs_frag * n_bfree);
+	printf("(%d frags, %d blocks, %d.%d%% fragmentation)\n",
+	    n_ffree, n_bfree,
+	    (n_ffree * 100) / sblock.fs_dsize,
+	    ((n_ffree * 1000 + sblock.fs_dsize / 2) / sblock.fs_dsize) % 10);
 	if (debug &&
 	    (n_files -= maxino - ROOTINO - sblock.fs_cstotal.cs_nifree))
-		printf("%lld files missing\n", n_files);
+		printf("%d files missing\n", n_files);
 	if (debug) {
 		n_blks += sblock.fs_ncg *
 			(cgdmin(&sblock, 0) - cgsblock(&sblock, 0));
 		n_blks += cgsblock(&sblock, 0) - cgbase(&sblock, 0);
 		n_blks += howmany(sblock.fs_cssize, sblock.fs_fsize);
 		if (n_blks -= maxfsblock - (n_ffree + sblock.fs_frag * n_bfree))
-			printf("%lld blocks missing\n", (long long)n_blks);
+			printf("%d blocks missing\n", n_blks);
 		if (duplist != NULL) {
 			printf("The following duplicate blocks remain:");
 			for (dp = duplist; dp; dp = dp->next)
-				printf(" %lld,", (long long)dp->dup);
+				printf(" %d,", dp->dup);
 			printf("\n");
 		}
 		if (zlnhead != NULL) {
 			printf("The following zero link count inodes remain:");
 			for (zlnp = zlnhead; zlnp; zlnp = zlnp->next)
-				printf(" %llu,",
-				    (unsigned long long)zlnp->zlncnt);
+				printf(" %u,", zlnp->zlncnt);
 			printf("\n");
 		}
 	}

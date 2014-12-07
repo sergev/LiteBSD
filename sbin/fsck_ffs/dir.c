@@ -414,11 +414,9 @@ linkup(ino_t orphan, ino_t parentdir)
 		DIP_SET(dp, di_nlink, DIP(dp, di_nlink) + 1);
 		inodirty();
 		ILNCOUNT(lfdir)++;
-		pwarn("DIR I=%llu CONNECTED. ",
-		    (unsigned long long)orphan);
+		pwarn("DIR I=%u CONNECTED. ", orphan);
 		if (parentdir != (ino_t)-1) {
-			printf("PARENT WAS I=%llu\n",
-			    (unsigned long long)parentdir);
+			printf("PARENT WAS I=%u\n", parentdir);
 			/*
 			 * The parent directory, because of the ordering
 			 * guarantees, has had the link count incremented

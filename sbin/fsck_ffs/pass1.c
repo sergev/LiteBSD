@@ -54,9 +54,8 @@ static ino_t info_inumber;
 static int
 pass1_info(char *buf, size_t buflen)
 {
-	return (snprintf(buf, buflen, "phase 1, inode %llu/%llu",
-	    (unsigned long long)info_inumber,
-	    (unsigned long long)sblock.fs_ipg * sblock.fs_ncg) > 0);
+	return (snprintf(buf, buflen, "phase 1, inode %u/%u",
+	    info_inumber, sblock.fs_ipg * sblock.fs_ncg) > 0);
 }
 
 void
@@ -171,8 +170,7 @@ pass1(void)
 			struct inostat *ninfo;
 			size_t ninospace = ninosused * sizeof(*ninfo);
 			if (ninospace / sizeof(*info) != ninosused) {
-				pfatal("too many inodes %llu\n",
-				    (unsigned long long)ninosused);
+				pfatal("too many inodes %u\n", ninosused);
 				exit(8);
 			}
 			ninfo = realloc(info, ninospace);
@@ -208,8 +206,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 		    memcmp(dp->dp1.di_ib, ufs_zino.di_ib,
 			NIADDR * sizeof(int32_t)) ||
 		    dp->dp1.di_mode || dp->dp1.di_size) {
-			pfatal("PARTIALLY ALLOCATED INODE I=%llu",
-			    (unsigned long long)inumber);
+			pfatal("PARTIALLY ALLOCATED INODE I=%u", inumber);
 			if (reply("CLEAR") == 1) {
 				dp = ginode(inumber);
 				clearinode(dp);
@@ -226,8 +223,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	    DIP(dp, di_size) > sblock.fs_maxfilesize ||
 	    (mode == IFDIR && DIP(dp, di_size) > MAXDIRSIZE)) {
 		if (debug)
-			printf("bad size %llu:",
-			    (unsigned long long)DIP(dp, di_size));
+			printf("bad size %u:", DIP(dp, di_size));
 		goto unknown;
 	}
 	if (!preen && mode == IFMT && reply("HOLD BAD BLOCK") == 1) {
@@ -240,8 +236,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	ndb = lndb > (u_int64_t)INT_MAX ? -1 : (int)lndb;
 	if (ndb < 0) {
 		if (debug)
-			printf("bad size %llu ndb %d:",
-			    (unsigned long long)DIP(dp, di_size), ndb);
+			printf("bad size %u ndb %d:", DIP(dp, di_size), ndb);
 		goto unknown;
 	}
 	if (mode == IFBLK || mode == IFCHR)
@@ -311,9 +306,8 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	(void)ckinode(dp, idesc);
 	idesc->id_entryno *= btodb(sblock.fs_fsize);
 	if (DIP(dp, di_blocks) != idesc->id_entryno) {
-		pwarn("INCORRECT BLOCK COUNT I=%llu (%ld should be %d)",
-		    (unsigned long long)inumber, (long)DIP(dp, di_blocks),
-		    idesc->id_entryno);
+		pwarn("INCORRECT BLOCK COUNT I=%u (%ld should be %d)",
+		    inumber, (long)DIP(dp, di_blocks), idesc->id_entryno);
 		if (preen)
 			printf(" (CORRECTED)\n");
 		else if (reply("CORRECT") == 0)
@@ -324,7 +318,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	}
 	return;
 unknown:
-	pfatal("UNKNOWN FILE TYPE I=%llu", (unsigned long long)inumber);
+	pfatal("UNKNOWN FILE TYPE I=%u", inumber);
 	SET_ISTATE(inumber, FCLEAR);
 	if (reply("CLEAR") == 1) {
 		SET_ISTATE(inumber, USTATE);
@@ -346,8 +340,7 @@ pass1check(struct inodesc *idesc)
 	if ((anyout = chkrange(blkno, idesc->id_numfrags)) != 0) {
 		blkerror(idesc->id_number, "BAD", blkno);
 		if (badblk++ >= MAXBAD) {
-			pwarn("EXCESSIVE BAD BLKS I=%llu",
-			    (unsigned long long)idesc->id_number);
+			pwarn("EXCESSIVE BAD BLKS I=%u", idesc->id_number);
 			if (preen)
 				printf(" (SKIPPING)\n");
 			else if (reply("CONTINUE") == 0) {
@@ -366,8 +359,8 @@ pass1check(struct inodesc *idesc)
 		} else {
 			blkerror(idesc->id_number, "DUP", blkno);
 			if (dupblk++ >= MAXDUP) {
-				pwarn("EXCESSIVE DUP BLKS I=%llu",
-				    (unsigned long long)idesc->id_number);
+				pwarn("EXCESSIVE DUP BLKS I=%u",
+                                        idesc->id_number);
 				if (preen)
 					printf(" (SKIPPING)\n");
 				else if (reply("CONTINUE") == 0) {

@@ -452,9 +452,8 @@ again:
 			break;
 
 		default:
-			errexit("BAD STATE %d FOR INODE I=%llu\n",
-			    GET_ISTATE(dirp->d_ino),
-			    (unsigned long long)dirp->d_ino);
+			errexit("BAD STATE %d FOR INODE I=%u\n",
+			    GET_ISTATE(dirp->d_ino), dirp->d_ino);
 		}
 	}
 	if (n == 0)

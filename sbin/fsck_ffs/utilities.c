@@ -126,8 +126,7 @@ inoinfo(ino_t inum)
 	int iloff;
 
 	if (inum > maxino)
-		errexit("inoinfo: inumber %llu out of range",
-		    (unsigned long long)inum);
+		errexit("inoinfo: inumber %u out of range", inum);
 	ilp = &inostathead[inum / sblock.fs_ipg];
 	iloff = inum % sblock.fs_ipg;
 	if (iloff >= ilp->il_numalloced)
@@ -228,9 +227,9 @@ flush(int fd, struct bufarea *bp)
 	if (!bp->b_dirty)
 		return;
 	if (bp->b_errs != 0)
-		pfatal("WRITING %sZERO'ED BLOCK %lld TO DISK\n",
+		pfatal("WRITING %sZERO'ED BLOCK %d TO DISK\n",
 		    (bp->b_errs == bp->b_size / DEV_BSIZE) ? "" : "PARTIALLY ",
-		    (long long)bp->b_bno);
+		    bp->b_bno);
 	bp->b_dirty = 0;
 	bp->b_errs = 0;
 	bwrite(fd, bp->b_un.b_buf, bp->b_bno, (long)bp->b_size);
@@ -250,7 +249,7 @@ rwerror(char *mesg, daddr_t blk)
 
 	if (preen == 0)
 		printf("\n");
-	pfatal("CANNOT %s: BLK %lld", mesg, (long long)blk);
+	pfatal("CANNOT %s: BLK %d", mesg, blk);
 	if (reply("CONTINUE") == 0)
 		errexit("Program terminated\n");
 }
@@ -347,12 +346,11 @@ bread(int fd, char *buf, daddr_t blk, long size)
 		if (read(fd, cp, secsize) != secsize) {
 			(void)lseek(fd, offset + i + secsize, 0);
 			if (secsize != DEV_BSIZE)
-				printf(" %lld (%lld),",
-				    (long long)(offset + i) / secsize,
-				    (long long)blk + i / DEV_BSIZE);
+				printf(" %d (%d),",
+				    (offset + i) / secsize,
+				    blk + i / DEV_BSIZE);
 			else
-				printf(" %lld,", (long long)blk +
-				    i / DEV_BSIZE);
+				printf(" %d,", blk + i / DEV_BSIZE);
 			errs++;
 		}
 	}
@@ -385,12 +383,11 @@ bwrite(int fd, char *buf, daddr_t blk, long size)
 		if (write(fd, cp, secsize) != secsize) {
 			(void)lseek(fd, offset + i + DEV_BSIZE, 0);
 			if (secsize != DEV_BSIZE)
-				printf(" %lld (%lld),",
-				    (long long)(offset + i) / secsize,
-				    (long long)blk + i / DEV_BSIZE);
+				printf(" %d (%d),",
+				    (offset + i) / secsize,
+				    blk + i / DEV_BSIZE);
 			else
-				printf(" %lld,", (long long)blk +
-				    i / DEV_BSIZE);
+				printf(" %d,", blk + i / DEV_BSIZE);
 		}
 	printf("\n");
 	return;

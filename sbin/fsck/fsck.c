@@ -182,10 +182,10 @@ main(int argc, char *argv[])
 		    fs = getfsspec(*argv);
 
 		if (fs == NULL) {
-			if (vfstype == NULL)
-				errx(1,
-				    "%s: unknown special file or file system.",
-				    *argv);
+			if (vfstype == NULL) {
+			        /* Assume FFS by default. */
+                                vfstype = "ffs";
+			}
 			spec = *argv;
 			type = vfstype;
 		} else {

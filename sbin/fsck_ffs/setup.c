@@ -261,8 +261,8 @@ found:
 		exit(8);
 	}
 	if (sblock.fs_maxfilesize != maxfilesize) {
-		pwarn("INCORRECT MAXFILESIZE=%llu IN SUPERBLOCK",
-		    (unsigned long long)sblock.fs_maxfilesize);
+		pwarn("INCORRECT MAXFILESIZE=%u IN SUPERBLOCK",
+		    sblock.fs_maxfilesize);
 		sblock.fs_maxfilesize = maxfilesize;
 		if (preen)
 			printf(" (FIXED)\n");

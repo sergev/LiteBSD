@@ -290,8 +290,8 @@ pass5(void)
 			default:
 				if (j < ROOTINO)
 					break;
-				errexit("BAD STATE %d FOR INODE I=%llu\n",
-				    GET_ISTATE(j), (unsigned long long)j);
+				errexit("BAD STATE %d FOR INODE I=%u\n",
+				    GET_ISTATE(j), j);
 			}
 		}
 		if (c == 0)

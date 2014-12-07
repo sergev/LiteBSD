@@ -172,8 +172,8 @@ iblock(struct inodesc *idesc, long ilevel, off_t isize)
 			if (IBLK(bp, i) == 0)
 				continue;
 			(void)snprintf(buf, sizeof buf,
-			    "PARTIALLY TRUNCATED INODE I=%llu",
-			    (unsigned long long)idesc->id_number);
+			    "PARTIALLY TRUNCATED INODE I=%u",
+                            idesc->id_number);
 			if (preen)
 				pfatal("%s", buf);
 			else if (dofix(idesc, buf)) {
@@ -236,32 +236,29 @@ chkrange(daddr_t blk, int cnt)
 	if (cnt > sblock.fs_frag ||
 	    fragnum(&sblock, blk) + cnt > sblock.fs_frag) {
 		if (debug)
-			printf("bad size: blk %lld, offset %lld, size %d\n",
-			    (long long)blk, (long long)fragnum(&sblock, blk),
-			    cnt);
+			printf("bad size: blk %d, offset %d, size %d\n",
+			    blk, fragnum(&sblock, blk), cnt);
 		return (1);
 	}
 	c = dtog(&sblock, blk);
 	if (blk < cgdmin(&sblock, c)) {
 		if ((blk + cnt) > cgsblock(&sblock, c)) {
 			if (debug) {
-				printf("blk %lld < cgdmin %lld;",
-				    (long long)blk,
-				    (long long)cgdmin(&sblock, c));
-				printf(" blk + cnt %lld > cgsbase %lld\n",
-				    (long long)(blk + cnt),
-				    (long long)cgsblock(&sblock, c));
+				printf("blk %d < cgdmin %d;",
+				    blk, cgdmin(&sblock, c));
+				printf(" blk + cnt %d > cgsbase %d\n",
+				    blk + cnt,
+				    cgsblock(&sblock, c));
 			}
 			return (1);
 		}
 	} else {
 		if ((blk + cnt) > cgbase(&sblock, c+1)) {
 			if (debug)  {
-				printf("blk %lld >= cgdmin %lld;",
-				    (long long)blk,
-				    (long long)cgdmin(&sblock, c));
-				printf(" blk + cnt %lld > sblock.fs_fpg %d\n",
-				    (long long)(blk+cnt), sblock.fs_fpg);
+				printf("blk %d >= cgdmin %d;",
+				    blk, cgdmin(&sblock, c));
+				printf(" blk + cnt %d > sblock.fs_fpg %d\n",
+				    blk+cnt, sblock.fs_fpg);
 			}
 			return (1);
 		}
@@ -278,8 +275,8 @@ ginode(ino_t inumber)
 	daddr_t iblk;
 
 	if (inumber < ROOTINO || inumber > maxino)
-		errexit("bad inode number %llu to ginode\n",
-		    (unsigned long long)inumber);
+		errexit("bad inode number %u to ginode\n",
+		    inumber);
 	if (startinum == 0 ||
 	    inumber < startinum || inumber >= startinum + INOPB(&sblock)) {
 		iblk = ino_to_fsba(&sblock, inumber);
@@ -309,9 +306,8 @@ getnextinode(ino_t inumber)
 	static caddr_t nextinop;
 
 	if (inumber != nextino++ || inumber > maxino)
-		errexit("bad inode number %llu to nextinode %llu\n",
-		    (unsigned long long)inumber,
-		    (unsigned long long)nextino);
+		errexit("bad inode number %u to nextinode %u\n",
+		    inumber, nextino);
 	if (inumber >= lastinum) {
 		readcnt++;
 		dblk = fsbtodb(&sblock, ino_to_fsba(&sblock, lastinum));
@@ -429,7 +425,7 @@ getinoinfo(ino_t inumber)
 			continue;
 		return (inp);
 	}
-	errexit("cannot find inode %llu\n", (unsigned long long)inumber);
+	errexit("cannot find inode %u\n", inumber);
 	return (NULL);
 }
 
@@ -512,7 +508,7 @@ pinode(ino_t ino)
 	struct passwd *pw;
 	time_t t;
 
-	printf(" I=%llu ", (unsigned long long)ino);
+	printf(" I=%u ", ino);
 	if (ino < ROOTINO || ino > maxino)
 		return;
 	dp = ginode(ino);
@@ -526,7 +522,7 @@ pinode(ino_t ino)
 	printf("MODE=%o\n", DIP(dp, di_mode));
 	if (preen)
 		printf("%s: ", cdevname());
-	printf("SIZE=%llu ", (unsigned long long)DIP(dp, di_size));
+	printf("SIZE=%u ", DIP(dp, di_size));
 	t = DIP(dp, di_mtime);
 	p = ctime(&t);
 	printf("MTIME=%12.12s %4.4s ", &p[4], &p[20]);
@@ -536,7 +532,7 @@ void
 blkerror(ino_t ino, char *type, daddr_t blk)
 {
 
-	pfatal("%lld %s I=%llu", blk, type, (unsigned long long)ino);
+	pfatal("%d %s I=%u", blk, type, ino);
 	printf("\n");
 	switch (GET_ISTATE(ino)) {
 

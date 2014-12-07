@@ -238,7 +238,7 @@ char	*lfname;		/* lost & found directory name */
 int	lfmode;			/* lost & found directory creation mode */
 
 daddr_t	n_blks;			/* number of blocks in use */
-int64_t	n_files;		/* number of files in use */
+int	n_files;		/* number of files in use */
 
 #define	clearinode(dp)	(dp)->dp1 = ufs_zino
 

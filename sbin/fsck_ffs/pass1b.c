@@ -48,9 +48,8 @@ static ino_t info_inumber;
 static int
 pass1b_info(char *buf, size_t buflen)
 {
-	return (snprintf(buf, buflen, "phase 1b, inode %llu/%llu",
-	    (unsigned long long)info_inumber,
-	    (unsigned long long)sblock.fs_ipg * sblock.fs_ncg) > 0);
+	return (snprintf(buf, buflen, "phase 1b, inode %u/%u",
+	    info_inumber, sblock.fs_ipg * sblock.fs_ncg) > 0);
 }
 
 void
