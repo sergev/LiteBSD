@@ -864,7 +864,7 @@ typedef enum {
 
 static int
 inode_by_name (ufs_t *disk, ufs_inode_t *inode, const char *name,
-    ufs_op_t op, int mode)
+    ufs_op_t op, int mode, int link_inum)
 {
     ufs_inode_t dir;
     int c, namlen, reclen;
@@ -1091,7 +1091,7 @@ delete_file:
      */
 create_link:
     if (verbose > 2)
-        printf ("*** link inode %d to '%.*s', directory %d\n", mode, namlen, namptr, dir.number);
+        printf ("*** link inode %d to '%.*s', directory %d\n", link_inum, namlen, namptr, dir.number);
     reclen = dirent.d_reclen - 8 - (dirent.d_namlen + 4) / 4 * 4;
     c = 8 + (namlen + 4) / 4 * 4;
     if (reclen >= c) {
@@ -1113,9 +1113,10 @@ create_link:
         reclen = DIRBLKSIZ;
     }
     offset = last_offset + dirent.d_reclen;
-    dirent.d_ino = mode;
+    dirent.d_ino = link_inum;
     dirent.d_reclen = reclen;
     dirent.d_namlen = namlen;
+    dirent.d_type = (mode & IFMT) >> 12;
     if (verbose > 2)
         printf ("*** new entry %u-%u-%u at offset %lu\n", dirent.d_ino, dirent.d_reclen, dirent.d_namlen, offset);
     if (ufs_inode_write (&dir, offset, (unsigned char*) &dirent, 8) < 0) {
@@ -1151,7 +1152,7 @@ create_link:
 int
 ufs_inode_lookup (ufs_t *disk, ufs_inode_t *inode, const char *name)
 {
-    return inode_by_name (disk, inode, name, INODE_OP_LOOKUP, 0);
+    return inode_by_name (disk, inode, name, INODE_OP_LOOKUP, 0, 0);
 }
 
 /*
@@ -1163,7 +1164,7 @@ ufs_inode_lookup (ufs_t *disk, ufs_inode_t *inode, const char *name)
 int
 ufs_inode_create (ufs_t *disk, ufs_inode_t *inode, const char *name, int mode)
 {
-    return inode_by_name (disk, inode, name, INODE_OP_CREATE, mode);
+    return inode_by_name (disk, inode, name, INODE_OP_CREATE, mode, 0);
 }
 
 /*
@@ -1174,7 +1175,7 @@ ufs_inode_create (ufs_t *disk, ufs_inode_t *inode, const char *name, int mode)
 int
 ufs_inode_delete (ufs_t *disk, ufs_inode_t *inode, const char *name)
 {
-    return inode_by_name (disk, inode, name, INODE_OP_DELETE, 0);
+    return inode_by_name (disk, inode, name, INODE_OP_DELETE, 0, 0);
 }
 
 /*
@@ -1183,9 +1184,9 @@ ufs_inode_delete (ufs_t *disk, ufs_inode_t *inode, const char *name)
  * Return 2 when the inode was linked.
  */
 int
-ufs_inode_link (ufs_t *disk, ufs_inode_t *inode, const char *name, int inum)
+ufs_inode_link (ufs_t *disk, ufs_inode_t *inode, const char *name, int inum, int mode)
 {
-    return inode_by_name (disk, inode, name, INODE_OP_LINK, inum);
+    return inode_by_name (disk, inode, name, INODE_OP_LINK, mode, inum);
 }
 
 /*

@@ -223,7 +223,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	    DIP(dp, di_size) > sblock.fs_maxfilesize ||
 	    (mode == IFDIR && DIP(dp, di_size) > MAXDIRSIZE)) {
 		if (debug)
-			printf("bad size %u:", DIP(dp, di_size));
+			printf("bad size %llu:", DIP(dp, di_size));
 		goto unknown;
 	}
 	if (!preen && mode == IFMT && reply("HOLD BAD BLOCK") == 1) {
@@ -236,7 +236,7 @@ checkinode(ino_t inumber, struct inodesc *idesc)
 	ndb = lndb > (u_int64_t)INT_MAX ? -1 : (int)lndb;
 	if (ndb < 0) {
 		if (debug)
-			printf("bad size %u ndb %d:", DIP(dp, di_size), ndb);
+			printf("bad size %llu ndb %d:", DIP(dp, di_size), ndb);
 		goto unknown;
 	}
 	if (mode == IFBLK || mode == IFCHR)

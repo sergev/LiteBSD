@@ -174,7 +174,7 @@ void    ufs_directory_scan (ufs_inode_t *inode, const char *dirname,
 int     ufs_inode_lookup (ufs_t *disk, ufs_inode_t *inode, const char *name);
 int     ufs_inode_create (ufs_t *disk, ufs_inode_t *inode, const char *name, int mode);
 int     ufs_inode_delete (ufs_t *disk, ufs_inode_t *inode, const char *name);
-int     ufs_inode_link (ufs_t *disk, ufs_inode_t *inode, const char *name, int mode);
+int     ufs_inode_link (ufs_t *disk, ufs_inode_t *inode, const char *name, int mode, int linktype);
 int     ufs_inode_save (ufs_inode_t *inode, int force);
 void    ufs_inode_clear (ufs_inode_t *inode);
 void    ufs_inode_truncate (ufs_inode_t *inode, unsigned long size);

@@ -442,7 +442,7 @@ int op_mkdir(const char *path, mode_t mode)
     /* Make parent link '..' */
     strcpy (buf, path);
     strcat (buf, "/..");
-    if (ufs_inode_link (disk, &dir, buf, parent.number) < 0) {
+    if (ufs_inode_link (disk, &dir, buf, parent.number, IFDIR) < 0) {
         printlog("--- dotdot link failed\n");
         return -EIO;
     }
@@ -476,7 +476,7 @@ int op_link(const char *path, const char *newpath)
     }
 
     /* Create target link. */
-    if (ufs_inode_link (disk, &target, newpath, source.number) < 0) {
+    if (ufs_inode_link (disk, &target, newpath, source.number, source.mode) < 0) {
         printlog("--- link failed\n");
         return -EIO;
     }
@@ -503,7 +503,7 @@ int op_rename(const char *path, const char *newpath)
     ufs_inode_save (&source, 1);
 
     /* Create target link. */
-    if (ufs_inode_link (disk, &target, newpath, source.number) < 0) {
+    if (ufs_inode_link (disk, &target, newpath, source.number, source.mode) < 0) {
         printlog("--- link failed\n");
         return -EIO;
     }

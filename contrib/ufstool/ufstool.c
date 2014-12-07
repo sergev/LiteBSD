@@ -252,7 +252,7 @@ add_directory (ufs_t *disk, char *name, int mode, int owner, int group)
     /* Make parent link '..' */
     strcpy (buf, name);
     strcat (buf, "/..");
-    if (ufs_inode_link (disk, &dir, buf, parent.number) < 0) {
+    if (ufs_inode_link (disk, &dir, buf, parent.number, IFDIR) < 0) {
         fprintf (stderr, "%s: dotdot link failed\n", name);
         return;
     }
@@ -414,8 +414,14 @@ add_hardlink (ufs_t *disk, const char *path, const char *link)
         return;
     }
 
+    /* Check the target does not exist. */
+    if (ufs_inode_lookup (disk, &target, path) >= 0) {
+        fprintf (stderr, "%s: link target already exists\n", path);
+        return;
+    }
+
     /* Create target link. */
-    if (ufs_inode_link (disk, &target, path, source.number) < 0) {
+    if (ufs_inode_link (disk, &target, path, source.number, source.mode) < 0) {
         fprintf (stderr, "%s: link failed\n", path);
         return;
     }

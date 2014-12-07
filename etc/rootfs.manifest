@@ -2471,8 +2471,6 @@ link /usr/share/man/cat3/mkstemp.0
 target /usr/share/man/cat3/mktemp.0
 link /usr/share/man/cat3/monstartup.0
 target /usr/share/man/cat3/moncontrol.0
-link /usr/share/man/cat3/monstartup.0
-target /usr/share/man/cat3/moncontrol.0
 link /usr/share/man/cat3/pclose.0
 target /usr/share/man/cat3/popen.0
 link /usr/share/man/cat3/fprintf.0
@@ -2569,12 +2567,6 @@ link /usr/share/man/cat3/regexec.0
 target /usr/share/man/cat3/regex.0
 link /usr/share/man/cat3/regfree.0
 target /usr/share/man/cat3/regex.0
-link /usr/share/man/cat3/regcomp.0
-target /usr/share/man/cat3/regexp.0
-link /usr/share/man/cat3/regerror.0
-target /usr/share/man/cat3/regexp.0
-link /usr/share/man/cat3/regexec.0
-target /usr/share/man/cat3/regexp.0
 link /usr/share/man/cat3/regsub.0
 target /usr/share/man/cat3/regexp.0
 link /usr/share/man/cat3/dn_comp.0
