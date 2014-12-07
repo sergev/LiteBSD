@@ -1092,13 +1092,24 @@ create_link:
     if (verbose > 2)
         printf ("*** link inode %d to '%.*s', directory %d\n", mode, namlen, namptr, dir.number);
     reclen = dirent.d_reclen - 8 - (dirent.d_namlen + 4) / 4 * 4;
-    dirent.d_reclen -= reclen;
-    if (verbose > 2)
-        printf ("*** previous entry %u-%u-%u at offset %lu\n", dirent.d_ino, dirent.d_reclen, dirent.d_namlen, last_offset);
-    if (ufs_inode_write (&dir, last_offset, (unsigned char*) &dirent, 8) < 0) {
-        fprintf (stderr, "inode %d: write error at offset %ld\n",
-            dir.number, last_offset);
-        return -1;
+    c = 8 + (namlen + 4) / 4 * 4;
+    if (reclen >= c) {
+        /* Enough space */
+        dirent.d_reclen -= reclen;
+        if (verbose > 2)
+            printf ("*** previous entry %u-%u-%u at offset %lu\n",
+                dirent.d_ino, dirent.d_reclen, dirent.d_namlen, last_offset);
+        if (ufs_inode_write (&dir, last_offset, (unsigned char*) &dirent, 8) < 0) {
+            fprintf (stderr, "inode %d: write error at offset %ld\n",
+                dir.number, last_offset);
+            return -1;
+        }
+    } else {
+        /* No space, extend directory. */
+        if (verbose > 2)
+            printf ("*** extend dir, previous entry %u-%u-%u at offset %lu\n",
+                dirent.d_ino, dirent.d_reclen, dirent.d_namlen, last_offset);
+        reclen = DIRBLKSIZ;
     }
     offset = last_offset + dirent.d_reclen;
     dirent.d_ino = mode;
