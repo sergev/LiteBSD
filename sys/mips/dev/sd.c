@@ -215,13 +215,12 @@ static int card_cmd(unsigned int unit, unsigned int cmd, unsigned int addr)
 static inline void
 sd_led(int val)
 {
-#ifdef SD_LED_ANSEL
-    struct gpioreg *led_port = (struct gpioreg*) &SD_LED_ANSEL;
-    led_port->trisclr = (1<<SD_LED_PIN);
+#ifdef SD_LED
+    gpio_set_output(SD_LED);
     if (val) {
-        led_port->latset = (1<<SD_LED_PIN);
+        gpio_set(SD_LED);
     } else {
-        led_port->latclr = (1<<SD_LED_PIN);
+        gpio_clr(SD_LED);
     }
 #endif
 }

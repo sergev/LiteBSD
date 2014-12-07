@@ -33,6 +33,12 @@
 
 #include <mips/dev/device.h>
 #include <machine/pic32mz.h>
+#include <machine/pic32_gpio.h>
+
+
+#ifndef UART_BUFSZ
+#define UART_BUFSZ 256
+#endif
 
 /*
  * PIC32 UART registers.
@@ -284,12 +290,12 @@ uartopen(dev, flag, mode, p)
         return ENXIO;
 
     if (!tp->t_rawq.c_cs)
-        clalloc(&tp->t_rawq, 256, 1);
+        clalloc(&tp->t_rawq, UART_BUFSZ, 1);
     if (!tp->t_canq.c_cs)
-        clalloc(&tp->t_canq, 256, 1);
+        clalloc(&tp->t_canq, UART_BUFSZ, 1);
     /* output queue doesn't need quoting */
     if (!tp->t_outq.c_cs)
-        clalloc(&tp->t_outq, 256, 0);
+        clalloc(&tp->t_outq, UART_BUFSZ, 0);
 
     tp->t_oproc = uartstart;
     tp->t_param = uartparam;

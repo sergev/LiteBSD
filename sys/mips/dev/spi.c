@@ -85,7 +85,7 @@ int spi_setup(struct spiio *io, int unit, int pin)
         return ENXIO;
 
     io->mode = PIC32_SPICON_MSTEN | PIC32_SPICON_ON;
-    io->cs_port = 0;
+    io->cs = 0;
     spi_set_speed(io, SPI_KHZ);
     spi_set_cspin(io, pin);
     return 0;
@@ -110,25 +110,15 @@ int spi_setup(struct spiio *io, int unit, int pin)
 void spi_set_cspin(struct spiio *io, int pin)
 {
     /* Release the old CS pin. */
-    if (io->cs_port) {
+    if (io->cs) {
         /* Configure the chip select pin as input. */
-        io->cs_port->trisset = io->cs_mask;
+        gpio_set_input(io->cs);
     }
-    io->cs_port = 0;
-    io->cs_pin  = 0;
-    io->cs_mask = 0;
 
     if (pin >= 0x10) {
-        struct gpioreg *cs_port = (struct gpioreg*) &ANSELA;
-
-        cs_port += (pin >> 4 & 15) - 1;
-        io->cs_port = cs_port;
-        io->cs_pin  = pin & 15;
-        io->cs_mask = 1 << io->cs_pin;
-
-        /* Configure the chip select pin as output high. */
-        cs_port->latset  = io->cs_mask;
-        cs_port->trisclr = io->cs_mask;
+        io->cs = pin;
+        gpio_set(io->cs);
+        gpio_set_output(io->cs);
     }
 }
 
@@ -147,11 +137,10 @@ void spi_set_speed(struct spiio *io, unsigned int khz)
  */
 void spi_select(struct spiio *io)
 {
-    if (io->cs_port) {
+    if (io->cs) {
         io->reg->brg = io->divisor;
         io->reg->con = io->mode;
-
-        io->cs_port->latclr = io->cs_mask;
+        gpio_clr(io->cs);
     }
 }
 
@@ -160,8 +149,8 @@ void spi_select(struct spiio *io)
  */
 void spi_deselect(struct spiio *io)
 {
-    if (io->cs_port) {
-        io->cs_port->latset = io->cs_mask;
+    if (io->cs) {
+        gpio_set(io->cs);
     }
 }
 
@@ -465,7 +454,7 @@ const char *spi_name(struct spiio *io)
  */
 char spi_csname(struct spiio *io)
 {
-    unsigned n = io->cs_port - (struct gpioreg*) &ANSELA;
+    unsigned int n = ((io->cs >> 4) & 15) - 1;
 
     if (n < 10)
         return "ABCDEFGHJK"[n];
@@ -477,10 +466,10 @@ char spi_csname(struct spiio *io)
  */
 int spi_cspin(struct spiio *io)
 {
-    if (! io->cs_port)
+    if (! io->cs)
         return 0;
 
-    return io->cs_pin;
+    return io->cs & 15;
 }
 
 /*
@@ -688,95 +677,6 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
         break;
     }
     return 0;
-}
-
-int gpio_input_map1(int pin)
-{
-    switch (pin) {
-    case RP('D',2):  return 0;
-    case RP('G',8):  return 1;
-    case RP('F',4):  return 2;
-    case RP('D',10): return 3;
-    case RP('F',1):  return 4;
-    case RP('B',9):  return 5;
-    case RP('B',10): return 6;
-    case RP('C',14): return 7;
-    case RP('B',5):  return 8;
-    case RP('C',1):  return 10;
-    case RP('D',14): return 11;
-    case RP('G',1):  return 12;
-    case RP('A',14): return 13;
-    case RP('D',6):  return 14;
-    }
-    printf ("spi: cannot map SDI pin %c%d, group 1\n",
-        pin_name[pin>>4], pin & 15);
-    return -1;
-}
-
-int gpio_input_map2(int pin)
-{
-    switch (pin) {
-    case RP('D',3):  return 0;
-    case RP('G',7):  return 1;
-    case RP('F',5):  return 2;
-    case RP('D',11): return 3;
-    case RP('F',0):  return 4;
-    case RP('B',1):  return 5;
-    case RP('E',5):  return 6;
-    case RP('C',13): return 7;
-    case RP('B',3):  return 8;
-    case RP('C',4):  return 10;
-    case RP('D',15): return 11;
-    case RP('G',0):  return 12;
-    case RP('A',15): return 13;
-    case RP('D',7):  return 14;
-    }
-    printf ("spi: cannot map SDI pin %c%d, group 2\n",
-        pin_name[pin>>4], pin & 15);
-    return -1;
-}
-
-int gpio_input_map3(int pin)
-{
-    switch (pin) {
-    case RP('D',9):  return 0;
-    case RP('G',6):  return 1;
-    case RP('B',8):  return 2;
-    case RP('B',15): return 3;
-    case RP('D',4):  return 4;
-    case RP('B',0):  return 5;
-    case RP('E',3):  return 6;
-    case RP('B',7):  return 7;
-    case RP('F',12): return 9;
-    case RP('D',12): return 10;
-    case RP('F',8):  return 11;
-    case RP('C',3):  return 12;
-    case RP('E',9):  return 13;
-    }
-    printf ("spi: cannot map SDI pin %c%d, group 3\n",
-        pin_name[pin>>4], pin & 15);
-    return -1;
-}
-
-int gpio_input_map4(int pin)
-{
-    switch (pin) {
-    case RP('D',1):  return 0;
-    case RP('G',9):  return 1;
-    case RP('B',14): return 2;
-    case RP('D',0):  return 3;
-    case RP('B',6):  return 5;
-    case RP('D',5):  return 6;
-    case RP('B',2):  return 7;
-    case RP('F',3):  return 8;
-    case RP('F',13): return 9;
-    case RP('F',2):  return 11;
-    case RP('C',2):  return 12;
-    case RP('E',8):  return 13;
-    }
-    printf ("spi: cannot map SDI pin %c%d, group 3\n",
-        pin_name[pin>>4], pin & 15);
-    return -1;
 }
 
 /*
