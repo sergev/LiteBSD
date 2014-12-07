@@ -775,6 +775,7 @@ file /usr/bin/install
 file /usr/bin/join
 file /usr/bin/jot
 file /usr/bin/kdump
+file /usr/bin/kermit
 file /usr/bin/ktrace
 file /usr/bin/lam
 file /usr/bin/last
@@ -824,6 +825,15 @@ group 2                 kmem
 file /usr/bin/nice
 file /usr/bin/nm
 file /usr/bin/nohup
+
+file /usr/bin/nvi
+symlink /usr/bin/vi
+target /usr/bin/nvi
+symlink /usr/bin/view
+target /usr/bin/nvi
+symlink /usr/bin/ex
+target /usr/bin/nvi
+
 file /usr/bin/pagesize
 file /usr/bin/passwd
 mode 04555

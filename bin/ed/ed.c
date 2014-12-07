@@ -11,6 +11,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 #define NULL    0
 #define FNSIZE  64
@@ -18,7 +21,7 @@
 #define ESIZE   128
 #define GBSIZE  256
 #define NBRA    5
-#define EOF -1
+//#define EOF -1
 
 #define CBRA    1
 #define CCHR    2
@@ -1609,9 +1612,11 @@ char **argv;
         globp = "r";
     }
     zero = (int *)malloc(nlall*sizeof(int));
-    tfname = mktemp("/tmp/eXXXXX");
+    tfname = strdup("/tmp/ed.XXXXXX");
+    tfname = mktemp(tfname);
     if (! tfname) {
         putstr ("ed: cannot create /tmp/file");
+        printf("Error: %d\n", errno);
         return -1;
     }
     init();
