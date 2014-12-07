@@ -933,8 +933,9 @@ cloop:
             return -1;
         }
         if (verbose > 2)
-            printf ("scan offset %lu: name='%.*s'\n", offset, namlen, fname);
-        if (strncmp (namptr, (char*) fname, namlen) == 0) {
+            printf ("scan offset %lu: name='%.*s'\n", offset, dirent.d_namlen, fname);
+        if (dirent.d_namlen == namlen &&
+            memcmp (namptr, (char*) fname, namlen) == 0) {
             /* Here a component matched in a directory.
              * If there is more pathname, go back to
              * cloop, otherwise return. */
