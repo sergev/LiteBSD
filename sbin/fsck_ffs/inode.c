@@ -522,7 +522,10 @@ pinode(ino_t ino)
 	printf("MODE=%o\n", DIP(dp, di_mode));
 	if (preen)
 		printf("%s: ", cdevname());
-	printf("SIZE=%llu ", DIP(dp, di_size));
+        if (DIP(dp, di_size) <= INT_MAX)
+            printf("SIZE=%u ", (unsigned)DIP(dp, di_size));
+        else
+            printf("SIZE=%llu ", DIP(dp, di_size));
 	t = DIP(dp, di_mtime);
 	p = ctime(&t);
 	printf("MTIME=%12.12s %4.4s ", &p[4], &p[20]);

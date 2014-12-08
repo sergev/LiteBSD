@@ -5,8 +5,6 @@
 # every file, directory, device, link or symlink.
 # Owner, group and access mode is defined for every object.
 #
-# TODO: verify access modes, links and symlinks.
-#
 default
 owner 0             root
 group 0             wheel

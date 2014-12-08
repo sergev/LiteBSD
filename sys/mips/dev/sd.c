@@ -616,7 +616,7 @@ sd_setup(struct disk *u)
     printf ("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
         sd_type[unit]==TYPE_SDHC ? "SDHC" :
         sd_type[unit]==TYPE_II ? "II" : "I",
-        u->dk_part[RAWPART].dp_size,
+        u->dk_part[RAWPART].dp_size / 2,
         spi_get_speed(&u->spiio) / 1000);
 
     /* Read partition table. */
