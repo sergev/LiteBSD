@@ -45,9 +45,7 @@ struct spireg {
  */
 struct spiio {
     struct spireg   *reg;
-    struct gpioreg  *cs_port;
-    unsigned int    cs_mask;
-    unsigned int    cs_pin;
+    int cs;
     unsigned int    divisor;
     unsigned int    mode;
 };

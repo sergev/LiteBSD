@@ -45,4 +45,19 @@ struct gpioreg {
     volatile unsigned unused[6*4];
 };
 
+/* Convert port name/signal into a pin number. */
+#define RP(x,n) (((x)-'A'+1) << 4 | (n))
+
+int gpio_input_map1(int);
+int gpio_input_map2(int);
+int gpio_input_map3(int);
+int gpio_input_map4(int);
+
+void gpio_set_input(int pin);
+void gpio_set_output(int pin);
+void gpio_set_analog(int pin);
+void gpio_set(int pin);
+void gpio_clr(int pin);
+int gpio_get(int pin);
+
 #endif

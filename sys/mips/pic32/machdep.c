@@ -67,6 +67,7 @@
 #include <machine/psl.h>
 #include <machine/pte.h>
 #include <machine/pic32mz.h>
+#include <machine/pic32_gpio.h>
 
 /* the following is used externally (sysctl_hw) */
 char    machine[] = "MIPS";     /* cpu "architecture" */
@@ -111,11 +112,12 @@ long    dumplo = 0;
 static inline int
 button1_pressed()
 {
-#ifdef BUTTON1_PORT
-    if ((BUTTON1_PORT >> BUTTON1_PIN) & 1)
-        return 1;
-#endif
+#ifdef BUTTON1
+    gpio_set_input(BUTTON1);
+    return gpio_get(BUTTON1);
+#else
     return 0;
+#endif
 }
 
 /*
