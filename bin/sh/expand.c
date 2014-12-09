@@ -674,7 +674,7 @@ record:
 
 STATIC int
 varisset(name)
-	char name;
+	signed char name;
 	{
 	char **ap;
 
@@ -687,8 +687,9 @@ varisset(name)
 	} else if ((unsigned)(name -= '1') <= '9' - '1') {
 		ap = shellparam.p;
 		do {
-			if (*ap++ == NULL)
+			if (*ap++ == NULL) {
 				return 0;
+            }
 		} while (--name >= 0);
 	}
 	return 1;
@@ -727,7 +728,6 @@ varvalue(name, quoted, allow_split)
 		while (*p) \
 			STPUTC(*p++, expdest); \
 	} while (0)
-
 
 	switch (name) {
 	case '$':
