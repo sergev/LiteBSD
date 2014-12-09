@@ -343,8 +343,6 @@ main(argc, argv)
 	 * loaded a file, then any file arguments are going to come after it.
 	 */
 	if (*argv != NULL) {
-        printf("File name found: [%s]\n", *argv);
-        sleep(1);
 		if (sp->frp != NULL) {
 			MALLOC_NOMSG(sp,
 			    *--argv, char *, strlen(sp->frp->name) + 1);

@@ -91,11 +91,11 @@ sex_screen_copy(orig, sp)
 	} else {
 		osex = SXP(orig);
 #ifndef SYSV_CURSES
-		if (osex->SE != NULL && (nsex->SE = strdup(osex->SE)) == NULL) {
+		if (osex->SE != NULL && (nsex->SE = int_strdup(osex->SE)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return (1);
 		}
-		if (osex->SO != NULL && (nsex->SO = strdup(osex->SO)) == NULL) {
+		if (osex->SO != NULL && (nsex->SO = int_strdup(osex->SO)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			free(osex->SE);
 			return (1);
@@ -215,7 +215,7 @@ sex_screen_exrc(sp)
 	}
 
 	if ((p = getenv("NEXINIT")) != NULL || (p = getenv("EXINIT")) != NULL)
-		if ((p = strdup(p)) == NULL) {
+		if ((p = int_strdup(p)) == NULL) {
 			rval = 1;
 			msgq(sp, M_SYSERR, NULL);
 			goto ret;

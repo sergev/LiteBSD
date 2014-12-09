@@ -636,7 +636,7 @@ badnum:				p = msg_print(sp, sep, &nf);
 				if (O_STR(sp, offset) != NULL &&
 				    O_STR(sp, offset) != O_D_STR(sp, offset))
 					free(O_STR(sp, offset));
-				if ((O_STR(sp, offset) = strdup(sep)) == NULL) {
+				if ((O_STR(sp, offset) = int_strdup(sep)) == NULL) {
 					msgq(sp, M_SYSERR, NULL);
 					rval = 1;
 					break;
@@ -972,7 +972,7 @@ opts_copy(orig, sp)
 			continue;
 		}
 		/* Copy the current string. */
-		if ((O_STR(sp, cnt) = strdup(O_STR(sp, cnt))) == NULL) {
+		if ((O_STR(sp, cnt) = int_strdup(O_STR(sp, cnt))) == NULL) {
 			O_D_STR(sp, cnt) = NULL;
 			goto nomem;
 		}
@@ -982,7 +982,7 @@ opts_copy(orig, sp)
 			continue;
 		}
 		/* Copy the default string. */
-		if ((O_D_STR(sp, cnt) = strdup(O_D_STR(sp, cnt))) == NULL) {
+		if ((O_D_STR(sp, cnt) = int_strdup(O_D_STR(sp, cnt))) == NULL) {
 nomem:			msgq(orig, M_SYSERR, NULL);
 			rval = 1;
 		}

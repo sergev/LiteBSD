@@ -85,7 +85,7 @@ v_screen_copy(orig, sp)
 		}
 
 		if (ovip->ps != NULL &&
-		    (nvip->ps = strdup(ovip->ps)) == NULL) {
+		    (nvip->ps = int_strdup(ovip->ps)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return (1);
 		}

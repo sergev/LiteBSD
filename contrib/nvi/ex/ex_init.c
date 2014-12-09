@@ -85,7 +85,7 @@ ex_screen_copy(orig, sp)
 		nexp->at_lbuf_set = oexp->at_lbuf_set;
 
 		if (oexp->lastbcomm != NULL &&
-		    (nexp->lastbcomm = strdup(oexp->lastbcomm)) == NULL) {
+		    (nexp->lastbcomm = int_strdup(oexp->lastbcomm)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return(1);
 		}

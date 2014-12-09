@@ -84,7 +84,7 @@ svi_screen_copy(orig, sp)
 	} else {
 		osvi = SVP(orig);
 		nsvi->srows = osvi->srows;
-		if (osvi->VB != NULL && (nsvi->VB = strdup(osvi->VB)) == NULL) {
+		if (osvi->VB != NULL && (nsvi->VB = int_strdup(osvi->VB)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return (1);
 		}

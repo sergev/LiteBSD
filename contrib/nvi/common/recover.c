@@ -191,7 +191,7 @@ rcv_tmp(sp, ep, name)
 		goto err;
 	(void)close(fd);
 
-	if ((ep->rcv_path = strdup(path)) == NULL) {
+	if ((ep->rcv_path = int_strdup(path)) == NULL) {
 		msgq(sp, M_SYSERR, NULL);
 		(void)unlink(path);
 err:		msgq(sp, M_ERR,
@@ -399,7 +399,7 @@ rcv_mailfile(sp, issync, cp_path)
 	if (!issync) {
 		/* Save the recover file descriptor, and mail path. */
 		ep->rcv_fd = fd;
-		if ((ep->rcv_mpath = strdup(mpath)) == NULL) {
+		if ((ep->rcv_mpath = int_strdup(mpath)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			goto err;
 		}
@@ -723,12 +723,12 @@ rcv_read(sp, frp)
 		if (recp == NULL || rec_mtime < sb.st_mtime) {
 			p = recp;
 			t = pathp;
-			if ((recp = strdup(recpath)) == NULL) {
+			if ((recp = int_strdup(recpath)) == NULL) {
 				msgq(sp, M_SYSERR, NULL);
 				recp = p;
 				goto next;
 			}
-			if ((pathp = strdup(path)) == NULL) {
+			if ((pathp = int_strdup(path)) == NULL) {
 				msgq(sp, M_SYSERR, NULL);
 				FREE(recp, strlen(recp) + 1);
 				recp = p;

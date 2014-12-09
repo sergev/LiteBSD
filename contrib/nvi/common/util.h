@@ -83,6 +83,8 @@ char	*tail __P((char *));
 CHAR_T	*v_strdup __P((SCR *, const CHAR_T *, size_t));
 void	 vi_putchar __P((int));
 
+char *int_strdup(char *);
+
 #ifdef DEBUG
 void	TRACE __P((SCR *, const char *, ...));
 #endif

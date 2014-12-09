@@ -136,7 +136,7 @@ ex_tagfirst(sp, tagarg)
 	sp->cno = m.cno;
 
 	/* Might as well make this the default tag. */
-	if ((EXP(sp)->tlast = strdup(tagarg)) == NULL) {
+	if ((EXP(sp)->tlast = int_strdup(tagarg)) == NULL) {
 		msgq(sp, M_SYSERR, NULL);
 		return (1);
 	}
@@ -190,7 +190,7 @@ ex_tagpush(sp, cmdp)
 	case 1:
 		if (exp->tlast != NULL)
 			FREE(exp->tlast, strlen(exp->tlast) + 1);
-		if ((exp->tlast = strdup(cmdp->argv[0]->bp)) == NULL) {
+		if ((exp->tlast = int_strdup(cmdp->argv[0]->bp)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return (1);
 		}
@@ -244,7 +244,7 @@ ex_tagpush(sp, cmdp)
 		exp->tagq.tqh_first->cno = sp->cno;
 	}
 	if (tp != NULL) {
-		if ((tp->search = strdup(search)) == NULL)
+		if ((tp->search = int_strdup(search)) == NULL)
 			msgq(sp, M_SYSERR, NULL);
 		else
 			tp->slen = strlen(search);
@@ -591,7 +591,7 @@ ex_tagcopy(orig, sp)
 			goto nomem;
 		*tp = *ap;
 		if (ap->search != NULL &&
-		    (tp->search = strdup(ap->search)) == NULL)
+		    (tp->search = int_strdup(ap->search)) == NULL)
 			goto nomem;
 		TAILQ_INSERT_TAIL(&nexp->tagq, tp, q);
 	}
@@ -603,14 +603,14 @@ ex_tagcopy(orig, sp)
 		if (tfp == NULL)
 			goto nomem;
 		*tfp = *atfp;
-		if ((tfp->name = strdup(atfp->name)) == NULL)
+		if ((tfp->name = int_strdup(atfp->name)) == NULL)
 			goto nomem;
 		TAILQ_INSERT_TAIL(&nexp->tagfq, tfp, q);
 	}
 
 	/* Copy the last tag. */
 	if (oexp->tlast != NULL &&
-	    (nexp->tlast = strdup(oexp->tlast)) == NULL) {
+	    (nexp->tlast = int_strdup(oexp->tlast)) == NULL) {
 nomem:		msgq(sp, M_SYSERR, NULL);
 		return (1);
 	}
