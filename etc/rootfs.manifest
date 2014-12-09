@@ -19,7 +19,6 @@ dir /dev
 dir /etc
 dir /root
 dir /sbin
-dir /tmp
 dir /home
 dir /usr
 dir /usr/bin
@@ -29,6 +28,10 @@ dir /usr/sbin
 dir /usr/src
 dir /usr/src/sys
 dir /var
+dir /var/tmp
+mode 1777
+dir /tmp
+mode 1777
 
 #------------------------------------------------------
 # Character devices.
@@ -3244,3 +3247,33 @@ file /var/spool/uucp/ERRORS
 
 dir /var/run
 file /var/run/utmp
+
+file /etc/rc.subr
+mode 0755
+file /etc/network.subr
+mode 0755
+dir /etc/rc.d
+file /sbin/rcorder
+mode 0755
+dir /etc/defaults
+file /etc/defaults/rc.conf
+mode 0755
+
+file /etc/rc.d/build_dev_db
+mode 0755
+file /etc/rc.d/build_pwd_db
+mode 0755
+file /etc/rc.d/fsck
+mode 0755
+file /etc/rc.d/mount_local
+mode 0755
+file /etc/rc.d/save_core
+mode 0755
+file /etc/rc.d/swap
+mode 0755
+file /etc/rc.d/FILESYSTEMS
+mode 0755
+file /etc/rc.d/hostname
+mode 0755
+file /etc/rc.d/netif
+mode 0755

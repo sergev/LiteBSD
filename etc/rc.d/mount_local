@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# LiteBSD mount local filesystems
+#
+
+# PROVIDE: mount_local
+# REQUIRE: fsck
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="mount_local"
+start_cmd="mount_local_start"
+stop_cmd=":"
+
+mount_local_start() 
+{
+    check_startmsgs && echo -n "Mounting local filesystems..."
+    /sbin/umount -a >/dev/null 2>&1
+    /sbin/mount -a -t nonfs
+    rm -f /fastboot 
+    check_startmsgs && echo "done."
+}
+
+load_rc_config $name
+run_rc_command "$1"
+

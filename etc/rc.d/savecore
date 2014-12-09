@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# LiteBSD save core dumps
+#
+
+# PROVIDE: savecore
+# REQUIRE: mount_local
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="savecore"
+start_cmd="savecore_start"
+stop_cmd=":"
+
+savecore_start() 
+{
+    if [ -d /var/crash ]; then
+        check_startmsgs && echo -n "Checking for core dump..."
+        savecore /var/crash
+        check_startmsgs && echo "done."
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"
+

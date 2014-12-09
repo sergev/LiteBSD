@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# LiteBSD build device database
+#
+
+# PROVIDE: build_dev_db
+# REQUIRE: mount_local
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="build_dev_db"
+start_cmd="build_dev_db_start"
+stop_cmd=":"
+
+build_dev_db_start() 
+{
+    check_startmsgs && echo -n "Building device database..."
+    /usr/sbin/dev_mkdb
+    check_startmsgs && echo "done."
+}
+
+load_rc_config $name
+run_rc_command "$1"
+

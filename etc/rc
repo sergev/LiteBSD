@@ -17,160 +17,49 @@ HOME=/; export HOME
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 export PATH
 
-if [ -r /fastboot ]
-then
-    echo "skipping disk checks."
-else
-    echo "starting file system checks."
-    fsck -p
-    case $? in
-    0)
-        ;;
-    2)
-        exit 1
-        ;;
-    4)
-        echo "Rebooting..."
-        reboot
-        echo "Reboot failed; help!"
-        exit 1
-        ;;
-    8)
-        echo "Automatic file system check failed; help!"
-        exit 1
-        ;;
-    12)
-        echo "Boot interrupted."
-        exit 1
-        ;;
-    130)
-        # interrupt before catcher installed
-        exit 1
-        ;;
-    *)
-        echo "Unknown error; help!"
-        exit 1
-        ;;
-    esac
-fi
+. /etc/rc.subr
+load_rc_config 'XXX'
 
-trap "echo 'Boot interrupted.'; exit 1" 3
+skip="-s nostart"
+_boot=start
 
-swapon -a
+# Do a first pass to get everything up to $early_late_divider so that
+# we can do a second pass that includes $local_startup directories
+#
+files=`rcorder ${skip} /etc/rc.d/* 2>/dev/null`
 
-umount -a >/dev/null 2>&1
-mount -a -t nonfs
-rm -f /fastboot                         # XXX (root now writeable)
+for _rc_elem in ${files}; do
+        run_rc_script ${_rc_elem} ${_boot}
 
-# set hostname, turn on network
-echo 'starting network'
-. /etc/netstart
+        case "$_rc_elem" in
+        */${early_late_divider})        break ;;
+        esac
+done
 
-#mount -a -t nfs >/dev/null 2>&1 &      # XXX shouldn't need background
+unset files local_rc
 
-# clean up left-over files
-rm -f /etc/nologin
-rm -f /var/spool/uucp/LCK.*
-rm -f /var/spool/uucp/STST/*
-(cd /var/run && { rm -rf -- *; install -c -m 664 -g utmp /dev/null utmp; })
+# Now that disks are mounted, for each dir in $local_startup
+# search for init scripts that use the new rc.d semantics.
+#
+case ${local_startup} in
+[Nn][Oo] | '') ;;
+*)      find_local_scripts_new ;;
+esac
 
-#echo -n 'starting system logger'
-#rm -f /dev/log
-#syslogd
+files=`rcorder ${skip} /etc/rc.d/* ${local_rc} 2>/dev/null`
+_skip_early=1
+for _rc_elem in ${files}; do
+        case "$_skip_early" in
+        1)      case "$_rc_elem" in
+                */${early_late_divider})        _skip_early=0 ;;
+                esac
+                continue
+                ;;
+        esac
 
-# $timedflags is imported from /etc/netstart;
-# if $timedflags == NO, timed isn't run.
-#if [ X${timedflags} != X"NO" ]; then
-#    echo -n ', time daemon'; timed $timedflags
-#fi
-#echo '.'
+        run_rc_script ${_rc_elem} ${_boot}
+done
 
-# /var/crash should be a directory or a symbolic link
-# to the crash directory if core dumps are to be saved.
-if [ -d /var/crash ]; then
-    echo checking for core dump...
-    savecore /var/crash
-fi
-
-#echo -n 'checking quotas:'
-#quotacheck -a
-#echo ' done.'
-#quotaon -a
-
-# build device database
-dev_mkdb
-
-# build password database
-if [ ! -f /etc/pwd.db ]; then
-    echo creating passwd database
-    pwd_mkdb /etc/master.passwd
-fi
-
-chmod 666 /dev/tty[pqrs]*
-
-# check the password temp/lock file
-if [ -f /etc/ptmp ]
-then
-    logger -s -p auth.err \
-        'password file may be incorrect -- /etc/ptmp exists'
-fi
-
-#echo preserving editor files
-#(cd /var/tmp && /usr/libexec/ex3.7preserve -a &&
-#     rm -f Ex[0-9][0-9][0-9][0-9][0-9] Rx[0-9][0-9][0-9][0-9][0-9])
-
-echo clearing /tmp
-
-# Prune quickly with one rm, then use find to clean up /tmp/[lq]* (this
-# is not needed with mfs /tmp, but doesn't hurt anything).
-(cd /tmp && rm -rf [a-km-pr-zA-Z]* &&
-    find . ! -name . ! -name lost+found ! -name quotas -type d -prune \
-        -exec rm -rf -- {} \;)
-
-#echo 'turning on accounting';  accton /var/account/acct
-
-echo -n standard daemons:
-echo -n ' update';              update
-#echo -n ' cron';               cron
-echo '.'
-
-#echo -n starting network daemons:
-
-# $gated and $routedflags are imported from /etc/netstart.
-# If $gated == YES, gated is used; otherwise routed.
-# If $routedflags == NO, routed isn't run.
-if [ X${gated} = X"YES" -a -r /etc/gated.conf ]; then
-    echo -n ' gated';           gated $gatedflags
-elif [ X${routedflags} != X"NO" ]; then
-#    echo -n ' routed';          routed $routedflags
-fi
-
-#echo -n ' named';               named
-
-# $rwhod is imported from /etc/netstart;
-# if $rwhod is set to something other than NO, rwhod is run.
-if [ ${rwhod-NO} != "NO" ]; then
-#   echo -n ' rwhod';            rwhod
-fi
-
-#echo -n ' printer';             lpd
-
-#echo -n ' portmap';             portmap
-#echo -n ' mountd';              mountd
-#echo -n ' nfsd';                nfsd -u -t 6
-#echo -n ' nfsiod';              nfsiod 4
-
-#echo -n ' sendmail';            sendmail -bd -q30m
-#echo -n ' inetd';               inetd
-#echo -n ' amd';
-#   cd /; amd -l /var/log/amd -r -a /amd -p > /var/run/amd.pid \
-#   /home /etc/amd-home \
-#   /n /etc/amd-n \
-#   &
-
-#echo '.'
-
-sh /etc/rc.local
-
+echo ''
 date
 exit 0

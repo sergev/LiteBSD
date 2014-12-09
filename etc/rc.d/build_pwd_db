@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# LiteBSD build password database
+#
+
+# PROVIDE: build_pwd_db
+# REQUIRE: mount_local
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="build_pwd_db"
+start_cmd="build_pwd_db_start"
+stop_cmd=":"
+
+build_pwd_db_start() 
+{
+    if [ ! -f /etc/pwd.db ]; then
+        check_startmsgs && echo -n "Building password database..."
+        /usr/sbin/pwd_mkdb /etc/master.passwd
+        check_startmsgs && echo "done."
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"
+

@@ -24,6 +24,7 @@ all clean cleandir depend etc lint:
 install:
 	# Hand-craft the password file first.
 	-mkdir -p ${DESTDIR}/etc/namedb ${DESTDIR}/dev ${DESTDIR}/tmp
+	-mkdir -p ${DESTDIR}/etc/rc.d ${DESTDIR}/etc/defaults
 	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys ${DESTDIR}/root
 	-mkdir -p ${DESTDIR}/var/log ${DESTDIR}/var/run ${DESTDIR}/var/spool/uucp
 	cp master.passwd ${DESTDIR}/etc/master.passwd
@@ -39,6 +40,11 @@ install:
 	install -c -m 744 netstart ${DESTDIR}/etc
 	install -c -m 644 ${BIN1} ${DESTDIR}/etc
 	install -c -m 666 ${BIN2} ${DESTDIR}/etc
+	install -c -m 755 network.subr ${DESTDIR}/etc
+	install -c -m 755 rc.subr ${DESTDIR}/etc
+	install -c -m 755 defaults/rc.conf ${DESTDIR}/etc/defaults
+	(cd rc.d; for RCFILE in *; do \
+		install -c -m 755 $$RCFILE ${DESTDIR}/etc/rc.d; done)
 	(cd root; \
 		install -c -m 644 dot.cshrc ${DESTDIR}/root/.cshrc; \
 		install -c -m 600 dot.klogin ${DESTDIR}/root/.klogin; \

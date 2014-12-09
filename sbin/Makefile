@@ -5,6 +5,6 @@ SUBDIR=	badsect clri dmesg dump dumpfs dumplfs fastboot \
 	mount_kernfs mount_lfs mount_nfs mount_null mount_portal \
 	mount_procfs mount_umap mount_union mountd newfs newlfs nfsd \
 	nfsiod nologin ping quotacheck reboot restore route routed savecore \
-	scsiformat shutdown slattach startslip swapon tunefs umount
+	scsiformat shutdown slattach startslip swapon tunefs umount rcorder
 #TODO: fsdb icheck ncheck
 .include <bsd.subdir.mk>

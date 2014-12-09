@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+# LiteBSD fsck rcng script
+#
+
+# PROVIDE: fsck
+# REQUIRE:
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="fsck"
+start_cmd="fsck_start"
+stop_cmd=":"
+
+fsck_start() 
+{
+    if [ -r /fastboot ]
+    then
+        check_startmsgs && echo "Skipping disk checks."
+    else
+        check_startmsgs && echo "Starting file system checks."
+        fsck -p
+        case $? in
+        0)
+            ;;
+        2)
+            stop_boot
+            ;;
+        4)
+            check_startmsgs && echo "Rebooting..."
+            reboot
+            check_startmsgs && echo "Reboot failed; help!"
+            stop_boot
+            ;;
+        8)
+            check_startmsgs && echo "Automatic file system check failed; help!"
+            stop_boot
+            ;;
+        12)
+            check_startmsgs && echo "Boot interrupted."
+            stop_boot
+            ;;
+        130)
+            # interrupt before catcher installed
+            stop_boot
+            ;;
+        *)
+            check_startmsgs && echo "Unknown error; help!"
+            stop_boot
+            ;;
+        esac
+    fi
+}
+
+load_rc_config $name
+run_rc_command "$1"
+

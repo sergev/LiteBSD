@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# LiteBSD Turn on swap
+#
+
+# PROVIDE: swap
+# REQUIRE: mount_local
+# KEYWORD:
+
+. /etc/rc.subr
+
+name="swap"
+start_cmd="swap_start"
+stop_cmd=":"
+
+swap_start() 
+{
+    check_startmsgs && echo -n "Starting swap..."
+    /sbin/swapon -a
+    check_startmsgs && echo "done."
+}
+
+load_rc_config $name
+run_rc_command "$1"
+
