@@ -60,4 +60,7 @@ void gpio_set(int pin);
 void gpio_clr(int pin);
 int gpio_get(int pin);
 
+char gpio_portname(int pin);
+int gpio_pinno(int pin);
+
 #endif

@@ -168,4 +168,10 @@ int gpio_get(int pin) {
     return ((port->port & (1 << (pin & 15))) ? 1 : 0);
 }
 
+char gpio_portname(int pin) {
+    return pin_name[(pin >> 4) & 15];
+}
 
+int gpio_pinno(int pin) {
+    return pin & 15;
+}

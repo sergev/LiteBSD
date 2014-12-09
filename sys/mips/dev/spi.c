@@ -56,8 +56,6 @@ static struct spireg *const spi_base[6] = {
 
 struct spiio spitab[NSPI];
 
-static const char pin_name[16] = "?ABCDEFGHJK?????";
-
 /*
  * Default SPI bus speed in kHz.
  */
@@ -212,9 +210,11 @@ void spi_bulk_write(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
     unsigned i;
 
+    int rup = mips_di();
     for (i=0; i<nbytes; i++) {
         spi_transfer(io, *data++);
     }
+    mtc0_Status(rup);
 }
 
 /*
@@ -224,9 +224,11 @@ void spi_bulk_read(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
     unsigned i;
 
+    int rup = mips_di();
     for(i=0; i<nbytes; i++) {
         *data++ = spi_transfer(io, 0xFF);
     }
+    mtc0_Status(rup);
 }
 
 /*
@@ -236,10 +238,12 @@ void spi_bulk_rw(struct spiio *io, unsigned int nbytes, unsigned char *data)
 {
     unsigned int i;
 
+    int rup = mips_di();
     for(i=0; i<nbytes; i++) {
         *data = spi_transfer(io, *data);
         data++;
     }
+    mtc0_Status(rup);
 }
 
 void spi_bulk_write16(struct spiio *io, unsigned int words, short *data)
@@ -248,6 +252,7 @@ void spi_bulk_write16(struct spiio *io, unsigned int words, short *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -260,6 +265,7 @@ void spi_bulk_write16(struct spiio *io, unsigned int words, short *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 /*
@@ -273,6 +279,7 @@ void spi_bulk_write32(struct spiio *io, unsigned int words, int *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -285,6 +292,7 @@ void spi_bulk_write32(struct spiio *io, unsigned int words, int *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_write32_be(struct spiio *io, unsigned int words, int *data)
@@ -293,6 +301,7 @@ void spi_bulk_write32_be(struct spiio *io, unsigned int words, int *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -305,6 +314,7 @@ void spi_bulk_write32_be(struct spiio *io, unsigned int words, int *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 // Read a huge chunk of data as fast and as efficiently as
@@ -317,6 +327,7 @@ void spi_bulk_read32_be(struct spiio *io, unsigned int words, int *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -329,6 +340,7 @@ void spi_bulk_read32_be(struct spiio *io, unsigned int words, int *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_read32(struct spiio *io, unsigned int words, int *data)
@@ -337,6 +349,7 @@ void spi_bulk_read32(struct spiio *io, unsigned int words, int *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -349,6 +362,7 @@ void spi_bulk_read32(struct spiio *io, unsigned int words, int *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_read16(struct spiio *io, unsigned int words, short *data)
@@ -357,6 +371,7 @@ void spi_bulk_read16(struct spiio *io, unsigned int words, short *data)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -369,6 +384,7 @@ void spi_bulk_read16(struct spiio *io, unsigned int words, short *data)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_rw32_be(struct spiio *io, unsigned int words, int *writep)
@@ -378,6 +394,7 @@ void spi_bulk_rw32_be(struct spiio *io, unsigned int words, int *writep)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -390,6 +407,7 @@ void spi_bulk_rw32_be(struct spiio *io, unsigned int words, int *writep)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_rw32(struct spiio *io, unsigned int words, int *writep)
@@ -399,6 +417,7 @@ void spi_bulk_rw32(struct spiio *io, unsigned int words, int *writep)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE32 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -411,6 +430,7 @@ void spi_bulk_rw32(struct spiio *io, unsigned int words, int *writep)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
@@ -420,6 +440,7 @@ void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
     unsigned int nread = 0;
     unsigned int nwrite = words;
 
+    int rup = mips_di();
     reg->conset = PIC32_SPICON_MODE16 | PIC32_SPICON_ENHBUF;
     while (nread < words) {
         if (nwrite > 0 && ! (reg->stat & PIC32_SPISTAT_SPITBF)) {
@@ -432,6 +453,7 @@ void spi_bulk_rw16(struct spiio *io, unsigned int words, short *writep)
         }
     }
     reg->con = io->mode;
+    mtc0_Status(rup);
 }
 
 /*
@@ -799,7 +821,7 @@ static void assign_sdo(int channel, int pin)
     case RP('G',9):  RPG9R  = output_map4(channel); return;
     }
     printf ("spi%u: cannot map SDO pin %c%d\n",
-        channel, pin_name[pin>>4], pin & 15);
+        channel, gpio_portname(pin), gpio_pinno(pin));
 }
 
 /*
@@ -829,9 +851,10 @@ spiprobe(config)
         return 0;
     sck = sck_tab[channel];
     printf ("spi%u at pins sdi=%c%d/sdo=%c%d/sck=%c%d\n", channel+1,
-        pin_name[sdi>>4], sdi & 15,
-        pin_name[sdo>>4], sdo & 15,
-        pin_name[sck>>4], sck & 15);
+        gpio_portname(sdi), gpio_pinno(sdi),
+        gpio_portname(sdo), gpio_pinno(sdo),
+        gpio_portname(sck), gpio_pinno(sck)
+    );
 
     /* Assign SDI and SDO pins. */
     assign_sdi (channel, sdi);
