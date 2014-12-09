@@ -47,6 +47,7 @@ static char sccsid[] = "@(#)slattach.c	8.2 (Berkeley) 1/7/94";
 #include <sys/param.h>
 #include <sgtty.h>
 #include <sys/socket.h>
+#include <sys/termios.h>
 #include <netinet/in.h>
 #include <net/if.h>
 #include <netdb.h>

@@ -100,6 +100,10 @@ extern int nsysent;
 
 extern int boothowto;           /* reboot flags, from console subsystem */
 
+#ifndef CBSIZE
+#define CBSIZE 1024
+#endif
+
 /*
  * General function declarations.
  */
