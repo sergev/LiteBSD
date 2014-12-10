@@ -20,6 +20,7 @@ dir /etc
 dir /root
 dir /sbin
 dir /tmp
+mode 01777
 dir /home
 dir /usr
 dir /usr/bin
@@ -29,6 +30,8 @@ dir /usr/sbin
 dir /usr/src
 dir /usr/src/sys
 dir /var
+dir /var/tmp
+mode 01777
 
 #------------------------------------------------------
 # Character devices.
