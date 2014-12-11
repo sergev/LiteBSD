@@ -37,11 +37,6 @@
 #define _ENDIAN_H_
 
 /*
- * Define _NOQUAD if the compiler does NOT support 64-bit integers.
- */
-/* #define _NOQUAD */
-
-/*
  * Define the order of 32-bit words in 64-bit words.
  */
 #define _QUAD_HIGHWORD  1
@@ -79,27 +74,21 @@
 /*
  * Swap bytes in a word: ABCD to DCBA.
  */
-static unsigned inline __attribute__ ((always_inline))
-__bswap32__(unsigned x)
-{
-    asm volatile (
-    "wsbh    %0, %1 \n"
-    "rotr    %0, 16"
-            : "=r" (x) : "r" (x));
-    return x;
-}
+#define __bswap32__(x) ({ unsigned __value = (x); \
+    asm volatile ( \
+    "wsbh    %0, %1 \n" \
+    "rotr    %0, 16" \
+    : "=r" (__value) : "r" (__value)); \
+    __value; })
 
 /*
  * Swap bytes in a halfword: AB to BA.
  */
-static unsigned short inline __attribute__ ((always_inline))
-__bswap16__(unsigned short x)
-{
-    asm volatile (
-    "wsbh    %0, %1"
-            : "=r" (x) : "r" (x));
-    return x;
-}
+#define __bswap16__(x) ({ unsigned short __value = (x); \
+    asm volatile ( \
+    "wsbh    %0, %1" \
+    : "=r" (__value) : "r" (__value)); \
+    __value; })
 
 #define ntohl(x)        __bswap32__(x)
 #define ntohs(x)        __bswap16__(x)

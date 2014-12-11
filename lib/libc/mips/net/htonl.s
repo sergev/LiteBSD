@@ -33,12 +33,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <machine/machAsmDefs.h>
-
-#if defined(LIBC_SCCS) && !defined(lint)
-	ASMSTR("@(#)htonl.s	8.1 (Berkeley) 6/4/93")
-#endif /* LIBC_SCCS and not lint */
+#include <machine/endian.h>
 
 /*
  * netorder = htonl(hostorder)
@@ -46,15 +42,11 @@
  */
 NLEAF(htonl)				# a0 = 0x11223344, return 0x44332211
 ALEAF(ntohl)
-#ifdef MIPSEL
+#if BYTE_ORDER == LITTLE_ENDIAN
         wsbh    a0, a0                  # word swap bytes within halfwords
         rotr    v0, a0, 16              # rotate word 16bits
 #else
-#ifdef MIPSEB
 	move	v0, a0
-#else
-	ERROR
-#endif
 #endif
 	j	ra
 END(htonl)

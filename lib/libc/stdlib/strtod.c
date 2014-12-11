@@ -120,8 +120,9 @@ static char sccsid[] = "@(#)strtod.c	8.1 (Berkeley) 6/4/93";
  *	define some or all of DBL_DIG, DBL_MAX_10_EXP, DBL_MAX_EXP,
  *	FLT_RADIX, FLT_ROUNDS, and DBL_MAX.
  */
+#include <machine/endian.h>
 
-#if defined(i386) || defined(mips) && defined(MIPSEL)
+#if defined(i386) || defined(mips) && BYTE_ORDER == LITTLE_ENDIAN
 #define IEEE_8087
 #else
 #define IEEE_MC68k

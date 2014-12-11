@@ -33,12 +33,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <machine/machAsmDefs.h>
-
-#if defined(LIBC_SCCS) && !defined(lint)
-	ASMSTR("@(#)htons.s	8.1 (Berkeley) 6/4/93")
-#endif /* LIBC_SCCS and not lint */
+#include <machine/endian.h>
 
 /*
  * netorder = htons(hostorder)
@@ -46,18 +42,10 @@
  */
 NLEAF(htons)
 ALEAF(ntohs)
-#ifdef MIPSEL
-	srl	v0, a0, 8
-	and	v0, v0, 0xff
-	sll	v1, a0, 8
-	and	v1, v1, 0xff00
-	or	v0, v0, v1
+#if BYTE_ORDER == LITTLE_ENDIAN
+        wsbh    v0, a0                  # word swap bytes within halfwords
 #else
-#ifdef MIPSEB
 	move	v0, a0
-#else
-	ERROR
-#endif
 #endif
 	j	ra
 END(htons)
