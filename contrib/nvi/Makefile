@@ -5,5 +5,5 @@
 # files README and PORT/README for information on building nvi for other
 # systems.
 
-SUBDIR= common
+SUBDIR= common USD.doc/vi.man
 .include <bsd.subdir.mk>

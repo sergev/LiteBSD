@@ -33,26 +33,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <machine/machAsmDefs.h>
-
-#if defined(LIBC_SCCS) && !defined(lint)
-	ASMSTR("@(#)bcmp.s	8.1 (Berkeley) 6/4/93")
-#endif /* LIBC_SCCS and not lint */
+#include <machine/endian.h>
 
 /* bcmp(s1, s2, n) */
-
-#ifdef MIPSEL
-#	define	LWHI	lwr
-#	define	LWLO	lwl
-#	define	SWHI	swr
-#	define	SWLO	swl
-#endif
-#ifdef MIPSEB
-#	define	LWHI	lwl
-#	define	LWLO	lwr
-#	define	SWHI	swl
-#	define	SWLO	swr
+#if BYTE_ORDER == BIG_ENDIAN
+#   define LWHI     lwl
+#   define LWLO     lwr
+#   define SWHI     swl
+#   define SWLO     swr
+#else
+#   define LWHI     lwr
+#   define LWLO     lwl
+#   define SWHI     swr
+#   define SWLO     swl
 #endif
 
 LEAF(bcmp)

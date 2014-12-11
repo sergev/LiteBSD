@@ -12,3 +12,5 @@ vi.0.ps: vi.1
 
 clean:
 	rm -f ${DOCS}
+
+install:
