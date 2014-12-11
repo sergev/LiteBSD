@@ -190,6 +190,7 @@ int      b_to_q __P((char *cp, int cc, struct clist *q));
 void     catq __P((struct clist *from, struct clist *to));
 void     clist_init __P((void));
 int      clalloc __P((struct clist *, int, int));
+void     clfree __P((struct clist *));
 int      getc __P((struct clist *q));
 void     ndflush __P((struct clist *q, int cc));
 int      ndqb __P((struct clist *q, int flag));
