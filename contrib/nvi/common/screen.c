@@ -99,7 +99,7 @@ screen_init(orig, spp)
 		sp->searchdir = NOTSET;
 	} else {
 		if (orig->alt_name != NULL &&
-		    (sp->alt_name = int_strdup(orig->alt_name)) == NULL)
+		    (sp->alt_name = strdup(orig->alt_name)) == NULL)
 			goto mem;
 
 		/* Retain all searching/substitution information. */

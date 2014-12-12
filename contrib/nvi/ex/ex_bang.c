@@ -99,7 +99,7 @@ ex_bang(sp, cmdp)
 	exp = EXP(sp);
 	if (exp->lastbcomm != NULL)
 		free(exp->lastbcomm);
-	if ((exp->lastbcomm = int_strdup(ap->bp)) == NULL) {
+	if ((exp->lastbcomm = strdup(ap->bp)) == NULL) {
 		msgq(sp, M_SYSERR, NULL);
 		return (1);
 	}

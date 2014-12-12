@@ -131,7 +131,7 @@ ex_read(sp, cmdp)
 		if (exp->lastbcomm != NULL)
 			free(exp->lastbcomm);
 		if ((exp->lastbcomm =
-		    int_strdup(cmdp->argv[argc]->bp)) == NULL) {
+		    strdup(cmdp->argv[argc]->bp)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			return (1);
 		}

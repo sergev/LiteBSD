@@ -89,7 +89,7 @@ ex(sp)
 	/* If reading from a file, messages should have line info. */
 	if (!F_ISSET(sp->gp, G_STDIN_TTY)) {
 		sp->if_lno = 1;
-		sp->if_name = int_strdup("input");
+		sp->if_name = strdup("input");
 	}
 
 	/*
@@ -211,7 +211,7 @@ err:		rval = 1;
 		 * but we don't care if we can't get space.
 		 */
 		sp->if_lno = 1;
-		sp->if_name = int_strdup(filename);
+		sp->if_name = strdup(filename);
 		rval = ex_icmd(sp, bp, len, flags);
 		free(sp->if_name);
 		sp->if_name = NULL;

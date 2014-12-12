@@ -111,7 +111,7 @@ file_add(sp, name)
 	 * name.  Temporary files are always ignored.
 	 */
 	if (name != NULL && strcmp(name, TEMPORARY_FILE_STRING) &&
-	    (frp->name = int_strdup(name)) == NULL) {
+	    (frp->name = strdup(name)) == NULL) {
 		FREE(frp, sizeof(FREF));
 		msgq(sp, M_SYSERR, NULL);
 		return (NULL);
@@ -193,8 +193,8 @@ file_init(sp, frp, rcv_name, flags)
 
 		if (frp->name == NULL)
 			F_SET(frp, FR_TMPFILE);
-		if ((frp->tname = int_strdup(tname)) == NULL ||
-		    frp->name == NULL && (frp->name = int_strdup(tname)) == NULL) {
+		if ((frp->tname = strdup(tname)) == NULL ||
+		    frp->name == NULL && (frp->name = strdup(tname)) == NULL) {
 			if (frp->tname != NULL)
 				free(frp->tname);
 			msgq(sp, M_SYSERR, NULL);
@@ -239,7 +239,7 @@ file_init(sp, frp, rcv_name, flags)
 		if (!rcv_tmp(sp, ep, frp->name))
 			oinfo.bfname = ep->rcv_path;
 	} else {
-		if ((ep->rcv_path = int_strdup(rcv_name)) == NULL) {
+		if ((ep->rcv_path = strdup(rcv_name)) == NULL) {
 			msgq(sp, M_SYSERR, NULL);
 			goto err;
 		}

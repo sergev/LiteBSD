@@ -473,7 +473,7 @@ opt_dup(sp, opt, str)
 	char *p;
 
 	/* Copy for user display. */
-	if ((p = int_strdup(str)) == NULL) {
+	if ((p = strdup(str)) == NULL) {
 		msgq(sp, M_SYSERR, NULL);
 		return (1);
 	}
@@ -501,7 +501,7 @@ opt_putenv(s)
 	 * XXX
 	 * Memory leak.
 	 */
-	if ((t = int_strdup(s)) == NULL)
+	if ((t = strdup(s)) == NULL)
 		return (1);
 	return (putenv(t));
 }

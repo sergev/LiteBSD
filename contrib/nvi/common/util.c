@@ -189,7 +189,7 @@ set_alt_name(sp, name)
 		free(sp->alt_name);
 	if (name == NULL)
 		sp->alt_name = NULL;
-	else if ((sp->alt_name = int_strdup(name)) == NULL)
+	else if ((sp->alt_name = strdup(name)) == NULL)
 		msgq(sp, M_SYSERR, NULL);
 }
 
@@ -302,15 +302,3 @@ TRACE(sp, fmt, va_alist)
 }
 #endif
 
-char *int_strdup(char *str) {
-    int x;
-    char *p = malloc(strlen(str) + 1);
-    if (p == NULL) {
-        return NULL;
-    }
-    for (x = 0; x < strlen(str); x++) {
-        p[x] = str[x];
-    }
-    p[strlen(str)] = 0;
-    return p;
-}
