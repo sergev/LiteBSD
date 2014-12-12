@@ -55,7 +55,7 @@ installfs:
 # Build kernel.
 #
 ARCH    = mips
-BOARD   = WIFIRE.pic32
+BOARD  ?= WIFIRE.pic32
 
 kernel: usr.sbin/config/config sys/compile/${BOARD}/.depend
 	${MAKE} -Csys/compile/${BOARD}
