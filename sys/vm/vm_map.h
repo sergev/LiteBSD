@@ -203,8 +203,8 @@ typedef struct {
 #define     vm_map_pmap(map)    ((map)->pmap)
 
 /* XXX: number of kernel maps and entries to statically allocate */
-#define MAX_KMAP    10
-#define MAX_KMAPENT 500
+#define MAX_KMAP    5
+#define MAX_KMAPENT 100
 
 #ifdef KERNEL
 boolean_t   vm_map_check_protection __P((vm_map_t,

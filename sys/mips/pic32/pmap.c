@@ -134,12 +134,12 @@ pmap_bootstrap(firstaddr)
         (name) = (type *)firstaddr; firstaddr = (vm_offset_t)((name)+(num))
     /*
      * Allocate a PTE table for the kernel.
-     * The '1024' comes from PAGER_MAP_SIZE in vm_pager_init().
+     * The '256' comes from PAGER_MAP_SIZE in vm_pager_init().
      * This should be kept in sync.
      * We also reserve space for kmem_alloc_pageable() for vm_fork().
      */
     Sysmapsize = (VM_KMEM_SIZE + VM_MBUF_SIZE + VM_PHYS_SIZE +
-        nbuf * MAXBSIZE + 16 * NCARGS) / NBPG + 1024 + 256;
+        nbuf * MAXBSIZE) / NBPG + 256 + 128;
 #ifdef SYSVSHM
     Sysmapsize += shminfo.shmall;
 #endif
@@ -200,7 +200,7 @@ pmap_bootstrap_alloc(size)
         panic("pmap_bootstrap_alloc: called after startup initialized");
 
     val = MACH_PHYS_TO_UNCACHED(avail_start);
-    size = round_page(size);
+//printf("--- %s: %d bytes at %x\n", __func__, size, val);
     avail_start += size;
 
     bzero((caddr_t)val, size);

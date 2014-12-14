@@ -116,7 +116,7 @@ struct pagerops *dfltpagerops = NULL;   /* default pager */
  * cleaning requests (NPENDINGIO == 64) * the maximum swap cluster size
  * (MAXPHYS == 64k) if you want to get the most efficiency.
  */
-#define PAGER_MAP_SIZE  (4 * 1024 * 1024)
+#define PAGER_MAP_SIZE  (1 * 1024 * 1024)
 
 vm_map_t pager_map;
 boolean_t pager_map_wanted;

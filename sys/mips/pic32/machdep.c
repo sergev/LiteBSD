@@ -260,11 +260,8 @@ mach_init()
         nbuf = 16;
     if (bufpages < nbuf)
         bufpages = nbuf;
-    if (nswbuf == 0) {
-        nswbuf = (nbuf / 2) &~ 1;       /* force even */
-        if (nswbuf > 256)
-            nswbuf = 256;               /* sanity */
-    }
+    if (nswbuf == 0)
+        nswbuf = 4;                     /* even */
     valloc(swbuf, struct buf, nswbuf);
     valloc(buf, struct buf, nbuf);
 
