@@ -1249,6 +1249,49 @@
 #define PIC32_SPISTAT_SPIBUSY   0x00000800      /* SPI is busy */
 
 /*--------------------------------------
+ * Ethernet registers.
+ */
+#define ETHCON1         PIC32_R (0x82000) /* Control 1 */
+#define ETHCON2         PIC32_R (0x82010) /* Control 1 */
+#define ETHTXST         PIC32_R (0x82020) /* Tx descriptor start address */
+#define ETHRXST         PIC32_R (0x82030) /* Rx descriptor start address */
+#define ETHHT0          PIC32_R (0x82040) /* Hash tasble 0 */
+#define ETHHT1          PIC32_R (0x82050) /* Hash tasble 1 */
+#define ETHPMM0         PIC32_R (0x82060) /* Pattern match mask 0 */
+#define ETHPMM1         PIC32_R (0x82070) /* Pattern match mask 1 */
+#define ETHPMCS         PIC32_R (0x82080) /* Pattern match checksum */
+#define ETHPMO          PIC32_R (0x82090) /* Pattern match offset */
+#define ETHRXFC         PIC32_R (0x820A0) /* Receive filter configuration */
+#define ETHRXWM         PIC32_R (0x820B0) /* Receive watermarks */
+#define ETHIEN          PIC32_R (0x820C0) /* Interrupt enable */
+#define ETHIRQ          PIC32_R (0x820D0) /* Interrupt request */
+#define ETHSTAT         PIC32_R (0x820E0) /* Status */
+#define ETHRXOVFLOW     PIC32_R (0x82100) /* Receive overflow statistics */
+#define ETHFRMTXOK      PIC32_R (0x82110) /* Frames transmitted OK statistics */
+#define ETHSCOLFRM      PIC32_R (0x82120) /* Single collision frames statistics */
+#define ETHMCOLFRM      PIC32_R (0x82130) /* Multiple collision frames statistics */
+#define ETHFRMRXOK      PIC32_R (0x82140) /* Frames received OK statistics */
+#define ETHFCSERR       PIC32_R (0x82150) /* Frame check sequence error statistics */
+#define ETHALGNERR      PIC32_R (0x82160) /* Alignment errors statistics */
+#define EMAC1CFG1       PIC32_R (0x82200) /* MAC configuration 1 */
+#define EMAC1CFG2       PIC32_R (0x82210) /* MAC configuration 2 */
+#define EMAC1IPGT       PIC32_R (0x82220) /* MAC back-to-back interpacket gap */
+#define EMAC1IPGR       PIC32_R (0x82230) /* MAC non-back-to-back interpacket gap */
+#define EMAC1CLRT       PIC32_R (0x82240) /* MAC collision window/retry limit */
+#define EMAC1MAXF       PIC32_R (0x82250) /* MAC maximum frame length */
+#define EMAC1SUPP       PIC32_R (0x82260) /* MAC PHY support */
+#define EMAC1TEST       PIC32_R (0x82270) /* MAC test */
+#define EMAC1MCFG       PIC32_R (0x82280) /* MII configuration */
+#define EMAC1MCMD       PIC32_R (0x82290) /* MII command */
+#define EMAC1MADR       PIC32_R (0x822A0) /* MII address */
+#define EMAC1MWTD       PIC32_R (0x822B0) /* MII write data */
+#define EMAC1MRDD       PIC32_R (0x822C0) /* MII read data */
+#define EMAC1MIND       PIC32_R (0x822D0) /* MII indicators */
+#define EMAC1SA0        PIC32_R (0x82300) /* MAC station address 0 */
+#define EMAC1SA1        PIC32_R (0x82310) /* MAC station address 1 */
+#define EMAC1SA2        PIC32_R (0x82320) /* MAC station address 2 */
+
+/*--------------------------------------
  * Interrupt controller registers.
  */
 #define INTCON          PIC32_R (0x10000)       /* Interrupt Control */
