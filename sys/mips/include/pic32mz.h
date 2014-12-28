@@ -1251,45 +1251,198 @@
 /*--------------------------------------
  * Ethernet registers.
  */
-#define ETHCON1         PIC32_R (0x82000) /* Control 1 */
-#define ETHCON2         PIC32_R (0x82010) /* Control 1 */
-#define ETHTXST         PIC32_R (0x82020) /* Tx descriptor start address */
-#define ETHRXST         PIC32_R (0x82030) /* Rx descriptor start address */
-#define ETHHT0          PIC32_R (0x82040) /* Hash tasble 0 */
-#define ETHHT1          PIC32_R (0x82050) /* Hash tasble 1 */
-#define ETHPMM0         PIC32_R (0x82060) /* Pattern match mask 0 */
-#define ETHPMM1         PIC32_R (0x82070) /* Pattern match mask 1 */
-#define ETHPMCS         PIC32_R (0x82080) /* Pattern match checksum */
-#define ETHPMO          PIC32_R (0x82090) /* Pattern match offset */
-#define ETHRXFC         PIC32_R (0x820A0) /* Receive filter configuration */
-#define ETHRXWM         PIC32_R (0x820B0) /* Receive watermarks */
-#define ETHIEN          PIC32_R (0x820C0) /* Interrupt enable */
-#define ETHIRQ          PIC32_R (0x820D0) /* Interrupt request */
-#define ETHSTAT         PIC32_R (0x820E0) /* Status */
-#define ETHRXOVFLOW     PIC32_R (0x82100) /* Receive overflow statistics */
-#define ETHFRMTXOK      PIC32_R (0x82110) /* Frames transmitted OK statistics */
-#define ETHSCOLFRM      PIC32_R (0x82120) /* Single collision frames statistics */
-#define ETHMCOLFRM      PIC32_R (0x82130) /* Multiple collision frames statistics */
-#define ETHFRMRXOK      PIC32_R (0x82140) /* Frames received OK statistics */
-#define ETHFCSERR       PIC32_R (0x82150) /* Frame check sequence error statistics */
-#define ETHALGNERR      PIC32_R (0x82160) /* Alignment errors statistics */
-#define EMAC1CFG1       PIC32_R (0x82200) /* MAC configuration 1 */
-#define EMAC1CFG2       PIC32_R (0x82210) /* MAC configuration 2 */
-#define EMAC1IPGT       PIC32_R (0x82220) /* MAC back-to-back interpacket gap */
-#define EMAC1IPGR       PIC32_R (0x82230) /* MAC non-back-to-back interpacket gap */
-#define EMAC1CLRT       PIC32_R (0x82240) /* MAC collision window/retry limit */
-#define EMAC1MAXF       PIC32_R (0x82250) /* MAC maximum frame length */
-#define EMAC1SUPP       PIC32_R (0x82260) /* MAC PHY support */
-#define EMAC1TEST       PIC32_R (0x82270) /* MAC test */
-#define EMAC1MCFG       PIC32_R (0x82280) /* MII configuration */
-#define EMAC1MCMD       PIC32_R (0x82290) /* MII command */
-#define EMAC1MADR       PIC32_R (0x822A0) /* MII address */
-#define EMAC1MWTD       PIC32_R (0x822B0) /* MII write data */
-#define EMAC1MRDD       PIC32_R (0x822C0) /* MII read data */
-#define EMAC1MIND       PIC32_R (0x822D0) /* MII indicators */
-#define EMAC1SA0        PIC32_R (0x82300) /* MAC station address 0 */
-#define EMAC1SA1        PIC32_R (0x82310) /* MAC station address 1 */
-#define EMAC1SA2        PIC32_R (0x82320) /* MAC station address 2 */
+#define ETHCON1         PIC32_R (0x82000)   /* Control 1 */
+#define ETHCON2         PIC32_R (0x82010)   /* Control 2: RX data buffer size */
+#define ETHTXST         PIC32_R (0x82020)   /* Tx descriptor start address */
+#define ETHRXST         PIC32_R (0x82030)   /* Rx descriptor start address */
+#define ETHHT0          PIC32_R (0x82040)   /* Hash tasble 0 */
+#define ETHHT1          PIC32_R (0x82050)   /* Hash tasble 1 */
+#define ETHPMM0         PIC32_R (0x82060)   /* Pattern match mask 0 */
+#define ETHPMM1         PIC32_R (0x82070)   /* Pattern match mask 1 */
+#define ETHPMCS         PIC32_R (0x82080)   /* Pattern match checksum */
+#define ETHPMO          PIC32_R (0x82090)   /* Pattern match offset */
+#define ETHRXFC         PIC32_R (0x820A0)   /* Receive filter configuration */
+#define ETHRXWM         PIC32_R (0x820B0)   /* Receive watermarks */
+#define ETHIEN          PIC32_R (0x820C0)   /* Interrupt enable */
+#define ETHIRQ          PIC32_R (0x820D0)   /* Interrupt request */
+#define ETHSTAT         PIC32_R (0x820E0)   /* Status */
+#define ETHRXOVFLOW     PIC32_R (0x82100)   /* Receive overflow statistics */
+#define ETHFRMTXOK      PIC32_R (0x82110)   /* Frames transmitted OK statistics */
+#define ETHSCOLFRM      PIC32_R (0x82120)   /* Single collision frames statistics */
+#define ETHMCOLFRM      PIC32_R (0x82130)   /* Multiple collision frames statistics */
+#define ETHFRMRXOK      PIC32_R (0x82140)   /* Frames received OK statistics */
+#define ETHFCSERR       PIC32_R (0x82150)   /* Frame check sequence error statistics */
+#define ETHALGNERR      PIC32_R (0x82160)   /* Alignment errors statistics */
+#define EMAC1CFG1       PIC32_R (0x82200)   /* MAC configuration 1 */
+#define EMAC1CFG2       PIC32_R (0x82210)   /* MAC configuration 2 */
+#define EMAC1IPGT       PIC32_R (0x82220)   /* MAC back-to-back interpacket gap */
+#define EMAC1IPGR       PIC32_R (0x82230)   /* MAC non-back-to-back interpacket gap */
+#define EMAC1CLRT       PIC32_R (0x82240)   /* MAC collision window/retry limit */
+#define EMAC1MAXF       PIC32_R (0x82250)   /* MAC maximum frame length */
+#define EMAC1SUPP       PIC32_R (0x82260)   /* MAC PHY support */
+#define EMAC1TEST       PIC32_R (0x82270)   /* MAC test */
+#define EMAC1MCFG       PIC32_R (0x82280)   /* MII configuration */
+#define EMAC1MCMD       PIC32_R (0x82290)   /* MII command */
+#define EMAC1MADR       PIC32_R (0x822A0)   /* MII address */
+#define EMAC1MWTD       PIC32_R (0x822B0)   /* MII write data */
+#define EMAC1MRDD       PIC32_R (0x822C0)   /* MII read data */
+#define EMAC1MIND       PIC32_R (0x822D0)   /* MII indicators */
+#define EMAC1SA0        PIC32_R (0x82300)   /* MAC station address 0 */
+#define EMAC1SA1        PIC32_R (0x82310)   /* MAC station address 1 */
+#define EMAC1SA2        PIC32_R (0x82320)   /* MAC station address 2 */
+
+/*
+ * Ethernet Control register 1.
+ */
+#define PIC32_ETHCON1_PTV(n)    ((n)<<16)   /* Pause timer value */
+#define PIC32_ETHCON1_ON            0x8000  /* Ethernet module enabled */
+#define PIC32_ETHCON1_SIDL          0x2000  /* Stop in idle mode */
+#define PIC32_ETHCON1_TXRTS         0x0200  /* Transmit request to send */
+#define PIC32_ETHCON1_RXEN          0x0100  /* Receive enable */
+#define PIC32_ETHCON1_AUTOFC        0x0080  /* Automatic flow control */
+#define PIC32_ETHCON1_MANFC         0x0010  /* Manual flow control */
+#define PIC32_ETHCON1_BUFCDEC       0x0001  /* Descriptor buffer count decrement */
+
+/*
+ * Ethernet Receive Filter Configuration register.
+ */
+#define PIC32_ETHRXFC_HTEN          0x8000  /* Enable hash table filtering */
+#define PIC32_ETHRXFC_MPEN          0x4000  /* Enable Magic Packet filtering */
+#define PIC32_ETHRXFC_NOTPM         0x1000  /* Pattern match inversion */
+#define PIC32_ETHRXFC_PMMODE_MAGIC  0x0900  /* Packet = magic */
+#define PIC32_ETHRXFC_PMMODE_HT     0x0800  /* Hash table filter match */
+#define PIC32_ETHRXFC_PMMODE_BCAST  0x0600  /* Destination = broadcast address */
+#define PIC32_ETHRXFC_PMMODE_UCAST  0x0400  /* Destination = unicast address */
+#define PIC32_ETHRXFC_PMMODE_STN    0x0200  /* Destination = station address */
+#define PIC32_ETHRXFC_PMMODE_CSUM   0x0100  /* Successful if checksum matches */
+#define PIC32_ETHRXFC_CRCERREN      0x0080  /* CRC error collection enable */
+#define PIC32_ETHRXFC_CRCOKEN       0x0040  /* CRC OK enable */
+#define PIC32_ETHRXFC_RUNTERREN     0x0020  /* Runt error collection enable */
+#define PIC32_ETHRXFC_RUNTEN        0x0010  /* Runt filter enable */
+#define PIC32_ETHRXFC_UCEN          0x0008  /* Unicast filter enable */
+#define PIC32_ETHRXFC_NOTMEEN       0x0004  /* Not Me unicast enable */
+#define PIC32_ETHRXFC_MCEN          0x0002  /* Multicast filter enable */
+#define PIC32_ETHRXFC_BCEN          0x0001  /* Broadcast filter enable */
+
+/*
+ * Ethernet Receive Watermarks register.
+ */
+#define PIC32_ETHRXWM_FWM(n)    ((n)<<16)   /* Receive Full Watermark */
+#define PIC32_ETHRXWM_EWM(n)    (n)         /* Receive Empty Watermark */
+
+/*
+ * Ethernet Interrupt Request register.
+ */
+#define PIC32_ETHIRQ_TXBUSE         0x4000  /* Transmit Bus Error */
+#define PIC32_ETHIRQ_RXBUSE         0x2000  /* Receive Bus Error */
+#define PIC32_ETHIRQ_EWMARK         0x0200  /* Empty Watermark */
+#define PIC32_ETHIRQ_FWMARK         0x0100  /* Full Watermark */
+#define PIC32_ETHIRQ_RXDONE         0x0080  /* Receive Done */
+#define PIC32_ETHIRQ_PKTPEND        0x0040  /* Packet Pending */
+#define PIC32_ETHIRQ_RXACT          0x0020  /* Receive Activity */
+#define PIC32_ETHIRQ_TXDONE         0x0008  /* Transmit Done */
+#define PIC32_ETHIRQ_TXABORT        0x0004  /* Transmitter Abort */
+#define PIC32_ETHIRQ_RXBUFNA        0x0002  /* Receive Buffer Not Available */
+#define PIC32_ETHIRQ_RXOVFLW        0x0001  /* Receive FIFO Overflow */
+
+/*
+ * Ethernet Status register.
+ */
+#define PIC32_ETHSTAT_BUFCNT    0x00ff0000  /* Packet buffer count */
+#define PIC32_ETHSTAT_ETHBUSY       0x0080  /* Ethernet logic is busy */
+#define PIC32_ETHSTAT_TXBUSY        0x0040  /* TX logic is receiving data */
+#define PIC32_ETHSTAT_RXBUSY        0x0020  /* RX logic is receiving data */
+
+/*
+ * Ethernet MAC configuration register 1.
+ */
+#define PIC32_EMAC1CFG1_SOFTRESET   0x8000  /* Soft reset */
+#define PIC32_EMAC1CFG1_SIMRESET    0x4000  /* Reset TX random number generator */
+#define PIC32_EMAC1CFG1_RESETRMCS   0x0800  /* Reset MCS/RX logic */
+#define PIC32_EMAC1CFG1_RESETRFUN   0x0400  /* Reset RX function */
+#define PIC32_EMAC1CFG1_RESETTMCS   0x0200  /* Reset MCS/TX logic */
+#define PIC32_EMAC1CFG1_RESETTFUN   0x0100  /* Reset TX function */
+#define PIC32_EMAC1CFG1_LOOPBACK    0x0010  /* MAC Loopback mode */
+#define PIC32_EMAC1CFG1_TXPAUSE     0x0008  /* MAC TX flow control */
+#define PIC32_EMAC1CFG1_RXPAUSE     0x0004  /* MAC RX flow control */
+#define PIC32_EMAC1CFG1_PASSALL     0x0002  /* MAC accept control frames as well */
+#define PIC32_EMAC1CFG1_RXENABLE    0x0001  /* MAC Receive Enable */
+
+/*
+ * Ethernet MAC configuration register 2.
+ */
+#define PIC32_EMAC1CFG2_EXCESSDER   0x4000  /* Defer to carrier indefinitely */
+#define PIC32_EMAC1CFG2_BPNOBKOFF   0x2000  /* Backpressure/No Backoff */
+#define PIC32_EMAC1CFG2_NOBKOFF     0x1000  /* No Backoff */
+#define PIC32_EMAC1CFG2_LONGPRE     0x0200  /* Long preamble enforcement */
+#define PIC32_EMAC1CFG2_PUREPRE     0x0100  /* Pure preamble enforcement */
+#define PIC32_EMAC1CFG2_AUTOPAD     0x0080  /* Automatic detect pad enable */
+#define PIC32_EMAC1CFG2_VLANPAD     0x0040  /* VLAN pad enable */
+#define PIC32_EMAC1CFG2_PADENABLE   0x0020  /* Pad/CRC enable */
+#define PIC32_EMAC1CFG2_CRCENABLE   0x0010  /* CRC enable */
+#define PIC32_EMAC1CFG2_DELAYCRC    0x0008  /* Delayed CRC */
+#define PIC32_EMAC1CFG2_HUGEFRM     0x0004  /* Huge frame enable */
+#define PIC32_EMAC1CFG2_LENGTHCK    0x0002  /* Frame length checking */
+#define PIC32_EMAC1CFG2_FULLDPLX    0x0001  /* Full-duplex operation */
+
+/*
+ * Ethernet MAC non-back-to-back interpacket gap register.
+ */
+#define PIC32_EMAC1IPGR(p1, p2)     ((p1)<<8 | (p2))
+
+/*
+ * Ethernet MAC collision window/retry limit register.
+ */
+#define PIC32_EMAC1CLRT(w, r)       ((w)<<8 | (r))
+
+/*
+ * Ethernet PHY support register.
+ */
+#define PIC32_EMAC1SUPP_RESETRMII   0x0800  /* Reset the RMII module */
+#define PIC32_EMAC1SUPP_SPEEDRMII   0x0100  /* RMII speed: 1=100Mbps, 0=10Mbps */
+
+/*
+ * Ethernet MAC test register.
+ */
+#define PIC32_EMAC1TEST_TESTBP      0x0004  /* Test backpressure */
+#define PIC32_EMAC1TEST_TESTPAUSE   0x0002  /* Test pause */
+#define PIC32_EMAC1TEST_SHRTQNTA    0x0001  /* Shortcut pause quanta */
+
+/*
+ * Ethernet MII configuration register.
+ */
+#define PIC32_EMAC1MCFG_RESETMGMT   0x8000  /* Reset the MII module */
+#define PIC32_EMAC1MCFG_CLKSEL_4    0x0000  /* Clock divide by 4 */
+#define PIC32_EMAC1MCFG_CLKSEL_6    0x0008  /* Clock divide by 6 */
+#define PIC32_EMAC1MCFG_CLKSEL_8    0x000c  /* Clock divide by 8 */
+#define PIC32_EMAC1MCFG_CLKSEL_10   0x0010  /* Clock divide by 10 */
+#define PIC32_EMAC1MCFG_CLKSEL_14   0x0014  /* Clock divide by 14 */
+#define PIC32_EMAC1MCFG_CLKSEL_20   0x0018  /* Clock divide by 20 */
+#define PIC32_EMAC1MCFG_CLKSEL_28   0x001c  /* Clock divide by 28 */
+#define PIC32_EMAC1MCFG_CLKSEL_40   0x0020  /* Clock divide by 40 */
+#define PIC32_EMAC1MCFG_CLKSEL_48   0x0024  /* Clock divide by 48 */
+#define PIC32_EMAC1MCFG_CLKSEL_50   0x0028  /* Clock divide by 50 */
+#define PIC32_EMAC1MCFG_NOPRE       0x0002  /* Suppress preamble */
+#define PIC32_EMAC1MCFG_SCANINC     0x0001  /* Scan increment */
+
+/*
+ * Ethernet MII command register.
+ */
+#define PIC32_EMAC1MCMD_SCAN        0x0002  /* Continuous scan mode */
+#define PIC32_EMAC1MCMD_READ        0x0001  /* Single read cycle */
+
+/*
+ * Ethernet MII address register.
+ */
+#define PIC32_EMAC1MADR(p, r)       ((p)<<8 | (r))
+
+/*
+ * Ethernet MII indicators register.
+ */
+#define PIC32_EMAC1MIND_LINKFAIL    0x0008  /* Link fail */
+#define PIC32_EMAC1MIND_NOTVALID    0x0004  /* Read data not valid */
+#define PIC32_EMAC1MIND_SCAN        0x0002  /* Scanning in progress */
+#define PIC32_EMAC1MIND_MIIMBUSY    0x0001  /* Read/write cycle in progress */
 
 /*--------------------------------------
  * Interrupt controller registers.
