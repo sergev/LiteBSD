@@ -44,11 +44,7 @@
  * different types of controllers.
  */
 struct driver {
-	char	*d_name;	/* device driver name (e.g., "rz") */
 	int	(*d_init)();	/* routine to probe & initialize device */
-	void	(*d_start)();	/* routine to start operation */
-	void	(*d_done)();	/* routine to call when operation complete */
-	void	(*d_intr)();	/* routine to call when interrupt is seen */
 };
 
 /*

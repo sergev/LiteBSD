@@ -875,7 +875,7 @@ spiintr(channel)
     // TODO
 }
 
-struct	driver spidriver = {
-    "spi", spiprobe, 0, 0, spiintr,
+struct driver spidriver = {
+    spiprobe,
 };
 #endif /* NSPI */

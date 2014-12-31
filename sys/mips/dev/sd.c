@@ -63,15 +63,12 @@ struct disk {
     struct diskpart dk_part [NPARTITIONS+1];
 
     struct spiio spiio;     /* interface to SPI port */
-    int     dk_bc;          /* byte count left */
     int     dk_unit;        /* physical unit number */
-    u_int   dk_status;      /* copy of status reg. */
-    u_int   dk_error;       /* copy of error reg. */
     int     dk_open;        /* open/closed refcnt */
+    int     dk_wlabel;      /* label writable? */
     u_int   dk_copenpart;   /* character units open on this drive */
     u_int   dk_bopenpart;   /* block units open on this drive */
     u_int   dk_openpart;    /* all units open on this drive */
-    int     dk_wlabel;      /* label writable? */
 };
 
 static struct disk sddrives[NSD];       /* Table of units */
@@ -899,17 +896,7 @@ sdprobe(config)
     return 1;
 }
 
-/*
- * Check for interrupts from all devices.
- */
-static void
-sdintr(unit)
-    int unit;
-{
-    // TODO
-}
-
 struct driver sddriver = {
-    "sd", sdprobe, 0, 0, sdintr,
+    sdprobe,
 };
 #endif
