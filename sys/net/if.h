@@ -127,7 +127,7 @@ struct ifnet {
         __P((struct ifnet *, u_long, caddr_t));
     void (*if_reset)
         __P((int));             /* new autoconfig will permit removal */
-    int (*if_watchdog)          /* timer routine */
+    void (*if_watchdog)         /* timer routine */
         __P((int));
     struct  ifqueue {
         struct  mbuf *ifq_head;

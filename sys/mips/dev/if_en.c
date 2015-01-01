@@ -29,8 +29,14 @@
 #include <netinet/if_ether.h>
 #endif
 
-#define ETHER_MIN_LEN 64
-#define ETHER_MAX_LEN 1536
+#define ETHER_MIN_LEN       64
+#define ETHER_MAX_LEN       1536
+
+#define RX_PACKETS          4
+#define RX_BYTES_PER_DESC   128                             // This is tuned as a balance between the number of discriptors and size wasting empty space at the end of a discriptor
+#define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)    // how much buffer space we have for incoming frames
+#define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)  // check that this works out to be even ie with a modulo of zero
+#define TX_DESCRIPTORS      5
 
 #if 1
 #define inb(a)      0
@@ -53,6 +59,40 @@
 #endif
 
 /*
+ * DMA buffer descriptor.
+ */
+typedef struct {
+    u_int32_t hdr;              /* Flags */
+    u_int32_t paddr;            /* Phys address of data buffer */
+    u_int32_t ctl;              /* TX options / RX filter status */
+    u_int32_t status;           /* Status */
+} eth_desc_t;
+
+/* Start of packet */
+#define DESC_SOP(d)         ((d)->hdr & 0x80000000)
+#define DESC_SET_SOP(d)     (d)->hdr |= 0x80000000
+
+/* End of packet */
+#define DESC_EOP(d)         ((d)->hdr & 0x40000000)
+#define DESC_SET_EOP(d)     (d)->hdr |= 0x40000000
+
+/* Number of data bytes */
+#define DESC_BYTECNT(d)     ((d)->hdr >> 16 & 0x7ff)
+#define DESC_SET_BYTECNT(d,n) ((d)->hdr |= (n) << 16)
+
+/* Next descriptor pointer valid */
+#define DESC_SET_NPV(d)     (d)->hdr &= 0x00000100
+#define DESC_CLEAR_NPV(d)   (d)->hdr &= ~0x00000100
+
+/* Eth controller owns this desc */
+#define DESC_EOWN(d)        ((d)->hdr & 0x00000080)
+#define DESC_SET_EOWN(d)    (d)->hdr &= 0x00000080
+#define DESC_CLEAR_EOWN(d)  (d)->hdr &= ~0x00000080
+
+/* Size of received packet */
+#define DESC_FRAMESZ(d)     ((d)->status & 0xffff)
+
+/*
  * Ethernet software status per interface.
  *
  * Each interface is referenced by a network interface structure `netif',
@@ -63,45 +103,384 @@ struct eth_port {
     struct arpcom arpcom;           /* Ethernet common part */
 #define netif   arpcom.ac_if        /* network-visible interface */
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
-    int     flags;
+    int         flags;
 #define DSF_LOCK    1               /* block re-entering en_start */
-    int     oactive;
-    int     mask;
-    int     ba;                     /* byte addr in buffer ram of inc pkt */
-    int     cur;                    /* current page being filled */
-    u_char  pb[2048];               /* ETHERMTU + sizeof(long) */
+    int         oactive;
+    int         phy_id;             /* PHY id */
+    int         is_up;              /* whether the link is up */
+    struct mbuf *tx_packet;         /* Current packet under transmit */
+
+    char        rx_buffer[RX_BYTES];
+    eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
+    eth_desc_t  tx_desc[TX_DESCRIPTORS];
+
+    unsigned    receive_index;      /* next RX descriptor to look */
+
+    /* Pointers into the current frame to read out the received packet. */
+    unsigned    read_index;
+    unsigned    desc_offset;
+    unsigned    frame_size;
+    unsigned    read_nbytes;
+
+    int         mask;
+    int         ba;                 /* byte addr in buffer ram of inc pkt */
+    int         cur;                /* current page being filled */
+    u_char      tx_buffer[2048];    /* ETHERMTU + sizeof(long) */
 } eth_port[NEN];
 
-/*
- * Fetch from onboard ROM/RAM
+/*-------------------------------------------------------------
+ * PHY routines for SMSC LAN8720A chip.
  */
-static void
-en_fetch(up, ad, len)
-    caddr_t up;
+#define PHY_CONTROL             0       /* Basic Control Register */
+#define PHY_STATUS              1       /* Basic Status Register */
+#define PHY_MODE                18      /* Special Modes */
+#define PHY_SPECIAL             31      /* Special Control/Status Register */
+
+#define PHY_CONTROL_RESET	0x8000	/* Soft reset, bit self cleared */
+
+#define PHY_STATUS_ANEG_ACK     0x0020	/* Auto-negotiation acknowledge */
+#define PHY_STATUS_CAP_ANEG     0x0008	/* Auto-negotiation available */
+#define PHY_STATUS_LINK         0x0004	/* Link valid */
+
+#define PHY_MODE_PHYAD          0x000f  /* PHY address mask */
+
+#define PHY_SPECIAL_AUTODONE    0x1000  /* Auto-negotiation is done */
+#define PHY_SPECIAL_FDX         0x0010  /* Full duplex */
+#define PHY_SPECIAL_100         0x0008  /* Speed 100 Mbps */
+
+/*
+ * Read PHY register.
+ * Return -1 when failed.
+ */
+static int phy_read(int phy_id, int reg_id, unsigned msec)
 {
-#if 0
-    int cmd __attribute__((unused));
+    unsigned time_start = mfc0_Count();
+    unsigned timeout = msec * CPU_KHZ / 2;
 
-    cmd = inb(ds_cmd);
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_START);
+    /* Clear any commands. */
+    EMAC1MCMD = 0;
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
 
-    /* Setup remote dma */
-    outb(ds0_isr, DSIS_RDC);
-    outb(ds0_rbcr0, len);
-    outb(ds0_rbcr1, len>>8);
-    outb(ds0_rsar0, ad);
-    outb(ds0_rsar1, ad>>8);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MCMDSET = PIC32_EMAC1MCMD_READ;
 
-    /* Execute & extract from card */
-    outb(ds_cmd, DSCM_RREAD|DSCM_PG0|DSCM_START);
-    insw(0x10, up, len/2);
+    /* Wait to finish. */
+    time_start = mfc0_Count();
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            EMAC1MCMD = 0;
+            return -1;
+        }
+    }
 
-    /* Wait till done, then shutdown feature */
-    while ((inb(ds0_isr) & DSIS_RDC) == 0)
-        ;
-    outb(ds0_isr, DSIS_RDC);
-    outb(ds_cmd, cmd);
-#endif
+    EMAC1MCMD = 0;
+    return EMAC1MRDD & 0xffff;
+}
+
+/*
+ * Scan PHY register for expected value.
+ * Return -1 when failed.
+ */
+static int phy_scan(int phy_id, int reg_id,
+    int scan_mask, int expected_value, unsigned msec)
+{
+    unsigned time_start = mfc0_Count();
+    unsigned timeout = msec * CPU_KHZ / 2;
+
+    /* Clear any commands. */
+    EMAC1MCMD = 0;
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+
+    /* Scan the PHY until it is ready. */
+    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MCMDSET = PIC32_EMAC1MCMD_SCAN;
+
+    /* Wait for it to become valid. */
+    time_start = mfc0_Count();
+    while (EMAC1MIND & PIC32_EMAC1MIND_NOTVALID) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+
+    /* Wait until we hit our mask. */
+    time_start = mfc0_Count();
+    while (((EMAC1MRDD & scan_mask) == scan_mask) != expected_value) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+
+    /* Kill the scan. */
+    EMAC1MCMD = 0;
+    time_start = mfc0_Count();
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Write PHY register.
+ * Return -1 when failed.
+ */
+static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
+{
+    unsigned time_start = mfc0_Count();
+    unsigned timeout = msec * CPU_KHZ / 2;
+
+    /* Clear any commands. */
+    EMAC1MCMD = 0;
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+
+    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MWTD = value;
+
+    /* Wait to finish. */
+    time_start = mfc0_Count();
+    while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
+        if (mfc0_Count() - time_start > timeout) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Determine whether the link is up.
+ * When up, setup MAC controller for required speed and duplex..
+ */
+static int is_phy_linked(int phy_id, int was_up)
+{
+    int status = phy_read(phy_id, PHY_STATUS, 1);
+    if (status < 0) {
+        return 0;
+    }
+
+    int link_is_up =
+        (status & PHY_STATUS_LINK) &&       /* link is up */
+        (status & PHY_STATUS_CAP_ANEG) &&   /* able to auto-negotiate */
+        (status & PHY_STATUS_ANEG_ACK);     /* auto-negotiation completed */
+
+    /* Set our link speed. */
+    if (link_is_up && ! was_up) {
+        /* Must disable the RX while setting these parameters. */
+        int rxen = ETHCON1 & PIC32_ETHCON1_RXEN;
+        ETHCON1CLR = PIC32_ETHCON1_RXEN;
+
+        /* Get the speed. */
+        int special = phy_read(phy_id, PHY_SPECIAL, 1);
+        int speed_100 = 0;
+        int full_duplex = 0;
+
+        if (special & PHY_SPECIAL_AUTODONE) {
+            /* Auto-negotiation is done. */
+            speed_100 = (special & PHY_SPECIAL_100);
+            full_duplex = (special & PHY_SPECIAL_FDX);
+        }
+
+        /* Set speed. */
+        if (speed_100)
+            EMAC1SUPPSET = PIC32_EMAC1SUPP_SPEEDRMII;
+        else
+            EMAC1SUPPCLR = PIC32_EMAC1SUPP_SPEEDRMII;
+
+        /* Set duplex and gap size. */
+        if (full_duplex) {
+            EMAC1CFG2SET = PIC32_EMAC1CFG2_FULLDPLX;
+            EMAC1IPGT = 21;
+        } else {
+            EMAC1CFG2CLR = PIC32_EMAC1CFG2_FULLDPLX;
+            EMAC1IPGT = 18;
+        }
+
+        /* Return the Rx Enable back to what it was. */
+        if (rxen)
+            ETHCON1SET = PIC32_ETHCON1_RXEN;
+    }
+    return link_is_up;
+}
+
+/*
+ * Reset the PHY via MIIM interface.
+ * Return -1 on failure.
+ */
+static int eth_reset_phy(int phy_id)
+{
+    int mode;
+
+    mode = phy_read(phy_id, PHY_MODE, 100);
+    if (mode < 0)
+        return -1;
+
+    if ((mode & PHY_MODE_PHYAD) != phy_id) {
+        printf("Wrong PHY id!\n");
+    }
+
+    /* Send a reset to the PHY. */
+    if (phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 100) < 0)
+        return -1;
+
+    /* Wait for the reset pin to autoclear. */
+    if (phy_scan(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
+        return -1;
+
+    return 0;
+}
+
+/*
+ * Reset the Ethernet Controller.
+ */
+static void eth_reset()
+{
+    /* Disable the ethernet interrupt. */
+    IECCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
+
+    /* Turn the Ethernet cotroller off. */
+    ETHCON1 = 0;
+
+    /* Wait for abort to finish. */
+    while (ETHSTAT & PIC32_ETHSTAT_ETHBUSY)
+        continue;
+
+    /* Clear the interrupt flag bit. */
+    IFSCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
+
+    /* Clear interrupts. */
+    ETHIEN = 0;
+    ETHIRQ = 0;
+
+    /* Clear discriptor pointers; for now. */
+    ETHTXST = 0;
+    ETHRXST = 0;
+
+    /* Auto flow control is on. */
+    ETHCON1SET = PIC32_ETHCON1_PTV(1);  /* the max number of pause timeouts */
+    ETHCON1SET = PIC32_ETHCON1_AUTOFC;
+
+    /* High and low watermarks. */
+    int empty_watermark = ETHER_MAX_LEN / RX_BYTES_PER_DESC;
+    int full_watermark  = RX_DESCRIPTORS - (ETHER_MAX_LEN * 2) / RX_BYTES_PER_DESC;
+    ETHRXWM = PIC32_ETHRXWM_FWM(full_watermark) |
+              PIC32_ETHRXWM_EWM(empty_watermark);
+
+    /* Set RX buffer size, descriptor buffer size in bytes / 16. */
+    ETHCON2 = RX_BYTES_PER_DESC >> 4;
+
+    /* Set our Rx filters. */
+    ETHRXFC = PIC32_ETHRXFC_CRCOKEN |   /* enable checksum filter */
+              PIC32_ETHRXFC_UCEN |      /* enable unicast filter */
+              PIC32_ETHRXFC_BCEN;       /* enable broadcast filter */
+
+    /* Hash table, not used. */
+    ETHHT0 = 0;
+    ETHHT1 = 0;
+
+    /* Pattern match, not used. */
+    ETHPMM1 = 0;
+    ETHPMM1 = 0;
+
+    /* Byte in TCP like checksum pattern calculation. */
+    ETHPMCS = 0;
+
+    /* Turn on the ethernet controller. */
+    ETHCON1SET = PIC32_ETHCON1_ON;
+}
+
+/*
+ * Reset the MAC.
+ */
+static void eth_reset_mac()
+{
+    /* Reset the MAC. */
+    EMAC1CFG1 = PIC32_EMAC1CFG1_SOFTRESET;
+
+    /* Pull it out of reset. */
+    EMAC1CFG1 = 0;
+    EMAC1CFG1 = PIC32_EMAC1CFG1_TXPAUSE |   /* MAC TX flow control */
+                PIC32_EMAC1CFG1_RXPAUSE |   /* MAC RX flow control */
+                PIC32_EMAC1CFG1_RXENABLE;   /* Receive enable */
+
+    EMAC1CFG2 = PIC32_EMAC1CFG2_EXCESSDFR | /* Defer to carrier indefinitely */
+                PIC32_EMAC1CFG2_BPNOBKOFF | /* Backpressure/No Backoff */
+                PIC32_EMAC1CFG2_AUTOPAD |   /* Automatic detect pad enable */
+                PIC32_EMAC1CFG2_PADENABLE | /* Pad/CRC enable */
+                PIC32_EMAC1CFG2_CRCENABLE | /* CRC enable */
+                PIC32_EMAC1CFG2_LENGTHCK;   /* Frame length checking */
+
+    /* These are all default. */
+    EMAC1MAXF = 1518;                       /* max frame size in bytes */
+    EMAC1IPGR = PIC32_EMAC1IPGR(12, 18);    /* non-back-to-back interpacket gap */
+    EMAC1CLRT = PIC32_EMAC1CLRT(55, 15);    /* collision window/retry limit */
+}
+
+/*
+ * RMII and MIIM reset.
+ */
+static void eth_reset_mii()
+{
+    EMAC1SUPP = PIC32_EMAC1SUPP_RESETRMII;  /* reset RMII */
+    EMAC1SUPP = 0;
+
+    EMAC1MCFG = PIC32_EMAC1MCFG_RESETMGMT;  /* reset the management fuctions */
+    EMAC1MCFG = 0;
+
+    /* The IEEE 802.3 spec says no faster than 2.5MHz.
+     * 80 / 40 = 2MHz
+     */
+    EMAC1MCFG = PIC32_EMAC1MCFG_CLKSEL_40;
+}
+
+/*
+ * Set DMA descriptors.
+ */
+static void eth_init_dma(struct eth_port *e)
+{
+    int i;
+
+    /* Set Rx discriptor list.
+     * All owned by the ethernet controller. */
+    bzero(e->rx_desc, sizeof(e->rx_desc));
+    for (i=0; i<RX_DESCRIPTORS; i++) {
+        DESC_SET_EOWN(&e->rx_desc[i]);
+        DESC_CLEAR_NPV(&e->rx_desc[i]);
+        e->rx_desc[i].paddr = MACH_VIRT_TO_PHYS(e->rx_buffer + (i * RX_BYTES_PER_DESC));
+    }
+
+    /* Loop the list back to the begining.
+     * This is a circular array descriptor list. */
+    e->rx_desc[RX_DESCRIPTORS].hdr = MACH_VIRT_TO_PHYS(e->rx_desc);
+    DESC_SET_NPV(&e->rx_desc[RX_DESCRIPTORS-1]);
+
+    /* Set RX at the start of the list. */
+    e->receive_index = 0;
+    ETHRXST = MACH_VIRT_TO_PHYS(&e->rx_desc[0]);
+
+    /* Set up the transmitt descriptors all owned by
+     * the software; clear it completely out. */
+    bzero(e->tx_desc, sizeof(e->tx_desc));
+    ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
+
+    /* Init our frame reading values,
+     * used by read_packet. */
+    e->read_index = 0;
+    e->desc_offset = 0;
+    e->frame_size = 0;
+    e->read_nbytes = 0;
 }
 
 /*
@@ -290,10 +669,6 @@ en_reset(unit, uban)
 }
 
 /*
- * Supporting routines
- */
-
-/*
  * Pull read data off a interface.
  * Len is length of data, with local net header stripped.
  * Off is non-zero if a trailer protocol was used, and
@@ -437,10 +812,10 @@ en_recv(e, len)
         return;
 
     /* this need not be so torturous - one/two bcopys at most into mbufs */
-    en_fetch(e->pb, e->ba, min(len, DS_PGSIZE - 4));
+    en_fetch(e->tx_buffer, e->ba, min(len, DS_PGSIZE - 4));
     if (len > DS_PGSIZE - 4) {
         int l = len - (DS_PGSIZE - 4), b;
-        u_char *p = e->pb + (DS_PGSIZE - 4);
+        u_char *p = e->tx_buffer + (DS_PGSIZE - 4);
 
         if(++e->cur > 0x7f) e->cur = 0x46;
         b = e->cur*DS_PGSIZE;
@@ -457,7 +832,31 @@ en_recv(e, len)
     /* don't forget checksum! */
     len -= sizeof(struct ether_header) + sizeof(long);
 #endif
-    en_read(e, (caddr_t)e->pb, len);
+    en_read(e, (caddr_t)e->tx_buffer, len);
+}
+
+/*
+ * Timeout routine.
+ */
+static void
+en_watchdog(unit)
+    int unit;
+{
+    struct eth_port *e = &eth_port[unit];
+
+    /* Poll whether the link is active. */
+    e->is_up = is_phy_linked(e->phy_id, e->is_up);
+
+#if 0
+    if (e->sc_iflags & IFF_OACTIVE) {
+        e->netif.if_flags &= ~IFF_RUNNING;
+        einit(unit);
+    } else if (e->sc_txcnt > 0)
+        e->sc_iflags |= IFF_OACTIVE;
+#endif
+
+    /* Call it every second. */
+    e->netif.if_timer = 1;
 }
 
 /*
@@ -642,11 +1041,10 @@ static int
 en_probe(config)
     struct scsi_device *config;
 {
-    int i, s;
-    int val __attribute__((unused));
     int unit = config->sd_unit;
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
+    int s;
 
     /* Only one Ethernet device is supported by this driver. */
     if (unit != 0)
@@ -654,47 +1052,42 @@ en_probe(config)
 
     s = splimp();
 
-    /* Reset the bastard */
-    val = inb(0x1f);
-    udelay(20000);
-    outb(0x1f, val);
+#ifdef MIBII
+    /*
+     * Setup for PIC32MZ EC Starter Kit board.
+     */
+    TRISHSET = 1 << 8;                  /* set RH8 as input for ERXD0 */
+    TRISHSET = 1 << 5;                  /* set RH5 as input for ERXD1 */
+    TRISHSET = 1 << 4;                  /* set RH4 as input for ERXERR */
 
-    outb(ds_cmd, DSCM_STOP|DSCM_NODMA);
-
-    i = 1000000;
-    //while ((inb(ds0_isr) & DSIS_RESET) == 0 && i-- > 0);
-    if (i < 0)
-        return 0;
-
-    outb(ds0_isr, 0xff);
-
-    /* Word Transfers, Burst Mode Select, Fifo at 8 bytes */
-    outb(ds0_dcr, DSDC_WTS|DSDC_BMS|DSDC_FT1);
-
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_STOP);
-    udelay(100);
-#if 0
-    /* Check cmd reg and fail if not right */
-    i = inb(ds_cmd);
-    if (i != (DSCM_NODMA|DSCM_PG0|DSCM_STOP))
-        return 0;
-
-    outb(ds0_tcr, 0);
-    outb(ds0_rcr, DSRC_MON);
-    outb(ds0_pstart, RBUF/DS_PGSIZE);
-    outb(ds0_pstop, RBUFEND/DS_PGSIZE);
-    outb(ds0_bnry, RBUFEND/DS_PGSIZE);
-    outb(ds0_imr, 0);
-    outb(ds0_isr, 0);
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG1|DSCM_STOP);
-    outb(ds1_curr, RBUF/DS_PGSIZE);
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_STOP);
+    /* Default PHY address is 0 on LAN8720 PHY daughter board. */
+    e->phy_id = 0;
 #endif
-    /* Extract board address */
-    u_short boarddata[16];
-    en_fetch((caddr_t)boarddata, 0, sizeof(boarddata));
-    for(i=0; i < 6; i++)
-        e->macaddr[i] = boarddata[i];
+    /* Link is down. */
+    e->is_up = 0;
+
+    /* Clear packet queues. */
+    e->tx_packet = 0;
+
+    /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
+    eth_reset();
+    eth_reset_mac();
+    eth_reset_mii();
+    if (eth_reset_phy(e->phy_id) < 0) {
+        printf("Ethernet PHY not detected at ID=%u\n", e->phy_id);
+        return 0;
+    }
+
+    /* Set DMA descriptors. */
+    eth_init_dma(e);
+
+    /* Extract our MAC address */
+    e->macaddr[0] = EMAC1SA2;
+    e->macaddr[1] = EMAC1SA2 >> 8;
+    e->macaddr[2] = EMAC1SA1;
+    e->macaddr[3] = EMAC1SA1 >> 8;
+    e->macaddr[4] = EMAC1SA0;
+    e->macaddr[5] = EMAC1SA0 >> 8;
     splx(s);
 
     /*
@@ -713,7 +1106,8 @@ en_probe(config)
     ifp->if_start = en_start;
     ifp->if_ioctl = en_ioctl;
     ifp->if_reset = en_reset;
-    ifp->if_watchdog = 0;
+    ifp->if_watchdog = en_watchdog;
+    ifp->if_timer = 1;
     if_attach(ifp);
     return 1;
 }

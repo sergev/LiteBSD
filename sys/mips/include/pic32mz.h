@@ -1252,6 +1252,9 @@
  * Ethernet registers.
  */
 #define ETHCON1         PIC32_R (0x82000)   /* Control 1 */
+#define ETHCON1CLR      PIC32_R (0x82004)
+#define ETHCON1SET      PIC32_R (0x82008)
+#define ETHCON1INV      PIC32_R (0x8200c)
 #define ETHCON2         PIC32_R (0x82010)   /* Control 2: RX data buffer size */
 #define ETHTXST         PIC32_R (0x82020)   /* Tx descriptor start address */
 #define ETHRXST         PIC32_R (0x82030)   /* Rx descriptor start address */
@@ -1275,14 +1278,23 @@
 #define ETHALGNERR      PIC32_R (0x82160)   /* Alignment errors statistics */
 #define EMAC1CFG1       PIC32_R (0x82200)   /* MAC configuration 1 */
 #define EMAC1CFG2       PIC32_R (0x82210)   /* MAC configuration 2 */
+#define EMAC1CFG2CLR    PIC32_R (0x82214)
+#define EMAC1CFG2SET    PIC32_R (0x82218)
+#define EMAC1CFG2INV    PIC32_R (0x8221c)
 #define EMAC1IPGT       PIC32_R (0x82220)   /* MAC back-to-back interpacket gap */
 #define EMAC1IPGR       PIC32_R (0x82230)   /* MAC non-back-to-back interpacket gap */
 #define EMAC1CLRT       PIC32_R (0x82240)   /* MAC collision window/retry limit */
 #define EMAC1MAXF       PIC32_R (0x82250)   /* MAC maximum frame length */
 #define EMAC1SUPP       PIC32_R (0x82260)   /* MAC PHY support */
+#define EMAC1SUPPCLR    PIC32_R (0x82264)
+#define EMAC1SUPPSET    PIC32_R (0x82268)
+#define EMAC1SUPPINV    PIC32_R (0x8226c)
 #define EMAC1TEST       PIC32_R (0x82270)   /* MAC test */
 #define EMAC1MCFG       PIC32_R (0x82280)   /* MII configuration */
 #define EMAC1MCMD       PIC32_R (0x82290)   /* MII command */
+#define EMAC1MCMDCLR    PIC32_R (0x82294)
+#define EMAC1MCMDSET    PIC32_R (0x82298)
+#define EMAC1MCMDINV    PIC32_R (0x8229c)
 #define EMAC1MADR       PIC32_R (0x822A0)   /* MII address */
 #define EMAC1MWTD       PIC32_R (0x822B0)   /* MII write data */
 #define EMAC1MRDD       PIC32_R (0x822C0)   /* MII read data */
@@ -1371,7 +1383,7 @@
 /*
  * Ethernet MAC configuration register 2.
  */
-#define PIC32_EMAC1CFG2_EXCESSDER   0x4000  /* Defer to carrier indefinitely */
+#define PIC32_EMAC1CFG2_EXCESSDFR   0x4000  /* Defer to carrier indefinitely */
 #define PIC32_EMAC1CFG2_BPNOBKOFF   0x2000  /* Backpressure/No Backoff */
 #define PIC32_EMAC1CFG2_NOBKOFF     0x1000  /* No Backoff */
 #define PIC32_EMAC1CFG2_LONGPRE     0x0200  /* Long preamble enforcement */
