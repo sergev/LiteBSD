@@ -1,5 +1,13 @@
 /*
- * PIC32 Ethernet driver
+ * Network driver for the PIC32 internal Ethernet controller with 8720 PHY.
+ *
+ * Copyright (c) 2015, Serge Vakulenko
+ *
+ * Loosely based on sources of Digilent deIPcK library by Keith Vogel.
+ * Copyright (c) 2013-2014, Digilent <www.digilentinc.com>
+ *
+ * This program is free software; distributed under the terms of
+ * BSD 3-clause license.
  */
 #include "en.h"
 #if NEN > 0
@@ -482,6 +490,198 @@ static void eth_init_dma(struct eth_port *e)
     e->frame_size = 0;
     e->read_nbytes = 0;
 }
+
+#if 0
+#define INCR_RX_INDEX(_i)   ((_i + 1) % RX_DESCRIPTORS)
+
+//-------------------------------------------------------------
+// Internal Ethernet routines.
+//
+
+static void send_packet(IPSTACK *packet)
+{
+    // clear the tx buffer, but we don't have to
+    // worry about the last one as it is just
+    // a dummy that will always have the software
+    // own to stop the DMA from running off the end
+    memset(tx_desc, 0, sizeof(tx_desc) - sizeof(tx_desc[0]));
+
+    // always have a frame, always FRAME II (we don't support 802.3 outgoing frames; this is typical)
+    int i = 0;
+    DESC_SET_BYTECNT(&tx_desc[i], packet->cbFrame);
+
+    tx_desc[i].paddr = VIRT_TO_PHYS(packet->pFrameII);
+    DESC_SET_SOP(&tx_desc[i]);
+    i++;
+
+    // IP Header
+    if (packet->cbIPHeader > 0)
+    {
+        DESC_SET_BYTECNT(&tx_desc[i], packet->cbIPHeader);
+        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pIPHeader);
+        i++;
+    }
+
+    // Transport Header (TCP/UDP)
+    if (packet->cbTranportHeader > 0)
+    {
+        DESC_SET_BYTECNT(&tx_desc[i], packet->cbTranportHeader);
+        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pTransportHeader);
+        i++;
+    }
+
+    // Payload / ARP / ICMP
+    if (packet->cbPayload > 0)
+    {
+        DESC_SET_BYTECNT(&tx_desc[i], packet->cbPayload);
+        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pPayload);
+        i++;
+    }
+
+    // put in eop; I is one past the last
+    // entry; lets bump it down one
+    i--;
+    DESC_SET_EOP(&tx_desc[i]);
+
+    // set the ownership bits
+    // the last descriptor is a dummy the software
+    // always owns, do look at that.
+    int j;
+    for (j=TX_DESCRIPTORS-1; j>=0; j--)
+    {
+        // i is the last descriptor that is
+        // go to be transmitted
+        if (j <= i)
+            DESC_SET_EOWN(&tx_desc[j]);
+        else
+            DESC_CLEAR_EOWN(&tx_desc[j]);
+    }
+
+    // set the descriptor table to be transmitted
+    ETHTXST = VIRT_TO_PHYS(tx_desc);
+
+    // transmit
+    ETHCON1SET = PIC32_ETHCON1_TXRTS;
+}
+
+static void read_packet(char *buf, unsigned bufsz)
+{
+    if (! DESC_SOP(&rx_desc[read_index])) {
+        // Start of packet is expected
+        //printf("Something is wrong!\n");
+    }
+
+    if (frame_size == 0 || read_nbytes == frame_size) {
+        return;
+    }
+
+    // make sure we own the descriptor, bad if we don't!
+    while (bufsz > 0) {
+        if (DESC_EOWN(&rx_desc[read_index]))
+            break;
+
+        int end_of_packet = DESC_EOP(&rx_desc[read_index]);
+        unsigned nbytes = DESC_BYTECNT(&rx_desc[read_index]);
+        unsigned cb     = min(nbytes - desc_offset, bufsz);
+
+        memcpy(buf, PHYS_TO_VIRT(rx_desc[read_index].paddr + desc_offset), cb);
+        buf         += cb;
+        desc_offset += cb;
+        read_nbytes += cb;
+        bufsz       -= cb;
+
+        // if we read the whole descriptor page
+        if (desc_offset == nbytes) {
+            // set up for the next page
+            desc_offset = 0;
+            read_index = INCR_RX_INDEX(read_index);
+
+            // if we are done, get out
+            if (end_of_packet || read_nbytes == frame_size)
+                break;
+        }
+    }
+}
+
+//
+// A packet has been received; process it.
+//
+static void receive_packet()
+{
+    // this is the size of the frame as the Eth controller knows it
+    // this may include the FCS at the end of the frame
+    // and may included padding bytes to make a min packet size of 64 bytes
+    // so it is likely this is longer than the payload length
+    read_index = receive_index;
+    frame_size = DESC_FRAMESZ(&rx_desc[receive_index]);
+    desc_offset = 0;
+    read_nbytes = 0;
+
+    if (frame_size <= 0)
+        return;
+
+    IPSTACK *packet = Malloc(frame_size + sizeof(IPSTACK));
+
+    if (packet == NULL) {
+        // Out of memory.
+    } else {
+        // Fill in info about the frame data.
+        packet->pPayload  = (char*)packet + sizeof(IPSTACK);
+        packet->cbPayload = frame_size;
+
+        read_packet(packet->pPayload, packet->cbPayload);
+        ENQUEUE(&receive_queue, packet);
+    }
+
+    // Free the receive descriptors.
+    while (! DESC_EOWN(&rx_desc[receive_index]))
+    {
+        int end_of_packet = DESC_EOP(&rx_desc[receive_index]);
+
+        DESC_SET_EOWN(&rx_desc[receive_index]);         // give up ownership
+        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;             // decrement the BUFCNT
+        receive_index = INCR_RX_INDEX(receive_index);   // check the next one
+
+        // hit the end of packet
+        if (end_of_packet)
+            break;
+    }
+
+    // init our state variables
+    read_index = 0;
+    desc_offset = 0;
+    frame_size = 0;
+    read_nbytes = 0;
+}
+
+//
+// This routine should be called periodically from upper layer.
+//
+void eth_periodic()
+{
+    if (! (ETHCON1 & PIC32_ETHCON1_TXRTS)) {
+        // TX is idle; transmit any pending data.
+        if (eth_tx_packet != 0){
+            // Release previous packet.
+            RELEASE(eth_tx_packet);
+            eth_tx_packet = 0;
+        }
+
+        if (eth_is_up) {
+            IPSTACK *packet = DEQUEUE(&transmit_queue);
+            if (packet != 0) {
+                send_packet(packet);
+                eth_tx_packet = packet;
+            }
+        }
+    }
+
+    // Check whether a frame has been received.
+    if (! DESC_EOWN(&rx_desc[receive_index])) {
+        receive_packet();
+    }
+}
+#endif
 
 /*
  * Put to onboard RAM
