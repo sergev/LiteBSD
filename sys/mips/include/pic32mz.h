@@ -1264,11 +1264,17 @@
 #define ETHPMM1         PIC32_R (0x82070)   /* Pattern match mask 1 */
 #define ETHPMCS         PIC32_R (0x82080)   /* Pattern match checksum */
 #define ETHPMO          PIC32_R (0x82090)   /* Pattern match offset */
-#define ETHRXFC         PIC32_R (0x820A0)   /* Receive filter configuration */
-#define ETHRXWM         PIC32_R (0x820B0)   /* Receive watermarks */
-#define ETHIEN          PIC32_R (0x820C0)   /* Interrupt enable */
-#define ETHIRQ          PIC32_R (0x820D0)   /* Interrupt request */
-#define ETHSTAT         PIC32_R (0x820E0)   /* Status */
+#define ETHRXFC         PIC32_R (0x820a0)   /* Receive filter configuration */
+#define ETHRXWM         PIC32_R (0x820b0)   /* Receive watermarks */
+#define ETHIEN          PIC32_R (0x820c0)   /* Interrupt enable */
+#define ETHIENCLR       PIC32_R (0x820c4)
+#define ETHIENSET       PIC32_R (0x820c8)
+#define ETHIENINV       PIC32_R (0x820cc)
+#define ETHIRQ          PIC32_R (0x820d0)   /* Interrupt request */
+#define ETHIRQCLR       PIC32_R (0x820d4)
+#define ETHIRQSET       PIC32_R (0x820d8)
+#define ETHIRQINV       PIC32_R (0x820dc)
+#define ETHSTAT         PIC32_R (0x820e0)   /* Status */
 #define ETHRXOVFLOW     PIC32_R (0x82100)   /* Receive overflow statistics */
 #define ETHFRMTXOK      PIC32_R (0x82110)   /* Frames transmitted OK statistics */
 #define ETHSCOLFRM      PIC32_R (0x82120)   /* Single collision frames statistics */
@@ -1295,10 +1301,10 @@
 #define EMAC1MCMDCLR    PIC32_R (0x82294)
 #define EMAC1MCMDSET    PIC32_R (0x82298)
 #define EMAC1MCMDINV    PIC32_R (0x8229c)
-#define EMAC1MADR       PIC32_R (0x822A0)   /* MII address */
-#define EMAC1MWTD       PIC32_R (0x822B0)   /* MII write data */
-#define EMAC1MRDD       PIC32_R (0x822C0)   /* MII read data */
-#define EMAC1MIND       PIC32_R (0x822D0)   /* MII indicators */
+#define EMAC1MADR       PIC32_R (0x822a0)   /* MII address */
+#define EMAC1MWTD       PIC32_R (0x822b0)   /* MII write data */
+#define EMAC1MRDD       PIC32_R (0x822c0)   /* MII read data */
+#define EMAC1MIND       PIC32_R (0x822d0)   /* MII indicators */
 #define EMAC1SA0        PIC32_R (0x82300)   /* MAC station address 0 */
 #define EMAC1SA1        PIC32_R (0x82310)   /* MAC station address 1 */
 #define EMAC1SA2        PIC32_R (0x82320)   /* MAC station address 2 */

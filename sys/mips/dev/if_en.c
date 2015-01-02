@@ -37,33 +37,19 @@
 #include <netinet/if_ether.h>
 #endif
 
-#define ETHER_MIN_LEN       64
 #define ETHER_MAX_LEN       1536
 
 #define RX_PACKETS          4
-#define RX_BYTES_PER_DESC   128                             // This is tuned as a balance between the number of discriptors and size wasting empty space at the end of a discriptor
+#define RX_BYTES_PER_DESC   256                             // This is tuned as a balance between the number of discriptors and size wasting empty space at the end of a discriptor
 #define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)    // how much buffer space we have for incoming frames
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)  // check that this works out to be even ie with a modulo of zero
-#define TX_DESCRIPTORS      5
+#define TX_DESCRIPTORS      1
 
 #if 1
-#define inb(a)      0
-#define insw(a,b,l) /*empty*/
-#define outb(a,v)   /*empty*/
-#define outsw(a,b,l) /*empty*/
-
 #define PKTSZ   3*512
 #define TBUF    (16*1024)       /* Starting location of Transmit Buffer */
 #define RBUF    (16*1024+PKTSZ) /* Starting location of Receive Buffer */
 #define RBUFEND (32*1024)       /* Ending location of Transmit Buffer */
-
-#define DS_PGSIZE   256         /* Size of RAM pages in bytes */
-
-#define DSIS_RX     1
-#define DSIS_RXE    2
-#define DSIS_ROVRN  4
-#define DSIS_TX     8
-#define DSIS_TXE    16
 #endif
 
 /*
@@ -111,29 +97,19 @@ struct eth_port {
     struct arpcom arpcom;           /* Ethernet common part */
 #define netif   arpcom.ac_if        /* network-visible interface */
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
-    int         flags;
-#define DSF_LOCK    1               /* block re-entering en_start */
-    int         oactive;
+
     int         phy_id;             /* PHY id */
     int         is_up;              /* whether the link is up */
-    struct mbuf *tx_packet;         /* Current packet under transmit */
+    int         is_transmitting;    /* block re-entering en_start */
 
     char        rx_buffer[RX_BYTES];
+    char        tx_buffer[ETHER_MAX_LEN];
     eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
-    eth_desc_t  tx_desc[TX_DESCRIPTORS];
+    eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
 
     unsigned    receive_index;      /* next RX descriptor to look */
+#define INCR_RX_INDEX(_i)   ((_i + 1) % RX_DESCRIPTORS)
 
-    /* Pointers into the current frame to read out the received packet. */
-    unsigned    read_index;
-    unsigned    desc_offset;
-    unsigned    frame_size;
-    unsigned    read_nbytes;
-
-    int         mask;
-    int         ba;                 /* byte addr in buffer ram of inc pkt */
-    int         cur;                /* current page being filled */
-    u_char      tx_buffer[2048];    /* ETHERMTU + sizeof(long) */
 } eth_port[NEN];
 
 /*-------------------------------------------------------------
@@ -482,239 +458,6 @@ static void eth_init_dma(struct eth_port *e)
      * the software; clear it completely out. */
     bzero(e->tx_desc, sizeof(e->tx_desc));
     ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
-
-    /* Init our frame reading values,
-     * used by read_packet. */
-    e->read_index = 0;
-    e->desc_offset = 0;
-    e->frame_size = 0;
-    e->read_nbytes = 0;
-}
-
-#if 0
-#define INCR_RX_INDEX(_i)   ((_i + 1) % RX_DESCRIPTORS)
-
-//-------------------------------------------------------------
-// Internal Ethernet routines.
-//
-
-static void send_packet(IPSTACK *packet)
-{
-    // clear the tx buffer, but we don't have to
-    // worry about the last one as it is just
-    // a dummy that will always have the software
-    // own to stop the DMA from running off the end
-    memset(tx_desc, 0, sizeof(tx_desc) - sizeof(tx_desc[0]));
-
-    // always have a frame, always FRAME II (we don't support 802.3 outgoing frames; this is typical)
-    int i = 0;
-    DESC_SET_BYTECNT(&tx_desc[i], packet->cbFrame);
-
-    tx_desc[i].paddr = VIRT_TO_PHYS(packet->pFrameII);
-    DESC_SET_SOP(&tx_desc[i]);
-    i++;
-
-    // IP Header
-    if (packet->cbIPHeader > 0)
-    {
-        DESC_SET_BYTECNT(&tx_desc[i], packet->cbIPHeader);
-        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pIPHeader);
-        i++;
-    }
-
-    // Transport Header (TCP/UDP)
-    if (packet->cbTranportHeader > 0)
-    {
-        DESC_SET_BYTECNT(&tx_desc[i], packet->cbTranportHeader);
-        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pTransportHeader);
-        i++;
-    }
-
-    // Payload / ARP / ICMP
-    if (packet->cbPayload > 0)
-    {
-        DESC_SET_BYTECNT(&tx_desc[i], packet->cbPayload);
-        tx_desc[i].paddr = VIRT_TO_PHYS(packet->pPayload);
-        i++;
-    }
-
-    // put in eop; I is one past the last
-    // entry; lets bump it down one
-    i--;
-    DESC_SET_EOP(&tx_desc[i]);
-
-    // set the ownership bits
-    // the last descriptor is a dummy the software
-    // always owns, do look at that.
-    int j;
-    for (j=TX_DESCRIPTORS-1; j>=0; j--)
-    {
-        // i is the last descriptor that is
-        // go to be transmitted
-        if (j <= i)
-            DESC_SET_EOWN(&tx_desc[j]);
-        else
-            DESC_CLEAR_EOWN(&tx_desc[j]);
-    }
-
-    // set the descriptor table to be transmitted
-    ETHTXST = VIRT_TO_PHYS(tx_desc);
-
-    // transmit
-    ETHCON1SET = PIC32_ETHCON1_TXRTS;
-}
-
-static void read_packet(char *buf, unsigned bufsz)
-{
-    if (! DESC_SOP(&rx_desc[read_index])) {
-        // Start of packet is expected
-        //printf("Something is wrong!\n");
-    }
-
-    if (frame_size == 0 || read_nbytes == frame_size) {
-        return;
-    }
-
-    // make sure we own the descriptor, bad if we don't!
-    while (bufsz > 0) {
-        if (DESC_EOWN(&rx_desc[read_index]))
-            break;
-
-        int end_of_packet = DESC_EOP(&rx_desc[read_index]);
-        unsigned nbytes = DESC_BYTECNT(&rx_desc[read_index]);
-        unsigned cb     = min(nbytes - desc_offset, bufsz);
-
-        memcpy(buf, PHYS_TO_VIRT(rx_desc[read_index].paddr + desc_offset), cb);
-        buf         += cb;
-        desc_offset += cb;
-        read_nbytes += cb;
-        bufsz       -= cb;
-
-        // if we read the whole descriptor page
-        if (desc_offset == nbytes) {
-            // set up for the next page
-            desc_offset = 0;
-            read_index = INCR_RX_INDEX(read_index);
-
-            // if we are done, get out
-            if (end_of_packet || read_nbytes == frame_size)
-                break;
-        }
-    }
-}
-
-//
-// A packet has been received; process it.
-//
-static void receive_packet()
-{
-    // this is the size of the frame as the Eth controller knows it
-    // this may include the FCS at the end of the frame
-    // and may included padding bytes to make a min packet size of 64 bytes
-    // so it is likely this is longer than the payload length
-    read_index = receive_index;
-    frame_size = DESC_FRAMESZ(&rx_desc[receive_index]);
-    desc_offset = 0;
-    read_nbytes = 0;
-
-    if (frame_size <= 0)
-        return;
-
-    IPSTACK *packet = Malloc(frame_size + sizeof(IPSTACK));
-
-    if (packet == NULL) {
-        // Out of memory.
-    } else {
-        // Fill in info about the frame data.
-        packet->pPayload  = (char*)packet + sizeof(IPSTACK);
-        packet->cbPayload = frame_size;
-
-        read_packet(packet->pPayload, packet->cbPayload);
-        ENQUEUE(&receive_queue, packet);
-    }
-
-    // Free the receive descriptors.
-    while (! DESC_EOWN(&rx_desc[receive_index]))
-    {
-        int end_of_packet = DESC_EOP(&rx_desc[receive_index]);
-
-        DESC_SET_EOWN(&rx_desc[receive_index]);         // give up ownership
-        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;             // decrement the BUFCNT
-        receive_index = INCR_RX_INDEX(receive_index);   // check the next one
-
-        // hit the end of packet
-        if (end_of_packet)
-            break;
-    }
-
-    // init our state variables
-    read_index = 0;
-    desc_offset = 0;
-    frame_size = 0;
-    read_nbytes = 0;
-}
-
-//
-// This routine should be called periodically from upper layer.
-//
-void eth_periodic()
-{
-    if (! (ETHCON1 & PIC32_ETHCON1_TXRTS)) {
-        // TX is idle; transmit any pending data.
-        if (eth_tx_packet != 0){
-            // Release previous packet.
-            RELEASE(eth_tx_packet);
-            eth_tx_packet = 0;
-        }
-
-        if (eth_is_up) {
-            IPSTACK *packet = DEQUEUE(&transmit_queue);
-            if (packet != 0) {
-                send_packet(packet);
-                eth_tx_packet = packet;
-            }
-        }
-    }
-
-    // Check whether a frame has been received.
-    if (! DESC_EOWN(&rx_desc[receive_index])) {
-        receive_packet();
-    }
-}
-#endif
-
-/*
- * Put to onboard RAM
- */
-static void
-en_put(up, ad, len)
-    caddr_t up;
-{
-#if 0
-    u_char cmd;
-
-    cmd = inb(ds_cmd);
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_START);
-
-    /* Setup for remote dma */
-    outb(ds0_isr, DSIS_RDC);
-    if (len&1)
-        len++;        /* roundup to words */
-    outb(ds0_rbcr0, len);
-    outb(ds0_rbcr1, len>>8);
-    outb(ds0_rsar0, ad);
-    outb(ds0_rsar1, ad>>8);
-
-    /* Execute & stuff to card */
-    outb(ds_cmd, DSCM_RWRITE|DSCM_PG0|DSCM_START);
-    outsw(0x10, up, len/2);
-
-    /* Wait till done, then shutdown feature */
-    while ((inb(ds0_isr) & DSIS_RDC) == 0)
-        ;
-    outb(ds0_isr, DSIS_RDC);
-    outb(ds_cmd, cmd);
-#endif
 }
 
 /*
@@ -729,35 +472,27 @@ en_start(ifp)
 {
     struct eth_port *e = &eth_port[ifp->if_unit];
     struct mbuf *m0, *m;
-    int buffer;
-    int len = 0, i, total,t;
+    char *buffer;
+    int total,t;
 
-    /*
-     * The DS8390 has only one transmit buffer, if it is busy we
-     * must wait until the transmit interrupt completes.
-     */
-    outb(ds_cmd, DSCM_NODMA|DSCM_START);
+    /* The previous transmit has not completed yet. */
+    if (e->is_transmitting)
+        return;
 
-    if (e->flags & DSF_LOCK)
-        return;
-#if 0
-    if (inb(ds_cmd) & DSCM_TRANS)
-        return;
-#endif
+    /* Interface is administratively deactivated. */
     if ((e->netif.if_flags & IFF_RUNNING) == 0)
         return;
 
+    /* Get a packet from the transmit queue. */
     IF_DEQUEUE(&e->netif.if_snd, m);
-
     if (m == 0)
         return;
 
     /*
      * Copy the mbuf chain into the transmit buffer
      */
-
-    e->flags |= DSF_LOCK;       /* prevent entering nestart */
-    buffer = TBUF; len = i = 0;
+    e->is_transmitting = 1;             /* prevent entering nestart */
+    buffer = e->tx_buffer;
     t = 0;
     for (m0 = m; m != 0; m = m->m_next)
         t += m->m_len;
@@ -765,16 +500,15 @@ en_start(ifp)
     m = m0;
     total = t;
     for (m0 = m; m != 0; ) {
-
-        if (m->m_len&1 && t > m->m_len) {
-            en_put(mtod(m, caddr_t), buffer, m->m_len - 1);
+        if ((m->m_len & 1) && t > m->m_len) {
+            bcopy(mtod(m, caddr_t), buffer, m->m_len - 1);
             t -= m->m_len - 1;
             buffer += m->m_len - 1;
             m->m_data += m->m_len - 1;
             m->m_len = 1;
             m = m_pullup(m, 2);
         } else {
-            en_put(mtod(m, caddr_t), buffer, m->m_len);
+            bcopy(mtod(m, caddr_t), buffer, m->m_len);
             buffer += m->m_len;
             t -= m->m_len;
             MFREE(m, m0);
@@ -783,16 +517,22 @@ en_start(ifp)
     }
 
     /*
-     * Init transmit length registers, and set transmit start flag.
+     * Init transmit descriptors, start transmittion.
      */
+    bzero(e->tx_desc, sizeof(e->tx_desc));
 
-    len = total;
-    if (len < ETHER_MIN_LEN)
-        len = ETHER_MIN_LEN;
-    outb(ds0_tbcr0, len & 0xff);
-    outb(ds0_tbcr1, (len >> 8) & 0xff);
-    outb(ds0_tpsr, TBUF/DS_PGSIZE);
-    outb(ds_cmd, DSCM_TRANS|DSCM_NODMA|DSCM_START);
+    // Use descriptor 0.
+    e->tx_desc[0].paddr = MACH_VIRT_TO_PHYS(e->tx_buffer);
+    DESC_SET_BYTECNT(&e->tx_desc[0], total);
+    DESC_SET_SOP(&e->tx_desc[0]);
+    DESC_SET_EOP(&e->tx_desc[0]);
+    DESC_SET_EOWN(&e->tx_desc[0]);
+
+    // set the descriptor table to be transmitted
+    ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
+
+    // transmit
+    ETHCON1SET = PIC32_ETHCON1_TXRTS;
 }
 
 /*
@@ -805,7 +545,7 @@ en_init(unit)
 {
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
-    int s, i;
+    int s;
 
     if (ifp->if_addrlist == (struct ifaddr *)0)
         return;
@@ -813,43 +553,7 @@ en_init(unit)
         return;
 
     s = splimp();
-
-    /* set physical address on ethernet */
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG1|DSCM_STOP);
-    for (i=0; i < 6; i++)
-        outb(ds1_par0+i, e->macaddr[i]);
-
-    /* clr logical address hash filter for now */
-    for (i=0; i < 8; i++)
-        outb(ds1_mar0+i, 0xff);
-#if 0
-    /* init regs */
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_STOP);
-    outb(ds0_rbcr0, 0);
-    outb(ds0_rbcr1, 0);
-    outb(ds0_imr, 0);
-    outb(ds0_isr, 0xff);
-
-    /* Word Transfers, Burst Mode Select, Fifo at 8 bytes */
-    outb(ds0_dcr, DSDC_WTS|DSDC_BMS|DSDC_FT1);
-    outb(ds0_tcr, 0);
-    outb(ds0_rcr, DSRC_MON);
-    outb(ds0_tpsr, 0);
-    outb(ds0_pstart, RBUF/DS_PGSIZE);
-    outb(ds0_pstop, RBUFEND/DS_PGSIZE);
-    outb(ds0_bnry, RBUF/DS_PGSIZE);
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG1|DSCM_STOP);
-    outb(ds1_curr, RBUF/DS_PGSIZE);
-    e->cur = RBUF/DS_PGSIZE;
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_START);
-    outb(ds0_rcr, DSRC_AB);
-    outb(ds0_dcr, DSDC_WTS|DSDC_BMS|DSDC_FT1);
-    outb(ds0_imr, 0xff);
-#endif
-
     e->netif.if_flags |= IFF_RUNNING;
-    e->oactive = 0;
-    e->mask = ~0;
     en_start(ifp);
     splx(s);
 }
@@ -864,38 +568,30 @@ en_reset(unit, uban)
     if (unit >= NEN)
         return;
     printf("en%d: reset\n", unit);
-    eth_port[unit].flags &= ~DSF_LOCK;
+    eth_port[unit].is_transmitting = 0;
     en_init(unit);
 }
 
 /*
  * Pull read data off a interface.
- * Len is length of data, with local net header stripped.
- * Off is non-zero if a trailer protocol was used, and
- * gives the offset of the trailer information.
- * We copy the trailer information and then all the normal
- * data into mbufs.  When full cluster sized units are present
+ * When full cluster sized units are present
  * we copy into clusters.
  */
 static struct mbuf *
-en_get(buf, totlen, off0, ifp)
+en_get(buf, totlen, ifp)
     caddr_t buf;
-    int totlen, off0;
+    int totlen;
     struct ifnet *ifp;
 {
     struct mbuf *top, **mp, *m;
-    int off = off0, len;
     caddr_t cp = buf;
     char *epkt;
+    int len;
 
     buf += sizeof(struct ether_header);
+    totlen -= sizeof(struct ether_header);
     cp = buf;
     epkt = cp + totlen;
-
-    if (off) {
-        cp += off + 2 * sizeof(u_short);
-        totlen -= 2 * sizeof(u_short);
-    }
 
     MGETHDR(m, M_DONTWAIT, MT_DATA);
     if (m == 0)
@@ -945,94 +641,63 @@ en_get(buf, totlen, off0, ifp)
 }
 
 /*
- * Pass a packet to the higher levels.
- * We deal with the trailer protocol here.
- */
-static void
-en_read(e, buf, len)
-    struct eth_port *e;
-    char *buf;
-    int len;
-{
-    struct ether_header *eh;
-    struct mbuf *m;
-    int off, resid;
-
-    /*
-     * Deal with trailer protocol: if type is trailer type
-     * get true type from first 16-bit word past data.
-     * Remember that type was trailer by setting off.
-     */
-    eh = (struct ether_header *)buf;
-    eh->ether_type = ntohs((u_short)eh->ether_type);
-#define en_dataaddr(eh, off, type) ((type)(((caddr_t)((eh)+1)+(off))))
-    if (eh->ether_type >= ETHERTYPE_TRAIL &&
-        eh->ether_type < ETHERTYPE_TRAIL+ETHERTYPE_NTRAILER) {
-        off = (eh->ether_type - ETHERTYPE_TRAIL) * 512;
-        if (off >= ETHERMTU)
-            return;        /* sanity */
-        eh->ether_type = ntohs(*en_dataaddr(eh, off, u_short *));
-        resid = ntohs(*(en_dataaddr(eh, off+2, u_short *)));
-        if (off + resid > len)
-            return;      /* sanity */
-        len = off + resid;
-    } else  off = 0;
-
-    if (len == 0)
-        return;
-
-    /*
-     * Pull packet off interface.  Off is nonzero if packet
-     * has trailing header; en_get will then force this header
-     * information to be at the front, but we still have to drop
-     * the type and length which are at the front of any trailer data.
-     */
-    m = en_get(buf, len, off, &e->netif);
-    if (m == 0)
-        return;
-
-    ether_input(&e->netif, eh, m);
-}
-
-/*
  * Ethernet interface receiver interface.
- * If input error just drop packet.
- * Otherwise examine packet to determine type.  If can't determine length
- * from type, then have to drop packet.  Othewise decapsulate
- * packet based on type and pass to type specific higher-level
- * input routine.
+ * Decapsulate packet based on type and pass to type specific
+ * higher-level input routine.
  */
 static void
-en_recv(e, len)
+en_recv(e)
     struct eth_port *e;
 {
-    e->netif.if_ipackets++;
-#if 0
-    if (len < ETHER_MIN_LEN || len > ETHER_MAX_LEN)
+    /* Get the size of received Ethernet packet. */
+    unsigned frame_size = DESC_FRAMESZ(&e->rx_desc[e->receive_index]);
+    if (frame_size <= 0) {
+        /* Cannot happen. */
+        printf("en_recv: bad frame size = %u\n", frame_size);
         return;
-
-    /* this need not be so torturous - one/two bcopys at most into mbufs */
-    en_fetch(e->tx_buffer, e->ba, min(len, DS_PGSIZE - 4));
-    if (len > DS_PGSIZE - 4) {
-        int l = len - (DS_PGSIZE - 4), b;
-        u_char *p = e->tx_buffer + (DS_PGSIZE - 4);
-
-        if(++e->cur > 0x7f) e->cur = 0x46;
-        b = e->cur*DS_PGSIZE;
-
-        while (l >= DS_PGSIZE) {
-            en_fetch(p, b, DS_PGSIZE);
-            p += DS_PGSIZE; l -= DS_PGSIZE;
-            if(++e->cur > 0x7f) e->cur = 0x46;
-            b = e->cur*DS_PGSIZE;
-        }
-        if (l > 0)
-            en_fetch(p, b, l);
     }
-    /* don't forget checksum! */
-    len -= sizeof(struct ether_header) + sizeof(long);
-#endif
-    en_read(e, (caddr_t)e->tx_buffer, len);
+
+    unsigned read_index = e->receive_index;
+    if (! DESC_SOP(&e->rx_desc[read_index])) {
+        /* Start of packet is expected. */
+        printf("en_recv: no SOP flag (%x)\n", e->rx_desc[read_index].hdr);
+    }
+
+    char buf[ETHER_MAX_LEN];
+    unsigned read_nbytes = 0;
+
+    while (read_nbytes < frame_size) {
+        if (DESC_EOWN(&e->rx_desc[read_index]))
+            break;
+
+        int end_of_packet = DESC_EOP(&e->rx_desc[read_index]);
+        unsigned nbytes = DESC_BYTECNT(&e->rx_desc[read_index]);
+        if (nbytes > frame_size - read_nbytes)
+            nbytes = frame_size - read_nbytes;
+
+        unsigned vaddr = MACH_PHYS_TO_UNCACHED(e->rx_desc[read_index].paddr);
+        bcopy((char*) vaddr, &buf[read_nbytes], nbytes);
+        read_nbytes += nbytes;
+
+        // set up for the next page
+        read_index = INCR_RX_INDEX(read_index);
+
+        // Free the receive descriptor.
+        DESC_SET_EOWN(&e->rx_desc[e->receive_index]);   // give up ownership
+        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;             // decrement the BUFCNT
+        e->receive_index = INCR_RX_INDEX(e->receive_index); // check the next one
+
+        // if we are done, get out
+        if (end_of_packet || read_nbytes == frame_size)
+            break;
+    }
+
+    /*
+     * Pass a packet to the higher levels.
+     */
+    struct mbuf *m = en_get(buf, frame_size, &e->netif);
+    if (m != 0)
+        ether_input(&e->netif, (struct ether_header*)buf, m);
 }
 
 /*
@@ -1066,116 +731,51 @@ void
 enintr(unit)
 {
     struct eth_port *e = &eth_port[unit];
-    int isr;
-    int cmd __attribute__((unused));
+    int irq;
 
-    /* Save cmd, clear interrupt */
-    cmd = inb(ds_cmd);
-loop:
-    isr = inb(ds0_isr);
-    outb(ds_cmd,DSCM_NODMA|DSCM_START);
-    outb(ds0_isr, isr);
+    /* Read the interrupt requests and acknowledge the interrupt. */
+    irq = ETHIRQ;
+    ETHIRQCLR = irq;
 
-    /* Receiver error */
-    if (isr & DSIS_RXE) {
-        /* need to read these registers to clear status */
-        (void) inb(ds0_rsr);
-        (void) inb(0xD);
-        (void) inb(0xE);
-        (void) inb(0xF);
+    /* Receiver error. */
+    if (irq & (PIC32_ETHIRQ_RXBUSE |
+               PIC32_ETHIRQ_RXBUFNA |
+               PIC32_ETHIRQ_RXOVFLW)) {
         e->netif.if_ierrors++;
+        log(LOG_ERR, "en%d: receive error: irq %x\n", unit, irq);
+        //TODO: reinitialize DMA descriptors.
     }
 
-    /* We received something; rummage thru tiny ring buffer */
-    if (isr & (DSIS_RX|DSIS_RXE|DSIS_ROVRN)) {
-        u_char pend,lastfree;
-
-        outb(ds_cmd, DSCM_START|DSCM_NODMA|DSCM_PG1);
-        pend = inb(ds1_curr);
-        outb(ds_cmd, DSCM_START|DSCM_NODMA|DSCM_PG0);
-        lastfree = inb(ds0_bnry);
-
-        /* Have we wrapped? */
-        if (lastfree >= RBUFEND/DS_PGSIZE)
-            lastfree = RBUF/DS_PGSIZE;
-        if (pend < lastfree && e->cur < pend)
-            lastfree = e->cur;
-        else if (e->cur > lastfree)
-            lastfree = e->cur;
-
-        /* Something in the buffer? */
-        while (pend != lastfree) {
-            int len = 0;
-            //struct prhdr ph;       /* hardware header of incoming packet */
-
-            /* Extract header from microcephalic board */
-            //en_fetch(&ph, lastfree*DS_PGSIZE, 4);
-            e->ba = lastfree*DS_PGSIZE + 4;
-
-            //len = ph.pr_sz0 + (ph.pr_sz1<<8);
-            en_recv(e, len);
-#if 0
-/* buffer successor/predecessor in ring? */
-#define succ(n) (((n)+1 >= RBUFEND/DS_PGSIZE) ? RBUF/DS_PGSIZE : (n)+1)
-#define pred(n) (((n)-1 < RBUF/DS_PGSIZE) ? RBUFEND/DS_PGSIZE-1 : (n)-1)
-
-            int nxt = ph.pr_nxtpg;
-
-            /* Sanity check */
-            if (nxt >= RBUF/DS_PGSIZE && nxt <= RBUFEND/DS_PGSIZE
-                && nxt <= pend)
-                e->cur = nxt;
-            else
-                e->cur = nxt = pend;
-
-            /* Set the boundaries */
-            lastfree = nxt;
-            outb(ds0_bnry, pred(nxt));
-            outb(ds_cmd, DSCM_START|DSCM_NODMA|DSCM_PG1);
-            pend = inb(ds1_curr);
-            outb(ds_cmd, DSCM_START|DSCM_NODMA|DSCM_PG0);
-#endif
-        }
-        outb(ds_cmd, DSCM_START|DSCM_NODMA);
+    /* We received something. */
+    while (! DESC_EOWN(&e->rx_desc[e->receive_index])) {
+        e->netif.if_ipackets++;
+        en_recv(e);
     }
 
-    /* Transmit error */
-    if (isr & DSIS_TXE) {
-        e->flags &= ~DSF_LOCK;
-        /* Need to read these registers to clear status */
-        e->netif.if_collisions += inb(ds0_tbcr0);
+    /* Transmit error. */
+    if (irq & (PIC32_ETHIRQ_TXBUSE | PIC32_ETHIRQ_TXABORT)) {
+        log(LOG_ERR, "en%d: transmit error: irq %x\n", unit, irq);
+        e->is_transmitting = 0;
         e->netif.if_oerrors++;
     }
 
     /* Packet Transmitted */
-    if (isr & DSIS_TX) {
-        e->flags &= ~DSF_LOCK;
+    if (irq & PIC32_ETHIRQ_TXDONE) {
+        e->is_transmitting = 0;
         ++e->netif.if_opackets;
-        e->netif.if_collisions += inb(ds0_tbcr0);
+        e->netif.if_collisions += ETHSCOLFRM + ETHMCOLFRM;
     }
 
-    /* Receiver ovverun? */
-    if (isr & DSIS_ROVRN) {
-        log(LOG_ERR, "en%d: error: isr %x\n", e-eth_port, isr);
-        outb(ds0_rbcr0, 0);
-        outb(ds0_rbcr1, 0);
-        outb(ds0_tcr, DSTC_LB0);
-        outb(ds0_rcr, DSRC_MON);
-        outb(ds_cmd, DSCM_START|DSCM_NODMA);
-        outb(ds0_rcr, DSRC_AB);
-        outb(ds0_tcr, 0);
+    /* Transmitter is idle. */
+    if (! (ETHCON1 & PIC32_ETHCON1_TXRTS)) {
+        if (e->is_up) {
+            /* Any more to send? */
+            en_start(&e->netif);
+        }
     }
 
-    /* Any more to send? */
-    outb(ds_cmd, DSCM_NODMA|DSCM_PG0|DSCM_START);
-    en_start(&e->netif);
-    outb(ds_cmd, cmd);
-    outb(ds0_imr, 0xff);
-
-    /* Still more to do? */
-    isr = inb(ds0_isr);
-    if (isr)
-        goto loop;
+    /* Clear the interrupt flag on exit from the service routine. */
+    IFSCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
 }
 
 /*
@@ -1215,7 +815,7 @@ en_ioctl(ifp, cmd, data)
         if ((ifp->if_flags & IFF_UP) == 0 &&
             ifp->if_flags & IFF_RUNNING) {
             ifp->if_flags &= ~IFF_RUNNING;
-            outb(ds_cmd,DSCM_STOP|DSCM_NODMA);
+            //TODO: disable interface
         } else if (ifp->if_flags & IFF_UP &&
             (ifp->if_flags & IFF_RUNNING) == 0)
             en_init(ifp->if_unit);
@@ -1227,6 +827,9 @@ en_ioctl(ifp, cmd, data)
         struct eth_port *e = &eth_port[ifp->if_unit];
         bcopy((caddr_t)e->macaddr, (caddr_t) &ifr->ifr_data,
             sizeof(e->macaddr));
+        EMAC1SA2 = e->macaddr[0] | (e->macaddr[1] << 8);
+        EMAC1SA1 = e->macaddr[2] | (e->macaddr[3] << 8);
+        EMAC1SA0 = e->macaddr[4] | (e->macaddr[5] << 8);
         break;
 #endif
 
@@ -1266,9 +869,6 @@ en_probe(config)
     /* Link is down. */
     e->is_up = 0;
 
-    /* Clear packet queues. */
-    e->tx_packet = 0;
-
     /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
     eth_reset();
     eth_reset_mac();
@@ -1288,6 +888,17 @@ en_probe(config)
     e->macaddr[3] = EMAC1SA1 >> 8;
     e->macaddr[4] = EMAC1SA0;
     e->macaddr[5] = EMAC1SA0 >> 8;
+
+    /* Enable interrupts. */
+    ETHIENSET = PIC32_ETHIRQ_TXBUSE |       /* Transmit Bus Error */
+                PIC32_ETHIRQ_TXDONE |       /* Transmit Done */
+                PIC32_ETHIRQ_TXABORT |      /* Transmit Abort */
+                PIC32_ETHIRQ_RXBUSE |       /* Receive Bus Error */
+                PIC32_ETHIRQ_RXDONE |       /* Receive Done */
+                PIC32_ETHIRQ_RXBUFNA |      /* Receive Buffer Not Available */
+                PIC32_ETHIRQ_RXOVFLW;       /* Receive FIFO Overflow */
+
+    IECSET(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
     splx(s);
 
     /*
