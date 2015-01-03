@@ -118,9 +118,13 @@ extern int uart_cnt;
 struct tty;
 struct termios;
 
+/* UART driver. */
 int uartparam(struct tty *, struct termios *);
 int uart_getc(dev_t);
 void uart_putc(dev_t, int);
 void uartintr(dev_t);
+
+/* Ethernet driver. */
+void enintr(dev_t);
 
 #endif

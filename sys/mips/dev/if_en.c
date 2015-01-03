@@ -38,19 +38,11 @@
 #endif
 
 #define ETHER_MAX_LEN       1536
-
 #define RX_PACKETS          4
-#define RX_BYTES_PER_DESC   256                             // This is tuned as a balance between the number of discriptors and size wasting empty space at the end of a discriptor
-#define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)    // how much buffer space we have for incoming frames
-#define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)  // check that this works out to be even ie with a modulo of zero
+#define RX_BYTES_PER_DESC   256
+#define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)
+#define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
 #define TX_DESCRIPTORS      1
-
-#if 1
-#define PKTSZ   3*512
-#define TBUF    (16*1024)       /* Starting location of Transmit Buffer */
-#define RBUF    (16*1024+PKTSZ) /* Starting location of Receive Buffer */
-#define RBUFEND (32*1024)       /* Ending location of Transmit Buffer */
-#endif
 
 /*
  * DMA buffer descriptor.
@@ -276,6 +268,9 @@ static int is_phy_linked(int phy_id, int was_up)
             speed_100 = (special & PHY_SPECIAL_100);
             full_duplex = (special & PHY_SPECIAL_FDX);
         }
+        log(LOG_ERR, "en0: link up, %s, %s duplex\n",
+            speed_100 ? "100Mbps" : "10Mbps",
+            full_duplex ? "full" : "half");
 
         /* Set speed. */
         if (speed_100)
@@ -303,7 +298,7 @@ static int is_phy_linked(int phy_id, int was_up)
  * Reset the PHY via MIIM interface.
  * Return -1 on failure.
  */
-static int eth_reset_phy(int phy_id)
+static int phy_reset(int phy_id)
 {
     int mode;
 
@@ -327,9 +322,9 @@ static int eth_reset_phy(int phy_id)
 }
 
 /*
- * Reset the Ethernet Controller.
+ * Initialize the Ethernet Controller.
  */
-static void eth_reset()
+static void en_setup()
 {
     /* Disable the ethernet interrupt. */
     IECCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
@@ -386,9 +381,9 @@ static void eth_reset()
 }
 
 /*
- * Reset the MAC.
+ * Initialize the MAC.
  */
-static void eth_reset_mac()
+static void en_setup_mac()
 {
     /* Reset the MAC. */
     EMAC1CFG1 = PIC32_EMAC1CFG1_SOFTRESET;
@@ -413,9 +408,9 @@ static void eth_reset_mac()
 }
 
 /*
- * RMII and MIIM reset.
+ * Initialize RMII and MIIM.
  */
-static void eth_reset_mii()
+static void en_setup_mii()
 {
     EMAC1SUPP = PIC32_EMAC1SUPP_RESETRMII;  /* reset RMII */
     EMAC1SUPP = 0;
@@ -432,7 +427,7 @@ static void eth_reset_mii()
 /*
  * Set DMA descriptors.
  */
-static void eth_init_dma(struct eth_port *e)
+static void en_init_dma(struct eth_port *e)
 {
     int i;
 
@@ -521,17 +516,17 @@ en_start(ifp)
      */
     bzero(e->tx_desc, sizeof(e->tx_desc));
 
-    // Use descriptor 0.
+    /* Use descriptor 0. */
     e->tx_desc[0].paddr = MACH_VIRT_TO_PHYS(e->tx_buffer);
     DESC_SET_BYTECNT(&e->tx_desc[0], total);
     DESC_SET_SOP(&e->tx_desc[0]);
     DESC_SET_EOP(&e->tx_desc[0]);
     DESC_SET_EOWN(&e->tx_desc[0]);
 
-    // set the descriptor table to be transmitted
+    /* Set the descriptor table to be transmitted. */
     ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
 
-    // transmit
+    /* Start transmitter. */
     ETHCON1SET = PIC32_ETHCON1_TXRTS;
 }
 
@@ -552,7 +547,9 @@ en_init(unit)
     if (ifp->if_flags & IFF_RUNNING)
         return;
 
+    /* Enable receiver. */
     s = splimp();
+    ETHCON1SET = PIC32_ETHCON1_RXEN;
     e->netif.if_flags |= IFF_RUNNING;
     en_start(ifp);
     splx(s);
@@ -657,37 +654,33 @@ en_recv(e)
         return;
     }
 
-    unsigned read_index = e->receive_index;
-    if (! DESC_SOP(&e->rx_desc[read_index])) {
+    if (! DESC_SOP(&e->rx_desc[e->receive_index])) {
         /* Start of packet is expected. */
-        printf("en_recv: no SOP flag (%x)\n", e->rx_desc[read_index].hdr);
+        printf("en_recv: no SOP flag (%x)\n", e->rx_desc[e->receive_index].hdr);
     }
 
     char buf[ETHER_MAX_LEN];
     unsigned read_nbytes = 0;
 
     while (read_nbytes < frame_size) {
-        if (DESC_EOWN(&e->rx_desc[read_index]))
+        if (DESC_EOWN(&e->rx_desc[e->receive_index]))
             break;
 
-        int end_of_packet = DESC_EOP(&e->rx_desc[read_index]);
-        unsigned nbytes = DESC_BYTECNT(&e->rx_desc[read_index]);
+        int end_of_packet = DESC_EOP(&e->rx_desc[e->receive_index]);
+        unsigned nbytes = DESC_BYTECNT(&e->rx_desc[e->receive_index]);
         if (nbytes > frame_size - read_nbytes)
             nbytes = frame_size - read_nbytes;
 
-        unsigned vaddr = MACH_PHYS_TO_UNCACHED(e->rx_desc[read_index].paddr);
+        unsigned vaddr = MACH_PHYS_TO_UNCACHED(e->rx_desc[e->receive_index].paddr);
         bcopy((char*) vaddr, &buf[read_nbytes], nbytes);
         read_nbytes += nbytes;
 
-        // set up for the next page
-        read_index = INCR_RX_INDEX(read_index);
+        /* Free the receive descriptor. */
+        DESC_SET_EOWN(&e->rx_desc[e->receive_index]);       /* give up ownership */
+        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;                 /* decrement the BUFCNT */
+        e->receive_index = INCR_RX_INDEX(e->receive_index); /* check the next one */
 
-        // Free the receive descriptor.
-        DESC_SET_EOWN(&e->rx_desc[e->receive_index]);   // give up ownership
-        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;             // decrement the BUFCNT
-        e->receive_index = INCR_RX_INDEX(e->receive_index); // check the next one
-
-        // if we are done, get out
+        /* If we are done, get out. */
         if (end_of_packet || read_nbytes == frame_size)
             break;
     }
@@ -712,14 +705,6 @@ en_watchdog(unit)
     /* Poll whether the link is active. */
     e->is_up = is_phy_linked(e->phy_id, e->is_up);
 
-#if 0
-    if (e->sc_iflags & IFF_OACTIVE) {
-        e->netif.if_flags &= ~IFF_RUNNING;
-        einit(unit);
-    } else if (e->sc_txcnt > 0)
-        e->sc_iflags |= IFF_OACTIVE;
-#endif
-
     /* Call it every second. */
     e->netif.if_timer = 1;
 }
@@ -728,8 +713,10 @@ en_watchdog(unit)
  * Controller interrupt.
  */
 void
-enintr(unit)
+enintr(dev)
+    dev_t dev;
 {
+    int unit = minor(dev);
     struct eth_port *e = &eth_port[unit];
     int irq;
 
@@ -743,7 +730,6 @@ enintr(unit)
                PIC32_ETHIRQ_RXOVFLW)) {
         e->netif.if_ierrors++;
         log(LOG_ERR, "en%d: receive error: irq %x\n", unit, irq);
-        //TODO: reinitialize DMA descriptors.
     }
 
     /* We received something. */
@@ -794,14 +780,13 @@ en_ioctl(ifp, cmd, data)
     switch (cmd) {
 
     case SIOCSIFADDR:
+        /* Change IP address. */
         ifp->if_flags |= IFF_UP;
-
         switch (ifa->ifa_addr->sa_family) {
 #ifdef INET
         case AF_INET:
             en_init(ifp->if_unit);   /* before arpwhohas */
-            ((struct arpcom *)ifp)->ac_ipaddr =
-                IA_SIN(ifa)->sin_addr;
+            ((struct arpcom *)ifp)->ac_ipaddr = IA_SIN(ifa)->sin_addr;
             arpwhohas((struct arpcom *)ifp, &IA_SIN(ifa)->sin_addr);
             break;
 #endif
@@ -812,17 +797,24 @@ en_ioctl(ifp, cmd, data)
         break;
 
     case SIOCSIFFLAGS:
+        /* Start/stop the network interface. */
         if ((ifp->if_flags & IFF_UP) == 0 &&
-            ifp->if_flags & IFF_RUNNING) {
+            ifp->if_flags & IFF_RUNNING)
+        {
+            /* Disable receiver. */
+            ETHCON1CLR = PIC32_ETHCON1_RXEN;
             ifp->if_flags &= ~IFF_RUNNING;
-            //TODO: disable interface
-        } else if (ifp->if_flags & IFF_UP &&
+        }
+        else if (ifp->if_flags & IFF_UP &&
             (ifp->if_flags & IFF_RUNNING) == 0)
+        {
             en_init(ifp->if_unit);
+        }
         break;
 
 #ifdef notdef
     case SIOCGHWADDR:
+        /* Change MAC address. */
         struct ifreq *ifr = (struct ifreq *)data;
         struct eth_port *e = &eth_port[ifp->if_unit];
         bcopy((caddr_t)e->macaddr, (caddr_t) &ifr->ifr_data,
@@ -870,16 +862,16 @@ en_probe(config)
     e->is_up = 0;
 
     /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
-    eth_reset();
-    eth_reset_mac();
-    eth_reset_mii();
-    if (eth_reset_phy(e->phy_id) < 0) {
+    en_setup();
+    en_setup_mac();
+    en_setup_mii();
+    if (phy_reset(e->phy_id) < 0) {
         printf("Ethernet PHY not detected at ID=%u\n", e->phy_id);
         return 0;
     }
 
     /* Set DMA descriptors. */
-    eth_init_dma(e);
+    en_init_dma(e);
 
     /* Extract our MAC address */
     e->macaddr[0] = EMAC1SA2;

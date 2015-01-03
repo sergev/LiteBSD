@@ -681,6 +681,14 @@ again:
         intrcnt.uart6++;
         uartintr(5);
         break;
+
+#include "en.h"
+#if NEN > 0
+    case PIC32_IRQ_ETH:                 /* Ethernet interrupt */
+        intrcnt.ether++;
+        enintr(0);
+        break;
+#endif
     }
 }
 
