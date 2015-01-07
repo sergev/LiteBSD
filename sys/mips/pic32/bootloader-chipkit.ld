@@ -1,5 +1,5 @@
 /*
- * Linker script for PIC32 firmware using HID bootloader.
+ * Linker script for PIC32 firmware using chipKIT bootloader.
  * Flash area for user starts at 9d000000.
  * Start address for user program is 9d001000.
  */

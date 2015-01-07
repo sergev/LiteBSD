@@ -13,7 +13,7 @@ cpu             "PIC32MZ"
 ident           WIFIRE
 
 # Linker script
-ldscript        "pic32/bootloader-max32.ld"
+ldscript        "pic32/bootloader-chipkit.ld"
 
 # Need to set locally
 timezone        8 dst
