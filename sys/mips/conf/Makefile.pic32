@@ -32,7 +32,7 @@ CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-bui
 LOCALCC= gcc -m32 ${DEBUG}
 CPP=	${MIPS_GCC_PREFIX}cpp
 LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
-LDFLAGS= -nostdlib -T $A/pic32/bootloader-max32.ld -Wl,-Map=unix.map
+LDFLAGS= -nostdlib -T $A/${LDSCRIPT} -Wl,-Map=vmunix.map
 SIZE=	${MIPS_GCC_PREFIX}size
 OBJCOPY= ${MIPS_GCC_PREFIX}objcopy
 OBJDUMP= ${MIPS_GCC_PREFIX}objdump
@@ -77,11 +77,11 @@ NORMAL_S_C=	${CPP} ${COPTS} ${PARAM} $< | ${AS} -o $@
 SYSTEM_OBJ=	locore.o ${OBJS} param.o ioconf.o vnode_if.o
 SYSTEM_DEP=	Makefile ${SYSTEM_OBJ} $S/libkern/libkern.a
 SYSTEM_LD_HEAD=	sh $S/conf/newvers.sh; ${CC} $(CFLAGS) -c vers.c; rm -f $@
-SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix; \
-		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix
-SYSTEM_LD_TAIL= ${SIZE} vmunix; \
+SYSTEM_LD=	-@echo ${LD} ${LDFLAGS} '$${SYSTEM_OBJ}' vers.o -L$S/libkern -lkern -o vmunix.elf; \
+		${LD} ${LDFLAGS} ${SYSTEM_OBJ} vers.o -L$S/libkern -lkern -o vmunix.elf
+SYSTEM_LD_TAIL= ${SIZE} vmunix.elf; \
                 $(OBJCOPY) -O ihex --change-addresses=0x80000000 $@ vmunix.hex; \
-                $(OBJDUMP) -d -S vmunix > vmunix.dis
+                $(OBJDUMP) -d -S vmunix.elf > vmunix.dis
 
 %LOAD
 
@@ -89,7 +89,7 @@ $S/libkern/libkern.a:
 	cd $S/libkern && ${MAKE} all
 
 clean:
-	rm -f eddep *vmunix vmunix.gdb tags *.o locore.i [a-z]*.s \
+	rm -f eddep *vmunix.elf vmunix.gdb tags *.o locore.i [a-z]*.s \
 		Errs errs linterrs makelinks
 
 lint: /tmp param.c

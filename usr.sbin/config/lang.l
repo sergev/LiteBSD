@@ -75,6 +75,7 @@ struct kt {
 	{ "iosiz",	IOSIZ },
 	{ "irq",	IRQ },
 #endif
+	{ "ldscript",	LDSCRIPT },
 	{ "machine",	MACHINE },
 	{ "major",	MAJOR },
 	{ "makeoptions", MAKEOPTIONS },

@@ -1,7 +1,5 @@
 /*
- * Linker script for PIC32 firmware using HID bootloader.
- * Flash area for user starts at 9d000000.
- * Start address for user program is 9d001000.
+ * Linker script for PIC32MZ firmware.
  */
 OUTPUT_FORMAT("elf32-tradlittlemips", "elf32-tradbigmips",
 	      "elf32-tradlittlemips")
@@ -9,6 +7,9 @@ OUTPUT_ARCH(mips)
 ENTRY(start)
 MEMORY
 {
+  devcfg            (r)     : ORIGIN = 0x9fc0ffc0, LENGTH = 16
+  devsign           (r)     : ORIGIN = 0x9fc0ffe0, LENGTH = 16
+
   /* Required by Microchip C32 linker */
   kseg0_program_mem (rx)    : ORIGIN = 0x9D000000, LENGTH = 2048K
   exception_mem     (rx)    : ORIGIN = 0x9D000000, LENGTH = 0x1000
@@ -21,20 +22,61 @@ _eram = ORIGIN(kseg1_data_mem) + LENGTH(kseg1_data_mem);
 
 SECTIONS
 {
+  /* Read-only sections, merged into text segment: */
+  . = 0x0000;
+  .interp         : { *(.interp) }
+  .hash           : { *(.hash) }
+  .dynsym         : { *(.dynsym) }
+  .dynstr         : { *(.dynstr) }
+  .gnu.version    : { *(.gnu.version) }
+  .gnu.version_d  : { *(.gnu.version_d) }
+  .gnu.version_r  : { *(.gnu.version_r) }
+  .rel.init       : { *(.rel.init) }
+  .rela.init      : { *(.rela.init) }
+  .rel.text       : { *(.rel.text .rel.text.* .rel.gnu.linkonce.t.*) }
+  .rela.text      : { *(.rela.text .rela.text.* .rela.gnu.linkonce.t.*) }
+  .rel.fini       : { *(.rel.fini) }
+  .rela.fini      : { *(.rela.fini) }
+  .rel.rodata     : { *(.rel.rodata .rel.rodata.* .rel.gnu.linkonce.r.*) }
+  .rela.rodata    : { *(.rela.rodata .rela.rodata.* .rela.gnu.linkonce.r.*) }
+  .rel.data       : { *(.rel.data .rel.data.* .rel.gnu.linkonce.d.*) }
+  .rela.data      : { *(.rela.data .rela.data.* .rela.gnu.linkonce.d.*) }
+  .rel.ctors      : { *(.rel.ctors) }
+  .rela.ctors     : { *(.rela.ctors) }
+  .rel.dtors      : { *(.rel.dtors) }
+  .rela.dtors     : { *(.rela.dtors) }
+  .rel.got        : { *(.rel.got) }
+  .rela.got       : { *(.rela.got) }
+  .rel.sdata      : { *(.rel.sdata .rel.sdata.* .rel.gnu.linkonce.s.*) }
+  .rela.sdata     : { *(.rela.sdata .rela.sdata.* .rela.gnu.linkonce.s.*) }
+  .rel.sbss       : { *(.rel.sbss .rel.sbss.* .rel.gnu.linkonce.sb.*) }
+  .rela.sbss      : { *(.rela.sbss .rela.sbss.* .rela.gnu.linkonce.sb.*) }
+  .rel.sdata2     : { *(.rel.sdata2 .rel.sdata2.* .rel.gnu.linkonce.s2.*) }
+  .rela.sdata2    : { *(.rela.sdata2 .rela.sdata2.* .rela.gnu.linkonce.s2.*) }
+  .rel.sbss2      : { *(.rel.sbss2 .rel.sbss2.* .rel.gnu.linkonce.sb2.*) }
+  .rela.sbss2     : { *(.rela.sbss2 .rela.sbss2.* .rela.gnu.linkonce.sb2.*) }
+  .rel.bss        : { *(.rel.bss .rel.bss.* .rel.gnu.linkonce.b.*) }
+  .rela.bss       : { *(.rela.bss .rela.bss.* .rela.gnu.linkonce.b.*) }
+  .rel.plt        : { *(.rel.plt) }
+  .rela.plt       : { *(.rela.plt) }
+  .plt            : { *(.plt) }
+
+  .boot           :
+  {
+    /* Execution starts here. */
+    *(.startup)
+  } > kseg0_boot_mem
+
   .text           :
   {
     /* Exception handlers. */
     *(.exception)
-    . = 0x1000;
-    /* Execution starts here. */
-    *(.startup)
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
     *(.glue_7t) *(.glue_7)
     __rodata_start = . ;
     *(.rodata .rodata.* .gnu.linkonce.r.* .rel.dyn)
-    *(.dinit)
     /* Align here to ensure that the .text section ends on word boundary. */
     . = ALIGN (32 / 8);
     _etext = .;
@@ -44,15 +86,28 @@ SECTIONS
   .data		  : AT (ADDR (.text) + SIZEOF (.text))
   {
     __data_start = . ;
-    _gp = .; 	/* We use only 32k RAM for kernel, so no need for 0x8000 offset. */
+    _gp = .; 	/* We have only 32k RAM on MC-24, so no need for 0x8000 offset. */
+    *(.data .data.* .gnu.linkonce.d.*)
     /* We want the small data sections together, so single-instruction offsets
        can access them all, and initialized data all before uninitialized, so
        we can shorten the on-disk segment size.  */
     *(.sdata .sdata.* .gnu.linkonce.s.*)
-    *(.data .data.* .gnu.linkonce.d.*)
     *(.eh_frame)
     _edata = .;
   } > kseg1_data_mem
+
+  /* Device configuration.  */
+  .devcfg       :
+  {
+    *(.config3)
+    *(.config2)
+    *(.config1)
+    *(.config0)
+  } > devcfg
+  .devsign      :
+  {
+    *(.devsign)
+  } > devsign
 
   .bss ADDR (.data) + SIZEOF (.data) (NOLOAD) :
   {
@@ -103,7 +158,4 @@ SECTIONS
   .debug_funcnames 0 : { *(.debug_funcnames) }
   .debug_typenames 0 : { *(.debug_typenames) }
   .debug_varnames  0 : { *(.debug_varnames) }
-  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-  .debug_ranges   0 : { *(.debug_ranges) }
-  .gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
 }

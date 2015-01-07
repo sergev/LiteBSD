@@ -12,6 +12,9 @@ machine         "pic32"
 cpu             "PIC32MZ"
 ident           MEBII
 
+# Linker script
+ldscript        "pic32/bare-mz.ld"
+
 # Need to set locally
 timezone        8 dst
 maxusers        2

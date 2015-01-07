@@ -171,6 +171,7 @@ struct opt {
 } *opt, *mkopt;
 
 char	*ident;
+char	*ldscript;
 char	*ns();
 char	*tc();
 char	*qu();

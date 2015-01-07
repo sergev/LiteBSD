@@ -472,7 +472,7 @@ void do_load(f)
 	fputs("all:", f);
 	for (fl = conf_list; fl; fl = fl->f_next)
 		if (fl->f_type == SYSTEMSPEC)
-			fprintf(f, " %s", fl->f_needs);
+			fprintf(f, " %s.elf", fl->f_needs);
 	putc('\n', f);
 }
 
@@ -516,6 +516,8 @@ void makefile()
 		else
 			fprintf(ofp, " -D%s", op->op_name);
 	fprintf(ofp, "\n");
+	if (ldscript)
+            fprintf(ofp, "LDSCRIPT=\"%s\"\n", ldscript);
 	if (hadtz == 0)
 		printf("timezone not specified; gmt assumed\n");
 	if ((unsigned)machine > NUSERS) {
@@ -596,7 +598,7 @@ do_systemspec(f, fl, first)
 	int first;
 {
 
-	fprintf(f, "%s: ${SYSTEM_DEP} swap%s.o", fl->f_needs, fl->f_fn);
+	fprintf(f, "%s.elf: ${SYSTEM_DEP} swap%s.o", fl->f_needs, fl->f_fn);
 	// Don't use newvers target.
 	// A preferred way is to run newvers.sh from SYSTEM_LD_HEAD macro.
 	//if (first)

@@ -12,6 +12,9 @@ machine         "pic32"
 cpu             "PIC32MZ"
 ident           WIFIRE
 
+# Linker script
+ldscript        "pic32/bootloader-max32.ld"
+
 # Need to set locally
 timezone        8 dst
 maxusers        2

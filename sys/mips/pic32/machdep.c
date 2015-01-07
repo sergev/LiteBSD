@@ -106,6 +106,43 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
+#if defined(MEBII)
+/*
+ * Chip configuration.
+ */
+PIC32_DEVCFG (
+    DEVCFG0_JTAG_DISABLE |      /* Disable JTAG port */
+    DEVCFG0_TRC_DISABLE,        /* Disable trace port */
+
+    /* Using primary oscillator with external crystal 24 MHz.
+     * PLL multiplies it to 200 MHz. */
+    DEVCFG1_FNOSC_SPLL |        /* System clock supplied by SPLL */
+    DEVCFG1_POSCMOD_EXT |       /* External generator */
+    DEVCFG1_FCKS_ENABLE |       /* Enable clock switching */
+    DEVCFG1_FCKM_ENABLE |       /* Enable fail-safe clock monitoring */
+    DEVCFG1_IESO |              /* Internal-external switch over enable */
+    DEVCFG1_CLKO_DISABLE,       /* CLKO output disable */
+
+    DEVCFG2_FPLLIDIV_3 |        /* PLL input divider = 3 */
+    DEVCFG2_FPLLRNG_5_10 |      /* PLL input range is 5-10 MHz */
+    DEVCFG2_FPLLMULT(50) |      /* PLL multiplier = 50x */
+    DEVCFG2_FPLLODIV_2,         /* PLL postscaler = 1/2 */
+
+    DEVCFG3_FETHIO |            /* Default Ethernet pins */
+    DEVCFG3_USERID(0xffff));    /* User-defined ID */
+
+/*
+ * Boot code at bfc00000.
+ * Jump to Flash memory.
+ */
+asm ("          .section .startup,\"ax\",@progbits");
+asm ("          .globl  _boot");
+asm ("          .type   _boot, function");
+asm ("_boot:    la      $ra, start");
+asm ("          jr      $ra");
+asm ("          .text");
+#endif
+
 /*
  * Check whether button 1 is pressed.
  */

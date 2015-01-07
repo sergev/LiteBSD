@@ -29,6 +29,7 @@
 %token	IOMEM
 %token	IOSIZ
 %token	IRQ
+%token	LDSCRIPT
 %token	MACHINE
 %token	MAJOR
 %token	MASTER
@@ -196,6 +197,8 @@ Config_spec:
 		|
 	IDENT ID
 	      = { ident = ns($2); } |
+	LDSCRIPT ID
+	      = { ldscript = ns($2); } |
 	System_spec
 		|
 	HZ NUMBER
