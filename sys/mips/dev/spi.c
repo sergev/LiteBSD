@@ -706,6 +706,7 @@ int spiioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
  */
 static void assign_sdi(int channel, int pin)
 {
+    gpio_set_input(pin);
     switch (channel) {
     case 0: SDI1R = gpio_input_map1(pin); break;
     case 1: SDI2R = gpio_input_map2(pin); break;
