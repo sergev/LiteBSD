@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1992, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2014 Serge Vakulenko
  *
  * This code is derived from software contributed to Berkeley by
@@ -16,8 +16,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -33,8 +33,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- *	@(#)device.h	8.1 (Berkeley) 6/10/93
  */
 
 /*
@@ -44,7 +42,8 @@
  * different types of controllers.
  */
 struct driver {
-	int	(*d_init)();	/* routine to probe & initialize device */
+    const char  *d_name;        /* driver name for vmstat and iostat */
+    int         (*d_init)();    /* routine to probe & initialize device */
 };
 
 /*
@@ -52,13 +51,13 @@ struct driver {
  * and is partially initialized in "ioconf.c" by the 'config' program.
  */
 struct mips_ctlr {
-	struct driver	*mips_driver;	/* controller driver routines */
-	int		mips_unit;	/* controller number */
-	char		*mips_addr;	/* address of controller */
-	int		mips_pri;	/* interrupt priority */
-	int		mips_flags;	/* flags */
+    struct driver   *mips_driver;   /* controller driver routines */
+    int             mips_unit;      /* controller number */
+    char            *mips_addr;     /* address of controller */
+    int             mips_pri;       /* interrupt priority */
+    int             mips_flags;     /* flags */
 
-	int		mips_alive;	/* true if init routine succeeded */
+    int             mips_alive;     /* true if init routine succeeded */
 };
 
 /*
@@ -66,48 +65,47 @@ struct mips_ctlr {
  * and is partially initialized in "ioconf.c" by the 'config' program.
  */
 struct scsi_device {
-	struct driver	*sd_driver;	/* SCSI device driver routines */
-	struct driver	*sd_cdriver;	/* SCSI interface driver routines */
-	int		sd_unit;	/* device unit number */
-	int		sd_ctlr;	/* SCSI interface number */
-	int		sd_drive;	/* SCSI address number */
-	int		sd_slave;	/* LUN if device has multiple units */
-	int		sd_dk;		/* used for disk statistics */
-	int		sd_flags;	/* flags */
-
-	int		sd_alive;	/* true if init routine succeeded */
+    struct driver   *sd_driver;     /* SCSI device driver routines */
+    struct driver   *sd_cdriver;    /* SCSI interface driver routines */
+    int             sd_unit;        /* device unit number */
+    int             sd_ctlr;        /* SCSI interface number */
+    int             sd_drive;       /* SCSI address number */
+    int             sd_slave;       /* LUN if device has multiple units */
+    int             sd_dk;          /* used for disk statistics */
+    int             sd_flags;       /* flags */
+    int             sd_alive;       /* true if init routine succeeded */
 };
 
 /* Define special unit types used by the config program */
-#define QUES	-1	/* -1 means '?' */
-#define	UNKNOWN -2	/* -2 means not set yet */
+#define QUES    -1      /* -1 means '?' */
+#define UNKNOWN -2      /* -2 means not set yet */
 
 /*
  * This structure contains information that a SCSI interface controller
  * needs to execute a SCSI command.
  */
 typedef struct ScsiCmd {
-	struct	scsi_device *sd; /* device requesting the command */
-	int	unit;		/* unit number passed to device done routine */
-	int	flags;		/* control flags for this command (see below) */
-	int	buflen;		/* length of the data buffer in bytes */
-	char	*buf;		/* pointer to data buffer for this command */
-	int	cmdlen;		/* length of data in cmdbuf */
-	u_char	*cmd;		/* buffer for the SCSI command */
+    struct scsi_device *sd; /* device requesting the command */
+    int     unit;           /* unit number passed to device done routine */
+    int     flags;          /* control flags for this command (see below) */
+    int     buflen;         /* length of the data buffer in bytes */
+    char    *buf;           /* pointer to data buffer for this command */
+    int     cmdlen;         /* length of data in cmdbuf */
+    u_char  *cmd;           /* buffer for the SCSI command */
 } ScsiCmd;
 
 /*
  * Define flags for controlling the SCSI command.
  *
  * SCSICMD_DATA_TO_DEVICE
- *	TRUE -> data is to be transferred to the device.
- *	FALSE -> data is to be transferred from the device.
- *	meaningless if buflen is 0.
+ *      TRUE -> data is to be transferred to the device.
+ *      FALSE -> data is to be transferred from the device.
+ *      meaningless if buflen is 0.
  * SCSICMD_USE_SYNC
- *	Attempt to negotiate for a synchronous data transfer.
+ *      Attempt to negotiate for a synchronous data transfer.
  */
-#define SCSICMD_DATA_TO_DEVICE	0x01
-#define SCSICMD_USE_SYNC	0x02
+#define SCSICMD_DATA_TO_DEVICE  0x01
+#define SCSICMD_USE_SYNC        0x02
 
 #ifdef KERNEL
 extern struct mips_ctlr mips_cinit[];

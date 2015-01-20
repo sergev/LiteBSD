@@ -746,6 +746,6 @@ uartprobe(config)
 }
 
 struct driver uartdriver = {
-    uartprobe,
+    "uart", uartprobe,
 };
 #endif /* NUART */

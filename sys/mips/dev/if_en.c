@@ -916,6 +916,6 @@ en_probe(config)
 }
 
 struct driver endriver = {
-    en_probe,
+    "en", en_probe,
 };
 #endif

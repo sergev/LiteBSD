@@ -897,6 +897,6 @@ sdprobe(config)
 }
 
 struct driver sddriver = {
-    sdprobe,
+    "sd", sdprobe,
 };
 #endif
