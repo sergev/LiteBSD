@@ -97,7 +97,7 @@ char ttyout[]   = "ttyout";
 #define TB  TAB
 #define VT  VTAB
 
-char const char_type[] = {
+unsigned char const char_type[] = {
     E|CC, O|CC, O|CC, E|CC, O|CC, E|CC, E|CC, O|CC, /* nul - bel */
     O|BS, E|TB, E|NL, O|CC, E|VT, O|CR, O|CC, E|CC, /* bs - si */
     O|CC, E|CC, E|CC, O|CC, E|CC, O|CC, O|CC, E|CC, /* dle - etb */
@@ -578,7 +578,11 @@ ttyoutput(c, tp)
     if (c == '\n' && ISSET(tp->t_oflag, ONLCR)) {
         tk_nout++;
         tp->t_outcc++;
-        if (putc('\r', &tp->t_outq))
+
+        /* Need at least two bytes of space
+         * to translate \n into \r\n. */
+        if (tp->t_outq.c_cc > tp->t_outq.c_cn - 2 ||
+            putc('\r', &tp->t_outq))
             return (c);
     }
     tk_nout++;
@@ -1446,7 +1450,7 @@ loop:
                 ce = cc;
             else {
                 ce = cc - scanc((u_int)cc, (u_char *)cp,
-                   (u_char *)char_type, CCLASSMASK);
+                    char_type, CCLASSMASK);
                 /*
                  * If ce is zero, then we're processing
                  * a special character through ttyoutput.

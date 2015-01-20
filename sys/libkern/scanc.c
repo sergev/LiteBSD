@@ -36,15 +36,15 @@
 #include <libkern/libkern.h>
 
 int
-scanc(size, cp, table, mask0)
+scanc(size, cp, table, mask)
     u_int size;
-    register u_char *cp, table[];
-    int mask0;
+    u_char *cp;
+    const u_char table[];
+    int mask;
 {
-    register u_char *end;
-    register u_char mask;
+    u_char *end = &cp[size];
 
-    mask = mask0;
-    for (end = &cp[size]; cp < end && (table[*cp] & mask) == 0; ++cp);
-    return (end - cp);
+    while (cp < end && (table[*cp] & mask) == 0)
+        ++cp;
+    return end - cp;
 }

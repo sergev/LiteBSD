@@ -254,6 +254,7 @@ uartstart(tp)
     if (tp->t_outq.c_cc == 0)
         goto out;
 
+    /* Fill transmit FIFO: put as much data as we can. */
     while (! (reg->sta & PIC32_USTA_UTXBF)) {
         /* Send next char. */
         c = getc(&tp->t_outq);
@@ -312,7 +313,10 @@ uartopen(dev, flag, mode, p)
             tp->t_ospeed = TTYDEF_SPEED;
         }
         uartparam(tp, &tp->t_termios);
-        ttsetwater(tp);
+
+        /* Set watermarks. */
+        tp->t_hiwat = UART_BUFSZ - 1;
+        tp->t_lowat = UART_BUFSZ / 8;
 
     } else if ((tp->t_state & TS_XCLUDE) && curproc->p_ucred->cr_uid != 0) {
         return EBUSY;

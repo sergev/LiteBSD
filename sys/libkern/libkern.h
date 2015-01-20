@@ -90,7 +90,7 @@ int     ffs __P((int));
 int     locc __P((int, char *, u_int));
 u_long   random __P((void));
 char    *rindex __P((const char *, int));
-int     scanc __P((u_int, u_char *, u_char *, int));
+int     scanc __P((u_int, u_char *, const u_char *, int));
 int     skpc __P((int, int, u_int8_t *));
 char    *strcat __P((char *, const char *));
 char    *strcpy __P((char *, const char *));
