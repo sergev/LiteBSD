@@ -295,7 +295,7 @@ enable_k0_cache:
         # NOTE! This code must be executed in KSEG1 (not KSEG0 uncached)
         mfc0    v0, MACH_C0_Config      # read Config
         li      v1, 3                   # CCA for single-core processors
-        ins     v0, v1, 0, 3            # instert K0
+        ins     v0, v1, 0, 3            # insert K0
         mtc0    v0, MACH_C0_Config      # write Config
 
         la      a2, init_dcache

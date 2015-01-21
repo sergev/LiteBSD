@@ -173,7 +173,7 @@ uartparam(tp, t)
     uart_regmap_t *reg = tp->t_sc;
     const struct uart_irq *irq = &uartirq[unit];
     unsigned cflag = t->c_cflag;
-    unsigned mode;
+    unsigned mode, divisor, sta, s, timo;
 
     /* Check whether the port is configured. */
     if (! reg) {
@@ -201,11 +201,6 @@ uartparam(tp, t)
         return 0;
     }
 
-    /* Reset line. */
-    reg->sta = PIC32_USTA_UTXISEL_EMP;  /* TX interrupt when buffer empty */
-    reg->mode = 0;
-    udelay(25);
-
     /* Compute mode bits. */
     mode = PIC32_UMODE_ON;              /* UART Enable */
     if (cflag & CSTOPB)
@@ -218,13 +213,37 @@ uartparam(tp, t)
             mode |= PIC32_UMODE_PDSEL_8EVEN;	/* 8-bit data, even parity */
     }
 
-    /* Setup the line. */
-    reg->brg = PIC32_BRG_BAUD (CPU_KHZ * 500, tp->t_ospeed);
-    reg->mode = mode;
-    reg->staset = PIC32_USTA_URXEN | PIC32_USTA_UTXEN;
+    /* Compute baud rate divisor. */
+    divisor = PIC32_BRG_BAUD (CPU_KHZ * 500, tp->t_ospeed);
+
+    /* Modify setting only when there is any change. */
+    sta = PIC32_USTA_UTXISEL_EMP | PIC32_USTA_URXEN | PIC32_USTA_UTXEN;
+    s = spltty();
+    if (reg->sta != sta || reg->mode != mode || reg->brg != divisor) {
+        /* Wait until transmit buffer empty. */
+        timo = 30000;
+        while (! (reg->sta & PIC32_USTA_TRMT))
+            if (--timo == 0)
+                break;
+
+        /* Reset line. */
+        reg->sta = PIC32_USTA_UTXISEL_EMP;  /* TX interrupt when buffer empty */
+        reg->mode = 0;
+        udelay(25);
+
+        /* Setup the line. */
+        reg->brg = divisor;
+        reg->mode = mode;
+        reg->sta = sta;
+
+        /* Resume pending trasmit. */
+        if (tp->t_state & TS_BUSY)
+            uartintr(tp->t_dev);
+    }
 
     /* Enable receive interrupt. */
     *irq->enable_rx_intr = irq->rx_mask;
+    splx(s);
     return 0;
 }
 
@@ -238,7 +257,7 @@ uartstart(tp)
     int unit = minor(tp->t_dev);
     uart_regmap_t *reg = tp->t_sc;
     const struct uart_irq *irq = &uartirq[unit];
-    int c, s;
+    int c, s, x;
 
     s = spltty();
     if (tp->t_state & (TS_TIMEOUT|TS_BUSY|TS_TTSTOP))
@@ -258,10 +277,16 @@ uartstart(tp)
     while (! (reg->sta & PIC32_USTA_UTXBF)) {
         /* Send next char. */
         c = getc(&tp->t_outq);
-        reg->txreg = (unsigned char) c;
 
-        /* Clear tx interrupt flag. */
+        /* Need to clear tx interrupt flag immediately
+         * after writing a data byte.
+         * Disable interrupts to avoid timer interrupt
+         * in between, otherwise it could cause
+         * the interrupt loss on simulator. */
+        x = splhigh();
+        reg->txreg = (unsigned char) c;
         *irq->clear_tx_intr = irq->tx_mask;
+        splx(x);
 
         tp->t_state |= TS_BUSY;
         if (tp->t_outq.c_cc == 0)
