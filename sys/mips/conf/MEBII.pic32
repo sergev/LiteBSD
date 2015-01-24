@@ -57,7 +57,7 @@ config          vmunix  root on major0 minor1
                         swap on major0 minor2
                         dumps on major0 minor2
 
-device          uart1   flags 0x1415    # pins rx=RA14,  tx=RA15  - 4,6 at PICtail connector
+device          uart1   flags 0x1e1f    # pins rx=RA14, tx=RA15 - 4,6 at PICtail connector
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
 
