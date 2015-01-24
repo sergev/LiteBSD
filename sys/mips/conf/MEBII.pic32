@@ -73,7 +73,7 @@ disk            sd0     at spi2 drive 0 flags 0x2e      # select pin RB14
 options         "SD_LED=0x80"                           # LED1 is H0
 
 # Ethernet controller
-controller     en0
+controller      en0
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 #device         mrf0    at spi4 flags 0x71641f49
@@ -82,9 +82,9 @@ controller     en0
 options         "BUTTON1=0x2c"          # button 1 at pin RB12
 options         "BUTTON2=0x2d"          # button 2 at pin RB13
 
-pseudo-device   sl              1       # serial line IP interfaces (SLIP)
 pseudo-device   pty             4       # pseudo ptys
-pseudo-device   bpfilter        1       # packet filter ports
+#pseudo-device   sl              1       # serial line IP interfaces (SLIP)
+#pseudo-device   bpfilter        1       # packet filter ports
 pseudo-device   loop                    # network loopback interface
 pseudo-device   ether                   # generic Ethernet protocol
 pseudo-device   vn                      # block/character interface to a vnode

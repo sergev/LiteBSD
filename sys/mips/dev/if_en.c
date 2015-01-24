@@ -28,6 +28,7 @@
 #include <net/if.h>
 #include <net/netisr.h>
 #include <net/route.h>
+#include <net/bpf.h>
 
 #ifdef INET
 #include <netinet/in.h>
@@ -36,6 +37,8 @@
 #include <netinet/ip.h>
 #include <netinet/if_ether.h>
 #endif
+
+#include "bpfilter.h"
 
 #define ETHER_MAX_LEN       1536
 #define RX_PACKETS          4
@@ -482,6 +485,14 @@ en_start(ifp)
     IF_DEQUEUE(&e->netif.if_snd, m);
     if (m == 0)
         return;
+#if NBPFILTER > 0
+    /*
+     * If bpf is listening on this interface, let it
+     * see the packet before we commit it to the wire.
+     */
+    if (ifp->if_bpf)
+        bpf_mtap(ifp->if_bpf, m);
+#endif
 
     /*
      * Copy the mbuf chain into the transmit buffer
@@ -689,6 +700,33 @@ en_recv(e)
      * Pass a packet to the higher levels.
      */
     struct mbuf *m = en_get(buf, frame_size, &e->netif);
+#if NBPFILTER > 0
+    /*
+     * Check if there's a bpf filter listening on this interface.
+     * If so, hand off the raw packet to enet.
+     */
+    if (e->netif.if_bpf) {
+        bpf_mtap(e->netif.if_bpf, m);
+#if 0 // TODO
+        /*
+         * Keep the packet if it's a broadcast or has our
+         * physical ethernet address (or if we support
+         * multicast and it's one).
+         */
+        if (
+#ifdef MULTICAST
+            (flags & (M_BCAST | M_MCAST)) == 0 &&
+#else
+            (flags & M_BCAST) == 0 &&
+#endif
+            bcmp(et.ether_dhost, le->sc_addr, sizeof(et.ether_dhost)) != 0
+        ) {
+            m_freem(m);
+            return;
+        }
+#endif
+    }
+#endif
     if (m != 0)
         ether_input(&e->netif, (struct ether_header*)buf, m);
 }
@@ -911,6 +949,9 @@ en_probe(config)
     ifp->if_reset = en_reset;
     ifp->if_watchdog = en_watchdog;
     ifp->if_timer = 1;
+#if NBPFILTER > 0
+    bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
+#endif
     if_attach(ifp);
     return 1;
 }
