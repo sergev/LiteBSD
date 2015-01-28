@@ -70,12 +70,12 @@ typedef struct {
 #define DESC_SET_BYTECNT(d,n) ((d)->hdr |= (n) << 16)
 
 /* Next descriptor pointer valid */
-#define DESC_SET_NPV(d)     (d)->hdr &= 0x00000100
+#define DESC_SET_NPV(d)     (d)->hdr |= 0x00000100
 #define DESC_CLEAR_NPV(d)   (d)->hdr &= ~0x00000100
 
 /* Eth controller owns this desc */
 #define DESC_EOWN(d)        ((d)->hdr & 0x00000080)
-#define DESC_SET_EOWN(d)    (d)->hdr &= 0x00000080
+#define DESC_SET_EOWN(d)    (d)->hdr |= 0x00000080
 #define DESC_CLEAR_EOWN(d)  (d)->hdr &= ~0x00000080
 
 /* Size of received packet */
