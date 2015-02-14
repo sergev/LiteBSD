@@ -70,7 +70,9 @@ sys/compile/${BOARD}/.depend: sys/${ARCH}/conf/${BOARD}
 #
 # Upload the kernel to chipKIT Wi-Fire board.
 #
+PORT   ?= /dev/ttyUSB0
+
 load:   kernel
-	sudo pic32prog -d /dev/ttyUSB0 sys/compile/${BOARD}/vmunix.hex
+	sudo pic32prog -d ${PORT} sys/compile/${BOARD}/vmunix.hex
 
 .include <bsd.subdir.mk>

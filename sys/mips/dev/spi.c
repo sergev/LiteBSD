@@ -63,6 +63,14 @@ struct spiio spitab[NSPI];
 #define SPI_KHZ 10000
 #endif
 
+/*
+ * On pic32mz chip, PBCLK2 signal is used for SPI clock.
+ * By default PBCLK2 is 1/2 of CPU clock.
+ */
+#ifndef PBCLK2_KHZ
+#define PBCLK2_KHZ (CPU_KHZ / 2)
+#endif
+
 /* Convert port name/signal into a pin number. */
 #define RP(x,n) (((x)-'A'+1) << 4 | (n))
 
@@ -125,7 +133,7 @@ void spi_set_cspin(struct spiio *io, int pin)
  */
 void spi_set_speed(struct spiio *io, unsigned int khz)
 {
-    io->divisor = (CPU_KHZ / khz + 1) / 2 - 1;
+    io->divisor = (PBCLK2_KHZ / khz + 1) / 2 - 1;
 }
 
 /*
@@ -502,7 +510,7 @@ unsigned int spi_get_speed(struct spiio *io)
     if (! io->reg)
         return 0;
 
-    return CPU_KHZ / (io->divisor + 1) / 2;
+    return (PBCLK2_KHZ / (io->divisor + 1) + 1) / 2;
 }
 
 /*

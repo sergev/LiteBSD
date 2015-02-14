@@ -48,7 +48,7 @@
 #define MBR_MAGIC       0xaa55
 
 #ifndef SD_KHZ
-#define SD_KHZ          13333           /* speed 13.33 MHz */
+#define SD_KHZ          16666           /* speed 16.66 MHz */
 #endif
 
 #if DEV_BSIZE != 512

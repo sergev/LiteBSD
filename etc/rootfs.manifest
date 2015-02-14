@@ -748,6 +748,7 @@ file /usr/bin/cut
 file /usr/bin/diff
 file /usr/bin/diff3
 file /usr/bin/dirname
+file /usr/bin/diskspeed
 file /usr/bin/du
 file /usr/bin/egrep
 file /usr/bin/env
