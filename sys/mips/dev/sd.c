@@ -139,7 +139,7 @@ static void sd_wait_ready(struct spiio *io, int limit, int *maxcount)
             return;
         }
     }
-    printf("sd%d: wait_ready(%d) failed\n", io - sddrives, limit);
+    printf("sd: wait_ready(%d) failed\n", limit);
 }
 
 /*
