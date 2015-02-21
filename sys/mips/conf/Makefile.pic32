@@ -29,7 +29,7 @@ MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-elf-
 
 AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
 CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin -Werror -Wall
-LOCALCC= gcc ${DEBUG}
+LOCALCC= gcc -m32 ${DEBUG}
 CPP=	${MIPS_GCC_PREFIX}cpp
 LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/${LDSCRIPT} -Wl,-Map=vmunix.map
