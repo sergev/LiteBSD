@@ -61,7 +61,7 @@ config          vmunix  root on major0 minor1
                         swap on major0 minor2
                         dumps on major0 minor2
 
-device          uart1   flags 0x4243    # pins rx=RD2, tx=RD3 - logical 39/40
+device          uart1   flags 0x4243    # pins rx=RD2,  tx=RD3  - logical 39/40
 device          uart2   flags 0x2726    # pins rx=RB7,  tx=RB6  - serial-to-USB converter
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
@@ -72,8 +72,7 @@ controller      spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - Whatever
 controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
 
 disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9  - logical 27
-options         "SD_LED=0x57"                           # LED4 is RE7 
-options         "SD_KHZ=10000"                          # 10MHz clock
+options         "SD_LED=0x57"                           # LED4 is RE7
 #disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
