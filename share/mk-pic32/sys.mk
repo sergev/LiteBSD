@@ -9,6 +9,14 @@ NOPROFILE       =  True
 
 .LIBS:		.a
 
+#
+# Default destination directory.
+#
+DESTDIR         ?= ${BSDSRC}/DESTDIR
+
+#
+# Use gcc cross compiler installed at $MIPS_GCC_ROOT directory.
+#
 .if exists(${MIPS_GCC_ROOT}/bin/mips-sde-elf-gcc)
 GCC_PREFIX      ?= ${MIPS_GCC_ROOT}/bin/mips-sde-elf-
 .endif
