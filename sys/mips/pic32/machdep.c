@@ -68,6 +68,7 @@
 #include <machine/pte.h>
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
+#include <machine/assym.h>
 
 /* the following is used externally (sysctl_hw) */
 char    machine[] = "MIPS";     /* cpu "architecture" */
@@ -566,6 +567,64 @@ identify_cpu()
 }
 
 /*
+ * File assym.h is incorrect - print the message and panic.
+ */
+static void
+bad_assym(int *error, const char *name, unsigned value)
+{
+    if (! *error) {
+        printf("Fatal error: file sys/mips/include/assym.h is incorrect.\n");
+        printf("Please, update the following values and rebuild the kernel:\n");
+        *error = 1;
+    }
+    printf("    #define %s %d\n", name, value);
+}
+
+/*
+ * Verify assembler symbols.
+ * File sys/mips/include/assym.h contains declarations of field offsets
+ * of struct proc, user and vmmeter for assembler routines.
+ * Here we verify that these values do match our expectations.
+ */
+static void
+verify_assym()
+{
+    register struct proc *p = 0;
+    register struct user *up = 0;
+    register struct vmmeter *vm = 0;
+    int error = 0;
+
+    /* Offsets for struct proc */
+    if (P_FORW != (unsigned)&p->p_forw)
+        bad_assym(&error, "P_FORW", (unsigned)&p->p_forw);
+    if (P_BACK != (unsigned)&p->p_back)
+        bad_assym(&error, "P_BACK", (unsigned)&p->p_back);
+    if (P_PRIORITY != (unsigned)&p->p_priority)
+        bad_assym(&error, "P_PRIORITY", (unsigned)&p->p_priority);
+    if (P_UPTE != (unsigned)p->p_md.md_upte)
+        bad_assym(&error, "P_UPTE", (unsigned)p->p_md.md_upte);
+
+    /* Offsets for struct user */
+    if (U_PCB_REGS != (unsigned)up->u_pcb.pcb_regs)
+        bad_assym(&error, "U_PCB_REGS", (unsigned)up->u_pcb.pcb_regs);
+    if (U_PCB_FPREGS != (unsigned)&up->u_pcb.pcb_regs[F0])
+        bad_assym(&error, "U_PCB_FPREGS", (unsigned)&up->u_pcb.pcb_regs[F0]);
+    if (U_PCB_CONTEXT != (unsigned)&up->u_pcb.pcb_context)
+        bad_assym(&error, "U_PCB_CONTEXT", (unsigned)&up->u_pcb.pcb_context);
+    if (U_PCB_ONFAULT != (unsigned)&up->u_pcb.pcb_onfault)
+        bad_assym(&error, "U_PCB_ONFAULT", (unsigned)&up->u_pcb.pcb_onfault);
+    if (U_PCB_SEGTAB != (unsigned)&up->u_pcb.pcb_segtab)
+        bad_assym(&error, "U_PCB_SEGTAB", (unsigned)&up->u_pcb.pcb_segtab);
+
+    /* Offsets for struct vmmeter */
+    if (V_SWTCH != (unsigned)&vm->v_swtch)
+        bad_assym(&error, "V_SWTCH", (unsigned)&vm->v_swtch);
+
+    if (error)
+        panic("assym");
+}
+
+/*
  * cpu_startup: allocate memory for variable-sized tables,
  * initialize cpu, and do autoconfiguration.
  */
@@ -582,6 +641,7 @@ cpu_startup()
      */
     printf(version);
     identify_cpu();
+    verify_assym();
     printf("real mem = %d kbytes\n", ctob(physmem) >> 10);
 #if 0
 printf("callout  = %08x, %u entries, %u bytes\n", callout, ncallout, ncallout * sizeof(struct callout));

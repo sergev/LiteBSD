@@ -65,8 +65,7 @@
 #include <machine/reg.h>
 #include <machine/machAsmDefs.h>
 #include <machine/pte.h>
-
-#include "assym.h"
+#include <machine/assym.h>
 
         .set    noreorder               # Don't allow the assembler to reorder instructions.
         .set    noat
@@ -1348,8 +1347,8 @@ user_tlb_refill:
  */
 kern_tlb_refill:
         mfc0    k0, MACH_C0_BadVAddr            # get the fault address
-        li      k1, VM_MIN_KERNEL_ADDRESS       # compute index
-        subu    k0, k1
+        li      k1, 0xc0000000                  # VM_MIN_KERNEL_ADDRESS
+        subu    k0, k1                          # compute index
         srl     k0, PGSHIFT
         lw      k1, Sysmapsize                  # index within range?
         sltu    k1, k0, k1

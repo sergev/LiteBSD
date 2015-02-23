@@ -29,7 +29,6 @@ MIPS_GCC_PREFIX ?= ${MIPS_GCC_ROOT}/bin/mips-elf-
 
 AS=	${MIPS_GCC_PREFIX}as ${DEBUG} -mips32r2 -EL
 CC=	${MIPS_GCC_PREFIX}gcc ${DEBUG} -mips32r2 -EL -msoft-float -nostdinc -fno-builtin -Werror -Wall
-LOCALCC= gcc -m32 ${DEBUG}
 CPP=	${MIPS_GCC_PREFIX}cpp
 LD=	${MIPS_GCC_PREFIX}gcc -mips32r2 -EL
 LDFLAGS= -nostdlib -T $A/${LDSCRIPT} -Wl,-Map=vmunix.map
@@ -45,8 +44,7 @@ LDFLAGS+= -Wl,--oformat=elf32-littlemips
 S=	../..
 A=	$S/mips
 
-INCLUDES= -I. -I$S
-COPTS=	${INCLUDES} ${IDENT} -DKERNEL
+COPTS=	-I. -I$S ${IDENT} -DKERNEL
 CFLAGS=	-O ${COPTS}
 
 # compile rules: rules are named ${TYPE}_${SUFFIX}${CONFIG_DEP}
@@ -102,7 +100,7 @@ symbols.sort: $A/pic32/symbols.raw
 	    | sed 's/^	//' | sort -u > symbols.sort
 
 locore.o: $A/pic32/locore.s $A/include/machAsmDefs.h \
-	$A/include/machConst.h $A/include/reg.h assym.h
+	$A/include/machConst.h $A/include/reg.h $A/include/assym.h
 	${CPP} ${COPTS} ${PARAM} -DLOCORE $A/pic32/locore.s | \
 	${AS} -o locore.o
 
@@ -116,18 +114,11 @@ clock.o machdep.o autoconf.o conf.o: Makefile
 # depend on network configuration
 uipc_proto.o vfs_conf.o: Makefile
 
-assym.h: genassym
-	./genassym >assym.h
-
-genassym: $A/pic32/genassym.c machine
-	${LOCALCC} -nostdinc -fno-builtin ${INCLUDES} -I. ${IDENT} ${PARAM} -o genassym $A/pic32/genassym.c
-
 machine:
 	ln -s $A/include $@
 
-depend: machine assym.h param.c vnode_if.h
+depend: machine param.c vnode_if.h
 	mkdep ${COPTS} ${CFILES} ioconf.c param.c
-	mkdep -a -p ${INCLUDES} ${IDENT} ${PARAM} $A/pic32/genassym.c
 
 links:
 	egrep '#if' ${CFILES} | sed -f $S/conf/defines | \
