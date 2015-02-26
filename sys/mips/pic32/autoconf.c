@@ -128,6 +128,9 @@ configure()
     struct mips_ctlr *ctlr;
     struct scsi_device *device;
 
+    /* Start assigning iostat dk numbers. */
+    dk_ndrive = 0;
+
     /* Probe and initialize controllers. */
     for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
         if ((*ctlr->mips_driver->d_init)(ctlr)) {

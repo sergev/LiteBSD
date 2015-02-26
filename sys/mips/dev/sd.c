@@ -32,6 +32,7 @@
 #include <sys/ioctl.h>
 #include <sys/disklabel.h>
 #include <sys/systm.h>
+#include <sys/dkstat.h>
 
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
@@ -60,15 +61,16 @@
  */
 struct disk {
     /* the partition table */
-    struct diskpart dk_part [NPARTITIONS+1];
+    struct diskpart part [NPARTITIONS+1];
 
     struct spiio spiio;     /* interface to SPI port */
-    int     dk_unit;        /* physical unit number */
-    int     dk_open;        /* open/closed refcnt */
-    int     dk_wlabel;      /* label writable? */
-    u_int   dk_copenpart;   /* character units open on this drive */
-    u_int   dk_bopenpart;   /* block units open on this drive */
-    u_int   dk_openpart;    /* all units open on this drive */
+    int     unit;           /* physical unit number */
+    int     open;           /* open/closed refcnt */
+    int     wlabel;         /* label writable? */
+    int     dkindex;        /* disk index for statistics */
+    u_int   copenpart;      /* character units open on this drive */
+    u_int   bopenpart;      /* block units open on this drive */
+    u_int   openpart;       /* all units open on this drive */
 };
 
 static struct disk sddrives[NSD];       /* Table of units */
@@ -592,24 +594,24 @@ again:
 static int
 sd_setup(struct disk *u)
 {
-    int unit = u->dk_unit;
+    int unit = u->unit;
 
     if (! card_init(unit)) {
         printf("sd%d: no SD card detected\n", unit);
         return 0;
     }
     /* Get the size of raw partition. */
-    bzero(u->dk_part, sizeof(u->dk_part));
-    u->dk_part[RAWPART].dp_offset = 0;
-    u->dk_part[RAWPART].dp_size = card_size(unit);
-    if (u->dk_part[RAWPART].dp_size == 0) {
+    bzero(u->part, sizeof(u->part));
+    u->part[RAWPART].dp_offset = 0;
+    u->part[RAWPART].dp_size = card_size(unit);
+    if (u->part[RAWPART].dp_size == 0) {
         printf("sd%d: cannot get card size\n", unit);
         return 0;
     }
     printf("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
         sd_type[unit]==TYPE_SDHC ? "SDHC" :
         sd_type[unit]==TYPE_II ? "II" : "I",
-        u->dk_part[RAWPART].dp_size / 2,
+        u->part[RAWPART].dp_size / 2,
         spi_get_speed(&u->spiio) / 1000);
 
     /* Read partition table. */
@@ -622,15 +624,15 @@ sd_setup(struct disk *u)
     }
     splx(s);
     if (buf[255] == MBR_MAGIC) {
-        bcopy(&buf[223], &u->dk_part[1], 64);
+        bcopy(&buf[223], &u->part[1], 64);
 #if 1
         int i;
         for (i=1; i<=NPARTITIONS; i++) {
-            if (u->dk_part[i].dp_type != 0)
+            if (u->part[i].dp_type != 0)
                 printf("sd%d%c: partition type %02x, sector %u, size %u kbytes\n",
-                    unit, i+'a'-1, u->dk_part[i].dp_type,
-                    u->dk_part[i].dp_offset,
-                    u->dk_part[i].dp_size / 2);
+                    unit, i+'a'-1, u->part[i].dp_type,
+                    u->part[i].dp_offset,
+                    u->part[i].dp_size / 2);
         }
 #endif
     }
@@ -654,17 +656,17 @@ sdopen(dev, flags, mode, p)
     if (unit >= NSD || part > NPARTITIONS)
         return ENXIO;
     u = &sddrives[unit];
-    u->dk_unit = unit;
+    u->unit = unit;
 
     /*
      * Setup the SD card interface.
      */
-    if (u->dk_part[RAWPART].dp_size == 0) {
+    if (u->part[RAWPART].dp_size == 0) {
         if (! sd_setup(u)) {
             return ENODEV;
         }
     }
-    u->dk_open++;
+    u->open++;
 
     /*
      * Warn if a partion is opened
@@ -672,13 +674,13 @@ sdopen(dev, flags, mode, p)
      * unless one is the "raw" partition (whole disk).
      */
     mask = 1 << part;
-    if (part != RAWPART && ! (u->dk_openpart & mask)) {
-        unsigned start = u->dk_part[part].dp_offset;
-        unsigned end = start + u->dk_part[part].dp_size;
+    if (part != RAWPART && ! (u->openpart & mask)) {
+        unsigned start = u->part[part].dp_offset;
+        unsigned end = start + u->part[part].dp_size;
 
         /* Check for overlapped partitions. */
         for (i=0; i<=NPARTITIONS; i++) {
-            struct diskpart *pp = &u->dk_part[i];
+            struct diskpart *pp = &u->part[i];
 
             if (i == part || i == RAWPART)
                 continue;
@@ -687,20 +689,20 @@ sdopen(dev, flags, mode, p)
                 pp->dp_offset >= end)
                 continue;
 
-            if (u->dk_openpart & (1 << i))
+            if (u->openpart & (1 << i))
                 log(LOG_WARNING, "sd%d%c: overlaps open partition (sd%d%c)\n",
                     unit, part + 'a' - 1,
-                    unit, pp - u->dk_part + 'a' - 1);
+                    unit, pp - u->part + 'a' - 1);
         }
     }
 
-    u->dk_openpart |= mask;
+    u->openpart |= mask;
     switch (mode) {
     case S_IFCHR:
-        u->dk_copenpart |= mask;
+        u->copenpart |= mask;
         break;
     case S_IFBLK:
-        u->dk_bopenpart |= mask;
+        u->bopenpart |= mask;
         break;
     }
     return 0;
@@ -730,19 +732,19 @@ sdstrategy(bp)
     }
     u = &sddrives[unit];
     offset = bp->b_blkno;
-    if (u->dk_open) {
+    if (u->open) {
         /*
          * Determine the size of the transfer, and make sure it is
          * within the boundaries of the partition.
          */
-        struct diskpart *p = &u->dk_part[sdpart(bp->b_dev)];
+        struct diskpart *p = &u->part[sdpart(bp->b_dev)];
         long maxsz = p->dp_size;
         long sz = (bp->b_bcount + DEV_BSIZE - 1) >> DEV_BSHIFT;
 
         offset += p->dp_offset;
 //printf("%s: sdpart=%u, offset=%u, maxsz=%u, sz=%u\n", __func__, sdpart(bp->b_dev), offset, maxsz, sz);
         if (offset == 0 &&
-            ! (bp->b_flags & B_READ) && ! u->dk_wlabel) {
+            ! (bp->b_flags & B_READ) && ! u->wlabel) {
                 /* Write to partition table not allowed. */
                 bp->b_error = EROFS;
                 goto bad;
@@ -768,6 +770,12 @@ sdstrategy(bp)
 //printf("%s: reading the partition table\n", __func__);
         offset = 0;
     }
+    if (u->dkindex >= 0) {
+        /* Update disk statistics. */
+        dk_busy |= 1 << u->dkindex;
+        dk_xfer[u->dkindex]++;
+        dk_wds[u->dkindex] += bp->b_bcount >> 6;
+    }
 
     s = splbio();
     if (bp->b_flags & B_READ) {
@@ -778,6 +786,9 @@ sdstrategy(bp)
     biodone(bp);
     splx(s);
 //printf("%s: done OK\n", __func__);
+
+    if (u->dkindex >= 0)
+        dk_busy &= ~(1 << u->dkindex);
     return;
 
 bad:
@@ -800,12 +811,12 @@ sdsize(dev)
     /*
      * Setup the SD card interface, if not done yet.
      */
-    if (u->dk_part[RAWPART].dp_size == 0) {
+    if (u->part[RAWPART].dp_size == 0) {
         if (! sd_setup(u)) {
             return -1;
         }
     }
-    return u->dk_part[part].dp_size;
+    return u->part[part].dp_size;
 }
 
 int
@@ -825,7 +836,7 @@ sdioctl(dev, cmd, data, flag, p)
 
     case DIOCGETPART:
         /* Get partition table entry. */
-        pp = &sddrives[unit].dk_part[part];
+        pp = &sddrives[unit].part[part];
 //printf("--- %s: DIOCGETPART unit = %d, part = %d, type = %u, size = %u\n", __func__, unit, part, pp->dp_type, pp->dp_size);
         *(struct diskpart*) data = *pp;
         break;
@@ -890,6 +901,15 @@ sdprobe(config)
 
     printf("sd%u at port %s, pin cs=%c%d\n", unit,
         spi_name(io), spi_csname(io), spi_cspin(io));
+
+    /* Assign disk index. */
+    if (dk_ndrive < DK_NDRIVE) {
+        du->dkindex = dk_ndrive++;
+
+        /* Estimated transfer rate in 16-bit words per second. */
+        dk_wpms[du->dkindex] = SD_KHZ / 32;
+    } else
+        du->dkindex = -1;
     return 1;
 }
 

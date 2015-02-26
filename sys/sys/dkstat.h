@@ -45,17 +45,17 @@
 #define CP_IDLE     4
 #define CPUSTATES   5
 
-#define DK_NDRIVE   8
+#define DK_NDRIVE   2
 #ifdef KERNEL
 long cp_time[CPUSTATES];
 long dk_seek[DK_NDRIVE];
 long dk_time[DK_NDRIVE];
-long dk_wds[DK_NDRIVE];
-long dk_wpms[DK_NDRIVE];
-long dk_xfer[DK_NDRIVE];
+long dk_wds[DK_NDRIVE];         /* Total 64byte chunks transferred */
+long dk_wpms[DK_NDRIVE];        /* Transfer rate in 16bit words per second */
+long dk_xfer[DK_NDRIVE];        /* Transfer count */
 
-int dk_busy;
-int dk_ndrive;
+int dk_busy;                    /* Bitmask of pending transfers */
+int dk_ndrive;                  /* Number of iostat dk numbers assigned */
 
 long tk_cancc;
 long tk_nin;

@@ -66,7 +66,6 @@ static char sccsid[] = "@(#)vmstat.c	8.2 (Berkeley) 3/1/95";
 #include <paths.h>
 #include <limits.h>
 
-#define NEWVM			/* XXX till old has been updated or purged */
 struct nlist namelist[] = {
 #define	X_CPTIME	0
 	{ "_cp_time" },
@@ -321,7 +320,7 @@ getdrivedata(argv)
 		exit (1);
 	for (i = 0; i < dk_ndrive; i++)
 		if (dr_name[i] == NULL) {
-			(void)sprintf(buf, "??%d", i);
+			(void)sprintf(buf, "sd%d", i);
 			dr_name[i] = strdup(buf);
 		}
 
@@ -425,26 +424,12 @@ dovmstat(interval, reps)
 #define	rate(x)	(((x) + halfuptime) / uptime)	/* round */
 		(void)printf("%6ld%6ld ",
 		    pgtok(total.t_avm), pgtok(total.t_free));
-#ifdef NEWVM
 		(void)printf("%4lu ", rate(sum.v_faults - osum.v_faults));
 		(void)printf("%3lu ",
 		    rate(sum.v_reactivated - osum.v_reactivated));
 		(void)printf("%3lu ", rate(sum.v_pageins - osum.v_pageins));
 		(void)printf("%3lu %3lu ",
 		    rate(sum.v_pageouts - osum.v_pageouts), 0);
-#else
-		(void)printf("%3lu %2lu ",
-		    rate(sum.v_pgrec - (sum.v_xsfrec+sum.v_xifrec) -
-		    (osum.v_pgrec - (osum.v_xsfrec+osum.v_xifrec))),
-		    rate(sum.v_xsfrec + sum.v_xifrec -
-		    osum.v_xsfrec - osum.v_xifrec));
-		(void)printf("%3lu ",
-		    rate(pgtok(sum.v_pgpgin - osum.v_pgpgin)));
-		(void)printf("%3lu %3lu ",
-		    rate(pgtok(sum.v_pgpgout - osum.v_pgpgout)),
-		    rate(pgtok(sum.v_dfree - osum.v_dfree)));
-		(void)printf("%3d ", pgtok(deficit));
-#endif
 		(void)printf("%3lu ", rate(sum.v_scan - osum.v_scan));
 		dkstats();
 		(void)printf("%4lu %4lu %3lu ",
@@ -471,21 +456,22 @@ printhdr()
 {
 	register int i;
 
-	(void)printf(" procs   memory     page%*s", 20, "");
-	if (ndrives > 1)
-		(void)printf("disks %*s  faults      cpu\n",
-		   ndrives * 3 - 6, "");
-	else
-		(void)printf("%*s  faults      cpu\n", ndrives * 3, "");
-#ifndef NEWVM
-	(void)printf(" r b w   avm   fre  re at  pi  po  fr  de  sr ");
-#else
+	(void)printf(" procs --memory---  ---------page---------- ");
+	if (ndrives <= 1)
+		(void)printf("disk");
+	else {
+		for (i = 2; i < ndrives; i++)
+			(void)printf("--");
+		(void)printf("-disks-");
+		for (i = 2; i < ndrives; i++)
+			(void)printf("--");
+		(void)printf(" ");
+        }
+	(void)printf(" ---faults--- --cpu---\n");
 	(void)printf(" r b w   avm   fre  flt  re  pi  po  fr  sr ");
-#endif
 	for (i = 0; i < dk_ndrive; i++)
 		if (dr_select[i])
-			(void)printf("%c%c ", dr_name[i][0],
-			    dr_name[i][strlen(dr_name[i]) - 1]);
+			(void)printf("%s ", dr_name[i]);
 	(void)printf("  in   sy  cs us sy id\n");
 	hdrcnt = winlines - 2;
 }
@@ -541,9 +527,6 @@ void
 dosum()
 {
 	struct nchstats nchstats;
-#ifndef NEWVM
-	struct xstats xstats;
-#endif
 	long nchtotal;
 #if defined(tahoe)
 	struct keystats keystats;
@@ -573,7 +556,6 @@ dosum()
 	(void)printf("%9u zero fill page faults\n", sum.v_zfod / CLSIZE);
 	(void)printf("%9u pages examined by the clock daemon\n", sum.v_scan);
 	(void)printf("%9u revolutions of the clock hand\n", sum.v_rev);
-#ifdef NEWVM
 	(void)printf("%9u VM object cache lookups\n", sum.v_lookups);
 	(void)printf("%9u VM object hits\n", sum.v_hits);
 	(void)printf("%9u total VM faults taken\n", sum.v_vm_faults);
@@ -588,24 +570,6 @@ dosum()
 	(void)printf("%9u target inactive pages\n", sum.v_inactive_target);
 	(void)printf("%9u target free pages\n", sum.v_free_target);
 	(void)printf("%9u minimum free pages\n", sum.v_free_min);
-#else
-	(void)printf("%9u sequential process pages freed\n", sum.v_seqfree);
-	(void)printf("%9u total reclaims (%d%% fast)\n", sum.v_pgrec,
-	    PCT(sum.v_fastpgrec, sum.v_pgrec));
-	(void)printf("%9u reclaims from free list\n", sum.v_pgfrec);
-	(void)printf("%9u executable fill pages created\n",
-	    sum.v_nexfod / CLSIZE);
-	(void)printf("%9u executable fill page faults\n",
-	    sum.v_exfod / CLSIZE);
-	(void)printf("%9u swap text pages found in free list\n",
-	    sum.v_xsfrec);
-	(void)printf("%9u inode text pages found in free list\n",
-	    sum.v_xifrec);
-	(void)printf("%9u file fill pages created\n", sum.v_nvrfod / CLSIZE);
-	(void)printf("%9u file fill page faults\n", sum.v_vrfod / CLSIZE);
-	(void)printf("%9u pages freed by the clock daemon\n",
-	    sum.v_dfree / CLSIZE);
-#endif
 	kread(X_NCHSTATS, &nchstats, sizeof(nchstats));
 	nchtotal = nchstats.ncs_goodhits + nchstats.ncs_neghits +
 	    nchstats.ncs_badhits + nchstats.ncs_falsehits +
@@ -620,16 +584,6 @@ dosum()
 	    PCT(nchstats.ncs_badhits, nchtotal),
 	    PCT(nchstats.ncs_falsehits, nchtotal),
 	    PCT(nchstats.ncs_long, nchtotal));
-#ifndef NEWVM
-	kread(X_XSTATS, &xstats, sizeof(xstats));
-	(void)printf("%9lu total calls to xalloc (cache hits %d%%)\n",
-	    xstats.alloc, PCT(xstats.alloc_cachehit, xstats.alloc));
-	(void)printf("%9s sticky %lu flushed %lu unused %lu\n", "",
-	    xstats.alloc_inuse, xstats.alloc_cacheflush, xstats.alloc_unused);
-	(void)printf("%9lu total calls to xfree", xstats.free);
-	(void)printf(" (sticky %lu cached %lu swapped %lu)\n",
-	    xstats.free_inuse, xstats.free_cache, xstats.free_cacheswap);
-#endif
 #if defined(tahoe)
 	kread(X_CKEYSTATS, &keystats, sizeof(keystats));
 	(void)printf("%9d %s (free %d%% norefs %d%% taken %d%% shared %d%%)\n",
@@ -687,7 +641,7 @@ dkstats()
 	for (dn = 0; dn < dk_ndrive; ++dn) {
 		if (!dr_select[dn])
 			continue;
-		(void)printf("%2.0f ", cur.xfer[dn] / etime);
+		(void)printf("%3.0f ", cur.xfer[dn] / etime);
 	}
 }
 
@@ -868,12 +822,7 @@ void
 usage()
 {
 	(void)fprintf(stderr,
-#ifndef NEWVM
-	    "usage: vmstat [-fimst] [-c count] [-M core] \
-[-N system] [-w wait] [disks]\n");
-#else
 	    "usage: vmstat [-ims] [-c count] [-M core] \
 [-N system] [-w wait] [disks]\n");
-#endif
 	exit(1);
 }
