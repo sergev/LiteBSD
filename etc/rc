@@ -132,7 +132,6 @@ echo clearing /tmp
 echo -n standard daemons:
 echo -n ' update';              update
 #echo -n ' cron';               cron
-echo '.'
 
 #echo -n starting network daemons:
 
@@ -161,14 +160,16 @@ fi
 #echo -n ' nfsiod';              nfsiod 4
 
 #echo -n ' sendmail';            sendmail -bd -q30m
-#echo -n ' inetd';               inetd
+if ifconfig en0 >/dev/null 2>&1; then
+    echo -n ' inetd';            inetd
+fi
 #echo -n ' amd';
 #   cd /; amd -l /var/log/amd -r -a /amd -p > /var/run/amd.pid \
 #   /home /etc/amd-home \
 #   /n /etc/amd-n \
 #   &
 
-#echo '.'
+echo '.'
 
 sh /etc/rc.local
 
