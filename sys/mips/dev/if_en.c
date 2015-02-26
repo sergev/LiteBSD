@@ -360,8 +360,8 @@ static void en_setup()
     ETHRXWM = PIC32_ETHRXWM_FWM(full_watermark) |
               PIC32_ETHRXWM_EWM(empty_watermark);
 
-    /* Set RX buffer size, descriptor buffer size in bytes / 16. */
-    ETHCON2 = RX_BYTES_PER_DESC >> 4;
+    /* Set RX descriptor buffer size in bytes (aligned to 16 bytes). */
+    ETHCON2 = RX_BYTES_PER_DESC;
 
     /* Set our Rx filters. */
     ETHRXFC = PIC32_ETHRXFC_CRCOKEN |   /* enable checksum filter */
@@ -658,38 +658,47 @@ en_recv(e)
     struct eth_port *e;
 {
     /* Get the size of received Ethernet packet. */
-    unsigned frame_size = DESC_FRAMESZ(&e->rx_desc[e->receive_index]);
+    eth_desc_t *desc = &e->rx_desc[e->receive_index];
+    unsigned frame_size = DESC_FRAMESZ(desc);
     if (frame_size <= 0) {
         /* Cannot happen. */
         printf("en_recv: bad frame size = %u\n", frame_size);
         return;
     }
 
-    if (! DESC_SOP(&e->rx_desc[e->receive_index])) {
+    if (! DESC_SOP(desc)) {
         /* Start of packet is expected. */
-        printf("en_recv: no SOP flag (%x)\n", e->rx_desc[e->receive_index].hdr);
+        printf("en_recv: no SOP flag (%x)\n", desc->hdr);
     }
 
     char buf[ETHER_MAX_LEN];
     unsigned read_nbytes = 0;
 
     while (read_nbytes < frame_size) {
-        if (DESC_EOWN(&e->rx_desc[e->receive_index]))
+        if (DESC_EOWN(desc))
             break;
 
-        int end_of_packet = DESC_EOP(&e->rx_desc[e->receive_index]);
-        unsigned nbytes = DESC_BYTECNT(&e->rx_desc[e->receive_index]);
+        int end_of_packet = DESC_EOP(desc);
+        unsigned nbytes = DESC_BYTECNT(desc);
         if (nbytes > frame_size - read_nbytes)
             nbytes = frame_size - read_nbytes;
 
-        unsigned vaddr = MACH_PHYS_TO_UNCACHED(e->rx_desc[e->receive_index].paddr);
+        unsigned vaddr = MACH_PHYS_TO_UNCACHED(desc->paddr);
         bcopy((char*) vaddr, &buf[read_nbytes], nbytes);
         read_nbytes += nbytes;
-
+#if 0
+        unsigned char *p = (unsigned char*) vaddr;
+        int i;
+        printf("--- %u bytes from descriptor %u: %02x", nbytes, e->receive_index, p[0]);
+        for (i=1; i<nbytes; i++)
+            printf("-%02x", p[i]);
+        printf("\n");
+#endif
         /* Free the receive descriptor. */
-        DESC_SET_EOWN(&e->rx_desc[e->receive_index]);       /* give up ownership */
+        DESC_SET_EOWN(desc);                                /* give up ownership */
         ETHCON1SET = PIC32_ETHCON1_BUFCDEC;                 /* decrement the BUFCNT */
         e->receive_index = INCR_RX_INDEX(e->receive_index); /* check the next one */
+        desc = &e->rx_desc[e->receive_index];
 
         /* If we are done, get out. */
         if (end_of_packet || read_nbytes == frame_size)
@@ -700,6 +709,9 @@ en_recv(e)
      * Pass a packet to the higher levels.
      */
     struct mbuf *m = en_get(buf, frame_size, &e->netif);
+    if (! m)
+        return;
+
 #if NBPFILTER > 0
     /*
      * Check if there's a bpf filter listening on this interface.
@@ -727,8 +739,9 @@ en_recv(e)
 #endif
     }
 #endif
-    if (m != 0)
-        ether_input(&e->netif, (struct ether_header*)buf, m);
+    struct ether_header *eh = (struct ether_header*) buf;
+    eh->ether_type = ntohs(eh->ether_type);
+    ether_input(&e->netif, eh, m);
 }
 
 /*
