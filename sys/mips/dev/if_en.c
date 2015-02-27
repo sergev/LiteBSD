@@ -58,28 +58,28 @@ typedef struct {
 } eth_desc_t;
 
 /* Start of packet */
-#define DESC_SOP(d)         ((d)->hdr & 0x80000000)
-#define DESC_SET_SOP(d)     (d)->hdr |= 0x80000000
+#define DESC_SOP(d)             ((d)->hdr & 0x80000000)
+#define DESC_SET_SOP(d)         ((d)->hdr |= 0x80000000)
 
 /* End of packet */
-#define DESC_EOP(d)         ((d)->hdr & 0x40000000)
-#define DESC_SET_EOP(d)     (d)->hdr |= 0x40000000
+#define DESC_EOP(d)             ((d)->hdr & 0x40000000)
+#define DESC_SET_EOP(d)         ((d)->hdr |= 0x40000000)
 
 /* Number of data bytes */
-#define DESC_BYTECNT(d)     ((d)->hdr >> 16 & 0x7ff)
-#define DESC_SET_BYTECNT(d,n) ((d)->hdr |= (n) << 16)
+#define DESC_BYTECNT(d)         ((d)->hdr >> 16 & 0x7ff)
+#define DESC_SET_BYTECNT(d,n)   ((d)->hdr = ((d)->hdr & ~0x7ff0000) | (n) << 16)
 
 /* Next descriptor pointer valid */
-#define DESC_SET_NPV(d)     (d)->hdr |= 0x00000100
-#define DESC_CLEAR_NPV(d)   (d)->hdr &= ~0x00000100
+#define DESC_SET_NPV(d)         ((d)->hdr |= 0x00000100)
+#define DESC_CLEAR_NPV(d)       ((d)->hdr &= ~0x00000100)
 
 /* Eth controller owns this desc */
-#define DESC_EOWN(d)        ((d)->hdr & 0x00000080)
-#define DESC_SET_EOWN(d)    (d)->hdr |= 0x00000080
-#define DESC_CLEAR_EOWN(d)  (d)->hdr &= ~0x00000080
+#define DESC_EOWN(d)            ((d)->hdr & 0x00000080)
+#define DESC_SET_EOWN(d)        ((d)->hdr |= 0x00000080)
+#define DESC_CLEAR_EOWN(d)      ((d)->hdr &= ~0x00000080)
 
 /* Size of received packet */
-#define DESC_FRAMESZ(d)     ((d)->status & 0xffff)
+#define DESC_FRAMESZ(d)         ((d)->status & 0xffff)
 
 /*
  * Ethernet software status per interface.
@@ -103,7 +103,6 @@ struct eth_port {
     eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
 
     unsigned    receive_index;      /* next RX descriptor to look */
-#define INCR_RX_INDEX(_i)   ((_i + 1) % RX_DESCRIPTORS)
 
 } eth_port[NEN];
 
@@ -660,6 +659,9 @@ en_recv(e)
     /* Get the size of received Ethernet packet. */
     eth_desc_t *desc = &e->rx_desc[e->receive_index];
     unsigned frame_size = DESC_FRAMESZ(desc);
+    unsigned read_nbytes = 0;
+    char buf[ETHER_MAX_LEN];
+
     if (frame_size <= 0) {
         /* Cannot happen. */
         printf("en_recv: bad frame size = %u\n", frame_size);
@@ -671,12 +673,12 @@ en_recv(e)
         printf("en_recv: no SOP flag (%x)\n", desc->hdr);
     }
 
-    char buf[ETHER_MAX_LEN];
-    unsigned read_nbytes = 0;
-
     while (read_nbytes < frame_size) {
-        if (DESC_EOWN(desc))
+        if (DESC_EOWN(desc)) {
+            printf("en_recv: unexpected EOWN flag (desc %04x = %x)\n",
+                MACH_VIRT_TO_PHYS(desc), desc->hdr);
             break;
+        }
 
         int end_of_packet = DESC_EOP(desc);
         unsigned nbytes = DESC_BYTECNT(desc);
@@ -689,20 +691,23 @@ en_recv(e)
 #if 0
         unsigned char *p = (unsigned char*) vaddr;
         int i;
-        printf("--- %u bytes from descriptor %u: %02x", nbytes, e->receive_index, p[0]);
+        printf("--- %u bytes from descriptor %04x: %02x",
+            nbytes, MACH_VIRT_TO_PHYS(desc), p[0]);
         for (i=1; i<nbytes; i++)
             printf("-%02x", p[i]);
         printf("\n");
 #endif
-        /* Free the receive descriptor. */
-        DESC_SET_EOWN(desc);                                /* give up ownership */
-        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;                 /* decrement the BUFCNT */
-        e->receive_index = INCR_RX_INDEX(e->receive_index); /* check the next one */
-        desc = &e->rx_desc[e->receive_index];
+        if (read_nbytes == frame_size && ! end_of_packet)
+            printf("en_recv: no EOP flag (desc %04x = %x)\n",
+                MACH_VIRT_TO_PHYS(desc), desc->hdr);
 
-        /* If we are done, get out. */
-        if (end_of_packet || read_nbytes == frame_size)
-            break;
+        /* Free the receive descriptor. */
+        DESC_SET_EOWN(desc);                        /* give up ownership */
+        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;         /* decrement the BUFCNT */
+        e->receive_index++;                         /* next descriptor */
+        if (e->receive_index >= RX_DESCRIPTORS)
+            e->receive_index = 0;
+        desc = &e->rx_desc[e->receive_index];
     }
 
     /*
