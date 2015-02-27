@@ -81,6 +81,10 @@ typedef struct {
 /* Size of received packet */
 #define DESC_FRAMESZ(d)         ((d)->status & 0xffff)
 
+/* Receive filter status */
+#define DESC_RXF(d)             ((d)->ctl >> 24)
+#define DESC_SET_RXF(d,n)       ((d)->ctl = ((d)->ctl & 0xffffff) | (n) << 24)
+
 /*
  * Ethernet software status per interface.
  *
@@ -668,10 +672,20 @@ en_recv(e)
         return;
     }
 
-    if (! DESC_SOP(desc)) {
+    int start_of_packet = DESC_SOP(desc);
+    if (! start_of_packet) {
         /* Start of packet is expected. */
         printf("en_recv: no SOP flag (%x)\n", desc->hdr);
     }
+#if NBPFILTER > 0
+    /* Get receive filter status. */
+    int rxf = DESC_RXF(desc);
+
+#ifndef MULTICAST
+    /* We don't accept multicast. */
+    rxf &= ~0x80;
+#endif
+#endif
 
     while (read_nbytes < frame_size) {
         if (DESC_EOWN(desc)) {
@@ -709,6 +723,10 @@ en_recv(e)
             e->receive_index = 0;
         desc = &e->rx_desc[e->receive_index];
     }
+    if (! start_of_packet) {
+        /* Damaged packet: ignore. */
+        return;
+    }
 
     /*
      * Pass a packet to the higher levels.
@@ -724,24 +742,18 @@ en_recv(e)
      */
     if (e->netif.if_bpf) {
         bpf_mtap(e->netif.if_bpf, m);
-#if 0 // TODO
-        /*
-         * Keep the packet if it's a broadcast or has our
-         * physical ethernet address (or if we support
-         * multicast and it's one).
-         */
-        if (
-#ifdef MULTICAST
-            (flags & (M_BCAST | M_MCAST)) == 0 &&
-#else
-            (flags & M_BCAST) == 0 &&
-#endif
-            bcmp(et.ether_dhost, le->sc_addr, sizeof(et.ether_dhost)) != 0
-        ) {
-            m_freem(m);
-            return;
+
+        if (rxfc & PIC32_ETHRXFC_NOTMEEN) {
+            /* In promisc mode, use RXF_RSV field of descriptor
+             * to filter broadcast/multicast/unicast packets.
+             * Keep the packet if it's a broadcast or has our
+             * physical ethernet address (or if we support
+             * multicast and it's one). */
+            if (! (rxf & 0xe0)) {
+                m_freem(m);
+                return;
+            }
         }
-#endif
     }
 #endif
     struct ether_header *eh = (struct ether_header*) buf;
