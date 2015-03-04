@@ -191,6 +191,16 @@ mach_init()
     bzero(_edata, v - _edata);
 
     /*
+     * Assign console pins, board specific.
+     */
+#if defined(MEBII)
+    /* Microchip MEB-II board: use UART1 for console.
+     * Map signals rx=RA14, tx=RA15 to pins 4,6 at PICtail connector. */
+    U1RXR = 13;             /* Group 1: 1101 = RA14 */
+    RPA15R = 1;             /* Group 2: 0001 = U1TX */
+#endif
+
+    /*
      * Autoboot by default.
      */
     boothowto = 0;
@@ -997,8 +1007,10 @@ boot(howto)
     mips_di();
 
     if (! (howto & RB_HALT)) {
-        if (howto & RB_DUMP)
+        if (howto & RB_DUMP) {
             dumpsys();
+            udelay(1000000);
+        }
 
         /* Unlock access to reset register */
         SYSKEY = 0;
@@ -1079,7 +1091,7 @@ void
 udelay(unsigned usec)
 {
     unsigned now = mfc0_Count();
-    unsigned final = now + usec * CPU_KHZ / 2000;
+    unsigned final = now + usec * (CPU_KHZ / 2000);
 
     do {
         now = mfc0_Count();

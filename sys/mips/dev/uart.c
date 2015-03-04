@@ -765,12 +765,13 @@ uartprobe(config)
         reg->sta = 0;
         reg->brg = 0;
         reg->mode = PIC32_UMODE_PDSEL_8NPAR | PIC32_UMODE_ON;
+
+        /* Assign RX and TX pins - except console.
+         * Console pins must be assigned by bootloader,
+         * or in mach_init(). */
+        assign_rx (unit, rx);
+        assign_tx (unit, tx);
     }
-
-    /* Assign RX and TX pins. */
-    assign_rx (unit, rx);
-    assign_tx (unit, tx);
-
     return 1;
 }
 

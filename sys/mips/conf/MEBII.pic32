@@ -65,9 +65,9 @@ device          uart1   flags 0x1e1f    # pins rx=RA14, tx=RA15 - 4,6 at PICtail
 options         "CONS_MAJOR=17"         # UART device
 options         "CONS_MINOR=0"          # UART1 - Microchip MEB-II board
 
-controller      spi1    flags 0x4e31    # pins sdi=RF1,  sdo=RC1  - audio
-controller      spi2    flags 0x604b    # pins sdi=RF0,  sdo=RD11 - SD card
-controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
+controller      spi1    flags 0x4e2a    # pins sdi=RD14, sdo=RB10 - audio
+controller      spi2    flags 0x4778    # pins sdi=RD7,  sdo=RG8  - SD card
+controller      spi4    flags 0x7723    # pins sdi=RG7,  sdo=RB3  - Wi-Fi interface
 
 disk            sd0     at spi2 drive 0 flags 0x2e      # select pin RB14
 options         "SD_LED=0x80"                           # LED1 is H0
