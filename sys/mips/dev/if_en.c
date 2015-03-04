@@ -113,22 +113,63 @@ struct eth_port {
 /*-------------------------------------------------------------
  * PHY routines for SMSC LAN8720A chip.
  */
-#define PHY_CONTROL             0       /* Basic Control Register */
-#define PHY_STATUS              1       /* Basic Status Register */
-#define PHY_MODE                18      /* Special Modes */
-#define PHY_SPECIAL             31      /* Special Control/Status Register */
+#define PHY_CONTROL                 0       /* Basic Control Register */
+#define PHY_STATUS                  1       /* Basic Status Register */
+#define PHY_ID1                     2       /* PHY identifier 1 */
+#define PHY_ID2                     3       /* PHY identifier 2 */
+#define PHY_ADVRT                   4       /* Auto-negotiation advertisement */
+#define PHY_MODE                    18      /* Special Modes */
+#define PHY_SPECIAL                 31      /* Special Control/Status Register */
 
-#define PHY_CONTROL_RESET	0x8000	/* Soft reset, bit self cleared */
+#define PHY_ID_MASK             0xfffffff0
+#define PHY_ID_LAN8270A         0x0007c110  /* SMSC LAN8720A */
 
-#define PHY_STATUS_ANEG_ACK     0x0020	/* Auto-negotiation acknowledge */
-#define PHY_STATUS_CAP_ANEG     0x0008	/* Auto-negotiation available */
-#define PHY_STATUS_LINK         0x0004	/* Link valid */
+#define PHY_CONTROL_DPLX            0x0100  /* Full duplex */
+#define PHY_CONTROL_ANEG_RESTART    0x0200  /* Write 1 to restart autoneg */
+#define PHY_CONTROL_ISOLATE         0x0400  /* MII interface disable */
+#define PHY_CONTROL_PDN             0x0800  /* Powerdown enable */
+#define PHY_CONTROL_ANEG_EN         0x1000  /* Auto-negotiation enable */
+#define PHY_CONTROL_SPEED_100       0x2000  /* Select 100 Mbps speed */
+#define PHY_CONTROL_LPBK            0x4000  /* Loopback enable */
+#define PHY_CONTROL_RESET           0x8000  /* Reset, bit self cleared */
+#define PHY_CONTROL_BITS "\20"\
+"\11dplx\12aneg-rst\13isolate\14pdn\15aneg-en\16speed100\17lpbk\20rst"
 
-#define PHY_MODE_PHYAD          0x000f  /* PHY address mask */
+#define PHY_STATUS_EXCAP            0x0001  /* Extended capabilities regs present */
+#define PHY_STATUS_JAB              0x0002  /* Jabber detected */
+#define PHY_STATUS_LINK             0x0004  /* Link valid */
+#define PHY_STATUS_CAP_ANEG         0x0008  /* Auto-negotiation available */
+#define PHY_STATUS_REM_FLT          0x0010  /* Remote fault detected */
+#define PHY_STATUS_ANEG_ACK         0x0020  /* Auto-negotiation acknowledge */
+#define PHY_STATUS_EXSTATUS         0x0100  /* Extended status reg present */
+#define PHY_STATUS_CAP_100T2_HDX    0x0200  /* Can do 100Base-T2 half duplex */
+#define PHY_STATUS_CAP_100T2_FDX    0x0400  /* Can do 100Base-T2 full duplex */
+#define PHY_STATUS_CAP_10_HDX       0x0800  /* Can do 10Base-TX half duplex */
+#define PHY_STATUS_CAP_10_FDX       0x1000  /* Can do 10Base-TX full duplex */
+#define PHY_STATUS_CAP_100_HDX      0x2000  /* Can do 100Base-TX half duplex */
+#define PHY_STATUS_CAP_100_FDX      0x4000  /* Can do 100Base-TX full duplex */
+#define PHY_STATUS_CAP_100_T4       0x8000  /* Can do 100Base-T4 */
+#define PHY_STATUS_BITS "\20"\
+"\1exreg\2jab\3link\4cap-aneg\5rem-flt\6aneg-ack"\
+"\14hdx10\15fdx10\16hdx100\17fdx100\20t4-100"
 
-#define PHY_SPECIAL_AUTODONE    0x1000  /* Auto-negotiation is done */
-#define PHY_SPECIAL_FDX         0x0010  /* Full duplex */
-#define PHY_SPECIAL_100         0x0008  /* Speed 100 Mbps */
+#define PHY_ADVRT_CSMA              0x0001  /* Capable of 802.3 CSMA operation */
+#define PHY_ADVRT_10_HDX            0x0020  /* Can do 10Base-TX half duplex */
+#define PHY_ADVRT_10_FDX            0x0040  /* Can do 10Base-TX full duplex */
+#define PHY_ADVRT_100_HDX           0x0080  /* Can do 100Base-TX half duplex */
+#define PHY_ADVRT_100_FDX           0x0100  /* Can do 100Base-TX full duplex */
+#define PHY_ADVRT_RF                0x2000  /* Remote fault */
+#define PHY_ADVRT_BITS "\20"\
+"\1csma\6hdx10\7fdx10\10hdx100\11fdx100\16rf"
+
+#define PHY_MODE_PHYAD              0x000f  /* PHY address mask */
+
+#define PHY_SPECIAL_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_SPECIAL_FDX             0x0010  /* Full duplex */
+#define PHY_SPECIAL_100             0x0008  /* Speed 100 Mbps */
+#define PHY_SPECIAL_10              0x0004  /* Speed 10 Mbps */
+#define PHY_SPECIAL_BITS "\20"\
+"\3speed10\4speed100\5fdx\15autodone"
 
 /*
  * Read PHY register.
@@ -149,6 +190,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
 
     EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_READ;
+    udelay(1);
 
     /* Wait to finish. */
     time_start = mfc0_Count();
@@ -184,6 +226,7 @@ static int phy_scan(int phy_id, int reg_id,
     /* Scan the PHY until it is ready. */
     EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_SCAN;
+    udelay(1);
 
     /* Wait for it to become valid. */
     time_start = mfc0_Count();
@@ -203,6 +246,7 @@ static int phy_scan(int phy_id, int reg_id,
 
     /* Kill the scan. */
     EMAC1MCMD = 0;
+    udelay(1);
     time_start = mfc0_Count();
     while (EMAC1MIND & PIC32_EMAC1MIND_MIIMBUSY) {
         if (mfc0_Count() - time_start > timeout) {
@@ -231,6 +275,7 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
 
     EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
     EMAC1MWTD = value;
+    udelay(1);
 
     /* Wait to finish. */
     time_start = mfc0_Count();
@@ -277,6 +322,8 @@ static int is_phy_linked(int phy_id, int was_up)
         log(LOG_ERR, "en0: link up, %s, %s duplex\n",
             speed_100 ? "100Mbps" : "10Mbps",
             full_duplex ? "full" : "half");
+        //printf("     STATUS=%b\n", status, PHY_STATUS_BITS);
+        //printf("     SPECIAL=%b\n", special, PHY_SPECIAL_BITS);
 
         /* Set speed. */
         if (speed_100)
@@ -323,6 +370,13 @@ static int phy_reset(int phy_id)
     /* Wait for the reset pin to autoclear. */
     if (phy_scan(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
         return -1;
+
+    /* Advertise both 100Mbps and 10Mbps modes, full or half duplex. */
+    phy_write(phy_id, PHY_ADVRT, PHY_ADVRT_CSMA | PHY_ADVRT_10_HDX |
+        PHY_ADVRT_10_FDX | PHY_ADVRT_100_HDX | PHY_ADVRT_100_FDX, 100);
+
+    /* Restart autonegotiation. */
+    phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_ANEG_EN | PHY_CONTROL_ANEG_RESTART, 100);
 
     return 0;
 }
@@ -907,7 +961,7 @@ en_probe(config)
     int unit = config->sd_unit;
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
-    int s;
+    int s, id;
 
     /* Only one Ethernet device is supported by this driver. */
     if (unit != 0)
@@ -968,6 +1022,16 @@ en_probe(config)
      */
     printf("en%d at interrupt %u, MAC address %s\n",
         unit, PIC32_IRQ_ETH, ether_sprintf(e->macaddr));
+    id = (phy_read(e->phy_id, PHY_ID1, 1) << 16 |
+          phy_read(e->phy_id, PHY_ID2, 1)) & PHY_ID_MASK;
+    switch (id) {
+    case PHY_ID_LAN8270A:
+        printf("en%d: <SMSC LAN8710A>\n", unit);
+        break;
+    default:
+        printf("en%d: PHY id = %08x\n", unit, id);
+        break;
+    }
     ifp->if_unit = unit;
     ifp->if_name = "en";
     ifp->if_mtu = ETHERMTU;
