@@ -66,10 +66,10 @@ device          uart2   flags 0x2726    # pins rx=RB7,  tx=RB6  - serial-to-USB 
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
 
-controller      spi1    flags 0x4e31    # pins sdi=RF1,  sdo=RC1  - logical 36/35/5
-controller      spi2    flags 0x7778    # pins sdi=RG7,  sdo=RG8  - SD card
-controller      spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - Whatever
-controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
+controller      spi1    flags 0x6160    # pins sdi=RF1,  sdo=RF0 - logical 15/14/8
+controller      spi2    flags 0x7778    # pins sdi=RG7,  sdo=RG8 - SD card
+controller      spi3    flags 0x2923    # pins sdi=RB9,  sdo=RB3 - logical A5/A13/A1
+controller      spi4    flags 0x4b40    # pins sdi=RD11, sdo=RD0 - logical 4/5/3
 
 disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9  - logical 27
 options         "SD_LED=0x57"                           # LED4 is RE7
