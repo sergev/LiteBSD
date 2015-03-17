@@ -489,6 +489,32 @@ mach_init()
 
     /* Read processor ID register. */
     cpu.cpuprid = mfc0_PRId();
+
+    /*
+     * Initialize bus clocks.
+     */
+    /* Unlock access to clock registers */
+    SYSKEY = 0;
+    SYSKEY = 0xaa996655;
+    SYSKEY = 0x556699aa;
+
+    /* Set all bus clocks to SYSCLK/2. */
+    PB1DIV = 1;
+    PB2DIV = 1; PB2DIVSET = 0x8000;
+    PB3DIV = 1; PB3DIVSET = 0x8000;
+    PB4DIV = 1; PB4DIVSET = 0x8000;
+    PB5DIV = 1; PB5DIVSET = 0x8000;
+    PB7DIV = 1; PB7DIVSET = 0x8000;
+    PB8DIV = 1; PB8DIVSET = 0x8000;
+
+    /* Disable output clocks. */
+    REFO1CONCLR = 0x8000; REFO1CONCLR = 0x1000;
+    REFO2CONCLR = 0x8000; REFO2CONCLR = 0x1000;
+    REFO3CONCLR = 0x8000; REFO3CONCLR = 0x1000;
+    REFO4CONCLR = 0x8000; REFO4CONCLR = 0x1000;
+
+    /* Lock up */
+    SYSKEY = 0x33333333;
 }
 
 void

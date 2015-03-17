@@ -1,7 +1,7 @@
 /*
  * Hardware register defines for Microchip PIC32MZ microcontroller.
  *
- * Copyright (C) 2013 Serge Vakulenko, <serge@vak.ru>
+ * Copyright (C) 2013 Serge Vakulenko
  *
  * Permission to use, copy, modify, and distribute this software
  * and its documentation for any purpose and without fee is hereby
@@ -24,6 +24,47 @@
 #ifndef _IO_PIC32MZ_H
 #define _IO_PIC32MZ_H
 
+/*
+ * Register memory map:
+ *
+ *  BF80 0000...03FF    Configuration
+ *  BF80 0600...07FF    Flash Controller
+ *  BF80 0800...09FF    Watchdog Timer
+ *  BF80 0A00...0BFF    Deadman Timer
+ *  BF80 0C00...0DFF    RTCC
+ *  BF80 0E00...0FFF    CVref
+ *  BF80 1200...13FF    Oscillator
+ *  BF80 1400...17FF    PPS
+ *
+ *  BF81 0000...0FFF    Interrupt Controller
+ *  BF81 1000...1FFF    DMA
+ *
+ *  BF82 0000...09FF    I2C1 - I2C5
+ *  BF82 1000...1BFF    SPI1 - SPI6
+ *  BF82 2000...2BFF    UART1 - UART6
+ *  BF82 E000...E1FF    PMP
+ *
+ *  BF84 0000...11FF    Timer1 - Timer9
+ *  BF84 2000...31FF    IC1 - IC9
+ *  BF84 4000...51FF    OC1 - OC9
+ *  BF84 B000...B3FF    ADC1
+ *  BF84 C000...C1FF    Comparator 1, 2
+ *
+ *  BF86 0000...09FF    PORTA - PORTK
+ *
+ *  BF88 0000...1FFF    CAN1 and CAN2
+ *  BF88 2000...2FFF    Ethernet
+ *
+ *  BF8E 0000...0FFF    Prefetch
+ *  BF8E 1000...1FFF    EBI
+ *  BF8E 2000...2FFF    SQI1
+ *  BF8E 3000...3FFF    USB
+ *  BF8E 5000...5FFF    Crypto
+ *  BF8E 6000...6FFF    RNG
+ *
+ *  BF8F 0000...FFFF    System Bus
+ */
+
 /*--------------------------------------
  * Configuration registers.
  */
@@ -33,10 +74,10 @@
 #define DEVCFG3         0x9fc0fff0
 
 #define PIC32_DEVCFG(cfg0, cfg1, cfg2, cfg3) \
-    unsigned __DEVCFG0 __attribute__ ((section (".config0"))) = (cfg0) ^ 0x7fffffff; \
-    unsigned __DEVCFG1 __attribute__ ((section (".config1"))) = (cfg1) | DEVCFG1_UNUSED; \
-    unsigned __DEVCFG2 __attribute__ ((section (".config2"))) = (cfg2) | DEVCFG2_UNUSED; \
-    unsigned __DEVCFG3 __attribute__ ((section (".config3"))) = (cfg3) | DEVCFG3_UNUSED
+    unsigned __DEVCFG0 __attribute__ ((section(".config0"))) = (cfg0) ^ 0x7fffffff; \
+    unsigned __DEVCFG1 __attribute__ ((section(".config1"))) = (cfg1) | DEVCFG1_UNUSED; \
+    unsigned __DEVCFG2 __attribute__ ((section(".config2"))) = (cfg2) | DEVCFG2_UNUSED; \
+    unsigned __DEVCFG3 __attribute__ ((section(".config3"))) = (cfg3) | DEVCFG3_UNUSED
 
 /*
  * Config0 register at 1fc0ffcc, inverted.
@@ -577,6 +618,118 @@
 #define CNSTATKINV      PIC32_R (0x6099C)
 
 /*--------------------------------------
+ * Timer registers.
+ */
+#define T1CON           PIC32_R (0x40000) /* Timer 1: Control */
+#define T1CONCLR        PIC32_R (0x40004)
+#define T1CONSET        PIC32_R (0x40008)
+#define T1CONINV        PIC32_R (0x4000C)
+#define TMR1            PIC32_R (0x40010) /* Timer 1: Count */
+#define TMR1CLR         PIC32_R (0x40014)
+#define TMR1SET         PIC32_R (0x40018)
+#define TMR1INV         PIC32_R (0x4001C)
+#define PR1             PIC32_R (0x40020) /* Timer 1: Period register */
+#define PR1CLR          PIC32_R (0x40024)
+#define PR1SET          PIC32_R (0x40028)
+#define PR1INV          PIC32_R (0x4002C)
+#define T2CON           PIC32_R (0x40200) /* Timer 2: Control */
+#define T2CONCLR        PIC32_R (0x40204)
+#define T2CONSET        PIC32_R (0x40208)
+#define T2CONINV        PIC32_R (0x4020C)
+#define TMR2            PIC32_R (0x40210) /* Timer 2: Count */
+#define TMR2CLR         PIC32_R (0x40214)
+#define TMR2SET         PIC32_R (0x40218)
+#define TMR2INV         PIC32_R (0x4021C)
+#define PR2             PIC32_R (0x40220) /* Timer 2: Period register */
+#define PR2CLR          PIC32_R (0x40224)
+#define PR2SET          PIC32_R (0x40228)
+#define PR2INV          PIC32_R (0x4022C)
+#define T3CON           PIC32_R (0x40400) /* Timer 3: Control */
+#define T3CONCLR        PIC32_R (0x40404)
+#define T3CONSET        PIC32_R (0x40408)
+#define T3CONINV        PIC32_R (0x4040C)
+#define TMR3            PIC32_R (0x40410) /* Timer 3: Count */
+#define TMR3CLR         PIC32_R (0x40414)
+#define TMR3SET         PIC32_R (0x40418)
+#define TMR3INV         PIC32_R (0x4041C)
+#define PR3             PIC32_R (0x40420) /* Timer 3: Period register */
+#define PR3CLR          PIC32_R (0x40424)
+#define PR3SET          PIC32_R (0x40428)
+#define PR3INV          PIC32_R (0x4042C)
+#define T4CON           PIC32_R (0x40600) /* Timer 4: Control */
+#define T4CONCLR        PIC32_R (0x40604)
+#define T4CONSET        PIC32_R (0x40608)
+#define T4CONINV        PIC32_R (0x4060C)
+#define TMR4            PIC32_R (0x40610) /* Timer 4: Count */
+#define TMR4CLR         PIC32_R (0x40614)
+#define TMR4SET         PIC32_R (0x40618)
+#define TMR4INV         PIC32_R (0x4061C)
+#define PR4             PIC32_R (0x40620) /* Timer 4: Period register */
+#define PR4CLR          PIC32_R (0x40624)
+#define PR4SET          PIC32_R (0x40628)
+#define PR4INV          PIC32_R (0x4062C)
+#define T5CON           PIC32_R (0x40800) /* Timer 5: Control */
+#define T5CONCLR        PIC32_R (0x40804)
+#define T5CONSET        PIC32_R (0x40808)
+#define T5CONINV        PIC32_R (0x4080C)
+#define TMR5            PIC32_R (0x40810) /* Timer 5: Count */
+#define TMR5CLR         PIC32_R (0x40814)
+#define TMR5SET         PIC32_R (0x40818)
+#define TMR5INV         PIC32_R (0x4081C)
+#define PR5             PIC32_R (0x40820) /* Timer 5: Period register */
+#define PR5CLR          PIC32_R (0x40824)
+#define PR5SET          PIC32_R (0x40828)
+#define PR5INV          PIC32_R (0x4082C)
+#define T6CON           PIC32_R (0x40A00) /* Timer 6: Control */
+#define T6CONCLR        PIC32_R (0x40A04)
+#define T6CONSET        PIC32_R (0x40A08)
+#define T6CONINV        PIC32_R (0x40A0C)
+#define TMR6            PIC32_R (0x40A10) /* Timer 6: Count */
+#define TMR6CLR         PIC32_R (0x40A14)
+#define TMR6SET         PIC32_R (0x40A18)
+#define TMR6INV         PIC32_R (0x40A1C)
+#define PR6             PIC32_R (0x40A20) /* Timer 6: Period register */
+#define PR6CLR          PIC32_R (0x40A24)
+#define PR6SET          PIC32_R (0x40A28)
+#define PR6INV          PIC32_R (0x40A2C)
+#define T7CON           PIC32_R (0x40C00) /* Timer 7: Control */
+#define T7CONCLR        PIC32_R (0x40C04)
+#define T7CONSET        PIC32_R (0x40C08)
+#define T7CONINV        PIC32_R (0x40C0C)
+#define TMR7            PIC32_R (0x40C10) /* Timer 7: Count */
+#define TMR7CLR         PIC32_R (0x40C14)
+#define TMR7SET         PIC32_R (0x40C18)
+#define TMR7INV         PIC32_R (0x40C1C)
+#define PR7             PIC32_R (0x40C20) /* Timer 7: Period register */
+#define PR7CLR          PIC32_R (0x40C24)
+#define PR7SET          PIC32_R (0x40C28)
+#define PR7INV          PIC32_R (0x40C2C)
+#define T8CON           PIC32_R (0x40E00) /* Timer 8: Control */
+#define T8CONCLR        PIC32_R (0x40E04)
+#define T8CONSET        PIC32_R (0x40E08)
+#define T8CONINV        PIC32_R (0x40E0C)
+#define TMR8            PIC32_R (0x40E10) /* Timer 8: Count */
+#define TMR8CLR         PIC32_R (0x40E14)
+#define TMR8SET         PIC32_R (0x40E18)
+#define TMR8INV         PIC32_R (0x40E1C)
+#define PR8             PIC32_R (0x40E20) /* Timer 8: Period register */
+#define PR8CLR          PIC32_R (0x40E24)
+#define PR8SET          PIC32_R (0x40E28)
+#define PR8INV          PIC32_R (0x40E2C)
+#define T9CON           PIC32_R (0x41000) /* Timer 9: Control */
+#define T9CONCLR        PIC32_R (0x41004)
+#define T9CONSET        PIC32_R (0x41008)
+#define T9CONINV        PIC32_R (0x4100C)
+#define TMR9            PIC32_R (0x41010) /* Timer 9: Count */
+#define TMR9CLR         PIC32_R (0x41014)
+#define TMR9SET         PIC32_R (0x41018)
+#define TMR9INV         PIC32_R (0x4101C)
+#define PR9             PIC32_R (0x41020) /* Timer 9: Period register */
+#define PR9CLR          PIC32_R (0x41024)
+#define PR9SET          PIC32_R (0x41028)
+#define PR9INV          PIC32_R (0x4102C)
+
+/*--------------------------------------
  * Parallel master port registers.
  */
 #define PMCON           PIC32_R (0x2E000) /* Control */
@@ -977,20 +1130,53 @@
 #define RNMICON         PIC32_R (0x1260)
 #define PWRCON          PIC32_R (0x1270)
 #define REFO1CON        PIC32_R (0x1280)
+#define REFO1CONCLR     PIC32_R (0x1284)
+#define REFO1CONSET     PIC32_R (0x1288)
+#define REFO1CONINV     PIC32_R (0x128c)
 #define REFO1TRIM       PIC32_R (0x1290)
 #define REFO2CON        PIC32_R (0x12A0)
+#define REFO2CONCLR     PIC32_R (0x12A4)
+#define REFO2CONSET     PIC32_R (0x12A8)
+#define REFO2CONINV     PIC32_R (0x12Ac)
 #define REFO2TRIM       PIC32_R (0x12B0)
 #define REFO3CON        PIC32_R (0x12C0)
+#define REFO3CONCLR     PIC32_R (0x12C4)
+#define REFO3CONSET     PIC32_R (0x12C8)
+#define REFO3CONINV     PIC32_R (0x12Cc)
 #define REFO3TRIM       PIC32_R (0x12D0)
 #define REFO4CON        PIC32_R (0x12E0)
+#define REFO4CONCLR     PIC32_R (0x12E4)
+#define REFO4CONSET     PIC32_R (0x12E8)
+#define REFO4CONINV     PIC32_R (0x12Ec)
 #define REFO4TRIM       PIC32_R (0x12F0)
 #define PB1DIV          PIC32_R (0x1300)
+#define PB1DIVCLR       PIC32_R (0x1304)
+#define PB1DIVSET       PIC32_R (0x1308)
+#define PB1DIVINV       PIC32_R (0x130c)
 #define PB2DIV          PIC32_R (0x1310)
+#define PB2DIVCLR       PIC32_R (0x1314)
+#define PB2DIVSET       PIC32_R (0x1318)
+#define PB2DIVINV       PIC32_R (0x131c)
 #define PB3DIV          PIC32_R (0x1320)
+#define PB3DIVCLR       PIC32_R (0x1324)
+#define PB3DIVSET       PIC32_R (0x1328)
+#define PB3DIVINV       PIC32_R (0x132c)
 #define PB4DIV          PIC32_R (0x1330)
+#define PB4DIVCLR       PIC32_R (0x1334)
+#define PB4DIVSET       PIC32_R (0x1338)
+#define PB4DIVINV       PIC32_R (0x133c)
 #define PB5DIV          PIC32_R (0x1340)
+#define PB5DIVCLR       PIC32_R (0x1344)
+#define PB5DIVSET       PIC32_R (0x1348)
+#define PB5DIVINV       PIC32_R (0x134c)
 #define PB7DIV          PIC32_R (0x1360)
+#define PB7DIVCLR       PIC32_R (0x1364)
+#define PB7DIVSET       PIC32_R (0x1368)
+#define PB7DIVINV       PIC32_R (0x136c)
 #define PB8DIV          PIC32_R (0x1370)
+#define PB8DIVCLR       PIC32_R (0x1374)
+#define PB8DIVSET       PIC32_R (0x1378)
+#define PB8DIVINV       PIC32_R (0x137c)
 
 /*
  * Configuration Control register.
@@ -1247,6 +1433,115 @@
 #define PIC32_SPISTAT_SPIRBE    0x00000020      /* Receive buffer is empty */
 #define PIC32_SPISTAT_SPIROV    0x00000040      /* Receive overflow flag */
 #define PIC32_SPISTAT_SPIBUSY   0x00000800      /* SPI is busy */
+
+/*--------------------------------------
+ * USB registers.
+ */
+#define USBCSR0         PIC32_R (0xE3000)   /*  */
+#define USBCSR1         PIC32_R (0xE3004)
+#define USBCSR2         PIC32_R (0xE3008)
+#define USBCSR3         PIC32_R (0xE300C)
+#define USBIENCSR0      PIC32_R (0xE3010)   /*  */
+#define USBIENCSR1      PIC32_R (0xE3014)
+#define USBIENCSR2      PIC32_R (0xE3018)
+#define USBIENCSR3      PIC32_R (0xE301C)
+#define USBFIFO0        PIC32_R (0xE3020)   /*  */
+#define USBFIFO1        PIC32_R (0xE3024)
+#define USBFIFO2        PIC32_R (0xE3028)
+#define USBFIFO3        PIC32_R (0xE302C)
+#define USBFIFO4        PIC32_R (0xE3030)
+#define USBFIFO5        PIC32_R (0xE3034)
+#define USBFIFO6        PIC32_R (0xE3038)
+#define USBFIFO7        PIC32_R (0xE303C)
+#define USBOTG          PIC32_R (0xE3060)   /*  */
+#define USBFIFOA        PIC32_R (0xE3064)   /*  */
+#define USBHWVER        PIC32_R (0xE306C)   /*  */
+#define USBINFO         PIC32_R (0xE3078)   /*  */
+#define USBEOFRST       PIC32_R (0xE307C)   /*  */
+#define USBE0TXA        PIC32_R (0xE3080)   /*  */
+#define USBE0RXA        PIC32_R (0xE3084)   /*  */
+#define USBE1TXA        PIC32_R (0xE3088)
+#define USBE1RXA        PIC32_R (0xE308C)
+#define USBE2TXA        PIC32_R (0xE3090)
+#define USBE2RXA        PIC32_R (0xE3094)
+#define USBE3TXA        PIC32_R (0xE3098)
+#define USBE3RXA        PIC32_R (0xE309C)
+#define USBE4TXA        PIC32_R (0xE30A0)
+#define USBE4RXA        PIC32_R (0xE30A4)
+#define USBE5TXA        PIC32_R (0xE30A8)
+#define USBE5RXA        PIC32_R (0xE30AC)
+#define USBE6TXA        PIC32_R (0xE30B0)
+#define USBE6RXA        PIC32_R (0xE30B4)
+#define USBE7TXA        PIC32_R (0xE30B8)
+#define USBE7RXA        PIC32_R (0xE30BC)
+#define USBE0CSR0       PIC32_R (0xE3100)   /*  */
+#define USBE0CSR2       PIC32_R (0xE3108)
+#define USBE0CSR3       PIC32_R (0xE310C)
+#define USBE1CSR0       PIC32_R (0xE3110)
+#define USBE1CSR1       PIC32_R (0xE3114)
+#define USBE1CSR2       PIC32_R (0xE3118)
+#define USBE1CSR3       PIC32_R (0xE311C)
+#define USBE2CSR0       PIC32_R (0xE3120)
+#define USBE2CSR1       PIC32_R (0xE3124)
+#define USBE2CSR2       PIC32_R (0xE3128)
+#define USBE2CSR3       PIC32_R (0xE312C)
+#define USBE3CSR0       PIC32_R (0xE3130)
+#define USBE3CSR1       PIC32_R (0xE3134)
+#define USBE3CSR2       PIC32_R (0xE3138)
+#define USBE3CSR3       PIC32_R (0xE313C)
+#define USBE4CSR0       PIC32_R (0xE3140)
+#define USBE4CSR1       PIC32_R (0xE3144)
+#define USBE4CSR2       PIC32_R (0xE3148)
+#define USBE4CSR3       PIC32_R (0xE314C)
+#define USBE5CSR0       PIC32_R (0xE3150)
+#define USBE5CSR1       PIC32_R (0xE3154)
+#define USBE5CSR2       PIC32_R (0xE3158)
+#define USBE5CSR3       PIC32_R (0xE315C)
+#define USBE6CSR0       PIC32_R (0xE3160)
+#define USBE6CSR1       PIC32_R (0xE3164)
+#define USBE6CSR2       PIC32_R (0xE3168)
+#define USBE6CSR3       PIC32_R (0xE316C)
+#define USBE7CSR0       PIC32_R (0xE3170)
+#define USBE7CSR1       PIC32_R (0xE3174)
+#define USBE7CSR2       PIC32_R (0xE3178)
+#define USBE7CSR3       PIC32_R (0xE317C)
+#define USBDMAINT       PIC32_R (0xE3200)   /*  */
+#define USBDMA1C        PIC32_R (0xE3204)   /*  */
+#define USBDMA1A        PIC32_R (0xE3208)   /*  */
+#define USBDMA1N        PIC32_R (0xE320C)   /*  */
+#define USBDMA2C        PIC32_R (0xE3214)
+#define USBDMA2A        PIC32_R (0xE3218)
+#define USBDMA2N        PIC32_R (0xE321C)
+#define USBDMA3C        PIC32_R (0xE3224)
+#define USBDMA3A        PIC32_R (0xE3228)
+#define USBDMA3N        PIC32_R (0xE322C)
+#define USBDMA4C        PIC32_R (0xE3234)
+#define USBDMA4A        PIC32_R (0xE3238)
+#define USBDMA4N        PIC32_R (0xE323C)
+#define USBDMA5C        PIC32_R (0xE3244)
+#define USBDMA5A        PIC32_R (0xE3248)
+#define USBDMA5N        PIC32_R (0xE324C)
+#define USBDMA6C        PIC32_R (0xE3254)
+#define USBDMA6A        PIC32_R (0xE3258)
+#define USBDMA6N        PIC32_R (0xE325C)
+#define USBDMA7C        PIC32_R (0xE3264)
+#define USBDMA7A        PIC32_R (0xE3268)
+#define USBDMA7N        PIC32_R (0xE326C)
+#define USBDMA8C        PIC32_R (0xE3274)
+#define USBDMA8A        PIC32_R (0xE3278)
+#define USBDMA8N        PIC32_R (0xE327C)
+#define USBE1RPC        PIC32_R (0xE3304)   /*  */
+#define USBE2RPC        PIC32_R (0xE3308)
+#define USBE3RPC        PIC32_R (0xE330C)
+#define USBE4RPC        PIC32_R (0xE3310)
+#define USBE5RPC        PIC32_R (0xE3314)
+#define USBE6RPC        PIC32_R (0xE3318)
+#define USBE7RPC        PIC32_R (0xE331C)
+#define USBDPBFD        PIC32_R (0xE3340)   /*  */
+#define USBTMCON1       PIC32_R (0xE3344)   /*  */
+#define USBTMCON2       PIC32_R (0xE3348)   /*  */
+#define USBLPMR1        PIC32_R (0xE3360)   /*  */
+#define USBLMPR2        PIC32_R (0xE3364)   /*  */
 
 /*--------------------------------------
  * Ethernet registers.
