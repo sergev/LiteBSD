@@ -357,10 +357,6 @@ static void en_setup()
     /* Turn on the ethernet controller. */
     ETHCON1 = PIC32_ETHCON1_ON;
 
-    /* Clear BUFCNT and related interrupt flags. */
-    while (ETHSTAT & PIC32_ETHSTAT_BUFCNT)
-        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;
-
     /* Clear the interrupt flag bit. */
     IFSCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
 
@@ -793,7 +789,7 @@ en_watchdog(unit)
     int unit;
 {
     struct eth_port *e = &eth_port[unit];
-    int receiver_enabled, i;
+    int receiver_enabled;
 #if 0
     int irq = ETHIRQ;
     int ien = ETHIEN;
@@ -851,20 +847,17 @@ en_watchdog(unit)
         EMAC1IPGT = full_duplex ? 21 : 18;
 
         /* Enable receiver. */
-        for (i=0; i<RX_DESCRIPTORS; i++) {
-            ETHCON1SET = PIC32_ETHCON1_BUFCDEC;
-            ETHCON1SET = PIC32_ETHCON1_RXEN;
-        }
+        ETHCON1SET = PIC32_ETHCON1_RXEN;
         //printf("--- %s: RXEN\n", __func__);
     }
     else if (! e->is_up && receiver_enabled) {
-        /* Link down - disable the receiver. */
-        while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
-            continue;
+        /* Link down. */
+        log(LOG_ERR, "en0: link down\n");
+
+        /* Disable the receiver. */
         ETHCON1CLR = PIC32_ETHCON1_RXEN;
         while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
             continue;
-        //printf("--- %s: RX disabled\n", __func__);
     }
 }
 
