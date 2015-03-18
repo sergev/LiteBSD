@@ -100,13 +100,12 @@ struct eth_port {
     int         phy_id;             /* PHY id */
     int         is_up;              /* whether the link is up */
     int         is_transmitting;    /* block re-entering en_start */
+    unsigned    receive_index;      /* next RX descriptor to look */
 
     char        rx_buffer[RX_BYTES];
     char        tx_buffer[ETHER_MAX_LEN];
     eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
     eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
-
-    unsigned    receive_index;      /* next RX descriptor to look */
 
 } eth_port[NEN];
 
@@ -122,7 +121,8 @@ struct eth_port {
 #define PHY_SPECIAL                 31      /* Special Control/Status Register */
 
 #define PHY_ID_MASK             0xfffffff0
-#define PHY_ID_LAN8270A         0x0007c110  /* SMSC LAN8720A */
+#define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
+#define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
 
 #define PHY_CONTROL_DPLX            0x0100  /* Full duplex */
 #define PHY_CONTROL_ANEG_RESTART    0x0200  /* Write 1 to restart autoneg */
@@ -165,6 +165,7 @@ struct eth_port {
 #define PHY_MODE_PHYAD              0x000f  /* PHY address mask */
 
 #define PHY_SPECIAL_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_SPECIAL_4B5B            0x0040  /* Enable 4B5B encoding */
 #define PHY_SPECIAL_FDX             0x0010  /* Full duplex */
 #define PHY_SPECIAL_100             0x0008  /* Speed 100 Mbps */
 #define PHY_SPECIAL_10              0x0004  /* Speed 10 Mbps */
@@ -291,60 +292,17 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
  * Determine whether the link is up.
  * When up, setup MAC controller for required speed and duplex..
  */
-static int is_phy_linked(int phy_id, int was_up)
+static int is_phy_linked(int phy_id)
 {
     int status = phy_read(phy_id, PHY_STATUS, 1);
     if (status < 0) {
         return 0;
     }
+    //printf("--- %s: STATUS=%b\n", __func__, status, PHY_STATUS_BITS);
 
-    int link_is_up =
-        (status & PHY_STATUS_LINK) &&       /* link is up */
-        (status & PHY_STATUS_CAP_ANEG) &&   /* able to auto-negotiate */
-        (status & PHY_STATUS_ANEG_ACK);     /* auto-negotiation completed */
-
-    /* Set our link speed. */
-    if (link_is_up && ! was_up) {
-        /* Must disable the RX while setting these parameters. */
-        int rxen = ETHCON1 & PIC32_ETHCON1_RXEN;
-        ETHCON1CLR = PIC32_ETHCON1_RXEN;
-
-        /* Get the speed. */
-        int special = phy_read(phy_id, PHY_SPECIAL, 1);
-        int speed_100 = 0;
-        int full_duplex = 0;
-
-        if (special & PHY_SPECIAL_AUTODONE) {
-            /* Auto-negotiation is done. */
-            speed_100 = (special & PHY_SPECIAL_100);
-            full_duplex = (special & PHY_SPECIAL_FDX);
-        }
-        log(LOG_ERR, "en0: link up, %s, %s duplex\n",
-            speed_100 ? "100Mbps" : "10Mbps",
-            full_duplex ? "full" : "half");
-        //printf("     STATUS=%b\n", status, PHY_STATUS_BITS);
-        //printf("     SPECIAL=%b\n", special, PHY_SPECIAL_BITS);
-
-        /* Set speed. */
-        if (speed_100)
-            EMAC1SUPPSET = PIC32_EMAC1SUPP_SPEEDRMII;
-        else
-            EMAC1SUPPCLR = PIC32_EMAC1SUPP_SPEEDRMII;
-
-        /* Set duplex and gap size. */
-        if (full_duplex) {
-            EMAC1CFG2SET = PIC32_EMAC1CFG2_FULLDPLX;
-            EMAC1IPGT = 21;
-        } else {
-            EMAC1CFG2CLR = PIC32_EMAC1CFG2_FULLDPLX;
-            EMAC1IPGT = 18;
-        }
-
-        /* Return the Rx Enable back to what it was. */
-        if (rxen)
-            ETHCON1SET = PIC32_ETHCON1_RXEN;
-    }
-    return link_is_up;
+    return (status & PHY_STATUS_LINK) &&        /* link is up */
+           (status & PHY_STATUS_CAP_ANEG) &&    /* able to auto-negotiate */
+           (status & PHY_STATUS_ANEG_ACK);      /* auto-negotiation completed */
 }
 
 /*
@@ -390,11 +348,18 @@ static void en_setup()
     IECCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
 
     /* Turn the Ethernet cotroller off. */
-    ETHCON1 = 0;
+    ETHCON1CLR = PIC32_ETHCON1_ON | PIC32_ETHCON1_RXEN | PIC32_ETHCON1_TXRTS;
 
     /* Wait for abort to finish. */
     while (ETHSTAT & PIC32_ETHSTAT_ETHBUSY)
         continue;
+
+    /* Turn on the ethernet controller. */
+    ETHCON1 = PIC32_ETHCON1_ON;
+
+    /* Clear BUFCNT and related interrupt flags. */
+    while (ETHSTAT & PIC32_ETHSTAT_BUFCNT)
+        ETHCON1SET = PIC32_ETHCON1_BUFCDEC;
 
     /* Clear the interrupt flag bit. */
     IFSCLR(PIC32_IRQ_ETH >> 5) = 1 << (PIC32_IRQ_ETH & 31);
@@ -407,9 +372,9 @@ static void en_setup()
     ETHTXST = 0;
     ETHRXST = 0;
 
-    /* Auto flow control is on. */
-    ETHCON1SET = PIC32_ETHCON1_PTV(1);  /* the max number of pause timeouts */
-    ETHCON1SET = PIC32_ETHCON1_AUTOFC;
+    /* Enable auto flow control. */
+    //ETHCON1SET = PIC32_ETHCON1_PTV(1);  /* the max number of pause timeouts */
+    //ETHCON1SET = PIC32_ETHCON1_AUTOFC;
 
     /* High and low watermarks. */
     int empty_watermark = ETHER_MAX_LEN / RX_BYTES_PER_DESC;
@@ -422,6 +387,7 @@ static void en_setup()
 
     /* Set our Rx filters. */
     ETHRXFC = PIC32_ETHRXFC_CRCOKEN |   /* enable checksum filter */
+              PIC32_ETHRXFC_RUNTEN |    /* enable short packets */
               PIC32_ETHRXFC_UCEN |      /* enable unicast filter */
               PIC32_ETHRXFC_BCEN;       /* enable broadcast filter */
 
@@ -435,9 +401,6 @@ static void en_setup()
 
     /* Byte in TCP like checksum pattern calculation. */
     ETHPMCS = 0;
-
-    /* Turn on the ethernet controller. */
-    ETHCON1SET = PIC32_ETHCON1_ON;
 }
 
 /*
@@ -447,22 +410,22 @@ static void en_setup_mac()
 {
     /* Reset the MAC. */
     EMAC1CFG1 = PIC32_EMAC1CFG1_SOFTRESET;
+    udelay(1);
 
     /* Pull it out of reset. */
     EMAC1CFG1 = 0;
-    EMAC1CFG1 = PIC32_EMAC1CFG1_TXPAUSE |   /* MAC TX flow control */
-                PIC32_EMAC1CFG1_RXPAUSE |   /* MAC RX flow control */
-                PIC32_EMAC1CFG1_RXENABLE;   /* Receive enable */
+    udelay(1);
+    EMAC1CFG1 = PIC32_EMAC1CFG1_RXENABLE |  /* Receive enable */
+                PIC32_EMAC1CFG1_TXPAUSE |   /* MAC TX flow control */
+                PIC32_EMAC1CFG1_RXPAUSE;    /* MAC RX flow control */
 
-    EMAC1CFG2 = PIC32_EMAC1CFG2_EXCESSDFR | /* Defer to carrier indefinitely */
-                PIC32_EMAC1CFG2_BPNOBKOFF | /* Backpressure/No Backoff */
-                PIC32_EMAC1CFG2_AUTOPAD |   /* Automatic detect pad enable */
-                PIC32_EMAC1CFG2_PADENABLE | /* Pad/CRC enable */
+    EMAC1CFG2 = PIC32_EMAC1CFG2_PADENABLE | /* Pad/CRC enable */
                 PIC32_EMAC1CFG2_CRCENABLE | /* CRC enable */
-                PIC32_EMAC1CFG2_LENGTHCK;   /* Frame length checking */
+                PIC32_EMAC1CFG2_EXCESSDFR |
+                PIC32_EMAC1CFG2_AUTOPAD |
+                PIC32_EMAC1CFG2_LENGTHCK;
 
-    /* These are all default. */
-    EMAC1MAXF = 1518;                       /* max frame size in bytes */
+    EMAC1MAXF = 6*256;                      /* max frame size in bytes */
     EMAC1IPGR = PIC32_EMAC1IPGR(12, 18);    /* non-back-to-back interpacket gap */
     EMAC1CLRT = PIC32_EMAC1CLRT(55, 15);    /* collision window/retry limit */
 }
@@ -473,9 +436,11 @@ static void en_setup_mac()
 static void en_setup_mii()
 {
     EMAC1SUPP = PIC32_EMAC1SUPP_RESETRMII;  /* reset RMII */
+    udelay(1);
     EMAC1SUPP = 0;
 
     EMAC1MCFG = PIC32_EMAC1MCFG_RESETMGMT;  /* reset the management fuctions */
+    udelay(1);
     EMAC1MCFG = 0;
 
     /* The IEEE 802.3 spec says no faster than 2.5MHz.
@@ -487,7 +452,7 @@ static void en_setup_mii()
 /*
  * Set DMA descriptors.
  */
-static void en_init_dma(struct eth_port *e)
+static void en_setup_dma(struct eth_port *e)
 {
     int i;
 
@@ -529,6 +494,10 @@ en_start(ifp)
     struct mbuf *m0, *m;
     char *buffer;
     int total,t;
+
+    /* Link not ready yet. */
+    if (! e->is_up)
+        return;
 
     /* The previous transmit has not completed yet. */
     if (e->is_transmitting)
@@ -596,6 +565,7 @@ en_start(ifp)
 
     /* Start transmitter. */
     ETHCON1SET = PIC32_ETHCON1_TXRTS;
+    //printf("--- %s: ethcon1=%04x\n", __func__, ETHCON1);
 }
 
 /*
@@ -614,10 +584,10 @@ en_init(unit)
         return;
     if (ifp->if_flags & IFF_RUNNING)
         return;
+    //printf("--- %s\n", __func__);
 
     /* Enable receiver. */
     s = splimp();
-    ETHCON1SET = PIC32_ETHCON1_RXEN;
     e->netif.if_flags |= IFF_RUNNING;
     en_start(ifp);
     splx(s);
@@ -823,12 +793,79 @@ en_watchdog(unit)
     int unit;
 {
     struct eth_port *e = &eth_port[unit];
-
-    /* Poll whether the link is active. */
-    e->is_up = is_phy_linked(e->phy_id, e->is_up);
-
+    int receiver_enabled, i;
+#if 0
+    int irq = ETHIRQ;
+    int ien = ETHIEN;
+    printf("--- %s: irq=%04x, ien=%04x, stat=%04x, rxdesc0=%04x\n", __func__, irq, ien, ETHSTAT, e->rx_desc[0].hdr);
+    printf("---     con1=%04x, cfg1=%04x, cfg2=%04x, mind=%04x\n", ETHCON1, EMAC1CFG1, EMAC1CFG2, EMAC1MIND);
+    printf("---     txst=%08x, rxst=%08x\n", ETHTXST, ETHRXST);
+    printf("---     rxovflow=%u, frmtxok=%u, scolfrm=%u, mcolfrm=%u, frmrxok=%u, fcserr=%u, algnerr=%u\n",
+        ETHRXOVFLOW, ETHFRMTXOK, ETHSCOLFRM, ETHMCOLFRM, ETHFRMRXOK, ETHFCSERR, ETHALGNERR);
+#endif
     /* Call it every second. */
     e->netif.if_timer = 1;
+
+    /* Poll whether the link is active. */
+    e->is_up = is_phy_linked(e->phy_id);
+
+    /* Check whether RX is enabled. */
+    receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
+    if (e->is_up && ! receiver_enabled) {
+        /* Link up - enable receiver. */
+        int special = phy_read(e->phy_id, PHY_SPECIAL, 1);
+        int speed_100 = 0;
+        int full_duplex = 0;
+
+        if (special & PHY_SPECIAL_AUTODONE) {
+            /* Auto-negotiation is done - get the speed. */
+            speed_100 = (special & PHY_SPECIAL_100);
+            full_duplex = (special & PHY_SPECIAL_FDX);
+        }
+        log(LOG_ERR, "en0: link up, %s, %s duplex\n",
+            speed_100 ? "100Mbps" : "10Mbps",
+            full_duplex ? "full" : "half");
+#if 0
+        int special_modes = phy_read(e->phy_id, 18, 1);
+        int error_counter = phy_read(e->phy_id, 26, 1);
+        int cable_length  = phy_read(e->phy_id, 28, 1);
+        printf("     SPECIAL=%b\n", special, PHY_SPECIAL_BITS);
+        printf("     Special_Modes=%04x, Error_Counter=%04x, Cable_Length=%04x\n",
+            special_modes, error_counter, cable_length);
+#endif
+        /* Set speed. */
+        if (speed_100) {
+            EMAC1SUPPSET = PIC32_EMAC1SUPP_SPEEDRMII;
+        } else {
+            EMAC1SUPPCLR = PIC32_EMAC1SUPP_SPEEDRMII;
+        }
+
+        /* Set duplex. */
+        if (full_duplex) {
+            EMAC1CFG2SET = PIC32_EMAC1CFG2_FULLDPLX;
+        } else {
+            EMAC1CFG2CLR = PIC32_EMAC1CFG2_FULLDPLX;
+        }
+
+        /* Set gap size. */
+        EMAC1IPGT = full_duplex ? 21 : 18;
+
+        /* Enable receiver. */
+        for (i=0; i<RX_DESCRIPTORS; i++) {
+            ETHCON1SET = PIC32_ETHCON1_BUFCDEC;
+            ETHCON1SET = PIC32_ETHCON1_RXEN;
+        }
+        //printf("--- %s: RXEN\n", __func__);
+    }
+    else if (! e->is_up && receiver_enabled) {
+        /* Link down - disable the receiver. */
+        while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
+            continue;
+        ETHCON1CLR = PIC32_ETHCON1_RXEN;
+        while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
+            continue;
+        //printf("--- %s: RX disabled\n", __func__);
+    }
 }
 
 /*
@@ -845,6 +882,7 @@ enintr(dev)
     /* Read the interrupt requests and acknowledge the interrupt. */
     irq = ETHIRQ;
     ETHIRQCLR = irq;
+    //printf("--- %s: irq=%04x\n", __func__, irq);
 
     /* Receiver error. */
     if (irq & (PIC32_ETHIRQ_RXBUSE |
@@ -923,9 +961,19 @@ en_ioctl(ifp, cmd, data)
         if ((ifp->if_flags & IFF_UP) == 0 &&
             ifp->if_flags & IFF_RUNNING)
         {
+            ETHCON1CLR = PIC32_ETHCON1_TXRTS;
+            while (ETHSTAT & PIC32_ETHSTAT_TXBUSY)
+                continue;
+
             /* Disable receiver. */
+            while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
+                continue;
             ETHCON1CLR = PIC32_ETHCON1_RXEN;
+            while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
+                continue;
+
             ifp->if_flags &= ~IFF_RUNNING;
+            eth_port[ifp->if_unit].is_transmitting = 0;
         }
         else if (ifp->if_flags & IFF_UP &&
             (ifp->if_flags & IFF_RUNNING) == 0)
@@ -969,15 +1017,43 @@ en_probe(config)
 
     s = splimp();
 
-#ifdef MIBII
+    /*
+     * Different boards can have different pin assignments and PHY address.
+     */
+#if defined(MEBII)
     /*
      * Setup for PIC32MZ EC Starter Kit board.
+     * Signal   Pin    Type  Function
+     * ----------------------------------------
+     * ETXEN    RD6         O   Transmit enable
+     * ETXD0    AN35/RJ8    O   Transmit data 0
+     * ETXD1    AN36/RJ9    O   Transmit data 1
+     * ERXD1    AN41/RH5    I   Receive data 1
+     * ERXD0    RH8         I   Receive data 0
+     * ERXERR   AN40/RH4    I   Receive error
+     * ERXDV    RH13        I   Receive data valid
+     * EREFCLK  AN37/RJ11   I   Clock 50MHz
+     * EMDC     RD11        O   SMI Clock
+     * EMDIO    RJ1         I/O SMI Data
+     * /EINT    RC13        I   PHY interrupt request
      */
-    TRISHSET = 1 << 8;                  /* set RH8 as input for ERXD0 */
-    TRISHSET = 1 << 5;                  /* set RH5 as input for ERXD1 */
-    TRISHSET = 1 << 4;                  /* set RH4 as input for ERXERR */
+    ANSELJCLR = 1 << 8;         /* Disable analog pad on ETXD0 (AN35/RJ8) */
+    ANSELJCLR = 1 << 9;         /* Disable analog pad on ETXD1 (AN36/RJ9) */
+    ANSELJCLR = 1 << 11;        /* Disable analog pad on EREFCLK (AN37/RJ11) */
+    ANSELHCLR = 1 << 4;         /* Disable analog pad on ERXERR (AN40/RH4) */
+    ANSELHCLR = 1 << 5;         /* Disable analog pad on ERXD1 (AN41/RH5) */
 
-    /* Default PHY address is 0 on LAN8720 PHY daughter board. */
+    TRISHSET = 1 << 8;                      /* set RH8 as input for ERXD0 */
+    TRISHSET = 1 << 5;                      /* set RH5 as input for ERXD1 */
+    TRISHSET = 1 << 4;                      /* set RH4 as input for ERXERR */
+    TRISHSET = 1 << 13;                     /* set RH13 as input for ECRS */
+    TRISJSET = 1 << 11;                     /* set RJ11 as input for EREFCLK */
+
+    LATDCLR = 1 << 6; TRISDCLR = 1 << 6;    /* set RD6 as output for ETXEN */
+    LATJCLR = 1 << 8; TRISJCLR = 1 << 8;    /* set RJ8 as output for ETXD0 */
+    LATJCLR = 1 << 9; TRISJCLR = 1 << 9;    /* set RJ9 as output for ETXD1 */
+
+    /* Default PHY address is 0 on LAN8720A and LAN8740A PHY daughter boards. */
     e->phy_id = 0;
 #endif
     /* Link is down. */
@@ -986,14 +1062,13 @@ en_probe(config)
     /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
     en_setup();
     en_setup_mac();
+    en_setup_dma(e);
     en_setup_mii();
     if (phy_reset(e->phy_id) < 0) {
+        ETHCON1 = 0;
         printf("Ethernet PHY not detected at ID=%u\n", e->phy_id);
         return 0;
     }
-
-    /* Set DMA descriptors. */
-    en_init_dma(e);
 
     /* Extract our MAC address */
     e->macaddr[0] = EMAC1SA2;
@@ -1025,8 +1100,11 @@ en_probe(config)
     id = (phy_read(e->phy_id, PHY_ID1, 1) << 16 |
           phy_read(e->phy_id, PHY_ID2, 1)) & PHY_ID_MASK;
     switch (id) {
-    case PHY_ID_LAN8270A:
-        printf("en%d: <SMSC LAN8710A>\n", unit);
+    case PHY_ID_LAN8720A:
+        printf("en%d: <SMSC LAN8720A>\n", unit);
+        break;
+    case PHY_ID_LAN8740A:
+        printf("en%d: <SMSC LAN8740A>\n", unit);
         break;
     default:
         printf("en%d: PHY id = %08x\n", unit, id);
