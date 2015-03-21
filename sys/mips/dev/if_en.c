@@ -47,6 +47,10 @@
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
 #define TX_DESCRIPTORS      1
 
+#ifndef ETHERNET_PHY_ID
+#   define ETHERNET_PHY_ID  0   /* Use PHY id 0 if not defined */
+#endif
+
 /*
  * DMA buffer descriptor.
  */
