@@ -74,6 +74,7 @@ options         "SD_LED=0x80"                           # LED1 is H0
 
 # Ethernet controller
 controller      en0
+options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN8740A daughter boards
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 #device         mrf0    at spi4 flags 0x71641f49

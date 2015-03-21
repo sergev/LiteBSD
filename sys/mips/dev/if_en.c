@@ -995,6 +995,103 @@ en_ioctl(ifp, cmd, data)
     return error;
 }
 
+/*
+ * Different devices can have different pin assignments,
+ * denending on pin count and DEVCFG.FETHIO configuration setting.
+ */
+static void setup_signals()
+{
+    switch (DEVID & 0x0fffffff) {
+    case 0x05104053:            /* MZ2048ECG064 */
+    case 0x05109053:            /* MZ2048ECH064 */
+    case 0x05131053:            /* MZ2048ECM064 */
+        if (*(unsigned*)DEVCFG3 & DEVCFG3_FETHIO) {
+            /*
+             * Default setup for 64-pin device.
+             */
+            ANSELECLR = 1 << 4;         /* Disable analog pad on RE4 for ERXERR */
+            ANSELECLR = 1 << 6;         /* Disable analog pad on RE6 for ETXD0 */
+            ANSELECLR = 1 << 7;         /* Disable analog pad on RE7 for ETXD1 */
+            ANSELECLR = 1 << 5;         /* Disable analog pad on RE5 for ETXEN */
+            ANSELBCLR = 1 << 15;        /* Disable analog pad on RB15 for EMDC */
+
+            LATECLR = 1 << 6; TRISECLR = 1 << 6;    /* set RE6 as output for ETXD0 */
+            LATECLR = 1 << 7; TRISECLR = 1 << 7;    /* set RE7 as output for ETXD1 */
+            LATECLR = 1 << 5; TRISECLR = 1 << 5;    /* set RE5 as output for ETXEN */
+        } else {
+            /*
+             * Alternative setup for 64-pin device.
+             */
+            ANSELBCLR = 1 << 15;        /* Disable analog pad on RB15 for AEMDC */
+
+            LATFCLR = 1 << 1; TRISFCLR = 1 << 1;    /* set RF1 as output for AETXD0 */
+            LATFCLR = 1 << 0; TRISFCLR = 1 << 0;    /* set RF0 as output for AETXD1 */
+            LATDCLR = 1 << 2; TRISDCLR = 1 << 2;    /* set RD2 as output for AETXEN */
+        }
+        break;
+
+    case 0x0510E053:            /* MZ2048ECG100 */
+    case 0x05113053:            /* MZ2048ECH100 */
+    case 0x0513B053:            /* MZ2048ECM100 */
+        if (*(unsigned*)DEVCFG3 & DEVCFG3_FETHIO) {
+            /*
+             * Default setup for 100-pin devices.
+             */
+            ANSELGCLR = 1 << 9;         /* Disable analog pad on RG9 for EREFCLK */
+            ANSELBCLR = 1 << 12;        /* Disable analog pad on RB12 for ERXD0 */
+            ANSELBCLR = 1 << 13;        /* Disable analog pad on RB13 for ERXD1 */
+            ANSELGCLR = 1 << 8;         /* Disable analog pad on RG8 for ECRSDV */
+            ANSELBCLR = 1 << 11;        /* Disable analog pad on RB11 for ERXERR */
+
+            LATFCLR = 1 << 1; TRISFCLR = 1 << 1;    /* set RF1 as output for ETXD0 */
+            LATFCLR = 1 << 0; TRISFCLR = 1 << 0;    /* set RF0 as output for ETXD1 */
+            LATDCLR = 1 << 2; TRISDCLR = 1 << 2;    /* set RD2 as output for ETXEN */
+        } else {
+            /*
+             * Alternative setup for 100-pin devices.
+             */
+            ANSELGCLR = 1 << 9;         /* Disable analog pad on RG9 for AEREFCLK */
+            ANSELECLR = 1 << 8;         /* Disable analog pad on RE8 for AERXD0 */
+            ANSELECLR = 1 << 9;         /* Disable analog pad on RE9 for AERXD1 */
+            ANSELGCLR = 1 << 8;         /* Disable analog pad on RG8 for AECRSDV */
+            ANSELGCLR = 1 << 15;        /* Disable analog pad on RG15 for AERXERR */
+            ANSELDCLR = 1 << 14;        /* Disable analog pad on RD14 for AETXD0 */
+            ANSELDCLR = 1 << 15;        /* Disable analog pad on RD15 for AETXD1 */
+
+            LATDCLR = 1 << 14; TRISDCLR = 1 << 14;  /* set RD14 as output for AETXD0 */
+            LATDCLR = 1 << 15; TRISDCLR = 1 << 15;  /* set RD15 as output for AETXD1 */
+            LATACLR = 1 << 15; TRISACLR = 1 << 15;  /* set RA15 as output for AETXEN */
+        }
+        break;
+
+    case 0x05118053:            /* MZ2048ECG124 */
+    case 0x0511D053:            /* MZ2048ECH124 */
+    case 0x05145053:            /* MZ2048ECM124 */
+        panic("en: 124-pin devices not supported yet\n");
+        break;
+
+    case 0x05122053:            /* MZ2048ECG144 */
+    case 0x05127053:            /* MZ2048ECH144 */
+    case 0x0514F053:            /* MZ2048ECM144 */
+        /*
+         * Setup for 144-pin devices.
+         */
+        ANSELJCLR = 1 << 11;        /* Disable analog pad on RJ11 for EREFCLK */
+        ANSELHCLR = 1 << 5;         /* Disable analog pad on RH5 for ERXD1 */
+        ANSELHCLR = 1 << 4;         /* Disable analog pad on RH4 for ERXERR */
+        ANSELJCLR = 1 << 8;         /* Disable analog pad on RJ8 for ETXD0 */
+        ANSELJCLR = 1 << 9;         /* Disable analog pad on RJ9 for ETXD1 */
+
+        LATJCLR = 1 << 8; TRISJCLR = 1 << 8;    /* set RJ8 as output for ETXD0 */
+        LATJCLR = 1 << 9; TRISJCLR = 1 << 9;    /* set RJ9 as output for ETXD1 */
+        LATDCLR = 1 << 6; TRISDCLR = 1 << 6;    /* set RD6 as output for ETXEN */
+        break;
+
+    default:
+        panic("en: DEVID not recognized\n");
+    }
+}
+
 static int
 en_probe(config)
     struct scsi_device *config;
@@ -1010,45 +1107,10 @@ en_probe(config)
 
     s = splimp();
 
-    /*
-     * Different boards can have different pin assignments and PHY address.
-     */
-#if defined(MEBII)
-    /*
-     * Setup for PIC32MZ EC Starter Kit board.
-     * Signal   Pin    Type  Function
-     * ----------------------------------------
-     * ETXEN    RD6         O   Transmit enable
-     * ETXD0    AN35/RJ8    O   Transmit data 0
-     * ETXD1    AN36/RJ9    O   Transmit data 1
-     * ERXD1    AN41/RH5    I   Receive data 1
-     * ERXD0    RH8         I   Receive data 0
-     * ERXERR   AN40/RH4    I   Receive error
-     * ERXDV    RH13        I   Receive data valid
-     * EREFCLK  AN37/RJ11   I   Clock 50MHz
-     * EMDC     RD11        O   SMI Clock
-     * EMDIO    RJ1         I/O SMI Data
-     * /EINT    RC13        I   PHY interrupt request
-     */
-    ANSELJCLR = 1 << 8;         /* Disable analog pad on ETXD0 (AN35/RJ8) */
-    ANSELJCLR = 1 << 9;         /* Disable analog pad on ETXD1 (AN36/RJ9) */
-    ANSELJCLR = 1 << 11;        /* Disable analog pad on EREFCLK (AN37/RJ11) */
-    ANSELHCLR = 1 << 4;         /* Disable analog pad on ERXERR (AN40/RH4) */
-    ANSELHCLR = 1 << 5;         /* Disable analog pad on ERXD1 (AN41/RH5) */
+    /* Board-dependent initialization. */
+    setup_signals();
+    e->phy_id = ETHERNET_PHY_ID;
 
-    TRISHSET = 1 << 8;                      /* set RH8 as input for ERXD0 */
-    TRISHSET = 1 << 5;                      /* set RH5 as input for ERXD1 */
-    TRISHSET = 1 << 4;                      /* set RH4 as input for ERXERR */
-    TRISHSET = 1 << 13;                     /* set RH13 as input for ECRS */
-    TRISJSET = 1 << 11;                     /* set RJ11 as input for EREFCLK */
-
-    LATDCLR = 1 << 6; TRISDCLR = 1 << 6;    /* set RD6 as output for ETXEN */
-    LATJCLR = 1 << 8; TRISJCLR = 1 << 8;    /* set RJ8 as output for ETXD0 */
-    LATJCLR = 1 << 9; TRISJCLR = 1 << 9;    /* set RJ9 as output for ETXD1 */
-
-    /* Default PHY address is 0 on LAN8720A and LAN8740A PHY daughter boards. */
-    e->phy_id = 0;
-#endif
     /* Link is down. */
     e->is_up = 0;
 
