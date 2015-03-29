@@ -2,6 +2,7 @@
  * GPIO driver for pic32.
  *
  * Copyright (C) 2014 Serge Vakulenko, <serge@vak.ru>
+ * Copyright (C) 2015 Jaume Olivé, <jolive@iberoxarxa.com>
  *
  * Permission to use, copy, modify, and distribute this software
  * and its documentation for any purpose and without fee is hereby
@@ -175,3 +176,99 @@ char gpio_portname(int pin) {
 int gpio_pinno(int pin) {
     return pin & 15;
 }
+
+#include "gpio.h"
+#if NGPIO > 0
+#include <sys/gpio.h>
+
+static unsigned char gpio_pin[4] = {0,0,0,0};
+
+/*
+ * Open /dev/gpio# device.
+ */
+int gpioopen (dev_t dev, int flag, int mode)
+{
+    unsigned char channel = minor(dev);
+
+    if (channel >= NGPIO)
+        return ENXIO;
+
+    if (curproc->p_ucred->cr_uid != 0)
+        return EPERM;
+
+    return 0;
+}
+
+/*
+ * Close /dev/gpio# device.
+ */
+int gpioclose (dev_t dev, int flag, int mode)
+{
+    unsigned char channel = minor(dev);
+
+    if (channel >= NGPIO)
+        return ENXIO;
+
+    if (curproc->p_ucred->cr_uid != 0)
+        return EPERM;
+
+    return 0;
+}
+
+int gpioread (dev_t dev, struct uio *uio, int flag)
+{
+    return 0;
+}
+
+int gpiowrite (dev_t dev, struct uio *uio, int flag)
+{
+    return 0;
+}
+
+int gpioioctl (dev_t dev, u_int cmd, caddr_t addr, int flag)
+{
+    int channel = minor (dev);
+
+    if (channel >= NGPIO)
+        return ENXIO;
+
+    switch (cmd) {
+    case GPIO_CONFOUT:
+        gpio_set_output(gpio_pin[channel]);
+        break;
+
+    case GPIO_CONFIN:
+        gpio_set_input(gpio_pin[channel]);
+        break;
+
+    case GPIO_SET:
+        gpio_set(gpio_pin[channel]);
+        break;
+
+    case GPIO_CLEAR:
+        gpio_clr(gpio_pin[channel]);
+        break;
+    }
+    return 0;
+}
+
+static int
+gpioprobe(config)
+    struct mips_ctlr *config;
+{
+    unsigned char channel = config->mips_unit - 1;
+    if (channel < 0 || channel >= NGPIO)
+        return 0;
+
+    unsigned char flags = config->mips_flags;
+    gpio_pin[channel] = flags;
+
+    printf ("gpio%u at pin %c%d\n", channel+1,
+        gpio_portname(flags), gpio_pinno(flags));
+    return 1;
+}
+
+struct driver gpiodriver = {
+    "gpio", gpioprobe,
+};
+#endif /* NGPIO */

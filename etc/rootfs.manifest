@@ -469,6 +469,20 @@ cdev /dev/ptypf
 major 5
 minor 15
 
+# Gpio
+cdev /dev/gpio1
+major 18
+minor 0
+cdev /dev/gpio2
+major 18
+minor 1
+cdev /dev/gpio3
+major 18
+minor 2
+cdev /dev/gpio4
+major 18
+minor 3
+
 #------------------------------------------------------
 # Block devices.
 #

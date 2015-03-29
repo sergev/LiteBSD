@@ -33,28 +33,28 @@ options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
 options         "HZ=100"                # Frequency of clock interrupt
 
 # Filesystem options
-options         FIFO            	# POSIX fifo support (in all filesystems)
-options         FFS             	# fast filesystem with user and group quotas
-#options        MFS             	# memory-based filesystem
-#options        NFS             	# Sun NFS-compatible filesystem
-options         UNION           	# Union filesystem
-options         KERNFS          	# kernel data-structure filesystem
-options         FDESC           	# user file descriptor filesystem
-options         PROCFS          	# /proc filesystem
-#options        UMAPFS          	# uid/gid remapping filesystem
-#options        NULLFS          	# null layer filesystem
-#options        LFS             	# Log-based filesystem (still experimental)
-#options        PORTAL          	# portal filesystem (still experimental)
+options         FIFO                    # POSIX fifo support (in all filesystems)
+options         FFS                     # fast filesystem with user and group quotas
+#options        MFS                     # memory-based filesystem
+#options        NFS                     # Sun NFS-compatible filesystem
+options         UNION                   # Union filesystem
+options         KERNFS                  # kernel data-structure filesystem
+options         FDESC                   # user file descriptor filesystem
+options         PROCFS                  # /proc filesystem
+#options        UMAPFS                  # uid/gid remapping filesystem
+#options        NULLFS                  # null layer filesystem
+#options        LFS                     # Log-based filesystem (still experimental)
+#options        PORTAL                  # portal filesystem (still experimental)
 
 # Networking options
-options         INET            	# Internet protocols
-#options        GATEWAY         	# IP packet forwarding
-#options        MULTICAST       	# Multicast support
-#options        MROUTING        	# Multicast routing support
+options         INET                    # Internet protocols
+#options        GATEWAY                 # IP packet forwarding
+#options        MULTICAST               # Multicast support
+#options        MROUTING                # Multicast routing support
 
-config          vmunix  		root on major0 minor1
-                        		swap on major0 minor2
-                        		dumps on major0 minor2
+config          vmunix                  root on major0 minor1
+                                        swap on major0 minor2
+                                        dumps on major0 minor2
 
 # UART configuration
 device          uart1   flags 0x6465    # pins rx=RF4 ,tx=RF5  - tty1 console
@@ -87,6 +87,11 @@ options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN87
 # Buttons
 #options         "BUTTON1=0x2c"          # button 1 at pin RB12
 #options         "BUTTON2=0x2d"          # button 2 at pin RB13
+
+controller      gpio1   flags 0x20      # pin RB0
+controller      gpio2   flags 0x21      # pin RB1
+controller      gpio3   flags 0x23      # pin RB3
+controller      gpio4   flags 0x24      # pin RB4
 
 pseudo-device   pty             4       # pseudo ptys
 #pseudo-device   sl              1       # serial line IP interfaces (SLIP)

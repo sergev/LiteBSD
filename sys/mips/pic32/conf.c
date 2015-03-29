@@ -236,6 +236,15 @@ cdev_decl(bpf);
 #include "uart.h"
 cdev_decl(uart);
 
+#include "gpio.h"
+cdev_decl(gpio);
+/* open, close, read, write, ioctl, stop, tty */
+#define cdev_gpio_init(c,n) { \
+    dev_init(c,n,open), (dev_type_close((*))) nullop, dev_init(c,n,read), \
+    dev_init(c,n,write), dev_init(c,n,ioctl), (dev_type_stop((*))) enodev, \
+    (dev_type_reset((*))) nullop, 0, seltrue, (dev_type_map((*))) enodev, \
+    0, 0 }
+
 #include "spi.h"
 cdev_decl(spi);
 /* open, read, write, ioctl */
@@ -265,6 +274,7 @@ struct cdevsw   cdevsw[] =
     cdev_notdef(),                  /* 15: */
     cdev_spi_init(NSPI,spi),        /* 16: SPI interface */
     cdev_tty_init(NUART,uart),      /* 17: serial UART interface */
+    cdev_gpio_init(NGPIO,gpio),     /* 18: GPIO interface */
 };
 
 int nchrdev = sizeof (cdevsw) / sizeof (cdevsw[0]);
