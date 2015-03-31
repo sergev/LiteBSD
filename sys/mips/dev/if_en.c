@@ -47,10 +47,6 @@
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
 #define TX_DESCRIPTORS      1
 
-#ifndef ETHERNET_PHY_ID
-#   define ETHERNET_PHY_ID  0   /* Use PHY id 0 if not defined */
-#endif
-
 /*
  * DMA buffer descriptor.
  */
@@ -101,10 +97,14 @@ struct eth_port {
 #define netif   arpcom.ac_if        /* network-visible interface */
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
-    int         phy_id;             /* PHY id */
     int         is_up;              /* whether the link is up */
     int         is_transmitting;    /* block re-entering en_start */
     unsigned    receive_index;      /* next RX descriptor to look */
+    int         phy_addr;           /* 5-bit PHY address on MII bus */
+    int         phy_id;             /* PHY vendor and chip model */
+#define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
+#define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
+#define PHY_ID_IP101G           0x02430c50  /* IC+ IP101G */
 
     char        rx_buffer[RX_BYTES];
     char        tx_buffer[ETHER_MAX_LEN];
@@ -114,19 +114,13 @@ struct eth_port {
 } eth_port[NEN];
 
 /*-------------------------------------------------------------
- * PHY routines for SMSC LAN8720A chip.
+ * PHY registers.
  */
 #define PHY_CONTROL                 0       /* Basic Control Register */
 #define PHY_STATUS                  1       /* Basic Status Register */
 #define PHY_ID1                     2       /* PHY identifier 1 */
 #define PHY_ID2                     3       /* PHY identifier 2 */
 #define PHY_ADVRT                   4       /* Auto-negotiation advertisement */
-#define PHY_MODE                    18      /* Special Modes */
-#define PHY_SPECIAL                 31      /* Special Control/Status Register */
-
-#define PHY_ID_MASK             0xfffffff0
-#define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
-#define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
 
 #define PHY_CONTROL_DPLX            0x0100  /* Full duplex */
 #define PHY_CONTROL_ANEG_RESTART    0x0200  /* Write 1 to restart autoneg */
@@ -166,21 +160,33 @@ struct eth_port {
 #define PHY_ADVRT_BITS "\20"\
 "\1csma\6hdx10\7fdx10\10hdx100\11fdx100\16rf"
 
-#define PHY_MODE_PHYAD              0x000f  /* PHY address mask */
-
-#define PHY_SPECIAL_AUTODONE        0x1000  /* Auto-negotiation is done */
-#define PHY_SPECIAL_4B5B            0x0040  /* Enable 4B5B encoding */
-#define PHY_SPECIAL_FDX             0x0010  /* Full duplex */
-#define PHY_SPECIAL_100             0x0008  /* Speed 100 Mbps */
-#define PHY_SPECIAL_10              0x0004  /* Speed 10 Mbps */
-#define PHY_SPECIAL_BITS "\20"\
+/*
+ * Register #31 for SMSC LAN8720A, LAN8740A.
+ */
+#define PHY_LAN87x0A_AUTODONE       0x1000  /* Auto-negotiation is done */
+#define PHY_LAN87x0A_4B5B           0x0040  /* Enable 4B5B encoding */
+#define PHY_LAN87x0A_FDX            0x0010  /* Full duplex */
+#define PHY_LAN87x0A_100            0x0008  /* Speed 100 Mbps */
+#define PHY_LAN87x0A_10             0x0004  /* Speed 10 Mbps */
+#define PHY_LAN87x0A_BITS "\20"\
 "\3speed10\4speed100\5fdx\15autodone"
+
+/*
+ * Page 16, register #30 for IC+ IP101G.
+ */
+#define PHY_IP101G_LINK_UP        0x0100  /* Link status is OK */
+#define PHY_IP101G_FORCE_MDIX     0x0008  /* Force MDIX mode */
+#define PHY_IP101G_FDX            0x0004  /* Full duplex */
+#define PHY_IP101G_100            0x0002  /* Speed 100 Mbps */
+#define PHY_IP101G_10             0x0001  /* Speed 10 Mbps */
+#define PHY_IP101G_BITS "\20"\
+"\1speed10\2speed100\3fdx\4mdix\11linkup"
 
 /*
  * Read PHY register.
  * Return -1 when failed.
  */
-static int phy_read(int phy_id, int reg_id, unsigned msec)
+static int phy_read(int phy_addr, int reg_num, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
     unsigned timeout = msec * CPU_KHZ / 2;
@@ -193,7 +199,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
         }
     }
 
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_READ;
     udelay(1);
 
@@ -207,6 +213,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
     }
 
     EMAC1MCMD = 0;
+    //printf("--- %s(reg_num = %u) return %04x\n", __func__, reg_num, EMAC1MRDD & 0xffff);
     return EMAC1MRDD & 0xffff;
 }
 
@@ -214,7 +221,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
  * Scan PHY register for expected value.
  * Return -1 when failed.
  */
-static int phy_scan(int phy_id, int reg_id,
+static int phy_scan(int phy_addr, int reg_num,
     int scan_mask, int expected_value, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
@@ -229,7 +236,7 @@ static int phy_scan(int phy_id, int reg_id,
     }
 
     /* Scan the PHY until it is ready. */
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_SCAN;
     udelay(1);
 
@@ -258,6 +265,7 @@ static int phy_scan(int phy_id, int reg_id,
             return -1;
         }
     }
+    //printf("--- %s(reg_num = %u) succeeded \n", __func__, reg_num);
     return 0;
 }
 
@@ -265,7 +273,7 @@ static int phy_scan(int phy_id, int reg_id,
  * Write PHY register.
  * Return -1 when failed.
  */
-static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
+static int phy_write(int phy_addr, int reg_num, int value, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
     unsigned timeout = msec * CPU_KHZ / 2;
@@ -278,7 +286,7 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
         }
     }
 
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MWTD = value;
     udelay(1);
 
@@ -289,6 +297,7 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
             return -1;
         }
     }
+    //printf("--- %s(reg_num = %u) value %04x \n", __func__, reg_num, value);
     return 0;
 }
 
@@ -296,9 +305,9 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
  * Determine whether the link is up.
  * When up, setup MAC controller for required speed and duplex..
  */
-static int is_phy_linked(int phy_id)
+static int is_phy_linked(int phy_addr)
 {
-    int status = phy_read(phy_id, PHY_STATUS, 1);
+    int status = phy_read(phy_addr, PHY_STATUS, 1);
     if (status < 0) {
         return 0;
     }
@@ -313,34 +322,77 @@ static int is_phy_linked(int phy_id)
  * Reset the PHY via MIIM interface.
  * Return -1 on failure.
  */
-static int phy_reset(int phy_id)
+static int phy_reset(int phy_addr)
 {
-    int mode;
+    int advrt;
+    int advertise_all = PHY_ADVRT_10_HDX | PHY_ADVRT_10_FDX |
+        PHY_ADVRT_100_HDX | PHY_ADVRT_100_FDX;
 
-    mode = phy_read(phy_id, PHY_MODE, 100);
-    if (mode < 0)
+    /* Check ADVRT register is writable. */
+    phy_write(phy_addr, PHY_ADVRT, 0, 100);
+    advrt = phy_read(phy_addr, PHY_ADVRT, 1);
+    if (advrt & advertise_all)
+        return -1;
+    phy_write(phy_addr, PHY_ADVRT, PHY_ADVRT_CSMA | advertise_all, 100);
+    advrt = phy_read(phy_addr, PHY_ADVRT, 1);
+    if ((advrt & advertise_all) != advertise_all)
         return -1;
 
-    if ((mode & PHY_MODE_PHYAD) != phy_id) {
-        printf("Wrong PHY id!\n");
-    }
-
     /* Send a reset to the PHY. */
-    if (phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 100) < 0)
+    if (phy_write(phy_addr, PHY_CONTROL, PHY_CONTROL_RESET, 100) < 0)
         return -1;
 
     /* Wait for the reset pin to autoclear. */
-    if (phy_scan(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
+    if (phy_scan(phy_addr, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
         return -1;
 
     /* Advertise both 100Mbps and 10Mbps modes, full or half duplex. */
-    phy_write(phy_id, PHY_ADVRT, PHY_ADVRT_CSMA | PHY_ADVRT_10_HDX |
-        PHY_ADVRT_10_FDX | PHY_ADVRT_100_HDX | PHY_ADVRT_100_FDX, 100);
+    phy_write(phy_addr, PHY_ADVRT, PHY_ADVRT_CSMA | advertise_all, 100);
 
     /* Restart autonegotiation. */
-    phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_ANEG_EN | PHY_CONTROL_ANEG_RESTART, 100);
-
+    phy_write(phy_addr, PHY_CONTROL, PHY_CONTROL_ANEG_EN | PHY_CONTROL_ANEG_RESTART, 100);
     return 0;
+}
+
+/*
+ * Get the speed and duplex mode of LAN87x0A chip.
+ */
+static void phy_lan87x0a_poll(int phy_addr, int *speed_100, int *full_duplex)
+{
+    /* Read 87x0A-specific register #31. */
+    int special = phy_read(phy_addr, 31, 1);
+
+    if (special & PHY_LAN87x0A_AUTODONE) {
+        /* Auto-negotiation is done - get the speed. */
+        *speed_100 = (special & PHY_LAN87x0A_100) != 0;
+        *full_duplex = (special & PHY_LAN87x0A_FDX) != 0;
+    }
+#if 0
+    int special_modes = phy_read(phy_addr, 18, 1);
+    int error_counter = phy_read(phy_addr, 26, 1);
+    int cable_length  = phy_read(phy_addr, 28, 1);
+    printf("     SPECIAL=%b\n", special, PHY_LAN87x0A_BITS);
+    printf("     Special_Modes=%04x, Error_Counter=%04x, Cable_Length=%04x\n",
+        special_modes, error_counter, cable_length);
+#endif
+}
+
+/*
+ * Get the speed and duplex mode of IP101G chip.
+ */
+static void phy_ip101g_poll(int phy_addr, int *speed_100, int *full_duplex)
+{
+    /* Read ip101g-specific register #30, page 16. */
+    int special = phy_read(phy_addr, 30, 1);
+
+    if (special & PHY_IP101G_LINK_UP) {
+        /* Auto-negotiation is done - get the speed. */
+        *speed_100 = (special & PHY_IP101G_100) != 0;
+        *full_duplex = (special & PHY_IP101G_FDX) != 0;
+    }
+#if 0
+    printf("     SPECIAL=%b\n", special, PHY_IP101G_BITS);
+#endif
 }
 
 /*
@@ -807,32 +859,30 @@ en_watchdog(unit)
     e->netif.if_timer = 1;
 
     /* Poll whether the link is active. */
-    e->is_up = is_phy_linked(e->phy_id);
+    e->is_up = is_phy_linked(e->phy_addr);
 
     /* Check whether RX is enabled. */
     receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
     if (e->is_up && ! receiver_enabled) {
-        /* Link up - enable receiver. */
-        int special = phy_read(e->phy_id, PHY_SPECIAL, 1);
-        int speed_100 = 0;
-        int full_duplex = 0;
+        /* Get speed and duplex status from the PHY. */
+        int speed_100 = 1, full_duplex = 1;
 
-        if (special & PHY_SPECIAL_AUTODONE) {
-            /* Auto-negotiation is done - get the speed. */
-            speed_100 = (special & PHY_SPECIAL_100);
-            full_duplex = (special & PHY_SPECIAL_FDX);
+        switch (e->phy_id) {
+        case PHY_ID_LAN8720A:
+        case PHY_ID_LAN8740A:
+            phy_lan87x0a_poll(e->phy_addr, &speed_100, &full_duplex);
+            break;
+        case PHY_ID_IP101G:
+            phy_ip101g_poll(e->phy_addr, &speed_100, &full_duplex);
+            break;
+        default:
+            /* Unknown PHY: assume 100Mbit/sec full duplex. */
+            break;
         }
         log(LOG_ERR, "en0: link up, %s, %s duplex\n",
             speed_100 ? "100Mbps" : "10Mbps",
             full_duplex ? "full" : "half");
-#if 0
-        int special_modes = phy_read(e->phy_id, 18, 1);
-        int error_counter = phy_read(e->phy_id, 26, 1);
-        int cable_length  = phy_read(e->phy_id, 28, 1);
-        printf("     SPECIAL=%b\n", special, PHY_SPECIAL_BITS);
-        printf("     Special_Modes=%04x, Error_Counter=%04x, Cable_Length=%04x\n",
-            special_modes, error_counter, cable_length);
-#endif
+
         /* Set speed. */
         if (speed_100) {
             EMAC1SUPPSET = PIC32_EMAC1SUPP_SPEEDRMII;
@@ -1103,7 +1153,7 @@ en_probe(config)
     int unit = config->sd_unit;
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
-    int s, id;
+    int s;
 
     /* Only one Ethernet device is supported by this driver. */
     if (unit != 0)
@@ -1113,7 +1163,6 @@ en_probe(config)
 
     /* Board-dependent initialization. */
     setup_signals();
-    e->phy_id = ETHERNET_PHY_ID;
 
     /* Link is down. */
     e->is_up = 0;
@@ -1123,11 +1172,27 @@ en_probe(config)
     en_setup_mac();
     en_setup_dma(e);
     en_setup_mii();
-    if (phy_reset(e->phy_id) < 0) {
+
+#ifdef ETHERNET_PHY_ADDR
+    /* PHY address defined in the kernel configuration file. */
+    e->phy_addr = ETHERNET_PHY_ADDR;
+    if (phy_reset(e->phy_addr) < 0) {
         ETHCON1 = 0;
-        printf("Ethernet PHY not detected at ID=%u\n", e->phy_id);
+        printf("Ethernet PHY not detected at address=%u\n", e->phy_addr);
         return 0;
     }
+#else
+    /* Auto-detect the PHY address, 0-31. */
+    for (e->phy_addr=0; e->phy_addr<32; e->phy_addr++) {
+        if (phy_reset(e->phy_addr) >= 0)
+            break;
+    }
+    if (e->phy_addr >= 32) {
+        ETHCON1 = 0;
+        printf("Ethernet PHY not detected\n");
+        return 0;
+    }
+#endif
 
     /* Extract our MAC address */
     e->macaddr[0] = EMAC1SA2;
@@ -1156,19 +1221,27 @@ en_probe(config)
      */
     printf("en%d at interrupt %u, MAC address %s\n",
         unit, PIC32_IRQ_ETH, ether_sprintf(e->macaddr));
-    id = (phy_read(e->phy_id, PHY_ID1, 1) << 16 |
-          phy_read(e->phy_id, PHY_ID2, 1)) & PHY_ID_MASK;
-    switch (id) {
+
+    e->phy_id = (phy_read(e->phy_addr, PHY_ID1, 1) << 16 |
+          phy_read(e->phy_addr, PHY_ID2, 1)) & 0xfffffff0;
+    printf("en%d: ", unit);
+    switch (e->phy_id) {
     case PHY_ID_LAN8720A:
-        printf("en%d: <SMSC LAN8720A>\n", unit);
+        printf("<SMSC LAN8720A>");
         break;
     case PHY_ID_LAN8740A:
-        printf("en%d: <SMSC LAN8740A>\n", unit);
+        printf("<SMSC LAN8740A>");
+        break;
+    case PHY_ID_IP101G:
+        printf("<IC+ IP101G>");
+        phy_write(e->phy_addr, 20, 16, 100); // Select page 16
         break;
     default:
-        printf("en%d: PHY id = %08x\n", unit, id);
+        printf("PHY id=%08x", e->phy_id);
         break;
     }
+    printf(" at address %u\n", e->phy_addr);
+
     ifp->if_unit = unit;
     ifp->if_name = "en";
     ifp->if_mtu = ETHERMTU;
