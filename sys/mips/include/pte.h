@@ -74,6 +74,8 @@ typedef union pt_entry {
     (Sysmap + (((vm_offset_t)(va) - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT))
 #define ptetokv(pte) \
     ((((pt_entry_t *)(pte) - Sysmap) << PGSHIFT) + VM_MIN_KERNEL_ADDRESS)
+#define kvtophys(va) \
+    (PG_FRAME(kvtopte(va)->pt_entry) | ((int)(va) & PGOFSET))
 
 extern  pt_entry_t *Sysmap;         /* kernel pte table */
 extern  u_int Sysmapsize;           /* number of pte's in Sysmap */

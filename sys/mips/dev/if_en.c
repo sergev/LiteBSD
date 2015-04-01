@@ -23,6 +23,8 @@
 #include <sys/syslog.h>
 
 #include <mips/dev/device.h>
+#include <vm/vm_param.h>
+#include <machine/pte.h>
 #include <machine/pic32mz.h>
 
 #include <net/if.h>
@@ -45,7 +47,7 @@
 #define RX_BYTES_PER_DESC   256
 #define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
-#define TX_DESCRIPTORS      1
+#define TX_DESCRIPTORS      12
 
 /*
  * DMA buffer descriptor.
@@ -98,7 +100,7 @@ struct eth_port {
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
     int         is_up;              /* whether the link is up */
-    int         is_transmitting;    /* block re-entering en_start */
+    struct mbuf *tx_packet;         /* current packet in transmit */
     unsigned    multiport_mask;     /* mask of active ports for switch */
     unsigned    receive_index;      /* next RX descriptor to look */
     int         phy_addr;           /* 5-bit PHY address on MII bus */
@@ -109,7 +111,6 @@ struct eth_port {
 #define PHY_ID_IP101G           0x02430c50  /* IC+ IP101G */
 
     char        rx_buffer[RX_BYTES];
-    char        tx_buffer[ETHER_MAX_LEN];
     eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
     eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
 
@@ -626,22 +627,21 @@ en_start(ifp)
     struct ifnet *ifp;
 {
     struct eth_port *e = &eth_port[ifp->if_unit];
-    struct mbuf *m0, *m;
-    char *buffer;
-    int total,t;
+    eth_desc_t *desc;
+    struct mbuf *m;
 
     /* Link not ready yet. */
     if (! e->is_up)
         return;
 
     /* The previous transmit has not completed yet. */
-    if (e->is_transmitting)
+    if (e->tx_packet)
         return;
 
     /* Interface is administratively deactivated. */
     if ((e->netif.if_flags & IFF_RUNNING) == 0)
         return;
-
+again:
     /* Get a packet from the transmit queue. */
     IF_DEQUEUE(&e->netif.if_snd, m);
     if (m == 0)
@@ -654,46 +654,31 @@ en_start(ifp)
     if (ifp->if_bpf)
         bpf_mtap(ifp->if_bpf, m);
 #endif
-
     /*
-     * Copy the mbuf chain into the transmit buffer
+     * Setup transmit descriptors.
      */
-    e->is_transmitting = 1;             /* prevent entering nestart */
-    buffer = e->tx_buffer;
-    t = 0;
-    for (m0 = m; m != 0; m = m->m_next)
-        t += m->m_len;
-
-    m = m0;
-    total = t;
-    for (m0 = m; m != 0; ) {
-        if ((m->m_len & 1) && t > m->m_len) {
-            bcopy(mtod(m, caddr_t), buffer, m->m_len - 1);
-            t -= m->m_len - 1;
-            buffer += m->m_len - 1;
-            m->m_data += m->m_len - 1;
-            m->m_len = 1;
-            m = m_pullup(m, 2);
-        } else {
-            bcopy(mtod(m, caddr_t), buffer, m->m_len);
-            buffer += m->m_len;
-            t -= m->m_len;
-            MFREE(m, m0);
-            m = m0;
+    e->tx_packet = m;
+    for (desc=e->tx_desc; m!=0; m=m->m_next) {
+        if (desc >= &e->tx_desc[TX_DESCRIPTORS]) {
+            e->netif.if_oerrors++;
+            m_freem(m);
+            log(LOG_ERR, "en%d: too many fragments in transmit packet\n",
+                ifp->if_unit);
+            goto again;
         }
+        if (m->m_len == 0)
+            continue;
+
+        desc->hdr = 0;
+        desc->paddr = kvtophys(mtod(m, caddr_t));
+        DESC_SET_BYTECNT(desc, m->m_len);
+        if (desc == e->tx_desc)
+            DESC_SET_SOP(desc);
+        DESC_SET_EOWN(desc);
+        //printf("--- tx desc%u = %08x %08x (%u bytes)\n", desc - e->tx_desc, desc->hdr, desc->paddr, m->m_len);
+        desc++;
     }
-
-    /*
-     * Init transmit descriptors, start transmittion.
-     */
-    bzero(e->tx_desc, sizeof(e->tx_desc));
-
-    /* Use descriptor 0. */
-    e->tx_desc[0].paddr = MACH_VIRT_TO_PHYS(e->tx_buffer);
-    DESC_SET_BYTECNT(&e->tx_desc[0], total);
-    DESC_SET_SOP(&e->tx_desc[0]);
-    DESC_SET_EOP(&e->tx_desc[0]);
-    DESC_SET_EOWN(&e->tx_desc[0]);
+    DESC_SET_EOP(desc - 1);
 
     /* Set the descriptor table to be transmitted. */
     ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
@@ -735,10 +720,15 @@ static void
 en_reset(unit, uban)
     int unit, uban;
 {
+    struct eth_port *e = &eth_port[unit];
+
     if (unit >= NEN)
         return;
     printf("en%d: reset\n", unit);
-    eth_port[unit].is_transmitting = 0;
+    if (e->tx_packet) {
+        m_freem(e->tx_packet);
+        e->tx_packet = 0;
+    }
     en_init(unit);
 }
 
@@ -1011,19 +1001,21 @@ enintr(dev)
     /* Transmit error. */
     if (irq & (PIC32_ETHIRQ_TXBUSE | PIC32_ETHIRQ_TXABORT)) {
         log(LOG_ERR, "en%d: transmit error: irq %x\n", unit, irq);
-        e->is_transmitting = 0;
         e->netif.if_oerrors++;
     }
 
     /* Packet Transmitted */
     if (irq & PIC32_ETHIRQ_TXDONE) {
-        e->is_transmitting = 0;
         ++e->netif.if_opackets;
         e->netif.if_collisions += ETHSCOLFRM + ETHMCOLFRM;
     }
 
     /* Transmitter is idle. */
     if (! (ETHCON1 & PIC32_ETHCON1_TXRTS)) {
+        if (e->tx_packet) {
+            m_freem(e->tx_packet);
+            e->tx_packet = 0;
+        }
         if (e->is_up) {
             /* Any more to send? */
             en_start(&e->netif);
@@ -1083,7 +1075,6 @@ en_ioctl(ifp, cmd, data)
                 continue;
 
             ifp->if_flags &= ~IFF_RUNNING;
-            eth_port[ifp->if_unit].is_transmitting = 0;
         }
         else if (ifp->if_flags & IFF_UP &&
             (ifp->if_flags & IFF_RUNNING) == 0)
