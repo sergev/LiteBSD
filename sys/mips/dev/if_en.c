@@ -99,11 +99,13 @@ struct eth_port {
 
     int         is_up;              /* whether the link is up */
     int         is_transmitting;    /* block re-entering en_start */
+    unsigned    multiport_mask;     /* mask of active ports for switch */
     unsigned    receive_index;      /* next RX descriptor to look */
     int         phy_addr;           /* 5-bit PHY address on MII bus */
     int         phy_id;             /* PHY vendor and chip model */
 #define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
 #define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
+#define PHY_ID_LAN9303          0x0007c0d0  /* SMSC LAN9303 */
 #define PHY_ID_IP101G           0x02430c50  /* IC+ IP101G */
 
     char        rx_buffer[RX_BYTES];
@@ -174,13 +176,34 @@ struct eth_port {
 /*
  * Page 16, register #30 for IC+ IP101G.
  */
-#define PHY_IP101G_LINK_UP        0x0100  /* Link status is OK */
-#define PHY_IP101G_FORCE_MDIX     0x0008  /* Force MDIX mode */
-#define PHY_IP101G_FDX            0x0004  /* Full duplex */
-#define PHY_IP101G_100            0x0002  /* Speed 100 Mbps */
-#define PHY_IP101G_10             0x0001  /* Speed 10 Mbps */
+#define PHY_IP101G_LINK_UP          0x0100  /* Link status is OK */
+#define PHY_IP101G_FORCE_MDIX       0x0008  /* Force MDIX mode */
+#define PHY_IP101G_FDX              0x0004  /* Full duplex */
+#define PHY_IP101G_100              0x0002  /* Speed 100 Mbps */
+#define PHY_IP101G_10               0x0001  /* Speed 10 Mbps */
 #define PHY_IP101G_BITS "\20"\
 "\1speed10\2speed100\3fdx\4mdix\11linkup"
+
+/*
+ * Register #31 for virtual or physical PHY of SMSC LAN9393.
+ */
+#define PHY_LAN9303_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_LAN9303_LOOPBACK        0x4000  /* Switch loopback port 0 */
+#define PHY_LAN9303_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_LAN9303_TURBO           0x0400  /* 200Mbps data rate */
+#define PHY_LAN9303_MODE_MAC        0x0000  /* MII MAC mode */
+#define PHY_LAN9303_MODE_MII_PHY    0x0100  /* MII PHY mode */
+#define PHY_LAN9303_MODE_RMII_PHY   0x0200  /* RMII PHY mode */
+#define PHY_LAN9303_COLL_TEST       0x0080  /* Switch collision test port 0 */
+#define PHY_LAN9303_OUTCLK          0x0040  /* OUTCLK signal as output */
+#define PHY_LAN9303_CLK_STRENGTH    0x0020  /* High current clock signal */
+#define PHY_LAN9303_FDX             0x0010  /* Full duplex */
+#define PHY_LAN9303_100             0x0008  /* Speed 100 Mbps */
+#define PHY_LAN9303_10              0x0004  /* Speed 10 Mbps */
+#define PHY_LAN9303_SQEOFF          0x0001  /* SQE test disable */
+#define PHY_LAN9303_BITS "\20"\
+"\1sqeoff\3speed10\4speed100\5fdx\6clkstrength\7outclk"\
+"\10colltest\11mii_phy\12rmii_phy\13turbo\15autodone\17loopback"
 
 /*
  * Read PHY register.
@@ -302,23 +325,6 @@ static int phy_write(int phy_addr, int reg_num, int value, unsigned msec)
 }
 
 /*
- * Determine whether the link is up.
- * When up, setup MAC controller for required speed and duplex..
- */
-static int is_phy_linked(int phy_addr)
-{
-    int status = phy_read(phy_addr, PHY_STATUS, 1);
-    if (status < 0) {
-        return 0;
-    }
-    //printf("--- %s: STATUS=%b\n", __func__, status, PHY_STATUS_BITS);
-
-    return (status & PHY_STATUS_LINK) &&        /* link is up */
-           (status & PHY_STATUS_CAP_ANEG) &&    /* able to auto-negotiate */
-           (status & PHY_STATUS_ANEG_ACK);      /* auto-negotiation completed */
-}
-
-/*
  * Reset the PHY via MIIM interface.
  * Return -1 on failure.
  */
@@ -393,6 +399,83 @@ static void phy_ip101g_poll(int phy_addr, int *speed_100, int *full_duplex)
 #if 0
     printf("     SPECIAL=%b\n", special, PHY_IP101G_BITS);
 #endif
+}
+
+/*
+ * LAN9303 switch: get the mask of active ports.
+ */
+static int phy_lan9303_poll(struct eth_port *e)
+{
+    /* Read status of physical PHYs, register #31. */
+    int special1 = phy_read(e->phy_addr + 1, 31, 1);
+    int special2 = phy_read(e->phy_addr + 2, 31, 1);
+    int mask = 0;
+
+    if (special1 & PHY_LAN87x0A_AUTODONE) {
+        mask |= 1;
+        if (! (e->multiport_mask & 1))
+            log(LOG_ERR, "en0: port 1 up, %s, %s duplex\n",
+                (special1 & PHY_LAN87x0A_100) ? "100Mbps" : "10Mbps",
+                (special1 & PHY_LAN87x0A_FDX) ? "full" : "half");
+    }
+    if (special2 & PHY_LAN87x0A_AUTODONE) {
+        mask |= 2;
+        if (! (e->multiport_mask & 2))
+            log(LOG_ERR, "en0: port 2 up, %s, %s duplex\n",
+                (special2 & PHY_LAN87x0A_100) ? "100Mbps" : "10Mbps",
+                (special2 & PHY_LAN87x0A_FDX) ? "full" : "half");
+    }
+#if 0
+    printf("     port1 SPECIAL=%b\n", special1, PHY_LAN9303_BITS);
+    printf("     port1 SPECIAL=%b\n", special2, PHY_LAN9303_BITS);
+#endif
+    return mask;
+}
+
+/*
+ * Determine whether the link is up.
+ * When up, get the speed and duplex mode.
+ */
+static int is_phy_linked(struct eth_port *e, int *speed_100, int *full_duplex)
+{
+    int status = phy_read(e->phy_addr, PHY_STATUS, 1);
+    if (status < 0)
+        return 0;
+    //printf("--- %s: STATUS=%b\n", __func__, status, PHY_STATUS_BITS);
+
+    if (! (status & PHY_STATUS_LINK))           /* Is link up? */
+        return 0;
+    if (! (status & PHY_STATUS_ANEG_ACK))       /* Is auto-negotiation done? */
+        return 0;
+
+    switch (e->phy_id) {
+    case PHY_ID_LAN8720A:
+    case PHY_ID_LAN8740A:
+        phy_lan87x0a_poll(e->phy_addr, speed_100, full_duplex);
+        break;
+
+    case PHY_ID_IP101G:
+        phy_ip101g_poll(e->phy_addr, speed_100, full_duplex);
+        break;
+
+    case PHY_ID_LAN9303:
+        /* Get mask of active ports. */
+        e->multiport_mask = phy_lan9303_poll(e);
+        if (e->multiport_mask == 0)
+            return 0;
+
+        /* Virtual PHY is always 100Mbit/sec full duplex. */
+        *speed_100 = 1;
+        *full_duplex = 1;
+        break;
+
+    default:
+        /* Unknown PHY: assume 100Mbit/sec full duplex. */
+        *speed_100 = 1;
+        *full_duplex = 1;
+        break;
+    }
+    return 1;
 }
 
 /*
@@ -845,43 +928,23 @@ en_watchdog(unit)
     int unit;
 {
     struct eth_port *e = &eth_port[unit];
-    int receiver_enabled;
-#if 0
-    int irq = ETHIRQ;
-    int ien = ETHIEN;
-    printf("--- %s: irq=%04x, ien=%04x, stat=%04x, rxdesc0=%04x\n", __func__, irq, ien, ETHSTAT, e->rx_desc[0].hdr);
-    printf("---     con1=%04x, cfg1=%04x, cfg2=%04x, mind=%04x\n", ETHCON1, EMAC1CFG1, EMAC1CFG2, EMAC1MIND);
-    printf("---     txst=%08x, rxst=%08x\n", ETHTXST, ETHRXST);
-    printf("---     rxovflow=%u, frmtxok=%u, scolfrm=%u, mcolfrm=%u, frmrxok=%u, fcserr=%u, algnerr=%u\n",
-        ETHRXOVFLOW, ETHFRMTXOK, ETHSCOLFRM, ETHMCOLFRM, ETHFRMRXOK, ETHFCSERR, ETHALGNERR);
-#endif
+    int receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
+    int speed_100 = 1, full_duplex = 1;
+
     /* Call it every second. */
     e->netif.if_timer = 1;
 
-    /* Poll whether the link is active. */
-    e->is_up = is_phy_linked(e->phy_addr);
+    /* Poll whether the link is active.
+     * Get speed and duplex status from the PHY. */
+    e->is_up = is_phy_linked(e, &speed_100, &full_duplex);
 
     /* Check whether RX is enabled. */
-    receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
     if (e->is_up && ! receiver_enabled) {
-        /* Get speed and duplex status from the PHY. */
-        int speed_100 = 1, full_duplex = 1;
-
-        switch (e->phy_id) {
-        case PHY_ID_LAN8720A:
-        case PHY_ID_LAN8740A:
-            phy_lan87x0a_poll(e->phy_addr, &speed_100, &full_duplex);
-            break;
-        case PHY_ID_IP101G:
-            phy_ip101g_poll(e->phy_addr, &speed_100, &full_duplex);
-            break;
-        default:
-            /* Unknown PHY: assume 100Mbit/sec full duplex. */
-            break;
-        }
-        log(LOG_ERR, "en0: link up, %s, %s duplex\n",
-            speed_100 ? "100Mbps" : "10Mbps",
-            full_duplex ? "full" : "half");
+        /* Link activated. */
+        if (! e->multiport_mask)
+            log(LOG_ERR, "en0: link up, %s, %s duplex\n",
+                speed_100 ? "100Mbps" : "10Mbps",
+                full_duplex ? "full" : "half");
 
         /* Set speed. */
         if (speed_100) {
@@ -1153,7 +1216,7 @@ en_probe(config)
     int unit = config->sd_unit;
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
-    int s;
+    int s, id;
 
     /* Only one Ethernet device is supported by this driver. */
     if (unit != 0)
@@ -1236,8 +1299,17 @@ en_probe(config)
         printf("<IC+ IP101G>");
         phy_write(e->phy_addr, 20, 16, 100); // Select page 16
         break;
+    case 0:
+        /* Looks like a virtual PHY of LAN9303. */
+        id = (phy_read(e->phy_addr + 1, PHY_ID1, 1) << 16 |
+              phy_read(e->phy_addr + 1, PHY_ID2, 1)) & 0xfffffff0;
+        if (id != PHY_ID_LAN9303)
+            goto other;
+        e->phy_id = id;
+        printf("<SMSC LAN9303>");
+        break;
     default:
-        printf("PHY id=%08x", e->phy_id);
+other:  printf("PHY id=%08x", e->phy_id);
         break;
     }
     printf(" at address %u\n", e->phy_addr);
