@@ -238,7 +238,6 @@ static int phy_read(int phy_addr, int reg_num, unsigned msec)
     }
 
     EMAC1MCMD = 0;
-    //printf("--- %s(reg_num = %u) return %04x\n", __func__, reg_num, EMAC1MRDD & 0xffff);
     return EMAC1MRDD & 0xffff;
 }
 
@@ -290,7 +289,6 @@ static int phy_scan(int phy_addr, int reg_num,
             return -1;
         }
     }
-    //printf("--- %s(reg_num = %u) succeeded \n", __func__, reg_num);
     return 0;
 }
 
@@ -322,7 +320,6 @@ static int phy_write(int phy_addr, int reg_num, int value, unsigned msec)
             return -1;
         }
     }
-    //printf("--- %s(reg_num = %u) value %04x \n", __func__, reg_num, value);
     return 0;
 }
 
@@ -706,7 +703,6 @@ again:
 
     /* Start transmitter. */
     ETHCON1SET = PIC32_ETHCON1_TXRTS;
-    //printf("--- %s: ethcon1=%04x\n", __func__, ETHCON1);
 }
 
 /*
@@ -754,74 +750,6 @@ en_reset(unit, uban)
 }
 
 /*
- * Pull read data off a interface.
- * When full cluster sized units are present
- * we copy into clusters.
- */
-static struct mbuf *
-en_get(buf, totlen, ifp)
-    caddr_t buf;
-    int totlen;
-    struct ifnet *ifp;
-{
-    struct mbuf *top, **mp, *m;
-    caddr_t cp = buf;
-    char *epkt;
-    int len;
-
-    buf += sizeof(struct ether_header);
-    totlen -= sizeof(struct ether_header);
-    cp = buf;
-    epkt = cp + totlen;
-
-    MGETHDR(m, M_DONTWAIT, MT_DATA);
-    if (m == 0)
-        return 0;
-    m->m_pkthdr.rcvif = ifp;
-    m->m_pkthdr.len = totlen;
-    m->m_len = MHLEN;
-
-    top = 0;
-    mp = &top;
-    while (totlen > 0) {
-        if (top) {
-            MGET(m, M_DONTWAIT, MT_DATA);
-            if (m == 0) {
-                m_freem(top);
-                return 0;
-            }
-            m->m_len = MLEN;
-        }
-        len = min(totlen, epkt - cp);
-        if (len >= MINCLSIZE) {
-            MCLGET(m, M_DONTWAIT);
-            if (m->m_flags & M_EXT)
-                m->m_len = len = min(len, MCLBYTES);
-            else
-                len = m->m_len;
-        } else {
-            /*
-             * Place initial small packet/header at end of mbuf.
-             */
-            if (len < m->m_len) {
-                if (top == 0 && len + max_linkhdr <= m->m_len)
-                    m->m_data += max_linkhdr;
-                m->m_len = len;
-            } else
-                len = m->m_len;
-        }
-        bcopy(cp, mtod(m, caddr_t), (unsigned)len);
-        cp += len;
-        *mp = m;
-        mp = &m->m_next;
-        totlen -= len;
-        if (cp == epkt)
-            cp = buf;
-    }
-    return top;
-}
-
-/*
  * Ethernet interface receiver interface.
  * Decapsulate packet based on type and pass to type specific
  * higher-level input routine.
@@ -834,7 +762,8 @@ en_recv(e)
     eth_desc_t *desc = &e->rx_desc[e->receive_index];
     unsigned frame_size = DESC_FRAMESZ(desc);
     unsigned read_nbytes = 0;
-    char buf[ETHER_MAX_LEN];
+    struct mbuf *m = 0, **tail = 0;
+    struct ether_header eth_header;
 
     if (frame_size <= 0) {
         /* Cannot happen. */
@@ -858,20 +787,18 @@ en_recv(e)
 #endif
 
     while (read_nbytes < frame_size) {
+        int end_of_packet = DESC_EOP(desc);
+        int buf_index = desc - e->rx_desc;
+        caddr_t vaddr = e->rx_buf[buf_index];
+        unsigned nbytes = DESC_BYTECNT(desc);
+
         if (DESC_EOWN(desc)) {
             printf("en_recv: unexpected EOWN flag (desc %04x = %x)\n",
                 MACH_VIRT_TO_PHYS(desc), desc->hdr);
             break;
         }
-
-        int end_of_packet = DESC_EOP(desc);
-        unsigned nbytes = DESC_BYTECNT(desc);
         if (nbytes > frame_size - read_nbytes)
             nbytes = frame_size - read_nbytes;
-
-        unsigned vaddr = MACH_PHYS_TO_UNCACHED(desc->paddr);
-        bcopy((char*) vaddr, &buf[read_nbytes], nbytes);
-        read_nbytes += nbytes;
 #if 0
         unsigned char *p = (unsigned char*) vaddr;
         int i;
@@ -881,9 +808,75 @@ en_recv(e)
             printf("-%02x", p[i]);
         printf("\n");
 #endif
-        if (read_nbytes == frame_size && ! end_of_packet)
-            printf("en_recv: no EOP flag (desc %04x = %x)\n",
-                MACH_VIRT_TO_PHYS(desc), desc->hdr);
+        if (read_nbytes == 0 && start_of_packet) {
+            /* Allocate packet header. */
+            MGETHDR(m, M_DONTWAIT, MT_DATA);
+            m->m_pkthdr.rcvif = &e->netif;
+            m->m_pkthdr.len = frame_size - sizeof(eth_header);
+            m->m_len = 0;
+
+            /* Store Ethernet header separately. */
+            bcopy(vaddr, &eth_header, sizeof(eth_header));
+            nbytes -= sizeof(eth_header);
+            read_nbytes += sizeof(eth_header);
+            vaddr += sizeof(eth_header);
+        }
+
+        /*
+         * Copy data from rx buffer to mbuf chain.
+         */
+        if (m && m->m_len == 0 && m->m_pkthdr.len > MHLEN) {
+            /* First mbuf chunk is large - allocate a cluster. */
+            MCLGET(m, M_DONTWAIT);
+            if (! (m->m_flags & M_EXT)) {
+                /* Cannot allocate cluster - ignore the packet. */
+                m_free(m);
+                m = 0;
+            }
+        }
+
+        if (m) {
+            if (m->m_len == 0) {
+                if (end_of_packet) {
+                    /* Single buffer - copy to mbuf. */
+                    m->m_len = m->m_pkthdr.len;
+                } else {
+                    /* First chunk of mbuf chain. */
+                    m->m_len = nbytes;
+                }
+                bcopy(vaddr, mtod(m, caddr_t), m->m_len);
+                tail = &m->m_next;
+            } else {
+                /* Append rx buffer to mbuf chain. */
+                struct mbuf *n;
+                MGET(n, M_DONTWAIT, MT_DATA);
+                if (! n) {
+                    m_freem(m);
+                    m = 0;
+                } else {
+                    /* Allocate new rx buffer. */
+                    MCLALLOC(e->rx_buf[buf_index], M_NOWAIT);
+                    if (! e->rx_buf[buf_index]) {
+                        /* Failed to allocate RX buffer. */
+                        m_freem(m);
+                        m_freem(n);
+                        m = 0;
+                        e->rx_buf[buf_index] = vaddr;
+                    } else {
+                        /* Move current rx buffer to mbuf. */
+                        n->m_ext.ext_buf = vaddr;
+                        n->m_data = vaddr;
+                        n->m_flags |= M_EXT;
+                        n->m_ext.ext_size = MCLBYTES;
+                        n->m_len = nbytes;
+                        *tail = n;
+                        tail = &n->m_next;
+                    }
+                    desc->paddr = kvtophys(e->rx_buf[buf_index]);
+                }
+            }
+        }
+        read_nbytes += nbytes;
 
         /* Free the receive descriptor. */
         DESC_SET_EOWN(desc);                        /* give up ownership */
@@ -893,17 +886,12 @@ en_recv(e)
             e->receive_index = 0;
         desc = &e->rx_desc[e->receive_index];
     }
-    if (! start_of_packet) {
+
+    if (! m) {
         /* Damaged packet: ignore. */
+        e->netif.if_iqdrops++;
         return;
     }
-
-    /*
-     * Pass a packet to the higher levels.
-     */
-    struct mbuf *m = en_get(buf, frame_size, &e->netif);
-    if (! m)
-        return;
 
 #if NBPFILTER > 0
     /*
@@ -926,9 +914,8 @@ en_recv(e)
         }
     }
 #endif
-    struct ether_header *eh = (struct ether_header*) buf;
-    eh->ether_type = ntohs(eh->ether_type);
-    ether_input(&e->netif, eh, m);
+    eth_header.ether_type = ntohs(eth_header.ether_type);
+    ether_input(&e->netif, &eth_header, m);
 }
 
 /*
@@ -1118,9 +1105,14 @@ en_ioctl(ifp, cmd, data)
     case SIOCGHWADDR:
         /* Change MAC address. */
         struct ifreq *ifr = (struct ifreq *)data;
+        u_char *addr = (u_char*) &ifr->ifr_data;
         struct eth_port *e = &eth_port[ifp->if_unit];
-        bcopy((caddr_t)e->macaddr, (caddr_t) &ifr->ifr_data,
-            sizeof(e->macaddr));
+        e->macaddr[0] = addr[0];
+        e->macaddr[1] = addr[1];
+        e->macaddr[2] = addr[2];
+        e->macaddr[3] = addr[3];
+        e->macaddr[4] = addr[4];
+        e->macaddr[5] = addr[5];
         EMAC1SA2 = e->macaddr[0] | (e->macaddr[1] << 8);
         EMAC1SA1 = e->macaddr[2] | (e->macaddr[3] << 8);
         EMAC1SA0 = e->macaddr[4] | (e->macaddr[5] << 8);
