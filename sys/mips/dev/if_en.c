@@ -44,10 +44,10 @@
 
 #define ETHER_MAX_LEN       1536
 #define RX_PACKETS          4
-#define RX_BYTES_PER_DESC   256
+#define RX_BYTES_PER_DESC   MCLBYTES
 #define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
-#define TX_DESCRIPTORS      12
+#define TX_DESCRIPTORS      16
 
 /*
  * DMA buffer descriptor.
@@ -100,7 +100,6 @@ struct eth_port {
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
     int         is_up;              /* whether the link is up */
-    struct mbuf *tx_packet;         /* current packet in transmit */
     unsigned    multiport_mask;     /* mask of active ports for switch */
     unsigned    receive_index;      /* next RX descriptor to look */
     int         phy_addr;           /* 5-bit PHY address on MII bus */
@@ -110,9 +109,11 @@ struct eth_port {
 #define PHY_ID_LAN9303          0x0007c0d0  /* SMSC LAN9303 */
 #define PHY_ID_IP101G           0x02430c50  /* IC+ IP101G */
 
-    char        rx_buffer[RX_BYTES];
-    eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
-    eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
+    caddr_t     rx_buf[RX_DESCRIPTORS];     /* receive buffers */
+    eth_desc_t  rx_desc[RX_DESCRIPTORS+1];  /* an additional terminating descriptor */
+
+    struct mbuf *tx_packet;                 /* current packet in transmit */
+    eth_desc_t  tx_desc[TX_DESCRIPTORS+1];  /* an additional terminating descriptor */
 
 } eth_port[NEN];
 
@@ -596,9 +597,13 @@ static void en_setup_dma(struct eth_port *e)
      * All owned by the ethernet controller. */
     bzero(e->rx_desc, sizeof(e->rx_desc));
     for (i=0; i<RX_DESCRIPTORS; i++) {
+        MCLALLOC(e->rx_buf[i], M_WAIT);
+        if (! e->rx_buf[i])
+            panic("en: failed to allocate RX buffer\n");
+
         DESC_SET_EOWN(&e->rx_desc[i]);
         DESC_CLEAR_NPV(&e->rx_desc[i]);
-        e->rx_desc[i].paddr = MACH_VIRT_TO_PHYS(e->rx_buffer + (i * RX_BYTES_PER_DESC));
+        e->rx_desc[i].paddr = kvtophys(e->rx_buf[i]);
     }
 
     /* Loop the list back to the begining.
@@ -614,6 +619,22 @@ static void en_setup_dma(struct eth_port *e)
      * the software; clear it completely out. */
     bzero(e->tx_desc, sizeof(e->tx_desc));
     ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
+}
+
+/*
+ * Free DMA resources.
+ */
+static void en_clear_dma(struct eth_port *e)
+{
+    int i;
+
+    /* Deallocate all RX buffers. */
+    for (i=0; i<RX_DESCRIPTORS; i++) {
+        if (e->rx_buf[i]) {
+            MCLFREE(e->rx_buf[i]);
+            e->rx_buf[i] = 0;
+        }
+    }
 }
 
 /*
@@ -639,7 +660,7 @@ en_start(ifp)
         return;
 
     /* Interface is administratively deactivated. */
-    if ((e->netif.if_flags & IFF_RUNNING) == 0)
+    if (! (e->netif.if_flags & IFF_RUNNING))
         return;
 again:
     /* Get a packet from the transmit queue. */
@@ -702,15 +723,15 @@ en_init(unit)
 
     if (ifp->if_addrlist == (struct ifaddr *)0)
         return;
-    if (ifp->if_flags & IFF_RUNNING)
-        return;
     //printf("--- %s\n", __func__);
 
-    /* Enable receiver. */
-    s = splimp();
-    e->netif.if_flags |= IFF_RUNNING;
-    en_start(ifp);
-    splx(s);
+    if (! (ifp->if_flags & IFF_RUNNING)) {
+        /* Enable transmitter. */
+        s = splimp();
+        e->netif.if_flags |= IFF_RUNNING;
+        en_start(ifp);
+        splx(s);
+    }
 }
 
 /*
@@ -928,6 +949,9 @@ en_watchdog(unit)
      * Get speed and duplex status from the PHY. */
     e->is_up = is_phy_linked(e, &speed_100, &full_duplex);
 
+    if (! (e->netif.if_flags & IFF_RUNNING))
+        return;
+
     /* Check whether RX is enabled. */
     if (e->is_up && ! receiver_enabled) {
         /* Link activated. */
@@ -954,6 +978,7 @@ en_watchdog(unit)
         EMAC1IPGT = full_duplex ? 21 : 18;
 
         /* Enable receiver. */
+        en_setup_dma(e);
         ETHCON1SET = PIC32_ETHCON1_RXEN;
         //printf("--- %s: RXEN\n", __func__);
     }
@@ -965,6 +990,8 @@ en_watchdog(unit)
         ETHCON1CLR = PIC32_ETHCON1_RXEN;
         while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
             continue;
+
+        en_clear_dma(e);
     }
 }
 
@@ -992,10 +1019,13 @@ enintr(dev)
         log(LOG_ERR, "en%d: receive error: irq %x\n", unit, irq);
     }
 
-    /* We received something. */
-    while (! DESC_EOWN(&e->rx_desc[e->receive_index])) {
-        e->netif.if_ipackets++;
-        en_recv(e);
+    if (ETHCON1 & PIC32_ETHCON1_RXEN) {
+        /* Receiver enabled. */
+        while (! DESC_EOWN(&e->rx_desc[e->receive_index])) {
+            /* We received something. */
+            e->netif.if_ipackets++;
+            en_recv(e);
+        }
     }
 
     /* Transmit error. */
@@ -1060,8 +1090,8 @@ en_ioctl(ifp, cmd, data)
 
     case SIOCSIFFLAGS:
         /* Start/stop the network interface. */
-        if ((ifp->if_flags & IFF_UP) == 0 &&
-            ifp->if_flags & IFF_RUNNING)
+        if (! (ifp->if_flags & IFF_UP) &&
+            (ifp->if_flags & IFF_RUNNING))
         {
             ETHCON1CLR = PIC32_ETHCON1_TXRTS;
             while (ETHSTAT & PIC32_ETHSTAT_TXBUSY)
@@ -1075,9 +1105,10 @@ en_ioctl(ifp, cmd, data)
                 continue;
 
             ifp->if_flags &= ~IFF_RUNNING;
+            en_clear_dma(&eth_port[ifp->if_unit]);
         }
-        else if (ifp->if_flags & IFF_UP &&
-            (ifp->if_flags & IFF_RUNNING) == 0)
+        else if ((ifp->if_flags & IFF_UP) &&
+            ! (ifp->if_flags & IFF_RUNNING))
         {
             en_init(ifp->if_unit);
         }
@@ -1224,7 +1255,6 @@ en_probe(config)
     /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
     en_setup();
     en_setup_mac();
-    en_setup_dma(e);
     en_setup_mii();
 
 #ifdef ETHERNET_PHY_ADDR

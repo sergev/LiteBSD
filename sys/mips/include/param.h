@@ -91,14 +91,14 @@
  * of the hardware page size.
  */
 #define MSIZE           128             /* size of an mbuf */
-#define MCLBYTES        1024
-#define MCLSHIFT        10
+#define MCLBYTES        512
+#define MCLSHIFT        9
 #define MCLOFSET        (MCLBYTES - 1)
 #ifndef NMBCLUSTERS
 #ifdef GATEWAY
-#define NMBCLUSTERS     512             /* map size, max cluster allocation */
+#define NMBCLUSTERS     32              /* map size, max cluster allocation */
 #else
-#define NMBCLUSTERS     256             /* map size, max cluster allocation */
+#define NMBCLUSTERS     16              /* map size, max cluster allocation */
 #endif
 #endif
 
@@ -106,7 +106,7 @@
  * Size of kernel malloc arena in CLBYTES-sized logical pages
  */
 #ifndef NKMEMCLUSTERS
-#define NKMEMCLUSTERS   (512*1024/CLBYTES)
+#define NKMEMCLUSTERS   (128*1024/CLBYTES)
 #endif
 
 /* pages ("clicks") (4096 bytes) to disk blocks */
