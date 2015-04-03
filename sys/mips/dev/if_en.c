@@ -23,6 +23,8 @@
 #include <sys/syslog.h>
 
 #include <mips/dev/device.h>
+#include <vm/vm_param.h>
+#include <machine/pte.h>
 #include <machine/pic32mz.h>
 
 #include <net/if.h>
@@ -42,14 +44,10 @@
 
 #define ETHER_MAX_LEN       1536
 #define RX_PACKETS          4
-#define RX_BYTES_PER_DESC   256
+#define RX_BYTES_PER_DESC   MCLBYTES
 #define RX_BYTES            (RX_PACKETS * ETHER_MAX_LEN)
 #define RX_DESCRIPTORS      (RX_BYTES / RX_BYTES_PER_DESC)
-#define TX_DESCRIPTORS      1
-
-#ifndef ETHERNET_PHY_ID
-#   define ETHERNET_PHY_ID  0   /* Use PHY id 0 if not defined */
-#endif
+#define TX_DESCRIPTORS      16
 
 /*
  * DMA buffer descriptor.
@@ -101,32 +99,32 @@ struct eth_port {
 #define netif   arpcom.ac_if        /* network-visible interface */
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
-    int         phy_id;             /* PHY id */
     int         is_up;              /* whether the link is up */
-    int         is_transmitting;    /* block re-entering en_start */
+    unsigned    multiport_mask;     /* mask of active ports for switch */
     unsigned    receive_index;      /* next RX descriptor to look */
+    int         phy_addr;           /* 5-bit PHY address on MII bus */
+    int         phy_id;             /* PHY vendor and chip model */
+#define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
+#define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
+#define PHY_ID_LAN9303          0x0007c0d0  /* SMSC LAN9303 */
+#define PHY_ID_IP101G           0x02430c50  /* IC+ IP101G */
 
-    char        rx_buffer[RX_BYTES];
-    char        tx_buffer[ETHER_MAX_LEN];
-    eth_desc_t  rx_desc[RX_DESCRIPTORS+1]; /* an additional terminating descriptor */
-    eth_desc_t  tx_desc[TX_DESCRIPTORS+1];
+    caddr_t     rx_buf[RX_DESCRIPTORS];     /* receive buffers */
+    eth_desc_t  rx_desc[RX_DESCRIPTORS+1];  /* an additional terminating descriptor */
+
+    struct mbuf *tx_packet;                 /* current packet in transmit */
+    eth_desc_t  tx_desc[TX_DESCRIPTORS+1];  /* an additional terminating descriptor */
 
 } eth_port[NEN];
 
 /*-------------------------------------------------------------
- * PHY routines for SMSC LAN8720A chip.
+ * PHY registers.
  */
 #define PHY_CONTROL                 0       /* Basic Control Register */
 #define PHY_STATUS                  1       /* Basic Status Register */
 #define PHY_ID1                     2       /* PHY identifier 1 */
 #define PHY_ID2                     3       /* PHY identifier 2 */
 #define PHY_ADVRT                   4       /* Auto-negotiation advertisement */
-#define PHY_MODE                    18      /* Special Modes */
-#define PHY_SPECIAL                 31      /* Special Control/Status Register */
-
-#define PHY_ID_MASK             0xfffffff0
-#define PHY_ID_LAN8720A         0x0007c0f0  /* SMSC LAN8720A */
-#define PHY_ID_LAN8740A         0x0007c110  /* SMSC LAN8740A */
 
 #define PHY_CONTROL_DPLX            0x0100  /* Full duplex */
 #define PHY_CONTROL_ANEG_RESTART    0x0200  /* Write 1 to restart autoneg */
@@ -166,21 +164,54 @@ struct eth_port {
 #define PHY_ADVRT_BITS "\20"\
 "\1csma\6hdx10\7fdx10\10hdx100\11fdx100\16rf"
 
-#define PHY_MODE_PHYAD              0x000f  /* PHY address mask */
-
-#define PHY_SPECIAL_AUTODONE        0x1000  /* Auto-negotiation is done */
-#define PHY_SPECIAL_4B5B            0x0040  /* Enable 4B5B encoding */
-#define PHY_SPECIAL_FDX             0x0010  /* Full duplex */
-#define PHY_SPECIAL_100             0x0008  /* Speed 100 Mbps */
-#define PHY_SPECIAL_10              0x0004  /* Speed 10 Mbps */
-#define PHY_SPECIAL_BITS "\20"\
+/*
+ * Register #31 for SMSC LAN8720A, LAN8740A.
+ */
+#define PHY_LAN87x0A_AUTODONE       0x1000  /* Auto-negotiation is done */
+#define PHY_LAN87x0A_4B5B           0x0040  /* Enable 4B5B encoding */
+#define PHY_LAN87x0A_FDX            0x0010  /* Full duplex */
+#define PHY_LAN87x0A_100            0x0008  /* Speed 100 Mbps */
+#define PHY_LAN87x0A_10             0x0004  /* Speed 10 Mbps */
+#define PHY_LAN87x0A_BITS "\20"\
 "\3speed10\4speed100\5fdx\15autodone"
+
+/*
+ * Page 16, register #30 for IC+ IP101G.
+ */
+#define PHY_IP101G_LINK_UP          0x0100  /* Link status is OK */
+#define PHY_IP101G_FORCE_MDIX       0x0008  /* Force MDIX mode */
+#define PHY_IP101G_FDX              0x0004  /* Full duplex */
+#define PHY_IP101G_100              0x0002  /* Speed 100 Mbps */
+#define PHY_IP101G_10               0x0001  /* Speed 10 Mbps */
+#define PHY_IP101G_BITS "\20"\
+"\1speed10\2speed100\3fdx\4mdix\11linkup"
+
+/*
+ * Register #31 for virtual or physical PHY of SMSC LAN9393.
+ */
+#define PHY_LAN9303_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_LAN9303_LOOPBACK        0x4000  /* Switch loopback port 0 */
+#define PHY_LAN9303_AUTODONE        0x1000  /* Auto-negotiation is done */
+#define PHY_LAN9303_TURBO           0x0400  /* 200Mbps data rate */
+#define PHY_LAN9303_MODE_MAC        0x0000  /* MII MAC mode */
+#define PHY_LAN9303_MODE_MII_PHY    0x0100  /* MII PHY mode */
+#define PHY_LAN9303_MODE_RMII_PHY   0x0200  /* RMII PHY mode */
+#define PHY_LAN9303_COLL_TEST       0x0080  /* Switch collision test port 0 */
+#define PHY_LAN9303_OUTCLK          0x0040  /* OUTCLK signal as output */
+#define PHY_LAN9303_CLK_STRENGTH    0x0020  /* High current clock signal */
+#define PHY_LAN9303_FDX             0x0010  /* Full duplex */
+#define PHY_LAN9303_100             0x0008  /* Speed 100 Mbps */
+#define PHY_LAN9303_10              0x0004  /* Speed 10 Mbps */
+#define PHY_LAN9303_SQEOFF          0x0001  /* SQE test disable */
+#define PHY_LAN9303_BITS "\20"\
+"\1sqeoff\3speed10\4speed100\5fdx\6clkstrength\7outclk"\
+"\10colltest\11mii_phy\12rmii_phy\13turbo\15autodone\17loopback"
 
 /*
  * Read PHY register.
  * Return -1 when failed.
  */
-static int phy_read(int phy_id, int reg_id, unsigned msec)
+static int phy_read(int phy_addr, int reg_num, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
     unsigned timeout = msec * CPU_KHZ / 2;
@@ -193,7 +224,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
         }
     }
 
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_READ;
     udelay(1);
 
@@ -214,7 +245,7 @@ static int phy_read(int phy_id, int reg_id, unsigned msec)
  * Scan PHY register for expected value.
  * Return -1 when failed.
  */
-static int phy_scan(int phy_id, int reg_id,
+static int phy_scan(int phy_addr, int reg_num,
     int scan_mask, int expected_value, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
@@ -229,7 +260,7 @@ static int phy_scan(int phy_id, int reg_id,
     }
 
     /* Scan the PHY until it is ready. */
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MCMDSET = PIC32_EMAC1MCMD_SCAN;
     udelay(1);
 
@@ -265,7 +296,7 @@ static int phy_scan(int phy_id, int reg_id,
  * Write PHY register.
  * Return -1 when failed.
  */
-static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
+static int phy_write(int phy_addr, int reg_num, int value, unsigned msec)
 {
     unsigned time_start = mfc0_Count();
     unsigned timeout = msec * CPU_KHZ / 2;
@@ -278,7 +309,7 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
         }
     }
 
-    EMAC1MADR = PIC32_EMAC1MADR(phy_id, reg_id);
+    EMAC1MADR = PIC32_EMAC1MADR(phy_addr, reg_num);
     EMAC1MWTD = value;
     udelay(1);
 
@@ -293,54 +324,157 @@ static int phy_write(int phy_id, int reg_id, int value, unsigned msec)
 }
 
 /*
- * Determine whether the link is up.
- * When up, setup MAC controller for required speed and duplex..
- */
-static int is_phy_linked(int phy_id)
-{
-    int status = phy_read(phy_id, PHY_STATUS, 1);
-    if (status < 0) {
-        return 0;
-    }
-    //printf("--- %s: STATUS=%b\n", __func__, status, PHY_STATUS_BITS);
-
-    return (status & PHY_STATUS_LINK) &&        /* link is up */
-           (status & PHY_STATUS_CAP_ANEG) &&    /* able to auto-negotiate */
-           (status & PHY_STATUS_ANEG_ACK);      /* auto-negotiation completed */
-}
-
-/*
  * Reset the PHY via MIIM interface.
  * Return -1 on failure.
  */
-static int phy_reset(int phy_id)
+static int phy_reset(int phy_addr)
 {
-    int mode;
+    int advrt;
+    int advertise_all = PHY_ADVRT_10_HDX | PHY_ADVRT_10_FDX |
+        PHY_ADVRT_100_HDX | PHY_ADVRT_100_FDX;
 
-    mode = phy_read(phy_id, PHY_MODE, 100);
-    if (mode < 0)
+    /* Check ADVRT register is writable. */
+    phy_write(phy_addr, PHY_ADVRT, 0, 100);
+    advrt = phy_read(phy_addr, PHY_ADVRT, 1);
+    if (advrt & advertise_all)
+        return -1;
+    phy_write(phy_addr, PHY_ADVRT, PHY_ADVRT_CSMA | advertise_all, 100);
+    advrt = phy_read(phy_addr, PHY_ADVRT, 1);
+    if ((advrt & advertise_all) != advertise_all)
         return -1;
 
-    if ((mode & PHY_MODE_PHYAD) != phy_id) {
-        printf("Wrong PHY id!\n");
-    }
-
     /* Send a reset to the PHY. */
-    if (phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 100) < 0)
+    if (phy_write(phy_addr, PHY_CONTROL, PHY_CONTROL_RESET, 100) < 0)
         return -1;
 
     /* Wait for the reset pin to autoclear. */
-    if (phy_scan(phy_id, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
+    if (phy_scan(phy_addr, PHY_CONTROL, PHY_CONTROL_RESET, 0, 500) < 0)
         return -1;
 
     /* Advertise both 100Mbps and 10Mbps modes, full or half duplex. */
-    phy_write(phy_id, PHY_ADVRT, PHY_ADVRT_CSMA | PHY_ADVRT_10_HDX |
-        PHY_ADVRT_10_FDX | PHY_ADVRT_100_HDX | PHY_ADVRT_100_FDX, 100);
+    phy_write(phy_addr, PHY_ADVRT, PHY_ADVRT_CSMA | advertise_all, 100);
 
     /* Restart autonegotiation. */
-    phy_write(phy_id, PHY_CONTROL, PHY_CONTROL_ANEG_EN | PHY_CONTROL_ANEG_RESTART, 100);
-
+    phy_write(phy_addr, PHY_CONTROL, PHY_CONTROL_ANEG_EN | PHY_CONTROL_ANEG_RESTART, 100);
     return 0;
+}
+
+/*
+ * Get the speed and duplex mode of LAN87x0A chip.
+ */
+static void phy_lan87x0a_poll(int phy_addr, int *speed_100, int *full_duplex)
+{
+    /* Read 87x0A-specific register #31. */
+    int special = phy_read(phy_addr, 31, 1);
+
+    if (special & PHY_LAN87x0A_AUTODONE) {
+        /* Auto-negotiation is done - get the speed. */
+        *speed_100 = (special & PHY_LAN87x0A_100) != 0;
+        *full_duplex = (special & PHY_LAN87x0A_FDX) != 0;
+    }
+#if 0
+    int special_modes = phy_read(phy_addr, 18, 1);
+    int error_counter = phy_read(phy_addr, 26, 1);
+    int cable_length  = phy_read(phy_addr, 28, 1);
+    printf("     SPECIAL=%b\n", special, PHY_LAN87x0A_BITS);
+    printf("     Special_Modes=%04x, Error_Counter=%04x, Cable_Length=%04x\n",
+        special_modes, error_counter, cable_length);
+#endif
+}
+
+/*
+ * Get the speed and duplex mode of IP101G chip.
+ */
+static void phy_ip101g_poll(int phy_addr, int *speed_100, int *full_duplex)
+{
+    /* Read ip101g-specific register #30, page 16. */
+    int special = phy_read(phy_addr, 30, 1);
+
+    if (special & PHY_IP101G_LINK_UP) {
+        /* Auto-negotiation is done - get the speed. */
+        *speed_100 = (special & PHY_IP101G_100) != 0;
+        *full_duplex = (special & PHY_IP101G_FDX) != 0;
+    }
+#if 0
+    printf("     SPECIAL=%b\n", special, PHY_IP101G_BITS);
+#endif
+}
+
+/*
+ * LAN9303 switch: get the mask of active ports.
+ */
+static int phy_lan9303_poll(struct eth_port *e)
+{
+    /* Read status of physical PHYs, register #31. */
+    int special1 = phy_read(e->phy_addr + 1, 31, 1);
+    int special2 = phy_read(e->phy_addr + 2, 31, 1);
+    int mask = 0;
+
+    if (special1 & PHY_LAN87x0A_AUTODONE) {
+        mask |= 1;
+        if (! (e->multiport_mask & 1))
+            log(LOG_ERR, "en0: port 1 up, %s, %s duplex\n",
+                (special1 & PHY_LAN87x0A_100) ? "100Mbps" : "10Mbps",
+                (special1 & PHY_LAN87x0A_FDX) ? "full" : "half");
+    }
+    if (special2 & PHY_LAN87x0A_AUTODONE) {
+        mask |= 2;
+        if (! (e->multiport_mask & 2))
+            log(LOG_ERR, "en0: port 2 up, %s, %s duplex\n",
+                (special2 & PHY_LAN87x0A_100) ? "100Mbps" : "10Mbps",
+                (special2 & PHY_LAN87x0A_FDX) ? "full" : "half");
+    }
+#if 0
+    printf("     port1 SPECIAL=%b\n", special1, PHY_LAN9303_BITS);
+    printf("     port1 SPECIAL=%b\n", special2, PHY_LAN9303_BITS);
+#endif
+    return mask;
+}
+
+/*
+ * Determine whether the link is up.
+ * When up, get the speed and duplex mode.
+ */
+static int is_phy_linked(struct eth_port *e, int *speed_100, int *full_duplex)
+{
+    int status = phy_read(e->phy_addr, PHY_STATUS, 1);
+    if (status < 0)
+        return 0;
+    //printf("--- %s: STATUS=%b\n", __func__, status, PHY_STATUS_BITS);
+
+    if (! (status & PHY_STATUS_LINK))           /* Is link up? */
+        return 0;
+    if (! (status & PHY_STATUS_ANEG_ACK))       /* Is auto-negotiation done? */
+        return 0;
+
+    switch (e->phy_id) {
+    case PHY_ID_LAN8720A:
+    case PHY_ID_LAN8740A:
+        phy_lan87x0a_poll(e->phy_addr, speed_100, full_duplex);
+        break;
+
+    case PHY_ID_IP101G:
+        phy_ip101g_poll(e->phy_addr, speed_100, full_duplex);
+        break;
+
+    case PHY_ID_LAN9303:
+        /* Get mask of active ports. */
+        e->multiport_mask = phy_lan9303_poll(e);
+        if (e->multiport_mask == 0)
+            return 0;
+
+        /* Virtual PHY is always 100Mbit/sec full duplex. */
+        *speed_100 = 1;
+        *full_duplex = 1;
+        break;
+
+    default:
+        /* Unknown PHY: assume 100Mbit/sec full duplex. */
+        *speed_100 = 1;
+        *full_duplex = 1;
+        break;
+    }
+    return 1;
 }
 
 /*
@@ -460,9 +594,13 @@ static void en_setup_dma(struct eth_port *e)
      * All owned by the ethernet controller. */
     bzero(e->rx_desc, sizeof(e->rx_desc));
     for (i=0; i<RX_DESCRIPTORS; i++) {
+        MCLALLOC(e->rx_buf[i], M_WAIT);
+        if (! e->rx_buf[i])
+            panic("en: failed to allocate RX buffer\n");
+
         DESC_SET_EOWN(&e->rx_desc[i]);
         DESC_CLEAR_NPV(&e->rx_desc[i]);
-        e->rx_desc[i].paddr = MACH_VIRT_TO_PHYS(e->rx_buffer + (i * RX_BYTES_PER_DESC));
+        e->rx_desc[i].paddr = kvtophys(e->rx_buf[i]);
     }
 
     /* Loop the list back to the begining.
@@ -481,6 +619,22 @@ static void en_setup_dma(struct eth_port *e)
 }
 
 /*
+ * Free DMA resources.
+ */
+static void en_clear_dma(struct eth_port *e)
+{
+    int i;
+
+    /* Deallocate all RX buffers. */
+    for (i=0; i<RX_DESCRIPTORS; i++) {
+        if (e->rx_buf[i]) {
+            MCLFREE(e->rx_buf[i]);
+            e->rx_buf[i] = 0;
+        }
+    }
+}
+
+/*
  * Setup output on interface.
  * Get another datagram to send off of the interface queue,
  * and map it to the interface before starting the output.
@@ -491,22 +645,21 @@ en_start(ifp)
     struct ifnet *ifp;
 {
     struct eth_port *e = &eth_port[ifp->if_unit];
-    struct mbuf *m0, *m;
-    char *buffer;
-    int total,t;
+    eth_desc_t *desc;
+    struct mbuf *m;
 
     /* Link not ready yet. */
     if (! e->is_up)
         return;
 
     /* The previous transmit has not completed yet. */
-    if (e->is_transmitting)
+    if (e->tx_packet)
         return;
 
     /* Interface is administratively deactivated. */
-    if ((e->netif.if_flags & IFF_RUNNING) == 0)
+    if (! (e->netif.if_flags & IFF_RUNNING))
         return;
-
+again:
     /* Get a packet from the transmit queue. */
     IF_DEQUEUE(&e->netif.if_snd, m);
     if (m == 0)
@@ -519,53 +672,37 @@ en_start(ifp)
     if (ifp->if_bpf)
         bpf_mtap(ifp->if_bpf, m);
 #endif
-
     /*
-     * Copy the mbuf chain into the transmit buffer
+     * Setup transmit descriptors.
      */
-    e->is_transmitting = 1;             /* prevent entering nestart */
-    buffer = e->tx_buffer;
-    t = 0;
-    for (m0 = m; m != 0; m = m->m_next)
-        t += m->m_len;
-
-    m = m0;
-    total = t;
-    for (m0 = m; m != 0; ) {
-        if ((m->m_len & 1) && t > m->m_len) {
-            bcopy(mtod(m, caddr_t), buffer, m->m_len - 1);
-            t -= m->m_len - 1;
-            buffer += m->m_len - 1;
-            m->m_data += m->m_len - 1;
-            m->m_len = 1;
-            m = m_pullup(m, 2);
-        } else {
-            bcopy(mtod(m, caddr_t), buffer, m->m_len);
-            buffer += m->m_len;
-            t -= m->m_len;
-            MFREE(m, m0);
-            m = m0;
+    e->tx_packet = m;
+    for (desc=e->tx_desc; m!=0; m=m->m_next) {
+        if (desc >= &e->tx_desc[TX_DESCRIPTORS]) {
+            e->netif.if_oerrors++;
+            m_freem(m);
+            log(LOG_ERR, "en%d: too many fragments in transmit packet\n",
+                ifp->if_unit);
+            goto again;
         }
+        if (m->m_len == 0)
+            continue;
+
+        desc->hdr = 0;
+        desc->paddr = kvtophys(mtod(m, caddr_t));
+        DESC_SET_BYTECNT(desc, m->m_len);
+        if (desc == e->tx_desc)
+            DESC_SET_SOP(desc);
+        DESC_SET_EOWN(desc);
+        //printf("--- tx desc%u = %08x %08x (%u bytes)\n", desc - e->tx_desc, desc->hdr, desc->paddr, m->m_len);
+        desc++;
     }
-
-    /*
-     * Init transmit descriptors, start transmittion.
-     */
-    bzero(e->tx_desc, sizeof(e->tx_desc));
-
-    /* Use descriptor 0. */
-    e->tx_desc[0].paddr = MACH_VIRT_TO_PHYS(e->tx_buffer);
-    DESC_SET_BYTECNT(&e->tx_desc[0], total);
-    DESC_SET_SOP(&e->tx_desc[0]);
-    DESC_SET_EOP(&e->tx_desc[0]);
-    DESC_SET_EOWN(&e->tx_desc[0]);
+    DESC_SET_EOP(desc - 1);
 
     /* Set the descriptor table to be transmitted. */
     ETHTXST = MACH_VIRT_TO_PHYS(e->tx_desc);
 
     /* Start transmitter. */
     ETHCON1SET = PIC32_ETHCON1_TXRTS;
-    //printf("--- %s: ethcon1=%04x\n", __func__, ETHCON1);
 }
 
 /*
@@ -582,15 +719,15 @@ en_init(unit)
 
     if (ifp->if_addrlist == (struct ifaddr *)0)
         return;
-    if (ifp->if_flags & IFF_RUNNING)
-        return;
     //printf("--- %s\n", __func__);
 
-    /* Enable receiver. */
-    s = splimp();
-    e->netif.if_flags |= IFF_RUNNING;
-    en_start(ifp);
-    splx(s);
+    if (! (ifp->if_flags & IFF_RUNNING)) {
+        /* Enable transmitter. */
+        s = splimp();
+        e->netif.if_flags |= IFF_RUNNING;
+        en_start(ifp);
+        splx(s);
+    }
 }
 
 /*
@@ -600,79 +737,16 @@ static void
 en_reset(unit, uban)
     int unit, uban;
 {
+    struct eth_port *e = &eth_port[unit];
+
     if (unit >= NEN)
         return;
     printf("en%d: reset\n", unit);
-    eth_port[unit].is_transmitting = 0;
-    en_init(unit);
-}
-
-/*
- * Pull read data off a interface.
- * When full cluster sized units are present
- * we copy into clusters.
- */
-static struct mbuf *
-en_get(buf, totlen, ifp)
-    caddr_t buf;
-    int totlen;
-    struct ifnet *ifp;
-{
-    struct mbuf *top, **mp, *m;
-    caddr_t cp = buf;
-    char *epkt;
-    int len;
-
-    buf += sizeof(struct ether_header);
-    totlen -= sizeof(struct ether_header);
-    cp = buf;
-    epkt = cp + totlen;
-
-    MGETHDR(m, M_DONTWAIT, MT_DATA);
-    if (m == 0)
-        return 0;
-    m->m_pkthdr.rcvif = ifp;
-    m->m_pkthdr.len = totlen;
-    m->m_len = MHLEN;
-
-    top = 0;
-    mp = &top;
-    while (totlen > 0) {
-        if (top) {
-            MGET(m, M_DONTWAIT, MT_DATA);
-            if (m == 0) {
-                m_freem(top);
-                return 0;
-            }
-            m->m_len = MLEN;
-        }
-        len = min(totlen, epkt - cp);
-        if (len >= MINCLSIZE) {
-            MCLGET(m, M_DONTWAIT);
-            if (m->m_flags & M_EXT)
-                m->m_len = len = min(len, MCLBYTES);
-            else
-                len = m->m_len;
-        } else {
-            /*
-             * Place initial small packet/header at end of mbuf.
-             */
-            if (len < m->m_len) {
-                if (top == 0 && len + max_linkhdr <= m->m_len)
-                    m->m_data += max_linkhdr;
-                m->m_len = len;
-            } else
-                len = m->m_len;
-        }
-        bcopy(cp, mtod(m, caddr_t), (unsigned)len);
-        cp += len;
-        *mp = m;
-        mp = &m->m_next;
-        totlen -= len;
-        if (cp == epkt)
-            cp = buf;
+    if (e->tx_packet) {
+        m_freem(e->tx_packet);
+        e->tx_packet = 0;
     }
-    return top;
+    en_init(unit);
 }
 
 /*
@@ -688,7 +762,8 @@ en_recv(e)
     eth_desc_t *desc = &e->rx_desc[e->receive_index];
     unsigned frame_size = DESC_FRAMESZ(desc);
     unsigned read_nbytes = 0;
-    char buf[ETHER_MAX_LEN];
+    struct mbuf *m = 0, **tail = 0;
+    struct ether_header eth_header;
 
     if (frame_size <= 0) {
         /* Cannot happen. */
@@ -712,20 +787,18 @@ en_recv(e)
 #endif
 
     while (read_nbytes < frame_size) {
+        int end_of_packet = DESC_EOP(desc);
+        int buf_index = desc - e->rx_desc;
+        caddr_t vaddr = e->rx_buf[buf_index];
+        unsigned nbytes = DESC_BYTECNT(desc);
+
         if (DESC_EOWN(desc)) {
             printf("en_recv: unexpected EOWN flag (desc %04x = %x)\n",
                 MACH_VIRT_TO_PHYS(desc), desc->hdr);
             break;
         }
-
-        int end_of_packet = DESC_EOP(desc);
-        unsigned nbytes = DESC_BYTECNT(desc);
         if (nbytes > frame_size - read_nbytes)
             nbytes = frame_size - read_nbytes;
-
-        unsigned vaddr = MACH_PHYS_TO_UNCACHED(desc->paddr);
-        bcopy((char*) vaddr, &buf[read_nbytes], nbytes);
-        read_nbytes += nbytes;
 #if 0
         unsigned char *p = (unsigned char*) vaddr;
         int i;
@@ -735,9 +808,75 @@ en_recv(e)
             printf("-%02x", p[i]);
         printf("\n");
 #endif
-        if (read_nbytes == frame_size && ! end_of_packet)
-            printf("en_recv: no EOP flag (desc %04x = %x)\n",
-                MACH_VIRT_TO_PHYS(desc), desc->hdr);
+        if (read_nbytes == 0 && start_of_packet) {
+            /* Allocate packet header. */
+            MGETHDR(m, M_DONTWAIT, MT_DATA);
+            m->m_pkthdr.rcvif = &e->netif;
+            m->m_pkthdr.len = frame_size - sizeof(eth_header);
+            m->m_len = 0;
+
+            /* Store Ethernet header separately. */
+            bcopy(vaddr, &eth_header, sizeof(eth_header));
+            nbytes -= sizeof(eth_header);
+            read_nbytes += sizeof(eth_header);
+            vaddr += sizeof(eth_header);
+        }
+
+        /*
+         * Copy data from rx buffer to mbuf chain.
+         */
+        if (m && m->m_len == 0 && m->m_pkthdr.len > MHLEN) {
+            /* First mbuf chunk is large - allocate a cluster. */
+            MCLGET(m, M_DONTWAIT);
+            if (! (m->m_flags & M_EXT)) {
+                /* Cannot allocate cluster - ignore the packet. */
+                m_free(m);
+                m = 0;
+            }
+        }
+
+        if (m) {
+            if (m->m_len == 0) {
+                if (end_of_packet) {
+                    /* Single buffer - copy to mbuf. */
+                    m->m_len = m->m_pkthdr.len;
+                } else {
+                    /* First chunk of mbuf chain. */
+                    m->m_len = nbytes;
+                }
+                bcopy(vaddr, mtod(m, caddr_t), m->m_len);
+                tail = &m->m_next;
+            } else {
+                /* Append rx buffer to mbuf chain. */
+                struct mbuf *n;
+                MGET(n, M_DONTWAIT, MT_DATA);
+                if (! n) {
+                    m_freem(m);
+                    m = 0;
+                } else {
+                    /* Allocate new rx buffer. */
+                    MCLALLOC(e->rx_buf[buf_index], M_NOWAIT);
+                    if (! e->rx_buf[buf_index]) {
+                        /* Failed to allocate RX buffer. */
+                        m_freem(m);
+                        m_freem(n);
+                        m = 0;
+                        e->rx_buf[buf_index] = vaddr;
+                    } else {
+                        /* Move current rx buffer to mbuf. */
+                        n->m_ext.ext_buf = vaddr;
+                        n->m_data = vaddr;
+                        n->m_flags |= M_EXT;
+                        n->m_ext.ext_size = MCLBYTES;
+                        n->m_len = nbytes;
+                        *tail = n;
+                        tail = &n->m_next;
+                    }
+                    desc->paddr = kvtophys(e->rx_buf[buf_index]);
+                }
+            }
+        }
+        read_nbytes += nbytes;
 
         /* Free the receive descriptor. */
         DESC_SET_EOWN(desc);                        /* give up ownership */
@@ -747,17 +886,12 @@ en_recv(e)
             e->receive_index = 0;
         desc = &e->rx_desc[e->receive_index];
     }
-    if (! start_of_packet) {
+
+    if (! m) {
         /* Damaged packet: ignore. */
+        e->netif.if_iqdrops++;
         return;
     }
-
-    /*
-     * Pass a packet to the higher levels.
-     */
-    struct mbuf *m = en_get(buf, frame_size, &e->netif);
-    if (! m)
-        return;
 
 #if NBPFILTER > 0
     /*
@@ -780,9 +914,8 @@ en_recv(e)
         }
     }
 #endif
-    struct ether_header *eh = (struct ether_header*) buf;
-    eh->ether_type = ntohs(eh->ether_type);
-    ether_input(&e->netif, eh, m);
+    eth_header.ether_type = ntohs(eth_header.ether_type);
+    ether_input(&e->netif, &eth_header, m);
 }
 
 /*
@@ -793,46 +926,27 @@ en_watchdog(unit)
     int unit;
 {
     struct eth_port *e = &eth_port[unit];
-    int receiver_enabled;
-#if 0
-    int irq = ETHIRQ;
-    int ien = ETHIEN;
-    printf("--- %s: irq=%04x, ien=%04x, stat=%04x, rxdesc0=%04x\n", __func__, irq, ien, ETHSTAT, e->rx_desc[0].hdr);
-    printf("---     con1=%04x, cfg1=%04x, cfg2=%04x, mind=%04x\n", ETHCON1, EMAC1CFG1, EMAC1CFG2, EMAC1MIND);
-    printf("---     txst=%08x, rxst=%08x\n", ETHTXST, ETHRXST);
-    printf("---     rxovflow=%u, frmtxok=%u, scolfrm=%u, mcolfrm=%u, frmrxok=%u, fcserr=%u, algnerr=%u\n",
-        ETHRXOVFLOW, ETHFRMTXOK, ETHSCOLFRM, ETHMCOLFRM, ETHFRMRXOK, ETHFCSERR, ETHALGNERR);
-#endif
+    int receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
+    int speed_100 = 1, full_duplex = 1;
+
     /* Call it every second. */
     e->netif.if_timer = 1;
 
-    /* Poll whether the link is active. */
-    e->is_up = is_phy_linked(e->phy_id);
+    /* Poll whether the link is active.
+     * Get speed and duplex status from the PHY. */
+    e->is_up = is_phy_linked(e, &speed_100, &full_duplex);
+
+    if (! (e->netif.if_flags & IFF_RUNNING))
+        return;
 
     /* Check whether RX is enabled. */
-    receiver_enabled = (ETHCON1 & PIC32_ETHCON1_RXEN);
     if (e->is_up && ! receiver_enabled) {
-        /* Link up - enable receiver. */
-        int special = phy_read(e->phy_id, PHY_SPECIAL, 1);
-        int speed_100 = 0;
-        int full_duplex = 0;
+        /* Link activated. */
+        if (! e->multiport_mask)
+            log(LOG_ERR, "en0: link up, %s, %s duplex\n",
+                speed_100 ? "100Mbps" : "10Mbps",
+                full_duplex ? "full" : "half");
 
-        if (special & PHY_SPECIAL_AUTODONE) {
-            /* Auto-negotiation is done - get the speed. */
-            speed_100 = (special & PHY_SPECIAL_100);
-            full_duplex = (special & PHY_SPECIAL_FDX);
-        }
-        log(LOG_ERR, "en0: link up, %s, %s duplex\n",
-            speed_100 ? "100Mbps" : "10Mbps",
-            full_duplex ? "full" : "half");
-#if 0
-        int special_modes = phy_read(e->phy_id, 18, 1);
-        int error_counter = phy_read(e->phy_id, 26, 1);
-        int cable_length  = phy_read(e->phy_id, 28, 1);
-        printf("     SPECIAL=%b\n", special, PHY_SPECIAL_BITS);
-        printf("     Special_Modes=%04x, Error_Counter=%04x, Cable_Length=%04x\n",
-            special_modes, error_counter, cable_length);
-#endif
         /* Set speed. */
         if (speed_100) {
             EMAC1SUPPSET = PIC32_EMAC1SUPP_SPEEDRMII;
@@ -851,6 +965,7 @@ en_watchdog(unit)
         EMAC1IPGT = full_duplex ? 21 : 18;
 
         /* Enable receiver. */
+        en_setup_dma(e);
         ETHCON1SET = PIC32_ETHCON1_RXEN;
         //printf("--- %s: RXEN\n", __func__);
     }
@@ -862,6 +977,8 @@ en_watchdog(unit)
         ETHCON1CLR = PIC32_ETHCON1_RXEN;
         while (ETHSTAT & PIC32_ETHSTAT_RXBUSY)
             continue;
+
+        en_clear_dma(e);
     }
 }
 
@@ -889,28 +1006,33 @@ enintr(dev)
         log(LOG_ERR, "en%d: receive error: irq %x\n", unit, irq);
     }
 
-    /* We received something. */
-    while (! DESC_EOWN(&e->rx_desc[e->receive_index])) {
-        e->netif.if_ipackets++;
-        en_recv(e);
+    if (ETHCON1 & PIC32_ETHCON1_RXEN) {
+        /* Receiver enabled. */
+        while (! DESC_EOWN(&e->rx_desc[e->receive_index])) {
+            /* We received something. */
+            e->netif.if_ipackets++;
+            en_recv(e);
+        }
     }
 
     /* Transmit error. */
     if (irq & (PIC32_ETHIRQ_TXBUSE | PIC32_ETHIRQ_TXABORT)) {
         log(LOG_ERR, "en%d: transmit error: irq %x\n", unit, irq);
-        e->is_transmitting = 0;
         e->netif.if_oerrors++;
     }
 
     /* Packet Transmitted */
     if (irq & PIC32_ETHIRQ_TXDONE) {
-        e->is_transmitting = 0;
         ++e->netif.if_opackets;
         e->netif.if_collisions += ETHSCOLFRM + ETHMCOLFRM;
     }
 
     /* Transmitter is idle. */
     if (! (ETHCON1 & PIC32_ETHCON1_TXRTS)) {
+        if (e->tx_packet) {
+            m_freem(e->tx_packet);
+            e->tx_packet = 0;
+        }
         if (e->is_up) {
             /* Any more to send? */
             en_start(&e->netif);
@@ -955,8 +1077,8 @@ en_ioctl(ifp, cmd, data)
 
     case SIOCSIFFLAGS:
         /* Start/stop the network interface. */
-        if ((ifp->if_flags & IFF_UP) == 0 &&
-            ifp->if_flags & IFF_RUNNING)
+        if (! (ifp->if_flags & IFF_UP) &&
+            (ifp->if_flags & IFF_RUNNING))
         {
             ETHCON1CLR = PIC32_ETHCON1_TXRTS;
             while (ETHSTAT & PIC32_ETHSTAT_TXBUSY)
@@ -970,10 +1092,10 @@ en_ioctl(ifp, cmd, data)
                 continue;
 
             ifp->if_flags &= ~IFF_RUNNING;
-            eth_port[ifp->if_unit].is_transmitting = 0;
+            en_clear_dma(&eth_port[ifp->if_unit]);
         }
-        else if (ifp->if_flags & IFF_UP &&
-            (ifp->if_flags & IFF_RUNNING) == 0)
+        else if ((ifp->if_flags & IFF_UP) &&
+            ! (ifp->if_flags & IFF_RUNNING))
         {
             en_init(ifp->if_unit);
         }
@@ -983,9 +1105,14 @@ en_ioctl(ifp, cmd, data)
     case SIOCGHWADDR:
         /* Change MAC address. */
         struct ifreq *ifr = (struct ifreq *)data;
+        u_char *addr = (u_char*) &ifr->ifr_data;
         struct eth_port *e = &eth_port[ifp->if_unit];
-        bcopy((caddr_t)e->macaddr, (caddr_t) &ifr->ifr_data,
-            sizeof(e->macaddr));
+        e->macaddr[0] = addr[0];
+        e->macaddr[1] = addr[1];
+        e->macaddr[2] = addr[2];
+        e->macaddr[3] = addr[3];
+        e->macaddr[4] = addr[4];
+        e->macaddr[5] = addr[5];
         EMAC1SA2 = e->macaddr[0] | (e->macaddr[1] << 8);
         EMAC1SA1 = e->macaddr[2] | (e->macaddr[3] << 8);
         EMAC1SA0 = e->macaddr[4] | (e->macaddr[5] << 8);
@@ -1113,7 +1240,6 @@ en_probe(config)
 
     /* Board-dependent initialization. */
     setup_signals();
-    e->phy_id = ETHERNET_PHY_ID;
 
     /* Link is down. */
     e->is_up = 0;
@@ -1121,13 +1247,28 @@ en_probe(config)
     /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
     en_setup();
     en_setup_mac();
-    en_setup_dma(e);
     en_setup_mii();
-    if (phy_reset(e->phy_id) < 0) {
+
+#ifdef ETHERNET_PHY_ADDR
+    /* PHY address defined in the kernel configuration file. */
+    e->phy_addr = ETHERNET_PHY_ADDR;
+    if (phy_reset(e->phy_addr) < 0) {
         ETHCON1 = 0;
-        printf("Ethernet PHY not detected at ID=%u\n", e->phy_id);
+        printf("Ethernet PHY not detected at address=%u\n", e->phy_addr);
         return 0;
     }
+#else
+    /* Auto-detect the PHY address, 0-31. */
+    for (e->phy_addr=0; e->phy_addr<32; e->phy_addr++) {
+        if (phy_reset(e->phy_addr) >= 0)
+            break;
+    }
+    if (e->phy_addr >= 32) {
+        ETHCON1 = 0;
+        printf("Ethernet PHY not detected\n");
+        return 0;
+    }
+#endif
 
     /* Extract our MAC address */
     e->macaddr[0] = EMAC1SA2;
@@ -1156,19 +1297,36 @@ en_probe(config)
      */
     printf("en%d at interrupt %u, MAC address %s\n",
         unit, PIC32_IRQ_ETH, ether_sprintf(e->macaddr));
-    id = (phy_read(e->phy_id, PHY_ID1, 1) << 16 |
-          phy_read(e->phy_id, PHY_ID2, 1)) & PHY_ID_MASK;
-    switch (id) {
+
+    e->phy_id = (phy_read(e->phy_addr, PHY_ID1, 1) << 16 |
+          phy_read(e->phy_addr, PHY_ID2, 1)) & 0xfffffff0;
+    printf("en%d: ", unit);
+    switch (e->phy_id) {
     case PHY_ID_LAN8720A:
-        printf("en%d: <SMSC LAN8720A>\n", unit);
+        printf("<SMSC LAN8720A>");
         break;
     case PHY_ID_LAN8740A:
-        printf("en%d: <SMSC LAN8740A>\n", unit);
+        printf("<SMSC LAN8740A>");
+        break;
+    case PHY_ID_IP101G:
+        printf("<IC+ IP101G>");
+        phy_write(e->phy_addr, 20, 16, 100); // Select page 16
+        break;
+    case 0:
+        /* Looks like a virtual PHY of LAN9303. */
+        id = (phy_read(e->phy_addr + 1, PHY_ID1, 1) << 16 |
+              phy_read(e->phy_addr + 1, PHY_ID2, 1)) & 0xfffffff0;
+        if (id != PHY_ID_LAN9303)
+            goto other;
+        e->phy_id = id;
+        printf("<SMSC LAN9303>");
         break;
     default:
-        printf("en%d: PHY id = %08x\n", unit, id);
+other:  printf("PHY id=%08x", e->phy_id);
         break;
     }
+    printf(" at address %u\n", e->phy_addr);
+
     ifp->if_unit = unit;
     ifp->if_name = "en";
     ifp->if_mtu = ETHERMTU;
