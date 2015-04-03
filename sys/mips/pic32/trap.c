@@ -83,12 +83,13 @@ syscall(p, causeReg, pc)
     unsigned pc;            /* program counter where to continue */
 {
     int *locr0 = p->p_md.md_regs;
+    int *rval = p->p_md.md_rval;
     struct sysent *callp;
     unsigned int code = locr0[V0];
     struct args {
         int i[8];
     } args;
-    int rval[2], error;
+    int error;
 //printf ("--- %s(pid=%u) syscall code=%u, RA=%08x \n", __func__, p->p_pid, code, locr0[RA]);
 
     if ((int)causeReg < 0) {

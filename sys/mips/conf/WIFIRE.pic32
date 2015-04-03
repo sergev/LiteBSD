@@ -33,10 +33,6 @@ options         "BUFPAGES=18"           # Number of i/o pages, default 10% of ra
 options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
 options         "HZ=100"                # Frequency of clock interrupt
 
-# Console options
-options         "CONS_MAJOR=17"         # UART device
-options         "CONS_MINOR=3"          # UART4 - chipKIT WiFire board
-
 # Filesystem options
 options         FIFO            # POSIX fifo support (in all filesystems)
 options         FFS             # fast filesystem with user and group quotas
@@ -57,30 +53,58 @@ options         INET            # Internet protocols
 #options        MULTICAST       # Multicast support
 #options        MROUTING        # Multicast routing support
 
+# Root filesystem at /dev/sd0a, swap at /dev/sd0b
 config          vmunix  root on major0 minor1
                         swap on major0 minor2
                         dumps on major0 minor2
 
+# UART ports
 device          uart1   flags 0x614f    # pins rx=RD14, tx=RD15 - logical 39/40
 device          uart4   flags 0x6268    # pins rx=RF2,  tx=RF8  - serial-to-USB converter
+
+# Use UART4 as console
+options         "CONS_MAJOR=17"         # UART device
+options         "CONS_MINOR=3"          # UART4 - chipKIT WiFire board
+
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
 
+# SPI ports
 controller      spi1    flags 0x4e31    # pins sdi=RF1,  sdo=RC1  - logical 36/35/5
 controller      spi2    flags 0x604b    # pins sdi=RF0,  sdo=RD11 - logical 12/11/13
 controller      spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - SD card
 controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
 
+# microSD card
 disk            sd0     at spi3 drive 0 flags 0x33      # select pin RC3
 options         "SD_LED=0x7f"                           # LED4 is G15
 #disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
+
+# General purpose I/O ports
+# Flags define a mask of available pins
+# The following pins excluded:
+#   D14, D15                     - uart1
+#   F2, F8                       - uart4
+#   C1, D1, F1,                  - spi1
+#   D11, F0, G6                  - spi2, LED1
+#   B10, B14, C3, C4             - spi3, SD card
+#   A15, D9, D10, F4, F5, G0, G1 - spi4, Wi-Fi
+#   B12                          - 1/11 of input voltage
+#   B13                          - potentiometer
+controller      gpio0   flags 0x46ff    # port A
+controller      gpio1   flags 0x8bff    # port B
+controller      gpio2   flags 0xf004    # port C
+controller      gpio3   flags 0x303d    # port D
+controller      gpio4   flags 0x03ff    # port E
+controller      gpio5   flags 0x3008    # port F
+controller      gpio6   flags 0xf380    # port G
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 #device         mrf0    at spi4 flags 0x71641f49
 
 # Buttons
-options         "BUTTON1=0x15"    # button 1 at pin RA5
-options         "BUTTON2=0x14"    # button 2 at pin RA4
+options         "BUTTON1=0x15"          # button 1 at pin RA5
+options         "BUTTON2=0x14"          # button 2 at pin RA4
 
 pseudo-device   sl              1       # serial line IP interfaces (SLIP)
 pseudo-device   pty             4       # pseudo ptys

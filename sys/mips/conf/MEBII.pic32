@@ -72,6 +72,19 @@ controller      spi4    flags 0x7723    # pins sdi=RG7,  sdo=RB3  - Wi-Fi interf
 disk            sd0     at spi2 drive 0 flags 0x2e      # select pin RB14
 options         "SD_LED=0x80"                           # LED1 is H0
 
+# General purpose I/O ports
+# TODO: exclude uart, spi and ethernet pins
+controller      gpio0   flags 0xc6ff    # port A
+controller      gpio1   flags 0xffff    # port B
+controller      gpio2   flags 0xf01e    # port C
+controller      gpio3   flags 0xfeff    # port D
+controller      gpio4   flags 0x03ff    # port E
+controller      gpio5   flags 0x313f    # port F
+controller      gpio6   flags 0xf3c3    # port G
+controller      gpio7   flags 0xffff    # port H
+controller      gpio8   flags 0xffff    # port J
+controller      gpio9   flags 0x00ff    # port K
+
 # Ethernet controller
 controller      en0
 options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN8740A daughter boards
