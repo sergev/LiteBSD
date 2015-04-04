@@ -1,4 +1,4 @@
-#
+7#
 # PIC32MZ target: ECMB Board (Embedded Computer Module Board PIC32MZ2048ECM064)
 #
 # To build the kernel, use:
@@ -88,10 +88,8 @@ options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN87
 #options         "BUTTON1=0x2c"          # button 1 at pin RB12
 #options         "BUTTON2=0x2d"          # button 2 at pin RB13
 
-controller      gpio1   flags 0x20      # pin RB0
-controller      gpio2   flags 0x21      # pin RB1
-controller      gpio3   flags 0x23      # pin RB3
-controller      gpio4   flags 0x24      # pin RB4
+# General purpose I/O ports
+device          gpio1   flags 0x000f    # port B, pins B0-B3
 
 pseudo-device   pty             4       # pseudo ptys
 #pseudo-device   sl              1       # serial line IP interfaces (SLIP)
