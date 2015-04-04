@@ -91,13 +91,13 @@ options         "SD_LED=0x7f"                           # LED4 is G15
 #   A15, D9, D10, F4, F5, G0, G1 - spi4, Wi-Fi
 #   B12                          - 1/11 of input voltage
 #   B13                          - potentiometer
-controller      gpio0   flags 0x46ff    # port A
-controller      gpio1   flags 0x8bff    # port B
-controller      gpio2   flags 0xf004    # port C
-controller      gpio3   flags 0x303d    # port D
-controller      gpio4   flags 0x03ff    # port E
-controller      gpio5   flags 0x3008    # port F
-controller      gpio6   flags 0xf380    # port G
+device          gpio0   flags 0x46ff    # port A
+device          gpio1   flags 0x8bff    # port B
+device          gpio2   flags 0xf004    # port C
+device          gpio3   flags 0x303d    # port D
+device          gpio4   flags 0x03ff    # port E
+device          gpio5   flags 0x3008    # port F
+device          gpio6   flags 0xf380    # port G
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 #device         mrf0    at spi4 flags 0x71641f49

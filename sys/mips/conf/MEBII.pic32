@@ -74,16 +74,16 @@ options         "SD_LED=0x80"                           # LED1 is H0
 
 # General purpose I/O ports
 # TODO: exclude uart, spi and ethernet pins
-controller      gpio0   flags 0xc6ff    # port A
-controller      gpio1   flags 0xffff    # port B
-controller      gpio2   flags 0xf01e    # port C
-controller      gpio3   flags 0xfeff    # port D
-controller      gpio4   flags 0x03ff    # port E
-controller      gpio5   flags 0x313f    # port F
-controller      gpio6   flags 0xf3c3    # port G
-controller      gpio7   flags 0xffff    # port H
-controller      gpio8   flags 0xffff    # port J
-controller      gpio9   flags 0x00ff    # port K
+device          gpio0   flags 0xc6ff    # port A
+device          gpio1   flags 0xffff    # port B
+device          gpio2   flags 0xf01e    # port C
+device          gpio3   flags 0xfeff    # port D
+device          gpio4   flags 0x03ff    # port E
+device          gpio5   flags 0x313f    # port F
+device          gpio6   flags 0xf3c3    # port G
+device          gpio7   flags 0xffff    # port H
+device          gpio8   flags 0xffff    # port J
+device          gpio9   flags 0x00ff    # port K
 
 # Ethernet controller
 controller      en0

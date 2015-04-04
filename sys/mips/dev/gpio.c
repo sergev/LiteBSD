@@ -474,10 +474,10 @@ int gpioioctl(dev_t dev, u_int cmd, caddr_t addr, int flag)
 
 static int
 gpioprobe(config)
-    struct mips_ctlr *config;
+    struct scsi_device *config;
 {
-    int unit = config->mips_unit;
-    int flags = config->mips_flags;
+    int unit = config->sd_unit;
+    int flags = config->sd_flags;
     char buf [20];
 
     if (unit < 0 || unit >= NGPIO)
@@ -486,7 +486,7 @@ gpioprobe(config)
     gpio_confmask[unit] = flags;
 
     gpio_print(unit | MINOR_CONF, buf);
-    printf("gpio%u at port%c, pins %s\n", unit,
+    printf("gpio%u at port%c, pins %s", unit,
         unit + (unit<8 ? 'A' : 'B'), buf);
     return 1;
 }

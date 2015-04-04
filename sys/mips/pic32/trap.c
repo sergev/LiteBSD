@@ -204,6 +204,7 @@ syscall(p, causeReg, pc)
      * if this is a child returning from fork syscall.
      */
     p = curproc;
+    rval = p->p_md.md_rval;
     locr0 = p->p_md.md_regs;
 
     switch (error) {
