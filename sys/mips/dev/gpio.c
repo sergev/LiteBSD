@@ -51,12 +51,13 @@
  * Example:
  *      echo ....oiiid....iiii > /dev/confa
  *      echo ....1...0........ > /dev/porta
+ *      cat /dev/conf?
+ *      cat /dev/port?
  *
  * Write to /dev/confX:
  *      'i' - configure the corresponding port pin as an input;
  *      'o' - configure the corresponding port pin as an output;
  *      'd' - configure the corresponding port pin as an open-drain output;
- *      'x' - deconfigure the corresponding port pin;
  *      '.' - no action.
  *
  * Write to /dev/portX:
@@ -64,22 +65,26 @@
  *      '1' - set output pin high;
  *      '+' - invert the value of output pin;
  *      '.' - no action.
- *
+ */
+
+/*
  * Use ioctl() on any of devices to control pins from the user program.
- *      ioctl(fd, GPIO_PORTA |  GPIO_CONFIN, mask)  - configure as input
- *      ioctl(fd, GPIO_PORTB |  GPIO_CONFOUT,mask)  - configure as output
- *      ioctl(fd, GPIO_PORTC |  GPIO_CONFOD, mask)  - configure as open drain
- *      ioctl(fd, GPIO_PORTD |  GPIO_DECONF, mask)  - deconfigure
- *      ioctl(fd, GPIO_PORTE |  GPIO_STORE,  val)   - set values of all pins
- *      ioctl(fd, GPIO_PORTF |  GPIO_SET,    mask)  - set to 1 by mask
- *      ioctl(fd, GPIO_PORTG |  GPIO_CLEAR,  mask)  - set to 0 by mask
- *      ioctl(fd, GPIO_PORT(0)| GPIO_INVERT, mask)  - invert by mask
- * val= ioctl(fd, GPIO_PORT(1)| GPIO_POLL,   0)     - get input values
+ *       ioctl(fd, GPIO_PORTA | GPIO_CONFIN, mask)  - configure as input, port A
+ *       ioctl(fd, GPIO_PORTB | GPIO_CONFOUT,mask)  - configure as output, port B
+ *       ioctl(fd, GPIO_PORTC | GPIO_CONFOD, mask)  - configure as open drain, port C
+ *       ioctl(fd, GPIO_PORTE | GPIO_STORE,  val)   - set values of all pins, port E
+ *       ioctl(fd, GPIO_PORTF | GPIO_SET,    mask)  - set to 1 by mask, port F
+ *       ioctl(fd, GPIO_PORTG | GPIO_CLEAR,  mask)  - set to 0 by mask, port G
+ *       ioctl(fd, GPIO_PORTH | GPIO_INVERT, mask)  - invert by mask, port H
+ * val = ioctl(fd, GPIO_PORTJ | GPIO_POLL,   0)     - get input values, port J
  *
  * Several operations can be combined in one call.
  * For example, to toggle pin A2 high thew low, and get value
  * of all PORTA pins:
  * val = ioctl(fd, GPIO_PORTA | GPIO_SET | GPIO_CLEAR | GPIO_POLL, 1<<3);
+ *
+ * You can use GPIO_PORT(0) instead of GPIO_PORTA,
+ * GPIO_PORT(1) instead of GPIO_PORTB and so on.
  */
 #undef NGPIO
 #define NGPIO           10              /* Ports A, B, C, D, E, F, G, H, J, K */
