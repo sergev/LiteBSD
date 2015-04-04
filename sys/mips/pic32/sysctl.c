@@ -144,7 +144,7 @@ static const struct {
     { "_pt_tty",        (int) &pt_tty       },
     { "_rtstat",        (int) &rtstat       },
     { "_rt_tables",     (int) &rt_tables    },
-    { "_scsi_dinit",    (int) &scsi_dinit   },
+    { "_conf_dinit",    (int) &conf_dinit   },
     { "_stathz",        (int) &stathz       },
     { "_swapmap",       (int) &swapmap      },
     { "_swdevt",        (int) &swdevt       },

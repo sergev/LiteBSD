@@ -841,7 +841,7 @@ void pic32_ioconf()
 			continue;
 		fprintf(fp, "extern struct driver %sdriver;\n", dp->d_name);
 	}
-	fprintf(fp, "\nstruct mips_ctlr mips_cinit[] = {\n");
+	fprintf(fp, "\nstruct conf_ctlr conf_cinit[] = {\n");
 	fprintf(fp, "/*\tdriver,\t\tunit,\taddr,\t\tpri,\tflags */\n");
 	for (dp = dtab; dp != 0; dp = dp->d_next) {
 		if (dp->d_type != CONTROLLER && dp->d_type != MASTER)
@@ -861,7 +861,7 @@ void pic32_ioconf()
 	fprintf(fp, "\t{ 0 }\n};\n");
 
 	/* print devices connected to other controllers */
-	fprintf(fp, "\nstruct scsi_device scsi_dinit[] = {\n");
+	fprintf(fp, "\nstruct conf_device conf_dinit[] = {\n");
 	fprintf(fp,
 	   "/*driver,\tcdriver,\tunit,\tctlr,\tdrive,\tslave,\tdk,\tflags*/\n");
 	for (dp = dtab; dp != 0; dp = dp->d_next) {

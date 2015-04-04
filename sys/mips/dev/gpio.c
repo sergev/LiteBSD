@@ -335,10 +335,10 @@ int gpioioctl(dev_t dev, u_int cmd, caddr_t addr, int flag)
 
 static int
 gpioprobe(config)
-    struct scsi_device *config;
+    struct conf_device *config;
 {
-    int unit = config->sd_unit;
-    int flags = config->sd_flags;
+    int unit = config->dev_unit;
+    int flags = config->dev_flags;
     char buf[20];
 
     if (unit < 0 || unit >= NGPIO)

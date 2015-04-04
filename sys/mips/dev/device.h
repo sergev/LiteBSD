@@ -50,66 +50,39 @@ struct driver {
  * This structure describes controllers directly connected to CPU
  * and is partially initialized in "ioconf.c" by the 'config' program.
  */
-struct mips_ctlr {
-    struct driver   *mips_driver;   /* controller driver routines */
-    int             mips_unit;      /* controller number */
-    char            *mips_addr;     /* address of controller */
-    int             mips_pri;       /* interrupt priority */
-    int             mips_flags;     /* flags */
+struct conf_ctlr {
+    struct driver   *ctlr_driver;   /* controller driver routines */
+    int             ctlr_unit;      /* controller number */
+    char            *ctlr_addr;     /* address of controller */
+    int             ctlr_pri;       /* interrupt priority */
+    int             ctlr_flags;     /* flags */
 
-    int             mips_alive;     /* true if init routine succeeded */
+    int             ctlr_alive;     /* true if init routine succeeded */
 };
 
 /*
- * This structure describes devices connected to a SCSI interface
+ * This structure describes devices connected to an interface
  * and is partially initialized in "ioconf.c" by the 'config' program.
  */
-struct scsi_device {
-    struct driver   *sd_driver;     /* SCSI device driver routines */
-    struct driver   *sd_cdriver;    /* SCSI interface driver routines */
-    int             sd_unit;        /* device unit number */
-    int             sd_ctlr;        /* SCSI interface number */
-    int             sd_drive;       /* SCSI address number */
-    int             sd_slave;       /* LUN if device has multiple units */
-    int             sd_dk;          /* used for disk statistics */
-    int             sd_flags;       /* flags */
-    int             sd_alive;       /* true if init routine succeeded */
+struct conf_device {
+    struct driver   *dev_driver;    /* device driver routines */
+    struct driver   *dev_cdriver;   /* interface driver routines */
+    int             dev_unit;       /* device unit number */
+    int             dev_ctlr;       /* device interface number */
+    int             dev_drive;      /* device address number */
+    int             dev_slave;      /* LUN if device has multiple units */
+    int             dev_dk;         /* used for disk statistics */
+    int             dev_flags;      /* flags */
+    int             dev_alive;      /* true if init routine succeeded */
 };
 
 /* Define special unit types used by the config program */
 #define QUES    -1      /* -1 means '?' */
 #define UNKNOWN -2      /* -2 means not set yet */
 
-/*
- * This structure contains information that a SCSI interface controller
- * needs to execute a SCSI command.
- */
-typedef struct ScsiCmd {
-    struct scsi_device *sd; /* device requesting the command */
-    int     unit;           /* unit number passed to device done routine */
-    int     flags;          /* control flags for this command (see below) */
-    int     buflen;         /* length of the data buffer in bytes */
-    char    *buf;           /* pointer to data buffer for this command */
-    int     cmdlen;         /* length of data in cmdbuf */
-    u_char  *cmd;           /* buffer for the SCSI command */
-} ScsiCmd;
-
-/*
- * Define flags for controlling the SCSI command.
- *
- * SCSICMD_DATA_TO_DEVICE
- *      TRUE -> data is to be transferred to the device.
- *      FALSE -> data is to be transferred from the device.
- *      meaningless if buflen is 0.
- * SCSICMD_USE_SYNC
- *      Attempt to negotiate for a synchronous data transfer.
- */
-#define SCSICMD_DATA_TO_DEVICE  0x01
-#define SCSICMD_USE_SYNC        0x02
-
 #ifdef KERNEL
-extern struct mips_ctlr mips_cinit[];
-extern struct scsi_device scsi_dinit[];
+extern struct conf_ctlr conf_cinit[];
+extern struct conf_device conf_dinit[];
 extern dev_t cn_dev;
 extern int uart_cnt;
 

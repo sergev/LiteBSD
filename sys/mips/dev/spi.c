@@ -840,12 +840,12 @@ static void assign_sdo(int channel, int pin)
  */
 static int
 spiprobe(config)
-    struct mips_ctlr *config;
+    struct conf_ctlr *config;
 {
-    int channel = config->mips_unit - 1;
+    int channel = config->ctlr_unit - 1;
     struct spiio *io = &spitab[channel];
-    int sdi = config->mips_flags >> 8 & 0xFF;
-    int sdo = config->mips_flags & 0xFF;
+    int sdi = config->ctlr_flags >> 8 & 0xFF;
+    int sdo = config->ctlr_flags & 0xFF;
     int sck;
     static const int sck_tab[6] = {
         RP('D',1),  /* SCK1 */

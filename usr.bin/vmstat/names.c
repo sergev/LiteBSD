@@ -215,7 +215,7 @@ read_names()
 	register char *p;
 	register u_long sp;
 	static char buf[BUFSIZ];
-	struct scsi_device sdev;
+	struct conf_device sdev;
 	struct driver hdrv;
 	char name[10];
 
@@ -227,15 +227,15 @@ read_names()
 	p = buf;
 	for (;; sp += sizeof sdev) {
 		(void)kvm_read(kd, sp, &sdev, sizeof sdev);
-		if (sdev.sd_driver == 0)
+		if (sdev.dev_driver == 0)
 			break;
-		if (sdev.sd_dk < 0 || sdev.sd_alive == 0 ||
-		    sdev.sd_cdriver == 0)
+		if (sdev.dev_dk < 0 || sdev.dev_alive == 0 ||
+		    sdev.dev_cdriver == 0)
 			continue;
-		(void)kvm_read(kd, (u_long)sdev.sd_driver, &hdrv, sizeof hdrv);
+		(void)kvm_read(kd, (u_long)sdev.dev_driver, &hdrv, sizeof hdrv);
 		(void)kvm_read(kd, (u_long)hdrv.d_name, name, sizeof name);
-		dr_name[sdev.sd_dk] = p;
-		p += sprintf(p, "%s%d", name, sdev.sd_unit) + 1;
+		dr_name[sdev.dev_dk] = p;
+		p += sprintf(p, "%s%d", name, sdev.dev_unit) + 1;
 	}
 	return (1);
 }

@@ -881,9 +881,9 @@ sdwrite(dev, uio)
  */
 static int
 sdprobe(config)
-    struct scsi_device *config;
+    struct conf_device *config;
 {
-    int unit = config->sd_unit;
+    int unit = config->dev_unit;
     struct disk *du = &sddrives[unit];
     struct spiio *io;
 
@@ -891,8 +891,8 @@ sdprobe(config)
         return 0;
     io = &du->spiio;
 
-    if (spi_setup(io, config->sd_ctlr, config->sd_flags) != 0) {
-        printf("sd%u: cannot open SPI%u port\n", unit, config->sd_ctlr);
+    if (spi_setup(io, config->dev_ctlr, config->dev_flags) != 0) {
+        printf("sd%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
         return 0;
     }
 

@@ -1225,9 +1225,9 @@ static void setup_signals()
 
 static int
 en_probe(config)
-    struct scsi_device *config;
+    struct conf_device *config;
 {
-    int unit = config->sd_unit;
+    int unit = config->dev_unit;
     struct eth_port *e = &eth_port[unit];
     struct ifnet *ifp = &e->netif;
     int s, id;

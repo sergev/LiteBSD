@@ -88,7 +88,7 @@ struct nlist namelist[] = {
 #endif
 #ifdef mips
 #define	X_SCSI_DINIT	(X_END+1)
-	{ "_scsi_dinit" },
+	{ "_conf_dinit" },
 #endif
 #ifdef tahoe
 #define	X_VBDINIT	(X_END+1)
@@ -360,7 +360,7 @@ dkstats()
 			itime = atime - xtime;		/* time not xfer'ing */
 			if (itime < 0)
 				msps = 0;
-			else 
+			else
 				msps = itime * 1000 / cur.dk_xfer[dn];
 		} else
 			msps = 0;

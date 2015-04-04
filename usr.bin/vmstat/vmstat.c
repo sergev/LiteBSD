@@ -116,7 +116,7 @@ struct nlist namelist[] = {
 #endif
 #ifdef mips
 #define	X_SCSI_DINIT	(X_END)
-	{ "_scsi_dinit" },
+	{ "_conf_dinit" },
 #endif
 #ifdef tahoe
 #define	X_VBDINIT	(X_END)

@@ -100,16 +100,16 @@ is_controller_alive(driver, unit)
     struct driver *driver;
     int unit;
 {
-    struct mips_ctlr *ctlr;
+    struct conf_ctlr *ctlr;
 
     /* No controller - that's OK. */
     if (driver == 0)
         return 1;
 
-    for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
-        if (ctlr->mips_driver == driver &&
-            ctlr->mips_unit == unit &&
-            ctlr->mips_alive)
+    for (ctlr = conf_cinit; ctlr->ctlr_driver; ctlr++) {
+        if (ctlr->ctlr_driver == driver &&
+            ctlr->ctlr_unit == unit &&
+            ctlr->ctlr_alive)
         {
             return 1;
         }
@@ -125,30 +125,30 @@ is_controller_alive(driver, unit)
 void
 configure()
 {
-    struct mips_ctlr *ctlr;
-    struct scsi_device *device;
+    struct conf_ctlr *ctlr;
+    struct conf_device *device;
 
     /* Start assigning iostat dk numbers. */
     dk_ndrive = 0;
 
     /* Probe and initialize controllers. */
-    for (ctlr = mips_cinit; ctlr->mips_driver; ctlr++) {
-        if ((*ctlr->mips_driver->d_init)(ctlr)) {
-            ctlr->mips_alive = 1;
+    for (ctlr = conf_cinit; ctlr->ctlr_driver; ctlr++) {
+        if ((*ctlr->ctlr_driver->d_init)(ctlr)) {
+            ctlr->ctlr_alive = 1;
         }
     }
 
     /* Probe and initialize devices. */
-    for (device = scsi_dinit; device->sd_driver; device++) {
-        if (is_controller_alive(device->sd_cdriver, device->sd_ctlr)) {
-            if ((*device->sd_driver->d_init)(device)) {
-                device->sd_alive = 1;
+    for (device = conf_dinit; device->dev_driver; device++) {
+        if (is_controller_alive(device->dev_cdriver, device->dev_ctlr)) {
+            if ((*device->dev_driver->d_init)(device)) {
+                device->dev_alive = 1;
 
                 /* if device is a disk, assign number for statistics */
-                if (device->sd_dk && dkn < DK_NDRIVE)
-                    device->sd_dk = dkn++;
+                if (device->dev_dk && dkn < DK_NDRIVE)
+                    device->dev_dk = dkn++;
                 else
-                    device->sd_dk = -1;
+                    device->dev_dk = -1;
             }
         }
     }

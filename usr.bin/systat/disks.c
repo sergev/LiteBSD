@@ -70,11 +70,11 @@ static struct nlist namelist[] = {
 #endif
 #if defined(hp300) || defined(luna68k)
 #define X_HPDINIT       (X_DK_WPMS+1)
-        { "_hp_dinit" }, 
+        { "_hp_dinit" },
 #endif
 #ifdef mips
 #define X_SCSI_DINIT	(X_DK_WPMS+1)
-	{ "_scsi_dinit" },
+	{ "_conf_dinit" },
 #endif
 	{ "" },
 };

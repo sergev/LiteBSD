@@ -736,13 +736,13 @@ static void assign_tx(int channel, int pin)
  */
 int
 uartprobe(config)
-    struct scsi_device *config;
+    struct conf_device *config;
 {
     uart_regmap_t *reg;
     struct tty *tp;
-    int unit = config->sd_unit - 1;
-    int rx = config->sd_flags >> 8 & 0xFF;
-    int tx = config->sd_flags & 0xFF;
+    int unit = config->dev_unit - 1;
+    int rx = config->dev_flags >> 8 & 0xFF;
+    int tx = config->dev_flags & 0xFF;
     int is_console = (CONS_MAJOR == 17 && CONS_MINOR == unit);
 
     if (unit < 0 || unit >= NUART)
