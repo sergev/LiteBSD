@@ -1261,3 +1261,158 @@ mips_flush_dcache(vm_offset_t addr, vm_offset_t len)
     // TODO
     mtc0_Status(x);                     /* Restore interrupts */
 }
+
+/*
+ * Routines for access to general purpose I/O pins.
+ */
+static const char pin_name[16] = "?ABCDEFGHJK?????";
+
+int gpio_input_map1(int pin)
+{
+    switch (pin) {
+    case RP('D',2):  return 0;
+    case RP('G',8):  return 1;
+    case RP('F',4):  return 2;
+    case RP('D',10): return 3;
+    case RP('F',1):  return 4;
+    case RP('B',9):  return 5;
+    case RP('B',10): return 6;
+    case RP('C',14): return 7;
+    case RP('B',5):  return 8;
+    case RP('C',1):  return 10;
+    case RP('D',14): return 11;
+    case RP('G',1):  return 12;
+    case RP('A',14): return 13;
+    case RP('D',6):  return 14;
+    }
+    printf("gpio: cannot map peripheral input pin %c%d, group 1\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map2(int pin)
+{
+    switch (pin) {
+    case RP('D',3):  return 0;
+    case RP('G',7):  return 1;
+    case RP('F',5):  return 2;
+    case RP('D',11): return 3;
+    case RP('F',0):  return 4;
+    case RP('B',1):  return 5;
+    case RP('E',5):  return 6;
+    case RP('C',13): return 7;
+    case RP('B',3):  return 8;
+    case RP('C',4):  return 10;
+    case RP('D',15): return 11;
+    case RP('G',0):  return 12;
+    case RP('A',15): return 13;
+    case RP('D',7):  return 14;
+    }
+    printf("gpio: cannot map peripheral input pin %c%d, group 2\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map3(int pin)
+{
+    switch (pin) {
+    case RP('D',9):  return 0;
+    case RP('G',6):  return 1;
+    case RP('B',8):  return 2;
+    case RP('B',15): return 3;
+    case RP('D',4):  return 4;
+    case RP('B',0):  return 5;
+    case RP('E',3):  return 6;
+    case RP('B',7):  return 7;
+    case RP('F',12): return 9;
+    case RP('D',12): return 10;
+    case RP('F',8):  return 11;
+    case RP('C',3):  return 12;
+    case RP('E',9):  return 13;
+    }
+    printf("gpio: cannot map peripheral input pin %c%d, group 3\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+int gpio_input_map4(int pin)
+{
+    switch (pin) {
+    case RP('D',1):  return 0;
+    case RP('G',9):  return 1;
+    case RP('B',14): return 2;
+    case RP('D',0):  return 3;
+    case RP('B',6):  return 5;
+    case RP('D',5):  return 6;
+    case RP('B',2):  return 7;
+    case RP('F',3):  return 8;
+    case RP('F',13): return 9;
+    case RP('F',2):  return 11;
+    case RP('C',2):  return 12;
+    case RP('E',8):  return 13;
+    }
+    printf("gpio: cannot map peripheral input pin %c%d, group 4\n",
+        pin_name[pin>>4], pin & 15);
+    return -1;
+}
+
+void gpio_set_input(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    port->trisset = (1 << (pin & 15));
+    port->anselclr = (1 << (pin & 15));
+}
+
+void gpio_set_output(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    port->trisclr = (1 << (pin & 15));
+    port->anselclr = (1 << (pin & 15));
+}
+
+void gpio_set_analog(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    port->trisset = (1 << (pin & 15));
+    port->anselset = (1 << (pin & 15));
+}
+
+void gpio_set(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    port->latset = (1 << (pin & 15));
+}
+
+void gpio_clr(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    port->latclr = (1 << (pin & 15));
+}
+
+int gpio_get(int pin)
+{
+    struct gpioreg *port = (struct gpioreg*) &ANSELA;
+
+    port += (pin >> 4 & 15) - 1;
+    return ((port->port & (1 << (pin & 15))) ? 1 : 0);
+}
+
+char gpio_portname(int pin)
+{
+    return pin_name[(pin >> 4) & 15];
+}
+
+int gpio_pinno(int pin)
+{
+    return pin & 15;
+}
