@@ -1,5 +1,15 @@
 /*
- * Network driver for the PIC32 internal Ethernet controller with 8720 PHY.
+ * Network driver for the PIC32 internal Ethernet controller.
+ * Several PHY variants are supported:
+ *      SMSC LAN8720A
+ *      SMSC LAN8740A
+ *      SMSC LAN9303
+ *      IC+ IP101G
+ *
+ * Pretty much any RMII PHY should work in 100Mbps full duplex mode.
+ * To support other modes, the driver should be modified to be able
+ * to detect the result of autonegotiation, which is PHY-depedent.
+ * See function is_phy_linked() for details.
  *
  * Copyright (c) 2015, Serge Vakulenko
  *

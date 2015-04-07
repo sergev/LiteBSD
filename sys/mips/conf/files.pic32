@@ -15,6 +15,7 @@ mips/dev/uart.c                 optional uart device-driver
 mips/dev/spi.c                  optional spi device-driver
 mips/dev/sd.c                   optional sd device-driver
 mips/dev/if_en.c                optional en device-driver
+mips/dev/if_mrf.c               optional mrf device-driver
 netinet/in_cksum.c              optional inet
 dev/vn.c                        optional vn
 thisisfor_in_proto.c            optional hy
