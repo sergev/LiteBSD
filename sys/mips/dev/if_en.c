@@ -744,8 +744,8 @@ en_init(unit)
  * Reset of interface.
  */
 static void
-en_reset(unit, uban)
-    int unit, uban;
+en_reset(unit)
+    int unit;
 {
     struct eth_port *e = &eth_port[unit];
 
@@ -1138,7 +1138,7 @@ en_ioctl(ifp, cmd, data)
 
 /*
  * Different devices can have different pin assignments,
- * denending on pin count and DEVCFG.FETHIO configuration setting.
+ * depending on pin count and DEVCFG.FETHIO configuration setting.
  */
 static void setup_signals()
 {

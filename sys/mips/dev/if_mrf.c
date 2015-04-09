@@ -12,15 +12,125 @@
 #include "mrf.h"
 #if NMRF > 0
 
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/socket.h>
+#include <mips/dev/device.h>
+#include <mips/dev/spi.h>
+#include <machine/pic32mz.h>
+#include <machine/pic32_gpio.h>
+
+#include <net/if.h>
+#include <net/netisr.h>
+#include <net/route.h>
+#include <net/bpf.h>
+
+#ifdef INET
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/in_var.h>
+#include <netinet/ip.h>
+#include <netinet/if_ether.h>
+#endif
+
+#include "bpfilter.h"
+
+#ifndef MRF_KHZ
+#define MRF_KHZ         10000       /* SPI port speed 10 MHz */
+#endif
+
+/*
+ * Wi-Fi software status per interface.
+ */
+struct wifi_port {
+    struct arpcom arpcom;           /* Ethernet common part */
+#define netif   arpcom.ac_if        /* network-visible interface */
+#define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
+
+    struct spiio spiio;             /* interface to SPI port */
+    int         is_up;              /* whether the link is up */
+
+} wifi_port[NMRF];
+
+/*
+ * Initialize hardware.
+ */
+static void mrf_setup()
+{
+    //TODO
+}
+
+/*
+ * Setup output on interface.
+ * Get another datagram to send off of the interface queue,
+ * and map it to the interface before starting the output.
+ * called only at splimp or interrupt level.
+ */
+static void mrf_start(struct ifnet *ifp)
+{
+    //TODO
+}
+
+/*
+ * Initialization of interface; set up initialization block
+ * and transmit/receive descriptor rings.
+ */
+static void mrf_init(int unit)
+{
+    //TODO
+}
+
+/*
+ * Reset of interface.
+ */
+static void mrf_reset(int unit)
+{
+    //TODO
+}
+
+/*
+ * Process an ioctl request.
+ */
+static int mrf_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
+{
+    //TODO
+    return 0;
+}
+
+/*
+ * Timeout routine.
+ */
+static void mrf_watchdog(int unit)
+{
+    //TODO
+}
+
+/*
+ * Detect the presence of MRF24G controller at given SPI port.
+ */
+static int mrf_detect(struct spiio *io)
+{
+    //TODO
+    return 0;
+}
+
+/*
+ * Setup direction of signal pins.
+ */
+static void setup_signals(int pin_irq, int pin_reset, int pin_hibernate)
+{
+    //TODO
+}
+
 static int
 mrf_probe(config)
     struct conf_device *config;
 {
     int unit = config->dev_unit;
-    int pin_cs = config->ctlr_flags & 0xFF;
-    int pin_irq = config->ctlr_flags >> 8 & 0xFF;
-    int pin_reset = config->ctlr_flags >> 16 & 0xFF;
-    int pin_hib = config->ctlr_flags >> 24 & 0xFF;
+    int pin_cs = config->dev_flags & 0xFF;
+    int pin_irq = config->dev_flags >> 8 & 0xFF;
+    int pin_reset = config->dev_flags >> 16 & 0xFF;
+    int pin_hib = config->dev_flags >> 24 & 0xFF;
     struct wifi_port *w = &wifi_port[unit];
     struct ifnet *ifp = &w->netif;
     struct spiio *io;
@@ -29,7 +139,7 @@ mrf_probe(config)
     if (unit < 0 || unit >= NMRF)
         return 0;
 
-    io = &du->spiio;
+    io = &w->spiio;
     if (spi_setup(io, config->dev_ctlr, pin_cs) != 0) {
         printf("sd%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
         return 0;
@@ -38,10 +148,10 @@ mrf_probe(config)
     spi_set(io, PIC32_SPICON_CKE);
 
     //TODO: detect mrf24g at SPI port
-    if (mrf_detect()) {
+    if (mrf_detect(io)) {
         printf("mrf%u not found at port %s, pin cs=%c%d\n",
             unit, spi_name(io), spi_csname(io), spi_cspin(io));
-        return 0
+        return 0;
     }
 
     s = splimp();
@@ -68,7 +178,7 @@ mrf_probe(config)
     printf("mrf%u at port %s, MAC address %s\n", unit,
         spi_name(io), ether_sprintf(w->macaddr));
     printf("mrf%u: pins cs=%c%d, irq=%c%d, reset=%c%d, hibernate=%c%d\n",
-        unit, spi_csname(io), spi_cspin(io)
+        unit, spi_csname(io), spi_cspin(io),
         gpio_portname(pin_irq), gpio_pinno(pin_irq),
         gpio_portname(pin_reset), gpio_pinno(pin_reset),
         gpio_portname(pin_hib), gpio_pinno(pin_hib));
