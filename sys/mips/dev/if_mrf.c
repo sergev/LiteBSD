@@ -56,6 +56,35 @@ struct wifi_port {
 } wifi_port[NMRF];
 
 /*
+ * TODO: routines for mrf24g integration:
+ *
+ * 1) Interrupt routines
+ *     WF_EintDisable
+ *     WF_EintEnable
+ *     WF_EintInit
+ *     WF_isEintDisabled
+ *
+ * 2) GPIO stuff
+ *     WF_GpioInit
+ *     WF_GpioSetHibernate
+ *     WF_GpioSetReset
+ *
+ * 3) SPI routines
+ *     WF_SpiDisableChipSelect
+ *     WF_SpiEnableChipSelect
+ *     WF_SpiInit
+ *     WF_SpiTxRx
+ *
+ * 4) Timer read
+ *     WF_TimerInit
+ *     WF_TimerRead
+ *
+ * 5) Processing of received data
+ *     WF_ProcessEvent
+ *     WF_ProcessRxPacket
+ */
+
+/*
  * Initialize hardware.
  */
 static void mrf_setup(struct wifi_port *w)
