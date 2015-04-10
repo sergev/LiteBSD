@@ -4,10 +4,10 @@
  * Functions pertaining MRF24WG set/get parameter message processing.
  * Parameter messages are a subset of management messages.
  */
-#include <stdio.h>
-#include <string.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
+#include <sys/param.h>
+#include <sys/systm.h>
 
 /*
  * Send a SetParam Mgmt request to MRF24W and waits for response.
@@ -36,11 +36,11 @@
  *  p_paramData - pointer to parameter data
  *  paramDataLength - Number of bytes pointed to by p_paramData
  */
-static void SendSetParamMsg(uint8_t paramType,
-                            uint8_t *p_paramData,
-                            uint8_t paramDataLength)
+static void SendSetParamMsg(u_int8_t paramType,
+                            u_int8_t *p_paramData,
+                            u_int8_t paramDataLength)
 {
-    uint8_t hdr[4];
+    u_int8_t hdr[4];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SET_PARAM_SUBTYPE;
@@ -82,19 +82,16 @@ static void SendSetParamMsg(uint8_t paramType,
  *  6     Data[0]        first byte of returned parameter data
  *  N     Data[N]        Nth byte of param data
  */
-static void SendGetParamMsg(uint8_t paramType, uint8_t *p_paramData, uint8_t paramDataLength)
+static void SendGetParamMsg(u_int8_t paramType, u_int8_t *p_paramData, u_int8_t paramDataLength)
 {
-    uint8_t hdr[4];
+    u_int8_t hdr[4];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_GET_PARAM_SUBTYPE;
     hdr[2] = 0x00;                      /* MS 8 bits of param Id, always 0 */
     hdr[3] = paramType;                 /* LS 8 bits of param ID           */
 
-    SendMgmtMsg(hdr,             /* header           */
-                sizeof(hdr),     /* size of header   */
-                NULL,            /* no data          */
-                0);              /* no data          */
+    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
 
     WaitForMgmtResponseAndReadData(WF_GET_PARAM_SUBTYPE,       /* expected subtype                           */
                                    paramDataLength,            /* num data bytes to read                     */
@@ -108,7 +105,7 @@ static void SendGetParamMsg(uint8_t paramType, uint8_t *p_paramData, uint8_t par
  */
 void WFEnableMRF24WB0MMode()
 {
-    uint8_t buf[1] = {ENABLE_MRF24WB0M};
+    u_int8_t buf[1] = {ENABLE_MRF24WB0M};
 
     SendSetParamMsg(PARAM_MRF24WB0M, buf, sizeof(buf));
 }
@@ -122,7 +119,7 @@ void WFEnableMRF24WB0MMode()
  */
 void WF_DeviceInfoGet(t_deviceInfo *p_Info)
 {
-    uint8_t msgData[2];
+    u_int8_t msgData[2];
 
     SendGetParamMsg(PARAM_SYSTEM_VERSION, msgData, sizeof(msgData));
 
@@ -152,10 +149,10 @@ void WF_DeviceInfoGet(t_deviceInfo *p_Info)
  * Parameter:
  *  regionalDomain - desired regional domain
  */
-void WF_RegionalDomainSet(uint8_t regionalDomain)
+void WF_RegionalDomainSet(u_int8_t regionalDomain)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetDomain(regionalDomain);
     if (errorCode != UD_SUCCESS) {
@@ -173,7 +170,7 @@ void WF_RegionalDomainSet(uint8_t regionalDomain)
  * Parameters:
  *  p_regionalDomain - pointer to where regional domain is written
  */
-void WF_RegionalDomainGet(uint8_t *p_regionalDomain)
+void WF_RegionalDomainGet(u_int8_t *p_regionalDomain)
 {
     SendGetParamMsg(PARAM_REGIONAL_DOMAIN, p_regionalDomain, 1);
 }
@@ -190,7 +187,7 @@ void WF_RegionalDomainGet(uint8_t *p_regionalDomain)
  * Parameter:
  *  p_mac - Pointer to 6-byte MAC that will be sent to MRF24W
  */
-void WF_MacAddressSet(uint8_t *p_mac)
+void WF_MacAddressSet(u_int8_t *p_mac)
 {
 #if defined(WF_ERROR_CHECKING)
     // can't change MAC address unless not connected
@@ -202,7 +199,7 @@ void WF_MacAddressSet(uint8_t *p_mac)
     SendSetParamMsg(PARAM_MAC_ADDRESS, p_mac, WF_MAC_ADDRESS_LENGTH);
 }
 
-void WF_MacAddressGet(uint8_t *p_macAddress)
+void WF_MacAddressGet(u_int8_t *p_macAddress)
 {
     SendGetParamMsg(PARAM_MAC_ADDRESS, p_macAddress, WF_MAC_ADDRESS_LENGTH);
 }
@@ -215,15 +212,15 @@ void WF_MacAddressGet(uint8_t *p_macAddress)
  * Parameters:
  *  state - WF_DISABLED or WF_ENABLED
  */
-void WF_SetTxDataConfirm(uint8_t state)
+void WF_SetTxDataConfirm(u_int8_t state)
 {
     SendSetParamMsg(PARAM_CONFIRM_DATA_TX_REQ, &state, 1);
 }
 
-void WF_TxModeSet(uint8_t mode)
+void WF_TxModeSet(u_int8_t mode)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetTxMode(mode);
+    u_int32_t errorCode = UdSetTxMode(mode);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
     }
@@ -231,12 +228,12 @@ void WF_TxModeSet(uint8_t mode)
     SendSetParamMsg(PARAM_TX_MODE, &mode, 1);
 }
 
-void WF_RtsThresholdSet(uint16_t rtsThreshold)
+void WF_RtsThresholdSet(u_int16_t rtsThreshold)
 {
-    uint16_t tmp;
+    u_int16_t tmp;
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetRtsThreshold(rtsThreshold);
+    u_int32_t errorCode = UdSetRtsThreshold(rtsThreshold);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -244,7 +241,7 @@ void WF_RtsThresholdSet(uint16_t rtsThreshold)
 #endif
 
     tmp = htons(rtsThreshold);
-    SendSetParamMsg(PARAM_RTS_THRESHOLD, (uint8_t *)&tmp, sizeof(tmp));
+    SendSetParamMsg(PARAM_RTS_THRESHOLD, (u_int8_t *)&tmp, sizeof(tmp));
 }
 
 /*
@@ -257,12 +254,12 @@ void WF_RtsThresholdSet(uint16_t rtsThreshold)
  */
 void YieldPassPhraseToHost()
 {
-    uint8_t yield = 1;
+    u_int8_t yield = 1;
 
     SendSetParamMsg(PARAM_YIELD_PASSPHRASE_TOHOST, &yield, sizeof(yield));
 }
 
-void SetPSK(uint8_t *psk)
+void SetPSK(u_int8_t *psk)
 {
     SendSetParamMsg(PARAM_SET_PSK, psk, WF_WPA_KEY_LENGTH);
 }
@@ -276,15 +273,15 @@ void SetPSK(uint8_t *psk)
  */
 void WF_MacStatsGet(t_macStats *p_macStats)
 {
-    uint32_t *p_value;
-    uint8_t  numElements;
-    uint8_t  i;
+    u_int32_t *p_value;
+    u_int8_t  numElements;
+    u_int8_t  i;
 
-    SendGetParamMsg(PARAM_STAT_COUNTERS, (uint8_t *)p_macStats, sizeof(t_macStats));
+    SendGetParamMsg(PARAM_STAT_COUNTERS, (u_int8_t *)p_macStats, sizeof(t_macStats));
 
     // calculate number of 32-bit counters in the stats structure and point to first element
-    numElements = sizeof(t_macStats) / sizeof(uint32_t);
-    p_value = (uint32_t *)p_macStats;
+    numElements = sizeof(t_macStats) / sizeof(u_int32_t);
+    p_value = (u_int32_t *)p_macStats;
 
     /* correct endianness on all counters in structure */
     for (i = 0; i < numElements; ++i) {
@@ -320,7 +317,7 @@ void WF_MacStatsGet(t_macStats *p_macStats)
  *  threshold -- 0:     disable this feature; MRF24WG does not track missed ack's (default)
  *               1-255: after this many missed ack's, signal connection lost event
  */
-void WF_LinkDownThresholdSet(uint8_t threshold)
+void WF_LinkDownThresholdSet(u_int8_t threshold)
 {
     SendSetParamMsg(PARAM_LINK_DOWN_THRESHOLD, &threshold, sizeof(threshold));
 }
@@ -342,15 +339,15 @@ void WF_LinkDownThresholdSet(uint8_t threshold)
  *  multicastFilterId - WF_MULTICAST_FILTER_1 or WF_MULTICAST_FILTER_2
  *  multicastAddress  - 6-byte address (all 0xFF will inactivate the filter)
  */
-void WF_SetHwMultiCastFilter(uint8_t multicastFilterId,
-                             uint8_t multicastAddress[WF_MAC_ADDRESS_LENGTH])
+void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
+                             u_int8_t multicastAddress[WF_MAC_ADDRESS_LENGTH])
 {
     int i;
-    bool    deactivateFlag = true;
-    uint8_t msgData[8];
+    bool    deactivateFlag = 1;
+    u_int8_t msgData[8];
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetHwMulticastFilter(multicastFilterId, multicastAddress);
+    u_int32_t errorCode = UdSetHwMulticastFilter(multicastFilterId, multicastAddress);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
     }
@@ -362,7 +359,7 @@ void WF_SetHwMultiCastFilter(uint8_t multicastFilterId,
         /* if any byte is not 0xff then a presume a valid multicast address */
         if (multicastAddress[i] != 0xff)
         {
-            deactivateFlag = false;
+            deactivateFlag = 0;
             break;
         }
     }
@@ -374,7 +371,7 @@ void WF_SetHwMultiCastFilter(uint8_t multicastFilterId,
         msgData[1] = MULTICAST_ADDRESS;     /* type of address being used in the filter */
     }
 
-    memcpy(&msgData[2], (void *)multicastAddress, WF_MAC_ADDRESS_LENGTH);
+    bcopy((void*)multicastAddress, &msgData[2], WF_MAC_ADDRESS_LENGTH);
     SendSetParamMsg(PARAM_COMPARE_ADDRESS, msgData, sizeof(msgData) );
 }
 
@@ -385,9 +382,9 @@ void WF_SetHwMultiCastFilter(uint8_t multicastFilterId,
  * Parameter:
  *  p_factoryMaxTxPower - desired maxTxPower ( 0 to 18 dBm), in 1dB steps
  */
-uint8_t GetFactoryMax()
+u_int8_t GetFactoryMax()
 {
-    uint8_t msgData[2];
+    u_int8_t msgData[2];
 
     /* read max and min factory-set power levels */
     SendGetParamMsg(PARAM_FACTORY_SET_TX_MAX_POWER, msgData, sizeof(msgData));

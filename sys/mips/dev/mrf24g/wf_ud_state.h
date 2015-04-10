@@ -18,15 +18,15 @@
 #define DEFAULT_NETWORK_TYPE        WF_NETWORK_TYPE_INFRASTRUCTURE
 
 // bit masks for errorState field
-#define INIT_INVALID                ((uint32_t)0x00000001)
-#define CHANNEL_LIST_INVALID        ((uint32_t)0x00000002)
-#define DOMAIN_INVALID              ((uint32_t)0x00000004)
-#define SSID_INVALID                ((uint32_t)0x00000008)
-#define RETRY_COUNT_INVALID         ((uint32_t)0x00000010)
-#define SECURITY_TYPE_INVALID       ((uint32_t)0x00000020)
-#define NETWORK_TYPE_INVALID        ((uint32_t)0x00000040)
-#define NETWORK_CONFIG_INVALID      ((uint32_t)0x00000080)
-#define SCAN_CONTEXT_INVALID        ((uint32_t)0x00000100)
+#define INIT_INVALID                ((u_int32_t)0x00000001)
+#define CHANNEL_LIST_INVALID        ((u_int32_t)0x00000002)
+#define DOMAIN_INVALID              ((u_int32_t)0x00000004)
+#define SSID_INVALID                ((u_int32_t)0x00000008)
+#define RETRY_COUNT_INVALID         ((u_int32_t)0x00000010)
+#define SECURITY_TYPE_INVALID       ((u_int32_t)0x00000020)
+#define NETWORK_TYPE_INVALID        ((u_int32_t)0x00000040)
+#define NETWORK_CONFIG_INVALID      ((u_int32_t)0x00000080)
+#define SCAN_CONTEXT_INVALID        ((u_int32_t)0x00000100)
 
 typedef enum t_internalConnectionState
 {
@@ -40,20 +40,20 @@ typedef enum t_internalConnectionState
 //==============================================================================
 typedef struct udStateStruct
 {
-    uint32_t        errorState;    // bit mask
-    uint8_t         connectionState;
-    uint8_t         retryCount;
+    u_int32_t       errorState;    // bit mask
+    u_int8_t        connectionState;
+    u_int8_t        retryCount;
     bool            psPollEnabled;
     t_psPollContext psPollContext;
 
 #if defined(WF_ERROR_CHECKING)
-    uint8_t domain;
-    uint8_t networkType;
-    uint8_t securityType;
-    uint8_t ssid[WF_MAX_SSID_LENGTH];
-    uint8_t ssidLength;
-    uint8_t channelList[WF_MAX_CHANNEL_LIST_LENGTH];
-    uint8_t numChannels;
+    u_int8_t domain;
+    u_int8_t networkType;
+    u_int8_t securityType;
+    u_int8_t ssid[WF_MAX_SSID_LENGTH];
+    u_int8_t ssidLength;
+    u_int8_t channelList[WF_MAX_CHANNEL_LIST_LENGTH];
+    u_int8_t numChannels;
 #endif
 
 } t_udState;
@@ -115,27 +115,27 @@ void  UdDisablePsPoll(void);
 bool  UdisPsPollEnabled(void);
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t UdSetDomain(uint8_t domain);
-    uint32_t UdSetChannelList(uint8_t *p_channelList, uint8_t numChannels);
-    uint32_t UdSetSsid(uint8_t *p_ssid, uint8_t ssidLength);
-    uint32_t UdSetNetworkType(uint8_t networkType);
-    uint32_t UdSetSecurityOpen(void);
-    uint32_t UdSetSecurityWep(t_wepContext *p_context);
-    uint32_t UdSetSecurityWpa(t_wpaContext *p_context);
-    uint32_t UdSetSecurityWps(t_wpsContext *p_context);
-    uint32_t UdCheckConnectionConfig(void);
-    uint32_t UdSetReconnectMode(uint8_t retryCount, uint8_t deauthAction, uint8_t beaconTimeout, uint8_t beaconTimeoutAction);
-    uint32_t UdSetScanContext(t_scanContext *p_context);
-    uint32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context);
-    uint32_t UdSetTxMode(uint8_t mode);
-    uint32_t UdSetBssid(uint8_t *p_bssid);
-    uint32_t UdSetRssi(uint8_t rssi);
-    uint32_t UdSetRtsThreshold(uint16_t rtsThreshold);
-    uint32_t UdScan(uint8_t mode);
-    uint32_t udSetTxPowerMax(uint8_t maxTxPower);
-    uint32_t UdSetHwMulticastFilter(uint8_t multicastFilterId, uint8_t *p_multicastAddress);
-    uint32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_passPhrase);
-    uint32_t UdGetWpsCredentials(void);
+    u_int32_t UdSetDomain(u_int8_t domain);
+    u_int32_t UdSetChannelList(u_int8_t *p_channelList, u_int8_t numChannels);
+    u_int32_t UdSetSsid(u_int8_t *p_ssid, u_int8_t ssidLength);
+    u_int32_t UdSetNetworkType(u_int8_t networkType);
+    u_int32_t UdSetSecurityOpen(void);
+    u_int32_t UdSetSecurityWep(t_wepContext *p_context);
+    u_int32_t UdSetSecurityWpa(t_wpaContext *p_context);
+    u_int32_t UdSetSecurityWps(t_wpsContext *p_context);
+    u_int32_t UdCheckConnectionConfig(void);
+    u_int32_t UdSetReconnectMode(u_int8_t retryCount, u_int8_t deauthAction, u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction);
+    u_int32_t UdSetScanContext(t_scanContext *p_context);
+    u_int32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context);
+    u_int32_t UdSetTxMode(u_int8_t mode);
+    u_int32_t UdSetBssid(u_int8_t *p_bssid);
+    u_int32_t UdSetRssi(u_int8_t rssi);
+    u_int32_t UdSetRtsThreshold(u_int16_t rtsThreshold);
+    u_int32_t UdScan(u_int8_t mode);
+    u_int32_t udSetTxPowerMax(u_int8_t maxTxPower);
+    u_int32_t UdSetHwMulticastFilter(u_int8_t multicastFilterId, u_int8_t *p_multicastAddress);
+    u_int32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_passPhrase);
+    u_int32_t UdGetWpsCredentials(void);
 #endif /* WF_ERROR_CHECKING */
 
 #endif /* __WF_UD_STATE_H */

@@ -3,20 +3,20 @@
  *
  * Functions performing run-time error checking.
  */
-#include <stdio.h>
-#include <string.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
+#include <sys/param.h>
+#include <sys/systm.h>
 
-#define MAX_RTS_THRESHOLD   ((uint16_t)2347)
+#define MAX_RTS_THRESHOLD   ((u_int16_t)2347)
 
 t_udState g_udState;
 
 #if defined(WF_ERROR_CHECKING)
 
-uint32_t UdSetDomain(uint8_t domain)
+u_int32_t UdSetDomain(u_int8_t domain)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // can't change domain unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -38,7 +38,7 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetSecurityOpen()
+u_int32_t UdSetSecurityOpen()
 {
     // can't change security unless not connected
     if (UdGetConnectionState() == CS_NOT_CONNECTED) {
@@ -50,9 +50,9 @@ uint32_t UdSetSecurityOpen()
     }
 }
 
-uint32_t UdSetSecurityWep(t_wepContext *p_context)
+u_int32_t UdSetSecurityWep(t_wepContext *p_context)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // can't change security unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -105,11 +105,11 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetSecurityWpa(t_wpaContext *p_context)
+u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
 {
-    uint32_t errorCode = UD_SUCCESS;
-    uint8_t securityType;
-    uint8_t securityKeyLength;
+    u_int32_t errorCode = UD_SUCCESS;
+    u_int8_t securityType;
+    u_int8_t securityKeyLength;
     int i;
 
     securityKeyLength = p_context->keyInfo.keyLength;
@@ -154,7 +154,7 @@ uint32_t UdSetSecurityWpa(t_wpaContext *p_context)
 
         // ASCII passphase characters must be printable (0x20 thru 0x7E)
         for (i = 0; i < securityKeyLength; ++i) {
-            uint8_t tmp = p_context->keyInfo.key[i];
+            u_int8_t tmp = p_context->keyInfo.key[i];
 
             if (tmp < 0x20 || tmp > 0x7e) {
                 errorCode = UD_ERROR_INVALID_WPA_PASSPHRASE_CHARACTERS;
@@ -173,12 +173,12 @@ errorExit:
     return errorCode;
 }
 
-static uint32_t ValidateWpsPin(uint8_t *p_wpsPin)
+static u_int32_t ValidateWpsPin(u_int8_t *p_wpsPin)
 {
-    uint32_t pin = 0;
-    uint32_t accum = 0;
+    u_int32_t pin = 0;
+    u_int32_t accum = 0;
     int i;
-    uint32_t mult = 10000000;
+    u_int32_t mult = 10000000;
 
     // convert 8-byte array of pin numbers to unsigned long
     for (i = 0; i < 8; ++i) {
@@ -211,10 +211,10 @@ static uint32_t ValidateWpsPin(uint8_t *p_wpsPin)
     }
 }
 
-uint32_t UdSetSecurityWps(t_wpsContext *p_context)
+u_int32_t UdSetSecurityWps(t_wpsContext *p_context)
 {
-    uint32_t errorCode = UD_SUCCESS;
-    uint8_t  securityType;
+    u_int32_t errorCode = UD_SUCCESS;
+    u_int8_t  securityType;
 
     securityType = p_context->wpsSecurityType;
 
@@ -224,14 +224,14 @@ uint32_t UdSetSecurityWps(t_wpsContext *p_context)
         goto errorExit;
     }
 
-    if (p_context->getPassPhrase != true &&
-        p_context->getPassPhrase != false) {
+    if (p_context->getPassPhrase != 1 &&
+        p_context->getPassPhrase != 0) {
         errorCode = UD_ERROR_INVALID_GET_PASS_PHRASE;
         goto errorExit;
     }
 
-    if (p_context->getPassPhrase == true) {
-        if (p_context->p_keyInfo == NULL) {
+    if (p_context->getPassPhrase == 1) {
+        if (p_context->p_keyInfo == 0) {
             errorCode = UD_ERROR_NULL_PASS_PHRASE_INFO;
             goto errorExit;
         }
@@ -265,9 +265,9 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetScanContext(t_scanContext *p_context)
+u_int32_t UdSetScanContext(t_scanContext *p_context)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // can't change scan context unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -289,17 +289,17 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context)
+u_int32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // can't change scan context unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
         return UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED;
     }
 
-    if (p_context->hiddenSsid != true &&
-        p_context->hiddenSsid != false) {
+    if (p_context->hiddenSsid != 1 &&
+        p_context->hiddenSsid != 0) {
        errorCode = UD_ERROR_INVALID_HIDDEN_SSID;
        goto errorExit;
     }
@@ -313,7 +313,7 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetNetworkType(uint8_t networkType)
+u_int32_t UdSetNetworkType(u_int8_t networkType)
 {
     // can't change channel list unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -331,13 +331,13 @@ uint32_t UdSetNetworkType(uint8_t networkType)
     return UD_SUCCESS;
 }
 
-static uint32_t ValidateChannelList(uint8_t *p_channelList, uint8_t numChannels)
+static u_int32_t ValidateChannelList(u_int8_t *p_channelList, u_int8_t numChannels)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
     int i;
 
     // if no channel list defined
-    if (p_channelList == NULL || numChannels == 0) {
+    if (p_channelList == 0 || numChannels == 0) {
         errorCode = UD_ERROR_NO_CHANNEL_LIST_DEFINED;
         goto errorExit;
     }
@@ -364,9 +364,9 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetChannelList(uint8_t *p_channelList, uint8_t numChannels)
+u_int32_t UdSetChannelList(u_int8_t *p_channelList, u_int8_t numChannels)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // can't change channel list unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -381,16 +381,16 @@ uint32_t UdSetChannelList(uint8_t *p_channelList, uint8_t numChannels)
         UdSetChannelListValid();
     }
 
-    memset(g_udState.channelList, 0x00, sizeof(g_udState.channelList));
-    memcpy(g_udState.channelList, p_channelList, numChannels);
+    bzero(g_udState.channelList, sizeof(g_udState.channelList));
+    bcopy(p_channelList, g_udState.channelList, numChannels);
     g_udState.numChannels = numChannels;
 
     return errorCode;
 }
 
-static uint32_t ValidateSsid(uint8_t *p_ssid, uint8_t ssidLength)
+static u_int32_t ValidateSsid(u_int8_t *p_ssid, u_int8_t ssidLength)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // With the exception of WPS_PUSH_BUTTON an SSID must be defined.  This will
     // be checked when WF_Connect() is called.
@@ -415,9 +415,9 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetSsid(uint8_t *p_ssid, uint8_t ssidLength)
+u_int32_t UdSetSsid(u_int8_t *p_ssid, u_int8_t ssidLength)
 {
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     // can't change SSID unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -430,14 +430,14 @@ uint32_t UdSetSsid(uint8_t *p_ssid, uint8_t ssidLength)
         return errorCode;
     } else {
         UdSetSsidValid();
-        memset(g_udState.ssid, 0x00, sizeof(g_udState.ssid));
-        memcpy(g_udState.ssid, p_ssid, ssidLength);
+        bzero(g_udState.ssid, sizeof(g_udState.ssid));
+        bcopy(p_ssid, g_udState.ssid, ssidLength);
         g_udState.ssidLength = ssidLength;
     }
     return UD_SUCCESS;
 }
 
-uint32_t UdSetBssid(uint8_t *p_bssid)
+u_int32_t UdSetBssid(u_int8_t *p_bssid)
 {
     p_bssid = p_bssid; // avoid warning
 
@@ -449,7 +449,7 @@ uint32_t UdSetBssid(uint8_t *p_bssid)
     }
 }
 
-uint32_t UdSetRssi(uint8_t rssi)
+u_int32_t UdSetRssi(u_int8_t rssi)
 {
     rssi = rssi; // avoid warning
 
@@ -461,7 +461,7 @@ uint32_t UdSetRssi(uint8_t rssi)
     }
 }
 
-uint32_t UdSetRtsThreshold(uint16_t rtsThreshold)
+u_int32_t UdSetRtsThreshold(u_int16_t rtsThreshold)
 {
     // can't change RSSI unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -474,10 +474,10 @@ uint32_t UdSetRtsThreshold(uint16_t rtsThreshold)
     return UD_SUCCESS;
 }
 
-uint32_t UdSetReconnectMode(uint8_t retryCount, uint8_t deauthAction,
-    uint8_t beaconTimeout, uint8_t beaconTimeoutAction)
+u_int32_t UdSetReconnectMode(u_int8_t retryCount, u_int8_t deauthAction,
+    u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction)
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     if (deauthAction != WF_ATTEMPT_TO_RECONNECT &&
         deauthAction != WF_DO_NOT_ATTEMPT_TO_RECONNECT) {
@@ -504,13 +504,13 @@ errorExit:
     return errorCode;
 }
 
-static uint32_t ValidateChannelsWithDomain(uint8_t *p_channelList,
-    uint8_t numChannels, uint8_t domain)
+static u_int32_t ValidateChannelsWithDomain(u_int8_t *p_channelList,
+    u_int8_t numChannels, u_int8_t domain)
 {
-    uint8_t maxChannel;
-    uint8_t channel;
+    u_int8_t maxChannel;
+    u_int8_t channel;
     int i;
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     if (domain == WF_DOMAIN_FCC) {
         maxChannel = 11;
@@ -550,12 +550,12 @@ static bool isSsidDefined()
     return (g_udState.ssidLength > 0);
 }
 
-static uint32_t ValidateWpsChannelList(const uint8_t domain,
-    const uint8_t *p_channelList, const uint8_t numChannels)
+static u_int32_t ValidateWpsChannelList(const u_int8_t domain,
+    const u_int8_t *p_channelList, const u_int8_t numChannels)
 {
-    uint32_t errorCode = UD_SUCCESS;
-    uint32_t channelBitMask = 0;
-    uint32_t compareMask;
+    u_int32_t errorCode = UD_SUCCESS;
+    u_int32_t channelBitMask = 0;
+    u_int32_t compareMask;
     int i;
 
     // for each channel in list
@@ -588,9 +588,9 @@ static uint32_t ValidateWpsChannelList(const uint8_t domain,
     return errorCode;
 }
 
-static uint32_t CheckInfrastructureConnect()
+static u_int32_t CheckInfrastructureConnect()
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // ensure that all channels are within selected domain
     errorCode = ValidateChannelsWithDomain(g_udState.channelList,
@@ -638,9 +638,9 @@ errorExit:
     return errorCode;
 }
 
-static uint32_t CheckAdHocConnect()
+static u_int32_t CheckAdHocConnect()
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
     // TODO: ps-poll not supported in Adhoc
 
     if ((g_udState.securityType != WF_SECURITY_OPEN)     &&
@@ -659,10 +659,10 @@ errorExit:
     return errorCode;
 }
 
-static uint32_t CheckP2pConnect()
+static u_int32_t CheckP2pConnect()
 {
-    uint32_t errorCode = UD_SUCCESS;
-    uint16_t channelBitMask = 0;
+    u_int32_t errorCode = UD_SUCCESS;
+    u_int16_t channelBitMask = 0;
     int i;
 
     if (strcmp((char *)g_udState.ssid, "DIRECT-") != 0) {
@@ -691,9 +691,9 @@ errorExit:
 }
 
 // called by WF_Connect
-uint32_t UdCheckConnectionConfig()
+u_int32_t UdCheckConnectionConfig()
 {
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     // first check the error bit mask; if any bits are set than an error
     // occurred previously and the connection process is stopped
@@ -721,7 +721,7 @@ errorExit:
     return errorCode;
 }
 
-uint32_t UdSetTxMode(uint8_t mode)
+u_int32_t UdSetTxMode(u_int8_t mode)
 {
     // can't change SSID unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -735,7 +735,7 @@ uint32_t UdSetTxMode(uint8_t mode)
     }
 }
 
-uint32_t UdScan(uint8_t mode)
+u_int32_t UdScan(u_int8_t mode)
 {
     if (mode > WF_SCAN_ALL) {
         return UD_ERROR_INVALID_SCAN_MODE;
@@ -744,7 +744,7 @@ uint32_t UdScan(uint8_t mode)
     }
 }
 
-uint32_t udSetTxPowerMax(uint8_t maxTxPower)
+u_int32_t udSetTxPowerMax(u_int8_t maxTxPower)
 {
     if (maxTxPower < 9 || maxTxPower > 18) {
         return UD_ERROR_INVALID_MAX_POWER;
@@ -753,7 +753,7 @@ uint32_t udSetTxPowerMax(uint8_t maxTxPower)
     }
 }
 
-uint32_t UdSetHwMulticastFilter(uint8_t multicastFilterId, uint8_t *p_multicastAddress)
+u_int32_t UdSetHwMulticastFilter(u_int8_t multicastFilterId, u_int8_t *p_multicastAddress)
 {
     p_multicastAddress = p_multicastAddress;  // avoid warning
 
@@ -765,7 +765,7 @@ uint32_t UdSetHwMulticastFilter(uint8_t multicastFilterId, uint8_t *p_multicastA
     }
 }
 
-uint32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_keyInfo)
+u_int32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_keyInfo)
 {
     // WPA passphrase must be between 8 and 63 bytes
     if (p_keyInfo->keyLength < 8 || p_keyInfo->keyLength > 63) {
@@ -778,7 +778,7 @@ uint32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_keyInfo)
     return UD_SUCCESS;
 }
 
-uint32_t UdGetWpsCredentials()
+u_int32_t UdGetWpsCredentials()
 {
     if (g_udState.securityType != WF_SECURITY_WPS_PIN ||
         g_udState.securityType != WF_SECURITY_WPS_PUSH_BUTTON) {
@@ -793,10 +793,10 @@ uint32_t UdGetWpsCredentials()
 void UdStateInit()
 {
 #if defined(WF_ERROR_CHECKING)
-    uint8_t defaultChannelList[] = {1,2,3,4,5,6,7,8,9,10,11};
+    u_int8_t defaultChannelList[] = {1,2,3,4,5,6,7,8,9,10,11};
 #endif
 
-    memset(&g_udState, 0x00, sizeof(g_udState));
+    bzero(&g_udState, sizeof(g_udState));
 
     UdSetInitInvalid();     // cleared after WF_Init() state machine complete
     UdSetConnectionState(CS_NOT_CONNECTED);
@@ -804,7 +804,7 @@ void UdStateInit()
     UdDisablePsPoll();
 
 #if defined(WF_ERROR_CHECKING)
-    UdSetSsid(NULL, 0);
+    UdSetSsid(0, 0);
     UdSetDomain(WF_DOMAIN_FCC);
     UdSetChannelList(defaultChannelList, sizeof(defaultChannelList));
     UdSetNetworkType(DEFAULT_NETWORK_TYPE);
@@ -814,13 +814,13 @@ void UdStateInit()
 
 void UdEnablePsPoll(t_psPollContext *p_context)
 {
-    g_udState.psPollEnabled = true;
-    memcpy(&g_udState.psPollContext, p_context, sizeof(t_psPollContext));
+    g_udState.psPollEnabled = 1;
+    bcopy(p_context, &g_udState.psPollContext, sizeof(t_psPollContext));
 }
 
 void UdDisablePsPoll()
 {
-    g_udState.psPollEnabled = false;
+    g_udState.psPollEnabled = 0;
 }
 
 bool UdisPsPollEnabled()

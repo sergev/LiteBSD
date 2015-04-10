@@ -6,7 +6,7 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-#define WF_RAW_STATUS_REG_BUSY_MASK     ((uint16_t)(0x0001))
+#define WF_RAW_STATUS_REG_BUSY_MASK     ((u_int16_t)(0x0001))
 
 /*
  * These macros set a flag bit if the raw index is set past the end
@@ -18,24 +18,24 @@
 #define isIndexOutOfBounds(rawId)           ((g_RawIndexPastEnd & g_RawAccessOutOfBoundsMask[rawId]) > 0)
 
 typedef struct {
-    volatile uint8_t rawInterruptMask;                    // filled in by interrupt
-    bool             waitingForRawMoveCompleteInterrupt;  // set in this module, cleared by interrupt
+    volatile u_int8_t rawInterruptMask;         // filled in by interrupt
+    bool waitingForRawMoveCompleteInterrupt;    // set in this module, cleared by interrupt
 } t_rawMoveState;
 
 /* raw registers for each raw window being used */
-static const uint8_t  g_RawIndexReg[NUM_RAW_WINDOWS]  = {
+static const u_int8_t g_RawIndexReg[NUM_RAW_WINDOWS] = {
     RAW_0_INDEX_REG,  RAW_1_INDEX_REG,  RAW_2_INDEX_REG,  RAW_3_INDEX_REG,  RAW_4_INDEX_REG, RAW_5_INDEX_REG
 };
-static const uint8_t  g_RawStatusReg[NUM_RAW_WINDOWS] = {
+static const u_int8_t g_RawStatusReg[NUM_RAW_WINDOWS] = {
     RAW_0_STATUS_REG, RAW_1_STATUS_REG, RAW_2_STATUS_REG, RAW_3_STATUS_REG, RAW_4_STATUS_REG, RAW_5_STATUS_REG
 };
-static const uint16_t g_RawCtrl0Reg[NUM_RAW_WINDOWS]  = {
+static const u_int16_t g_RawCtrl0Reg[NUM_RAW_WINDOWS] = {
     RAW_0_CTRL_0_REG, RAW_1_CTRL_0_REG, RAW_2_CTRL_0_REG, RAW_3_CTRL_0_REG, RAW_4_CTRL_0_REG, RAW_5_CTRL_0_REG
 };
-static const uint16_t g_RawCtrl1Reg[NUM_RAW_WINDOWS]  = {
+static const u_int16_t g_RawCtrl1Reg[NUM_RAW_WINDOWS] = {
     RAW_0_CTRL_1_REG, RAW_1_CTRL_1_REG, RAW_2_CTRL_1_REG, RAW_3_CTRL_1_REG, RAW_4_CTRL_1_REG, RAW_5_CTRL_1_REG
 };
-static const uint16_t g_RawDataReg[NUM_RAW_WINDOWS]   = {
+static const u_int16_t g_RawDataReg[NUM_RAW_WINDOWS] = {
     RAW_0_DATA_REG,   RAW_1_DATA_REG,   RAW_2_DATA_REG,   RAW_3_DATA_REG,   RAW_4_DATA_REG, RAW_5_DATA_REG
 };
 
@@ -43,7 +43,7 @@ static const uint16_t g_RawDataReg[NUM_RAW_WINDOWS]   = {
  * Interrupt mask for each raw window; note that raw0 and raw1 are really
  * 8 bit values and will be cast when used.
  */
-static const uint16_t g_RawIntMask[NUM_RAW_WINDOWS] = {
+static const u_int16_t g_RawIntMask[NUM_RAW_WINDOWS] = {
     WF_HOST_INT_MASK_RAW_0_INT_0,   /* used in HOST_INTR reg (8-bit register) */
     WF_HOST_INT_MASK_RAW_1_INT_0,   /* used in HOST_INTR reg (8-bit register) */
     WF_HOST_INT_MASK_RAW_2_INT_0,   /* used in HOST_INTR2 reg (16-bit register) */
@@ -53,12 +53,12 @@ static const uint16_t g_RawIntMask[NUM_RAW_WINDOWS] = {
 };
 
 /* keeps track of whether raw tx/rx data windows mounted or not */
-static uint8_t RawWindowState[2];   // [0] is RAW Rx window, [1] is RAW Tx window
+static u_int8_t RawWindowState[2];  // [0] is RAW Rx window, [1] is RAW Tx window
 
-const uint8_t g_RawAccessOutOfBoundsMask[NUM_RAW_WINDOWS] = {
+const u_int8_t g_RawAccessOutOfBoundsMask[NUM_RAW_WINDOWS] = {
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20
 };
-static uint8_t g_RawIndexPastEnd = 0;   /* no indexes are past end of window */
+static u_int8_t g_RawIndexPastEnd = 0;  /* no indexes are past end of window */
 
 static t_rawMoveState RawMoveState;
 
@@ -66,13 +66,13 @@ static t_rawMoveState RawMoveState;
  * Wait for a RAW move to complete.
  * Returns a number of bytes that were overlayed (not always applicable).
  */
-static uint16_t WaitForRawMoveComplete(uint8_t rawId)
+static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
 {
-    uint8_t  rawIntMask;
-    uint16_t byteCount;
-    uint8_t  regId;
-    uint32_t elapsedTime;
-    uint32_t startTime;
+    u_int8_t  rawIntMask;
+    u_int16_t byteCount;
+    u_int8_t  regId;
+    u_int32_t elapsedTime;
+    u_int32_t startTime;
 
     /* create mask to check against for Raw Move complete interrupt for either RAW0 or RAW1 */
     if (rawId <= RAW_ID_1) {
@@ -116,8 +116,8 @@ void RawInit()
     // this mechanism is because when waiting for a Raw Move complete interrupt
     // we need to save the state if any other interrupts occur at the same time so
     // we don't lose them
-    RawMoveState.rawInterruptMask  = 0;                         // interrupt will write to this
-    RawMoveState.waitingForRawMoveCompleteInterrupt = false;    // not waiting for RAW move complete
+    RawMoveState.rawInterruptMask  = 0;                     // interrupt will write to this
+    RawMoveState.waitingForRawMoveCompleteInterrupt = 0;    // not waiting for RAW move complete
 
     // By default the MRF24WG firmware mounts Scratch to RAW 1 after reset. This
     // is not being used, so unmount the scratch from this RAW window.
@@ -138,10 +138,10 @@ bool isWaitingForRawMoveCompleteInterrupt()
 
 void ClearWaitingForRawMoveCompleteInterrupt()
 {
-    RawMoveState.waitingForRawMoveCompleteInterrupt = false;
+    RawMoveState.waitingForRawMoveCompleteInterrupt = 0;
 }
 
-void SignalRawInterruptEvent(uint8_t rawIntMask)
+void SignalRawInterruptEvent(u_int8_t rawIntMask)
 {
     RawMoveState.rawInterruptMask = rawIntMask;
 }
@@ -157,11 +157,11 @@ void SignalRawInterruptEvent(uint8_t rawIntMask)
  * Parameters:
  *  rawId -- RAW window ID being used to mount the scratch data
  */
-uint16_t ScratchMount(uint8_t rawId)
+u_int16_t ScratchMount(u_int8_t rawId)
 {
-    uint16_t byteCount;
+    u_int16_t byteCount;
 
-    byteCount = RawMove(rawId, RAW_SCRATCH_POOL, true, 0);
+    byteCount = RawMove(rawId, RAW_SCRATCH_POOL, 1, 0);
     return byteCount;
 }
 
@@ -176,9 +176,9 @@ uint16_t ScratchMount(uint8_t rawId)
  * Parameters:
  *  rawId -- RAW window ID that was used to mount the scratch window
  */
-void ScratchUnmount(uint8_t rawId)
+void ScratchUnmount(u_int8_t rawId)
 {
-    RawMove(rawId, RAW_SCRATCH_POOL, false, 0);
+    RawMove(rawId, RAW_SCRATCH_POOL, 0, 0);
 }
 
 /*
@@ -191,10 +191,10 @@ void ScratchUnmount(uint8_t rawId)
  * Parameters:
  *  bytesNeeded -- number of bytes needed for the mgmt tx message
  */
-bool AllocateMgmtTxBuffer(uint16_t bytesNeeded)
+bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
 {
-    uint16_t bufAvail;
-    uint16_t byteCount;
+    u_int16_t bufAvail;
+    u_int16_t byteCount;
 
     /* get total bytes available for MGMT tx memory pool */
     bufAvail = Read16BitWFRegister(WF_HOST_WFIFO_BCNT1_REG) & 0x0fff; /* LS 12 bits contain length */
@@ -202,21 +202,21 @@ bool AllocateMgmtTxBuffer(uint16_t bytesNeeded)
     /* if enough bytes available to allocate */
     if (bufAvail >= bytesNeeded) {
         /* allocate and create the new Mgmt Tx buffer */
-        byteCount = RawMove(RAW_MGMT_TX_ID, RAW_MGMT_POOL, true, bytesNeeded);
+        byteCount = RawMove(RAW_MGMT_TX_ID, RAW_MGMT_POOL, 1, bytesNeeded);
         if (byteCount == 0) {
              EventEnqueue(WF_EVENT_ERROR, UD_ERROR_MGMT_BUFFER_ALLOCATION_FAILED);
-             return false;
+             return 0;
         }
         ClearIndexOutOfBoundsFlag(RAW_MGMT_TX_ID);
-        return true;
+        return 1;
     }
     /* else not enough bytes available at this time to satisfy request */
     else {
         /* if we allocated some bytes, but not enough, then deallocate what was allocated */
         if (bufAvail > 0) {
-            RawMove(RAW_MGMT_RX_ID, RAW_MGMT_POOL, false, 0);
+            RawMove(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
         }
-        return false;
+        return 0;
     }
 }
 
@@ -227,7 +227,7 @@ bool AllocateMgmtTxBuffer(uint16_t bytesNeeded)
 void DeallocateMgmtRxBuffer()
 {
     /* Unmount (release) mgmt packet now that we are done with it */
-    RawMove(RAW_MGMT_RX_ID, RAW_MGMT_POOL, false, 0);
+    RawMove(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
 }
 
 /*
@@ -237,9 +237,9 @@ void DeallocateMgmtRxBuffer()
  *  pBuffer - Buffer containing bytes to write
  *  length  - number of bytes to read
  */
-void RawSetByte(uint16_t rawId, const uint8_t *p_buffer, uint16_t length)
+void RawSetByte(u_int16_t rawId, const u_int8_t *p_buffer, u_int16_t length)
 {
-    uint8_t regId;
+    u_int8_t regId;
 
     // if trying to write past end of raw window
     if (isIndexOutOfBounds(rawId)) {
@@ -260,9 +260,9 @@ void RawSetByte(uint16_t rawId, const uint8_t *p_buffer, uint16_t length)
  *  pBuffer - Buffer to read bytes into
  *  length  - number of bytes to read
  */
-void RawGetByte(uint16_t rawId, uint8_t *pBuffer, uint16_t length)
+void RawGetByte(u_int16_t rawId, u_int8_t *pBuffer, u_int16_t length)
 {
-    uint8_t regId;
+    u_int8_t regId;
 
     // if the raw index was previously set out of bounds
     if (isIndexOutOfBounds(rawId)) {
@@ -283,10 +283,10 @@ void RawGetByte(uint16_t rawId, uint8_t *pBuffer, uint16_t length)
  * Parameters:
  *  bufLen -- number of bytes that comprise the management frame.
  */
-void SendRAWManagementFrame(uint16_t bufLen)
+void SendRAWManagementFrame(u_int16_t bufLen)
 {
     /* Notify WiFi device that management message is ready to be processed */
-    RawMove(RAW_MGMT_TX_ID, RAW_MAC, false, bufLen);
+    RawMove(RAW_MGMT_TX_ID, RAW_MAC, 0, bufLen);
 }
 
 /*
@@ -299,11 +299,11 @@ void SendRAWManagementFrame(uint16_t bufLen)
  * Parameters:
  *  rawId -- RAW ID specifying which raw window to mount the rx packet in.
  */
-uint16_t RawMountRxBuffer(uint8_t rawId)
+u_int16_t RawMountRxBuffer(u_int8_t rawId)
 {
-    uint16_t length;
+    u_int16_t length;
 
-    length = RawMove(rawId, RAW_MAC, true, 0);
+    length = RawMove(rawId, RAW_MAC, 1, 0);
 
     // the length should never be 0 if notified of an Rx msg
     if (length == 0) {
@@ -329,7 +329,7 @@ uint16_t RawMountRxBuffer(uint8_t rawId)
  *  length     -- number of bytes to read from the RAW window
  *  p_dest     -- pointer to Host buffer where read data is copied
  */
-void RawRead(uint8_t rawId, uint16_t startIndex, uint16_t length, uint8_t *p_dest)
+void RawRead(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, u_int8_t *p_dest)
 {
     RawSetIndex(rawId, startIndex);
     RawGetByte(rawId, p_dest, length);
@@ -345,7 +345,7 @@ void RawRead(uint8_t rawId, uint16_t startIndex, uint16_t length, uint8_t *p_des
  *  length     -- number of bytes to write to RAW window
  *  p_src      -- pointer to Host buffer write data
  */
-void RawWrite(uint8_t rawId, uint16_t startIndex, uint16_t length, const uint8_t *p_src)
+void RawWrite(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, const u_int8_t *p_src)
 {
     /* set raw index in dest memory */
     RawSetIndex(rawId, startIndex);
@@ -366,12 +366,12 @@ void RawWrite(uint8_t rawId, uint16_t startIndex, uint16_t length, const uint8_t
  *  rawId -- RAW window ID
  *  index -- desired index within RAW window
  */
-void RawSetIndex(uint16_t rawId, uint16_t index)
+void RawSetIndex(u_int16_t rawId, u_int16_t index)
 {
-    uint8_t  regId;
-    uint16_t regValue;
-    uint32_t elapsedTime;
-    uint32_t startTime;
+    u_int8_t  regId;
+    u_int16_t regValue;
+    u_int32_t elapsedTime;
+    u_int32_t startTime;
 
     /* get the index register associated with the raw ID and write to it */
     regId = g_RawIndexReg[rawId];
@@ -416,28 +416,28 @@ void RawSetIndex(uint16_t rawId, uint16_t index)
  * Parameters:
  *  bytesNeeded -- number of bytes needed for the data tx message
  */
-bool AllocateDataTxBuffer(uint16_t bytesNeeded)
+bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
 {
-    uint16_t bufAvail;
-    uint16_t byteCount;
+    u_int16_t bufAvail;
+    u_int16_t byteCount;
 
     /* get total bytes available for DATA tx memory pool */
     bufAvail = Read16BitWFRegister(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff; /* LS 12 bits contain length */
     if (bufAvail < bytesNeeded) {
         /* not enough bytes available at this time to satisfy request */
-        return false;
+        return 0;
     }
 
     /* allocate and create the new Tx buffer (mgmt or data) */
-    byteCount = RawMove(RAW_DATA_TX_ID, RAW_DATA_POOL, true, bytesNeeded);
+    byteCount = RawMove(RAW_DATA_TX_ID, RAW_DATA_POOL, 1, bytesNeeded);
     if (byteCount == 0) {
         EventEnqueue(WF_EVENT_ERROR, UD_TX_ALLOCATION_FAILED);
-        return false;
+        return 0;
     }
 
     /* flag this raw window as mounted (in use) */
     SetRawDataWindowState(RAW_DATA_TX_ID, WF_RAW_DATA_MOUNTED);
-    return true;
+    return 1;
 }
 
 /*
@@ -455,7 +455,7 @@ void DeallocateDataRxBuffer()
     SetRawDataWindowState(RAW_DATA_RX_ID, WF_RAW_UNMOUNTED);
 
     /* perform deallocation of raw rx buffer */
-    RawMove(RAW_DATA_RX_ID, RAW_DATA_POOL, false, 0);
+    RawMove(RAW_DATA_RX_ID, RAW_DATA_POOL, 0, 0);
 }
 
 /*
@@ -483,15 +483,15 @@ void DeallocateDataRxBuffer()
  *
  *  size -- number of bytes to overlay (not always applicable)
  */
-uint16_t RawMove(uint16_t rawId,
-                 uint16_t srcDest,
+u_int16_t RawMove(u_int16_t rawId,
+                 u_int16_t srcDest,
                  bool     rawIsDestination,
-                 uint16_t size)
+                 u_int16_t size)
 {
-    uint16_t byteCount;
-    uint8_t  regId;
-    uint8_t  regValue;
-    uint16_t ctrlVal = 0;
+    u_int16_t byteCount;
+    u_int8_t  regId;
+    u_int8_t  regValue;
+    u_int16_t ctrlVal = 0;
     bool intDisabled;
 
     // save current state of External interrupt and disable it
@@ -511,7 +511,7 @@ uint16_t RawMove(uint16_t rawId,
      * RawMoveState.waitingForRawMoveCompleteInterrupt.
      */
     RawMoveState.rawInterruptMask  = 0;
-    RawMoveState.waitingForRawMoveCompleteInterrupt = true;
+    RawMoveState.waitingForRawMoveCompleteInterrupt = 1;
 
     /* Create control value that will be written to raw control register,
      * which initiates the raw move */
@@ -531,7 +531,7 @@ uint16_t RawMove(uint16_t rawId,
     /* if doing a raw move on Raw 0 or 1 (data rx or data tx) */
     if (rawId <= RAW_ID_1) {
         /* Clear the interrupt bit in the host interrupt register (Raw 0 and 1 are in 8-bit host intr reg) */
-        regValue = (uint8_t)g_RawIntMask[rawId];
+        regValue = (u_int8_t)g_RawIntMask[rawId];
         Write8BitWFRegister(WF_HOST_INTR_REG, regValue);
     }
     /* else doing raw move on mgmt rx, mgmt tx, or scratch */
@@ -563,12 +563,12 @@ uint16_t RawMove(uint16_t rawId,
 }
 
 /* sets and gets the state of RAW data tx/rx windows */
-void SetRawDataWindowState(uint8_t rawId, uint8_t state)
+void SetRawDataWindowState(u_int8_t rawId, u_int8_t state)
 {
     RawWindowState[rawId] = state;
 }
 
-uint8_t GetRawDataWindowState(uint8_t rawId)
+u_int8_t GetRawDataWindowState(u_int8_t rawId)
 {
     return RawWindowState[rawId];
 }

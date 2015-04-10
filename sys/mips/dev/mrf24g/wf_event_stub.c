@@ -21,11 +21,11 @@
  *   eventType -- type of event
  *   eventData -- data associated with event; not always used.
  */
-void WF_ProcessEvent(uint8_t eventType, uint32_t eventData)
+void WF_ProcessEvent(u_int8_t eventType, u_int32_t eventData)
 {
     //TODO
 #if 0
-    wfmrf24.priv.fMRFBusy = FALSE;
+    wfmrf24.priv.fMRFBusy = 0;
     wfmrf24.priv.lastEventType = eventType;
     wfmrf24.priv.lastEventData = eventData;
 
@@ -47,7 +47,7 @@ void WF_ProcessEvent(uint8_t eventType, uint32_t eventData)
 
     case WF_EVENT_CONNECTION_TEMPORARILY_LOST:
         wfmrf24.priv.connectionStatus = ForceIPStatus((CLMask | eventData));
-        wfmrf24.priv.fMRFBusy = true;   // don't do anything during the reconnect!
+        wfmrf24.priv.fMRFBusy = 1;  // don't do anything during the reconnect!
         break;
 
     case WF_EVENT_CONNECTION_REESTABLISHED:
@@ -67,9 +67,9 @@ void WF_ProcessEvent(uint8_t eventType, uint32_t eventData)
         break;
 
     case WF_WPS_EVENT_KEY_CALCULATION_REQUEST:
-        WF_WpsKeyGenerate(); // can be called here or later, but must be called
-                             // to complete WPS connection
-        wfmrf24.priv.fMRFBusy = TRUE;   // wait for connection status or error.
+        WF_WpsKeyGenerate();        // can be called here or later, but must be called
+                                    // to complete WPS connection
+        wfmrf24.priv.fMRFBusy = 1;  // wait for connection status or error.
         break;
 
     case WF_EVENT_MRF24WG_MODULE_ASSERT:
@@ -92,22 +92,22 @@ void WF_ProcessRxPacket()
 {
     //TODO
 #if 0
-    uint16_t cbPkt = WF_RxPacketLengthGet();
+    u_int16_t cbPkt = WF_RxPacketLengthGet();
 
     if (cbPkt > 0) {
         IPSTACK * pIpStack = RRHPAlloc(wfmrf24.adpMRF24G.hAdpHeap, cbPkt + sizeof(IPSTACK));
-        if (pIpStack != NULL) {
+        if (pIpStack != 0) {
             // fill in info about the frame data
-            pIpStack->fFrameIsParsed    = FALSE;
-            pIpStack->fFreeIpStackToAdp = TRUE;
+            pIpStack->fFrameIsParsed    = 0;
+            pIpStack->fFreeIpStackToAdp = 1;
             pIpStack->headerOrder       = NETWORK_ORDER;
-            pIpStack->pPayload          = ((uint8_t *) pIpStack) + sizeof(IPSTACK);
+            pIpStack->pPayload          = ((u_int8_t *) pIpStack) + sizeof(IPSTACK);
             pIpStack->cbPayload         = cbPkt;
 
             WF_RxPacketCopy(pIpStack->pPayload, pIpStack->cbPayload);
             WF_RxPacketDeallocate();
 
-            pIpStack->fOwnedByAdp = true;
+            pIpStack->fOwnedByAdp = 1;
             FFInPacket(&wfmrf24.priv.ffptRead, pIpStack);
         }
         // if we know we can never allocate this packet, then just drop it

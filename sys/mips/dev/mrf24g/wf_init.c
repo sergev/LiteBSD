@@ -17,12 +17,12 @@ enum {
     MRF24WG_RESET_SUCCESSFUL           = 4,
 };
 
-#define WF_INT_DISABLE ((uint8_t)0)
-#define WF_INT_ENABLE  ((uint8_t)1)
+#define WF_INT_DISABLE ((u_int8_t)0)
+#define WF_INT_ENABLE  ((u_int8_t)1)
 
-static uint8_t g_mrf24wgResetState;
+static u_int8_t g_mrf24wgResetState;
 
-extern void WF_SetTxDataConfirm(uint8_t state);
+extern void WF_SetTxDataConfirm(u_int8_t state);
 
 /*
  * Initialize the 16-bit Host Interrupt register on the WiFi device with the
@@ -35,9 +35,9 @@ extern void WF_SetTxDataConfirm(uint8_t state);
  *                        Disable implies clearing the bits and enable sets
  *                        the bits.
  */
-static void HostInterrupt2RegInit(uint16_t hostIntMaskRegMask, uint8_t  state)
+static void HostInterrupt2RegInit(u_int16_t hostIntMaskRegMask, u_int8_t  state)
 {
-    uint16_t int2MaskValue;
+    u_int16_t int2MaskValue;
 
     /* Host Int Register is a status register where each bit indicates a specific event  */
     /* has occurred. In addition, writing a 1 to a bit location in this register clears  */
@@ -81,9 +81,9 @@ static void HostInterrupt2RegInit(uint16_t hostIntMaskRegMask, uint8_t  state)
  *  state -  one of WF_EXINT_DISABLE, WF_EXINT_ENABLE where
  *           Disable implies clearing the bits and enable sets the bits.
  */
-static void HostInterruptRegInit(uint8_t hostIntrMaskRegMask, uint8_t state)
+static void HostInterruptRegInit(u_int8_t hostIntrMaskRegMask, u_int8_t state)
 {
-    uint8_t hostIntMaskValue;
+    u_int8_t hostIntMaskValue;
 
     /* Host Int Register is a status register where each bit indicates a specific event  */
     /* has occurred. In addition, writing a 1 to a bit location in this register clears  */
@@ -120,11 +120,11 @@ static void HostInterruptRegInit(uint8_t hostIntrMaskRegMask, uint8_t state)
  */
 static void Init_Interrupts()
 {
-    uint8_t  mask8;
-    uint16_t mask16;
+    u_int8_t  mask8;
+    u_int16_t mask16;
 
     // disable the interrupts gated by the 16-bit host int register
-    HostInterrupt2RegInit(WF_HOST_2_INT_MASK_ALL_INT, (uint16_t)WF_INT_DISABLE);
+    HostInterrupt2RegInit(WF_HOST_2_INT_MASK_ALL_INT, (u_int16_t)WF_INT_DISABLE);
 
     // disable the interrupts gated the by main 8-bit host int register
     HostInterruptRegInit(WF_HOST_INT_MASK_ALL_INT, WF_INT_DISABLE);
@@ -161,10 +161,10 @@ static void Init_Interrupts()
  * Returns 0 if successful, else the upper 16-bits contains the event type and the lower
  * 16 bits contains the event data
  */
-static uint32_t CompleteInitialization()
+static u_int32_t CompleteInitialization()
 {
     t_deviceInfo deviceInfo;
-    uint32_t errorCode = UD_SUCCESS;
+    u_int32_t errorCode = UD_SUCCESS;
 
     Init_Interrupts();                              // Initialize MRF24WG interrupts
     RawInit();                                      // initialize RAW driver
@@ -172,11 +172,11 @@ static uint32_t CompleteInitialization()
     WF_DeviceInfoGet(&deviceInfo);                   // get MRF24WG module version numbers
     if (deviceInfo.deviceType == WF_UNKNOWN_DEVICE)
     {
-        errorCode = (((uint32_t)WF_EVENT_ERROR << 16) | (uint32_t)UD_ERROR_UNKNOWN_DEVICE);
+        errorCode = (((u_int32_t)WF_EVENT_ERROR << 16) | (u_int32_t)UD_ERROR_UNKNOWN_DEVICE);
     }
     else if (deviceInfo.deviceType == WF_MRF24WB_DEVICE)
     {
-        errorCode = (((uint32_t)WF_EVENT_ERROR << 16) | (uint32_t)UD_ERROR_MRF24WB_NOT_SUPPORTED);
+        errorCode = (((u_int32_t)WF_EVENT_ERROR << 16) | (u_int32_t)UD_ERROR_MRF24WB_NOT_SUPPORTED);
     }
 
     WF_SetTxDataConfirm(WF_DISABLED);     // Disable Tx Data confirms (from the MRF24W)
@@ -200,7 +200,7 @@ static uint32_t CompleteInitialization()
  */
 void WF_Init()
 {
-    uint32_t    tStart = 0;
+    u_int32_t    tStart = 0;
 
     UdStateInit();      // initialize internal state machine
 
@@ -242,10 +242,10 @@ void WF_Init()
  */
 void ChipResetStateMachine()
 {
-    uint32_t elapsedTime;
-    uint16_t value;
-    static uint32_t startTime;
-    uint16_t errorCode;
+    u_int32_t elapsedTime;
+    u_int16_t value;
+    static u_int32_t startTime;
+    u_int16_t errorCode;
 
     switch (g_mrf24wgResetState)
     {
@@ -316,7 +316,7 @@ void ChipResetStateMachine()
                 }
                 else
                 {
-                    EventEnqueue( ((uint8_t)errorCode >> 16), (uint32_t)errorCode);
+                    EventEnqueue( ((u_int8_t)errorCode >> 16), (u_int32_t)errorCode);
                     g_mrf24wgResetState = MRF24WG_RESET_FAILED;
                 }
             }

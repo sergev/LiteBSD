@@ -4,16 +4,16 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static volatile bool gMgmtConfirmMsgReceived = false;
+static volatile bool gMgmtConfirmMsgReceived = 0;
 
 void ClearMgmtConfirmMsg()
 {
-    gMgmtConfirmMsgReceived = false;
+    gMgmtConfirmMsgReceived = 0;
 }
 
 static void SignalMgmtConfirmMsg()
 {
-    gMgmtConfirmMsgReceived = true;
+    gMgmtConfirmMsgReceived = 1;
 }
 
 static bool isMgmtConfirmMsg()
@@ -24,12 +24,12 @@ static bool isMgmtConfirmMsg()
 static void WFProcessMgmtIndicateMsg()
 {
     t_mgmtIndicateHdr hdr;
-    uint8_t buf[6];
-    uint8_t eventType = 0xff;
-    uint32_t eventData = WF_NO_EVENT_DATA;
+    u_int8_t buf[6];
+    u_int8_t eventType = 0xff;
+    u_int32_t eventData = WF_NO_EVENT_DATA;
 
     /* read 2-byte header of management message */
-    RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_mgmtIndicateHdr), (uint8_t *)&hdr);
+    RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_mgmtIndicateHdr), (u_int8_t *)&hdr);
 
     /* Determine which event occurred and handle it */
     switch (hdr.subType)
@@ -49,7 +49,7 @@ static void WFProcessMgmtIndicateMsg()
             else
             {
                 eventType = WF_EVENT_CONNECTION_FAILED;
-                eventData = ((uint32_t)buf[0] << 8) | (uint32_t)buf[1]; /* contains connection failure code */
+                eventData = ((u_int32_t)buf[0] << 8) | (u_int32_t)buf[1]; /* contains connection failure code */
                 UdSetConnectionState(CS_NOT_CONNECTED);
             }
         break;
@@ -65,19 +65,19 @@ static void WFProcessMgmtIndicateMsg()
             if (buf[0] == CONNECTION_TEMPORARILY_LOST)
             {
                 eventType     = WF_EVENT_CONNECTION_TEMPORARILY_LOST;
-                eventData = (uint32_t)buf[1];    /* lost due to beacon timeout or deauth */
+                eventData = (u_int32_t)buf[1];    /* lost due to beacon timeout or deauth */
                 UdSetConnectionState(CS_CONNECTION_IN_PROGRESS);
             }
             else if (buf[0] == CONNECTION_PERMANENTLY_LOST)
             {
                 eventType     = WF_EVENT_CONNECTION_PERMANENTLY_LOST;
-                eventData = (uint32_t)buf[1];   /* lost due to beacon timeout or deauth */
+                eventData = (u_int32_t)buf[1];   /* lost due to beacon timeout or deauth */
                 UdSetConnectionState(CS_NOT_CONNECTED);
             }
             else if (buf[0] == CONNECTION_REESTABLISHED)
             {
                 eventType     = WF_EVENT_CONNECTION_REESTABLISHED;
-                eventData = (uint32_t)buf[1];    /* originally lost due to beacon timeout or deauth */
+                eventData = (u_int32_t)buf[1];    /* originally lost due to beacon timeout or deauth */
                 UdSetConnectionState(CS_CONNECTED);
             }
             else
@@ -93,7 +93,7 @@ static void WFProcessMgmtIndicateMsg()
             /* read index 2 of mgmt indicate to get the number of scan results */
             RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 1, buf);
             eventType = WF_EVENT_SCAN_RESULTS_READY;
-            eventData = (uint32_t)buf[0];          /* number of scan results */
+            eventData = (u_int32_t)buf[0];          /* number of scan results */
             break;
 
 #if 0
@@ -116,7 +116,7 @@ static void WFProcessMgmtIndicateMsg()
             RawRead(RAW_MGMT_RX_ID,
                     sizeof(t_mgmtIndicateHdr),
                     sizeof(t_wpaKeyInfo),
-                    (uint8_t *)GetWpsPassPhraseInfo());
+                    (u_int8_t *)GetWpsPassPhraseInfo());
             break;
 
         //------
@@ -135,7 +135,7 @@ static void WFProcessMgmtIndicateMsg()
 
 void SignalMgmtMsgRx()
 {
-    uint8_t msgType;
+    u_int8_t msgType;
 
     // mount the mgmt pool rx data.  Read index is set to 0.
     RawMountRxBuffer(RAW_MGMT_RX_ID);
@@ -174,16 +174,16 @@ void SignalMgmtMsgRx()
  *  p_data        -- pointer to mgmt message data
  *  dataLength    -- number of byte of data
  */
-void SendMgmtMsg(uint8_t *p_header, uint8_t headerLength,
-    uint8_t *p_data, uint8_t dataLength)
+void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
+    u_int8_t *p_data, u_int8_t dataLength)
 {
-    uint32_t elapsedTime;
-    uint32_t startTime;
+    u_int32_t elapsedTime;
+    u_int32_t startTime;
 
     EnsureWFisAwake();
 
     startTime = WF_TimerRead();
-    while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == false)
+    while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0)
     {
          // if timed out waiting for allocation of Mgmt Tx Buffer
          elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
@@ -219,9 +219,9 @@ void SendMgmtMsg(uint8_t *p_header, uint8_t headerLength,
  *  expectedSubtype -- The expected subtype of the mgmt response
  *  freeAction      -- FREE_MGMT_BUFFER or DO_NOT_FREE_MGMT_BUFFER
  */
-void WaitForMgmtResponse(uint8_t expectedSubtype, uint8_t freeAction)
+void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
 {
-    uint32_t startTime, elapsedTime;
+    u_int32_t startTime, elapsedTime;
 #if 1
     #if defined(__18CXX)
         static tMgmtMsgRxHdr  hdr;
@@ -272,7 +272,7 @@ void WaitForMgmtResponse(uint8_t expectedSubtype, uint8_t freeAction)
     if (freeAction == FREE_MGMT_BUFFER)
     {
         /* read and verify result before freeing up buffer to ensure our message send was successful */
-        RawRead(RAW_MGMT_RX_ID, 0, (uint16_t)(sizeof(t_mgmtMsgRxHdr)), (uint8_t *)&hdr);
+        RawRead(RAW_MGMT_RX_ID, 0, (u_int16_t)(sizeof(t_mgmtMsgRxHdr)), (u_int8_t *)&hdr);
 
         if (hdr.subtype != expectedSubtype)
         {
@@ -308,17 +308,17 @@ void WaitForMgmtResponse(uint8_t expectedSubtype, uint8_t freeAction)
  *                     be freed.  If FALSE, the data will be read and the mgmt buffer
  *                     will be freed.
  */
-void WaitForMgmtResponseAndReadData(uint8_t expectedSubtype,
-                                    uint8_t numDataBytes,
-                                    uint8_t startIndex,
-                                    uint8_t *p_data)
+void WaitForMgmtResponseAndReadData(u_int8_t expectedSubtype,
+                                    u_int8_t numDataBytes,
+                                    u_int8_t startIndex,
+                                    u_int8_t *p_data)
 {
     t_mgmtMsgRxHdr  hdr;  /* management msg header struct */
 
     WaitForMgmtResponse(expectedSubtype, DO_NOT_FREE_MGMT_BUFFER);
 
     // if made it here then received a management message; read out header
-    RawRead(RAW_MGMT_RX_ID, 0, (uint16_t)(sizeof(t_mgmtMsgRxHdr)), (uint8_t *)&hdr);
+    RawRead(RAW_MGMT_RX_ID, 0, (u_int16_t)(sizeof(t_mgmtMsgRxHdr)), (u_int8_t *)&hdr);
 
     if ((hdr.result != MGMT_RESP_SUCCESS) && (hdr.result != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR))
     {

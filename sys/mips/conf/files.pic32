@@ -10,12 +10,29 @@ mips/pic32/sys_machdep.c        standard
 mips/pic32/sysctl.c             standard
 mips/pic32/trap.c               standard
 mips/pic32/vm_machdep.c         standard
+netinet/in_cksum.c              optional inet
+dev/vn.c                        optional vn
+thisisfor_in_proto.c            optional hy
 mips/dev/gpio.c                 optional gpio
 mips/dev/uart.c                 optional uart device-driver
 mips/dev/spi.c                  optional spi device-driver
 mips/dev/sd.c                   optional sd device-driver
 mips/dev/if_en.c                optional en device-driver
 mips/dev/if_mrf.c               optional mrf device-driver
-netinet/in_cksum.c              optional inet
-dev/vn.c                        optional vn
-thisisfor_in_proto.c            optional hy
+mips/dev/mrf24g/wf_connection.c optional mrf device-driver
+mips/dev/mrf24g/wf_profile.c    optional mrf device-driver
+mips/dev/mrf24g/wf_data_msg.c   optional mrf device-driver
+mips/dev/mrf24g/wf_eint.c       optional mrf device-driver
+mips/dev/mrf24g/wf_event.c      optional mrf device-driver
+mips/dev/mrf24g/wf_init.c       optional mrf device-driver
+mips/dev/mrf24g/wf_mgmt_msg.c   optional mrf device-driver
+mips/dev/mrf24g/wf_param_msg.c  optional mrf device-driver
+mips/dev/mrf24g/wf_pbkdf2.c     optional mrf device-driver
+mips/dev/mrf24g/wf_pll.c        optional mrf device-driver
+mips/dev/mrf24g/wf_power.c      optional mrf device-driver
+mips/dev/mrf24g/wf_raw.c        optional mrf device-driver
+mips/dev/mrf24g/wf_registers.c  optional mrf device-driver
+mips/dev/mrf24g/wf_scan.c       optional mrf device-driver
+mips/dev/mrf24g/wf_task.c       optional mrf device-driver
+mips/dev/mrf24g/wf_timer.c      optional mrf device-driver
+mips/dev/mrf24g/wf_ud_state.c   optional mrf device-driver

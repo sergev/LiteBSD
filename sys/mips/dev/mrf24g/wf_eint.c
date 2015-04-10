@@ -8,7 +8,7 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static uint8_t g_HostIntSaved = 0;
+static u_int8_t g_HostIntSaved = 0;
 
 /*
  * true if external interrupt needs processing, else false
@@ -20,9 +20,9 @@ static volatile bool g_ExIntNeedsServicing;
  * If declared as local variables, causes stack corruption in PIC18, or other
  * MCU's with overlay memory.
  */
-static uint8_t  g_EintHostIntRegValue;
-static uint8_t  g_EintHostIntMaskRegValue;
-static uint8_t  g_EintHostInt;
+static u_int8_t g_EintHostIntRegValue;
+static u_int8_t g_EintHostIntMaskRegValue;
+static u_int8_t g_EintHostInt;
 
 /*
  * MRF24WG interrupt handler, called directly from the the interrupt routine,
@@ -109,7 +109,7 @@ void WF_EintHandler()
     }
 
     // used by InterruptCheck()
-    g_ExIntNeedsServicing = true;
+    g_ExIntNeedsServicing = 1;
 }
 
 /*
@@ -122,11 +122,11 @@ void WF_EintHandler()
  */
 void InterruptCheck()
 {
-    uint8_t  hostIntRegValue;
-    uint8_t  hostIntMaskRegValue;
-    uint8_t  hostInt;
-    uint16_t hostInt2;
-    uint32_t assertInfo;
+    u_int8_t  hostIntRegValue;
+    u_int8_t  hostIntMaskRegValue;
+    u_int8_t  hostInt;
+    u_int16_t hostInt2;
+    u_int32_t assertInfo;
 
     // in no interrupt to process
     if (!g_ExIntNeedsServicing)
@@ -134,7 +134,7 @@ void InterruptCheck()
         return;
     }
 
-    g_ExIntNeedsServicing = false;
+    g_ExIntNeedsServicing = 0;
 
      /* read hostInt register to determine cause of interrupt */
     hostIntRegValue = Read8BitWFRegister(WF_HOST_INTR_REG);
@@ -165,7 +165,7 @@ void InterruptCheck()
         if (hostInt2 & WF_HOST_INT_MASK_MAIL_BOX_0_WRT)
         {
             // module number in upper 8 bits, assert information in lower 20 bits
-            assertInfo = (((uint32_t)Read16BitWFRegister(WF_HOST_MAIL_BOX_0_MSW_REG)) << 16) |
+            assertInfo = (((u_int32_t)Read16BitWFRegister(WF_HOST_MAIL_BOX_0_MSW_REG)) << 16) |
                                      Read16BitWFRegister(WF_HOST_MAIL_BOX_0_LSW_REG);
             // signal this event
             EventEnqueue(WF_EVENT_MRF24WG_MODULE_ASSERT, assertInfo);

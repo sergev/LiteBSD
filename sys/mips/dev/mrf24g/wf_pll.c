@@ -10,7 +10,7 @@
  * When bit-banging, determines which SPI port to use
  * based on the type of register we are accessing.
  */
-static uint8_t GetSpiPort(uint8_t regType)
+static u_int8_t GetSpiPort(u_int8_t regType)
 {
     switch (regType) {
     case ANALOG_PORT_0_REG_TYPE: return 0;
@@ -21,14 +21,14 @@ static uint8_t GetSpiPort(uint8_t regType)
     }
 }
 
-static void WriteAnalogRegisterBitBang(uint8_t regType, uint16_t address, uint16_t value)
+static void WriteAnalogRegisterBitBang(u_int8_t regType, u_int16_t address, u_int16_t value)
 {
-    uint8_t  spiPort;
-    uint16_t hrVal;
-    uint8_t  bitMask8;
-    uint16_t bitMask16;
-    uint8_t  i;
-    uint8_t  regAddress;
+    u_int8_t  spiPort;
+    u_int16_t hrVal;
+    u_int8_t  bitMask8;
+    u_int16_t bitMask16;
+    u_int8_t  i;
+    u_int8_t  regAddress;
 
     spiPort = GetSpiPort(regType);   // extract SPI port (0-3) from the register type
 

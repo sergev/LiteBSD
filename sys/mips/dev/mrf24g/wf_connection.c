@@ -4,10 +4,10 @@
  * Functions that connect, disconnect, get connection status,
  * set reconnection mode, and convert a WPA passphrase to a binary key.
  */
-#include <stdio.h>
-#include <string.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
+#include <sys/param.h>
+#include <sys/systm.h>
 
 /*
  * header format for response to CA Get Element message
@@ -15,14 +15,14 @@
 typedef struct caElementResponseStruct
 {
     t_mgmtMsgRxHdr    mgmtHdr;                /* normal 4-byte hdr for all mgmt responses */
-    uint8_t           elementId;              /* index 4 */
-    uint8_t           elementDataLength;      /* index 5 */
+    u_int8_t          elementId;              /* index 4 */
+    u_int8_t          elementDataLength;      /* index 5 */
     /* element data follows */
 } tCAElementResponseHdr;
 
 // did not want to create header file for one function
-extern void pbkdf2_sha1(const char *passphrase, const char *ssid, uint16_t ssid_len,
-                        uint16_t iterations, uint8_t *buf, uint16_t buflen);
+extern void pbkdf2_sha1(const char *passphrase, const char *ssid, u_int16_t ssid_len,
+                        u_int16_t iterations, u_int8_t *buf, u_int16_t buflen);
 
 /*
  * Set an element of the connection algorithm on the MRF24W.
@@ -41,11 +41,11 @@ extern void pbkdf2_sha1(const char *passphrase, const char *ssid, uint16_t ssid_
  * to construct the management message.  The caller must fix up any endian
  * issues prior to calling this function.
  */
-static void LowLevel_CASetElement(uint8_t elementId,
-                                  uint8_t *p_elementData,
-                                  uint8_t elementDataLength)
+static void LowLevel_CASetElement(u_int8_t elementId,
+                                  u_int8_t *p_elementData,
+                                  u_int8_t elementDataLength)
 {
-    uint8_t  hdrBuf[4];
+    u_int8_t  hdrBuf[4];
 
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
     hdrBuf[1] = WF_CA_SET_ELEMENT_SUBTYPE;      /* mgmt request subtype */
@@ -79,19 +79,19 @@ static void LowLevel_CASetElement(uint8_t elementId,
  * construct the management message.  The caller must fix up any endian issues
  * after getting the data from this function.
  */
-static void LowLevel_CAGetElement(uint8_t elementId,
-                                  uint8_t *p_elementData,
-                                  uint8_t elementDataLength,
+static void LowLevel_CAGetElement(u_int8_t elementId,
+                                  u_int8_t *p_elementData,
+                                  u_int8_t elementDataLength,
                                   bool    dataReadAction)
 {
-    uint8_t  hdrBuf[4];
+    u_int8_t  hdrBuf[4];
 
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
     hdrBuf[1] = WF_CA_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
     hdrBuf[2] = elementId;                  /* Element ID */
     hdrBuf[3] = 0;                          /* not used */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), NULL, 0);
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
 
     if (dataReadAction) {
         /* wait for mgmt response, read desired data, and then free response buffer */
@@ -131,10 +131,10 @@ static void LowLevel_CAGetElement(uint8_t elementId,
  */
 void WF_Connect()
 {
-    uint8_t  hdrBuf[4];
+    u_int8_t  hdrBuf[4];
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdCheckConnectionConfig();
     if (errorCode != UD_SUCCESS) {
@@ -149,7 +149,7 @@ void WF_Connect()
     hdrBuf[2] = GetCpid();
     hdrBuf[3] = 0;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), NULL, 0);
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
 
     /* wait for mgmt response, free after it comes in, don't need data bytes */
     WaitForMgmtResponse(WF_CM_CONNECT_SUBYTPE, FREE_MGMT_BUFFER);
@@ -208,11 +208,11 @@ void WF_Connect()
  *            3 beacon periods):
  *            WF_SetReconnectMode(WF_RETRY_FOREVER, WF_ATTEMPT_TO_RECONNECT, 3, WF_ATTEMPT_TO_RECONNECT);
  */
-void WF_ReconnectModeSet(uint8_t retryCount, uint8_t deauthAction,
-    uint8_t beaconTimeout, uint8_t beaconTimeoutAction)
+void WF_ReconnectModeSet(u_int8_t retryCount, u_int8_t deauthAction,
+    u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetReconnectMode(retryCount, deauthAction, beaconTimeout, beaconTimeoutAction);
     if (errorCode != UD_SUCCESS) {
@@ -249,8 +249,8 @@ void WF_ReconnectModeSet(uint8_t retryCount, uint8_t deauthAction,
  */
 void WF_Disconnect()
 {
-    uint8_t  hdrBuf[2];
-    uint8_t   connectionState; // not used, but required for function call
+    u_int8_t  hdrBuf[2];
+    u_int8_t   connectionState; // not used, but required for function call
 
     /* WARNING !!! :
      * Disconnect is allowed only in connected state.
@@ -269,7 +269,7 @@ void WF_Disconnect()
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;
     hdrBuf[1] = WF_CM_DISCONNECT_SUBYTPE;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), NULL, 0);
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
 
     /* wait for mgmt response, free after it comes in, don't need data bytes */
     WaitForMgmtResponse(WF_CM_DISCONNECT_SUBYTPE, FREE_MGMT_BUFFER);
@@ -288,10 +288,10 @@ void WF_Disconnect()
  *                  MRF24W will use all valid channels for the current
  *                  regional domain.
  */
-void WF_ChannelListSet(uint8_t *p_channelList, uint8_t numChannels)
+void WF_ChannelListSet(u_int8_t *p_channelList, u_int8_t numChannels)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetChannelList(p_channelList, numChannels);
     if (errorCode != UD_SUCCESS) {
@@ -307,10 +307,10 @@ void WF_ChannelListSet(uint8_t *p_channelList, uint8_t numChannels)
 
 void WF_ScanContextSet(t_scanContext *p_context)
 {
-    uint16_t tmp;
+    u_int16_t tmp;
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetScanContext(p_context);
+    u_int32_t errorCode = UdSetScanContext(p_context);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -327,26 +327,26 @@ void WF_ScanContextSet(t_scanContext *p_context)
 
     tmp = htons(p_context->minChannelTime);
     LowLevel_CASetElement(WF_CA_ELEMENT_MIN_CHANNEL_TIME,
-                          (uint8_t *)&tmp,
+                          (u_int8_t *)&tmp,
                           sizeof(tmp));
 
     tmp = htons(p_context->maxChannelTime);
     LowLevel_CASetElement(WF_CA_ELEMENT_MAX_CHANNEL_TIME,
-                          (uint8_t *)&tmp,
+                          (u_int8_t *)&tmp,
                           sizeof(tmp));
 
     tmp = htons(p_context->probeDelay);
     LowLevel_CASetElement(WF_CA_ELEMENT_PROBE_DELAY,
-                          (uint8_t *)&tmp,
+                          (u_int8_t *)&tmp,
                           sizeof(tmp));
 }
 
 void WF_AdhocContextSet(t_adHocNetworkContext *p_context)
 {
-    uint16_t tmp;
+    u_int16_t tmp;
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetAdhocNetworkContext(p_context);
+    u_int32_t errorCode = UdSetAdhocNetworkContext(p_context);
     if (errorCode != UD_SUCCESS) {
         return;
     }
@@ -356,16 +356,16 @@ void WF_AdhocContextSet(t_adHocNetworkContext *p_context)
 
     tmp = htons(p_context->beaconPeriod);
     LowLevel_CASetElement(WF_CA_ELEMENT_BEACON_PERIOD,  // Element ID
-                          (uint8_t *)&tmp,              // pointer to element data
+                          (u_int8_t *)&tmp,              // pointer to element data
                           sizeof(tmp));                 // number of element data bytes
 
     SetAdHocMode(p_context->mode);
 }
 
-void WF_RssiSet(uint8_t rssi)
+void WF_RssiSet(u_int8_t rssi)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetRssi(rssi);
+    u_int32_t errorCode = UdSetRssi(rssi);
     if (errorCode != UD_SUCCESS) {
         return;
     }
@@ -384,15 +384,15 @@ void WF_RssiSet(uint8_t rssi)
  * Response msg is actually two bytes, the second byte being the Connection Profile ID.
  * Since this is not being used, set msgData to a 1-byte array.
  */
-void WF_ConnectionStateGet(uint8_t *p_state)
+void WF_ConnectionStateGet(u_int8_t *p_state)
 {
-    uint8_t  hdrBuf[2];
-    uint8_t  msgData[1];
+    u_int8_t  hdrBuf[2];
+    u_int8_t  msgData[1];
 
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;
     hdrBuf[1] = WF_CM_GET_CONNECTION_STATUS_SUBYTPE;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), NULL, 0);
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
 
     // wait for mgmt response, read data, free after read
     WaitForMgmtResponseAndReadData(WF_CM_GET_CONNECTION_STATUS_SUBYTPE,
@@ -418,9 +418,9 @@ void WF_ConnectionStateGet(uint8_t *p_state)
  */
 void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo)
 {
-    uint8_t binaryKey[WF_WPA_KEY_LENGTH];
+    u_int8_t binaryKey[WF_WPA_KEY_LENGTH];
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdConvWpaPassphrase(p_keyInfo);
+    u_int32_t errorCode = UdConvWpaPassphrase(p_keyInfo);
     if (errorCode != UD_SUCCESS)
     {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
@@ -438,27 +438,27 @@ void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo)
                 32);
 
     // overwrite the passphrase with binary key
-    memcpy(p_keyInfo->key, binaryKey, WF_WPA_KEY_LENGTH);
+    bcopy(binaryKey, p_keyInfo->key, WF_WPA_KEY_LENGTH);
 
     // overwrite the length with the length of the binary key (always 32)
     p_keyInfo->keyLength = WF_WPA_KEY_LENGTH;
 }
 
-void SetListenInterval(uint16_t listenInterval)
+void SetListenInterval(u_int16_t listenInterval)
 {
     /* correct endianness before sending message */
     listenInterval = htons(listenInterval);
     LowLevel_CASetElement(WF_CA_ELEMENT_LISTEN_INTERVAL,    /* Element ID */
-                         (uint8_t *)&listenInterval,        /* pointer to element data */
+                         (u_int8_t *)&listenInterval,        /* pointer to element data */
                           sizeof(listenInterval));          /* number of element data bytes */
 }
 
-void SetDtimInterval(uint16_t dtimInterval)
+void SetDtimInterval(u_int16_t dtimInterval)
 {
     /* correct endianness before sending message */
     dtimInterval = htons(dtimInterval);
 
     LowLevel_CASetElement(WF_CA_ELEMENT_DTIM_INTERVAL,    /* Element ID */
-                          (uint8_t *)&dtimInterval,       /* pointer to element data */
+                          (u_int8_t *)&dtimInterval,       /* pointer to element data */
                           sizeof(dtimInterval));          /* number of element data bytes */
 }

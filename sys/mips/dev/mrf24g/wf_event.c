@@ -5,10 +5,10 @@
  * As WiFi events occur they are stored in the event queue, and
  * ultimately passed to the WF_ProcessEvent function in wf_event_stub.c
  */
-#include <stdio.h>
-#include <string.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
+#include <sys/param.h>
+#include <sys/systm.h>
 
 #define IncrementReadIndex()                    \
     if (g_eventQueue.readIndex == MAX_EVENTS) { \
@@ -34,7 +34,7 @@ static t_wfEventQueue g_eventQueue;
  */
 void EventQInit()
 {
-    memset(&g_eventQueue, 0x00, sizeof(g_eventQueue));
+    bzero(&g_eventQueue, sizeof(g_eventQueue));
 
     g_eventQueue.readIndex  = 0;
     g_eventQueue.writeIndex = 0;
@@ -48,7 +48,7 @@ void EventQInit()
  *  eventType - event type
  *  eventData - data associated with the event; not always used.
  */
-void EventEnqueue(uint8_t eventType, uint32_t eventData)
+void EventEnqueue(u_int8_t eventType, u_int32_t eventData)
 {
 #if 0
     if (eventType == WF_EVENT_ERROR) {
@@ -116,16 +116,16 @@ bool isEventQEmpty()
  */
 bool isEventQFull()
 {
-    uint8_t readIndex  = g_eventQueue.readIndex;
-    uint8_t writeIndex = g_eventQueue.writeIndex;
+    u_int8_t readIndex  = g_eventQueue.readIndex;
+    u_int8_t writeIndex = g_eventQueue.writeIndex;
 
     // check wrap case first
     if ((writeIndex == MAX_EVENTS) && (readIndex == 0)) {
-        return true;
+        return 1;
     }
     // else do regular check
     else if (writeIndex + 1 == readIndex) {
-        return true;
+        return 1;
     }
-    return false;
+    return 0;
 }

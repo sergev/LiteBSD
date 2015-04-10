@@ -1,10 +1,10 @@
 
-OBJS    = wf_connection_algorithm.o \
-          wf_connection_profile.o \
+OBJS    = wf_connection.o \
+          wf_profile.o \
           wf_data_msg.o \
           wf_eint.o \
           wf_eint_stub.o \
-          wf_event_queue.o \
+          wf_event.o \
           wf_event_stub.o \
           wf_gpio_stub.o \
           wf_init.o \

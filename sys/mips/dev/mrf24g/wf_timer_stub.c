@@ -19,7 +19,7 @@ void WF_TimerInit()
  * Returns the current value of the 1ms timer.
  * Returns current value of 1ms timer.
  */
-uint32_t WF_TimerRead()
+u_int32_t WF_TimerRead()
 {
     //TODO
     return 0;   //SYSGetMilliSecond();

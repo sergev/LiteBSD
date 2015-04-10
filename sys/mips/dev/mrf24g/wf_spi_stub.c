@@ -14,7 +14,7 @@
  */
 void WF_SpiInit()
 {
-    uint8_t rxData __attribute__((unused));
+    u_int8_t rxData __attribute__((unused));
 
 #ifdef WF_INT_PPS
     WF_INT_PPS();
@@ -98,14 +98,14 @@ void WF_SpiDisableChipSelect()
  *   p_rxBuf  -- pointer to receive buffer
  *   rxLength -- number of bytes to read and copy into p_rxBuf
  */
-void WF_SpiTxRx(const uint8_t *p_txBuf,
-                uint16_t txLength,
-                uint8_t *p_rxBuf,
-                uint16_t rxLength)
+void WF_SpiTxRx(const u_int8_t *p_txBuf,
+                u_int16_t txLength,
+                u_int8_t *p_rxBuf,
+                u_int16_t rxLength)
 {
-    uint16_t byteCount;
-    uint16_t i;
-    uint8_t  rxTrash __attribute__((unused));
+    u_int16_t byteCount;
+    u_int16_t i;
+    u_int8_t  rxTrash __attribute__((unused));
 
     // TODO: need a check either here or somewhere else to flag an error if
     //       MRF24WG is in hibernate mode.  Another stub function to check if

@@ -164,36 +164,36 @@ typedef enum t_mgmtIndicateSubtypes {
 } t_mgmtIndicateSubtypes;
 
 /* event values for index 2 of WF_CONNECTION_ATTEMPT_STATUS_EVENT_SUBTYPE */
-#define CONNECTION_ATTEMPT_SUCCESSFUL    ((uint8_t)1)   /* if not 1 then failed to connect and info field is error code */
-#define CONNECTION_ATTEMPT_FAILED        ((uint8_t)2)
+#define CONNECTION_ATTEMPT_SUCCESSFUL    ((u_int8_t)1)  /* if not 1 then failed to connect and info field is error code */
+#define CONNECTION_ATTEMPT_FAILED        ((u_int8_t)2)
 
 /* event values for index 2 of WF_EVENT_CONNECTION_LOST_SUBTYPE */
-#define CONNECTION_TEMPORARILY_LOST      ((uint8_t)1)
-#define CONNECTION_PERMANENTLY_LOST      ((uint8_t)2)
-#define CONNECTION_REESTABLISHED         ((uint8_t)3)
+#define CONNECTION_TEMPORARILY_LOST      ((u_int8_t)1)
+#define CONNECTION_PERMANENTLY_LOST      ((u_int8_t)2)
+#define CONNECTION_REESTABLISHED         ((u_int8_t)3)
 
 
 /* This structure describes the format of the first four bytes of all */
 /* mgmt response messages received from the MRF24W                 */
 typedef struct mgmtRxHdrStruct {
-    uint8_t  type;          /* always 0x02                  */
-    uint8_t  subtype;       /* mgmt msg subtype             */
-    uint8_t  result;        /* 1 if success, else failure   */
-    uint8_t  macState;      /* not used                     */
+    u_int8_t  type;         /* always 0x02                  */
+    u_int8_t  subtype;      /* mgmt msg subtype             */
+    u_int8_t  result;       /* 1 if success, else failure   */
+    u_int8_t  macState;     /* not used                     */
 
 } t_mgmtMsgRxHdr;
 
 typedef struct mgmtIndicateHdrStruct {
-    uint8_t type;       /* always WF_MGMT_INDICATE_MSG_TYPE (2) */
-    uint8_t subType;    /* event type                           */
+    u_int8_t type;          /* always WF_MGMT_INDICATE_MSG_TYPE (2) */
+    u_int8_t subType;       /* event type                           */
 } t_mgmtIndicateHdr;
 
 
 void WF_CPCreate(void);
 void SignalMgmtMsgRx();
-void SendMgmtMsg(uint8_t *p_header, uint8_t headerLength, uint8_t *p_data, uint8_t dataLength);
-void WaitForMgmtResponse(uint8_t expectedSubtype, uint8_t freeAction);
-void WaitForMgmtResponseAndReadData(uint8_t expectedSubtype, uint8_t numDataBytes, uint8_t startIndex, uint8_t *p_data);
+void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength, u_int8_t *p_data, u_int8_t dataLength);
+void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction);
+void WaitForMgmtResponseAndReadData(u_int8_t expectedSubtype, u_int8_t numDataBytes, u_int8_t startIndex, u_int8_t *p_data);
 
 void ClearMgmtConfirmMsg(void);
 

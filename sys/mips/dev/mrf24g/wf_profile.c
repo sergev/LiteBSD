@@ -4,7 +4,6 @@
  * Functions that connect, disconnect, get connection status,
  * set reconnection mode, and convert a WPA passphrase to a binary key.
  */
-#include <stdio.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
@@ -32,13 +31,13 @@ typedef enum tCPElementIds {
  */
 typedef struct cpElementResponseStruct {
     t_mgmtMsgRxHdr   mgmtHdr;                /* normal 4-byte hdr for all mgmt responses */
-    uint8_t          profileId;
-    uint8_t          elementId;
-    uint8_t          elementDataLength;
+    u_int8_t         profileId;
+    u_int8_t         elementId;
+    u_int8_t         elementDataLength;
     /* element data follow */
 } t_cPElementResponseHdr;
 
-static uint8_t g_cpid;
+static u_int8_t g_cpid;
 
 static t_wpaKeyInfo *g_p_wpaKeyInfo;
 
@@ -55,11 +54,11 @@ static t_wpaKeyInfo *g_p_wpaKeyInfo;
  *  p_elementData - Pointer to element data
  *  elementDataLength - Number of bytes pointed to by p_elementData
  */
-static void LowLevel_CPSetElement(uint8_t elementId,
-                                  uint8_t *p_elementData,
-                                  uint8_t elementDataLength)
+static void LowLevel_CPSetElement(u_int8_t elementId,
+                                  u_int8_t *p_elementData,
+                                  u_int8_t elementDataLength)
 {
-    uint8_t  hdrBuf[5];
+    u_int8_t  hdrBuf[5];
 
     /* Write out header portion of msg */
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
@@ -91,19 +90,19 @@ static void LowLevel_CPSetElement(uint8_t elementId,
  *                   received, do not read any data as the caller will do that,
  *                   and don't free buffer, as caller will do that as well.
  */
-static void LowLevel_CPGetElement(uint8_t elementId,
-                                  uint8_t *p_elementData,
-                                  uint8_t elementDataLength,
-                                  bool    dataReadAction)
+static void LowLevel_CPGetElement(u_int8_t elementId,
+                                  u_int8_t *p_elementData,
+                                  u_int8_t elementDataLength,
+                                  bool     dataReadAction)
 {
-    uint8_t  hdrBuf[4];
+    u_int8_t  hdrBuf[4];
 
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
     hdrBuf[1] = WF_CP_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
     hdrBuf[2] = g_cpid;                     /* Connection Profile ID */
     hdrBuf[3] = elementId;                  /* Element ID */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), NULL, 0);
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
 
     if (dataReadAction) {
         /* wait for mgmt response, read desired data, and then free response buffer */
@@ -142,13 +141,13 @@ static void LowLevel_CPGetElement(uint8_t elementId,
  *  securityKeyLength - Number of bytes in p_securityKey (not used if security
  *                      is WF_SECURITY_OPEN)
  */
-static void LowLevel_SetSecurity(uint8_t securityType,
-                                 uint8_t wepKeyIndex,
-                                 uint8_t *p_securityKey,
-                                 uint8_t securityKeyLength)
+static void LowLevel_SetSecurity(u_int8_t securityType,
+                                 u_int8_t wepKeyIndex,
+                                 u_int8_t *p_securityKey,
+                                 u_int8_t securityKeyLength)
 {
-    uint8_t  hdrBuf[7];
-    uint8_t  *p_key;
+    u_int8_t  hdrBuf[7];
+    u_int8_t  *p_key;
 
     /* Write out header portion of msg */
     hdrBuf[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
@@ -166,7 +165,7 @@ static void LowLevel_SetSecurity(uint8_t securityType,
         securityType == WF_SECURITY_WPS_PUSH_BUTTON)
     {
         hdrBuf[4]         = 2;      /* Only data is security type and wep index */
-        p_key             = NULL;
+        p_key             = 0;
         securityKeyLength = 0;
     }
     /* else security is selected, so need to send key */
@@ -184,7 +183,7 @@ static void LowLevel_SetSecurity(uint8_t securityType,
     WaitForMgmtResponse(WF_CP_SET_ELEMENT_SUBTYPE, FREE_MGMT_BUFFER);
 }
 
-uint8_t GetCpid()
+u_int8_t GetCpid()
 {
     return g_cpid;
 }
@@ -205,14 +204,14 @@ uint8_t GetCpid()
  */
 void WF_CPCreate()
 {
-    uint8_t  hdr[2];
+    u_int8_t hdr[2];
 
     g_cpid = 0xff;
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_CP_CREATE_PROFILE_SUBTYPE;
 
-    SendMgmtMsg(hdr, sizeof(hdr), NULL, 0);
+    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
 
     /* wait for MRF24W management response, read data, free response after read */
     WaitForMgmtResponseAndReadData(WF_CP_CREATE_PROFILE_SUBTYPE,
@@ -233,10 +232,10 @@ void WF_CPCreate()
  *   p_ssid - Pointer to the SSID string
  *   ssidLength - Number of bytes in the SSID
  */
-void WF_SsidSet(uint8_t *p_ssid,  uint8_t ssidLength)
+void WF_SsidSet(u_int8_t *p_ssid,  u_int8_t ssidLength)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetSsid(p_ssid, ssidLength);
+    u_int32_t errorCode = UdSetSsid(p_ssid, ssidLength);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -254,22 +253,22 @@ void WF_SsidSet(uint8_t *p_ssid,  uint8_t ssidLength)
  *  p_ssid - Pointer to the SSID string
  *  ssidLength - Pumber of bytes in the SSID
  */
-void WF_SsidGet(uint8_t *p_ssid, uint8_t *p_ssidLength)
+void WF_SsidGet(u_int8_t *p_ssid, u_int8_t *p_ssidLength)
 {
     t_cPElementResponseHdr  mgmtHdr;
 
     /* Request SSID, but don't have this function read data or free response buffer. */
-    LowLevel_CPGetElement(WF_CP_ELEMENT_SSID,     /* Element ID */
-                          NULL,                   /* ptr to element data (not used here */
-                          0,                      /* num data bytes to read (not used here */
-                          false);                 /* no read, leave response mounted */
+    LowLevel_CPGetElement(WF_CP_ELEMENT_SSID,   /* Element ID */
+                          0,                    /* ptr to element data (not used here */
+                          0,                    /* num data bytes to read (not used here */
+                          0);                   /* no read, leave response mounted */
 
     /* At this point, management response is mounted and ready to be read.
      * Set raw index to 0, read normal 4 byte header plus the next 3 bytes, these will be:
      *   profile id             [4]
      *   element id             [5]
      *   element data length    [6] */
-    RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_cPElementResponseHdr), (uint8_t *)&mgmtHdr);
+    RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_cPElementResponseHdr), (u_int8_t *)&mgmtHdr);
 
     /* extract SSID length and write to caller */
     *p_ssidLength = mgmtHdr.elementDataLength;
@@ -290,10 +289,10 @@ void WF_SsidGet(uint8_t *p_ssid, uint8_t *p_ssidLength)
  * Parameter:
  *  networkType - Type of network to create (infrastructure or adhoc)
  */
-void WF_NetworkTypeSet(uint8_t networkType)
+void WF_NetworkTypeSet(u_int8_t networkType)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetNetworkType(networkType);
     if (errorCode != UD_SUCCESS) {
@@ -320,27 +319,27 @@ void WF_NetworkTypeSet(uint8_t networkType)
 void WF_SsidTypeSet(bool hidden)
 {
     LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE,  /* Element ID */
-                          (uint8_t *)&hidden,       /* pointer to element data */
+                          (u_int8_t *)&hidden,       /* pointer to element data */
                           1);                       /* number of element data bytes */
 }
 
 void WF_SecurityOpenSet()
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetSecurityOpen();
+    u_int32_t errorCode = UdSetSecurityOpen();
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
     }
 #endif
 
-    LowLevel_SetSecurity(WF_SECURITY_OPEN, 0, NULL, 0);
+    LowLevel_SetSecurity(WF_SECURITY_OPEN, 0, 0, 0);
 }
 
 void WF_SecurityWepSet(t_wepContext* p_context)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetSecurityWep(p_context);
     if (errorCode != UD_SUCCESS) {
@@ -358,7 +357,7 @@ void WF_SecurityWepSet(t_wepContext* p_context)
 void WF_SecurityWpaSet(t_wpaContext* p_context)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode;
+    u_int32_t errorCode;
 
     errorCode = UdSetSecurityWpa(p_context);
     if (errorCode != UD_SUCCESS) {
@@ -376,7 +375,7 @@ void WF_SecurityWpaSet(t_wpaContext* p_context)
 void WF_SecurityWpsSet(t_wpsContext *p_context)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetSecurityWps(p_context);
+    u_int32_t errorCode = UdSetSecurityWps(p_context);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -412,31 +411,31 @@ void WF_WpsKeyGenerate()
     SetPSK(g_p_wpaKeyInfo->key);
 }
 
-void WF_BssidSet(uint8_t *p_bssid)
+void WF_BssidSet(u_int8_t *p_bssid)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdSetBssid(p_bssid);
+    u_int32_t errorCode = UdSetBssid(p_bssid);
     if (errorCode != UD_SUCCESS) {
         return;
     }
 
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_BSSID,   // Element ID
-                          p_bssid,               // pointer to element data
-                          WF_BSSID_LENGTH,       // number of element data bytes
-                          true);                 // read data, free buffer after read
+    LowLevel_CPGetElement(WF_CP_ELEMENT_BSSID,  // Element ID
+                          p_bssid,              // pointer to element data
+                          WF_BSSID_LENGTH,      // number of element data bytes
+                          1);                   // read data, free buffer after read
 }
 
 // called from SetAdhocContext().  Error checking performed there
 void SetHiddenSsid(bool hiddenSsid)
 {
     LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, // Element ID
-                          (uint8_t *)&hiddenSsid,  // pointer to element data
+                          (u_int8_t *)&hiddenSsid,  // pointer to element data
                           1);                      // number of element data bytes
 }
 
 // called from SetAdhocContext().  Error checking performed there
-void SetAdHocMode(uint8_t mode)
+void SetAdHocMode(u_int8_t mode)
 {
     LowLevel_CPSetElement(WF_CP_ELEMENT_ADHOC_BEHAVIOR,  // Element ID
                           &mode,                         // pointer to element data
@@ -446,14 +445,14 @@ void SetAdHocMode(uint8_t mode)
 void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdGetWpsCredentials();
+    u_int32_t errorCode = UdGetWpsCredentials();
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
     }
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_READ_WPS_CRED,    // Element ID
-                          (uint8_t *)p_cred,              // pointer to element data
-                          sizeof(*p_cred),                // number of element data bytes
-                          true);                          // read data, free buffer after read
+    LowLevel_CPGetElement(WF_CP_ELEMENT_READ_WPS_CRED,  // Element ID
+                          (u_int8_t *)p_cred,           // pointer to element data
+                          sizeof(*p_cred),              // number of element data bytes
+                          1);                           // read data, free buffer after read
 }

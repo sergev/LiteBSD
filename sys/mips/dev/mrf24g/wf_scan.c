@@ -3,7 +3,6 @@
  *
  * Functions to initiate a scan and retrieve scan results.
  */
-#include <stdio.h>
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
@@ -38,13 +37,13 @@
  *          * All scan results are retained (both Infrastructure and Ad Hoc networks).
  *          * All channels within the MRF24W's regional domain will be scanned.
  */
-void WF_Scan(uint8_t scanMode)
+void WF_Scan(u_int8_t scanMode)
 {
-    uint8_t connectionState;
-    uint8_t   hdr[4];
+    u_int8_t connectionState;
+    u_int8_t   hdr[4];
 
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = UdScan(scanMode);
+    u_int32_t errorCode = UdScan(scanMode);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -63,7 +62,7 @@ void WF_Scan(uint8_t scanMode)
     hdr[1] = WF_SCAN_START_SUBTYPE;
     hdr[2] = (scanMode == WF_SCAN_FILTERED) ? GetCpid() : 0xff;
     hdr[3] = 0; /* not used */
-    SendMgmtMsg(hdr, sizeof(hdr), NULL, 0);
+    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
 
     /* wait for mgmt response, free it after it comes in (no data needed) */
     WaitForMgmtResponse(WF_SCAN_START_SUBTYPE, FREE_MGMT_BUFFER);
@@ -85,23 +84,23 @@ void WF_Scan(uint8_t scanMode)
  *  listIndex    - Index (0-based list) of the scan entry to retrieve.
  *  p_scanResult - Pointer to location to store the scan result structure
  */
-void WF_ScanResultGet(uint8_t listIndex, t_scanResult *p_scanResult)
+void WF_ScanResultGet(u_int8_t listIndex, t_scanResult *p_scanResult)
 {
-    uint8_t   hdr[4];
+    u_int8_t   hdr[4];
     /* char rssiChan[48]; */ /* reference for how to retrieve RSSI */
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SCAN_GET_RESULTS_SUBTYPE;
     hdr[2] = listIndex;        /* scan result index to read from */
     hdr[3] = 1;                /* number of results to read */
-    SendMgmtMsg(hdr, sizeof(hdr), NULL, 0);
+    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
 
     /* index 4 contains number of scan results returned, index 5 is first byte of first scan result */
     WaitForMgmtResponseAndReadData(
         WF_SCAN_GET_RESULTS_SUBTYPE,    /* expected subtype */
         sizeof(t_scanResult),           /* num data bytes to read */
         5,                              /* starting at this index */
-        (uint8_t *)p_scanResult);       /* write the response data here */
+        (u_int8_t *)p_scanResult);       /* write the response data here */
 
     /* fix up endianness for the two 16-bit values in the scan results */
     p_scanResult->beaconPeriod = htons(p_scanResult->beaconPeriod);

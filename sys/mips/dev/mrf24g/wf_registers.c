@@ -11,14 +11,14 @@
  * external interrupt routine, and for parts that use overlay memory using local
  * buffers fails.
  */
-static uint8_t g_txBuf[3];
-static uint8_t g_rxBuf[3];
+static u_int8_t g_txBuf[3];
+static u_int8_t g_rxBuf[3];
 
 /*
  * Read WF 8-bit register.
  * Returns register value.
  */
-uint8_t Read8BitWFRegister(uint8_t regId)
+u_int8_t Read8BitWFRegister(u_int8_t regId)
 {
     g_txBuf[0] = regId | WF_READ_REGISTER_MASK;
     WF_SpiEnableChipSelect();
@@ -31,7 +31,7 @@ uint8_t Read8BitWFRegister(uint8_t regId)
 /*
  * Write WF 8-bit register.
  */
-void Write8BitWFRegister(uint8_t regId, uint8_t value)
+void Write8BitWFRegister(u_int8_t regId, u_int8_t value)
 {
     g_txBuf[0] = regId | WF_WRITE_REGISTER_MASK;
     g_txBuf[1] = value;
@@ -44,11 +44,11 @@ void Write8BitWFRegister(uint8_t regId, uint8_t value)
 /*
  * Write WF 16-bit register.
  */
-void Write16BitWFRegister(uint8_t regId, uint16_t value)
+void Write16BitWFRegister(u_int8_t regId, u_int16_t value)
 {
     g_txBuf[0] = regId | WF_WRITE_REGISTER_MASK;
-    g_txBuf[1] = (uint8_t)(value >> 8);       /* MS byte being written */
-    g_txBuf[2] = (uint8_t)(value & 0x00ff);   /* LS byte being written */
+    g_txBuf[1] = (u_int8_t)(value >> 8);       /* MS byte being written */
+    g_txBuf[2] = (u_int8_t)(value & 0x00ff);   /* LS byte being written */
 
     WF_SpiEnableChipSelect();
     WF_SpiTxRx(g_txBuf, 3, g_rxBuf, 1);
@@ -59,14 +59,14 @@ void Write16BitWFRegister(uint8_t regId, uint16_t value)
  * Read WF 16-bit register.
  * Returns register value.
  */
-uint16_t Read16BitWFRegister(uint8_t regId)
+u_int16_t Read16BitWFRegister(u_int8_t regId)
 {
     g_txBuf[0] = regId | WF_READ_REGISTER_MASK;
     WF_SpiEnableChipSelect();
     WF_SpiTxRx(g_txBuf, 1, g_rxBuf, 3);
     WF_SpiDisableChipSelect();
 
-    return (((uint16_t)g_rxBuf[1]) << 8) | ((uint16_t)(g_rxBuf[2]));
+    return (((u_int16_t)g_rxBuf[1]) << 8) | ((u_int16_t)(g_rxBuf[2]));
 }
 
 /*
@@ -76,7 +76,7 @@ uint16_t Read16BitWFRegister(uint8_t regId)
  *  pBuf   -- pointer to array of bytes being written
  *  length -- number of bytes in pBuf
  */
-void WriteWFArray(uint8_t regId, const uint8_t *p_Buf, uint16_t length)
+void WriteWFArray(u_int8_t regId, const u_int8_t *p_Buf, u_int16_t length)
 {
     g_txBuf[0] = regId;
 
@@ -98,7 +98,7 @@ void WriteWFArray(uint8_t regId, const uint8_t *p_Buf, uint16_t length)
  *  pBuf   -- pointer where to write out bytes
  *  length -- number of bytes to read
  */
-void ReadWFArray(uint8_t regId, uint8_t *p_Buf, uint16_t length)
+void ReadWFArray(u_int8_t regId, u_int8_t *p_Buf, u_int16_t length)
 {
     WF_SpiEnableChipSelect();
 

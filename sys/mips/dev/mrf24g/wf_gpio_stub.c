@@ -40,7 +40,7 @@ void WF_GpioInit()
  *
  * Parameter: level -- WF_HIGH or WF_LOW
  */
-void WF_GpioSetReset(uint8_t level)
+void WF_GpioSetReset(u_int8_t level)
 {
     WF_RESET_SET(level);
 }
@@ -54,7 +54,7 @@ void WF_GpioSetReset(uint8_t level)
  *
  * Parameter: level -- WF_HIGH or WF_LOW
  */
-void WF_GpioSetHibernate(uint8_t level)
+void WF_GpioSetHibernate(u_int8_t level)
 {
     WF_HIBERNATE_SET(level);
 }

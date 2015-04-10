@@ -167,42 +167,42 @@ typedef enum t_p2pError
 
 typedef struct
 {
-    uint8_t event;  // always WF_EVENT_CONNECTION_FAILED
-    uint8_t status; // see t_connectionFailedEventStatus
+    u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
+    u_int8_t status;    // see t_connectionFailedEventStatus
 } t_connectLost;
 
 // used if status = WF_RECV_DEAUTH or WF_RECV_DISASSOC
 typedef struct
 {
-    uint8_t event;  // always WF_EVENT_CONNECTION_FAILED
-    uint8_t status; // see t_connectionFailedEventStatus (either WF_RECV_DEAUTH or WF_RECV_DISASSOC)
-    uint8_t reason; // see t_deauthDisssocReasonCodes
+    u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
+    u_int8_t status;    // see t_connectionFailedEventStatus (either WF_RECV_DEAUTH or WF_RECV_DISASSOC)
+    u_int8_t reason;    // see t_deauthDisssocReasonCodes
 } t_recvAuthDisassocFailureCodes;
 
 // used if status = WF_AUTHENTICATION_FAILURE or WF_ASSOCIATION_FAILURE
 typedef struct
 {
-    uint8_t event;  // always WF_EVENT_CONNECTION_FAILED
-    uint8_t status; // see t_connectionFailedEventStatus (either WF_AUTHENTICATION_FAILURE or WF_ASSOCIATION_FAILURE)
-    uint8_t reason; // see t_statusCodes;
+    u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
+    u_int8_t status;    // see t_connectionFailedEventStatus (either WF_AUTHENTICATION_FAILURE or WF_ASSOCIATION_FAILURE)
+    u_int8_t reason;    // see t_statusCodes;
 } t_authAssocFailure;
 
 // used if status = WF_WPS_FAILURE
 typedef struct
 {
-    uint8_t event;          // always WF_EVENT_CONNECTION_FAILED
-    uint8_t status;         // always WF_WPS_FAILURE
-    uint8_t wpsState;       // see t_wpsState
-    uint8_t wpsConfigErr;   // see t_wpsConfigErr
+    u_int8_t event;         // always WF_EVENT_CONNECTION_FAILED
+    u_int8_t status;        // always WF_WPS_FAILURE
+    u_int8_t wpsState;      // see t_wpsState
+    u_int8_t wpsConfigErr;  // see t_wpsConfigErr
 } t_wpsFailure;
 
 // used if status = WF_P2P_FAILURE
 typedef struct
 {
-    uint8_t event;          // always WF_EVENT_CONNECTION_FAILED
-    uint8_t status;         // always WF_P2P_FAILURE
-    uint8_t p2pState;       // see t_p2pState
-    uint8_t p2pErr;         // see t_p2pErr
+    u_int8_t event;         // always WF_EVENT_CONNECTION_FAILED
+    u_int8_t status;        // always WF_P2P_FAILURE
+    u_int8_t p2pState;      // see t_p2pState
+    u_int8_t p2pErr;        // see t_p2pErr
 } t_p2pFailure;
 
 typedef struct

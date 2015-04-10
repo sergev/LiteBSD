@@ -6,8 +6,8 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-#define REG_ENABLE_LOW_POWER_MASK   ((uint16_t)0x01)
-#define REG_DISABLE_LOW_POWER_MASK  ((uint16_t)0x00)
+#define REG_ENABLE_LOW_POWER_MASK   ((u_int16_t)0x01)
+#define REG_DISABLE_LOW_POWER_MASK  ((u_int16_t)0x00)
 
 /*
  * Enumeration of valid values for WFSetPowerSaveMode()
@@ -18,27 +18,27 @@ typedef enum {
 } t_WFPsPwrMode;
 
 typedef struct WFPwrModeReq {
-    uint8_t mode;
-    uint8_t wake;
-    uint8_t rcvDtims;
-    uint8_t reserved;       /* pad byte */
+    u_int8_t mode;
+    u_int8_t wake;
+    u_int8_t rcvDtims;
+    u_int8_t reserved;      /* pad byte */
 } t_WFPwrModeReq;
 
-static uint8_t g_powerSaveState = WF_PS_OFF;
-static bool    g_reactivatePsPoll = false;
+static u_int8_t g_powerSaveState = WF_PS_OFF;
+static bool     g_reactivatePsPoll = 0;
 
-extern void SetListenInterval(uint16_t listenInterval);
-extern void SetDtimInterval(uint16_t dtimInterval);
+extern void SetListenInterval(u_int16_t listenInterval);
+extern void SetDtimInterval(u_int16_t dtimInterval);
 
 static void SendPowerModeMsg(t_WFPwrModeReq *p_powerMode)
 {
-    uint8_t hdr[2];
+    u_int8_t hdr[2];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SET_POWER_MODE_SUBTYPE;
 
     SendMgmtMsg(hdr, sizeof(hdr),
-        (uint8_t*) p_powerMode, sizeof(t_WFPwrModeReq));
+        (u_int8_t*) p_powerMode, sizeof(t_WFPwrModeReq));
 
     /* wait for mgmt response, free buffer after it comes in (no data to read) */
     WaitForMgmtResponse(WF_SET_POWER_MODE_SUBTYPE, FREE_MGMT_BUFFER);
@@ -58,19 +58,19 @@ static void SendPowerModeMsg(t_WFPwrModeReq *p_powerMode)
  *   WF_PS_PS_POLL_DTIM_DISABLED MRF24W in PS-Poll mode with DTIM disabled
  *   WF_PS_OFF              MRF24W is not in any power-save state
  */
-static void PowerStateSet(uint8_t powerSaveState)
+static void PowerStateSet(u_int8_t powerSaveState)
 {
     g_powerSaveState = powerSaveState;
 }
 
-void WF_PowerStateGet(uint8_t *p_powerState)
+void WF_PowerStateGet(u_int8_t *p_powerState)
 {
     *p_powerState = g_powerSaveState;
 }
 
 static void SetPsPollReactivate()
 {
-    g_reactivatePsPoll = true;
+    g_reactivatePsPoll = 1;
 }
 
 bool isPsPollNeedReactivate()
@@ -80,7 +80,7 @@ bool isPsPollNeedReactivate()
 
 void ClearPsPollReactivate()
 {
-    g_reactivatePsPoll = false;
+    g_reactivatePsPoll = 0;
 }
 
 /*
@@ -172,9 +172,9 @@ void WF_PsPollDisable()
  *           * WF_LOW_POWER_MODE_ON
  *           * WF_LOW_POWER_MODE_OFF
  */
-void WFConfigureLowPowerMode(uint8_t action)
+void WFConfigureLowPowerMode(u_int8_t action)
 {
-    uint16_t lowPowerStatusRegValue;
+    u_int16_t lowPowerStatusRegValue;
 
     //-------------------------------------
     // if activating PS-Poll mode on MRF24W
@@ -215,10 +215,10 @@ void WF_Hibernate()
     PowerStateSet(WF_PS_HIBERNATE);
 }
 
-void WF_TxPowerMaxSet(uint8_t maxTxPower)
+void WF_TxPowerMaxSet(u_int8_t maxTxPower)
 {
 #if defined(WF_ERROR_CHECKING)
-    uint32_t errorCode = udSetTxPowerMax(maxTxPower);
+    u_int32_t errorCode = udSetTxPowerMax(maxTxPower);
     if (errorCode != UD_SUCCESS) {
         EventEnqueue(WF_EVENT_ERROR, errorCode);
         return;
@@ -226,7 +226,7 @@ void WF_TxPowerMaxSet(uint8_t maxTxPower)
 #endif
 }
 
-void WF_TxPowerFactoryMaxGet(uint8_t *p_maxPower)
+void WF_TxPowerFactoryMaxGet(u_int8_t *p_maxPower)
 {
     *p_maxPower = GetFactoryMax();
 }

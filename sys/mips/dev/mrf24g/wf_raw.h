@@ -82,27 +82,27 @@
 #define WF_RAW_MGMT_MOUNTED             (3)
 
 void        RawInit(void);
-void        ScratchUnmount(uint8_t rawId);
-uint16_t    ScratchMount(uint8_t rawId);
+void        ScratchUnmount(u_int8_t rawId);
+u_int16_t    ScratchMount(u_int8_t rawId);
 bool        isWaitingForRawMoveCompleteInterrupt(void);
 void        ClearWaitingForRawMoveCompleteInterrupt(void);
-void        SignalRawInterruptEvent(uint8_t rawIntMask);
-bool        AllocateMgmtTxBuffer(uint16_t bytesNeeded);
+void        SignalRawInterruptEvent(u_int8_t rawIntMask);
+bool        AllocateMgmtTxBuffer(u_int16_t bytesNeeded);
 void        DeallocateMgmtRxBuffer(void);
-void        RawSetByte(uint16_t rawId, const uint8_t *p_buffer, uint16_t length);
-void        RawGetByte(uint16_t rawId, uint8_t *pBuffer, uint16_t length);
-void        SendRAWManagementFrame(uint16_t bufLen);
-uint16_t    RawMountRxBuffer(uint8_t rawId);
-void        RawSetIndex(uint16_t rawId, uint16_t index);
-void        RawRead(uint8_t rawId, uint16_t startIndex, uint16_t length, uint8_t *p_dest);
-void        RawWrite(uint8_t rawId, uint16_t startIndex, uint16_t length, const uint8_t *p_src);
-bool        AllocateDataTxBuffer(uint16_t bytesNeeded);
+void        RawSetByte(u_int16_t rawId, const u_int8_t *p_buffer, u_int16_t length);
+void        RawGetByte(u_int16_t rawId, u_int8_t *pBuffer, u_int16_t length);
+void        SendRAWManagementFrame(u_int16_t bufLen);
+u_int16_t    RawMountRxBuffer(u_int8_t rawId);
+void        RawSetIndex(u_int16_t rawId, u_int16_t index);
+void        RawRead(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, u_int8_t *p_dest);
+void        RawWrite(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, const u_int8_t *p_src);
+bool        AllocateDataTxBuffer(u_int16_t bytesNeeded);
 void        DeallocateDataRxBuffer(void);
-uint16_t    RawMove(uint16_t rawId,
-                    uint16_t srcDest,
+u_int16_t    RawMove(u_int16_t rawId,
+                    u_int16_t srcDest,
                     bool     rawIsDestination,
-                    uint16_t size);
-void SetRawDataWindowState(uint8_t rawId, uint8_t state);
-uint8_t GetRawDataWindowState(uint8_t rawId);
+                    u_int16_t size);
+void SetRawDataWindowState(u_int8_t rawId, u_int8_t state);
+u_int8_t GetRawDataWindowState(u_int8_t rawId);
 
 #endif /* __WF_RAW_H */
