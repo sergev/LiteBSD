@@ -203,10 +203,6 @@ void WF_Init()
     u_int32_t    tStart = 0;
 
     UdStateInit();      // initialize internal state machine
-
-    WF_SpiInit();       // initialize the SPI interface
-    WF_GpioInit();      // initialize HIBERNATE and RESET I/O lines
-    WF_TimerInit();     // initialize and start the 1ms timer
     EventQInit();       // initialize WiFi event queue
 
     // take chip out of hibernate and out of reset; must be done before calling ResetPll()

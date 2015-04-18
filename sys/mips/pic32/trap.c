@@ -691,6 +691,40 @@ again:
         enintr(0);
         break;
 #endif
+
+#include "mrf.h"
+#if NMRF > 0
+#if WF_INT == 0
+    case PIC32_IRQ_INT0:                /* Wi-Fi interrupt at INT0 */
+        intrcnt.ether++;
+        mrfintr(0);
+        break;
+#endif
+#if WF_INT == 1
+    case PIC32_IRQ_INT1:                /* Wi-Fi interrupt at INT1 */
+        intrcnt.ether++;
+        mrfintr(0);
+        break;
+#endif
+#if WF_INT == 2
+    case PIC32_IRQ_INT2:                /* Wi-Fi interrupt at INT2 */
+        intrcnt.ether++;
+        mrfintr(0);
+        break;
+#endif
+#if WF_INT == 3
+    case PIC32_IRQ_INT3:                /* Wi-Fi interrupt at INT3 */
+        intrcnt.ether++;
+        mrfintr(0);
+        break;
+#endif
+#if WF_INT == 4
+    case PIC32_IRQ_INT4:                /* Wi-Fi interrupt at INT4 */
+        intrcnt.ether++;
+        mrfintr(0);
+        break;
+#endif
+#endif
     }
 }
 

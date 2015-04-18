@@ -200,8 +200,8 @@ unsigned spi_transfer(struct spiio *io, unsigned data)
     struct spireg *reg = io->reg;
     unsigned int cnt = 100000;
 
-    reg->con = io->mode;
-    reg->brg = io->divisor;
+    reg->con = io->mode;        //TODO: delete this
+    reg->brg = io->divisor;     //TODO: delete this
     reg->buf = data;
     while (! (reg->stat & PIC32_SPISTAT_SPIRBF) && --cnt > 0)
         asm volatile ("nop");

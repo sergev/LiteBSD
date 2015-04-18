@@ -101,6 +101,7 @@ device          gpio6   flags 0xf380    # port G
 
 # Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
 device          mrf0    at spi4 flags 0x71641f49
+options         "WF_INT=2"              # use INT2 interrupt pin
 options         WF_ERROR_CHECKING
 
 # Buttons

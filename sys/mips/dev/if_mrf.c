@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
+#include <mips/dev/mrf24g/wf_universal_driver.h>
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
 
@@ -48,6 +49,7 @@ struct wifi_port {
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
     struct spiio spiio;             /* interface to SPI port */
+    unsigned    int_mask;           /* mask for interrupt pin */
     int         pin_irq;            /* /Int pin number */
     int         pin_reset;          /* /Reset pin number */
     int         pin_hibernate;      /* Hibernate pin number */
@@ -55,36 +57,299 @@ struct wifi_port {
 
 } wifi_port[NMRF];
 
-/*
- * TODO: routines for mrf24g integration:
- *
- * 1) Interrupt routines
- *     WF_EintDisable
- *     WF_EintEnable
- *     WF_EintInit
- *     WF_isEintDisabled
- *
- * 2) GPIO stuff
- *     WF_GpioInit
- *     WF_GpioSetHibernate
- *     WF_GpioSetReset
- *
- * 3) SPI routines
- *     WF_SpiDisableChipSelect
- *     WF_SpiEnableChipSelect
- *     WF_SpiInit
- *     WF_SpiTxRx
- *
- * 4) Timer read
- *     WF_TimerInit
- *     WF_TimerRead
- *
- * 5) Processing of received data
- *     WF_ProcessEvent
- *     WF_ProcessRxPacket
+/*-------------------------------------------------------------
+ * Put the MRF24WG into and out of reset.
+ * Set the RESET line high or low.
  */
+void WF_GpioSetReset(unsigned high)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    if (high)
+        gpio_set(w->pin_reset);
+    else
+        gpio_clr(w->pin_reset);
+}
 
 /*
+ * Put the MRF24WG into and out of hibernate.
+ * Set the HIBERNATE line high or low.
+ */
+void WF_GpioSetHibernate(unsigned high)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    if (high)
+        gpio_set(w->pin_hibernate);
+    else
+        gpio_clr(w->pin_hibernate);
+}
+
+/*-------------------------------------------------------------
+ * Select the MRF24WG SPI by setting the CS line low.
+ */
+void WF_SpiEnableChipSelect()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    spi_select(&w->spiio);
+}
+
+/*
+ * Deselect the MRF24WG SPI by setting CS high.
+ */
+void WF_SpiDisableChipSelect()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Transmit and receive SPI bytes with the MRF24WG.
+ * Called by Universal Driver to communicate with the MRF24WG.
+ * Parameters:
+ *   tx_data  -- pointer to the transmit buffer
+ *   tx_len   -- number of bytes to be transmitted from tx_data
+ *   rx_data  -- pointer to receive buffer
+ *   rx_len   -- number of bytes to read and copy into rx_data
+ */
+void WF_SpiTxRx(const u_int8_t *tx_data, unsigned tx_len,
+    u_int8_t *rx_data, unsigned rx_len)
+{
+    struct wifi_port *w = &wifi_port[0];
+    unsigned nbytes, i, byte;
+
+    /* total number of bytes to clock out is whichever is larger, tx_len or rx_len */
+    nbytes = (tx_len >= rx_len) ? tx_len : rx_len;
+
+    /* for each byte being clocked */
+    for (i=0; i<nbytes; ++i) {
+        if (tx_len > 0) {       /* if still have bytes to transmit */
+            byte = *tx_data++;
+            --tx_len;
+        } else {                /* else done writing bytes out from tx buffer */
+            byte = 0xff;        /* clock out a "don't care" byte */
+        }
+
+        byte = spi_transfer(&w->spiio, byte);
+
+        if (rx_len > 0) {       /* if still have bytes to read into rx buffer */
+            *rx_data++ = byte;
+            --rx_len;
+        }
+    }
+}
+
+/*-------------------------------------------------------------
+ * Return the current value of the 1ms timer.
+ */
+unsigned WF_TimerRead()
+{
+    struct timeval tv;
+
+    microtime(&tv);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+/*-------------------------------------------------------------
+ * Configure host processor external interrupt.
+ * This line is asserted low by MRF24WG.
+ * Config parameter WF_INT defines the interrupt pin to use:
+ * one of INT1, INT2, INT3 or INT4.
+ */
+void WF_EintInit()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+#define LETH    4               /* Interrupt priority level for splimp() */
+
+    /* Set interrupt priority. */
+    switch (WF_INT) {
+    case 0:                             /* External Interrupt 0 */
+        /* INT0 pin is fixed mapped. */
+        w->int_mask = 1 << PIC32_IRQ_INT0;
+        IPC(PIC32_IRQ_INT0/4) |= PIC32_IPC_IP(0, 0, 0, LETH);
+        break;
+    case 1:                             /* External Interrupt 1 */
+        INT1R = gpio_input_map1(w->pin_irq);
+        w->int_mask = 1 << PIC32_IRQ_INT1;
+        IPC(PIC32_IRQ_INT1/4) |= PIC32_IPC_IP(LETH, 0, 0, 0);
+        break;
+    case 2:                             /* External Interrupt 2 */
+        INT2R = gpio_input_map2(w->pin_irq);
+        w->int_mask = 1 << PIC32_IRQ_INT2;
+        IPC(PIC32_IRQ_INT2/4) |= PIC32_IPC_IP(0, LETH, 0, 0);
+        break;
+    case 3:                             /* External Interrupt 3 */
+        INT3R = gpio_input_map3(w->pin_irq);
+        w->int_mask = 1 << PIC32_IRQ_INT3;
+        IPC(PIC32_IRQ_INT3/4) |= PIC32_IPC_IP(0, 0, LETH, 0);
+        break;
+    case 4:                             /* External Interrupt 4 */
+        INT4R = gpio_input_map4(w->pin_irq);
+        w->int_mask = 1 << PIC32_IRQ_INT4;
+        IPC(PIC32_IRQ_INT4/4) |= PIC32_IPC_IP(0, 0, 0, LETH);
+        break;
+    }
+
+    IECCLR(0) = w->int_mask;            /* disable /INT interrupt */
+    INTCONCLR = w->int_mask;            /* falling edge triggered */
+    IFSCLR(0) = w->int_mask;            /* ensure the interrupt is cleared */
+    IECSET(0) = w->int_mask;            /* enable the interrupt */
+}
+
+/*
+ * Determines if the external interrupt is disabled.
+ * Returns True if interrupt is disabled, else False.
+ */
+int WF_isEintDisabled()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    return ! (IEC(0) & w->int_mask);
+}
+
+/*
+ * Disable the MRF24WG external interrupt.
+ */
+void WF_EintDisable()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    IECCLR(0) = w->int_mask;
+}
+
+/*
+ * Enable the MRF24WG external interrupt.
+ *
+ * When using level-triggered interrupts it is possible that host MCU
+ * could miss a falling edge; this can occur because during normal
+ * operations as the Universal Driver disables the external interrupt for
+ * short periods.  If the MRF24WG asserts the interrupt line while the
+ * interrupt is disabled the falling edge won't be detected.  So, a
+ * check must be made to determine if an interrupt is pending; if so, the
+ * interrupt must be forced.
+ * This is not an issue for level-triggered interrupts.
+ */
+void WF_EintEnable()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    /* PIC32 uses level-triggered interrupts, so it is possible the Universal Driver
+     * may have temporarily disabled the external interrupt, and then missed the
+     * falling edge when the MRF24WG asserted the interrupt line.  The code below
+     * checks for this condition and forces the interrupt if needed. */
+
+    /* If interrupt line is low, then PIC32 may have missed the falling edge
+     * while the interrupt was disabled. */
+    if (gpio_get(w->pin_irq) == 0) {
+        /* Need to force the interrupt for two reasons:
+         *  1) there is an event that needs to be serviced
+         *  2) MRF24WG won't generate another falling edge until the interrupt
+         *     is processed. */
+        IFSSET(0) = w->int_mask;
+    }
+
+    /* Enable the external interrupt. */
+    IECSET(0) = w->int_mask;
+}
+
+/*-------------------------------------------------------------
+ * Called by Universal Driver to inform application of MRF24WG events.
+ *
+ * Various events are reported to the application via this function callback.
+ * The application should take appropriate action based on the event.
+ */
+void WF_ProcessEvent(unsigned event_type, unsigned event_data)
+{
+    //TODO
+#if 0
+    wfmrf24.priv.fMRFBusy = 0;
+    wfmrf24.priv.lastEventType = eventType;
+    wfmrf24.priv.lastEventData = eventData;
+
+    switch (eventType) {
+    case WF_EVENT_INITIALIZATION:
+        if (eventData == WF_INIT_SUCCESSFUL)
+        {
+            wfmrf24.priv.initStatus = ForceIPStatus((InitMask | eventData));
+        }
+        else
+        {
+            wfmrf24.priv.initStatus = ForceIPError((InitMask | eventData));
+        }
+        break;
+
+    case WF_EVENT_CONNECTION_SUCCESSFUL:
+        wfmrf24.priv.connectionStatus = ipsSuccess;
+        break;
+
+    case WF_EVENT_CONNECTION_TEMPORARILY_LOST:
+        wfmrf24.priv.connectionStatus = ForceIPStatus((CLMask | eventData));
+        wfmrf24.priv.fMRFBusy = 1;  // don't do anything during the reconnect!
+        break;
+
+    case WF_EVENT_CONNECTION_REESTABLISHED:
+        wfmrf24.priv.connectionStatus = ipsSuccess;
+        break;
+
+    case WF_EVENT_CONNECTION_PERMANENTLY_LOST:
+        wfmrf24.priv.connectionStatus = ForceIPError((CLMask | eventData));
+        break;
+
+    case WF_EVENT_CONNECTION_FAILED:
+        wfmrf24.priv.connectionStatus = ForceIPError((CFMask | eventData));
+        break;
+
+    case WF_EVENT_SCAN_RESULTS_READY:
+        wfmrf24.priv.cScanResults = eventData;
+        break;
+
+    case WF_WPS_EVENT_KEY_CALCULATION_REQUEST:
+        WF_WpsKeyGenerate();        // can be called here or later, but must be called
+                                    // to complete WPS connection
+        wfmrf24.priv.fMRFBusy = 1;  // wait for connection status or error.
+        break;
+
+    case WF_EVENT_MRF24WG_MODULE_ASSERT:
+        //TODO: OutputMrf24wgAssertInfo(eventData);
+        break;
+
+    // if we get an event error, it will be in
+    // the last eventData
+    case WF_EVENT_ERROR:
+    default:
+        break;
+    }
+#endif
+}
+
+/*
+ * Called by Universal Driver to notify application of incoming packet.
+ */
+void WF_ProcessRxPacket()
+{
+    //TODO
+#if 0
+    u_int16_t nbytes = WF_RxPacketLengthGet();
+
+    if (nbytes > 0) {
+        char *data = malloc(nbytes);
+        if (data != 0) {
+            WF_RxPacketCopy(data, nbytes);
+            WF_RxPacketDeallocate();
+
+            //TODO: process the data.
+        } else {
+            // if we know we can never allocate this packet, then just drop it
+            WF_RxPacketDeallocate();
+        }
+    }
+#endif
+}
+
+/*-------------------------------------------------------------
  * Initialize hardware.
  */
 static void mrf_setup(struct wifi_port *w)
@@ -142,14 +407,34 @@ static void mrf_watchdog(int unit)
 }
 
 /*
+ * External interrupt.
+ *
+ * This interrupt handler should:
+ * 1) ensure the interrupt is disabled upon exit (Universal Driver will reenable it)
+ * 2) clear the interrupt
+ * 3) call WF_EintHandler()
+ */
+void mrfintr(dev_t dev)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    IFSCLR(0) = w->int_mask;            /* clear the interrupt */
+    IECCLR(0) = w->int_mask;            /* disable external interrupt */
+    WF_EintHandler();                   /* call handler function */
+}
+
+/*
  * Detect the presence of MRF24G controller at given SPI port.
  */
 static int mrf_detect(struct wifi_port *w)
 {
     /* Setup direction of signal pins. */
+    gpio_set(w->pin_irq);
     gpio_set_input(w->pin_irq);         /* /Int input */
+
     gpio_clr(w->pin_reset);
     gpio_set_output(w->pin_reset);      /* /Reset output low (active) */
+
     gpio_set(w->pin_hibernate);
     gpio_set_output(w->pin_hibernate);  /* Hibernate output high (active) */
 
@@ -159,6 +444,8 @@ static int mrf_detect(struct wifi_port *w)
     udelay(300000);
     gpio_set(w->pin_reset);             /* /Reset signal high (inactive) */
     udelay(5000);
+
+    WF_Init();
 
     //TODO
     goto failed;

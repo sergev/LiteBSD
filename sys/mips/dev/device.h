@@ -98,4 +98,7 @@ void uartintr(dev_t);
 /* Ethernet driver. */
 void enintr(dev_t);
 
+/* Wi-Fi driver. */
+void mrfintr(dev_t);
+
 #endif
