@@ -42,6 +42,14 @@
 #endif
 
 /*
+ * To enable debug output, uncomment the following line.
+ */
+//#define PRINTDBG printf
+#ifndef PRINTDBG
+#   define PRINTDBG(...) /*empty*/
+#endif
+
+/*
  * Wi-Fi software status per interface.
  */
 struct wifi_port {
@@ -66,10 +74,13 @@ void WF_GpioSetReset(unsigned high)
 {
     struct wifi_port *w = &wifi_port[0];
 
-    if (high)
+    if (high) {
+        PRINTDBG("-- set /Reset pin\n");
         gpio_set(w->pin_reset);
-    else
+    } else {
+        PRINTDBG("-- clear /Reset pin\n");
         gpio_clr(w->pin_reset);
+    }
 }
 
 /*
@@ -80,37 +91,42 @@ void WF_GpioSetHibernate(unsigned high)
 {
     struct wifi_port *w = &wifi_port[0];
 
-    if (high)
+    if (high) {
+        PRINTDBG("-- set Hibernate pin\n");
         gpio_set(w->pin_hibernate);
-    else
+    } else {
+        PRINTDBG("-- clear Hibernate pin\n");
         gpio_clr(w->pin_hibernate);
+    }
 }
 
 /*-------------------------------------------------------------
  * Read 8-bit register.
  * Return register value.
  */
-unsigned WF_ReadByte(unsigned regId)
+unsigned WF_ReadByte(unsigned regno)
 {
     struct wifi_port *w = &wifi_port[0];
     u_int8_t reply;
 
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
     reply = spi_transfer(&w->spiio, 0xff);
     spi_deselect(&w->spiio);
+    PRINTDBG("-- read byte [%02x] -> %02x\n", regno, reply);
     return reply;
 }
 
 /*
  * Write 8-bit register.
  */
-void WF_WriteByte(unsigned regId, unsigned value)
+void WF_WriteByte(unsigned regno, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
+    PRINTDBG("-- write byte [%02x] <- %02x\n", regno, value);
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regId);
+    spi_transfer(&w->spiio, regno);
     spi_transfer(&w->spiio, value);
     spi_deselect(&w->spiio);
 }
@@ -119,28 +135,30 @@ void WF_WriteByte(unsigned regId, unsigned value)
  * Read 16-bit register.
  * Return register value.
  */
-unsigned WF_Read(unsigned regId)
+unsigned WF_Read(unsigned regno)
 {
     struct wifi_port *w = &wifi_port[0];
     u_int8_t reply[3];
 
     spi_select(&w->spiio);
-    reply[0] = spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    reply[0] = spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
     reply[1] = spi_transfer(&w->spiio, 0xff);
     reply[2] = spi_transfer(&w->spiio, 0xff);
     spi_deselect(&w->spiio);
+    PRINTDBG("-- read [%02x] -> %04x\n", regno, (reply[1] << 8) | reply[2]);
     return (reply[1] << 8) | reply[2];
 }
 
 /*
  * Write 16-bit register.
  */
-void WF_Write(unsigned regId, unsigned value)
+void WF_Write(unsigned regno, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
+    PRINTDBG("-- write [%02x] <- %04x\n", regno, value);
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regId);
+    spi_transfer(&w->spiio, regno);
     spi_transfer(&w->spiio, value >> 8);
     spi_transfer(&w->spiio, value & 0xff);
     spi_deselect(&w->spiio);
@@ -149,12 +167,13 @@ void WF_Write(unsigned regId, unsigned value)
 /*
  * Read a block of data from a register.
  */
-void WF_ReadArray(unsigned regId, u_int8_t *data, unsigned nbytes)
+void WF_ReadArray(unsigned regno, u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
+    PRINTDBG("-- read %u bytes from [%02x]\n", nbytes, regno);
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
     while (nbytes-- > 0) {
         *data++ = spi_transfer(&w->spiio, 0xff);
     }
@@ -164,12 +183,13 @@ void WF_ReadArray(unsigned regId, u_int8_t *data, unsigned nbytes)
 /*
  * Write a data block to specified register.
  */
-void WF_WriteArray(unsigned regId, const u_int8_t *data, unsigned nbytes)
+void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
+    PRINTDBG("-- write %u bytes to [%02x]\n", nbytes, regno);
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regId);
+    spi_transfer(&w->spiio, regno);
     while (nbytes-- > 0) {
         spi_transfer(&w->spiio, *data++);
     }
@@ -390,6 +410,16 @@ void WF_ProcessRxPacket()
 static void mrf_setup(struct wifi_port *w)
 {
     //TODO
+
+#if 0
+    /* Extract our MAC address */
+    w->macaddr[0] = EMAC1SA2;
+    w->macaddr[1] = EMAC1SA2 >> 8;
+    w->macaddr[2] = EMAC1SA1;
+    w->macaddr[3] = EMAC1SA1 >> 8;
+    w->macaddr[4] = EMAC1SA0;
+    w->macaddr[5] = EMAC1SA0 >> 8;
+#endif
 }
 
 /*
@@ -456,10 +486,11 @@ void mrfintr(dev_t dev)
 
 /*
  * Detect the presence of MRF24G controller at given SPI port.
+ * Return -1 on error.
  */
 static int mrf_detect(struct wifi_port *w)
 {
-    int v;
+    int mask2, v;
 
     /* Setup direction of signal pins. */
     gpio_set(w->pin_irq);
@@ -478,8 +509,11 @@ static int mrf_detect(struct wifi_port *w)
     gpio_set(w->pin_reset);             /* /Reset signal high (inactive) */
     udelay(5000);
 
+    /* Initialize the MRF24WG for operations. */
     WF_Init();
 
+    /* Check whether we really have MRF24G chip attached. */
+    mask2 = WF_Read(WF_HOST_INTR2_MASK_REG);
     WF_Write(WF_HOST_INTR2_MASK_REG, 0xaa55);
     v = WF_Read(WF_HOST_INTR2_MASK_REG);
     if (v != 0xaa55)
@@ -488,15 +522,15 @@ static int mrf_detect(struct wifi_port *w)
     v = WF_Read(WF_HOST_INTR2_MASK_REG);
     if (v != 0x55aa)
         goto failed;
-    WF_Write(WF_HOST_INTR2_MASK_REG, 0);
+    WF_Write(WF_HOST_INTR2_MASK_REG, mask2);
 
     /* MRF24G controller detected */
-    return 1;
+    return 0;
 
 failed:
     gpio_set_input(w->pin_reset);
     gpio_set_input(w->pin_hibernate);
-    return 0;
+    return -1;
 }
 
 static int
@@ -524,28 +558,15 @@ mrf_probe(config)
     w->pin_irq = config->dev_flags >> 8 & 0xFF;
     w->pin_reset = config->dev_flags >> 16 & 0xFF;
     w->pin_hibernate = config->dev_flags >> 24 & 0xFF;
-    if (mrf_detect(w)) {
+    if (mrf_detect(w) < 0) {
         printf("mrf%u not found at port %s, pin cs=%c%d\n",
             unit, spi_name(io), spi_csname(io), spi_cspin(io));
         return 0;
     }
 
+    /* Initialize the chip with interrupts disabled. */
     s = splimp();
-
-    /* Link is down. */
-    w->is_up = 0;
-
-    /* As per section 35.4.10 of the Pic32 Family Ref Manual. */
     mrf_setup(w);
-#if 0
-    /* Extract our MAC address */
-    w->macaddr[0] = EMAC1SA2;
-    w->macaddr[1] = EMAC1SA2 >> 8;
-    w->macaddr[2] = EMAC1SA1;
-    w->macaddr[3] = EMAC1SA1 >> 8;
-    w->macaddr[4] = EMAC1SA0;
-    w->macaddr[5] = EMAC1SA0 >> 8;
-#endif
     splx(s);
 
     printf("mrf%u at port %s, MAC address %s\n", unit,
