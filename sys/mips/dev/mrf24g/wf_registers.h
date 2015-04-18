@@ -30,10 +30,6 @@
 #define WF_HOST_RESET_REG           ((u_int16_t)0x3c)
 #define WF_HOST_RESET_MASK          ((u_int16_t)0x0001)
 
-/* Scratchpad registers */
-#define WF_SCRATCHPAD_0_REG         ((u_int16_t)0x3d)
-#define WF_SCRATCHPAD_1_REG         ((u_int16_t)0x3e)
-
 #define WF_HOST_INTR2_REG           ((u_int16_t)0x2d) /* 16-bit register containing 2nd level interrupt bits */
 #define WF_HOST_INTR2_MASK_REG      ((u_int16_t)0x2e)
 #define WF_HOST_WFIFO_BCNT0_REG     ((u_int16_t)0x2f) /* 16-bit register containing available write size for fifo 0 (data tx)*/
@@ -59,7 +55,7 @@
 #define WF_HW_STATUS_REG            ((u_int16_t)0x2a) /* 16-bit read only register providing hardware status bits */
 #define WF_CONFIG_CTRL0_REG         ((u_int16_t)0x2e) /* 16-bit register used to initiate Hard reset              */
 #define WF_WAKE_CONTROL_REG         ((u_int16_t)0x2f)
-#define WF_SCRATCHPAD_0_REG         ((u_int16_t)0x3d)
+#define WF_SCRATCHPAD_0_REG         ((u_int16_t)0x3d) /* Scratchpad registers */
 #define WF_SCRATCHPAD_1_REG         ((u_int16_t)0x3e) /* 16-bit register read to determine when low power is done */
 #define WF_PSPOLL_CONFIG_REG        ((u_int16_t)0x40)
 #define WF_XTAL_SETTLE_TIME_REG     ((u_int16_t)0x41)
@@ -122,15 +118,8 @@
 #define HR_HOST_ANA_SPI_DOUT_MASK             ((u_int16_t)0x01 << 10)
 #define HR_HOST_ANA_SPI_CLK_MASK              ((u_int16_t)0x01 << 9)
 
-
 //---------------
 // END PLL BLOCK
 //---------------
-u_int8_t  Read8BitWFRegister(u_int8_t regId);
-void     Write8BitWFRegister(u_int8_t regId, u_int8_t value);
-void     Write16BitWFRegister(u_int8_t regId, u_int16_t value);
-u_int16_t Read16BitWFRegister(u_int8_t regId);
-void WriteWFArray(u_int8_t regId, const u_int8_t *p_Buf, u_int16_t length);
-void ReadWFArray(u_int8_t  regId, u_int8_t *p_Buf, u_int16_t length);
 
 #endif /* __WF_REGISTERS_H */

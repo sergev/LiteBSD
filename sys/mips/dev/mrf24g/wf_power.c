@@ -181,7 +181,7 @@ void WFConfigureLowPowerMode(u_int8_t action)
     //-------------------------------------
     if (action == WF_LOW_POWER_MODE_ON) {
         //dbgprintf("Enable PS\n");
-        Write16BitWFRegister(WF_PSPOLL_H_REG, REG_ENABLE_LOW_POWER_MASK);
+        WF_Write(WF_PSPOLL_H_REG, REG_ENABLE_LOW_POWER_MASK);
     }
     //---------------------------------------------------------------------------------------------
     // else deactivating PS-Poll mode on MRF24W (taking it out of low-power mode and waking it up)
@@ -189,15 +189,15 @@ void WFConfigureLowPowerMode(u_int8_t action)
     else {
         // action == WF_LOW_POWER_MODE_OFF
         //dbgprintf("Disable PS\n");
-        Write16BitWFRegister(WF_PSPOLL_H_REG, REG_DISABLE_LOW_POWER_MASK);
+        WF_Write(WF_PSPOLL_H_REG, REG_DISABLE_LOW_POWER_MASK);
 
         /* poll the response bit that indicates when the MRF24W has come out of low power mode */
         do {
             // set the index register to the register we wish to read
-            Write16BitWFRegister(WF_INDEX_ADDR_REG, WF_SCRATCHPAD_1_REG);
+            WF_Write(WF_INDEX_ADDR_REG, WF_SCRATCHPAD_1_REG);
 
             // read register
-            lowPowerStatusRegValue = Read16BitWFRegister(WF_INDEX_DATA_REG);
+            lowPowerStatusRegValue = WF_Read(WF_INDEX_DATA_REG);
         } while (lowPowerStatusRegValue & REG_ENABLE_LOW_POWER_MASK);
     }
 }

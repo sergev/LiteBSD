@@ -34,7 +34,7 @@ static void WriteAnalogRegisterBitBang(u_int8_t regType, u_int16_t address, u_in
 
     // Enable the on-chip SPI and select the desired bank (0-3)
     hrVal = (HR_HOST_ANA_SPI_EN_MASK | (spiPort << 6));
-    Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+    WF_Write(WF_HOST_RESET_REG, hrVal);
 
     // create register address byte
     regAddress = (address << 2) | SPI_AUTO_INCREMENT_ENABLED_MASK | SPI_WRITE_MASK;
@@ -48,11 +48,11 @@ static void WriteAnalogRegisterBitBang(u_int8_t regType, u_int16_t address, u_in
         if ((regAddress & bitMask8) > 0) {
             hrVal |= HR_HOST_ANA_SPI_DOUT_MASK;
         }
-        Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+        WF_Write(WF_HOST_RESET_REG, hrVal);
 
         // now toggle SPI clock high, on rising edge this bit is clocked out
         hrVal |= HR_HOST_ANA_SPI_CLK_MASK;
-        Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+        WF_Write(WF_HOST_RESET_REG, hrVal);
 
         bitMask8 >>= 1; //  # get to next bit in address byte
     }
@@ -67,18 +67,18 @@ static void WriteAnalogRegisterBitBang(u_int8_t regType, u_int16_t address, u_in
             hrVal |= HR_HOST_ANA_SPI_DOUT_MASK;
         }
 
-        Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+        WF_Write(WF_HOST_RESET_REG, hrVal);
 
         // now toggle SPI clock high, on rising edge this bit is clocked out
         hrVal |= HR_HOST_ANA_SPI_CLK_MASK;
-        Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+        WF_Write(WF_HOST_RESET_REG, hrVal);
 
         bitMask16 = bitMask16 >> 1;  // go to next bit in data byte
     }
 
     // Disable the on-chip SPI
     hrVal &= ~HR_HOST_ANA_SPI_EN_MASK;
-    Write16BitWFRegister(WF_HOST_RESET_REG, hrVal);
+    WF_Write(WF_HOST_RESET_REG, hrVal);
 }
 
 void ResetPll()

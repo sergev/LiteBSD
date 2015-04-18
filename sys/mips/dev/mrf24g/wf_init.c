@@ -47,7 +47,7 @@ static void HostInterrupt2RegInit(u_int16_t hostIntMaskRegMask, u_int8_t  state)
     /* to cause an interrupt to the host                                                    */
 
     /* read current state of int2 mask reg */
-    int2MaskValue = Read16BitWFRegister(WF_HOST_INTR2_MASK_REG);
+    int2MaskValue = WF_Read(WF_HOST_INTR2_MASK_REG);
 
     /* if caller is disabling a set of interrupts */
     if (state == WF_INT_DISABLE)
@@ -63,10 +63,10 @@ static void HostInterrupt2RegInit(u_int16_t hostIntMaskRegMask, u_int8_t  state)
     }
 
     /* write out new interrupt mask value */
-    Write16BitWFRegister(WF_HOST_INTR2_MASK_REG, int2MaskValue);
+    WF_Write(WF_HOST_INTR2_MASK_REG, int2MaskValue);
 
     /* ensure that pending interrupts from those updated interrupts are cleared */
-    Write16BitWFRegister(WF_HOST_INTR2_REG, hostIntMaskRegMask);
+    WF_Write(WF_HOST_INTR2_REG, hostIntMaskRegMask);
 }
 
 /*
@@ -93,7 +93,7 @@ static void HostInterruptRegInit(u_int8_t hostIntrMaskRegMask, u_int8_t state)
     /* to cause an interrupt to the host                                                    */
 
     /* read current state of Host Interrupt Mask register */
-    hostIntMaskValue = Read8BitWFRegister(WF_HOST_MASK_REG);
+    hostIntMaskValue = WF_ReadByte(WF_HOST_MASK_REG);
 
     /* if caller is disabling a set of interrupts */
     if (state == WF_INT_DISABLE)
@@ -109,10 +109,10 @@ static void HostInterruptRegInit(u_int8_t hostIntrMaskRegMask, u_int8_t state)
     }
 
     /* write out new interrupt mask value */
-    Write8BitWFRegister(WF_HOST_MASK_REG, hostIntMaskValue);
+    WF_WriteByte(WF_HOST_MASK_REG, hostIntMaskValue);
 
     /* ensure that pending interrupts from those updated interrupts are cleared */
-    Write8BitWFRegister(WF_HOST_INTR_REG, hostIntrMaskRegMask);
+    WF_WriteByte(WF_HOST_INTR_REG, hostIntrMaskRegMask);
 }
 
 /*
@@ -200,25 +200,8 @@ static u_int32_t CompleteInitialization()
  */
 void WF_Init()
 {
-    u_int32_t    tStart = 0;
-
     UdStateInit();      // initialize internal state machine
     EventQInit();       // initialize WiFi event queue
-
-    // take chip out of hibernate and out of reset; must be done before calling ResetPll()
-    WF_GpioSetHibernate(WF_HIGH);  // Toggle the module into and then out of hibernate
-    tStart = WF_TimerRead();
-    while (WF_TimerRead() - tStart <= 2);
-    WF_GpioSetHibernate(WF_LOW);
-    tStart = WF_TimerRead();
-    while (WF_TimerRead() - tStart <= 300);
-
-    WF_GpioSetReset(WF_LOW);       // Toggle the module into and out of reset
-    tStart = WF_TimerRead();
-    while (WF_TimerRead() - tStart <= 2);
-    WF_GpioSetReset(WF_HIGH);
-    tStart = WF_TimerRead();
-    while (WF_TimerRead() - tStart <= 5);
 
     // MRF24WG silicon work-around -- needed for A1 silicon to initialize PLL values correctly
     ResetPll();
@@ -226,7 +209,6 @@ void WF_Init()
     ClearMgmtConfirmMsg();    // no mgmt response messages received
 
     g_mrf24wgResetState = MRF24WG_RESET_START;
-
 }
 
 /*
@@ -243,102 +225,76 @@ void ChipResetStateMachine()
     static u_int32_t startTime;
     u_int16_t errorCode;
 
-    switch (g_mrf24wgResetState)
-    {
-        //--------------------
-        case MRF24WG_RESET_START:
-        //--------------------
-            UdSetInitInvalid(); // init not valid until it gets through this state machine
+    switch (g_mrf24wgResetState) {
+    case MRF24WG_RESET_START:
+        UdSetInitInvalid(); // init not valid until it gets through this state machine
 
-            // clear the power bit to disable low power mode on the MRF24W
-            Write16BitWFRegister(WF_PSPOLL_H_REG, 0x0000);
+        // clear the power bit to disable low power mode on the MRF24W
+        WF_Write(WF_PSPOLL_H_REG, 0x0000);
 
-            // Set HOST_RESET bit in register to put device in reset
-            Write16BitWFRegister(WF_HOST_RESET_REG, Read16BitWFRegister(WF_HOST_RESET_REG) | WF_HOST_RESET_MASK);
+        // Set HOST_RESET bit in register to put device in reset
+        WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) | WF_HOST_RESET_MASK);
 
-            // Clear HOST_RESET bit in register to take device out of reset
-            Write16BitWFRegister(WF_HOST_RESET_REG, Read16BitWFRegister(WF_HOST_RESET_REG) & ~WF_HOST_RESET_MASK);
+        // Clear HOST_RESET bit in register to take device out of reset
+        WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) & ~WF_HOST_RESET_MASK);
 
-            startTime = WF_TimerRead();
-            g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_HW_RESET;
-            break;
+        startTime = WF_TimerRead();
+        g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_HW_RESET;
+        break;
 
-        //--------------------------------
-        case MRF24WG_RESET_WAIT_FOR_HW_RESET:
-        //--------------------------------
-            Write16BitWFRegister(WF_INDEX_ADDR_REG, WF_HW_STATUS_REG);
-            value = Read16BitWFRegister(WF_INDEX_DATA_REG);
-            if ((value & WF_HW_STATUS_NOT_IN_RESET_MASK) == WF_HW_STATUS_NOT_IN_RESET_MASK)
-            {
-                if (value == 0xffff)
-                {
-                    // typically read all 1's when SPI not connected
-                    EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_SPI_NOT_CONNECTED);
-                    g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-                }
-                else
-                {
-                    startTime = WF_TimerRead();
-                    g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_MRF24W_INIT;
-                }
+    case MRF24WG_RESET_WAIT_FOR_HW_RESET:
+        WF_Write(WF_INDEX_ADDR_REG, WF_HW_STATUS_REG);
+        value = WF_Read(WF_INDEX_DATA_REG);
+        if ((value & WF_HW_STATUS_NOT_IN_RESET_MASK) == WF_HW_STATUS_NOT_IN_RESET_MASK) {
+            if (value == 0xffff) {
+                // typically read all 1's when SPI not connected
+                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_SPI_NOT_CONNECTED);
+                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
+            } else {
+                startTime = WF_TimerRead();
+                g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_MRF24W_INIT;
             }
+        } else {
             // else still waiting
-            else
-            {
-                // if timed out waiting for MRF24WG to come out of reset
-                elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-                if (elapsedTime > 1000) // 1000
-                {
-                    EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_RESET_TIMEOUT);
-                    g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-                }
+            // if timed out waiting for MRF24WG to come out of reset
+            elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
+            if (elapsedTime > 1000) {
+                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_RESET_TIMEOUT);
+                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
             }
-            break;
+        }
+        break;
 
-        //-----------------------------------
-        case MRF24WG_RESET_WAIT_FOR_MRF24W_INIT:
-        //-----------------------------------
-            // read FIFO byte count; if > 0 than MRF24WG reset complete
-            value = Read16BitWFRegister(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff;;  // read FIFO byte count
-            if (value > 0)
-            {
+    case MRF24WG_RESET_WAIT_FOR_MRF24W_INIT:
+        // read FIFO byte count; if > 0 than MRF24WG reset complete
+        value = WF_Read(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff;  // read FIFO byte count
+        if (value > 0) {
+            // generate event
+            errorCode = CompleteInitialization();
+            if (errorCode == 0) {
+                UdSetInitValid();
+                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_SUCCESSFUL); // signal init successful event
+                g_mrf24wgResetState = MRF24WG_RESET_SUCCESSFUL;
+            } else {
+                EventEnqueue( ((u_int8_t)errorCode >> 16), (u_int32_t)errorCode);
+                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
+            }
+        } else {
+            // else still waiting
+            // if timed out waiting for MRF24WG init
+            elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
+            if (elapsedTime > 2000) {
                 // generate event
-                errorCode = CompleteInitialization();
-                if (errorCode == 0)
-                {
-                    UdSetInitValid();
-                    EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_SUCCESSFUL); // signal init successful event
-                    g_mrf24wgResetState = MRF24WG_RESET_SUCCESSFUL;
-                }
-                else
-                {
-                    EventEnqueue( ((u_int8_t)errorCode >> 16), (u_int32_t)errorCode);
-                    g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-                }
+                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_INIT_TIMEOUT);
+                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
             }
-            // else still waiting
-            else
-            {
-                // if timed out waiting for MRF24WG init
-                elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-                if (elapsedTime > 2000) // 2000ms
-                {
-                    // generate event
-                    EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_INIT_TIMEOUT);
-                    g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-                }
-            }
-            break;
+        }
+        break;
 
-        //------------------------
-        case MRF24WG_RESET_FAILED:
-        //------------------------
-            break;  // just stay in this state until the next reset
+    case MRF24WG_RESET_FAILED:
+        break;  // just stay in this state until the next reset
 
-        //----------------------------
-        case MRF24WG_RESET_SUCCESSFUL:
-        //----------------------------
-            break;  // just stay in this state until the next reset
-
-    } // end switch
+    case MRF24WG_RESET_SUCCESSFUL:
+        break;  // just stay in this state until the next reset
+    }
 }

@@ -47,10 +47,10 @@ void WF_EintHandler()
     {
         // read hostInt register and hostIntMask register to determine cause of interrupt
         // TODO: [NOTE: Stellaris requires two reads to get proper SPI read?]
-        g_EintHostIntRegValue      = Read8BitWFRegister(WF_HOST_INTR_REG);
-        g_EintHostIntRegValue      = Read8BitWFRegister(WF_HOST_INTR_REG);
+        g_EintHostIntRegValue      = WF_ReadByte(WF_HOST_INTR_REG);
+        g_EintHostIntRegValue      = WF_ReadByte(WF_HOST_INTR_REG);
 
-        g_EintHostIntMaskRegValue  = Read8BitWFRegister(WF_HOST_MASK_REG);
+        g_EintHostIntMaskRegValue  = WF_ReadByte(WF_HOST_MASK_REG);
 
         // AND the two registers together to determine which active, enabled interrupt has occurred
         g_EintHostInt = g_EintHostIntRegValue & g_EintHostIntMaskRegValue;
@@ -69,14 +69,14 @@ void WF_EintHandler()
                                    WF_HOST_INT_MASK_INT2)) == 0)
             {
                 /* clear the RAW interrupts, re-enable interrupts, and exit */
-                Write8BitWFRegister(WF_HOST_INTR_REG, (WF_HOST_INT_MASK_RAW_0_INT_0 |
-                                                       WF_HOST_INT_MASK_RAW_1_INT_0 |
-                                                       WF_HOST_INT_MASK_INT2));
+                WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_RAW_0_INT_0 |
+                                               WF_HOST_INT_MASK_RAW_1_INT_0 |
+                                               WF_HOST_INT_MASK_INT2);
 
-                Write16BitWFRegister(WF_HOST_INTR2_REG, (WF_HOST_INT_MASK_RAW_2_INT_0 |
-                                                         WF_HOST_INT_MASK_RAW_3_INT_0 |
-                                                         WF_HOST_INT_MASK_RAW_4_INT_0 |
-                                                         WF_HOST_INT_MASK_RAW_5_INT_0));
+                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_RAW_2_INT_0 |
+                                            WF_HOST_INT_MASK_RAW_3_INT_0 |
+                                            WF_HOST_INT_MASK_RAW_4_INT_0 |
+                                            WF_HOST_INT_MASK_RAW_5_INT_0);
 
                 WF_EintEnable();
                 return;
@@ -87,12 +87,12 @@ void WF_EintHandler()
             {
                 // save the other interrupts and clear them, along with the Raw Move Complete interrupts
                 // keep interrupts disabled
-                Write16BitWFRegister(WF_HOST_INTR2_REG, (WF_HOST_INT_MASK_RAW_2_INT_0   |
-                                                         WF_HOST_INT_MASK_RAW_3_INT_0   |
-                                                         WF_HOST_INT_MASK_RAW_4_INT_0   |
-                                                         WF_HOST_INT_MASK_RAW_5_INT_0));
+                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_RAW_2_INT_0   |
+                                            WF_HOST_INT_MASK_RAW_3_INT_0   |
+                                            WF_HOST_INT_MASK_RAW_4_INT_0   |
+                                            WF_HOST_INT_MASK_RAW_5_INT_0);
                 g_HostIntSaved |= (g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0_INT_0 | WF_HOST_INT_MASK_RAW_1_INT_0 | WF_HOST_INT_MASK_INT2));
-                Write8BitWFRegister(WF_HOST_INTR_REG, g_EintHostInt);
+                WF_WriteByte(WF_HOST_INTR_REG, g_EintHostInt);
 
                 // leave interrupt disabled for now
             }
@@ -103,7 +103,7 @@ void WF_EintHandler()
         else
         {
             g_HostIntSaved |= g_EintHostInt;
-            Write8BitWFRegister(WF_HOST_INTR_REG, g_EintHostInt);
+            WF_WriteByte(WF_HOST_INTR_REG, g_EintHostInt);
             WF_EintEnable();
         }
     }
@@ -137,7 +137,7 @@ void InterruptCheck()
     g_ExIntNeedsServicing = 0;
 
      /* read hostInt register to determine cause of interrupt */
-    hostIntRegValue = Read8BitWFRegister(WF_HOST_INTR_REG);
+    hostIntRegValue = WF_ReadByte(WF_HOST_INTR_REG);
 
     // OR in the saved interrupts during the time when we were waiting for raw complete, set by WFEintHandler()
     hostIntRegValue |= g_HostIntSaved;
@@ -145,7 +145,7 @@ void InterruptCheck()
     // done with the saved interrupts, clear variable
     g_HostIntSaved = 0;
 
-    hostIntMaskRegValue  = Read8BitWFRegister(WF_HOST_MASK_REG);
+    hostIntMaskRegValue = WF_ReadByte(WF_HOST_MASK_REG);
 
     // AND the two registers together to determine which active, enabled interrupt has occurred
     hostInt = hostIntRegValue & hostIntMaskRegValue;
@@ -161,24 +161,24 @@ void InterruptCheck()
         // hit an assert condition.  So, we check for that here.
 
         // if the MRF24WG has hit an assert condition
-        hostInt2 = Read16BitWFRegister(WF_HOST_INTR2_REG);
+        hostInt2 = WF_Read(WF_HOST_INTR2_REG);
         if (hostInt2 & WF_HOST_INT_MASK_MAIL_BOX_0_WRT)
         {
             // module number in upper 8 bits, assert information in lower 20 bits
-            assertInfo = (((u_int32_t)Read16BitWFRegister(WF_HOST_MAIL_BOX_0_MSW_REG)) << 16) |
-                                     Read16BitWFRegister(WF_HOST_MAIL_BOX_0_LSW_REG);
+            assertInfo = (WF_Read(WF_HOST_MAIL_BOX_0_MSW_REG) << 16) |
+                          WF_Read(WF_HOST_MAIL_BOX_0_LSW_REG);
             // signal this event
             EventEnqueue(WF_EVENT_MRF24WG_MODULE_ASSERT, assertInfo);
         }
 
         /* clear this interrupt */
-        Write16BitWFRegister(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_INT2);
+        WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_INT2);
     }
     /* else if got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
     else if ((hostInt & WF_HOST_INT_MASK_FIFO_1_THRESHOLD) == WF_HOST_INT_MASK_FIFO_1_THRESHOLD)
     {
         /* clear this interrupt */
-        Write8BitWFRegister(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1_THRESHOLD);
+        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1_THRESHOLD);
 
         // signal that a mgmt msg, either confirm or indicate, has been received
         // and needs to be processed
@@ -188,7 +188,7 @@ void InterruptCheck()
     else if ((hostInt & WF_HOST_INT_MASK_FIFO_0_THRESHOLD) == WF_HOST_INT_MASK_FIFO_0_THRESHOLD)
     {
         /* clear this interrupt */
-        Write8BitWFRegister(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_0_THRESHOLD);
+        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_0_THRESHOLD);
 
         // signal that a data msg has been received and needs to be processed
         SignalPacketRx();
@@ -196,7 +196,7 @@ void InterruptCheck()
     /* else got a Host interrupt that we don't handle */
     else if (hostInt) {
         /* clear this interrupt */
-        Write8BitWFRegister(WF_HOST_INTR_REG, hostInt);
+        WF_WriteByte(WF_HOST_INTR_REG, hostInt);
         WF_EintEnable();
     }
     /* we got a spurious interrupt (no bits set in register) */

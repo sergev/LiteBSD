@@ -18,6 +18,7 @@
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
 #include <mips/dev/mrf24g/wf_universal_driver.h>
+#include <mips/dev/mrf24g/wf_registers.h>
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
 
@@ -86,59 +87,93 @@ void WF_GpioSetHibernate(unsigned high)
 }
 
 /*-------------------------------------------------------------
- * Select the MRF24WG SPI by setting the CS line low.
+ * Read 8-bit register.
+ * Return register value.
  */
-void WF_SpiEnableChipSelect()
+unsigned WF_ReadByte(unsigned regId)
+{
+    struct wifi_port *w = &wifi_port[0];
+    u_int8_t reply;
+
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    reply = spi_transfer(&w->spiio, 0xff);
+    spi_deselect(&w->spiio);
+    return reply;
+}
+
+/*
+ * Write 8-bit register.
+ */
+void WF_WriteByte(unsigned regId, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
     spi_select(&w->spiio);
-}
-
-/*
- * Deselect the MRF24WG SPI by setting CS high.
- */
-void WF_SpiDisableChipSelect()
-{
-    struct wifi_port *w = &wifi_port[0];
-
+    spi_transfer(&w->spiio, regId);
+    spi_transfer(&w->spiio, value);
     spi_deselect(&w->spiio);
 }
 
 /*
- * Transmit and receive SPI bytes with the MRF24WG.
- * Called by Universal Driver to communicate with the MRF24WG.
- * Parameters:
- *   tx_data  -- pointer to the transmit buffer
- *   tx_len   -- number of bytes to be transmitted from tx_data
- *   rx_data  -- pointer to receive buffer
- *   rx_len   -- number of bytes to read and copy into rx_data
+ * Read 16-bit register.
+ * Return register value.
  */
-void WF_SpiTxRx(const u_int8_t *tx_data, unsigned tx_len,
-    u_int8_t *rx_data, unsigned rx_len)
+unsigned WF_Read(unsigned regId)
 {
     struct wifi_port *w = &wifi_port[0];
-    unsigned nbytes, i, byte;
+    u_int8_t reply[3];
 
-    /* total number of bytes to clock out is whichever is larger, tx_len or rx_len */
-    nbytes = (tx_len >= rx_len) ? tx_len : rx_len;
+    spi_select(&w->spiio);
+    reply[0] = spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    reply[1] = spi_transfer(&w->spiio, 0xff);
+    reply[2] = spi_transfer(&w->spiio, 0xff);
+    spi_deselect(&w->spiio);
+    return (reply[1] << 8) | reply[2];
+}
 
-    /* for each byte being clocked */
-    for (i=0; i<nbytes; ++i) {
-        if (tx_len > 0) {       /* if still have bytes to transmit */
-            byte = *tx_data++;
-            --tx_len;
-        } else {                /* else done writing bytes out from tx buffer */
-            byte = 0xff;        /* clock out a "don't care" byte */
-        }
+/*
+ * Write 16-bit register.
+ */
+void WF_Write(unsigned regId, unsigned value)
+{
+    struct wifi_port *w = &wifi_port[0];
 
-        byte = spi_transfer(&w->spiio, byte);
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regId);
+    spi_transfer(&w->spiio, value >> 8);
+    spi_transfer(&w->spiio, value & 0xff);
+    spi_deselect(&w->spiio);
+}
 
-        if (rx_len > 0) {       /* if still have bytes to read into rx buffer */
-            *rx_data++ = byte;
-            --rx_len;
-        }
+/*
+ * Read a block of data from a register.
+ */
+void WF_ReadArray(unsigned regId, u_int8_t *data, unsigned nbytes)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regId | WF_READ_REGISTER_MASK);
+    while (nbytes-- > 0) {
+        *data++ = spi_transfer(&w->spiio, 0xff);
     }
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Write a data block to specified register.
+ */
+void WF_WriteArray(unsigned regId, const u_int8_t *data, unsigned nbytes)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regId);
+    while (nbytes-- > 0) {
+        spi_transfer(&w->spiio, *data++);
+    }
+    spi_deselect(&w->spiio);
 }
 
 /*-------------------------------------------------------------
@@ -354,10 +389,6 @@ void WF_ProcessRxPacket()
  */
 static void mrf_setup(struct wifi_port *w)
 {
-    /* MRF24WG silicon work-around.
-     * Needed for A1 silicon to initialize PLL values correctly. */
-    //reset_pll();
-
     //TODO
 }
 
@@ -428,6 +459,8 @@ void mrfintr(dev_t dev)
  */
 static int mrf_detect(struct wifi_port *w)
 {
+    int v;
+
     /* Setup direction of signal pins. */
     gpio_set(w->pin_irq);
     gpio_set_input(w->pin_irq);         /* /Int input */
@@ -447,8 +480,18 @@ static int mrf_detect(struct wifi_port *w)
 
     WF_Init();
 
-    //TODO
-    goto failed;
+    WF_Write(WF_HOST_INTR2_MASK_REG, 0xaa55);
+    v = WF_Read(WF_HOST_INTR2_MASK_REG);
+    if (v != 0xaa55)
+        goto failed;
+    WF_Write(WF_HOST_INTR2_MASK_REG, 0x55aa);
+    v = WF_Read(WF_HOST_INTR2_MASK_REG);
+    if (v != 0x55aa)
+        goto failed;
+    WF_Write(WF_HOST_INTR2_MASK_REG, 0);
+
+    /* MRF24G controller detected */
+    return 1;
 
 failed:
     gpio_set_input(w->pin_reset);
