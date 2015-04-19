@@ -32,99 +32,73 @@ static void WFProcessMgmtIndicateMsg()
     RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_mgmtIndicateHdr), (u_int8_t *)&hdr);
 
     /* Determine which event occurred and handle it */
-    switch (hdr.subType)
-    {
-        //----------------------------------------------
-        case WF_EVENT_CONNECTION_ATTEMPT_STATUS_SUBTYPE:
-        //----------------------------------------------
-            RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 2, buf); /* read first 2 bytes after header */
+    switch (hdr.subType) {
+    case WF_EVENT_CONNECTION_ATTEMPT_STATUS_SUBTYPE:
+        RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 2, buf); /* read first 2 bytes after header */
+
+        if (buf[0] == CONNECTION_ATTEMPT_SUCCESSFUL) {
             // if connection attempt successful
-            if (buf[0] == CONNECTION_ATTEMPT_SUCCESSFUL)
-            {
-                eventType = WF_EVENT_CONNECTION_SUCCESSFUL;
-                eventData = WF_NO_EVENT_DATA;
-                UdSetConnectionState(CS_CONNECTED);
-            }
+            eventType = WF_EVENT_CONNECTION_SUCCESSFUL;
+            eventData = WF_NO_EVENT_DATA;
+            UdSetConnectionState(CS_CONNECTED);
+        } else {
             /* else connection attempt failed */
-            else
-            {
-                eventType = WF_EVENT_CONNECTION_FAILED;
-                eventData = ((u_int32_t)buf[0] << 8) | (u_int32_t)buf[1]; /* contains connection failure code */
-                UdSetConnectionState(CS_NOT_CONNECTED);
-            }
+            eventType = WF_EVENT_CONNECTION_FAILED;
+            eventData = ((u_int32_t)buf[0] << 8) | (u_int32_t)buf[1]; /* contains connection failure code */
+            UdSetConnectionState(CS_NOT_CONNECTED);
+        }
         break;
 
-        //------------------------------------
-        case WF_EVENT_CONNECTION_LOST_SUBTYPE:
-        //------------------------------------
-            /* read index 2 and 3 from message and store in buf[0] and buf[1]
-               buf[0] -- 1: Connection temporarily lost  2: Connection permanently lost 3: Connection Reestablished
-               buf[1] -- 0: Beacon Timeout  1: Deauth from AP  */
-            RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 2, buf);
+    case WF_EVENT_CONNECTION_LOST_SUBTYPE:
+        /* read index 2 and 3 from message and store in buf[0] and buf[1]
+           buf[0] -- 1: Connection temporarily lost  2: Connection permanently lost 3: Connection Reestablished
+           buf[1] -- 0: Beacon Timeout  1: Deauth from AP  */
+        RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 2, buf);
 
-            if (buf[0] == CONNECTION_TEMPORARILY_LOST)
-            {
-                eventType     = WF_EVENT_CONNECTION_TEMPORARILY_LOST;
-                eventData = (u_int32_t)buf[1];    /* lost due to beacon timeout or deauth */
-                UdSetConnectionState(CS_CONNECTION_IN_PROGRESS);
-            }
-            else if (buf[0] == CONNECTION_PERMANENTLY_LOST)
-            {
-                eventType     = WF_EVENT_CONNECTION_PERMANENTLY_LOST;
-                eventData = (u_int32_t)buf[1];   /* lost due to beacon timeout or deauth */
-                UdSetConnectionState(CS_NOT_CONNECTED);
-            }
-            else if (buf[0] == CONNECTION_REESTABLISHED)
-            {
-                eventType     = WF_EVENT_CONNECTION_REESTABLISHED;
-                eventData = (u_int32_t)buf[1];    /* originally lost due to beacon timeout or deauth */
-                UdSetConnectionState(CS_CONNECTED);
-            }
-            else
-            {
-                /* invalid parameter in received mgmt indicate message */
-                EventEnqueue(WF_EVENT_ERROR, UD_ERROR_BAD_PARAM_IN_CONN_LOST_EVENT);
-            }
+        switch (buf[0]) {
+        case CONNECTION_TEMPORARILY_LOST:
+            eventType = WF_EVENT_CONNECTION_TEMPORARILY_LOST;
+            eventData = buf[1];
+            UdSetConnectionState(CS_CONNECTION_IN_PROGRESS);
             break;
-
-        //---------------------------------------
-        case WF_EVENT_SCAN_RESULTS_READY_SUBTYPE:
-        //---------------------------------------
-            /* read index 2 of mgmt indicate to get the number of scan results */
-            RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 1, buf);
-            eventType = WF_EVENT_SCAN_RESULTS_READY;
-            eventData = (u_int32_t)buf[0];          /* number of scan results */
+        case CONNECTION_PERMANENTLY_LOST:
+            eventType = WF_EVENT_CONNECTION_PERMANENTLY_LOST;
+            eventData = buf[1];
+            UdSetConnectionState(CS_NOT_CONNECTED);
             break;
-
-#if 0
-        /*-----------------------------------------------------------------*/
-        case WF_EVENT_SCAN_IE_RESULTS_READY_SUBTYPE:
-        /*-----------------------------------------------------------------*/
-            eventType = WF_EVENT_IE_RESULTS_READY;
-            /* read indexes 2 and 3 containing the 16-bit value of IE bytes */
-            RawRead(RAW_MGMT_RX_ID, sizeof(tMgmtIndicateHdr), 2, (UINT8 *)&eventInfo);
-            eventData = WFSTOHS(eventInfo);     /* fix endianess of 16-bit value */
+        case CONNECTION_REESTABLISHED:
+            eventType = WF_EVENT_CONNECTION_REESTABLISHED;
+            eventData = buf[1];
+            UdSetConnectionState(CS_CONNECTED);
             break;
-#endif
-
-        //--------------------------------------------
-        case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
-        //--------------------------------------------
-            eventType = WF_WPS_EVENT_KEY_CALCULATION_REQUEST;
-            eventData = WF_NO_EVENT_DATA;
-            // read the passphrase data into the structure provided during WF_SetSecurityWps()
-            RawRead(RAW_MGMT_RX_ID,
-                    sizeof(t_mgmtIndicateHdr),
-                    sizeof(t_wpaKeyInfo),
-                    (u_int8_t *)GetWpsPassPhraseInfo());
-            break;
-
-        //------
         default:
-        //------
-            eventType = WF_EVENT_ERROR;
-            eventData = UD_ERROR_UNKNOWN_EVENT_TYPE;
+            /* invalid parameter in received mgmt indicate message */
+            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_BAD_PARAM_IN_CONN_LOST_EVENT);
             break;
+        }
+        break;
+
+    case WF_EVENT_SCAN_RESULTS_READY_SUBTYPE:
+        /* read index 2 of mgmt indicate to get the number of scan results */
+        RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 1, buf);
+        eventType = WF_EVENT_SCAN_RESULTS_READY;
+        eventData = buf[0];          /* number of scan results */
+        break;
+
+    case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
+        eventType = WF_WPS_EVENT_KEY_CALCULATION_REQUEST;
+        eventData = WF_NO_EVENT_DATA;
+        // read the passphrase data into the structure provided during WF_SetSecurityWps()
+        RawRead(RAW_MGMT_RX_ID,
+                sizeof(t_mgmtIndicateHdr),
+                sizeof(t_wpaKeyInfo),
+                (u_int8_t *)GetWpsPassPhraseInfo());
+        break;
+
+    default:
+        eventType = WF_EVENT_ERROR;
+        eventData = UD_ERROR_UNKNOWN_EVENT_TYPE;
+        break;
     }
 
     /* free mgmt buffer */
@@ -177,7 +151,6 @@ void SignalMgmtMsgRx()
 void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     u_int8_t *p_data, u_int8_t dataLength)
 {
-    u_int32_t elapsedTime;
     u_int32_t startTime;
 
     EnsureWFisAwake();
@@ -186,9 +159,7 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0)
     {
          // if timed out waiting for allocation of Mgmt Tx Buffer
-         elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-         if (elapsedTime > 15)
-         {
+         if (WF_TimerElapsed(startTime) > 15) {
             EventEnqueue(WF_EVENT_ERROR, UD_ERROR_MGMT_BUFFER_ALLOCATION_FAILED);
             return;
          }
@@ -221,25 +192,19 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
  */
 void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
 {
-    u_int32_t startTime, elapsedTime;
-#if 1
-    #if defined(__18CXX)
-        static tMgmtMsgRxHdr  hdr;
-    #else
-        t_mgmtMsgRxHdr  hdr;
-    #endif
-
+    u_int32_t startTime;
+    t_mgmtMsgRxHdr  hdr;
 
     /* Wait until mgmt response is received */
     startTime = WF_TimerRead();
-    while ( !isMgmtConfirmMsg() )
+    while (!isMgmtConfirmMsg())
     {
         InterruptCheck();   // check if an interrupt has occurred (and process it)
 
         /* if received a data packet while waiting for mgmt response packet */
-        if ( isPacketRx() )
+        if (isPacketRx())
         {
-            // We can't let the StackTask processs data messages that come in while waiting for mgmt
+            // We can't let the StackTask process data messages that come in while waiting for mgmt
             // response because the application might send another mgmt message, which is illegal until the response
             // is received for the first mgmt msg.  And, we can't prevent the race condition where a data message
             // comes in before a mgmt response is received.  Thus, the only solution is to throw away a data message
@@ -247,7 +212,7 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
             // stack takes care of retries.  If using UDP, the application has to deal with occasional data messages not being
             // received.  Also, applications typically do not send a lot of management messages after connected.
 
-            // TODO: may be a away to avoid doing this when the data tx/rx, with their
+            // TODO: may be a way to avoid doing this when the data tx/rx, with their
             // buffers, are available.  Can just copy the data message to buffer.
             // throw away the data rx
             RawMountRxBuffer(RAW_DATA_RX_ID);
@@ -258,15 +223,12 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
             WF_EintEnable();
         }
 
-        elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-        if (elapsedTime > 50)
-        {
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_MGMT_RESPONSE_TIMEOUT);
+        if (WF_TimerElapsed(startTime) > 50) {
+            printf("--- %s: timeout waiting for response\n", __func__);
             return;
         }
     }
     ClearMgmtConfirmMsg();
-
 
     /* if the caller wants to delete the response immediately (doesn't need any data from it */
     if (freeAction == FREE_MGMT_BUFFER)
@@ -287,7 +249,6 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
         /* free mgmt buffer */
         DeallocateMgmtRxBuffer();
     }
-#endif
 }
 
 /*

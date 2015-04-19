@@ -7,8 +7,8 @@
  */
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
-#include <sys/param.h>
-#include <sys/systm.h>
+
+#if 0
 
 #define IncrementReadIndex()                    \
     if (g_eventQueue.readIndex == MAX_EVENTS) { \
@@ -129,3 +129,15 @@ bool isEventQFull()
     }
     return 0;
 }
+
+#else
+void EventQInit()
+{}
+
+bool isEventQEmpty()
+{ return 1; }
+
+void EventDequeue(t_event *p_event)
+{}
+
+#endif

@@ -6,21 +6,8 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-/*
- * MRF24WG reset state machine states
- */
-enum {
-    MRF24WG_RESET_START                = 0,
-    MRF24WG_RESET_WAIT_FOR_HW_RESET    = 1,
-    MRF24WG_RESET_WAIT_FOR_MRF24W_INIT = 2,
-    MRF24WG_RESET_FAILED               = 3,
-    MRF24WG_RESET_SUCCESSFUL           = 4,
-};
-
 #define WF_INT_DISABLE ((u_int8_t)0)
 #define WF_INT_ENABLE  ((u_int8_t)1)
-
-static u_int8_t g_mrf24wgResetState;
 
 extern void WF_SetTxDataConfirm(u_int8_t state);
 
@@ -149,152 +136,79 @@ static void Init_Interrupts()
               WF_HOST_INT_MASK_RAW_5_INT_0     |    // RAW5 Move Complete (Scratch) interrupt
               WF_HOST_INT_MASK_MAIL_BOX_0_WRT);     // MRF24WG assertion interrupt
     HostInterrupt2RegInit(mask16, WF_INT_ENABLE);
-
-}
-
-/*
- * Completes the MRF24WG intitialization after the MRF24WG has been reset and is
- * ready for operations.
- *
- * Called from ChipResetStateMachine().
- *
- * Returns 0 if successful, else the upper 16-bits contains the event type and the lower
- * 16 bits contains the event data
- */
-static u_int32_t CompleteInitialization()
-{
-    t_deviceInfo deviceInfo;
-    u_int32_t errorCode = UD_SUCCESS;
-
-    Init_Interrupts();                              // Initialize MRF24WG interrupts
-    RawInit();                                      // initialize RAW driver
-    WFEnableMRF24WB0MMode();                        // legacy, but still needed
-    WF_DeviceInfoGet(&deviceInfo);                   // get MRF24WG module version numbers
-    if (deviceInfo.deviceType == WF_UNKNOWN_DEVICE)
-    {
-        errorCode = (((u_int32_t)WF_EVENT_ERROR << 16) | (u_int32_t)UD_ERROR_UNKNOWN_DEVICE);
-    }
-    else if (deviceInfo.deviceType == WF_MRF24WB_DEVICE)
-    {
-        errorCode = (((u_int32_t)WF_EVENT_ERROR << 16) | (u_int32_t)UD_ERROR_MRF24WB_NOT_SUPPORTED);
-    }
-
-    WF_SetTxDataConfirm(WF_DISABLED);     // Disable Tx Data confirms (from the MRF24W)
-    WF_CPCreate();                        // create a connection profile, get its ID and store it
-
-    WF_PsPollDisable();
-    ClearPsPollReactivate();
-
-    return errorCode;
 }
 
 /*
  * Initialize the MRF24WG for operations.
- * Must be called before any other WiFi API calls.  This function starts the
- * initialization sequence, which is in two stages:
- *     Stage 1: the actions in this function
- *     Stage 2: waiting for the MRF24WG reset and initialization to complete.
- *
- * Stage 2 occurs in the ChipResetStateMachine() function which is called from
- * WF_Task.  When Stage 2 completes, the WF_INITIALIZATION_EVENT occurs.
+ * Must be called before any other WiFi API calls.
  */
-void WF_Init()
+void WF_Init(t_deviceInfo *deviceInfo)
 {
-    UdStateInit();      // initialize internal state machine
-    EventQInit();       // initialize WiFi event queue
+    unsigned msec, value;
 
-    // MRF24WG silicon work-around -- needed for A1 silicon to initialize PLL values correctly
-    ResetPll();
+    UdStateInit();          // initialize internal state machine
+    EventQInit();           // initialize WiFi event queue
+    ClearMgmtConfirmMsg();  // no mgmt response messages received
+    UdSetInitInvalid();     // init not valid until it gets through this state machine
 
-    ClearMgmtConfirmMsg();    // no mgmt response messages received
+    /*
+     * Reset the chip.
+     */
 
-    g_mrf24wgResetState = MRF24WG_RESET_START;
-}
+    // clear the power bit to disable low power mode on the MRF24W
+    WF_Write(WF_PSPOLL_H_REG, 0x0000);
 
-/*
- * State machine to complete the MRF24WG initialization sequence.
- *
- * Called from WF_Task().  Cycles thru the states needed to perform the MRF24WG
- * module reset and initialization.  Upon the state machine completing, it
- * triggers the WF_INITIALIZATION_EVENT.
- */
-void ChipResetStateMachine()
-{
-    u_int32_t elapsedTime;
-    u_int16_t value;
-    static u_int32_t startTime;
-    u_int16_t errorCode;
+    // Set HOST_RESET bit in register to put device in reset
+    WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) | WF_HOST_RESET_MASK);
 
-    switch (g_mrf24wgResetState) {
-    case MRF24WG_RESET_START:
-        UdSetInitInvalid(); // init not valid until it gets through this state machine
+    // Clear HOST_RESET bit in register to take device out of reset
+    WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) & ~WF_HOST_RESET_MASK);
 
-        // clear the power bit to disable low power mode on the MRF24W
-        WF_Write(WF_PSPOLL_H_REG, 0x0000);
-
-        // Set HOST_RESET bit in register to put device in reset
-        WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) | WF_HOST_RESET_MASK);
-
-        // Clear HOST_RESET bit in register to take device out of reset
-        WF_Write(WF_HOST_RESET_REG, WF_Read(WF_HOST_RESET_REG) & ~WF_HOST_RESET_MASK);
-
-        startTime = WF_TimerRead();
-        g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_HW_RESET;
-        break;
-
-    case MRF24WG_RESET_WAIT_FOR_HW_RESET:
+    /*
+     * Wait for Reset to complete, up to 1 sec.
+     */
+    for (msec=0; msec<1000; msec++) {
         WF_Write(WF_INDEX_ADDR_REG, WF_HW_STATUS_REG);
         value = WF_Read(WF_INDEX_DATA_REG);
-        if ((value & WF_HW_STATUS_NOT_IN_RESET_MASK) == WF_HW_STATUS_NOT_IN_RESET_MASK) {
-            if (value == 0xffff) {
-                // typically read all 1's when SPI not connected
-                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_SPI_NOT_CONNECTED);
-                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-            } else {
-                startTime = WF_TimerRead();
-                g_mrf24wgResetState = MRF24WG_RESET_WAIT_FOR_MRF24W_INIT;
-            }
-        } else {
-            // else still waiting
-            // if timed out waiting for MRF24WG to come out of reset
-            elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-            if (elapsedTime > 1000) {
-                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_RESET_TIMEOUT);
-                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-            }
-        }
+        if (value & WF_HW_STATUS_NOT_IN_RESET_MASK)
+            break;
+        udelay(1000);
+    }
+printf("--- WF_Init: reset done in %u msec\n", msec);
+
+    /*
+     * Wait for chip to initialize itself, up to 2 sec.
+     */
+    for (msec=0; msec<2000; msec++) {
+        value = WF_Read(WF_HOST_WFIFO_BCNT0_REG);
+        if (value & 0x0fff)
+            break;
+        udelay(1000);
+    }
+printf("--- WF_Init: initialization complete in %u msec\n", msec);
+
+    /*
+     * Finish the MRF24WG intitialization.
+     */
+    Init_Interrupts();                  // Initialize MRF24WG interrupts
+    RawInit();                          // initialize RAW driver
+    WFEnableMRF24WB0MMode();            // legacy, but still needed
+    WF_DeviceInfoGet(deviceInfo);       // get MRF24WG module version numbers
+    switch (deviceInfo->deviceType) {
+    case WF_UNKNOWN_DEVICE:
+        /* Cannot happen. */
         break;
 
-    case MRF24WG_RESET_WAIT_FOR_MRF24W_INIT:
-        // read FIFO byte count; if > 0 than MRF24WG reset complete
-        value = WF_Read(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff;  // read FIFO byte count
-        if (value > 0) {
-            // generate event
-            errorCode = CompleteInitialization();
-            if (errorCode == 0) {
-                UdSetInitValid();
-                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_SUCCESSFUL); // signal init successful event
-                g_mrf24wgResetState = MRF24WG_RESET_SUCCESSFUL;
-            } else {
-                EventEnqueue( ((u_int8_t)errorCode >> 16), (u_int32_t)errorCode);
-                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-            }
-        } else {
-            // else still waiting
-            // if timed out waiting for MRF24WG init
-            elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-            if (elapsedTime > 2000) {
-                // generate event
-                EventEnqueue(WF_EVENT_INITIALIZATION, WF_INIT_ERROR_INIT_TIMEOUT);
-                g_mrf24wgResetState = MRF24WG_RESET_FAILED;
-            }
-        }
+    case WF_MRF24WB_DEVICE:
+        /* MRF24WB chip not supported by this driver. */
         break;
 
-    case MRF24WG_RESET_FAILED:
-        break;  // just stay in this state until the next reset
-
-    case MRF24WG_RESET_SUCCESSFUL:
-        break;  // just stay in this state until the next reset
+    case WF_MRF24WG_DEVICE:
+        WF_SetTxDataConfirm(WF_DISABLED); // Disable Tx Data confirms (from the MRF24W)
+        WF_CPCreate();                  // create a connection profile, get its ID and store it
+        WF_PsPollDisable();
+        ClearPsPollReactivate();
+        UdSetInitValid();               // Chip initialized successfully.
+        break;
     }
 }

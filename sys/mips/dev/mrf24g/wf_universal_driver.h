@@ -464,12 +464,8 @@ typedef struct wpsCredentialsStruct
 
 // WiFi init and task functions
 //-----------------------------
-void WF_Init(void);     // must be called first
-#if defined(WF_RTOS)
-    void WF_Task(void *arg);
-#else
-    void WF_Task(void);
-#endif
+void WF_Init(t_deviceInfo *deviceInfo); // must be called first
+void WF_Task(void);
 
 // Core WiFi configuration functions (must always be called)
 //----------------------------------------------------------

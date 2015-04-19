@@ -6,8 +6,6 @@
  */
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
-#include <sys/param.h>
-#include <sys/systm.h>
 
 /*
  * Send a SetParam Mgmt request to MRF24W and waits for response.

@@ -6,8 +6,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-extern void ChipResetStateMachine(void);
-
 static void EventCheck()
 {
     t_event event;
@@ -38,8 +36,6 @@ static void PsPollCheck()
 
 void WF_Task()
 {
-    ChipResetStateMachine();
-
     EventCheck();
 
     InterruptCheck();

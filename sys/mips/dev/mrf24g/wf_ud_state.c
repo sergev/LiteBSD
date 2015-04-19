@@ -5,8 +5,6 @@
  */
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
-#include <sys/param.h>
-#include <sys/systm.h>
 
 #define MAX_RTS_THRESHOLD   ((u_int16_t)2347)
 

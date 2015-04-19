@@ -13,6 +13,8 @@
 #include "wf_ud_state.h"
 #include "wf_raw.h"
 #include "wf_registers.h"
+#include <sys/param.h>
+#include <sys/systm.h>
 
 /*
  * Connection profile functions.
@@ -62,8 +64,9 @@ typedef struct eventQueueStruct
    t_event  event[MAX_EVENTS + 1]; // one unused slot
 } t_wfEventQueue;
 
+#define EventEnqueue(type, code) printf("--- %s: event %u, code %u\n", __func__, type, code)
 void EventQInit(void);
-void EventEnqueue(u_int8_t eventType, u_int32_t eventData);
+//void EventEnqueue(u_int8_t eventType, u_int32_t eventData);
 void EventDequeue(t_event *p_event);
 bool isEventQEmpty(void);
 bool isEventQFull(void);
@@ -125,6 +128,6 @@ void ClearPsPollReactivate(void);
 /*
  * Timer definitions.
  */
-u_int32_t GetElapsedTime(u_int32_t startTime, u_int32_t currentTime);
+int WF_TimerElapsed(unsigned start_time);
 
 #endif /* __WF_GLOBAL_INCLUDES_H */

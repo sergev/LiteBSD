@@ -44,7 +44,7 @@
 /*
  * To enable debug output, uncomment the following line.
  */
-//#define PRINTDBG printf
+#define PRINTDBG printf
 #ifndef PRINTDBG
 #   define PRINTDBG(...) /*empty*/
 #endif
@@ -58,6 +58,7 @@ struct wifi_port {
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
     struct spiio spiio;             /* interface to SPI port */
+    t_deviceInfo dev_info;          /* device type and version */
     unsigned    int_mask;           /* mask for interrupt pin */
     int         pin_irq;            /* /Int pin number */
     int         pin_reset;          /* /Reset pin number */
@@ -196,15 +197,67 @@ void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
     spi_deselect(&w->spiio);
 }
 
+/*
+ * Write to analog register via bitbang.
+ */
+static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
+{
+    unsigned reset, mask;
+
+    /* Create register address byte. */
+    address <<= 2;
+    address |= SPI_AUTO_INCREMENT_ENABLED_MASK | SPI_WRITE_MASK;
+
+    /* Enable the on-chip SPI and select the desired bank (0-3). */
+    reset = HR_HOST_ANA_SPI_EN_MASK | (bank << 6);
+    WF_Write(WF_HOST_RESET_REG, reset);
+
+    /* Bit-bang the address byte, MS bit to LS bit. */
+    for (mask = 0x80; mask; mask >>= 1) {
+        if (address & mask)
+            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+        else
+            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+
+        WF_Write(WF_HOST_RESET_REG, reset);
+        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+    }
+
+    /* Bit bang data from MS bit to LS bit. */
+    for (mask = 0x8000; mask; mask >>= 1) {
+        if (value & mask)
+            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+        else
+            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+
+        WF_Write(WF_HOST_RESET_REG, reset);
+        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+    }
+
+    /* Disable the on-chip SPI. */
+    reset &= ~HR_HOST_ANA_SPI_EN_MASK;
+    WF_Write(WF_HOST_RESET_REG, reset);
+}
+
 /*-------------------------------------------------------------
  * Return the current value of the 1ms timer.
  */
 unsigned WF_TimerRead()
 {
-    struct timeval tv;
+    unsigned count = mfc0_Count();
 
-    microtime(&tv);
-    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    count /= CPU_KHZ / 2;
+    return count;
+}
+
+int WF_TimerElapsed(unsigned start_time)
+{
+    int elapsed = WF_TimerRead() - start_time;
+
+    if (elapsed < 0)
+        elapsed += 0xffffffffU / (CPU_KHZ / 2);
+
+    return elapsed;
 }
 
 /*-------------------------------------------------------------
@@ -404,24 +457,6 @@ void WF_ProcessRxPacket()
 #endif
 }
 
-/*-------------------------------------------------------------
- * Initialize hardware.
- */
-static void mrf_setup(struct wifi_port *w)
-{
-    //TODO
-
-#if 0
-    /* Extract our MAC address */
-    w->macaddr[0] = EMAC1SA2;
-    w->macaddr[1] = EMAC1SA2 >> 8;
-    w->macaddr[2] = EMAC1SA1;
-    w->macaddr[3] = EMAC1SA1 >> 8;
-    w->macaddr[4] = EMAC1SA0;
-    w->macaddr[5] = EMAC1SA0 >> 8;
-#endif
-}
-
 /*
  * Setup output on interface.
  * Get another datagram to send off of the interface queue,
@@ -478,6 +513,7 @@ static void mrf_watchdog(int unit)
 void mrfintr(dev_t dev)
 {
     struct wifi_port *w = &wifi_port[0];
+printf("---mrf0 interrupt\n");
 
     IFSCLR(0) = w->int_mask;            /* clear the interrupt */
     IECCLR(0) = w->int_mask;            /* disable external interrupt */
@@ -509,8 +545,13 @@ static int mrf_detect(struct wifi_port *w)
     gpio_set(w->pin_reset);             /* /Reset signal high (inactive) */
     udelay(5000);
 
-    /* Initialize the MRF24WG for operations. */
-    WF_Init();
+    /* Shuttle MRF24WG workaround (benign to production MRF24WG) */
+    WF_WriteAnalog(2, PLL0_REG, 0x8021);
+    WF_WriteAnalog(2, PLL0_REG, 0x6021);
+
+    /* Production MRF24WG workaround (benign to shuttle MRF24WG) */
+    WF_WriteAnalog(1, OSC0_REG, 0x6b80);
+    WF_WriteAnalog(1, BIAS_REG, 0xc000);
 
     /* Check whether we really have MRF24G chip attached. */
     mask2 = WF_Read(WF_HOST_INTR2_MASK_REG);
@@ -542,13 +583,12 @@ mrf_probe(config)
     struct wifi_port *w = &wifi_port[unit];
     struct ifnet *ifp = &w->netif;
     struct spiio *io = &w->spiio;
-    int s;
 
     if (unit < 0 || unit >= NMRF)
         return 0;
 
     if (spi_setup(io, config->dev_ctlr, pin_cs) != 0) {
-        printf("sd%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
+        printf("mrf%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
         return 0;
     }
     spi_set_speed(io, MRF_KHZ);
@@ -563,19 +603,26 @@ mrf_probe(config)
             unit, spi_name(io), spi_csname(io), spi_cspin(io));
         return 0;
     }
-
-    /* Initialize the chip with interrupts disabled. */
-    s = splimp();
-    mrf_setup(w);
-    splx(s);
-
-    printf("mrf%u at port %s, MAC address %s\n", unit,
-        spi_name(io), ether_sprintf(w->macaddr));
-    printf("mrf%u: pins cs=%c%d, irq=%c%d, reset=%c%d, hibernate=%c%d\n",
-        unit, spi_csname(io), spi_cspin(io),
+    printf("mrf%u at port %s, pins cs=%c%d, irq=%c%d, reset=%c%d, hibernate=%c%d\n",
+        unit, spi_name(io), spi_csname(io), spi_cspin(io),
         gpio_portname(w->pin_irq), gpio_pinno(w->pin_irq),
         gpio_portname(w->pin_reset), gpio_pinno(w->pin_reset),
         gpio_portname(w->pin_hibernate), gpio_pinno(w->pin_hibernate));
+
+    /* Initialize the chip with interrupts disabled.
+     * Extract the MAC address. */
+    int s = splimp();
+    WF_Init(&w->dev_info);
+    WF_MacAddressGet(w->macaddr);
+    splx(s);
+
+    if (w->dev_info.deviceType != WF_MRF24WG_DEVICE) {
+        printf("mrf%u: unknown device type, only MRF24WG is supported\n", unit);
+        return 0;
+    }
+    printf("mrf%u: MRF24WG version %02x.%02x, MAC address %s\n",
+        unit, w->dev_info.romVersion, w->dev_info.patchVersion,
+        ether_sprintf(w->macaddr));
 
     ifp->if_unit = unit;
     ifp->if_name = "mrf";

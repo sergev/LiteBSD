@@ -68,34 +68,36 @@ static t_rawMoveState RawMoveState;
  */
 static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
 {
-    u_int8_t  rawIntMask;
+    unsigned intr, intMask;
     u_int16_t byteCount;
     u_int8_t  regId;
-    u_int32_t elapsedTime;
     u_int32_t startTime;
 
     /* create mask to check against for Raw Move complete interrupt for either RAW0 or RAW1 */
     if (rawId <= RAW_ID_1) {
         /* will be either raw 0 or raw 1 */
-        rawIntMask = (rawId == RAW_ID_0)?WF_HOST_INT_MASK_RAW_0_INT_0:WF_HOST_INT_MASK_RAW_1_INT_0;
+        intMask = (rawId == RAW_ID_0) ?
+            WF_HOST_INT_MASK_RAW_0_INT_0 :
+            WF_HOST_INT_MASK_RAW_1_INT_0;
     } else {
         /* will be INTR2 bit in host register, signifying RAW2, RAW3, or RAW4 */
-        rawIntMask = WF_HOST_INT_MASK_INT2;
+        intMask = WF_HOST_INT_MASK_INT2;
     }
 
     startTime = WF_TimerRead();
     for (;;) {
-        //InterruptCheck();
+        intr = WF_ReadByte(WF_HOST_INTR_REG);
 
         /* If received an external interrupt that signaled the RAW Move
          * completed then break out of this loop. */
-        if (RawMoveState.rawInterruptMask & rawIntMask) {
+        if (intr & intMask) {
+            /* clear the RAW interrupts, re-enable interrupts, and exit */
+            WF_WriteByte(WF_HOST_INTR_REG, intMask);
             break;
         }
 
-        elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-        if (elapsedTime > 20) {
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_RAW_INTERRUPT_TIMEOUT);
+        if (WF_TimerElapsed(startTime) > 20) {
+            printf("--- %s: timeout waiting for interrupt\n", __func__);
             break;
         }
     }
@@ -116,7 +118,7 @@ void RawInit()
     // this mechanism is because when waiting for a Raw Move complete interrupt
     // we need to save the state if any other interrupts occur at the same time so
     // we don't lose them
-    RawMoveState.rawInterruptMask  = 0;                     // interrupt will write to this
+    RawMoveState.rawInterruptMask = 0;                      // interrupt will write to this
     RawMoveState.waitingForRawMoveCompleteInterrupt = 0;    // not waiting for RAW move complete
 
     // By default the MRF24WG firmware mounts Scratch to RAW 1 after reset. This
@@ -370,7 +372,6 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
 {
     u_int8_t  regId;
     u_int16_t regValue;
-    u_int32_t elapsedTime;
     u_int32_t startTime;
 
     /* get the index register associated with the raw ID and write to it */
@@ -393,8 +394,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
             break;
         }
 
-        elapsedTime = GetElapsedTime(startTime, WF_TimerRead());
-        if (elapsedTime > 5) {
+        if (WF_TimerElapsed(startTime) > 5) {
             // if we timed out that means that the caller is trying to set the index
             // past the end of the raw window.  Not illegal in of itself so long
             // as there is no attempt to read or write at this location.  But,
