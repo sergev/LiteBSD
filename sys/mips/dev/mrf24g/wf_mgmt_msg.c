@@ -80,10 +80,8 @@ static void WFProcessMgmtIndicateMsg()
     case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
         printf("--- %s: key calculation finished\n", __func__);
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
-        RawRead(RAW_MGMT_RX_ID,
-                sizeof(t_mgmtIndicateHdr),
-                sizeof(t_wpaKeyInfo),
-                (u_int8_t *)GetWpsPassPhraseInfo());
+        RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr),
+            sizeof(t_wpaKeyInfo), (u_int8_t *)GetWpsPassPhraseInfo());
         break;
 
     default:

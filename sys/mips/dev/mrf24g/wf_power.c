@@ -202,6 +202,7 @@ void WFConfigureLowPowerMode(u_int8_t action)
     }
 }
 
+#if 0
 /*
  * Enables Hibernate mode on the MRF24W, which effectively turns off the
  * device for maximum power savings.
@@ -214,6 +215,7 @@ void WF_Hibernate()
     WF_GpioSetHibernate(WF_HIGH);
     PowerStateSet(WF_PS_HIBERNATE);
 }
+#endif
 
 void WF_TxPowerMaxSet(u_int8_t maxTxPower)
 {

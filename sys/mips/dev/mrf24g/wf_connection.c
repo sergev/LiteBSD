@@ -109,8 +109,7 @@ static void LowLevel_CAGetElement(u_int8_t elementId,
  *
  * Directs the Connection Manager to scan for and connect to a WiFi network.
  * This function does not wait until the connection attempt is successful, but
- * returns immediately.  See WF_ProcessEvent for events that can occur as a
- * result of a connection attempt being successful or not.
+ * returns immediately.
  *
  * Note that if the Connection Profile being used has WPA or WPA2 security
  * enabled and is using a passphrase, the connection manager will first

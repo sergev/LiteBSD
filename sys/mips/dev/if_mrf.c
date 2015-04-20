@@ -268,40 +268,6 @@ static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
 }
 
 /*-------------------------------------------------------------
- * Put the MRF24WG into and out of reset.
- * Set the RESET line high or low.
- */
-void WF_GpioSetReset(unsigned high)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    if (high) {
-        PRINTDBG("-- set /Reset pin\n");
-        gpio_set(w->pin_reset);
-    } else {
-        PRINTDBG("-- clear /Reset pin\n");
-        gpio_clr(w->pin_reset);
-    }
-}
-
-/*
- * Put the MRF24WG into and out of hibernate.
- * Set the HIBERNATE line high or low.
- */
-void WF_GpioSetHibernate(unsigned high)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    if (high) {
-        PRINTDBG("-- set Hibernate pin\n");
-        gpio_set(w->pin_hibernate);
-    } else {
-        PRINTDBG("-- clear Hibernate pin\n");
-        gpio_clr(w->pin_hibernate);
-    }
-}
-
-/*-------------------------------------------------------------
  * Return the current value of the 1ms timer.
  */
 unsigned WF_TimerRead()
@@ -431,23 +397,20 @@ void WF_EintEnable()
  * Various events are reported to the application via this function callback.
  * The application should take appropriate action based on the event.
  */
+#if 0
 void WF_ProcessEvent(unsigned event_type, unsigned event_data)
 {
     //TODO
-#if 0
     wfmrf24.priv.fMRFBusy = 0;
     wfmrf24.priv.lastEventType = eventType;
     wfmrf24.priv.lastEventData = eventData;
 
     switch (eventType) {
     case WF_EVENT_INITIALIZATION:
-        if (eventData == WF_INIT_SUCCESSFUL)
-        {
-            wfmrf24.priv.initStatus = ForceIPStatus((InitMask | eventData));
-        }
-        else
-        {
-            wfmrf24.priv.initStatus = ForceIPError((InitMask | eventData));
+        if (eventData == WF_INIT_SUCCESSFUL) {
+            wfmrf24.priv.initStatus = ForceIPStatus(InitMask | eventData);
+        } else {
+            wfmrf24.priv.initStatus = ForceIPError(InitMask | eventData);
         }
         break;
 
@@ -482,18 +445,11 @@ void WF_ProcessEvent(unsigned event_type, unsigned event_data)
         wfmrf24.priv.fMRFBusy = 1;  // wait for connection status or error.
         break;
 
-    case WF_EVENT_MRF24WG_MODULE_ASSERT:
-        //TODO: OutputMrf24wgAssertInfo(eventData);
-        break;
-
-    // if we get an event error, it will be in
-    // the last eventData
-    case WF_EVENT_ERROR:
     default:
         break;
     }
-#endif
 }
+#endif
 
 /*
  * Called by Universal Driver to notify application of incoming packet.

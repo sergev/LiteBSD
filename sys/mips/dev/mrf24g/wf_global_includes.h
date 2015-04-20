@@ -118,9 +118,4 @@ void ClearPsPollReactivate(void);
 
 #define WF_TX_DATA_MSG_PREAMBLE_LENGTH  ((u_int8_t)3)
 
-/*
- * Timer definitions.
- */
-int WF_TimerElapsed(unsigned start_time);
-
 #endif /* __WF_GLOBAL_INCLUDES_H */
