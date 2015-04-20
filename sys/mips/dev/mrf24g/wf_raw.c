@@ -17,11 +17,6 @@
 #define ClearIndexOutOfBoundsFlag(rawId)    g_RawIndexPastEnd &= ~g_RawAccessOutOfBoundsMask[rawId]
 #define isIndexOutOfBounds(rawId)           ((g_RawIndexPastEnd & g_RawAccessOutOfBoundsMask[rawId]) > 0)
 
-typedef struct {
-    volatile u_int8_t rawInterruptMask;         // filled in by interrupt
-    bool waitingForRawMoveCompleteInterrupt;    // set in this module, cleared by interrupt
-} t_rawMoveState;
-
 /* raw registers for each raw window being used */
 static const u_int8_t g_RawIndexReg[NUM_RAW_WINDOWS] = {
     RAW_0_INDEX_REG,  RAW_1_INDEX_REG,  RAW_2_INDEX_REG,  RAW_3_INDEX_REG,  RAW_4_INDEX_REG, RAW_5_INDEX_REG
@@ -59,8 +54,6 @@ const u_int8_t g_RawAccessOutOfBoundsMask[NUM_RAW_WINDOWS] = {
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20
 };
 static u_int8_t g_RawIndexPastEnd = 0;  /* no indexes are past end of window */
-
-static t_rawMoveState RawMoveState;
 
 /*
  * Wait for a RAW move to complete.
@@ -114,13 +107,6 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
  */
 void RawInit()
 {
-    // Used in interrupt routine and functions in this module.  The reason for
-    // this mechanism is because when waiting for a Raw Move complete interrupt
-    // we need to save the state if any other interrupts occur at the same time so
-    // we don't lose them
-    RawMoveState.rawInterruptMask = 0;                      // interrupt will write to this
-    RawMoveState.waitingForRawMoveCompleteInterrupt = 0;    // not waiting for RAW move complete
-
     // By default the MRF24WG firmware mounts Scratch to RAW 1 after reset. This
     // is not being used, so unmount the scratch from this RAW window.
     ScratchUnmount(RAW_ID_1);
@@ -131,21 +117,6 @@ void RawInit()
 
     SetRawDataWindowState(RAW_DATA_TX_ID, WF_RAW_UNMOUNTED);
     SetRawDataWindowState(RAW_DATA_RX_ID, WF_RAW_UNMOUNTED);
-}
-
-bool isWaitingForRawMoveCompleteInterrupt()
-{
-    return RawMoveState.waitingForRawMoveCompleteInterrupt;
-}
-
-void ClearWaitingForRawMoveCompleteInterrupt()
-{
-    RawMoveState.waitingForRawMoveCompleteInterrupt = 0;
-}
-
-void SignalRawInterruptEvent(u_int8_t rawIntMask)
-{
-    RawMoveState.rawInterruptMask = rawIntMask;
 }
 
 /*
@@ -498,21 +469,6 @@ u_int16_t RawMove(u_int16_t rawId,
     // save current state of External interrupt and disable it
     intDisabled = WF_isEintDisabled();
     WF_EintDisable();
-
-    /*
-     * These variables are shared with the ISR so need to be careful when
-     * setting them.  The WF_EintHandler() is the isr that will touch these
-     * variables but will only touch them if
-     * RawMoveState.waitingForRawMoveCompleteInterrupt is set to TRUE.
-     * RawMoveState.waitingForRawMoveCompleteInterrupt is only set TRUE here
-     * and only here.  So as long as we set RawMoveState.rawInterrupt first
-     * and then set RawMoveState.waitingForRawMoveCompleteInterrupt
-     * to TRUE, we are guaranteed that the ISR won't touch
-     * RawMoveState.rawInterrupt and
-     * RawMoveState.waitingForRawMoveCompleteInterrupt.
-     */
-    RawMoveState.rawInterruptMask  = 0;
-    RawMoveState.waitingForRawMoveCompleteInterrupt = 1;
 
     /* Create control value that will be written to raw control register,
      * which initiates the raw move */

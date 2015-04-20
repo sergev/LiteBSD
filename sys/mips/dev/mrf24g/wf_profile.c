@@ -232,12 +232,12 @@ void WF_CPCreate()
  *   p_ssid - Pointer to the SSID string
  *   ssidLength - Number of bytes in the SSID
  */
-void WF_SsidSet(u_int8_t *p_ssid,  u_int8_t ssidLength)
+void WF_SsidSet(u_int8_t *p_ssid, u_int8_t ssidLength)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSsid(p_ssid, ssidLength);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid SSID\n", __func__);
         return;
     }
 #endif
@@ -296,7 +296,7 @@ void WF_NetworkTypeSet(u_int8_t networkType)
 
     errorCode = UdSetNetworkType(networkType);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid network type=%u\n", __func__, networkType);
         return;
     }
 #endif
@@ -328,7 +328,7 @@ void WF_SecurityOpenSet()
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityOpen();
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: must be disconnected\n", __func__);
         return;
     }
 #endif
@@ -343,7 +343,7 @@ void WF_SecurityWepSet(t_wepContext* p_context)
 
     errorCode = UdSetSecurityWep(p_context);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: cannot set WEP security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
@@ -361,7 +361,7 @@ void WF_SecurityWpaSet(t_wpaContext* p_context)
 
     errorCode = UdSetSecurityWpa(p_context);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: cannot set WPA security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
@@ -377,7 +377,7 @@ void WF_SecurityWpsSet(t_wpsContext *p_context)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityWps(p_context);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: cannot set WPS security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
@@ -447,7 +447,7 @@ void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdGetWpsCredentials();
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: cannot get WPS credentials\n", __func__);
         return;
     }
 #endif

@@ -8,21 +8,10 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static u_int8_t g_HostIntSaved = 0;
-
 /*
  * true if external interrupt needs processing, else false
  */
 static volatile bool g_ExIntNeedsServicing;
-
-/*
- * Keep these as static globals instead of local variables in the Eint Handler.
- * If declared as local variables, causes stack corruption in PIC18, or other
- * MCU's with overlay memory.
- */
-static u_int8_t g_EintHostIntRegValue;
-static u_int8_t g_EintHostIntMaskRegValue;
-static u_int8_t g_EintHostInt;
 
 /*
  * MRF24WG interrupt handler, called directly from the the interrupt routine,
@@ -40,78 +29,6 @@ static u_int8_t g_EintHostInt;
  */
 void WF_EintHandler()
 {
-    /*--------------------------------------------------------*/
-    /* if driver is waiting for a RAW Move Complete interrupt */
-    /*--------------------------------------------------------*/
-    if (isWaitingForRawMoveCompleteInterrupt())
-    {
-        // read hostInt register and hostIntMask register to determine cause of interrupt
-        // TODO: [NOTE: Stellaris requires two reads to get proper SPI read?]
-        g_EintHostIntRegValue      = WF_ReadByte(WF_HOST_INTR_REG);
-        g_EintHostIntRegValue      = WF_ReadByte(WF_HOST_INTR_REG);
-
-        g_EintHostIntMaskRegValue  = WF_ReadByte(WF_HOST_MASK_REG);
-
-        // AND the two registers together to determine which active, enabled interrupt has occurred
-        g_EintHostInt = g_EintHostIntRegValue & g_EintHostIntMaskRegValue;
-
-
-        // If a Raw move complete interrupt occurred
-        if (g_EintHostInt & (WF_HOST_INT_MASK_RAW_0 |
-                             WF_HOST_INT_MASK_RAW_1 |
-                             WF_HOST_INT_MASK_INT2))
-        {
-            // Let the Raw driver know which interrupt occurred and clear the flag
-            SignalRawInterruptEvent(g_EintHostInt);
-            ClearWaitingForRawMoveCompleteInterrupt();
-
-            /* if no other interrupts occurred other than a RAW0/RAW1/RAW2/RAW3/RAW4 Raw Move Complete */
-            if ((g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0 |
-                                   WF_HOST_INT_MASK_RAW_1 |
-                                   WF_HOST_INT_MASK_INT2)) == 0)
-            {
-                /* clear the RAW interrupts, re-enable interrupts, and exit */
-                WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_RAW_0 |
-                                               WF_HOST_INT_MASK_RAW_1 |
-                                               WF_HOST_INT_MASK_INT2);
-
-                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
-                                            WF_HOST_INT2_MASK_RAW_3 |
-                                            WF_HOST_INT2_MASK_RAW_4 |
-                                            WF_HOST_INT2_MASK_RAW_5);
-
-                WF_EintEnable();
-                return;
-            }
-            /* else we got a RAW0/RAW1/RAW2/RAW3/RAW4/RAW5 Raw Move Complete interrupt, but, there is also at */
-            /* least one other interrupt present                                                               */
-            else
-            {
-                // save the other interrupts and clear them, along with the Raw Move Complete interrupts
-                // keep interrupts disabled
-                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
-                                            WF_HOST_INT2_MASK_RAW_3 |
-                                            WF_HOST_INT2_MASK_RAW_4 |
-                                            WF_HOST_INT2_MASK_RAW_5);
-                g_HostIntSaved |= (g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0 |
-                                                     WF_HOST_INT_MASK_RAW_1 |
-                                                     WF_HOST_INT_MASK_INT2));
-                WF_WriteByte(WF_HOST_INTR_REG, g_EintHostInt);
-
-                // leave interrupt disabled for now
-            }
-        }
-        /*--------------------------------------------------------------------------------------------------*/
-        /* else we did not get a 'RAW Move Complete' interrupt, but we did get at least one other interrupt */
-        /*--------------------------------------------------------------------------------------------------*/
-        else
-        {
-            g_HostIntSaved |= g_EintHostInt;
-            WF_WriteByte(WF_HOST_INTR_REG, g_EintHostInt);
-            WF_EintEnable();
-        }
-    }
-
     // used by InterruptCheck()
     g_ExIntNeedsServicing = 1;
 }
@@ -133,21 +50,13 @@ void InterruptCheck()
     u_int32_t assertInfo;
 
     // in no interrupt to process
-    if (!g_ExIntNeedsServicing)
-    {
+    if (! g_ExIntNeedsServicing) {
         return;
     }
-
     g_ExIntNeedsServicing = 0;
 
      /* read hostInt register to determine cause of interrupt */
     hostIntRegValue = WF_ReadByte(WF_HOST_INTR_REG);
-
-    // OR in the saved interrupts during the time when we were waiting for raw complete, set by WFEintHandler()
-    hostIntRegValue |= g_HostIntSaved;
-
-    // done with the saved interrupts, clear variable
-    g_HostIntSaved = 0;
 
     hostIntMaskRegValue = WF_ReadByte(WF_HOST_MASK_REG);
 
@@ -166,13 +75,11 @@ void InterruptCheck()
 
         // if the MRF24WG has hit an assert condition
         hostInt2 = WF_Read(WF_HOST_INTR2_REG);
-        if (hostInt2 & WF_HOST_INT2_MASK_MAIL_BOX)
-        {
+        if (hostInt2 & WF_HOST_INT2_MASK_MAIL_BOX) {
             // module number in upper 8 bits, assert information in lower 20 bits
             assertInfo = (WF_Read(WF_HOST_MAIL_BOX_0_MSW_REG) << 16) |
                           WF_Read(WF_HOST_MAIL_BOX_0_LSW_REG);
-            // signal this event
-            EventEnqueue(WF_EVENT_MRF24WG_MODULE_ASSERT, assertInfo);
+            printf("--- %s: assert info=%04x\n", __func__, assertInfo);
         }
 
         /* clear this interrupt */

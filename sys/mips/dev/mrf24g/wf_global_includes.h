@@ -64,13 +64,6 @@ typedef struct eventQueueStruct
    t_event  event[MAX_EVENTS + 1]; // one unused slot
 } t_wfEventQueue;
 
-#define EventEnqueue(type, code) printf("--- %s: event %u, code %u\n", __func__, type, code)
-void EventQInit(void);
-//void EventEnqueue(u_int8_t eventType, u_int32_t eventData);
-void EventDequeue(t_event *p_event);
-bool isEventQEmpty(void);
-bool isEventQFull(void);
-
 /*
  * Parameter message defintions
  */

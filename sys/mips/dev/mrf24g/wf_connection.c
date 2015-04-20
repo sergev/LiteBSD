@@ -136,7 +136,7 @@ void WF_Connect()
 
     errorCode = UdCheckConnectionConfig();
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid connection config\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
@@ -214,7 +214,7 @@ void WF_ReconnectModeSet(u_int8_t retryCount, u_int8_t deauthAction,
 
     errorCode = UdSetReconnectMode(retryCount, deauthAction, beaconTimeout, beaconTimeoutAction);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid reconnect mode\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
@@ -260,7 +260,7 @@ void WF_Disconnect()
     WF_ConnectionStateGet(&connectionState);
     if ((connectionState != WF_CSTATE_CONNECTED_INFRASTRUCTURE) &&
         (connectionState != WF_CSTATE_CONNECTED_ADHOC)) {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_DISCONNECT_NOT_ALLOWED);
+        printf("--- %s: disconnect not allowed\n", __func__);
         return;
     }
 
@@ -293,7 +293,7 @@ void WF_ChannelListSet(u_int8_t *p_channelList, u_int8_t numChannels)
 
     errorCode = UdSetChannelList(p_channelList, numChannels);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid channel list\n", __func__);
         return;
     }
 #endif
@@ -310,7 +310,7 @@ void WF_ScanContextSet(t_scanContext *p_context)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetScanContext(p_context);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid scan context\n", __func__);
         return;
     }
 #endif
@@ -421,7 +421,7 @@ void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo)
     u_int32_t errorCode = UdConvWpaPassphrase(p_keyInfo);
     if (errorCode != UD_SUCCESS)
     {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: cannot convert passphrase\n", __func__);
         return;
     }
 #endif

@@ -120,7 +120,7 @@ u_int16_t WF_RxPacketLengthGet()
     RawGetByte(RAW_DATA_RX_ID, (u_int8_t *)&rxPreamble, sizeof(t_rxPreamble));
     if (rxPreamble.type != WF_DATA_RX_INDICATE_TYPE)
     {
-        EventEnqueue(WF_EVENT_ERROR, UD_INVALID_DATA_MSG);
+        printf("--- %s: invalid preamble type=%u\n", __func__, rxPreamble.type);
         return 0;
     }
 

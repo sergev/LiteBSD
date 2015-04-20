@@ -154,8 +154,8 @@ void WF_RegionalDomainSet(u_int8_t regionalDomain)
 
     errorCode = UdSetDomain(regionalDomain);
     if (errorCode != UD_SUCCESS) {
-       EventEnqueue(WF_EVENT_ERROR, errorCode);
-       return;
+        printf("--- %s: invalid regional domain=%u\n", __func__, regionalDomain);
+        return;
     }
 #endif /* WF_ERROR_CHECKING */
 
@@ -190,7 +190,7 @@ void WF_MacAddressSet(u_int8_t *p_mac)
 #if defined(WF_ERROR_CHECKING)
     // can't change MAC address unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED);
+        printf("--- %s: invalid connection state\n", __func__);
         return;
     }
 #endif
@@ -220,7 +220,7 @@ void WF_TxModeSet(u_int8_t mode)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetTxMode(mode);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid tx mode=%u\n", __func__, mode);
     }
 #endif
     SendSetParamMsg(PARAM_TX_MODE, &mode, 1);
@@ -233,7 +233,7 @@ void WF_RtsThresholdSet(u_int16_t rtsThreshold)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetRtsThreshold(rtsThreshold);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid RTC threshold=%u\n", __func__, rtsThreshold);
         return;
     }
 #endif
@@ -347,7 +347,7 @@ void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetHwMulticastFilter(multicastFilterId, multicastAddress);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid multicast filter\n", __func__);
     }
 #endif
 

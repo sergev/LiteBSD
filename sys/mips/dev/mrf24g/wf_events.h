@@ -6,46 +6,6 @@
 #ifndef __WF_EVENTS_H
 #define __WF_EVENTS_H
 
-//-----------------------------------------------------------------------
-// Event Types -- corresponds to eventType parameter in WF_ProcessEvent()
-//-----------------------------------------------------------------------
-typedef enum t_eventType
-{
-    // initialization event
-    WF_EVENT_INITIALIZATION              = 0,    // Results of calling WF_Init()
-
-    // connection events
-    WF_EVENT_CONNECTION_SUCCESSFUL       = 1,
-    WF_EVENT_CONNECTION_FAILED           = 2,
-    WF_EVENT_CONNECTION_TEMPORARILY_LOST = 3,
-    WF_EVENT_CONNECTION_PERMANENTLY_LOST = 4,
-    WF_EVENT_CONNECTION_REESTABLISHED    = 5,
-
-    // WiFi scan event
-    WF_EVENT_SCAN_RESULTS_READY          = 6,
-
-    // WPS WPA-PSK key calculation needed
-    WF_WPS_EVENT_KEY_CALCULATION_REQUEST = 8,    // Key calculation is required
-
-    // error events
-    WF_EVENT_ERROR                       = 50,   // Universal Driver error has occurred
-    WF_EVENT_MRF24WG_MODULE_ASSERT       = 52   // MRF24WG module has asserted
-} t_eventType;
-
-
-// WF_INITIALIZATION_EVENT -- eventData values
-//--------------------------------------------
-typedef enum t_wfInitEventErrors
-{
-    WF_INIT_SUCCESSFUL                 = 0,    // MRF24WG initialization successful
-    WF_INIT_ERROR_SPI_NOT_CONNECTED    = 1,    // appears that the MRF24WG SPI interface is not connected
-    WF_INIT_ERROR_RESET_TIMEOUT        = 2,    // timed out waiting for MRF24WG to come out of reset
-    WF_INIT_ERROR_INIT_TIMEOUT         = 3    // timed out waiting for MRF24WG to initialize after reset
-} t_wfInitEventErrors;
-
-
-// WF_EVENT_ERROR -- eventData values
-//-----------------------------------
 typedef enum t_udEventErrors
 {
     UD_SUCCESS = 0,

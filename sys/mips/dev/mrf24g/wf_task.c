@@ -6,24 +6,12 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static void EventCheck()
+void WF_Task()
 {
-    t_event event;
+    InterruptCheck();
 
-    // if event queue empty then nothing to do
-    if (isEventQEmpty()) {
-        return;
-    }
+    RxPacketCheck();
 
-    // get next event from queue
-    EventDequeue(&event);
-
-    // notify application of event
-    WF_ProcessEvent(event.eventType, event.eventData);
-}
-
-static void PsPollCheck()
-{
     // if PS-Poll was disabled temporarily and needs to be reenabled, and, we are in
     // a connected state
     if (isPsPollNeedReactivate() &&
@@ -32,15 +20,4 @@ static void PsPollCheck()
         ClearPsPollReactivate();
         WFConfigureLowPowerMode(WF_LOW_POWER_MODE_ON);
     }
-}
-
-void WF_Task()
-{
-    EventCheck();
-
-    InterruptCheck();
-
-    RxPacketCheck();
-
-    PsPollCheck();
 }

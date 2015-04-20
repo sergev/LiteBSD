@@ -112,7 +112,7 @@ void WF_PsPollEnable(t_psPollContext *p_context)
 
     // if not currently connected then return
     if (UdGetConnectionState() != CS_CONNECTED) {
-        EventEnqueue(WF_EVENT_ERROR, UD_INVALID_PS_POLL_ERROR);
+        printf("--- %s: not connected\n", __func__);
         return;
     }
 
@@ -220,7 +220,7 @@ void WF_TxPowerMaxSet(u_int8_t maxTxPower)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = udSetTxPowerMax(maxTxPower);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid tx power=%u\n", __func__, maxTxPower);
         return;
     }
 #endif

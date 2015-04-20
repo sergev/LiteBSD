@@ -56,7 +56,6 @@ void WF_Init(t_deviceInfo *deviceInfo)
     unsigned msec, value;
 
     UdStateInit();          // initialize internal state machine
-    EventQInit();           // initialize WiFi event queue
     ClearMgmtConfirmMsg();  // no mgmt response messages received
     UdSetInitInvalid();     // init not valid until it gets through this state machine
 

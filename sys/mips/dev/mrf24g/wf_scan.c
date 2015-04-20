@@ -45,7 +45,7 @@ void WF_Scan(u_int8_t scanMode)
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdScan(scanMode);
     if (errorCode != UD_SUCCESS) {
-        EventEnqueue(WF_EVENT_ERROR, errorCode);
+        printf("--- %s: invalid scan mode=%u\n", __func__, scanMode);
         return;
     }
 #endif
@@ -54,7 +54,7 @@ void WF_Scan(u_int8_t scanMode)
     WF_ConnectionStateGet(&connectionState);
     if (connectionState == WF_CSTATE_CONNECTION_IN_PROGRESS ||
         connectionState == WF_CSTATE_RECONNECTION_IN_PROGRESS) {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_SCAN_NOT_ALLOWED);
+        printf("--- %s: scan not allowed\n", __func__);
         return;
     }
 
