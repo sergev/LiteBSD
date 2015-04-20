@@ -19,6 +19,7 @@
 #include <mips/dev/spi.h>
 #include <mips/dev/mrf24g/wf_universal_driver.h>
 #include <mips/dev/mrf24g/wf_registers.h>
+#include <mips/dev/mrf24g/wf_raw.h>
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
 
@@ -44,10 +45,7 @@
 /*
  * To enable debug output, uncomment the following line.
  */
-#define PRINTDBG printf
-#ifndef PRINTDBG
-#   define PRINTDBG(...) /*empty*/
-#endif
+//#define PRINTDBG printf
 
 /*
  * Wi-Fi software status per interface.
@@ -66,6 +64,208 @@ struct wifi_port {
     int         is_up;              /* whether the link is up */
 
 } wifi_port[NMRF];
+
+#ifndef PRINTDBG
+#   define PRINTDBG(...) /*empty*/
+#else
+static const char *reg_name(unsigned regno)
+{
+    static char buf[8] = "[00]";
+
+    switch (regno) {
+    /*
+     * 8-bit registers
+     */
+    case WF_HOST_INTR_REG:              return "INTR";
+    case WF_HOST_MASK_REG:              return "MASK";
+    case RAW_0_DATA_REG:                return "RAW0_DATA";
+    case RAW_1_DATA_REG:                return "RAW1_DATA";
+    case RAW_2_DATA_REG:                return "RAW2_DATA";
+    case RAW_3_DATA_REG:                return "RAW3_DATA";
+    case RAW_4_DATA_REG:                return "RAW4_DATA";
+    case RAW_5_DATA_REG:                return "RAW5_DATA";
+    /*
+     * 16-bit registers
+     */
+    case WF_HOST_MAIL_BOX_0_MSW_REG:    return "MBOX0_MSW";
+    case WF_HOST_MAIL_BOX_0_LSW_REG:    return "MBOX0_LSW";
+    case WF_HOST_RESET_REG:             return "RESET";
+    case WF_HOST_INTR2_REG:             return "INTR2";
+    case WF_HOST_INTR2_MASK_REG:        return "MASK2";
+    case WF_HOST_WFIFO_BCNT0_REG:       return "WFIFO_BCNT0";
+    case WF_HOST_WFIFO_BCNT1_REG:       return "WFIFO_BCNT1";
+    case WF_HOST_RFIFO_BCNT0_REG:       return "RFIFO_BCNT0";
+    case WF_HOST_RFIFO_BCNT1_REG:       return "RFIFO_BCNT1";
+    case WF_PSPOLL_H_REG:               return "PSPOLL";
+    case WF_INDEX_ADDR_REG:             return "ADDR";
+    case WF_INDEX_DATA_REG:             return "DATA";
+    case RAW_0_CTRL_0_REG:              return "RAW0_CTRL0";
+    case RAW_0_CTRL_1_REG:              return "RAW0_CTRL1";
+    case RAW_0_INDEX_REG:               return "RAW0_INDEX";
+    case RAW_0_STATUS_REG:              return "RAW0_STATUS";
+    case RAW_1_CTRL_0_REG:              return "RAW1_CTRL0";
+    case RAW_1_CTRL_1_REG:              return "RAW1_CTRL1";
+    case RAW_1_INDEX_REG:               return "RAW1_INDEX";
+    case RAW_1_STATUS_REG:              return "RAW1_STATUS";
+    case RAW_2_CTRL_0_REG:              return "RAW2_CTRL0";
+    case RAW_2_CTRL_1_REG:              return "RAW2_CTRL1";
+    case RAW_2_INDEX_REG:               return "RAW2_INDEX";
+    case RAW_2_STATUS_REG:              return "RAW2_STATUS";
+    case RAW_3_CTRL_0_REG:              return "RAW3_CTRL0";
+    case RAW_3_CTRL_1_REG:              return "RAW3_CTRL1";
+    case RAW_3_INDEX_REG:               return "RAW3_INDEX";
+    case RAW_3_STATUS_REG:              return "RAW3_STATUS";
+    case RAW_4_CTRL_0_REG:              return "RAW4_CTRL0";
+    case RAW_4_CTRL_1_REG:              return "RAW4_CTRL1";
+    case RAW_4_INDEX_REG:               return "RAW4_INDEX";
+    case RAW_4_STATUS_REG:              return "RAW4_STATUS";
+    case RAW_5_CTRL_0_REG:              return "RAW5_CTRL0";
+    case RAW_5_CTRL_1_REG:              return "RAW5_CTRL1";
+    case RAW_5_INDEX_REG:               return "RAW5_INDEX";
+    case RAW_5_STATUS_REG:              return "RAW5_STATUS";
+    }
+    buf[1] = "0123456789abcdef"[regno>>4];
+    buf[2] = "0123456789abcdef"[regno&15];
+    return buf;
+}
+#endif /* PRINTDBG */
+
+/*-------------------------------------------------------------
+ * Read 8-bit register.
+ * Return register value.
+ */
+unsigned WF_ReadByte(unsigned regno)
+{
+    struct wifi_port *w = &wifi_port[0];
+    u_int8_t reply;
+
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    reply = spi_transfer(&w->spiio, 0xff);
+    spi_deselect(&w->spiio);
+    PRINTDBG("-- read byte %s -> %02x\n", reg_name(regno), reply);
+    return reply;
+}
+
+/*
+ * Write 8-bit register.
+ */
+void WF_WriteByte(unsigned regno, unsigned value)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    PRINTDBG("-- write byte %s = %02x\n", reg_name(regno), value);
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regno);
+    spi_transfer(&w->spiio, value);
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Read 16-bit register.
+ * Return register value.
+ */
+unsigned WF_Read(unsigned regno)
+{
+    struct wifi_port *w = &wifi_port[0];
+    u_int8_t reply[3];
+
+    spi_select(&w->spiio);
+    reply[0] = spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    reply[1] = spi_transfer(&w->spiio, 0xff);
+    reply[2] = spi_transfer(&w->spiio, 0xff);
+    spi_deselect(&w->spiio);
+    PRINTDBG("-- read %s -> %04x\n", reg_name(regno), (reply[1] << 8) | reply[2]);
+    return (reply[1] << 8) | reply[2];
+}
+
+/*
+ * Write 16-bit register.
+ */
+void WF_Write(unsigned regno, unsigned value)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    PRINTDBG("-- write %s = %04x\n", reg_name(regno), value);
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regno);
+    spi_transfer(&w->spiio, value >> 8);
+    spi_transfer(&w->spiio, value & 0xff);
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Read a block of data from a register.
+ */
+void WF_ReadArray(unsigned regno, u_int8_t *data, unsigned nbytes)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    PRINTDBG("-- read %u bytes from %s\n", nbytes, reg_name(regno));
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    while (nbytes-- > 0) {
+        *data++ = spi_transfer(&w->spiio, 0xff);
+    }
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Write a data block to specified register.
+ */
+void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    PRINTDBG("-- write %u bytes to %s\n", nbytes, reg_name(regno));
+    spi_select(&w->spiio);
+    spi_transfer(&w->spiio, regno);
+    while (nbytes-- > 0) {
+        spi_transfer(&w->spiio, *data++);
+    }
+    spi_deselect(&w->spiio);
+}
+
+/*
+ * Write to analog register via bitbang.
+ */
+static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
+{
+    unsigned reset, mask;
+
+    /* Create register address byte. */
+    address <<= 2;
+
+    /* Enable the on-chip SPI and select the desired bank (0-3). */
+    reset = HR_HOST_ANA_SPI_EN_MASK | (bank << 6);
+    WF_Write(WF_HOST_RESET_REG, reset);
+
+    /* Bit-bang the address byte, MS bit to LS bit. */
+    for (mask = 0x80; mask; mask >>= 1) {
+        if (address & mask)
+            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+        else
+            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+
+        WF_Write(WF_HOST_RESET_REG, reset);
+        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+    }
+
+    /* Bit bang data from MS bit to LS bit. */
+    for (mask = 0x8000; mask; mask >>= 1) {
+        if (value & mask)
+            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+        else
+            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+
+        WF_Write(WF_HOST_RESET_REG, reset);
+        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+    }
+
+    /* Disable the on-chip SPI. */
+    reset &= ~HR_HOST_ANA_SPI_EN_MASK;
+    WF_Write(WF_HOST_RESET_REG, reset);
+}
 
 /*-------------------------------------------------------------
  * Put the MRF24WG into and out of reset.
@@ -99,144 +299,6 @@ void WF_GpioSetHibernate(unsigned high)
         PRINTDBG("-- clear Hibernate pin\n");
         gpio_clr(w->pin_hibernate);
     }
-}
-
-/*-------------------------------------------------------------
- * Read 8-bit register.
- * Return register value.
- */
-unsigned WF_ReadByte(unsigned regno)
-{
-    struct wifi_port *w = &wifi_port[0];
-    u_int8_t reply;
-
-    spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
-    reply = spi_transfer(&w->spiio, 0xff);
-    spi_deselect(&w->spiio);
-    PRINTDBG("-- read byte [%02x] -> %02x\n", regno, reply);
-    return reply;
-}
-
-/*
- * Write 8-bit register.
- */
-void WF_WriteByte(unsigned regno, unsigned value)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    PRINTDBG("-- write byte [%02x] <- %02x\n", regno, value);
-    spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno);
-    spi_transfer(&w->spiio, value);
-    spi_deselect(&w->spiio);
-}
-
-/*
- * Read 16-bit register.
- * Return register value.
- */
-unsigned WF_Read(unsigned regno)
-{
-    struct wifi_port *w = &wifi_port[0];
-    u_int8_t reply[3];
-
-    spi_select(&w->spiio);
-    reply[0] = spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
-    reply[1] = spi_transfer(&w->spiio, 0xff);
-    reply[2] = spi_transfer(&w->spiio, 0xff);
-    spi_deselect(&w->spiio);
-    PRINTDBG("-- read [%02x] -> %04x\n", regno, (reply[1] << 8) | reply[2]);
-    return (reply[1] << 8) | reply[2];
-}
-
-/*
- * Write 16-bit register.
- */
-void WF_Write(unsigned regno, unsigned value)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    PRINTDBG("-- write [%02x] <- %04x\n", regno, value);
-    spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno);
-    spi_transfer(&w->spiio, value >> 8);
-    spi_transfer(&w->spiio, value & 0xff);
-    spi_deselect(&w->spiio);
-}
-
-/*
- * Read a block of data from a register.
- */
-void WF_ReadArray(unsigned regno, u_int8_t *data, unsigned nbytes)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    PRINTDBG("-- read %u bytes from [%02x]\n", nbytes, regno);
-    spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
-    while (nbytes-- > 0) {
-        *data++ = spi_transfer(&w->spiio, 0xff);
-    }
-    spi_deselect(&w->spiio);
-}
-
-/*
- * Write a data block to specified register.
- */
-void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    PRINTDBG("-- write %u bytes to [%02x]\n", nbytes, regno);
-    spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno);
-    while (nbytes-- > 0) {
-        spi_transfer(&w->spiio, *data++);
-    }
-    spi_deselect(&w->spiio);
-}
-
-/*
- * Write to analog register via bitbang.
- */
-static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
-{
-    unsigned reset, mask;
-
-    /* Create register address byte. */
-    address <<= 2;
-    address |= SPI_AUTO_INCREMENT_ENABLED_MASK | SPI_WRITE_MASK;
-
-    /* Enable the on-chip SPI and select the desired bank (0-3). */
-    reset = HR_HOST_ANA_SPI_EN_MASK | (bank << 6);
-    WF_Write(WF_HOST_RESET_REG, reset);
-
-    /* Bit-bang the address byte, MS bit to LS bit. */
-    for (mask = 0x80; mask; mask >>= 1) {
-        if (address & mask)
-            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
-        else
-            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
-
-        WF_Write(WF_HOST_RESET_REG, reset);
-        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
-    }
-
-    /* Bit bang data from MS bit to LS bit. */
-    for (mask = 0x8000; mask; mask >>= 1) {
-        if (value & mask)
-            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
-        else
-            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
-
-        WF_Write(WF_HOST_RESET_REG, reset);
-        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
-    }
-
-    /* Disable the on-chip SPI. */
-    reset &= ~HR_HOST_ANA_SPI_EN_MASK;
-    WF_Write(WF_HOST_RESET_REG, reset);
 }
 
 /*-------------------------------------------------------------
@@ -443,6 +505,10 @@ void WF_ProcessRxPacket()
     u_int16_t nbytes = WF_RxPacketLengthGet();
 
     if (nbytes > 0) {
+        // now that buffer mounted it is safe to reenable interrupts, which were left disabled
+        // in the WiFi interrupt handler.
+        WF_EintEnable();
+
         char *data = malloc(nbytes);
         if (data != 0) {
             WF_RxPacketCopy(data, nbytes);
@@ -620,7 +686,7 @@ mrf_probe(config)
         printf("mrf%u: unknown device type, only MRF24WG is supported\n", unit);
         return 0;
     }
-    printf("mrf%u: MRF24WG version %02x.%02x, MAC address %s\n",
+    printf("mrf%u: MRF24WG version %x.%x, MAC address %s\n",
         unit, w->dev_info.romVersion, w->dev_info.patchVersion,
         ether_sprintf(w->macaddr));
 

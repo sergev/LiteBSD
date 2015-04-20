@@ -25,8 +25,6 @@ static void WFProcessMgmtIndicateMsg()
 {
     t_mgmtIndicateHdr hdr;
     u_int8_t buf[6];
-    u_int8_t eventType = 0xff;
-    u_int32_t eventData = WF_NO_EVENT_DATA;
 
     /* read 2-byte header of management message */
     RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_mgmtIndicateHdr), (u_int8_t *)&hdr);
@@ -38,13 +36,12 @@ static void WFProcessMgmtIndicateMsg()
 
         if (buf[0] == CONNECTION_ATTEMPT_SUCCESSFUL) {
             // if connection attempt successful
-            eventType = WF_EVENT_CONNECTION_SUCCESSFUL;
-            eventData = WF_NO_EVENT_DATA;
+            printf("--- %s: connection attempt successful\n", __func__);
             UdSetConnectionState(CS_CONNECTED);
         } else {
             /* else connection attempt failed */
-            eventType = WF_EVENT_CONNECTION_FAILED;
-            eventData = ((u_int32_t)buf[0] << 8) | (u_int32_t)buf[1]; /* contains connection failure code */
+            printf("--- %s: connection attempt failed, code=0x%x\n",
+                __func__, (buf[0] << 8) | buf[1]);
             UdSetConnectionState(CS_NOT_CONNECTED);
         }
         break;
@@ -57,23 +54,19 @@ static void WFProcessMgmtIndicateMsg()
 
         switch (buf[0]) {
         case CONNECTION_TEMPORARILY_LOST:
-            eventType = WF_EVENT_CONNECTION_TEMPORARILY_LOST;
-            eventData = buf[1];
+            printf("--- %s: connection temporarily lost, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_CONNECTION_IN_PROGRESS);
             break;
         case CONNECTION_PERMANENTLY_LOST:
-            eventType = WF_EVENT_CONNECTION_PERMANENTLY_LOST;
-            eventData = buf[1];
+            printf("--- %s: connection lost, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_NOT_CONNECTED);
             break;
         case CONNECTION_REESTABLISHED:
-            eventType = WF_EVENT_CONNECTION_REESTABLISHED;
-            eventData = buf[1];
+            printf("--- %s: connection reestablished, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_CONNECTED);
             break;
         default:
-            /* invalid parameter in received mgmt indicate message */
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_BAD_PARAM_IN_CONN_LOST_EVENT);
+            printf("--- %s: invalid parameter=%u in received mgmt indicate message\n", __func__, buf[0]);
             break;
         }
         break;
@@ -81,13 +74,11 @@ static void WFProcessMgmtIndicateMsg()
     case WF_EVENT_SCAN_RESULTS_READY_SUBTYPE:
         /* read index 2 of mgmt indicate to get the number of scan results */
         RawRead(RAW_MGMT_RX_ID, sizeof(t_mgmtIndicateHdr), 1, buf);
-        eventType = WF_EVENT_SCAN_RESULTS_READY;
-        eventData = buf[0];          /* number of scan results */
+        printf("--- %s: scan results ready, count=%u\n", __func__, buf[0]);
         break;
 
     case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
-        eventType = WF_WPS_EVENT_KEY_CALCULATION_REQUEST;
-        eventData = WF_NO_EVENT_DATA;
+        printf("--- %s: key calculation finished\n", __func__);
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
         RawRead(RAW_MGMT_RX_ID,
                 sizeof(t_mgmtIndicateHdr),
@@ -96,15 +87,12 @@ static void WFProcessMgmtIndicateMsg()
         break;
 
     default:
-        eventType = WF_EVENT_ERROR;
-        eventData = UD_ERROR_UNKNOWN_EVENT_TYPE;
+        printf("--- %s: unknown mgmt indicate message, subtype=%u\n", __func__, hdr.subType);
         break;
     }
 
     /* free mgmt buffer */
     DeallocateMgmtRxBuffer();
-
-    EventEnqueue(eventType, eventData);
 }
 
 void SignalMgmtMsgRx()
@@ -117,25 +105,22 @@ void SignalMgmtMsgRx()
     // read first byte from this mgmt msg (msg type)
     RawRead(RAW_MGMT_RX_ID, 0, 1, &msgType);
 
-    // if a mgmt confirm then the Universal Driver is waiting for it.  Don't
-    // process it here, but signal the driver that it happened.
-    if (msgType == WF_MGMT_CONFIRM_TYPE)
-    {
+    switch (msgType) {
+    case WF_MGMT_CONFIRM_TYPE:
+        // if a mgmt confirm then the Universal Driver is waiting for it.  Don't
+        // process it here, but signal the driver that it happened.
         SignalMgmtConfirmMsg();
-    }
-    // if a mgmt indicated occurred (asynchronous event), then process it right
-    // now
-    else if (msgType == WF_MGMT_INDICATE_TYPE)
-    {
+        break;
+    case WF_MGMT_INDICATE_TYPE:
+        // if a mgmt indicated occurred (asynchronous event),
+        // then process it right now
         WFProcessMgmtIndicateMsg();
+        break;
+    default:
+        // unknown mgmt msg type was received
+        printf("--- %s: unknown mgmt message received, type=%u\n", __func__, msgType);
+        break;
     }
-    // else an unknown mgmt msg type was received
-    else
-    {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_INVALID_MGMT_TYPE);
-    }
-
-    WF_EintEnable();
 }
 
 /*
@@ -156,11 +141,10 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     EnsureWFisAwake();
 
     startTime = WF_TimerRead();
-    while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0)
-    {
+    while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0) {
          // if timed out waiting for allocation of Mgmt Tx Buffer
          if (WF_TimerElapsed(startTime) > 15) {
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_MGMT_BUFFER_ALLOCATION_FAILED);
+            printf("--- %s: buffer allocation failed\n", __func__);
             return;
          }
     }
@@ -169,8 +153,7 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     RawSetByte(RAW_MGMT_TX_ID, p_header, headerLength);
 
     /* write out data (if any) */
-    if (dataLength > 0)
-    {
+    if (dataLength > 0) {
         RawSetByte(RAW_MGMT_TX_ID, p_data, dataLength);
     }
 
@@ -192,35 +175,34 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
  */
 void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
 {
-    u_int32_t startTime;
+    unsigned startTime, intr;
     t_mgmtMsgRxHdr  hdr;
 
     /* Wait until mgmt response is received */
     startTime = WF_TimerRead();
-    while (!isMgmtConfirmMsg())
-    {
-        InterruptCheck();   // check if an interrupt has occurred (and process it)
+    for (;;) {
+        intr = WF_ReadByte(WF_HOST_INTR_REG);
 
-        /* if received a data packet while waiting for mgmt response packet */
-        if (isPacketRx())
-        {
-            // We can't let the StackTask process data messages that come in while waiting for mgmt
-            // response because the application might send another mgmt message, which is illegal until the response
-            // is received for the first mgmt msg.  And, we can't prevent the race condition where a data message
-            // comes in before a mgmt response is received.  Thus, the only solution is to throw away a data message
-            // that comes in while waiting for a mgmt response.  This should happen very infrequently.  If using TCP then the
-            // stack takes care of retries.  If using UDP, the application has to deal with occasional data messages not being
-            // received.  Also, applications typically do not send a lot of management messages after connected.
+        // if received a level 2 interrupt
+        if (intr & WF_HOST_INT_MASK_INT2) {
+            // Either a mgmt tx or mgmt rx Raw move complete occurred
+            /* clear this interrupt */
+            WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
+                                        WF_HOST_INT2_MASK_RAW_3 |
+                                        WF_HOST_INT2_MASK_RAW_4 |
+                                        WF_HOST_INT2_MASK_RAW_5);
+            WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_INT2);
+        }
+        if (intr & WF_HOST_INT_MASK_FIFO_1) {
+            /* got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
+            /* clear this interrupt */
+            WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
 
-            // TODO: may be a way to avoid doing this when the data tx/rx, with their
-            // buffers, are available.  Can just copy the data message to buffer.
-            // throw away the data rx
-            RawMountRxBuffer(RAW_DATA_RX_ID);
-            DeallocateDataRxBuffer();
-            ClearPacketRx();
-
-            /* ensure interrupts enabled */
-            WF_EintEnable();
+            // signal that a mgmt msg, either confirm or indicate, has been received
+            // and needs to be processed
+            SignalMgmtMsgRx();
+            if (isMgmtConfirmMsg())
+                break;
         }
 
         if (WF_TimerElapsed(startTime) > 50) {
@@ -231,19 +213,16 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
     ClearMgmtConfirmMsg();
 
     /* if the caller wants to delete the response immediately (doesn't need any data from it */
-    if (freeAction == FREE_MGMT_BUFFER)
-    {
+    if (freeAction == FREE_MGMT_BUFFER) {
         /* read and verify result before freeing up buffer to ensure our message send was successful */
         RawRead(RAW_MGMT_RX_ID, 0, (u_int16_t)(sizeof(t_mgmtMsgRxHdr)), (u_int8_t *)&hdr);
 
-        if (hdr.subtype != expectedSubtype)
-        {
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_INVALID_MGMT_SUBTYPE);
+        if (hdr.result != MGMT_RESP_SUCCESS) {
+            printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
         }
-
-        if (hdr.result != MGMT_RESP_SUCCESS)
-        {
-            EventEnqueue(WF_EVENT_ERROR, hdr.result);
+        else if (hdr.subtype != expectedSubtype) {
+            printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
+                __func__, hdr.subtype, expectedSubtype);
         }
 
         /* free mgmt buffer */
@@ -281,19 +260,17 @@ void WaitForMgmtResponseAndReadData(u_int8_t expectedSubtype,
     // if made it here then received a management message; read out header
     RawRead(RAW_MGMT_RX_ID, 0, (u_int16_t)(sizeof(t_mgmtMsgRxHdr)), (u_int8_t *)&hdr);
 
-    if ((hdr.result != MGMT_RESP_SUCCESS) && (hdr.result != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR))
-    {
-        EventEnqueue(WF_EVENT_ERROR, hdr.result);
+    if (hdr.result != MGMT_RESP_SUCCESS &&
+        hdr.result != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR) {
+        printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
     }
-
-    if (hdr.subtype != expectedSubtype)
-    {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_INVALID_MGMT_SUBTYPE);
+    else if (hdr.subtype != expectedSubtype) {
+        printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
+            __func__, hdr.subtype, expectedSubtype);
     }
 
     /* if caller wants to read data from this mgmt response */
-    if (numDataBytes > 0)
-    {
+    if (numDataBytes > 0) {
         RawRead(RAW_MGMT_RX_ID, startIndex, numDataBytes, p_data);
     }
 

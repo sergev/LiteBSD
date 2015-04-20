@@ -44,12 +44,12 @@ static const u_int16_t g_RawDataReg[NUM_RAW_WINDOWS] = {
  * 8 bit values and will be cast when used.
  */
 static const u_int16_t g_RawIntMask[NUM_RAW_WINDOWS] = {
-    WF_HOST_INT_MASK_RAW_0_INT_0,   /* used in HOST_INTR reg (8-bit register) */
-    WF_HOST_INT_MASK_RAW_1_INT_0,   /* used in HOST_INTR reg (8-bit register) */
-    WF_HOST_INT_MASK_RAW_2_INT_0,   /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT_MASK_RAW_3_INT_0,   /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT_MASK_RAW_4_INT_0,   /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT_MASK_RAW_5_INT_0,   /* used in HOST_INTR2 reg (16-bit register) */
+    WF_HOST_INT_MASK_RAW_0,     /* used in HOST_INTR reg (8-bit register) */
+    WF_HOST_INT_MASK_RAW_1,     /* used in HOST_INTR reg (8-bit register) */
+    WF_HOST_INT2_MASK_RAW_2,    /* used in HOST_INTR2 reg (16-bit register) */
+    WF_HOST_INT2_MASK_RAW_3,    /* used in HOST_INTR2 reg (16-bit register) */
+    WF_HOST_INT2_MASK_RAW_4,    /* used in HOST_INTR2 reg (16-bit register) */
+    WF_HOST_INT2_MASK_RAW_5,    /* used in HOST_INTR2 reg (16-bit register) */
 };
 
 /* keeps track of whether raw tx/rx data windows mounted or not */
@@ -77,8 +77,8 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
     if (rawId <= RAW_ID_1) {
         /* will be either raw 0 or raw 1 */
         intMask = (rawId == RAW_ID_0) ?
-            WF_HOST_INT_MASK_RAW_0_INT_0 :
-            WF_HOST_INT_MASK_RAW_1_INT_0;
+            WF_HOST_INT_MASK_RAW_0 :
+            WF_HOST_INT_MASK_RAW_1;
     } else {
         /* will be INTR2 bit in host register, signifying RAW2, RAW3, or RAW4 */
         intMask = WF_HOST_INT_MASK_INT2;
@@ -206,8 +206,9 @@ bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
         /* allocate and create the new Mgmt Tx buffer */
         byteCount = RawMove(RAW_MGMT_TX_ID, RAW_MGMT_POOL, 1, bytesNeeded);
         if (byteCount == 0) {
-             EventEnqueue(WF_EVENT_ERROR, UD_ERROR_MGMT_BUFFER_ALLOCATION_FAILED);
-             return 0;
+            printf("--- %s: cannot allocate %u bytes of %u free\n",
+                __func__, bytesNeeded, bufAvail);
+            return 0;
         }
         ClearIndexOutOfBoundsFlag(RAW_MGMT_TX_ID);
         return 1;
@@ -245,7 +246,7 @@ void RawSetByte(u_int16_t rawId, const u_int8_t *p_buffer, u_int16_t length)
 
     // if trying to write past end of raw window
     if (isIndexOutOfBounds(rawId)) {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_RAW_SET_BYTE_OUT_OF_BOUNDS);
+        printf("--- %s: index out of bounds\n", __func__);
     }
 
     /* write data to raw window */
@@ -269,7 +270,7 @@ void RawGetByte(u_int16_t rawId, u_int8_t *pBuffer, u_int16_t length)
     // if the raw index was previously set out of bounds
     if (isIndexOutOfBounds(rawId)) {
         // trying to read past end of raw window
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_RAW_GET_BYTE_OUT_OF_BOUNDS);
+        printf("--- %s: index out of bounds\n", __func__);
     }
 
     regId = g_RawDataReg[rawId];
@@ -309,7 +310,7 @@ u_int16_t RawMountRxBuffer(u_int8_t rawId)
 
     // the length should never be 0 if notified of an Rx msg
     if (length == 0) {
-        EventEnqueue(WF_EVENT_ERROR, UD_ERROR_RAW_RX_MOUNT_FAILED);
+        printf("--- %s: failed\n", __func__);
     }
 
     /* if mounting a Raw Rx data frame */
@@ -400,7 +401,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
             // as there is no attempt to read or write at this location.  But,
             // applications should avoid this to avoid the timeout in
             SetIndexOutOfBoundsFlag(rawId);
-            EventEnqueue(WF_EVENT_ERROR, UD_ERROR_RAW_SET_INDEX_OUT_OF_BOUNDS);
+            printf("--- %s: bad index=%u out of bounds\n", __func__, index);
             break;
         }
     }
@@ -431,7 +432,7 @@ bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
     /* allocate and create the new Tx buffer (mgmt or data) */
     byteCount = RawMove(RAW_DATA_TX_ID, RAW_DATA_POOL, 1, bytesNeeded);
     if (byteCount == 0) {
-        EventEnqueue(WF_EVENT_ERROR, UD_TX_ALLOCATION_FAILED);
+        printf("--- %s: failed\n", __func__);
         return 0;
     }
 

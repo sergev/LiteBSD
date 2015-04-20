@@ -127,10 +127,6 @@ u_int16_t WF_RxPacketLengthGet()
     // set raw pointer to start of 802.11 payload (start of Ethernet packet)
     RawSetIndex(RAW_DATA_RX_ID, sizeof(t_rxPreamble) + ENC_PREAMBLE_OFFSET);
 
-    // now that buffer mounted it is safe to reenable interrupts, which were left disabled
-    // in the WiFi interrupt handler.
-    WF_EintEnable();
-
     return len - sizeof(t_rxPreamble) - ENC_PREAMBLE_OFFSET;
 }
 

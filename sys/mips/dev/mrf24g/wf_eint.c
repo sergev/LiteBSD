@@ -57,26 +57,28 @@ void WF_EintHandler()
 
 
         // If a Raw move complete interrupt occurred
-        if (g_EintHostInt & (WF_HOST_INT_MASK_RAW_0_INT_0 | WF_HOST_INT_MASK_RAW_1_INT_0 | WF_HOST_INT_MASK_INT2))
+        if (g_EintHostInt & (WF_HOST_INT_MASK_RAW_0 |
+                             WF_HOST_INT_MASK_RAW_1 |
+                             WF_HOST_INT_MASK_INT2))
         {
             // Let the Raw driver know which interrupt occurred and clear the flag
             SignalRawInterruptEvent(g_EintHostInt);
             ClearWaitingForRawMoveCompleteInterrupt();
 
             /* if no other interrupts occurred other than a RAW0/RAW1/RAW2/RAW3/RAW4 Raw Move Complete */
-            if ((g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0_INT_0 |
-                                   WF_HOST_INT_MASK_RAW_1_INT_0 |
+            if ((g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0 |
+                                   WF_HOST_INT_MASK_RAW_1 |
                                    WF_HOST_INT_MASK_INT2)) == 0)
             {
                 /* clear the RAW interrupts, re-enable interrupts, and exit */
-                WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_RAW_0_INT_0 |
-                                               WF_HOST_INT_MASK_RAW_1_INT_0 |
+                WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_RAW_0 |
+                                               WF_HOST_INT_MASK_RAW_1 |
                                                WF_HOST_INT_MASK_INT2);
 
-                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_RAW_2_INT_0 |
-                                            WF_HOST_INT_MASK_RAW_3_INT_0 |
-                                            WF_HOST_INT_MASK_RAW_4_INT_0 |
-                                            WF_HOST_INT_MASK_RAW_5_INT_0);
+                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
+                                            WF_HOST_INT2_MASK_RAW_3 |
+                                            WF_HOST_INT2_MASK_RAW_4 |
+                                            WF_HOST_INT2_MASK_RAW_5);
 
                 WF_EintEnable();
                 return;
@@ -87,11 +89,13 @@ void WF_EintHandler()
             {
                 // save the other interrupts and clear them, along with the Raw Move Complete interrupts
                 // keep interrupts disabled
-                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_RAW_2_INT_0   |
-                                            WF_HOST_INT_MASK_RAW_3_INT_0   |
-                                            WF_HOST_INT_MASK_RAW_4_INT_0   |
-                                            WF_HOST_INT_MASK_RAW_5_INT_0);
-                g_HostIntSaved |= (g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0_INT_0 | WF_HOST_INT_MASK_RAW_1_INT_0 | WF_HOST_INT_MASK_INT2));
+                WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
+                                            WF_HOST_INT2_MASK_RAW_3 |
+                                            WF_HOST_INT2_MASK_RAW_4 |
+                                            WF_HOST_INT2_MASK_RAW_5);
+                g_HostIntSaved |= (g_EintHostInt & ~(WF_HOST_INT_MASK_RAW_0 |
+                                                     WF_HOST_INT_MASK_RAW_1 |
+                                                     WF_HOST_INT_MASK_INT2));
                 WF_WriteByte(WF_HOST_INTR_REG, g_EintHostInt);
 
                 // leave interrupt disabled for now
@@ -162,7 +166,7 @@ void InterruptCheck()
 
         // if the MRF24WG has hit an assert condition
         hostInt2 = WF_Read(WF_HOST_INTR2_REG);
-        if (hostInt2 & WF_HOST_INT_MASK_MAIL_BOX_0_WRT)
+        if (hostInt2 & WF_HOST_INT2_MASK_MAIL_BOX)
         {
             // module number in upper 8 bits, assert information in lower 20 bits
             assertInfo = (WF_Read(WF_HOST_MAIL_BOX_0_MSW_REG) << 16) |
@@ -175,20 +179,22 @@ void InterruptCheck()
         WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_INT2);
     }
     /* else if got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
-    else if ((hostInt & WF_HOST_INT_MASK_FIFO_1_THRESHOLD) == WF_HOST_INT_MASK_FIFO_1_THRESHOLD)
+    else if (hostInt & WF_HOST_INT_MASK_FIFO_1)
     {
         /* clear this interrupt */
-        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1_THRESHOLD);
+        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
 
         // signal that a mgmt msg, either confirm or indicate, has been received
         // and needs to be processed
         SignalMgmtMsgRx();
+
+        WF_EintEnable();
     }
     /* else if got a FIFO 0 Threshold Interrupt (Data Fifo).  Data Rx msg ready to process. */
-    else if ((hostInt & WF_HOST_INT_MASK_FIFO_0_THRESHOLD) == WF_HOST_INT_MASK_FIFO_0_THRESHOLD)
+    else if (hostInt & WF_HOST_INT_MASK_FIFO_0)
     {
         /* clear this interrupt */
-        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_0_THRESHOLD);
+        WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_0);
 
         // signal that a data msg has been received and needs to be processed
         SignalPacketRx();
