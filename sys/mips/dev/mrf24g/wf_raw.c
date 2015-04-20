@@ -17,21 +17,48 @@
 #define ClearIndexOutOfBoundsFlag(rawId)    g_RawIndexPastEnd &= ~g_RawAccessOutOfBoundsMask[rawId]
 #define isIndexOutOfBounds(rawId)           ((g_RawIndexPastEnd & g_RawAccessOutOfBoundsMask[rawId]) > 0)
 
-/* raw registers for each raw window being used */
+/*
+ * Raw registers for each raw window being used
+ */
 static const u_int8_t g_RawIndexReg[NUM_RAW_WINDOWS] = {
-    RAW_0_INDEX_REG,  RAW_1_INDEX_REG,  RAW_2_INDEX_REG,  RAW_3_INDEX_REG,  RAW_4_INDEX_REG, RAW_5_INDEX_REG
+    MRF24_REG_RAW0_INDEX,
+    MRF24_REG_RAW1_INDEX,
+    MRF24_REG_RAW2_INDEX,
+    MRF24_REG_RAW3_INDEX,
+    MRF24_REG_RAW4_INDEX,
+    MRF24_REG_RAW5_INDEX,
 };
 static const u_int8_t g_RawStatusReg[NUM_RAW_WINDOWS] = {
-    RAW_0_STATUS_REG, RAW_1_STATUS_REG, RAW_2_STATUS_REG, RAW_3_STATUS_REG, RAW_4_STATUS_REG, RAW_5_STATUS_REG
+    MRF24_REG_RAW0_STATUS,
+    MRF24_REG_RAW1_STATUS,
+    MRF24_REG_RAW2_STATUS,
+    MRF24_REG_RAW3_STATUS,
+    MRF24_REG_RAW4_STATUS,
+    MRF24_REG_RAW5_STATUS,
 };
 static const u_int16_t g_RawCtrl0Reg[NUM_RAW_WINDOWS] = {
-    RAW_0_CTRL_0_REG, RAW_1_CTRL_0_REG, RAW_2_CTRL_0_REG, RAW_3_CTRL_0_REG, RAW_4_CTRL_0_REG, RAW_5_CTRL_0_REG
+    MRF24_REG_RAW0_CTRL0,
+    MRF24_REG_RAW1_CTRL0,
+    MRF24_REG_RAW2_CTRL0,
+    MRF24_REG_RAW3_CTRL0,
+    MRF24_REG_RAW4_CTRL0,
+    MRF24_REG_RAW5_CTRL0,
 };
 static const u_int16_t g_RawCtrl1Reg[NUM_RAW_WINDOWS] = {
-    RAW_0_CTRL_1_REG, RAW_1_CTRL_1_REG, RAW_2_CTRL_1_REG, RAW_3_CTRL_1_REG, RAW_4_CTRL_1_REG, RAW_5_CTRL_1_REG
+    MRF24_REG_RAW0_CTRL1,
+    MRF24_REG_RAW1_CTRL1,
+    MRF24_REG_RAW2_CTRL1,
+    MRF24_REG_RAW3_CTRL1,
+    MRF24_REG_RAW4_CTRL1,
+    MRF24_REG_RAW5_CTRL1,
 };
 static const u_int16_t g_RawDataReg[NUM_RAW_WINDOWS] = {
-    RAW_0_DATA_REG,   RAW_1_DATA_REG,   RAW_2_DATA_REG,   RAW_3_DATA_REG,   RAW_4_DATA_REG, RAW_5_DATA_REG
+    MRF24_REG_RAW0_DATA,
+    MRF24_REG_RAW1_DATA,
+    MRF24_REG_RAW2_DATA,
+    MRF24_REG_RAW3_DATA,
+    MRF24_REG_RAW4_DATA,
+    MRF24_REG_RAW5_DATA,
 };
 
 /*
@@ -39,12 +66,12 @@ static const u_int16_t g_RawDataReg[NUM_RAW_WINDOWS] = {
  * 8 bit values and will be cast when used.
  */
 static const u_int16_t g_RawIntMask[NUM_RAW_WINDOWS] = {
-    WF_HOST_INT_MASK_RAW_0,     /* used in HOST_INTR reg (8-bit register) */
-    WF_HOST_INT_MASK_RAW_1,     /* used in HOST_INTR reg (8-bit register) */
-    WF_HOST_INT2_MASK_RAW_2,    /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT2_MASK_RAW_3,    /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT2_MASK_RAW_4,    /* used in HOST_INTR2 reg (16-bit register) */
-    WF_HOST_INT2_MASK_RAW_5,    /* used in HOST_INTR2 reg (16-bit register) */
+    INTR_RAW0,      /* used in HOST_INTR reg (8-bit register) */
+    INTR_RAW1,      /* used in HOST_INTR reg (8-bit register) */
+    INTR2_RAW2,     /* used in HOST_INTR2 reg (16-bit register) */
+    INTR2_RAW3,     /* used in HOST_INTR2 reg (16-bit register) */
+    INTR2_RAW4,     /* used in HOST_INTR2 reg (16-bit register) */
+    INTR2_RAW5,     /* used in HOST_INTR2 reg (16-bit register) */
 };
 
 /* keeps track of whether raw tx/rx data windows mounted or not */
@@ -67,25 +94,23 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
     u_int32_t startTime;
 
     /* create mask to check against for Raw Move complete interrupt for either RAW0 or RAW1 */
-    if (rawId <= RAW_ID_1) {
+    if (rawId <= 1) {
         /* will be either raw 0 or raw 1 */
-        intMask = (rawId == RAW_ID_0) ?
-            WF_HOST_INT_MASK_RAW_0 :
-            WF_HOST_INT_MASK_RAW_1;
+        intMask = (rawId == 0) ? INTR_RAW0 : INTR_RAW1;
     } else {
         /* will be INTR2 bit in host register, signifying RAW2, RAW3, or RAW4 */
-        intMask = WF_HOST_INT_MASK_INT2;
+        intMask = INTR_INT2;
     }
 
     startTime = mrf_timer_read();
     for (;;) {
-        intr = mrf_read_byte(WF_HOST_INTR_REG);
+        intr = mrf_read_byte(MRF24_REG_INTR);
 
         /* If received an external interrupt that signaled the RAW Move
          * completed then break out of this loop. */
         if (intr & intMask) {
             /* clear the RAW interrupts, re-enable interrupts, and exit */
-            mrf_write_byte(WF_HOST_INTR_REG, intMask);
+            mrf_write_byte(MRF24_REG_INTR, intMask);
             break;
         }
 
@@ -109,7 +134,7 @@ void RawInit()
 {
     // By default the MRF24WG firmware mounts Scratch to RAW 1 after reset. This
     // is not being used, so unmount the scratch from this RAW window.
-    ScratchUnmount(RAW_ID_1);
+    ScratchUnmount(1);
 
     /* Permanently mount scratch memory, index defaults to 0. */
     /* If one needs to know, this function returns the number of bytes in scratch memory */
@@ -170,7 +195,7 @@ bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
     u_int16_t byteCount;
 
     /* get total bytes available for MGMT tx memory pool */
-    bufAvail = mrf_read(WF_HOST_WFIFO_BCNT1_REG) & 0x0fff; /* LS 12 bits contain length */
+    bufAvail = mrf_read(MRF24_REG_WFIFO_BCNT1) & FIFO_BCNT_MASK;
 
     /* if enough bytes available to allocate */
     if (bufAvail >= bytesNeeded) {
@@ -394,7 +419,7 @@ bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
     u_int16_t byteCount;
 
     /* get total bytes available for DATA tx memory pool */
-    bufAvail = mrf_read(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff; /* LS 12 bits contain length */
+    bufAvail = mrf_read(MRF24_REG_WFIFO_BCNT0) & FIFO_BCNT_MASK;
     if (bufAvail < bytesNeeded) {
         /* not enough bytes available at this time to satisfy request */
         return 0;
@@ -485,16 +510,16 @@ u_int16_t RawMove(u_int16_t rawId,
      */
 
     /* if doing a raw move on Raw 0 or 1 (data rx or data tx) */
-    if (rawId <= RAW_ID_1) {
+    if (rawId <= 1) {
         /* Clear the interrupt bit in the host interrupt register (Raw 0 and 1 are in 8-bit host intr reg) */
         regValue = (u_int8_t)g_RawIntMask[rawId];
-        mrf_write_byte(WF_HOST_INTR_REG, regValue);
+        mrf_write_byte(MRF24_REG_INTR, regValue);
     }
     /* else doing raw move on mgmt rx, mgmt tx, or scratch */
     else {
         /* Clear the interrupt bit in the host interrupt 2 register (Raw 2,3, and 4 are in 16-bit host intr2 reg */
         regValue = g_RawIntMask[rawId];
-        mrf_write(WF_HOST_INTR2_REG, regValue);
+        mrf_write(MRF24_REG_INTR2, regValue);
     }
 
     /*

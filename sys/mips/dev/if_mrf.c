@@ -45,7 +45,7 @@
 /*
  * To enable debug output, uncomment the following line.
  */
-//#define PRINTDBG printf
+#define PRINTDBG printf
 
 /*
  * Wi-Fi software status per interface.
@@ -76,53 +76,53 @@ static const char *reg_name(unsigned regno)
     /*
      * 8-bit registers
      */
-    case WF_HOST_INTR_REG:              return "INTR";
-    case WF_HOST_MASK_REG:              return "MASK";
-    case RAW_0_DATA_REG:                return "RAW0_DATA";
-    case RAW_1_DATA_REG:                return "RAW1_DATA";
-    case RAW_2_DATA_REG:                return "RAW2_DATA";
-    case RAW_3_DATA_REG:                return "RAW3_DATA";
-    case RAW_4_DATA_REG:                return "RAW4_DATA";
-    case RAW_5_DATA_REG:                return "RAW5_DATA";
+    case MRF24_REG_INTR:        return "INTR";
+    case MRF24_REG_MASK:        return "MASK";
+    case MRF24_REG_RAW0_DATA:   return "RAW0_DATA";
+    case MRF24_REG_RAW1_DATA:   return "RAW1_DATA";
+    case MRF24_REG_RAW2_DATA:   return "RAW2_DATA";
+    case MRF24_REG_RAW3_DATA:   return "RAW3_DATA";
+    case MRF24_REG_RAW4_DATA:   return "RAW4_DATA";
+    case MRF24_REG_RAW5_DATA:   return "RAW5_DATA";
     /*
      * 16-bit registers
      */
-    case WF_HOST_MAIL_BOX_0_MSW_REG:    return "MBOX0_MSW";
-    case WF_HOST_MAIL_BOX_0_LSW_REG:    return "MBOX0_LSW";
-    case WF_HOST_RESET_REG:             return "RESET";
-    case WF_HOST_INTR2_REG:             return "INTR2";
-    case WF_HOST_INTR2_MASK_REG:        return "MASK2";
-    case WF_HOST_WFIFO_BCNT0_REG:       return "WFIFO_BCNT0";
-    case WF_HOST_WFIFO_BCNT1_REG:       return "WFIFO_BCNT1";
-    case WF_HOST_RFIFO_BCNT0_REG:       return "RFIFO_BCNT0";
-    case WF_HOST_RFIFO_BCNT1_REG:       return "RFIFO_BCNT1";
-    case WF_PSPOLL_H_REG:               return "PSPOLL";
-    case WF_INDEX_ADDR_REG:             return "ADDR";
-    case WF_INDEX_DATA_REG:             return "DATA";
-    case RAW_0_CTRL_0_REG:              return "RAW0_CTRL0";
-    case RAW_0_CTRL_1_REG:              return "RAW0_CTRL1";
-    case RAW_0_INDEX_REG:               return "RAW0_INDEX";
-    case RAW_0_STATUS_REG:              return "RAW0_STATUS";
-    case RAW_1_CTRL_0_REG:              return "RAW1_CTRL0";
-    case RAW_1_CTRL_1_REG:              return "RAW1_CTRL1";
-    case RAW_1_INDEX_REG:               return "RAW1_INDEX";
-    case RAW_1_STATUS_REG:              return "RAW1_STATUS";
-    case RAW_2_CTRL_0_REG:              return "RAW2_CTRL0";
-    case RAW_2_CTRL_1_REG:              return "RAW2_CTRL1";
-    case RAW_2_INDEX_REG:               return "RAW2_INDEX";
-    case RAW_2_STATUS_REG:              return "RAW2_STATUS";
-    case RAW_3_CTRL_0_REG:              return "RAW3_CTRL0";
-    case RAW_3_CTRL_1_REG:              return "RAW3_CTRL1";
-    case RAW_3_INDEX_REG:               return "RAW3_INDEX";
-    case RAW_3_STATUS_REG:              return "RAW3_STATUS";
-    case RAW_4_CTRL_0_REG:              return "RAW4_CTRL0";
-    case RAW_4_CTRL_1_REG:              return "RAW4_CTRL1";
-    case RAW_4_INDEX_REG:               return "RAW4_INDEX";
-    case RAW_4_STATUS_REG:              return "RAW4_STATUS";
-    case RAW_5_CTRL_0_REG:              return "RAW5_CTRL0";
-    case RAW_5_CTRL_1_REG:              return "RAW5_CTRL1";
-    case RAW_5_INDEX_REG:               return "RAW5_INDEX";
-    case RAW_5_STATUS_REG:              return "RAW5_STATUS";
+    case MRF24_REG_MAILBOX0_HI: return "MBOX0_MSW";
+    case MRF24_REG_MAILBOX0_LO: return "MBOX0_LSW";
+    case MRF24_REG_RESET:       return "RESET";
+    case MRF24_REG_INTR2:       return "INTR2";
+    case MRF24_REG_MASK2:       return "MASK2";
+    case MRF24_REG_WFIFO_BCNT0: return "WFIFO_BCNT0";
+    case MRF24_REG_WFIFO_BCNT1: return "WFIFO_BCNT1";
+    case MRF24_REG_RFIFO_BCNT0: return "RFIFO_BCNT0";
+    case MRF24_REG_RFIFO_BCNT1: return "RFIFO_BCNT1";
+    case MRF24_REG_PSPOLL:      return "PSPOLL";
+    case MRF24_REG_ADDR:        return "ADDR";
+    case MRF24_REG_DATA:        return "DATA";
+    case MRF24_REG_RAW0_CTRL0:  return "RAW0_CTRL0";
+    case MRF24_REG_RAW0_CTRL1:  return "RAW0_CTRL1";
+    case MRF24_REG_RAW0_INDEX:  return "RAW0_INDEX";
+    case MRF24_REG_RAW0_STATUS: return "RAW0_STATUS";
+    case MRF24_REG_RAW1_CTRL0:  return "RAW1_CTRL0";
+    case MRF24_REG_RAW1_CTRL1:  return "RAW1_CTRL1";
+    case MRF24_REG_RAW1_INDEX:  return "RAW1_INDEX";
+    case MRF24_REG_RAW1_STATUS: return "RAW1_STATUS";
+    case MRF24_REG_RAW2_CTRL0:  return "RAW2_CTRL0";
+    case MRF24_REG_RAW2_CTRL1:  return "RAW2_CTRL1";
+    case MRF24_REG_RAW2_INDEX:  return "RAW2_INDEX";
+    case MRF24_REG_RAW2_STATUS: return "RAW2_STATUS";
+    case MRF24_REG_RAW3_CTRL0:  return "RAW3_CTRL0";
+    case MRF24_REG_RAW3_CTRL1:  return "RAW3_CTRL1";
+    case MRF24_REG_RAW3_INDEX:  return "RAW3_INDEX";
+    case MRF24_REG_RAW3_STATUS: return "RAW3_STATUS";
+    case MRF24_REG_RAW4_CTRL0:  return "RAW4_CTRL0";
+    case MRF24_REG_RAW4_CTRL1:  return "RAW4_CTRL1";
+    case MRF24_REG_RAW4_INDEX:  return "RAW4_INDEX";
+    case MRF24_REG_RAW4_STATUS: return "RAW4_STATUS";
+    case MRF24_REG_RAW5_CTRL0:  return "RAW5_CTRL0";
+    case MRF24_REG_RAW5_CTRL1:  return "RAW5_CTRL1";
+    case MRF24_REG_RAW5_INDEX:  return "RAW5_INDEX";
+    case MRF24_REG_RAW5_STATUS: return "RAW5_STATUS";
     }
     buf[1] = "0123456789abcdef"[regno>>4];
     buf[2] = "0123456789abcdef"[regno&15];
@@ -140,7 +140,7 @@ unsigned mrf_read_byte(unsigned regno)
     u_int8_t reply;
 
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    spi_transfer(&w->spiio, regno | MRF24_READ_MODE);
     reply = spi_transfer(&w->spiio, 0xff);
     spi_deselect(&w->spiio);
     PRINTDBG("-- read byte %s -> %02x\n", reg_name(regno), reply);
@@ -171,7 +171,7 @@ unsigned mrf_read(unsigned regno)
     u_int8_t reply[3];
 
     spi_select(&w->spiio);
-    reply[0] = spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    reply[0] = spi_transfer(&w->spiio, regno | MRF24_READ_MODE);
     reply[1] = spi_transfer(&w->spiio, 0xff);
     reply[2] = spi_transfer(&w->spiio, 0xff);
     spi_deselect(&w->spiio);
@@ -203,7 +203,7 @@ void mrf_read_array(unsigned regno, u_int8_t *data, unsigned nbytes)
 
     PRINTDBG("-- read %u bytes from %s\n", nbytes, reg_name(regno));
     spi_select(&w->spiio);
-    spi_transfer(&w->spiio, regno | WF_READ_REGISTER_MASK);
+    spi_transfer(&w->spiio, regno | MRF24_READ_MODE);
     while (nbytes-- > 0) {
         *data++ = spi_transfer(&w->spiio, 0xff);
     }
@@ -237,34 +237,34 @@ static void mrf_write_analog(unsigned bank, unsigned address, unsigned value)
     address <<= 2;
 
     /* Enable the on-chip SPI and select the desired bank (0-3). */
-    reset = HR_HOST_ANA_SPI_EN_MASK | (bank << 6);
-    mrf_write(WF_HOST_RESET_REG, reset);
+    reset = RESET_ANA_SPI_EN | (bank << 6);
+    mrf_write(MRF24_REG_RESET, reset);
 
     /* Bit-bang the address byte, MS bit to LS bit. */
     for (mask = 0x80; mask; mask >>= 1) {
         if (address & mask)
-            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+            reset |= RESET_ANA_SPI_DOUT;
         else
-            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+            reset &= ~RESET_ANA_SPI_DOUT;
 
-        mrf_write(WF_HOST_RESET_REG, reset);
-        mrf_write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+        mrf_write(MRF24_REG_RESET, reset);
+        mrf_write(MRF24_REG_RESET, reset | RESET_ANA_SPI_CLK);
     }
 
     /* Bit bang data from MS bit to LS bit. */
     for (mask = 0x8000; mask; mask >>= 1) {
         if (value & mask)
-            reset |= HR_HOST_ANA_SPI_DOUT_MASK;
+            reset |= RESET_ANA_SPI_DOUT;
         else
-            reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
+            reset &= ~RESET_ANA_SPI_DOUT;
 
-        mrf_write(WF_HOST_RESET_REG, reset);
-        mrf_write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+        mrf_write(MRF24_REG_RESET, reset);
+        mrf_write(MRF24_REG_RESET, reset | RESET_ANA_SPI_CLK);
     }
 
     /* Disable the on-chip SPI. */
-    reset &= ~HR_HOST_ANA_SPI_EN_MASK;
-    mrf_write(WF_HOST_RESET_REG, reset);
+    reset &= ~RESET_ANA_SPI_EN;
+    mrf_write(MRF24_REG_RESET, reset);
 }
 
 /*-------------------------------------------------------------
@@ -563,24 +563,24 @@ static int mrf_detect(struct wifi_port *w)
     udelay(5000);
 
     /* Shuttle MRF24WG workaround (benign to production MRF24WG) */
-    mrf_write_analog(2, PLL0_REG, 0x8021);
-    mrf_write_analog(2, PLL0_REG, 0x6021);
+    mrf_write_analog(2, ANALOG_REG_PLL0, 0x8021);
+    mrf_write_analog(2, ANALOG_REG_PLL0, 0x6021);
 
     /* Production MRF24WG workaround (benign to shuttle MRF24WG) */
-    mrf_write_analog(1, OSC0_REG, 0x6b80);
-    mrf_write_analog(1, BIAS_REG, 0xc000);
+    mrf_write_analog(1, ANALOG_REG_OSC0, 0x6b80);
+    mrf_write_analog(1, ANALOG_REG_BIAS, 0xc000);
 
     /* Check whether we really have MRF24G chip attached. */
-    mask2 = mrf_read(WF_HOST_INTR2_MASK_REG);
-    mrf_write(WF_HOST_INTR2_MASK_REG, 0xaa55);
-    v = mrf_read(WF_HOST_INTR2_MASK_REG);
+    mask2 = mrf_read(MRF24_REG_MASK2);
+    mrf_write(MRF24_REG_MASK2, 0xaa55);
+    v = mrf_read(MRF24_REG_MASK2);
     if (v != 0xaa55)
         goto failed;
-    mrf_write(WF_HOST_INTR2_MASK_REG, 0x55aa);
-    v = mrf_read(WF_HOST_INTR2_MASK_REG);
+    mrf_write(MRF24_REG_MASK2, 0x55aa);
+    v = mrf_read(MRF24_REG_MASK2);
     if (v != 0x55aa)
         goto failed;
-    mrf_write(WF_HOST_INTR2_MASK_REG, mask2);
+    mrf_write(MRF24_REG_MASK2, mask2);
 
     /* MRF24G controller detected */
     return 0;

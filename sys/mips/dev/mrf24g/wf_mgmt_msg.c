@@ -179,22 +179,20 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
     /* Wait until mgmt response is received */
     startTime = mrf_timer_read();
     for (;;) {
-        intr = mrf_read_byte(WF_HOST_INTR_REG);
+        intr = mrf_read_byte(MRF24_REG_INTR);
 
         // if received a level 2 interrupt
-        if (intr & WF_HOST_INT_MASK_INT2) {
+        if (intr & INTR_INT2) {
             // Either a mgmt tx or mgmt rx Raw move complete occurred
             /* clear this interrupt */
-            mrf_write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
-                                        WF_HOST_INT2_MASK_RAW_3 |
-                                        WF_HOST_INT2_MASK_RAW_4 |
-                                        WF_HOST_INT2_MASK_RAW_5);
-            mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_INT2);
+            mrf_write(MRF24_REG_INTR2,
+                INTR2_RAW2 | INTR2_RAW3 | INTR2_RAW4 | INTR2_RAW5);
+            mrf_write_byte(MRF24_REG_INTR, INTR_INT2);
         }
-        if (intr & WF_HOST_INT_MASK_FIFO_1) {
+        if (intr & INTR_FIFO1) {
             /* got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
             /* clear this interrupt */
-            mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
+            mrf_write_byte(MRF24_REG_INTR, INTR_FIFO1);
 
             // signal that a mgmt msg, either confirm or indicate, has been received
             // and needs to be processed

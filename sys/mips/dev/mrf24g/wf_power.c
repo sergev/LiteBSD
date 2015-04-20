@@ -6,9 +6,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-#define REG_ENABLE_LOW_POWER_MASK   ((u_int16_t)0x01)
-#define REG_DISABLE_LOW_POWER_MASK  ((u_int16_t)0x00)
-
 /*
  * Enumeration of valid values for WFSetPowerSaveMode()
  */
@@ -181,7 +178,7 @@ void WFConfigureLowPowerMode(u_int8_t action)
     //-------------------------------------
     if (action == WF_LOW_POWER_MODE_ON) {
         //dbgprintf("Enable PS\n");
-        mrf_write(WF_PSPOLL_H_REG, REG_ENABLE_LOW_POWER_MASK);
+        mrf_write(MRF24_REG_PSPOLL, PSPOLL_LP_ENABLE);
     }
     //---------------------------------------------------------------------------------------------
     // else deactivating PS-Poll mode on MRF24W (taking it out of low-power mode and waking it up)
@@ -189,16 +186,16 @@ void WFConfigureLowPowerMode(u_int8_t action)
     else {
         // action == WF_LOW_POWER_MODE_OFF
         //dbgprintf("Disable PS\n");
-        mrf_write(WF_PSPOLL_H_REG, REG_DISABLE_LOW_POWER_MASK);
+        mrf_write(MRF24_REG_PSPOLL, 0);
 
         /* poll the response bit that indicates when the MRF24W has come out of low power mode */
         do {
             // set the index register to the register we wish to read
-            mrf_write(WF_INDEX_ADDR_REG, WF_SCRATCHPAD_1_REG);
+            mrf_write(MRF24_REG_ADDR, MRF24_INDEX_SCRATCHPAD1);
 
             // read register
-            lowPowerStatusRegValue = mrf_read(WF_INDEX_DATA_REG);
-        } while (lowPowerStatusRegValue & REG_ENABLE_LOW_POWER_MASK);
+            lowPowerStatusRegValue = mrf_read(MRF24_REG_DATA);
+        } while (lowPowerStatusRegValue & PSPOLL_LP_ENABLE);
     }
 }
 

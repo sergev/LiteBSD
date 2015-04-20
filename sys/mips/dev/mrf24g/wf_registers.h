@@ -6,114 +6,135 @@
 #ifndef __WF_REGISTERS_H
 #define __WF_REGISTERS_H
 
-// Used when accessing MRF24WG registers
-#define WF_READ_REGISTER_MASK               0x40
+/*
+ * Address bit used when accessing MRF24WG registers via SPI interface.
+ */
+#define MRF24_READ_MODE         0x40
 
-#define SPI_READ_MASK                       0x01    // bit 0 = 1
-#define SPI_AUTO_INCREMENT_DISABLED_MASK    0x02    // bit 1 = 1
+/*
+ * MRF24WG direct registers.
+ */
+#define MRF24_REG_INTR          0x01    /* 8-bit: 1st level interrupt bits */
+#define MRF24_REG_MASK          0x02    /* 8-bit: 1st level interrupt mask */
+#define MRF24_REG_RAW2_DATA     0x06    /* 8-bit: RAW2 data - Mgmt Rx */
+#define MRF24_REG_RAW3_DATA     0x07    /* 8-bit: RAW3 data - Mgmt Tx */
+#define MRF24_REG_RAW4_DATA     0x08    /* 8-bit: RAW4 data - Scratch Tx/Rx */
+#define MRF24_REG_RAW5_DATA     0x09    /* 8-bit: RAW5 data - not used */
+#define MRF24_REG_RAW4_CTRL0    0x0a    /* 16-bit: RAW4 control0 - Scratch Tx/Rx */
+#define MRF24_REG_RAW4_CTRL1    0x0b    /* 16-bit: RAW4 control1 - Scratch Tx/Rx */
+#define MRF24_REG_RAW4_INDEX    0x0c    /* 16-bit: RAW4 index - Scratch Tx/Rx */
+#define MRF24_REG_RAW4_STATUS   0x0d    /* 16-bit: RAW4 status - Scratch Tx/Rx */
+#define MRF24_REG_RAW5_CTRL0    0x0e    /* 16-bit: RAW5 control0 - Not used */
+#define MRF24_REG_RAW5_CTRL1    0x0f    /* 16-bit: RAW5 control1 - Not used */
+#define MRF24_REG_MAILBOX0_HI   0x10    /* 16-bit: mailbox0 upper half */
+#define MRF24_REG_MAILBOX0_LO   0x12    /* 16-bit: mailbox0 lower half */
+#define MRF24_REG_RAW2_CTRL0    0x18    /* 16-bit: RAW2 control0 - Mgmt Rx */
+#define MRF24_REG_RAW2_CTRL1    0x19    /* 16-bit: RAW2 control1 - Mgmt Rx */
+#define MRF24_REG_RAW2_INDEX    0x1a    /* 16-bit: RAW2 index - Mgmt Rx */
+#define MRF24_REG_RAW2_STATUS   0x1b    /* 16-bit: RAW2 status - Mgmt Rx */
+#define MRF24_REG_RAW3_CTRL0    0x1c    /* 16-bit: RAW3 control0 - Mgmt Tx */
+#define MRF24_REG_RAW3_CTRL1    0x1d    /* 16-bit: RAW3 control0 - Mgmt Tx */
+#define MRF24_REG_RAW3_INDEX    0x1e    /* 16-bit: RAW3 index - Mgmt Tx */
+#define MRF24_REG_RAW3_STATUS   0x1f    /* 16-bit: RAW3 status - Mgmt Tx */
+#define MRF24_REG_RAW0_DATA     0x20    /* 8-bit: RAW0 data - Data Rx */
+#define MRF24_REG_RAW1_DATA     0x21    /* 8-bit: RAW1 data - Data Tx */
+#define MRF24_REG_RAW5_INDEX    0x22    /* 16-bit: RAW5 index - Not used */
+#define MRF24_REG_RAW5_STATUS   0x23    /* 16-bit: RAW5 status - Not used */
+#define MRF24_REG_RAW0_CTRL0    0x25    /* 16-bit: RAW0 control0 - Data Rx */
+#define MRF24_REG_RAW0_CTRL1    0x26    /* 16-bit: RAW0 control1 - Data Rx */
+#define MRF24_REG_RAW0_INDEX    0x27    /* 16-bit: RAW0 index - Data Rx */
+#define MRF24_REG_RAW0_STATUS   0x28    /* 16-bit: RAW0 status - Data Rx */
+#define MRF24_REG_RAW1_CTRL0    0x29    /* 16-bit: RAW1 control0 - Data Tx */
+#define MRF24_REG_RAW1_CTRL1    0x2a    /* 16-bit: RAW1 control1 - Data Tx */
+#define MRF24_REG_RAW1_INDEX    0x2b    /* 16-bit: RAW1 index - Data Tx */
+#define MRF24_REG_RAW1_STATUS   0x2c    /* 16-bit: RAW1 status - Data Tx */
+#define MRF24_REG_INTR2         0x2d    /* 16-bit: 2nd level interrupt bits */
+#define MRF24_REG_MASK2         0x2e    /* 16-bit: 2nd level interrupt mask */
+#define MRF24_REG_WFIFO_BCNT0   0x2f    /* 16-bit: available write size for fifo 0 (data tx) */
+#define MRF24_REG_WFIFO_BCNT1   0x31    /* 16-bit: available write size for fifo 1 (mgmt tx) */
+#define MRF24_REG_RFIFO_BCNT0   0x33    /* 16-bit: number of bytes in read fifo 0 (data rx) */
+#define MRF24_REG_RFIFO_BCNT1   0x35    /* 16-bit: number of bytes in read fifo 1 (mgmt rx) */
+#define MRF24_REG_RESET         0x3c    /* 16-bit: reset and analog SPI */
+#define MRF24_REG_PSPOLL        0x3d    /* 16-bit: control low power mode */
+#define MRF24_REG_ADDR          0x3e    /* 16-bit: move the data window */
+#define MRF24_REG_DATA          0x3f    /* 16-bit: read or write address-indexed register */
 
+/*
+ * MRF24WG indirect registers accessed via the ADDR and DATA registers.
+ */
+#define MRF24_INDEX_HW_STATUS           0x2a    /* hardware status, read only */
+#define MRF24_INDEX_CONFIG_CONTROL0     0x2e    /* used to initiate Hard reset */
+#define MRF24_INDEX_WAKE_CONTROL        0x2f    /*  */
+#define MRF24_INDEX_SCRATCHPAD0         0x3d    /* scratchpad */
+#define MRF24_INDEX_SCRATCHPAD1         0x3e    /* read to determine when low power is done */
+#define MRF24_INDEX_PSPOLL_CONFIG       0x40    /*  */
+#define MRF24_INDEX_XTAL_SETTLE_TIME    0x41    /*  */
 
-/*--------------------------------*/
-/* MRF24W 8-bit Host Registers */
-/*--------------------------------*/
-#define WF_HOST_INTR_REG            0x01    /* 8-bit register containing 1st level interrupt bits. */
-#define WF_HOST_MASK_REG            0x02    /* 8-bit register containing 1st level interrupt mask. */
+/*
+ * Bits for 1st level interrupt and mask registers.
+ */
+#define INTR_INT2               0x01    /* 2nd level interrupt */
+#define INTR_RAW0               0x02    /* RAW0 Move Complete (Data Rx) */
+#define INTR_RAW1               0x04    /* RAW1 Move Complete (Data Tx) */
+#define INTR_FIFO0              0x40    /* Data Rx */
+#define INTR_FIFO1              0x80    /* Mgmt Rx */
 
-/*---------------------------------*/
-/* MRF24W 16-bit Host Registers */
-/*---------------------------------*/
-#define WF_HOST_MAIL_BOX_0_MSW_REG  0x10
-#define WF_HOST_MAIL_BOX_0_LSW_REG  0x12
+/*
+ * Bits for 2nd level interrupt and mask registers.
+ */
+#define INTR2_MAILBOX           0x0001  /* Assertion */
+#define INTR2_RAW4              0x0004  /* RAW4 Move Complete (Scratch) */
+#define INTR2_RAW5              0x0008  /* RAW5 Move Complete (Not used) */
+#define INTR2_RAW2              0x0010  /* RAW2 Move Complete (Mgmt Rx) */
+#define INTR2_RAW3              0x0020  /* RAW3 Move Complete (Mgmt Tx) */
 
-#define WF_HOST_RESET_REG           0x3c
-#define WF_HOST_RESET_MASK          0x0001
+/*
+ * Bits for FIFO byte count registers.
+ */
+#define FIFO_BCNT_MASK          0x0fff  /* lower 12 bits contain length */
 
-#define WF_HOST_INTR2_REG           0x2d    /* 16-bit register containing 2nd level interrupt bits */
-#define WF_HOST_INTR2_MASK_REG      0x2e
-#define WF_HOST_WFIFO_BCNT0_REG     0x2f    /* 16-bit register containing available write size for fifo 0 (data tx)*/
-                                            /* (LS 12 bits contain the length)                                     */
+/*
+ * Bits for Reset register.
+ */
+#define RESET_SOFT_RESET        0x0001  /* Soft reset */
+#define RESET_ANA_SPI_CLK       0x0200  /* Clock for analog SPI */
+#define RESET_ANA_SPI_DOUT      0x0400  /* Data out for analog SPI */
+#define RESET_ANA_SPI_EN        0x1000  /* Chip enable for analog SPI */
 
-#define WF_HOST_WFIFO_BCNT1_REG     0x31    /* 16-bit register containing available write size for fifo 1 (mgmt tx)*/
-                                            /* (LS 12 bits contain the length)                                     */
+/*
+ * Bits for PSPOLL register.
+ */
+#define PSPOLL_LP_ENABLE        0x0001  /* Enable low power mode */
 
-#define WF_HOST_RFIFO_BCNT0_REG     0x33    /* 16-bit register containing number of bytes in read fifo 0 (data rx) */
-                                            /* (LS 12 bits contain the length)                                     */
+/*
+ * Bits for HW_STATUS register.
+ */
+#define HW_STATUS_RESET_DONE    0x1000  /* hardware reset completed */
 
-#define WF_HOST_RFIFO_BCNT1_REG     0x35    /* 16-bit register containing number of bytes in read fifo 1 (mgmt rx) */
-                                            /* (LS 12 bits contain the length)                                     */
-
-#define WF_PSPOLL_H_REG             0x3d    /* 16-bit register used to control low power mode                      */
-#define WF_INDEX_ADDR_REG           0x3e    /* 16-bit register to move the data window                             */
-#define WF_INDEX_DATA_REG           0x3f    /* 16-bit register to read or write address-indexed register           */
-
-/*----------------------------------------------------------------------------------------*/
-/* WiFi registers accessed via the WF_INDEX_ADDR_REG and WF_INDEX_DATA_REG registers */
-/*----------------------------------------------------------------------------------------*/
-#define WF_HW_STATUS_REG            0x2a    /* 16-bit read only register providing hardware status bits */
-#define WF_CONFIG_CTRL0_REG         0x2e    /* 16-bit register used to initiate Hard reset              */
-#define WF_WAKE_CONTROL_REG         0x2f
-#define WF_SCRATCHPAD_0_REG         0x3d    /* Scratchpad registers */
-#define WF_SCRATCHPAD_1_REG         0x3e    /* 16-bit register read to determine when low power is done */
-#define WF_PSPOLL_CONFIG_REG        0x40
-#define WF_XTAL_SETTLE_TIME_REG     0x41
-
-/* This bit mask is used in the HW_STATUS_REG to determine */
-/* when the MRF24W has completed its hardware reset.       */
-/*  0 : MRF24W is in reset                                 */
-/*  1 : MRF24W is not in reset                             */
-#define WF_HW_STATUS_NOT_IN_RESET_MASK      0x1000
-
-/* Definitions represent individual interrupt bits for the 8-bit host interrupt registers */
-/*  WF_HOST_INTR_REG and WF_HOST_MASK_REG                                                 */
-#define WF_HOST_INT_MASK_INT2       0x01
-#define WF_HOST_INT_MASK_FIFO_1     0x80
-#define WF_HOST_INT_MASK_FIFO_0     0x40
-#define WF_HOST_INT_MASK_RAW_0      0x02    /* Data Rx */
-#define WF_HOST_INT_MASK_RAW_1      0x04    /* Data Tx */
-
-/* Definitions represent individual interrupt bits for */
-/*  WF_HOST_INTR2_REG and WF_HOST_MASK2_REG            */
-#define WF_HOST_INT2_MASK_RAW_2     0x0010  /* Mgmt Rx */
-#define WF_HOST_INT2_MASK_RAW_3     0x0020  /* Mgmt Tx */
-#define WF_HOST_INT2_MASK_RAW_4     0x0004  /* Scratch  */
-#define WF_HOST_INT2_MASK_RAW_5     0x0008  /* Not used */
-#define WF_HOST_INT2_MASK_MAIL_BOX  0x0001
-
-//----------
-// PLL BLOCK
-//----------
-// Required analog registers needed for PLL work-around
-#define ANALOG_PORT_3_REG_TYPE              ((u_int32_t)0x09)   /* 16-bit analog register in SPI Port 3                                          */
-#define ANALOG_PORT_2_REG_TYPE              ((u_int32_t)0x08)   /* 16-bit analog register in SPI Port 2                                          */
-#define ANALOG_PORT_1_REG_TYPE              ((u_int32_t)0x0a)   /* 16-bit analog register in SPI Port 1                                          */
-#define ANALOG_PORT_0_REG_TYPE              ((u_int32_t)0x0b)   /* 16-bit analog register in SPI Port 0                                          */
+/*
+ * Address bits used when accessing analog chip registers
+ * through software SPI via RESET register.
+ */
+#define ANA_SPI_READ_MODE       0x01    /* bit 0 */
+#define ANA_SPI_NO_AUTO_INCR    0x02    /* bit 1 */
 
 // SPI Port 3 Registers (Port 5 if going through Master SPI controller)
-#define PLL9_REG            ((u_int32_t)(9 * 2))
-#define PLL8_REG            ((u_int32_t)(8 * 2))
-#define PLL7_REG            ((u_int32_t)(7 * 2))
-#define PLL6_REG            ((u_int32_t)(6 * 2))
-#define PLL5_REG            ((u_int32_t)(5 * 2))
-#define PLL4_REG            ((u_int32_t)(4 * 2))
-#define PLL3_REG            ((u_int32_t)(3 * 2))
-#define PLL2_REG            ((u_int32_t)(2 * 2))
-#define PLL1_REG            ((u_int32_t)(1 * 2))
-#define PLL0_REG            ((u_int32_t)(0 * 2))
+#define ANALOG_REG_PLL0         (0 * 2)
+#define ANALOG_REG_PLL1         (1 * 2)
+#define ANALOG_REG_PLL2         (2 * 2)
+#define ANALOG_REG_PLL3         (3 * 2)
+#define ANALOG_REG_PLL4         (4 * 2)
+#define ANALOG_REG_PLL5         (5 * 2)
+#define ANALOG_REG_PLL6         (6 * 2)
+#define ANALOG_REG_PLL7         (7 * 2)
+#define ANALOG_REG_PLL8         (8 * 2)
+#define ANALOG_REG_PLL9         (9 * 2)
 
-#define OSC0_REG            ((u_int32_t)(0 * 2))
-#define OSC1_REG            ((u_int32_t)(1 * 2))
-#define OSC2_REG            ((u_int32_t)(2 * 2))
-#define PLDO_REG            ((u_int32_t)(3 * 2))
-#define BIAS_REG            ((u_int32_t)(4 * 2))
-#define ANALOG_SPARE_REG    ((u_int32_t)(5 * 2))
-
-// Host Reset register bit masks
-#define HR_HOST_ANA_SPI_EN_MASK               ((u_int16_t)0x01 << 12)
-#define HR_HOST_ANA_SPI_DOUT_MASK             ((u_int16_t)0x01 << 10)
-#define HR_HOST_ANA_SPI_CLK_MASK              ((u_int16_t)0x01 << 9)
-
-//---------------
-// END PLL BLOCK
-//---------------
+#define ANALOG_REG_OSC0         (0 * 2)
+#define ANALOG_REG_OSC1         (1 * 2)
+#define ANALOG_REG_OSC2         (2 * 2)
+#define ANALOG_REG_PLDO         (3 * 2)
+#define ANALOG_REG_BIAS         (4 * 2)
+#define ANALOG_REG_SPARE        (5 * 2)
 
 #endif /* __WF_REGISTERS_H */

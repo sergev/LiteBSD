@@ -16,12 +16,12 @@ static void Init_Interrupts()
     unsigned mask, mask2;
 
     // disable the interrupts gated by the 16-bit host int register
-    mrf_write(WF_HOST_INTR2_MASK_REG, 0);
-    mrf_write(WF_HOST_INTR2_REG, 0xffff);
+    mrf_write(MRF24_REG_MASK2, 0);
+    mrf_write(MRF24_REG_INTR2, 0xffff);
 
     // disable the interrupts gated the by main 8-bit host int register
-    mrf_write_byte(WF_HOST_MASK_REG, 0);
-    mrf_write_byte(WF_HOST_INTR_REG, 0xff);
+    mrf_write_byte(MRF24_REG_MASK, 0);
+    mrf_write_byte(MRF24_REG_INTR, 0xff);
 
     // Initialize the External Interrupt for the MRF24W allowing the MRF24W to interrupt
     // the Host from this point forward.
@@ -29,22 +29,14 @@ static void Init_Interrupts()
     mrf_intr_enable();
 
     // enable the following MRF24W interrupts in the INT1 8-bit register
-    mask = WF_HOST_INT_MASK_FIFO_1 |        // Mgmt Rx Msg interrupt
-           WF_HOST_INT_MASK_FIFO_0 |        // Data Rx Msg interrupt
-           WF_HOST_INT_MASK_RAW_0 |         // RAW0 Move Complete (Data Rx) interrupt
-           WF_HOST_INT_MASK_RAW_1 |         // RAW1 Move Complete (Data Tx) interrupt
-           WF_HOST_INT_MASK_INT2;           // Interrupt 2 interrupt
-    mrf_write_byte(WF_HOST_MASK_REG, mask);
-    mrf_write_byte(WF_HOST_INTR_REG, mask);
+    mask = INTR_FIFO0 | INTR_FIFO1 | INTR_RAW0 | INTR_RAW1 | INTR_INT2;
+    mrf_write_byte(MRF24_REG_MASK, mask);
+    mrf_write_byte(MRF24_REG_INTR, mask);
 
     // enable the following MRF24W interrupts in the INT2 16-bit register
-    mask2 = WF_HOST_INT2_MASK_RAW_2 |       // RAW2 Move Complete (Mgmt Rx) interrupt
-            WF_HOST_INT2_MASK_RAW_3 |       // RAW3 Move Complete (Mgmt Tx) interrupt
-            WF_HOST_INT2_MASK_RAW_4 |       // RAW4 Move Complete (Scratch) interrupt
-            WF_HOST_INT2_MASK_RAW_5 |       // RAW5 Move Complete (Scratch) interrupt
-            WF_HOST_INT2_MASK_MAIL_BOX;     // MRF24WG assertion interrupt
-    mrf_write(WF_HOST_INTR2_MASK_REG, mask2);
-    mrf_write(WF_HOST_INTR2_REG, mask2);
+    mask2 = INTR2_RAW2 | INTR2_RAW3 | INTR2_RAW4 | INTR2_RAW5 | INTR2_MAILBOX;
+    mrf_write(MRF24_REG_MASK2, mask2);
+    mrf_write(MRF24_REG_INTR2, mask2);
 }
 
 /*
@@ -64,21 +56,21 @@ void WF_Init(t_deviceInfo *deviceInfo)
      */
 
     // clear the power bit to disable low power mode on the MRF24W
-    mrf_write(WF_PSPOLL_H_REG, 0x0000);
+    mrf_write(MRF24_REG_PSPOLL, 0);
 
     // Set HOST_RESET bit in register to put device in reset
-    mrf_write(WF_HOST_RESET_REG, mrf_read(WF_HOST_RESET_REG) | WF_HOST_RESET_MASK);
+    mrf_write(MRF24_REG_RESET, mrf_read(MRF24_REG_RESET) | RESET_SOFT_RESET);
 
     // Clear HOST_RESET bit in register to take device out of reset
-    mrf_write(WF_HOST_RESET_REG, mrf_read(WF_HOST_RESET_REG) & ~WF_HOST_RESET_MASK);
+    mrf_write(MRF24_REG_RESET, mrf_read(MRF24_REG_RESET) & ~RESET_SOFT_RESET);
 
     /*
      * Wait for chip to initialize itself, up to 2 sec.
      * Usually it takes about 140 msec until all registers are ready..
      */
     for (msec=0; msec<2000; msec++) {
-        value = mrf_read(WF_HOST_WFIFO_BCNT0_REG);
-        if (value & 0x0fff)
+        value = mrf_read(MRF24_REG_WFIFO_BCNT0);
+        if (value & FIFO_BCNT_MASK)
             break;
         udelay(1000);
     }

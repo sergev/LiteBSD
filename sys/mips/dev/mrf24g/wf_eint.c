@@ -56,16 +56,15 @@ void InterruptCheck()
     g_ExIntNeedsServicing = 0;
 
      /* read hostInt register to determine cause of interrupt */
-    hostIntRegValue = mrf_read_byte(WF_HOST_INTR_REG);
+    hostIntRegValue = mrf_read_byte(MRF24_REG_INTR);
 
-    hostIntMaskRegValue = mrf_read_byte(WF_HOST_MASK_REG);
+    hostIntMaskRegValue = mrf_read_byte(MRF24_REG_MASK);
 
     // AND the two registers together to determine which active, enabled interrupt has occurred
     hostInt = hostIntRegValue & hostIntMaskRegValue;
 
     // if received a level 2 interrupt
-    if ((hostInt & WF_HOST_INT_MASK_INT2) == WF_HOST_INT_MASK_INT2)
-    {
+    if (hostInt & INTR_INT2) {
         // Either a mgmt tx or mgmt rx Raw move complete occurred, which is how
         // this interrupt is normally used.  If this is the case, the event was
         // already handled in WF_EintHandler(), and all we need to do here is
@@ -74,22 +73,22 @@ void InterruptCheck()
         // hit an assert condition.  So, we check for that here.
 
         // if the MRF24WG has hit an assert condition
-        hostInt2 = mrf_read(WF_HOST_INTR2_REG);
-        if (hostInt2 & WF_HOST_INT2_MASK_MAIL_BOX) {
+        hostInt2 = mrf_read(MRF24_REG_INTR2);
+        if (hostInt2 & INTR2_MAILBOX) {
             // module number in upper 8 bits, assert information in lower 20 bits
-            assertInfo = (mrf_read(WF_HOST_MAIL_BOX_0_MSW_REG) << 16) |
-                          mrf_read(WF_HOST_MAIL_BOX_0_LSW_REG);
+            assertInfo = (mrf_read(MRF24_REG_MAILBOX0_HI) << 16) |
+                          mrf_read(MRF24_REG_MAILBOX0_LO);
             printf("--- %s: assert info=%04x\n", __func__, assertInfo);
         }
 
         /* clear this interrupt */
-        mrf_write(WF_HOST_INTR2_REG, WF_HOST_INT_MASK_INT2);
+        mrf_write(MRF24_REG_INTR, INTR_INT2);
     }
     /* else if got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
-    else if (hostInt & WF_HOST_INT_MASK_FIFO_1)
+    else if (hostInt & INTR_FIFO1)
     {
         /* clear this interrupt */
-        mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
+        mrf_write_byte(MRF24_REG_INTR, INTR_FIFO1);
 
         // signal that a mgmt msg, either confirm or indicate, has been received
         // and needs to be processed
@@ -98,10 +97,10 @@ void InterruptCheck()
         mrf_intr_enable();
     }
     /* else if got a FIFO 0 Threshold Interrupt (Data Fifo).  Data Rx msg ready to process. */
-    else if (hostInt & WF_HOST_INT_MASK_FIFO_0)
+    else if (hostInt & INTR_FIFO0)
     {
         /* clear this interrupt */
-        mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_0);
+        mrf_write_byte(MRF24_REG_INTR, INTR_FIFO0);
 
         // signal that a data msg has been received and needs to be processed
         SignalPacketRx();
@@ -109,7 +108,7 @@ void InterruptCheck()
     /* else got a Host interrupt that we don't handle */
     else if (hostInt) {
         /* clear this interrupt */
-        mrf_write_byte(WF_HOST_INTR_REG, hostInt);
+        mrf_write_byte(MRF24_REG_INTR, hostInt);
         mrf_intr_enable();
     }
     /* we got a spurious interrupt (no bits set in register) */
