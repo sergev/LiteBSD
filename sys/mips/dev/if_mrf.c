@@ -134,7 +134,7 @@ static const char *reg_name(unsigned regno)
  * Read 8-bit register.
  * Return register value.
  */
-unsigned WF_ReadByte(unsigned regno)
+unsigned mrf_read_byte(unsigned regno)
 {
     struct wifi_port *w = &wifi_port[0];
     u_int8_t reply;
@@ -150,7 +150,7 @@ unsigned WF_ReadByte(unsigned regno)
 /*
  * Write 8-bit register.
  */
-void WF_WriteByte(unsigned regno, unsigned value)
+void mrf_write_byte(unsigned regno, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
@@ -165,7 +165,7 @@ void WF_WriteByte(unsigned regno, unsigned value)
  * Read 16-bit register.
  * Return register value.
  */
-unsigned WF_Read(unsigned regno)
+unsigned mrf_read(unsigned regno)
 {
     struct wifi_port *w = &wifi_port[0];
     u_int8_t reply[3];
@@ -182,7 +182,7 @@ unsigned WF_Read(unsigned regno)
 /*
  * Write 16-bit register.
  */
-void WF_Write(unsigned regno, unsigned value)
+void mrf_write(unsigned regno, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
@@ -197,7 +197,7 @@ void WF_Write(unsigned regno, unsigned value)
 /*
  * Read a block of data from a register.
  */
-void WF_ReadArray(unsigned regno, u_int8_t *data, unsigned nbytes)
+void mrf_read_array(unsigned regno, u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
@@ -213,7 +213,7 @@ void WF_ReadArray(unsigned regno, u_int8_t *data, unsigned nbytes)
 /*
  * Write a data block to specified register.
  */
-void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
+void mrf_write_array(unsigned regno, const u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
@@ -229,7 +229,7 @@ void WF_WriteArray(unsigned regno, const u_int8_t *data, unsigned nbytes)
 /*
  * Write to analog register via bitbang.
  */
-static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
+static void mrf_write_analog(unsigned bank, unsigned address, unsigned value)
 {
     unsigned reset, mask;
 
@@ -238,7 +238,7 @@ static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
 
     /* Enable the on-chip SPI and select the desired bank (0-3). */
     reset = HR_HOST_ANA_SPI_EN_MASK | (bank << 6);
-    WF_Write(WF_HOST_RESET_REG, reset);
+    mrf_write(WF_HOST_RESET_REG, reset);
 
     /* Bit-bang the address byte, MS bit to LS bit. */
     for (mask = 0x80; mask; mask >>= 1) {
@@ -247,8 +247,8 @@ static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
         else
             reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
 
-        WF_Write(WF_HOST_RESET_REG, reset);
-        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+        mrf_write(WF_HOST_RESET_REG, reset);
+        mrf_write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
     }
 
     /* Bit bang data from MS bit to LS bit. */
@@ -258,19 +258,19 @@ static void WF_WriteAnalog(unsigned bank, unsigned address, unsigned value)
         else
             reset &= ~HR_HOST_ANA_SPI_DOUT_MASK;
 
-        WF_Write(WF_HOST_RESET_REG, reset);
-        WF_Write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
+        mrf_write(WF_HOST_RESET_REG, reset);
+        mrf_write(WF_HOST_RESET_REG, reset | HR_HOST_ANA_SPI_CLK_MASK);
     }
 
     /* Disable the on-chip SPI. */
     reset &= ~HR_HOST_ANA_SPI_EN_MASK;
-    WF_Write(WF_HOST_RESET_REG, reset);
+    mrf_write(WF_HOST_RESET_REG, reset);
 }
 
 /*-------------------------------------------------------------
  * Return the current value of the 1ms timer.
  */
-unsigned WF_TimerRead()
+unsigned mrf_timer_read()
 {
     unsigned count = mfc0_Count();
 
@@ -278,9 +278,9 @@ unsigned WF_TimerRead()
     return count;
 }
 
-int WF_TimerElapsed(unsigned start_time)
+int mrf_timer_elapsed(unsigned start_time)
 {
-    int elapsed = WF_TimerRead() - start_time;
+    int elapsed = mrf_timer_read() - start_time;
 
     if (elapsed < 0)
         elapsed += 0xffffffffU / (CPU_KHZ / 2);
@@ -294,7 +294,7 @@ int WF_TimerElapsed(unsigned start_time)
  * Config parameter WF_INT defines the interrupt pin to use:
  * one of INT1, INT2, INT3 or INT4.
  */
-void WF_EintInit()
+void mrf_intr_init()
 {
     struct wifi_port *w = &wifi_port[0];
 
@@ -336,28 +336,21 @@ void WF_EintInit()
 }
 
 /*
- * Determines if the external interrupt is disabled.
- * Returns True if interrupt is disabled, else False.
- */
-int WF_isEintDisabled()
-{
-    struct wifi_port *w = &wifi_port[0];
-
-    return ! (IEC(0) & w->int_mask);
-}
-
-/*
  * Disable the MRF24WG external interrupt.
+ * Return True if interrupt was enabled, else False.
  */
-void WF_EintDisable()
+int mrf_intr_disable()
 {
     struct wifi_port *w = &wifi_port[0];
+    int was_enabled = (IEC(0) & w->int_mask) != 0;
 
     IECCLR(0) = w->int_mask;
+    return was_enabled;
 }
 
 /*
  * Enable the MRF24WG external interrupt.
+ * Return True if interrupt was enabled, else False.
  *
  * When using level-triggered interrupts it is possible that host MCU
  * could miss a falling edge; this can occur because during normal
@@ -368,9 +361,10 @@ void WF_EintDisable()
  * interrupt must be forced.
  * This is not an issue for level-triggered interrupts.
  */
-void WF_EintEnable()
+int mrf_intr_enable()
 {
     struct wifi_port *w = &wifi_port[0];
+    int was_enabled = (IEC(0) & w->int_mask) != 0;
 
     /* PIC32 uses level-triggered interrupts, so it is possible the Universal Driver
      * may have temporarily disabled the external interrupt, and then missed the
@@ -389,6 +383,7 @@ void WF_EintEnable()
 
     /* Enable the external interrupt. */
     IECSET(0) = w->int_mask;
+    return was_enabled;
 }
 
 /*-------------------------------------------------------------
@@ -568,24 +563,24 @@ static int mrf_detect(struct wifi_port *w)
     udelay(5000);
 
     /* Shuttle MRF24WG workaround (benign to production MRF24WG) */
-    WF_WriteAnalog(2, PLL0_REG, 0x8021);
-    WF_WriteAnalog(2, PLL0_REG, 0x6021);
+    mrf_write_analog(2, PLL0_REG, 0x8021);
+    mrf_write_analog(2, PLL0_REG, 0x6021);
 
     /* Production MRF24WG workaround (benign to shuttle MRF24WG) */
-    WF_WriteAnalog(1, OSC0_REG, 0x6b80);
-    WF_WriteAnalog(1, BIAS_REG, 0xc000);
+    mrf_write_analog(1, OSC0_REG, 0x6b80);
+    mrf_write_analog(1, BIAS_REG, 0xc000);
 
     /* Check whether we really have MRF24G chip attached. */
-    mask2 = WF_Read(WF_HOST_INTR2_MASK_REG);
-    WF_Write(WF_HOST_INTR2_MASK_REG, 0xaa55);
-    v = WF_Read(WF_HOST_INTR2_MASK_REG);
+    mask2 = mrf_read(WF_HOST_INTR2_MASK_REG);
+    mrf_write(WF_HOST_INTR2_MASK_REG, 0xaa55);
+    v = mrf_read(WF_HOST_INTR2_MASK_REG);
     if (v != 0xaa55)
         goto failed;
-    WF_Write(WF_HOST_INTR2_MASK_REG, 0x55aa);
-    v = WF_Read(WF_HOST_INTR2_MASK_REG);
+    mrf_write(WF_HOST_INTR2_MASK_REG, 0x55aa);
+    v = mrf_read(WF_HOST_INTR2_MASK_REG);
     if (v != 0x55aa)
         goto failed;
-    WF_Write(WF_HOST_INTR2_MASK_REG, mask2);
+    mrf_write(WF_HOST_INTR2_MASK_REG, mask2);
 
     /* MRF24G controller detected */
     return 0;

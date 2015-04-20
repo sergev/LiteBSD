@@ -138,10 +138,10 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
 
     EnsureWFisAwake();
 
-    startTime = WF_TimerRead();
+    startTime = mrf_timer_read();
     while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0) {
          // if timed out waiting for allocation of Mgmt Tx Buffer
-         if (WF_TimerElapsed(startTime) > 15) {
+         if (mrf_timer_elapsed(startTime) > 15) {
             printf("--- %s: buffer allocation failed\n", __func__);
             return;
          }
@@ -177,24 +177,24 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
     t_mgmtMsgRxHdr  hdr;
 
     /* Wait until mgmt response is received */
-    startTime = WF_TimerRead();
+    startTime = mrf_timer_read();
     for (;;) {
-        intr = WF_ReadByte(WF_HOST_INTR_REG);
+        intr = mrf_read_byte(WF_HOST_INTR_REG);
 
         // if received a level 2 interrupt
         if (intr & WF_HOST_INT_MASK_INT2) {
             // Either a mgmt tx or mgmt rx Raw move complete occurred
             /* clear this interrupt */
-            WF_Write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
+            mrf_write(WF_HOST_INTR2_REG, WF_HOST_INT2_MASK_RAW_2 |
                                         WF_HOST_INT2_MASK_RAW_3 |
                                         WF_HOST_INT2_MASK_RAW_4 |
                                         WF_HOST_INT2_MASK_RAW_5);
-            WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_INT2);
+            mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_INT2);
         }
         if (intr & WF_HOST_INT_MASK_FIFO_1) {
             /* got a FIFO 1 Threshold interrupt (Management Fifo).  Mgmt Rx msg ready to proces. */
             /* clear this interrupt */
-            WF_WriteByte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
+            mrf_write_byte(WF_HOST_INTR_REG, WF_HOST_INT_MASK_FIFO_1);
 
             // signal that a mgmt msg, either confirm or indicate, has been received
             // and needs to be processed
@@ -203,7 +203,7 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
                 break;
         }
 
-        if (WF_TimerElapsed(startTime) > 50) {
+        if (mrf_timer_elapsed(startTime) > 50) {
             printf("--- %s: timeout waiting for response\n", __func__);
             return;
         }

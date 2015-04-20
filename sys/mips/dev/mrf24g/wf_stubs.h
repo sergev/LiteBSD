@@ -9,31 +9,30 @@
 /*
  * SPI Functions
  */
-unsigned WF_ReadByte(unsigned regId);
-void     WF_WriteByte(unsigned regId, unsigned value);
-void     WF_Write(unsigned regId, unsigned value);
-unsigned WF_Read(unsigned regId);
-void     WF_WriteArray(unsigned regId, const u_int8_t *p_Buf, unsigned length);
-void     WF_ReadArray(unsigned regId, u_int8_t *p_Buf, unsigned length);
+unsigned mrf_read_byte(unsigned regId);
+void     mrf_write_byte(unsigned regId, unsigned value);
+void     mrf_write(unsigned regId, unsigned value);
+unsigned mrf_read(unsigned regId);
+void     mrf_write_array(unsigned regId, const u_int8_t *p_Buf, unsigned length);
+void     mrf_read_array(unsigned regId, u_int8_t *p_Buf, unsigned length);
 
 /*
  * External Interrupt Functions
  */
-void WF_EintInit(void);
-void WF_EintEnable(void);
-void WF_EintDisable(void);
-bool WF_isEintDisabled(void);
-void WF_EintHandler(void);
+void    mrf_intr_init(void);
+int     mrf_intr_enable(void);
+int     mrf_intr_disable(void);
+void    WF_EintHandler(void);
 
 /*
  * 1ms Timer Function
  */
-unsigned WF_TimerRead(void);
-int WF_TimerElapsed(unsigned start_time);
+unsigned mrf_timer_read(void);
+int      mrf_timer_elapsed(unsigned start_time);
 
 /*
  * Event Handler Functions
  */
-void WF_ProcessRxPacket(void);
+void    WF_ProcessRxPacket(void);
 
-#endif /* __WF_STUBS_H */
+#endif /* __mrf_STUBS_H */

@@ -77,19 +77,19 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
         intMask = WF_HOST_INT_MASK_INT2;
     }
 
-    startTime = WF_TimerRead();
+    startTime = mrf_timer_read();
     for (;;) {
-        intr = WF_ReadByte(WF_HOST_INTR_REG);
+        intr = mrf_read_byte(WF_HOST_INTR_REG);
 
         /* If received an external interrupt that signaled the RAW Move
          * completed then break out of this loop. */
         if (intr & intMask) {
             /* clear the RAW interrupts, re-enable interrupts, and exit */
-            WF_WriteByte(WF_HOST_INTR_REG, intMask);
+            mrf_write_byte(WF_HOST_INTR_REG, intMask);
             break;
         }
 
-        if (WF_TimerElapsed(startTime) > 20) {
+        if (mrf_timer_elapsed(startTime) > 20) {
             printf("--- %s: timeout waiting for interrupt\n", __func__);
             break;
         }
@@ -97,7 +97,7 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
 
     /* read the byte count and return it */
     regId = g_RawCtrl1Reg[rawId];
-    byteCount = WF_Read(regId);
+    byteCount = mrf_read(regId);
 
     return byteCount;
 }
@@ -170,7 +170,7 @@ bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
     u_int16_t byteCount;
 
     /* get total bytes available for MGMT tx memory pool */
-    bufAvail = WF_Read(WF_HOST_WFIFO_BCNT1_REG) & 0x0fff; /* LS 12 bits contain length */
+    bufAvail = mrf_read(WF_HOST_WFIFO_BCNT1_REG) & 0x0fff; /* LS 12 bits contain length */
 
     /* if enough bytes available to allocate */
     if (bufAvail >= bytesNeeded) {
@@ -222,7 +222,7 @@ void RawSetByte(u_int16_t rawId, const u_int8_t *p_buffer, u_int16_t length)
 
     /* write data to raw window */
     regId = g_RawDataReg[rawId];
-    WF_WriteArray(regId, p_buffer, length);
+    mrf_write_array(regId, p_buffer, length);
 }
 
 /*
@@ -245,7 +245,7 @@ void RawGetByte(u_int16_t rawId, u_int8_t *pBuffer, u_int16_t length)
     }
 
     regId = g_RawDataReg[rawId];
-    WF_ReadArray(regId, pBuffer, length);
+    mrf_read_array(regId, pBuffer, length);
 }
 
 /*
@@ -348,7 +348,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
 
     /* get the index register associated with the raw ID and write to it */
     regId = g_RawIndexReg[rawId];
-    WF_Write(regId, index);
+    mrf_write(regId, index);
 
     /* Get the raw status register address associated with the raw ID.  This will be polled to
      * determine that:
@@ -358,15 +358,15 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
     regId = g_RawStatusReg[rawId];
 
     /* read the status register until set index operation completes or times out */
-    startTime = WF_TimerRead();
+    startTime = mrf_timer_read();
     while (1) {
-        regValue = WF_Read(regId);
+        regValue = mrf_read(regId);
         if ((regValue & WF_RAW_STATUS_REG_BUSY_MASK) == 0) {
             ClearIndexOutOfBoundsFlag(rawId);
             break;
         }
 
-        if (WF_TimerElapsed(startTime) > 5) {
+        if (mrf_timer_elapsed(startTime) > 5) {
             // if we timed out that means that the caller is trying to set the index
             // past the end of the raw window.  Not illegal in of itself so long
             // as there is no attempt to read or write at this location.  But,
@@ -394,7 +394,7 @@ bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
     u_int16_t byteCount;
 
     /* get total bytes available for DATA tx memory pool */
-    bufAvail = WF_Read(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff; /* LS 12 bits contain length */
+    bufAvail = mrf_read(WF_HOST_WFIFO_BCNT0_REG) & 0x0fff; /* LS 12 bits contain length */
     if (bufAvail < bytesNeeded) {
         /* not enough bytes available at this time to satisfy request */
         return 0;
@@ -464,11 +464,10 @@ u_int16_t RawMove(u_int16_t rawId,
     u_int8_t  regId;
     u_int8_t  regValue;
     u_int16_t ctrlVal = 0;
-    bool intDisabled;
+    bool intEnabled;
 
     // save current state of External interrupt and disable it
-    intDisabled = WF_isEintDisabled();
-    WF_EintDisable();
+    intEnabled = mrf_intr_disable();
 
     /* Create control value that will be written to raw control register,
      * which initiates the raw move */
@@ -489,13 +488,13 @@ u_int16_t RawMove(u_int16_t rawId,
     if (rawId <= RAW_ID_1) {
         /* Clear the interrupt bit in the host interrupt register (Raw 0 and 1 are in 8-bit host intr reg) */
         regValue = (u_int8_t)g_RawIntMask[rawId];
-        WF_WriteByte(WF_HOST_INTR_REG, regValue);
+        mrf_write_byte(WF_HOST_INTR_REG, regValue);
     }
     /* else doing raw move on mgmt rx, mgmt tx, or scratch */
     else {
         /* Clear the interrupt bit in the host interrupt 2 register (Raw 2,3, and 4 are in 16-bit host intr2 reg */
         regValue = g_RawIntMask[rawId];
-        WF_Write(WF_HOST_INTR2_REG, regValue);
+        mrf_write(WF_HOST_INTR2_REG, regValue);
     }
 
     /*
@@ -504,15 +503,15 @@ u_int16_t RawMove(u_int16_t rawId,
      * writing to the appropriate RawCtrl0.
      */
     regId = g_RawCtrl0Reg[rawId];                   /* get RawCtrl0 register address for desired raw ID */
-    WF_Write(regId, ctrlVal);                       /* write ctrl value to register */
+    mrf_write(regId, ctrlVal);                      /* write ctrl value to register */
 
     // enable interrupts so we get raw move complete interrupt
-    WF_EintEnable();
+    mrf_intr_enable();
     byteCount = WaitForRawMoveComplete(rawId);      /* wait for raw move to complete */
 
     // if interrupts were disabled coming into this function, put back to that state
-    if (intDisabled) {
-        WF_EintDisable();
+    if (! intEnabled) {
+        mrf_intr_disable();
     }
 
     /* byte count is not valid for all raw move operations */
