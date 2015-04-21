@@ -17,7 +17,6 @@ void WF_Init(t_deviceInfo *deviceInfo)
     unsigned msec, value, mask, mask2;
 
     UdStateInit();          // initialize internal state machine
-    ClearMgmtConfirmMsg();  // no mgmt response messages received
     UdSetInitInvalid();     // init not valid until it gets through this state machine
 
     /*
@@ -62,7 +61,7 @@ void WF_Init(t_deviceInfo *deviceInfo)
     mrf_intr_enable();
 
     /* Enable the following interrupts in the 8-bit int register. */
-    mask = INTR_FIFO0 | INTR_FIFO1 | INTR_RAW0 | INTR_RAW1 | INTR_INT2;
+    mask = INTR_FIFO0 | INTR_FIFO1 | INTR_RAW0 | INTR_RAW1 /*| INTR_INT2*/;
     mrf_write_byte(MRF24_REG_MASK, mask);
     mrf_write_byte(MRF24_REG_INTR, mask);
 

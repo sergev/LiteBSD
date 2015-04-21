@@ -27,15 +27,14 @@ static bool     g_reactivatePsPoll = 0;
 extern void SetListenInterval(u_int16_t listenInterval);
 extern void SetDtimInterval(u_int16_t dtimInterval);
 
-static void SendPowerModeMsg(t_WFPwrModeReq *p_powerMode)
+static void SendPowerModeMsg(t_WFPwrModeReq *power_mode)
 {
     u_int8_t hdr[2];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SET_POWER_MODE_SUBTYPE;
 
-    SendMgmtMsg(hdr, sizeof(hdr),
-        (u_int8_t*) p_powerMode, sizeof(t_WFPwrModeReq));
+    SendMgmtMsg(hdr, sizeof(hdr), (u_int8_t*)power_mode, sizeof(*power_mode));
 
     /* wait for mgmt response, free buffer after it comes in (no data to read) */
     WaitForMgmtResponse(WF_SET_POWER_MODE_SUBTYPE, FREE_MGMT_BUFFER);

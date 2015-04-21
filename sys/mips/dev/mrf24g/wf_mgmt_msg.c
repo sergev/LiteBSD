@@ -4,23 +4,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static volatile bool gMgmtConfirmMsgReceived = 0;
-
-void ClearMgmtConfirmMsg()
-{
-    gMgmtConfirmMsgReceived = 0;
-}
-
-static void SignalMgmtConfirmMsg()
-{
-    gMgmtConfirmMsgReceived = 1;
-}
-
-static bool isMgmtConfirmMsg()
-{
-    return gMgmtConfirmMsgReceived;
-}
-
 static void WFProcessMgmtIndicateMsg()
 {
     t_mgmtIndicateHdr hdr;
@@ -93,7 +76,10 @@ static void WFProcessMgmtIndicateMsg()
     DeallocateMgmtRxBuffer();
 }
 
-void SignalMgmtMsgRx()
+/*
+ * Receive mgmt Confirm message.
+ */
+int ReceiveMgmtConfirmMsg()
 {
     u_int8_t msgType;
 
@@ -105,19 +91,18 @@ void SignalMgmtMsgRx()
 
     switch (msgType) {
     case WF_MGMT_CONFIRM_TYPE:
-        // if a mgmt confirm then the Universal Driver is waiting for it.  Don't
-        // process it here, but signal the driver that it happened.
-        SignalMgmtConfirmMsg();
-        break;
+        // if a mgmt confirm then the Universal Driver is waiting for it.
+        //TODO: receive mgmt message
+        return 1;
     case WF_MGMT_INDICATE_TYPE:
         // if a mgmt indicated occurred (asynchronous event),
         // then process it right now
         WFProcessMgmtIndicateMsg();
-        break;
+        return 0;
     default:
         // unknown mgmt msg type was received
         printf("--- %s: unknown mgmt message received, type=%u\n", __func__, msgType);
-        break;
+        return 0;
     }
 }
 
@@ -134,17 +119,28 @@ void SignalMgmtMsgRx()
 void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     u_int8_t *p_data, u_int8_t dataLength)
 {
-    u_int32_t startTime;
+    unsigned start_time, elapsed_time;
 
     EnsureWFisAwake();
-
-    startTime = mrf_timer_read();
+#if 0
+    printf("--- %s: send %u+%u bytes: %02x", __func__, headerLength, dataLength, p_header[0]);
+    int i;
+    for (i=1; i<headerLength; ++i)
+        printf("-%02x", p_header[i]);
+    for (i=0; i<dataLength; ++i)
+        printf("-%02x", p_data[i]);
+    printf("\n");
+#endif
+    start_time = mrf_timer_read();
     while (AllocateMgmtTxBuffer(WF_MAX_TX_MGMT_MSG_SIZE) == 0) {
-         // if timed out waiting for allocation of Mgmt Tx Buffer
-         if (mrf_timer_elapsed(startTime) > 15) {
+        elapsed_time = mrf_timer_elapsed(start_time);
+        if (elapsed_time > 15) {
+            // if timed out waiting for allocation of Mgmt Tx Buffer
             printf("--- %s: buffer allocation failed\n", __func__);
             return;
-         }
+        }
+        /* Don't poll too fast, give the chip some time for internal tasks */
+        udelay(10);
     }
 
     /* write out management header */
@@ -154,8 +150,6 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     if (dataLength > 0) {
         RawSetByte(RAW_MGMT_TX_ID, p_data, dataLength);
     }
-
-    ClearMgmtConfirmMsg();  // haven't received the confirm message yet
 
     /* signal MRF24W that mgmt message is ready to be processed */
     SendRAWManagementFrame(headerLength + dataLength);
@@ -173,11 +167,11 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
  */
 void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
 {
-    unsigned startTime, intr;
+    unsigned start_time, elapsed_time, intr;
     t_mgmtMsgRxHdr  hdr;
 
     /* Wait until mgmt response is received */
-    startTime = mrf_timer_read();
+    start_time = mrf_timer_read();
     for (;;) {
         intr = mrf_read_byte(MRF24_REG_INTR);
 
@@ -196,17 +190,17 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
 
             // signal that a mgmt msg, either confirm or indicate, has been received
             // and needs to be processed
-            SignalMgmtMsgRx();
-            if (isMgmtConfirmMsg())
+            if (ReceiveMgmtConfirmMsg())
                 break;
         }
 
-        if (mrf_timer_elapsed(startTime) > 50) {
+        elapsed_time = mrf_timer_elapsed(start_time);
+        if (elapsed_time > 50) {
             printf("--- %s: timeout waiting for response\n", __func__);
             return;
         }
+        udelay(10);
     }
-    ClearMgmtConfirmMsg();
 
     /* if the caller wants to delete the response immediately (doesn't need any data from it */
     if (freeAction == FREE_MGMT_BUFFER) {

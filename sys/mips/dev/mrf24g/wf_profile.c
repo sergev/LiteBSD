@@ -174,10 +174,7 @@ static void LowLevel_SetSecurity(u_int8_t securityType,
         p_key     = p_securityKey;
     }
 
-    SendMgmtMsg(hdrBuf,              /* msg header which includes the security type and WEP index) */
-                sizeof(hdrBuf),      /* msg header length */
-                p_key,               /* msg data (security key), can be NULL */
-                securityKeyLength);  /* msg data length (will be 0 if p_securityKey is NULL) */
+    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), p_key, securityKeyLength);
 
     /* wait for mgmt response, free after it comes in, don't need data bytes */
     WaitForMgmtResponse(WF_CP_SET_ELEMENT_SUBTYPE, FREE_MGMT_BUFFER);

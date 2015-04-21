@@ -60,8 +60,7 @@ bool WF_TxPacketAllocate(u_int16_t packetSize)
     EnsureWFisAwake();
 
     startTime = mrf_timer_read();
-    while (mrf_timer_elapsed(startTime) < 20)
-    {
+    while (mrf_timer_elapsed(startTime) < 20) {
         // allocate an extra 4 bytes for WiFi message preamble
         result = AllocateDataTxBuffer(packetSize + WF_TX_PREAMBLE_SIZE);
         if (result) {
@@ -71,6 +70,7 @@ bool WF_TxPacketAllocate(u_int16_t packetSize)
             result = 1;
             break;
         }
+        udelay(10);
     }
     return result;
 }

@@ -86,12 +86,10 @@ static u_int8_t g_RawIndexPastEnd = 0;  /* no indexes are past end of window */
  * Wait for a RAW move to complete.
  * Returns a number of bytes that were overlayed (not always applicable).
  */
-static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
+static unsigned WaitForRawMoveComplete(unsigned rawId)
 {
     unsigned intr, intMask;
-    u_int16_t byteCount;
-    u_int8_t  regId;
-    u_int32_t startTime;
+    unsigned nbytes, regId, start_time;
 
     /* create mask to check against for Raw Move complete interrupt for either RAW0 or RAW1 */
     if (rawId <= 1) {
@@ -102,7 +100,7 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
         intMask = INTR_INT2;
     }
 
-    startTime = mrf_timer_read();
+    start_time = mrf_timer_read();
     for (;;) {
         intr = mrf_read_byte(MRF24_REG_INTR);
 
@@ -110,21 +108,25 @@ static u_int16_t WaitForRawMoveComplete(u_int8_t rawId)
          * completed then break out of this loop. */
         if (intr & intMask) {
             /* clear the RAW interrupts, re-enable interrupts, and exit */
+            if (intMask == INTR_INT2)
+                mrf_write(MRF24_REG_INTR2,
+                    INTR2_RAW2 | INTR2_RAW3 | INTR2_RAW4 | INTR2_RAW5);
             mrf_write_byte(MRF24_REG_INTR, intMask);
             break;
         }
 
-        if (mrf_timer_elapsed(startTime) > 20) {
+        if (mrf_timer_elapsed(start_time) > 20) {
             printf("--- %s: timeout waiting for interrupt\n", __func__);
             break;
         }
+        udelay(10);
     }
 
     /* read the byte count and return it */
     regId = g_RawCtrl1Reg[rawId];
-    byteCount = mrf_read(regId);
+    nbytes = mrf_read(regId);
 
-    return byteCount;
+    return nbytes;
 }
 
 /*
@@ -157,10 +159,10 @@ void RawInit()
  */
 u_int16_t ScratchMount(u_int8_t rawId)
 {
-    u_int16_t byteCount;
+    u_int16_t nbytes;
 
-    byteCount = RawMove(rawId, RAW_SCRATCH_POOL, 1, 0);
-    return byteCount;
+    nbytes = RawMove(rawId, RAW_SCRATCH_POOL, 1, 0);
+    return nbytes;
 }
 
 /*
@@ -192,7 +194,7 @@ void ScratchUnmount(u_int8_t rawId)
 bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
 {
     u_int16_t bufAvail;
-    u_int16_t byteCount;
+    u_int16_t nbytes;
 
     /* get total bytes available for MGMT tx memory pool */
     bufAvail = mrf_read(MRF24_REG_WFIFO_BCNT1) & FIFO_BCNT_MASK;
@@ -200,10 +202,10 @@ bool AllocateMgmtTxBuffer(u_int16_t bytesNeeded)
     /* if enough bytes available to allocate */
     if (bufAvail >= bytesNeeded) {
         /* allocate and create the new Mgmt Tx buffer */
-        byteCount = RawMove(RAW_MGMT_TX_ID, RAW_MGMT_POOL, 1, bytesNeeded);
-        if (byteCount == 0) {
-            printf("--- %s: cannot allocate %u bytes of %u free\n",
-                __func__, bytesNeeded, bufAvail);
+        nbytes = RawMove(RAW_MGMT_TX_ID, RAW_MGMT_POOL, 1, bytesNeeded);
+        if (nbytes == 0) {
+            /*printf("--- %s: cannot allocate %u bytes of %u free\n",
+                __func__, bytesNeeded, bufAvail); */
             return 0;
         }
         ClearIndexOutOfBoundsFlag(RAW_MGMT_TX_ID);
@@ -369,7 +371,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
 {
     u_int8_t  regId;
     u_int16_t regValue;
-    u_int32_t startTime;
+    u_int32_t start_time;
 
     /* get the index register associated with the raw ID and write to it */
     regId = g_RawIndexReg[rawId];
@@ -383,7 +385,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
     regId = g_RawStatusReg[rawId];
 
     /* read the status register until set index operation completes or times out */
-    startTime = mrf_timer_read();
+    start_time = mrf_timer_read();
     while (1) {
         regValue = mrf_read(regId);
         if ((regValue & WF_RAW_STATUS_REG_BUSY_MASK) == 0) {
@@ -391,7 +393,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
             break;
         }
 
-        if (mrf_timer_elapsed(startTime) > 5) {
+        if (mrf_timer_elapsed(start_time) > 5) {
             // if we timed out that means that the caller is trying to set the index
             // past the end of the raw window.  Not illegal in of itself so long
             // as there is no attempt to read or write at this location.  But,
@@ -400,6 +402,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
             printf("--- %s: bad index=%u out of bounds\n", __func__, index);
             break;
         }
+        udelay(10);
     }
 }
 
@@ -416,7 +419,7 @@ void RawSetIndex(u_int16_t rawId, u_int16_t index)
 bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
 {
     u_int16_t bufAvail;
-    u_int16_t byteCount;
+    u_int16_t nbytes;
 
     /* get total bytes available for DATA tx memory pool */
     bufAvail = mrf_read(MRF24_REG_WFIFO_BCNT0) & FIFO_BCNT_MASK;
@@ -426,8 +429,8 @@ bool AllocateDataTxBuffer(u_int16_t bytesNeeded)
     }
 
     /* allocate and create the new Tx buffer (mgmt or data) */
-    byteCount = RawMove(RAW_DATA_TX_ID, RAW_DATA_POOL, 1, bytesNeeded);
-    if (byteCount == 0) {
+    nbytes = RawMove(RAW_DATA_TX_ID, RAW_DATA_POOL, 1, bytesNeeded);
+    if (nbytes == 0) {
         printf("--- %s: failed\n", __func__);
         return 0;
     }
@@ -485,7 +488,7 @@ u_int16_t RawMove(u_int16_t rawId,
                  bool     rawIsDestination,
                  u_int16_t size)
 {
-    u_int16_t byteCount;
+    u_int16_t nbytes;
     u_int8_t  regId;
     u_int8_t  regValue;
     u_int16_t ctrlVal = 0;
@@ -532,7 +535,7 @@ u_int16_t RawMove(u_int16_t rawId,
 
     // enable interrupts so we get raw move complete interrupt
     mrf_intr_enable();
-    byteCount = WaitForRawMoveComplete(rawId);      /* wait for raw move to complete */
+    nbytes = WaitForRawMoveComplete(rawId);      /* wait for raw move to complete */
 
     // if interrupts were disabled coming into this function, put back to that state
     if (! intEnabled) {
@@ -540,7 +543,7 @@ u_int16_t RawMove(u_int16_t rawId,
     }
 
     /* byte count is not valid for all raw move operations */
-    return byteCount;
+    return nbytes;
 }
 
 /* sets and gets the state of RAW data tx/rx windows */

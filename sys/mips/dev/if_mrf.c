@@ -45,7 +45,7 @@
 /*
  * To enable debug output, uncomment the following line.
  */
-#define PRINTDBG printf
+//#define PRINTDBG printf
 
 /*
  * Wi-Fi software status per interface.
@@ -143,7 +143,7 @@ unsigned mrf_read_byte(unsigned regno)
     spi_transfer(&w->spiio, regno | MRF24_READ_MODE);
     reply = spi_transfer(&w->spiio, 0xff);
     spi_deselect(&w->spiio);
-    PRINTDBG("-- read byte %s -> %02x\n", reg_name(regno), reply);
+    PRINTDBG("-- read %s -> %02x\n", reg_name(regno), reply);
     return reply;
 }
 
@@ -154,7 +154,7 @@ void mrf_write_byte(unsigned regno, unsigned value)
 {
     struct wifi_port *w = &wifi_port[0];
 
-    PRINTDBG("-- write byte %s = %02x\n", reg_name(regno), value);
+    PRINTDBG("-- write %s = %02x\n", reg_name(regno), value);
     spi_select(&w->spiio);
     spi_transfer(&w->spiio, regno);
     spi_transfer(&w->spiio, value);
@@ -201,12 +201,16 @@ void mrf_read_array(unsigned regno, u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
-    PRINTDBG("-- read %u bytes from %s\n", nbytes, reg_name(regno));
+    PRINTDBG("-- read %u bytes from %s: ", nbytes, reg_name(regno));
     spi_select(&w->spiio);
     spi_transfer(&w->spiio, regno | MRF24_READ_MODE);
     while (nbytes-- > 0) {
         *data++ = spi_transfer(&w->spiio, 0xff);
+        PRINTDBG("%02x", data[-1]);
+        if (nbytes > 0)
+            PRINTDBG("-");
     }
+    PRINTDBG("\n");
     spi_deselect(&w->spiio);
 }
 
@@ -217,12 +221,16 @@ void mrf_write_array(unsigned regno, const u_int8_t *data, unsigned nbytes)
 {
     struct wifi_port *w = &wifi_port[0];
 
-    PRINTDBG("-- write %u bytes to %s\n", nbytes, reg_name(regno));
+    PRINTDBG("-- write %u bytes to %s: ", nbytes, reg_name(regno));
     spi_select(&w->spiio);
     spi_transfer(&w->spiio, regno);
     while (nbytes-- > 0) {
+        PRINTDBG("%02x", *data);
+        if (nbytes > 0)
+            PRINTDBG("-");
         spi_transfer(&w->spiio, *data++);
     }
+    PRINTDBG("\n");
     spi_deselect(&w->spiio);
 }
 

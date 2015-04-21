@@ -45,10 +45,7 @@ static void SendSetParamMsg(u_int8_t paramType,
     hdr[2] = 0x00;                 /* MS 8 bits of param Id, always 0 */
     hdr[3] = paramType;            /* LS 8 bits of param ID           */
 
-    SendMgmtMsg(hdr,               /* header            */
-                sizeof(hdr),       /* size of header    */
-                p_paramData,       /* param data        */
-                paramDataLength);  /* param data length */
+    SendMgmtMsg(hdr, sizeof(hdr), p_paramData, paramDataLength);
 
     /* wait for MRF24W management response; free response because not needed */
     WaitForMgmtResponse(WF_SET_PARAM_SUBTYPE, FREE_MGMT_BUFFER);
