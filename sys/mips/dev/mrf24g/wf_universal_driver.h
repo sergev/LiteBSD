@@ -74,29 +74,25 @@ typedef int bool;
 // End DEFAULTS block
 //===================
 
-enum
-{
+enum {
     WF_LOW  = 0,
     WF_HIGH = 1
 };
 
-enum
-{
+enum {
     WF_DISABLED = 0,
     WF_ENABLED  = 1
 };
 
 // See WF_DeviceInfoGet() and t_mrf24wgDeviceInfo
-typedef enum t_deviceType
-{
+typedef enum t_deviceType {
     WF_UNKNOWN_DEVICE = 0,
     WF_MRF24WB_DEVICE = 1,
     WF_MRF24WG_DEVICE = 2
 } t_deviceType;
 
 // See WF_SetRegionalDomain()
-typedef enum t_regionalDomain
-{
+typedef enum t_regionalDomain {
     WF_DOMAIN_FCC   = 0,    // Available Channels: 1 - 11
     WF_DOMAIN_ETSI  = 2,    // Available Channels: 1 - 13
     WF_DOMAIN_JAPAN = 7,    // Available Channels: 1 - 14
@@ -104,8 +100,7 @@ typedef enum t_regionalDomain
 } t_regionalDomain;
 
 // WiFi security modes
-typedef enum t_securityMode
-{
+typedef enum t_securityMode {
     WF_SECURITY_OPEN                         = 0,
     WF_SECURITY_WEP_40                       = 1,
     WF_SECURITY_WEP_104                      = 2,
@@ -122,22 +117,19 @@ typedef enum t_securityMode
 } t_securityMode;
 
 // see WF_SetReconnectMode
-typedef enum t_retry
-{
+typedef enum t_retry {
     WF_DO_NOT_ATTEMPT_TO_RECONNECT = 0,
     WF_ATTEMPT_TO_RECONNECT        = 1
 } t_retry;
 
 // WF_ScanContextSet()
-typedef enum t_scanType
-{
+typedef enum t_scanType {
     WF_ACTIVE_SCAN  = 1,
     WF_PASSIVE_SCAN = 2
 } t_scanType;
 
 // see WF_SetNetworkType()
-typedef enum t_networkType
-{
+typedef enum t_networkType {
     WF_MIN_NETWORK_TYPE            = 1,
 
     WF_NETWORK_TYPE_INFRASTRUCTURE = 1,
@@ -148,23 +140,20 @@ typedef enum t_networkType
 } t_networkType;
 
 // see WF_SetSecurityWep()
-typedef enum t_wepKeyType
-{
+typedef enum t_wepKeyType {
     WF_SECURITY_WEP_SHAREDKEY = 0,
     WF_SECURITY_WEP_OPENKEY   = 1
 } t_wepKeyType;
 
 // see WF_AdhocContextSet()
-typedef enum t_adhocMode
-{
+typedef enum t_adhocMode {
     WF_ADHOC_CONNECT_THEN_START = 0,
     WF_ADHOC_CONNECT_ONLY       = 1,
     WF_ADHOC_START_ONLY         = 2
 } t_adhocMode;
 
 // see WF_PowerStateGet()
-typedef enum t_powerSaveStates
-{
+typedef enum t_powerSaveStates {
     WF_PS_HIBERNATE             = 1,
     WF_PS_PS_POLL_DTIM_ENABLED  = 2,
     WF_PS_PS_POLL_DTIM_DISABLED = 3,
@@ -172,16 +161,14 @@ typedef enum t_powerSaveStates
 } t_powerSaveStates;
 
 // See WF_TxModeSet()
-typedef enum t_txMode
-{
+typedef enum t_txMode {
     WF_TXMODE_G_RATES       = 0,
     WF_TXMODE_B_RATES       = 1,
     WF_TXMODE_LEGACY_RATES  = 2
 } t_txMode;
 
 // see WF_ConnectionStateGet()
-typedef enum t_connectionState
-{
+typedef enum t_connectionState {
     WF_CSTATE_NOT_CONNECTED               = 1,
     WF_CSTATE_CONNECTION_IN_PROGRESS      = 2,
     WF_CSTATE_CONNECTED_INFRASTRUCTURE    = 3,
@@ -191,8 +178,7 @@ typedef enum t_connectionState
 } t_connectionState;
 
 // see WF_Scan()
-typedef enum t_scanMode
-{
+typedef enum t_scanMode {
     WF_SCAN_FILTERED = 0,
     WF_SCAN_ALL      = 1
 } t_scanMode;
@@ -201,8 +187,7 @@ typedef enum t_scanMode
 // Multicast Filter ID's (see t_swMulticastConfig() and WF_SwMulticastFilterSet().
 // AdHoc can only use WF_MULTICAST_FILTER_1 or WF_MULTICAST_FILTER_2.
 //------------------------------------------------------------------------------
-typedef enum t_multicastFilterId
-{
+typedef enum t_multicastFilterId {
     WF_MULTICAST_FILTER_1       = 4,
     WF_MULTICAST_FILTER_2       = 5,
     WF_MULTICAST_FILTER_3       = 6,
@@ -222,16 +207,14 @@ typedef enum t_multicastFilterId
 } t_multicastFilterId;
 
 // see t_swMulticastConfig() and WF_SwMulticastFilterSet()
-typedef enum t_multicastAction
-{
+typedef enum t_multicastAction {
     WF_MULTICAST_DISABLE_ALL    = 0,
     WF_MULTICAST_ENABLE_ALL     = 1,
     WF_MULTICAST_USE_FILTERS    = 2
 } t_multicastAction;
 
 // see WF_WpsCredentialsGet()
-typedef enum t_wps_auth
-{
+typedef enum t_wps_auth {
     WF_AUTH_OPEN       = 0x01,
     WF_AUTH_WPA_PSK    = 0x02,
     WF_AUTH_SHARED     = 0x04,
@@ -241,8 +224,7 @@ typedef enum t_wps_auth
 } t_wps_auth;
 
 // see WF_WpsCredentialsGet()
-typedef enum t_wps_enc
-{
+typedef enum t_wps_enc {
     WF_ENC_NONE        = 0x01,
     WF_ENC_WEP         = 0x02,
     WF_ENC_TKIP        = 0x04,
@@ -253,8 +235,7 @@ typedef enum t_wps_enc
 //                                  DATA TYPES
 //==============================================================================
 // See WF_ScanContextSet()
-typedef struct scanContext
-{
+typedef struct scanContext {
     u_int8_t  scanType;                 // see t_scanType
     u_int8_t  scanCount;
     u_int16_t minChannelTime;           // ms
@@ -263,24 +244,21 @@ typedef struct scanContext
 } t_scanContext;
 
 // See SetAdhocContext()
-typedef struct adHocNetworkContext
-{
+typedef struct adHocNetworkContext {
     bool     hiddenSsid;                // True if SSID should be hidden, else False (normally False)
     u_int16_t beaconPeriod;             // beacon period, in ms
     u_int8_t  mode;                     // see t_adhoc mode
 } t_adHocNetworkContext;
 
 // used in WF_DeviceInfoGet()
-typedef struct mrf24wgDeviceInfo
-{
+typedef struct mrf24wgDeviceInfo {
     u_int8_t  deviceType;               // see t_deviceType
     u_int8_t  romVersion;               // ROM version number
     u_int8_t  patchVersion;             // Patch version number
 } t_deviceInfo;
 
 // See WF_SecurityWepSet()
-typedef struct wepContext
-{
+typedef struct wepContext {
     u_int8_t wepSecurityType;               // WF_SECURITY_WEP_40 or WF_SECURITY_WEP_104
     u_int8_t wepKeyIndex;                   // 0 thru 3
     u_int8_t wepKey[WF_MAX_WEP_KEY_LENGTH]; // array containing WEP binary security key (4 5-byte keys for WEP-40, 4 13-byte keys for WEP-104)
@@ -289,8 +267,7 @@ typedef struct wepContext
 } t_wepContext;
 
 // used in t_wpaContext and t_wpsContext
-typedef struct
-{
+typedef struct {
     u_int8_t key[WF_MAX_PASSPHRASE_LENGTH]; // binary key or passphrase
     u_int8_t keyLength;                     // number of bytes in binary key (always 32) or passphrase
     u_int8_t ssid[WF_MAX_SSID_LENGTH];      // ssid
@@ -298,8 +275,7 @@ typedef struct
 } t_wpaKeyInfo;
 
 // See WF_SetSecurityWpa()
-typedef struct wpaContext
-{
+typedef struct wpaContext {
     u_int8_t wpaSecurityType;               // WF_SECURITY_WPA_WITH_KEY, WF_SECURITY_WPA_WITH_PASS_PHRASE,
                                             //  WF_SECURITY_WPA2_WITH_KEY, WF_SECURITY_WPA2_WITH_PASS_PHRASE
                                             //  WF_SECURITY_WPA_AUTO_WITH_KEY, WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE
@@ -307,8 +283,7 @@ typedef struct wpaContext
 } t_wpaContext;
 
 // See WF_SetSecurityWps()
-typedef struct wpsContext
-{
+typedef struct wpsContext {
     u_int8_t wpsSecurityType;               // WF_SECURITY_WPS_PUSH_BUTTON or WF_SECURITY_WPS_PIN
     u_int8_t wpsPin[WF_WPS_PIN_LENGTH];     // if using WF_SECURITY_WPS_PIN then pointer to 8-digit pin
     u_int8_t wpsPinLength;                  // should always be 8
@@ -322,10 +297,8 @@ typedef struct wpsContext
 // structure/union can be used in functions WF_SecurityWepSet, WF_SecurityWpaSet,
 // and WF_SetSecurityWps
 #if 0
-typedef struct
-{
-    union
-    {
+typedef struct {
+    union {
         t_wepContext wepContext;
         t_wpaContext wpaContext;
         t_wpsContext wpsContext;
@@ -333,8 +306,7 @@ typedef struct
 } t_securityContext;
 #endif
 
-typedef union
-{
+typedef union {
     t_wepContext wepContext;
     t_wpaContext wpaContext;
     t_wpsContext wpsContext;
@@ -342,8 +314,7 @@ typedef union
 
 
 // See WF_PsPollEnable()
-typedef struct psPollContext
-{
+typedef struct psPollContext {
     u_int16_t listenInterval; // Number of 100ms intervals between instances when
                               // the MRF24W wakes up to receive buffered messages
                               // from the network (1 = 100ms, 2 = 200ms, etc.)
@@ -354,8 +325,7 @@ typedef struct psPollContext
 } t_psPollContext;
 
 // See WF_MacStatsGet()
-typedef struct WFMacStatsStruct
-{
+typedef struct WFMacStatsStruct {
     u_int32_t MibWEPExcludeCtr;     // Number of frames received with the Protected Frame subfield of the Frame
                                     //  Control field set to zero and the value of dot11ExcludeUnencrypted causes
                                     //  that frame to be discarded
@@ -382,50 +352,46 @@ typedef struct WFMacStatsStruct
 } t_macStats;
 
 // See WF_ScanResultGet()
-typedef struct
-{
+typedef struct {
     u_int8_t    bssid[WF_BSSID_LENGTH];     // Network BSSID value
     u_int8_t    ssid[WF_MAX_SSID_LENGTH];   // Network SSID value
 
-    /**
-      Access point configuration
-      <table>
-        Bit 7       Bit 6       Bit 5       Bit 4       Bit 3       Bit 2       Bit 1       Bit 0
-        -----       -----       -----       -----       -----       -----       -----       -----
-        WPA2        WPA         Preamble    Privacy     Reserved    Reserved    Reserved    IE
-      </table>
-
-      <table>
-      IE         1 if AP broadcasting one or more Information Elements, else 0
-      Privacy    0 : AP is open (no security)
-                 1: AP using security,  if neither WPA and WPA2 set then security is WEP.
-      Preamble   0: AP transmitting with short preamble
-                 1: AP transmitting with long preamble
-      WPA        Only valid if Privacy is 1.
-                   0: AP does not support WPA
-                   1: AP supports WPA
-      WPA2       Only valid if Privacy is 1.
-                   0: AP does not support WPA2
-                   1: AP supports WPA2
-      </table>
-      */
+    /*
+     * Access point configuration
+     *
+     *   Bit 7  Bit 6  Bit 5     Bit 4    Bit 3     Bit 2     Bit 1     Bit 0
+     *   -----  -----  -----     -----    -----     -----     -----     -----
+     *   WPA2   WPA    Preamble  Privacy  Reserved  Reserved  Reserved  IE
+     *
+     * IE         1 if AP broadcasting one or more Information Elements, else 0
+     * Privacy    0: AP is open (no security)
+     *            1: AP using security,  if neither WPA and WPA2 set then security is WEP.
+     * Preamble   0: AP transmitting with short preamble
+     *            1: AP transmitting with long preamble
+     * WPA        Only valid if Privacy is 1.
+     *            0: AP does not support WPA
+     *            1: AP supports WPA
+     * WPA2       Only valid if Privacy is 1.
+     *            0: AP does not support WPA2
+     *            1: AP supports WPA2
+     */
     u_int8_t    apConfig;
     u_int8_t    reserved;
     u_int16_t   beaconPeriod;   // Network beacon interval
     u_int16_t   atimWindow;     // Only valid if bssType = WF_INFRASTRUCTURE
 
     /*
-      List of Network basic rates.  Each rate has the following format:
-
-      Bit 7
-        * 0: rate is not part of the basic rates set
-        * 1: rate is part of the basic rates set
-
-      Bits 6:0
-        Multiple of 500kbps giving the supported rate.  For example, a value of 2
-        (2 * 500kbps) indicates that 1mbps is a supported rate.  A value of 4 in
-        this field indicates a 2mbps rate (4 * 500kbps).
-      */
+     * List of Network basic rates.  Each rate has the following format:
+     *
+     * Bit 7
+     *   0: rate is not part of the basic rates set
+     *   1: rate is part of the basic rates set
+     *
+     * Bits 6:0
+     *   Multiple of 500kbps giving the supported rate.  For example, a value of 2
+     *   (2 * 500kbps) indicates that 1mbps is a supported rate.  A value of 4 in
+     *   this field indicates a 2mbps rate (4 * 500kbps).
+     */
     u_int8_t    basicRateSet[WF_MAX_NUM_RATES];
     u_int8_t    rssi;                                   // Signal strength of received frame beacon or probe response
     u_int8_t    numRates;                               // Number of valid rates in basicRates
@@ -437,16 +403,14 @@ typedef struct
 } t_scanResult;
 
 // see WF_SwMulticastFilterSet
-typedef struct swMulticastConfigStruct
-{
+typedef struct swMulticastConfigStruct {
     u_int8_t filterId;
     u_int8_t action;
     u_int8_t macAddress[WF_MAC_ADDRESS_LENGTH];
     u_int8_t macBitMask;
 } t_swMulticastConfig;
 
-typedef struct wpsCredentialsStruct
-{
+typedef struct wpsCredentialsStruct {
     u_int8_t  ssid[WF_MAX_SSID_LENGTH];         // network SSID
     u_int8_t  netKey[WF_MAX_PASSPHRASE_LENGTH]; // binary security key
     u_int16_t authType;                         // see t_wps_auth

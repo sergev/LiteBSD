@@ -51,14 +51,12 @@ void InterruptCheck(void);
  */
 #define MAX_EVENTS  (10)
 
-typedef struct eventStruct
-{
+typedef struct eventStruct {
     u_int8_t  eventType;
     u_int32_t eventData;
 } t_event;
 
-typedef struct eventQueueStruct
-{
+typedef struct eventQueueStruct {
    u_int8_t writeIndex;
    u_int8_t readIndex;
    t_event  event[MAX_EVENTS + 1]; // one unused slot

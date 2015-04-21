@@ -28,8 +28,7 @@
 #define NETWORK_CONFIG_INVALID      ((u_int32_t)0x00000080)
 #define SCAN_CONTEXT_INVALID        ((u_int32_t)0x00000100)
 
-typedef enum t_internalConnectionState
-{
+typedef enum t_internalConnectionState {
     CS_NOT_CONNECTED           = 0,
     CS_CONNECTION_IN_PROGRESS  = 1,
     CS_CONNECTED               = 2,
@@ -38,8 +37,7 @@ typedef enum t_internalConnectionState
 //==============================================================================
 //                                  DATA TYPES
 //==============================================================================
-typedef struct udStateStruct
-{
+typedef struct udStateStruct {
     u_int32_t       errorState;    // bit mask
     u_int8_t        connectionState;
     u_int8_t        retryCount;

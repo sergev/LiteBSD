@@ -6,8 +6,7 @@
 #ifndef __WF_EVENTS_H
 #define __WF_EVENTS_H
 
-typedef enum t_udEventErrors
-{
+typedef enum t_udEventErrors {
     UD_SUCCESS = 0,
 
     // this block of error codes are returned from the MRF24WG in the result field

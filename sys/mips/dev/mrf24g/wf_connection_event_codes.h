@@ -9,8 +9,7 @@
 #ifndef __WF_CONNECTION_EVENT_CODES_H
 #define __WF_CONNECTION_EVENT_CODES_H
 
-typedef enum t_connectionFailedEventStatus
-{
+typedef enum t_connectionFailedEventStatus {
     CF_JOIN_FAILURE                         = 2,
     CF_AUTHENTICATION_FAILURE               = 3,
     CF_ASSOCIATION_FAILURE                  = 4,
@@ -31,8 +30,7 @@ typedef enum t_connectionFailedEventStatus
     CF_LINK_DOWN                            = 19
 } t_connectionFailedEventStatus;
 
-typedef enum t_connectionLost
-{
+typedef enum t_connectionLost {
     CL_ASSOCIATION_FAILURE                  = 0,
     CL_BEACON_TIMEOUT                       = 1,
     CL_DEAUTH_RECEIVED                      = 2,
@@ -41,8 +39,7 @@ typedef enum t_connectionLost
     CL_LINK_DOWN                            = 5
 } t_connectionLost;
 
-typedef enum t_deauthDissaocReasonCode
-{
+typedef enum t_deauthDissaocReasonCode {
     DD_UNSPECIFIED                          = 1,
     DD_PREV_AUTH_NOT_VALID                  = 2,
     DD_DEAUTH_LEAVING                       = 3,
@@ -66,8 +63,7 @@ typedef enum t_deauthDissaocReasonCode
     DD_CIPHER_SUITE_REJECTED                = 24
 } t_deauthDissaocReasonCode;
 
-typedef enum t_statusCode
-{
+typedef enum t_statusCode {
     SC_UNSPECIFIED_FAILURE                  = 1,
     SC_CAPS_UNSUPPORTED                     = 10,
     SC_REASSOC_NO_ASSOC                     = 11,
@@ -93,8 +89,7 @@ typedef enum t_statusCode
     SC_TIMEOUT                              = 47
 } t_statusCode;
 
-typedef enum t_wpsState
-{
+typedef enum t_wpsState {
     EAP_EAPOL_START                         = 1,
     EAP_REQ_IDENTITY                        = 2,
     EAP_RSP_IDENTITY                        = 3,
@@ -111,8 +106,7 @@ typedef enum t_wpsState
     EAP_FAILURE                             = 14
 } t_wpsState;
 
-typedef enum t_wpsConfigError
-{
+typedef enum t_wpsConfigError {
     WPS_NOERR                               = 0,
     WPS_SESSION_OVERLAPPED                  = 1,
     WPS_DECRYPT_CRC_FAILURE                 = 2,
@@ -131,8 +125,7 @@ typedef enum t_wpsConfigError
     WPS_SETUP_LOCKED                        = 15
 } t_wpsConfigError;
 
-typedef enum t_p2pState
-{
+typedef enum t_p2pState {
     P2P_IDLE                                = 0,
     P2P_SCAN                                = 1,
     P2P_LISTEN                              = 2,
@@ -146,8 +139,7 @@ typedef enum t_p2pState
     P2P_CLIENT                              = 10
 } t_p2pState;
 
-typedef enum t_p2pError
-{
+typedef enum t_p2pError {
     WFD_SUCCESS                             = 0,
     WFD_INFO_CURRENTLY_UNAVAILABLE          = 1,
     WFD_INCOMPATIBLE_PARAMS                 = 2,
@@ -165,31 +157,27 @@ typedef enum t_p2pError
     WFD_TIME_OUT                            = 15
 } t_p2pError;
 
-typedef struct
-{
+typedef struct {
     u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
     u_int8_t status;    // see t_connectionFailedEventStatus
 } t_connectLost;
 
 // used if status = WF_RECV_DEAUTH or WF_RECV_DISASSOC
-typedef struct
-{
+typedef struct {
     u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
     u_int8_t status;    // see t_connectionFailedEventStatus (either WF_RECV_DEAUTH or WF_RECV_DISASSOC)
     u_int8_t reason;    // see t_deauthDisssocReasonCodes
 } t_recvAuthDisassocFailureCodes;
 
 // used if status = WF_AUTHENTICATION_FAILURE or WF_ASSOCIATION_FAILURE
-typedef struct
-{
+typedef struct {
     u_int8_t event;     // always WF_EVENT_CONNECTION_FAILED
     u_int8_t status;    // see t_connectionFailedEventStatus (either WF_AUTHENTICATION_FAILURE or WF_ASSOCIATION_FAILURE)
     u_int8_t reason;    // see t_statusCodes;
 } t_authAssocFailure;
 
 // used if status = WF_WPS_FAILURE
-typedef struct
-{
+typedef struct {
     u_int8_t event;         // always WF_EVENT_CONNECTION_FAILED
     u_int8_t status;        // always WF_WPS_FAILURE
     u_int8_t wpsState;      // see t_wpsState
@@ -197,16 +185,14 @@ typedef struct
 } t_wpsFailure;
 
 // used if status = WF_P2P_FAILURE
-typedef struct
-{
+typedef struct {
     u_int8_t event;         // always WF_EVENT_CONNECTION_FAILED
     u_int8_t status;        // always WF_P2P_FAILURE
     u_int8_t p2pState;      // see t_p2pState
     u_int8_t p2pErr;        // see t_p2pErr
 } t_p2pFailure;
 
-typedef struct
-{
+typedef struct {
     t_connectLost                   connectionLost;
     t_recvAuthDisassocFailureCodes  recvAuthDissaocFailure;
     t_authAssocFailure              authAssocFailure;
