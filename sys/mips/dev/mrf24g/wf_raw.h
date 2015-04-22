@@ -28,36 +28,12 @@
 #define RAW_STACK_MEM                   0x40    /* single level stack to save state of RAW */
 #define RAW_COPY                        0x70    /* RAW to RAW copy */
 
-/*
- * RAW Window states
- */
-#define WF_RAW_UNMOUNTED                0
-#define WF_SCRATCH_MOUNTED              1
-#define WF_RAW_DATA_MOUNTED             2
-#define WF_RAW_MGMT_MOUNTED             3
-
-void        RawInit(void);
-void        ScratchUnmount(u_int8_t rawId);
-u_int16_t   ScratchMount(u_int8_t rawId);
-bool        isWaitingForRawMoveCompleteInterrupt(void);
-void        ClearWaitingForRawMoveCompleteInterrupt(void);
-void        SignalRawInterruptEvent(u_int8_t rawIntMask);
-bool        AllocateMgmtTxBuffer(u_int16_t bytesNeeded);
-void        DeallocateMgmtRxBuffer(void);
-void        RawSetByte(u_int16_t rawId, const u_int8_t *p_buffer, u_int16_t length);
-void        RawGetByte(u_int16_t rawId, u_int8_t *pBuffer, u_int16_t length);
-void        SendRAWManagementFrame(u_int16_t bufLen);
-u_int16_t   RawMountRxBuffer(u_int8_t rawId);
-void        RawSetIndex(u_int16_t rawId, u_int16_t index);
-void        RawRead(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, u_int8_t *p_dest);
-void        RawWrite(u_int8_t rawId, u_int16_t startIndex, u_int16_t length, const u_int8_t *p_src);
-bool        AllocateDataTxBuffer(u_int16_t bytesNeeded);
-void        DeallocateDataRxBuffer(void);
-u_int16_t   RawMove(u_int16_t rawId,
-                    u_int16_t srcDest,
-                    bool      rawIsDestination,
-                    u_int16_t size);
-void SetRawDataWindowState(u_int8_t rawId, u_int8_t state);
-u_int8_t GetRawDataWindowState(u_int8_t rawId);
+void        mrf_raw_init(void);
+unsigned    mrf_raw_move(unsigned raw_id, unsigned src_dest, bool raw_is_destination, unsigned size);
+void        mrf_raw_seek(unsigned raw_id, unsigned index);
+void        mrf_raw_read(unsigned raw_id, u_int8_t *dest, unsigned length);
+void        mrf_raw_write(unsigned raw_id, const u_int8_t *src, unsigned length);
+void        mrf_raw_pread(unsigned raw_id, u_int8_t *dest, unsigned length, unsigned offset);
+void        mrf_raw_pwrite(unsigned raw_id, const u_int8_t *src, unsigned length, unsigned offset);
 
 #endif /* __WF_RAW_H */

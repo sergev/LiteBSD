@@ -73,7 +73,7 @@ void WF_Init(t_deviceInfo *deviceInfo)
     /*
      * Finish the MRF24WG intitialization.
      */
-    RawInit();                          // initialize RAW driver
+    mrf_raw_init();                     // initialize RAW driver
     WFEnableMRF24WB0MMode();            // legacy, but still needed
     WF_DeviceInfoGet(deviceInfo);       // get MRF24WG module version numbers
     switch (deviceInfo->deviceType) {

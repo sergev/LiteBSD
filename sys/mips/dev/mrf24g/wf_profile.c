@@ -265,16 +265,16 @@ void WF_SsidGet(u_int8_t *p_ssid, u_int8_t *p_ssidLength)
      *   profile id             [4]
      *   element id             [5]
      *   element data length    [6] */
-    RawRead(RAW_MGMT_RX_ID, 0, sizeof(t_cPElementResponseHdr), (u_int8_t *)&mgmtHdr);
+    mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t*) &mgmtHdr, sizeof(t_cPElementResponseHdr), 0);
 
     /* extract SSID length and write to caller */
     *p_ssidLength = mgmtHdr.elementDataLength;
 
     /* copy SSID name to callers buffer */
-    RawRead(RAW_MGMT_RX_ID, sizeof(t_cPElementResponseHdr), *p_ssidLength, p_ssid);
+    mrf_raw_pread(RAW_MGMT_RX_ID, p_ssid, *p_ssidLength, sizeof(t_cPElementResponseHdr));
 
     /* free management buffer */
-    DeallocateMgmtRxBuffer();
+    mrf_raw_move(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
 }
 
 /*
