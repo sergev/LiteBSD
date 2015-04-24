@@ -31,8 +31,8 @@ static void SendPowerModeMsg(t_WFPwrModeReq *power_mode)
 {
     u_int8_t hdr[2];
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_SET_POWER_MODE_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_SET_POWER_MODE;
 
     mrf_mgmt_send(hdr, sizeof(hdr), (u_int8_t*)power_mode, sizeof(*power_mode), 1);
 }

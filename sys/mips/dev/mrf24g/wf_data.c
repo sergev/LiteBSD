@@ -102,7 +102,9 @@ void WF_TxPacketCopy(u_int8_t *buf, u_int16_t length)
 void WF_TxPacketTransmit(u_int16_t packetSize)
 {
     /* create internal preamble */
-    u_int8_t txDataPreamble[4] = {WF_DATA_REQUEST_TYPE, WF_STD_DATA_MSG_SUBTYPE, 1, 0};
+    u_int8_t txDataPreamble[4] = {
+        WF_TYPE_DATA_REQUEST, WF_SUBTYPE_STD_DATA, 1, 0,
+    };
 
     EnsureWFisAwake();
 
@@ -140,7 +142,7 @@ u_int16_t WF_RxPacketLengthGet()
     // fact, mount an Rx data packet.  This read auto-increments the raw index to the first
     // actual data byte in the frame.
     mrf_raw_read(RAW_ID_RECEIVE, (u_int8_t*) &rxPreamble, sizeof(t_rxPreamble));
-    if (rxPreamble.type != WF_DATA_RX_INDICATE_TYPE) {
+    if (rxPreamble.type != WF_TYPE_DATA_RX_INDICATE) {
         printf("--- %s: invalid preamble type=%u\n", __func__, rxPreamble.type);
         return 0;
     }

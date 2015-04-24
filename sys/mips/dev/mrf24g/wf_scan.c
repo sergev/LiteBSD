@@ -58,8 +58,8 @@ void WF_Scan(u_int8_t scanMode)
         return;
     }
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_SCAN_START_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_SCAN_START;
     hdr[2] = (scanMode == WF_SCAN_FILTERED) ? GetCpid() : 0xff;
     hdr[3] = 0;                                 /* not used */
     mrf_mgmt_send(hdr, sizeof(hdr), 0, 0, 1);
@@ -85,8 +85,8 @@ void WF_ScanResultGet(u_int8_t list_index, t_scanResult *scan_result)
 {
     u_int8_t hdr[4];
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_SCAN_GET_RESULTS_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_SCAN_GET_RESULTS;
     hdr[2] = list_index;        /* scan result index to read from */
     hdr[3] = 1;                 /* number of results to read */
 

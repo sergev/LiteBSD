@@ -44,8 +44,8 @@ static void LowLevel_CASetElement(unsigned element_id,
 {
     u_int8_t header[4];
 
-    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    header[1] = WF_CA_SET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CA_SET_ELEMENT;  /* mgmt request subtype */
     header[2] = element_id;                 /* Element ID */
     header[3] = data_len;                   /* number of bytes of element data */
 
@@ -73,14 +73,14 @@ static void LowLevel_CASetElement(unsigned element_id,
  * construct the management message.  The caller must fix up any endian issues
  * after getting the data from this function.
  */
-static void LowLevel_CAGetElement(unsigned elementId,
+static void LowLevel_CAGetElement(unsigned element_id,
     u_int8_t *data, unsigned data_len)
 {
     u_int8_t  header[4];
 
-    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    header[1] = WF_CA_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
-    header[2] = elementId;                  /* Element ID */
+    header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CA_GET_ELEMENT;  /* mgmt request subtype */
+    header[2] = element_id;                 /* Element ID */
     header[3] = 0;                          /* not used */
 
     if (data) {
@@ -132,8 +132,8 @@ void WF_Connect()
 #endif /* WF_ERROR_CHECKING */
 
     /* Write out header portion of msg (which is whole msg, there is no data) */
-    header[0] = WF_MGMT_REQUEST_TYPE;    /* indicate this is a mgmt msg */
-    header[1] = WF_CM_CONNECT_SUBYTPE;   /* mgmt request subtype */
+    header[0] = WF_TYPE_MGMT_REQUEST;    /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CM_CONNECT;   /* mgmt request subtype */
     header[2] = GetCpid();
     header[3] = 0;
 
@@ -251,8 +251,8 @@ void WF_Disconnect()
         return;
     }
 
-    header[0] = WF_MGMT_REQUEST_TYPE;
-    header[1] = WF_CM_DISCONNECT_SUBYTPE;
+    header[0] = WF_TYPE_MGMT_REQUEST;
+    header[1] = WF_SUBTYPE_CM_DISCONNECT;
 
     mrf_mgmt_send(header, sizeof(header), 0, 0, 1);
 
@@ -370,8 +370,8 @@ int WF_ConnectionStateGet()
 {
     u_int8_t header[2], reply[1];
 
-    header[0] = WF_MGMT_REQUEST_TYPE;
-    header[1] = WF_CM_GET_CONNECTION_STATUS_SUBYTPE;
+    header[0] = WF_TYPE_MGMT_REQUEST;
+    header[1] = WF_SUBTYPE_CM_GET_CONNECTION_STATUS;
 
     mrf_mgmt_send_receive(header, sizeof(header),
         reply, sizeof(reply), MGMT_RESP_1ST_DATA_BYTE_INDEX);

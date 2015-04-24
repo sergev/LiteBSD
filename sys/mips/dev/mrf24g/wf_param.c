@@ -38,8 +38,8 @@ static void SendSetParamMsg(unsigned param, u_int8_t *data, unsigned data_len)
 {
     u_int8_t hdr[4];
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_SET_PARAM_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_SET_PARAM;
     hdr[2] = 0;                     /* MS 8 bits of param Id, always 0 */
     hdr[3] = param;                 /* LS 8 bits of param ID           */
 
@@ -76,8 +76,8 @@ static void SendGetParamMsg(unsigned param_type, u_int8_t *reply, unsigned reply
 {
     u_int8_t hdr[4];
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_GET_PARAM_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_GET_PARAM;
     hdr[2] = 0;                         /* MS 8 bits of param Id, always 0 */
     hdr[3] = param_type;                /* LS 8 bits of param ID */
 

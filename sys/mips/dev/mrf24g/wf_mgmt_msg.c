@@ -96,11 +96,11 @@ int ReceiveMgmtConfirmMsg()
     mrf_raw_pread(RAW_ID_MGMT_RX, &msgType, 1, 0);
 
     switch (msgType) {
-    case WF_MGMT_CONFIRM_TYPE:
+    case WF_TYPE_MGMT_CONFIRM:
         // if a mgmt confirm then the Universal Driver is waiting for it.
         //TODO: receive mgmt message
         return 1;
-    case WF_MGMT_INDICATE_TYPE:
+    case WF_TYPE_MGMT_INDICATE:
         // if a mgmt indicated occurred (asynchronous event),
         // then process it right now
         WFProcessMgmtIndicateMsg();

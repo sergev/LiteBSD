@@ -100,21 +100,21 @@ void ClearPsPollReactivate(void);
  */
 
 /* SPI Tx Message Types */
-#define WF_DATA_REQUEST_TYPE            ((u_int8_t)1)
-#define WF_MGMT_REQUEST_TYPE            ((u_int8_t)2)
+#define WF_TYPE_DATA_REQUEST            1       /* Network packet */
+#define WF_TYPE_MGMT_REQUEST            2       /* Management message */
 
 /* SPI Rx Message Types */
-#define WF_DATA_TX_CONFIRM_TYPE         ((u_int8_t)1)
-#define WF_MGMT_CONFIRM_TYPE            ((u_int8_t)2)
-#define WF_DATA_RX_INDICATE_TYPE        ((u_int8_t)3)
-#define WF_MGMT_INDICATE_TYPE           ((u_int8_t)4)
+#define WF_TYPE_DATA_TX_CONFIRM         1
+#define WF_TYPE_MGMT_CONFIRM            2
+#define WF_TYPE_DATA_RX_INDICATE        3
+#define WF_TYPE_MGMT_INDICATE           4
 
 /* SPI Tx/Rx Data Message Subtypes */
-#define WF_STD_DATA_MSG_SUBTYPE         ((u_int8_t)1)
-#define WF_NULL_DATA_MSG_SUBTYPE        ((u_int8_t)2)
-/* reserved value                       ((u_int8_t)3) */
-#define WF_UNTAMPERED_DATA_MSG_SUBTYPE  ((u_int8_t)4)
+#define WF_SUBTYPE_STD_DATA             1
+#define WF_SUBTYPE_NULL_DATA            2
+                                     /* 3 - reserved value */
+#define WF_SUBTYPE_UNTAMPERED_DATA      4
 
-#define WF_TX_DATA_MSG_PREAMBLE_LENGTH  ((u_int8_t)3)
+#define WF_TX_DATA_MSG_PREAMBLE_LENGTH  3
 
 #endif /* __WF_GLOBAL_INCLUDES_H */

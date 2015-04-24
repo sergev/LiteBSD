@@ -19,51 +19,51 @@ enum {
 /*----------------------------------------------*/
 typedef enum {
     /* Misc subtypes */
-    WF_SCAN_SUBTYPE                             = 1,
-    WF_JOIN_SUBTYPE                             = 2,
-    WF_AUTH_SUBTYPE                             = 3,
-    WF_ASSOC_SUBTYPE                            = 4,
-    WF_DISCONNECT_SUBTYPE                       = 5,
-    WF_DISASOCC_SUBTYPE                         = 6,
-    WF_SET_POWER_MODE_SUBTYPE                   = 7,
-    WF_SET_PM_KEY_SUBTYPE                       = 8,
-    WF_SET_WEP_MAP_SUBTYPE                      = 9,
-    WF_SET_WEP_KEY_SUBTYPE                      = 10,
-    WF_SET_TEMP_KEY_SUBTYPE                     = 11,
-    WF_CALC_PSK_KEY_SUBTYPE                     = 12,
-    WF_SET_WEP_KEY_ID_SUBTYPE                   = 13,
-    WF_CONFIG_KEY_SPACE_SUBTYPE                 = 14,
-    WF_SET_PARAM_SUBTYPE                        = 15,
-    WF_GET_PARAM_SUBTYPE                        = 16,
-    WF_ADHOC_CONNECT_SUBTYPE                    = 17,
-    WF_ADHOC_START_SUBTYPE                      = 18,
+    WF_SUBTYPE_SCAN                             = 1,
+    WF_SUBTYPE_JOIN                             = 2,
+    WF_SUBTYPE_AUTH                             = 3,
+    WF_SUBTYPE_ASSOC                            = 4,
+    WF_SUBTYPE_DISCONNECT                       = 5,
+    WF_SUBTYPE_DISASOCC                         = 6,
+    WF_SUBTYPE_SET_POWER_MODE                   = 7,
+    WF_SUBTYPE_SET_PM_KEY                       = 8,
+    WF_SUBTYPE_SET_WEP_MAP                      = 9,
+    WF_SUBTYPE_SET_WEP_KEY                      = 10,
+    WF_SUBTYPE_SET_TEMP_KEY                     = 11,
+    WF_SUBTYPE_CALC_PSK_KEY                     = 12,
+    WF_SUBTYPE_SET_WEP_KEY_ID                   = 13,
+    WF_SUBTYPE_CONFIG_KEY_SPACE                 = 14,
+    WF_SUBTYPE_SET_PARAM                        = 15,
+    WF_SUBTYPE_GET_PARAM                        = 16,
+    WF_SUBTYPE_ADHOC_CONNECT                    = 17,
+    WF_SUBTYPE_ADHOC_START                      = 18,
 
     /* Connection Profile Message Subtypes */
-    WF_CP_CREATE_PROFILE_SUBTYPE                = 21,
-    WF_CP_DELETE_PROFILE_SUBTYPE                = 22,
-    WF_CP_GET_ID_LIST_SUBTYPE                   = 23,
-    WF_CP_SET_ELEMENT_SUBTYPE                   = 24,
-    WF_CP_GET_ELEMENT_SUBTYPE                   = 25,
+    WF_SUBTYPE_CP_CREATE_PROFILE                = 21,
+    WF_SUBTYPE_CP_DELETE_PROFILE                = 22,
+    WF_SUBTYPE_CP_GET_ID_LIST                   = 23,
+    WF_SUBTYPE_CP_SET_ELEMENT                   = 24,
+    WF_SUBTYPE_CP_GET_ELEMENT                   = 25,
 
     /* Connection Algorithm Message Subtypes */
-    WF_CA_SET_ELEMENT_SUBTYPE                   = 26,
-    WF_CA_GET_ELEMENT_SUBTYPE                   = 27,
+    WF_SUBTYPE_CA_SET_ELEMENT                   = 26,
+    WF_SUBTYPE_CA_GET_ELEMENT                   = 27,
 
     /* Connnection Manager Message Subtypes */
-    WF_CM_CONNECT_SUBYTPE                       = 28,
-    WF_CM_DISCONNECT_SUBYTPE                    = 29,
-    WF_CM_GET_CONNECTION_STATUS_SUBYTPE         = 30,
+    WF_SUBTYPE_CM_CONNECT                       = 28,
+    WF_SUBTYPE_CM_DISCONNECT                    = 29,
+    WF_SUBTYPE_CM_GET_CONNECTION_STATUS         = 30,
 
-    WF_SCAN_START_SUBTYPE                       = 31,
-    WF_SCAN_GET_RESULTS_SUBTYPE                 = 32,
+    WF_SUBTYPE_SCAN_START                       = 31,
+    WF_SUBTYPE_SCAN_GET_RESULTS                 = 32,
 
-    WF_CM_INFO_SUBTYPE                          = 33,
+    WF_SUBTYPE_CM_INFO                          = 33,
 
-    WF_SCAN_FOR_IE_SUBTYPE                      = 34,  /* not yet supported */
-    WF_SCAN_IE_GET_RESULTS_SUBTYPE              = 35,  /* not yet supported */
+    WF_SUBTYPE_SCAN_FOR_IE                      = 34,  /* not yet supported */
+    WF_SUBTYPE_SCAN_IE_GET_RESULTS              = 35,  /* not yet supported */
 
-    WF_CM_GET_CONNECTION_STATISTICS_SUBYTPE     = 36,  /* not yet supported so moved here for now */
-    WF_NUM_REQUEST_SUBTYPES
+    WF_SUBTYPE_CM_GET_CONNECTION_STATISTICS     = 36,  /* not yet supported so moved here for now */
+    WF_SUBTYPE_NUM_REQUESTS
 
 } tMgmtMsgSubtypes;
 

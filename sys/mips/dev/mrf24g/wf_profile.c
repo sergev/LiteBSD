@@ -9,8 +9,8 @@
 
 /*
  * Connection Profile Element IDs.
- * Used in conjunction with the WF_CP_SET_ELEMENT_SUBTYPE and
- * WF_CP_GET_ELEMENT_SUBTYPE message subtypes
+ * Used in conjunction with the WF_SUBTYPE_CP_SET_ELEMENT and
+ * WF_SUBTYPE_CP_GET_ELEMENT message subtypes
  */
 typedef enum tCPElementIds {
     WF_CP_ELEMENT_ALL               = 0,  /* sends all elements in CP struct (not used)*/
@@ -60,8 +60,8 @@ static void LowLevel_CPSetElement(unsigned element_id,
     u_int8_t  header[5];
 
     /* Write out header portion of msg */
-    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    header[1] = WF_CP_SET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CP_SET_ELEMENT;  /* mgmt request subtype */
     header[2] = g_cpid;                     /* Connection Profile ID */
     header[3] = element_id;                 /* Element ID */
     header[4] = data_len;                   /* number of bytes of element data */
@@ -90,10 +90,10 @@ static void LowLevel_CPGetElement(u_int8_t element_id,
                                   u_int8_t *reply,
                                   u_int8_t reply_len)
 {
-    u_int8_t  header[4];
+    u_int8_t header[4];
 
-    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    header[1] = WF_CP_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CP_GET_ELEMENT;  /* mgmt request subtype */
     header[2] = g_cpid;                     /* Connection Profile ID */
     header[3] = element_id;                 /* Element ID */
 
@@ -140,8 +140,8 @@ static void LowLevel_SetSecurity(unsigned securityType,
     u_int8_t header[7], *p_key;
 
     /* Write out header portion of msg */
-    header[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
-    header[1] = WF_CP_SET_ELEMENT_SUBTYPE;      /* mgmt request subtype */
+    header[0] = WF_TYPE_MGMT_REQUEST;           /* indicate this is a mgmt msg */
+    header[1] = WF_SUBTYPE_CP_SET_ELEMENT;      /* mgmt request subtype */
     header[2] = GetCpid();                      /* Connection Profile ID */
     header[3] = WF_CP_ELEMENT_SECURITY;         /* Element ID */
 
@@ -190,8 +190,8 @@ void WF_CPCreate()
 {
     u_int8_t hdr[2];
 
-    hdr[0] = WF_MGMT_REQUEST_TYPE;
-    hdr[1] = WF_CP_CREATE_PROFILE_SUBTYPE;
+    hdr[0] = WF_TYPE_MGMT_REQUEST;
+    hdr[1] = WF_SUBTYPE_CP_CREATE_PROFILE;
     g_cpid = 0xff;
 
     mrf_mgmt_send_receive(hdr, sizeof(hdr),
