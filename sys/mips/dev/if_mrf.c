@@ -56,7 +56,7 @@ struct wifi_port {
 #define macaddr arpcom.ac_enaddr    /* hardware Ethernet address */
 
     struct spiio spiio;             /* interface to SPI port */
-    t_deviceInfo dev_info;          /* device type and version */
+    unsigned    rom_version;        /* device ROM version */
     unsigned    int_mask;           /* mask for interrupt pin */
     int         pin_irq;            /* /Int pin number */
     int         pin_reset;          /* /Reset pin number */
@@ -637,16 +637,16 @@ mrf_probe(config)
     /* Initialize the chip with interrupts disabled.
      * Extract the MAC address. */
     int s = splimp();
-    WF_Init(&w->dev_info);
+    w->rom_version = WF_Init();
     WF_MacAddressGet(w->macaddr);
     splx(s);
 
-    if (w->dev_info.deviceType != WF_MRF24WG_DEVICE) {
+    if (w->rom_version == 0) {
         printf("mrf%u: unknown device type, only MRF24WG is supported\n", unit);
         return 0;
     }
     printf("mrf%u: MRF24WG version %x.%x, MAC address %s\n",
-        unit, w->dev_info.romVersion, w->dev_info.patchVersion,
+        unit, w->rom_version >> 8, w->rom_version & 0xff,
         ether_sprintf(w->macaddr));
 
     ifp->if_unit = unit;

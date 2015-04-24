@@ -36,4 +36,24 @@ void     mrf_raw_write(unsigned raw_id, const u_int8_t *src, unsigned nbytes);
 void     mrf_raw_pread(unsigned raw_id, u_int8_t *dest, unsigned nbytes, unsigned offset);
 void     mrf_raw_pwrite(unsigned raw_id, const u_int8_t *src, unsigned nbytes, unsigned offset);
 
+/*
+ * RAW message type definitions.
+ */
+
+/* Tx Message Types */
+#define WF_TYPE_DATA_REQUEST        1   /* Network packet */
+#define WF_TYPE_MGMT_REQUEST        2   /* Management message */
+
+/* Rx Message Types */
+#define WF_TYPE_DATA_TX_CONFIRM     1   /* Data packet transmitted */
+#define WF_TYPE_MGMT_CONFIRM        2   /* Mgmt message transmitted */
+#define WF_TYPE_DATA_RX_INDICATE    3   /* Data packet received */
+#define WF_TYPE_MGMT_INDICATE       4   /* Mgmt message received */
+
+/* Tx/Rx Data Message Subtypes */
+#define WF_SUBTYPE_STD_DATA         1   /* Generic data */
+#define WF_SUBTYPE_NULL_DATA        2
+                                 /* 3 - reserved value */
+#define WF_SUBTYPE_UNTAMPERED_DATA  4
+
 #endif /* __WF_RAW_H */

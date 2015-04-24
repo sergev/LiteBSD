@@ -129,7 +129,6 @@ bool  UdisPsPollEnabled(void);
     u_int32_t UdSetBssid(u_int8_t *p_bssid);
     u_int32_t UdSetRssi(u_int8_t rssi);
     u_int32_t UdSetRtsThreshold(u_int16_t rtsThreshold);
-    u_int32_t UdScan(u_int8_t mode);
     u_int32_t udSetTxPowerMax(u_int8_t maxTxPower);
     u_int32_t UdSetHwMulticastFilter(u_int8_t multicastFilterId, u_int8_t *p_multicastAddress);
     u_int32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_passPhrase);

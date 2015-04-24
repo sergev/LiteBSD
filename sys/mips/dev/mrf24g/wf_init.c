@@ -11,10 +11,11 @@ extern void WF_SetTxDataConfirm(u_int8_t state);
 /*
  * Initialize the MRF24WG for operations.
  * Must be called before any other WiFi API calls.
+ * Returns the device ROM and patch version.
  */
-void WF_Init(t_deviceInfo *deviceInfo)
+unsigned WF_Init()
 {
-    unsigned msec, value, mask, mask2;
+    unsigned msec, value, mask, mask2, rom_version;
 
     UdStateInit();          // initialize internal state machine
     UdSetInitInvalid();     // init not valid until it gets through this state machine
@@ -74,23 +75,17 @@ void WF_Init(t_deviceInfo *deviceInfo)
      * Finish the MRF24WG intitialization.
      */
     mrf_raw_init();                     // initialize RAW driver
-    WFEnableMRF24WB0MMode();            // legacy, but still needed
-    WF_DeviceInfoGet(deviceInfo);       // get MRF24WG module version numbers
-    switch (deviceInfo->deviceType) {
-    case WF_UNKNOWN_DEVICE:
-        /* Cannot happen. */
-        break;
-
-    case WF_MRF24WB_DEVICE:
+    mrf_enable_module_operation();      // legacy, but still needed
+    rom_version = mrf_get_system_version();
+    if (rom_version < 0x3000) {
         /* MRF24WB chip not supported by this driver. */
-        break;
-
-    case WF_MRF24WG_DEVICE:
-        WF_SetTxDataConfirm(WF_DISABLED); // Disable Tx Data confirms (from the MRF24W)
-        WF_CPCreate();                  // create a connection profile, get its ID and store it
-        WF_PsPollDisable();
-        ClearPsPollReactivate();
-        UdSetInitValid();               // Chip initialized successfully.
-        break;
+        return 0;
     }
+
+    WF_SetTxDataConfirm(0);             // Disable Tx Data confirms (from the MRF24W)
+    WF_CPCreate();                      // create a connection profile, get its ID and store it
+    WF_PsPollDisable();
+    ClearPsPollReactivate();
+    UdSetInitValid();                   // Chip initialized successfully.
+    return rom_version;
 }

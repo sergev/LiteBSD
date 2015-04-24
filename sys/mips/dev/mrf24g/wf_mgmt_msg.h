@@ -9,11 +9,6 @@
 #define WF_MAX_TX_MGMT_MSG_SIZE         (128)
 #define MGMT_RESP_1ST_DATA_BYTE_INDEX   (4)  /* first data byte of Mgmt response starts at index 4 */
 
-enum {
-    DO_NOT_FREE_MGMT_BUFFER = 0,
-    FREE_MGMT_BUFFER        = 1,
-};
-
 /*----------------------------------------------*/
 /* Management Message Request/Response Subtypes */
 /*----------------------------------------------*/
@@ -109,7 +104,7 @@ typedef enum {
                                                    /*  Patch */
     PARAM_STATUE_INFO                   = 27,      /* MAC State information */
     PARAM_SECURITY_CONTROL              = 28,      /* 2 byte data structure to enable/disable encryption */
-    PARAM_FACTORY_SET_TX_MAX_POWER      = 29,      /* gets the factory-set tx max power level */
+    PARAM_FACTORY_TX_POWER              = 29,      /* gets the factory-set tx max/min power level */
     PARAM_MRF24WB0M                     = 30,      /* a set enables MRF24WB0M Mode, a get gets the version */
     PARAM_CONNECT_CONTEXT               = 31,      /* gets current connection status */
     PARAM_WICOM_MODE                    = 32,      /* a set enables WiCom mode */

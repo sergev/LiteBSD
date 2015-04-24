@@ -121,7 +121,7 @@ void WF_PsPollEnable(t_psPollContext *p_context)
     pwrModeReq.rcvDtims = p_context->useDtim;
     SendPowerModeMsg(&pwrModeReq);
 
-    WFConfigureLowPowerMode(WF_LOW_POWER_MODE_ON);
+    WFConfigureLowPowerMode(1);
 
     if (p_context->useDtim) {
         PowerStateSet(WF_PS_PS_POLL_DTIM_ENABLED);
@@ -145,7 +145,7 @@ void WF_PsPollDisable()
     pwrModeReq.rcvDtims = 1;
     SendPowerModeMsg(&pwrModeReq);
 
-    WFConfigureLowPowerMode(WF_LOW_POWER_MODE_OFF);
+    WFConfigureLowPowerMode(0);
     PowerStateSet(WF_PS_OFF);
 }
 
@@ -161,18 +161,16 @@ void WF_PsPollDisable()
  * MACInit must be called first.
  *
  * Parameters:
- *  action - Can be either:
- *           * WF_LOW_POWER_MODE_ON
- *           * WF_LOW_POWER_MODE_OFF
+ *  enable - true to enable low power mode
  */
-void WFConfigureLowPowerMode(u_int8_t action)
+void WFConfigureLowPowerMode(int enable)
 {
     u_int16_t lowPowerStatusRegValue;
 
     //-------------------------------------
     // if activating PS-Poll mode on MRF24W
     //-------------------------------------
-    if (action == WF_LOW_POWER_MODE_ON) {
+    if (enable) {
         //dbgprintf("Enable PS\n");
         mrf_write(MRF24_REG_PSPOLL, PSPOLL_LP_ENABLE);
     }
@@ -180,7 +178,6 @@ void WFConfigureLowPowerMode(u_int8_t action)
     // else deactivating PS-Poll mode on MRF24W (taking it out of low-power mode and waking it up)
     //---------------------------------------------------------------------------------------------
     else {
-        // action == WF_LOW_POWER_MODE_OFF
         //dbgprintf("Disable PS\n");
         mrf_write(MRF24_REG_PSPOLL, 0);
 
@@ -205,7 +202,7 @@ void WFConfigureLowPowerMode(u_int8_t action)
  */
 void WF_Hibernate()
 {
-    WF_GpioSetHibernate(WF_HIGH);
+    WF_GpioSetHibernate(1);
     PowerStateSet(WF_PS_HIBERNATE);
 }
 #endif
@@ -232,7 +229,7 @@ void EnsureWFisAwake()
     if (g_powerSaveState == WF_PS_PS_POLL_DTIM_ENABLED ||
         g_powerSaveState == WF_PS_PS_POLL_DTIM_DISABLED) {
         // wake up MRF24WG
-        WFConfigureLowPowerMode(WF_LOW_POWER_MODE_OFF);
+        WFConfigureLowPowerMode(0);
 
         // set flag to put it back in PS-Poll when appropriate
         SetPsPollReactivate();

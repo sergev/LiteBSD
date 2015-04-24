@@ -733,15 +733,6 @@ u_int32_t UdSetTxMode(u_int8_t mode)
     }
 }
 
-u_int32_t UdScan(u_int8_t mode)
-{
-    if (mode > WF_SCAN_ALL) {
-        return UD_ERROR_INVALID_SCAN_MODE;
-    } else {
-        return UD_SUCCESS;
-    }
-}
-
 u_int32_t udSetTxPowerMax(u_int8_t maxTxPower)
 {
     if (maxTxPower < 9 || maxTxPower > 18) {

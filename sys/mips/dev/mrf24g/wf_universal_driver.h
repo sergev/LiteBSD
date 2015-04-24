@@ -74,30 +74,13 @@ typedef int bool;
 // End DEFAULTS block
 //===================
 
+// See mrf_set_regional_domain()
 enum {
-    WF_LOW  = 0,
-    WF_HIGH = 1
+    WF_DOMAIN_FCC   = 0,        // Available Channels: 1 - 11
+    WF_DOMAIN_ETSI  = 2,        // Available Channels: 1 - 13
+    WF_DOMAIN_JAPAN = 7,        // Available Channels: 1 - 14
+    WF_DOMAIN_OTHER = 7         // Available Channels: 1 - 14
 };
-
-enum {
-    WF_DISABLED = 0,
-    WF_ENABLED  = 1
-};
-
-// See WF_DeviceInfoGet() and t_mrf24wgDeviceInfo
-typedef enum t_deviceType {
-    WF_UNKNOWN_DEVICE = 0,
-    WF_MRF24WB_DEVICE = 1,
-    WF_MRF24WG_DEVICE = 2
-} t_deviceType;
-
-// See WF_SetRegionalDomain()
-typedef enum t_regionalDomain {
-    WF_DOMAIN_FCC   = 0,    // Available Channels: 1 - 11
-    WF_DOMAIN_ETSI  = 2,    // Available Channels: 1 - 13
-    WF_DOMAIN_JAPAN = 7,    // Available Channels: 1 - 14
-    WF_DOMAIN_OTHER = 7    // Available Channels: 1 - 14
-} t_regionalDomain;
 
 // WiFi security modes
 typedef enum t_securityMode {
@@ -177,12 +160,6 @@ typedef enum t_connectionState {
     WF_CSTATE_CONNECTION_PERMANENTLY_LOST = 6
 } t_connectionState;
 
-// see WF_Scan()
-typedef enum t_scanMode {
-    WF_SCAN_FILTERED = 0,
-    WF_SCAN_ALL      = 1
-} t_scanMode;
-
 //------------------------------------------------------------------------------
 // Multicast Filter ID's (see t_swMulticastConfig() and WF_SwMulticastFilterSet().
 // AdHoc can only use WF_MULTICAST_FILTER_1 or WF_MULTICAST_FILTER_2.
@@ -249,13 +226,6 @@ typedef struct adHocNetworkContext {
     u_int16_t beaconPeriod;             // beacon period, in ms
     u_int8_t  mode;                     // see t_adhoc mode
 } t_adHocNetworkContext;
-
-// used in WF_DeviceInfoGet()
-typedef struct mrf24wgDeviceInfo {
-    u_int8_t  deviceType;               // see t_deviceType
-    u_int8_t  romVersion;               // ROM version number
-    u_int8_t  patchVersion;             // Patch version number
-} t_deviceInfo;
 
 // See WF_SecurityWepSet()
 typedef struct wepContext {
@@ -428,12 +398,12 @@ typedef struct wpsCredentialsStruct {
 
 // WiFi init and task functions
 //-----------------------------
-void WF_Init(t_deviceInfo *deviceInfo); // must be called first
+unsigned WF_Init(void);                         // must be called first
 void WF_Task(void);
 
 // Core WiFi configuration functions (must always be called)
 //----------------------------------------------------------
-void WF_RegionalDomainSet(u_int8_t regionalDomain);
+void mrf_set_regional_domain(unsigned regional_domain);
 void WF_SsidSet(u_int8_t *p_ssid,  u_int8_t ssidLength);
 void WF_NetworkTypeSet(u_int8_t networkType);
 void WF_ChannelListSet(u_int8_t *p_channelList, u_int8_t numChannels);
@@ -457,8 +427,8 @@ int WF_ConnectionStateGet(void);
 
 // WiFi scanning functions
 //------------------------
-void WF_Scan(u_int8_t scanMode);
-void WF_ScanResultGet(u_int8_t listIndex, t_scanResult *p_scanResult);
+void WF_Scan(int scan_all);
+void WF_ScanResultGet(unsigned list_index, t_scanResult *p_scanResult);
 
 // Power-save mode (PS-Poll)
 //--------------------------
@@ -474,7 +444,7 @@ void WF_TxPowerMaxSet(u_int8_t maxTxPower);
 
 // WiFi status functions
 //----------------------
-void WF_DeviceInfoGet(t_deviceInfo *p_deviceInfo);
+unsigned mrf_get_system_version();
 void WF_MacStatsGet(t_macStats *p_stats);
 
 // multicast filter functions
@@ -482,15 +452,15 @@ void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId, u_int8_t multicastAddre
 
 // data tx functions
 //------------------
-bool WF_TxPacketAllocate(u_int16_t bytesNeeded);
-void WF_TxPacketCopy(u_int8_t *p_buf, u_int16_t length);
-void WF_TxPacketTransmit(u_int16_t packetSize);
+int WF_TxPacketAllocate(unsigned bytes_needed);
+void WF_TxPacketCopy(u_int8_t *p_buf, unsigned length);
+void WF_TxPacketTransmit(unsigned packet_size);
 
 // data rx functions
 //------------------
 void WF_ProcessRxPacket(void);
-u_int16_t WF_RxPacketLengthGet(void);
-void WF_RxPacketCopy(u_int8_t *p_buf, u_int16_t len);
+unsigned WF_RxPacketLengthGet(void);
+void WF_RxPacketCopy(u_int8_t *p_buf, unsigned len);
 void WF_RxPacketDeallocate(void);
 
 // Miscellaneous functions

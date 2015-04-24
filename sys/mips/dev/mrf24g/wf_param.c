@@ -34,7 +34,7 @@
  *  data     - Parameter data
  *  data_len - Number of data bytes
  */
-static void SendSetParamMsg(unsigned param, u_int8_t *data, unsigned data_len)
+static void set_param(unsigned param, u_int8_t *data, unsigned data_len)
 {
     u_int8_t hdr[4];
 
@@ -72,7 +72,7 @@ static void SendSetParamMsg(unsigned param, u_int8_t *data, unsigned data_len)
  *  6     Data[0]        first byte of returned parameter data
  *  N     Data[N]        Nth byte of param data
  */
-static void SendGetParamMsg(unsigned param_type, u_int8_t *reply, unsigned reply_len)
+static void get_param(unsigned param_type, u_int8_t *reply, unsigned reply_len)
 {
     u_int8_t hdr[4];
 
@@ -81,45 +81,32 @@ static void SendGetParamMsg(unsigned param_type, u_int8_t *reply, unsigned reply
     hdr[2] = 0;                         /* MS 8 bits of param Id, always 0 */
     hdr[3] = param_type;                /* LS 8 bits of param ID */
 
-    mrf_mgmt_send_receive(hdr, sizeof(hdr),
-        reply, reply_len,               /* write the response data here */
-        MSG_PARAM_START_DATA_INDEX);    /* data for GetParam always starts at index 6 */
+    /* Reply data for GetParam always starts at index 6. */
+    mrf_mgmt_send_receive(hdr, sizeof(hdr), reply, reply_len, 6);
 }
 
 /*
  * Must be called to configure the MRF24W for operations.
  * MACInit must be called first.
  */
-void WFEnableMRF24WB0MMode()
+void mrf_enable_module_operation()
 {
-    u_int8_t buf[1] = {ENABLE_MRF24WB0M};
+    u_int8_t buf[1] = { 1 };    /* Enable MRF24WB0M mode */
 
-    SendSetParamMsg(PARAM_MRF24WB0M, buf, sizeof(buf));
+    set_param(PARAM_MRF24WB0M, buf, sizeof(buf));
 }
 
 /*
  * Retrieve WF device information.
  * MACInit must be called first.
- *
- * Parameters:
- *  p_deviceInfo - Pointer where device info will be written
+ * Return ROM version and patch version as a 16-bit number.
  */
-void WF_DeviceInfoGet(t_deviceInfo *p_Info)
+unsigned mrf_get_system_version()
 {
-    u_int8_t msgData[2];
+    u_int8_t data[2];
 
-    SendGetParamMsg(PARAM_SYSTEM_VERSION, msgData, sizeof(msgData));
-
-    p_Info->romVersion   = msgData[0];
-    p_Info->patchVersion = msgData[1];
-
-    if (p_Info->romVersion == 0x12) {
-        p_Info->deviceType = WF_MRF24WB_DEVICE;
-    } else if (p_Info->romVersion >= 0x30) {
-        p_Info->deviceType = WF_MRF24WG_DEVICE;  /* need part number */
-    } else {
-        p_Info->deviceType = WF_UNKNOWN_DEVICE;
-    }
+    get_param(PARAM_SYSTEM_VERSION, data, sizeof(data));
+    return data[0] << 8 | data[1];
 }
 
 /*
@@ -136,19 +123,19 @@ void WF_DeviceInfoGet(t_deviceInfo *p_Info)
  * Parameter:
  *  regionalDomain - desired regional domain
  */
-void WF_RegionalDomainSet(u_int8_t regionalDomain)
+void mrf_set_regional_domain(unsigned regional_domain)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
 
-    errorCode = UdSetDomain(regionalDomain);
+    errorCode = UdSetDomain(regional_domain);
     if (errorCode != UD_SUCCESS) {
-        printf("--- %s: invalid regional domain=%u\n", __func__, regionalDomain);
+        printf("--- %s: invalid regional domain=%u\n", __func__, regional_domain);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
 
-    SendSetParamMsg(PARAM_REGIONAL_DOMAIN, &regionalDomain, 1);
+    set_param(PARAM_REGIONAL_DOMAIN, (u_int8_t*) &regional_domain, 1);
 }
 
 /*
@@ -157,9 +144,12 @@ void WF_RegionalDomainSet(u_int8_t regionalDomain)
  * Parameters:
  *  p_regionalDomain - pointer to where regional domain is written
  */
-void WF_RegionalDomainGet(u_int8_t *p_regionalDomain)
+unsigned mrf_get_regional_domain()
 {
-    SendGetParamMsg(PARAM_REGIONAL_DOMAIN, p_regionalDomain, 1);
+    u_int8_t regional_domain;
+
+    get_param(PARAM_REGIONAL_DOMAIN, &regional_domain, 1);
+    return regional_domain;
 }
 
 /*
@@ -183,12 +173,12 @@ void WF_MacAddressSet(u_int8_t *p_mac)
         return;
     }
 #endif
-    SendSetParamMsg(PARAM_MAC_ADDRESS, p_mac, WF_MAC_ADDRESS_LENGTH);
+    set_param(PARAM_MAC_ADDRESS, p_mac, WF_MAC_ADDRESS_LENGTH);
 }
 
 void WF_MacAddressGet(u_int8_t *p_macAddress)
 {
-    SendGetParamMsg(PARAM_MAC_ADDRESS, p_macAddress, WF_MAC_ADDRESS_LENGTH);
+    get_param(PARAM_MAC_ADDRESS, p_macAddress, WF_MAC_ADDRESS_LENGTH);
 }
 
 /*
@@ -201,7 +191,7 @@ void WF_MacAddressGet(u_int8_t *p_macAddress)
  */
 void WF_SetTxDataConfirm(u_int8_t state)
 {
-    SendSetParamMsg(PARAM_CONFIRM_DATA_TX_REQ, &state, 1);
+    set_param(PARAM_CONFIRM_DATA_TX_REQ, &state, 1);
 }
 
 void WF_TxModeSet(u_int8_t mode)
@@ -212,7 +202,7 @@ void WF_TxModeSet(u_int8_t mode)
         printf("--- %s: invalid tx mode=%u\n", __func__, mode);
     }
 #endif
-    SendSetParamMsg(PARAM_TX_MODE, &mode, 1);
+    set_param(PARAM_TX_MODE, &mode, 1);
 }
 
 void WF_RtsThresholdSet(u_int16_t rtsThreshold)
@@ -228,7 +218,7 @@ void WF_RtsThresholdSet(u_int16_t rtsThreshold)
 #endif
 
     tmp = htons(rtsThreshold);
-    SendSetParamMsg(PARAM_RTS_THRESHOLD, (u_int8_t *)&tmp, sizeof(tmp));
+    set_param(PARAM_RTS_THRESHOLD, (u_int8_t *)&tmp, sizeof(tmp));
 }
 
 /*
@@ -243,12 +233,12 @@ void YieldPassPhraseToHost()
 {
     u_int8_t yield = 1;
 
-    SendSetParamMsg(PARAM_YIELD_PASSPHRASE_TOHOST, &yield, sizeof(yield));
+    set_param(PARAM_YIELD_PASSPHRASE_TOHOST, &yield, 1);
 }
 
 void SetPSK(u_int8_t *psk)
 {
-    SendSetParamMsg(PARAM_SET_PSK, psk, WF_WPA_KEY_LENGTH);
+    set_param(PARAM_SET_PSK, psk, WF_WPA_KEY_LENGTH);
 }
 
 /*
@@ -261,10 +251,9 @@ void SetPSK(u_int8_t *psk)
 void WF_MacStatsGet(t_macStats *p_macStats)
 {
     u_int32_t *p_value;
-    u_int8_t  numElements;
-    u_int8_t  i;
+    unsigned numElements, i;
 
-    SendGetParamMsg(PARAM_STAT_COUNTERS, (u_int8_t *)p_macStats, sizeof(t_macStats));
+    get_param(PARAM_STAT_COUNTERS, (u_int8_t *)p_macStats, sizeof(t_macStats));
 
     // calculate number of 32-bit counters in the stats structure and point to first element
     numElements = sizeof(t_macStats) / sizeof(u_int32_t);
@@ -306,7 +295,7 @@ void WF_MacStatsGet(t_macStats *p_macStats)
  */
 void WF_LinkDownThresholdSet(u_int8_t threshold)
 {
-    SendSetParamMsg(PARAM_LINK_DOWN_THRESHOLD, &threshold, sizeof(threshold));
+    set_param(PARAM_LINK_DOWN_THRESHOLD, &threshold, 1);
 }
 
 /*
@@ -329,9 +318,8 @@ void WF_LinkDownThresholdSet(u_int8_t threshold)
 void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
                              u_int8_t multicastAddress[WF_MAC_ADDRESS_LENGTH])
 {
-    int i;
-    bool    deactivateFlag = 1;
-    u_int8_t msgData[8];
+    int i, deactivateFlag = 1;
+    u_int8_t data[8];
 
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetHwMulticastFilter(multicastFilterId, multicastAddress);
@@ -351,15 +339,15 @@ void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
         }
     }
 
-    msgData[0] = multicastFilterId;     /* Address Compare Register number to use   */
+    data[0] = multicastFilterId;     /* Address Compare Register number to use   */
     if (deactivateFlag) {
-        msgData[1] = ADDRESS_FILTER_DEACTIVATE;
+        data[1] = 0;                 /* deactivate address filter */
     } else {
-        msgData[1] = MULTICAST_ADDRESS;     /* type of address being used in the filter */
+        data[1] = 6;                 /* use multicast filter */
     }
 
-    bcopy((void*)multicastAddress, &msgData[2], WF_MAC_ADDRESS_LENGTH);
-    SendSetParamMsg(PARAM_COMPARE_ADDRESS, msgData, sizeof(msgData) );
+    bcopy((void*)multicastAddress, &data[2], WF_MAC_ADDRESS_LENGTH);
+    set_param(PARAM_COMPARE_ADDRESS, data, sizeof(data));
 }
 
 /*
@@ -369,13 +357,13 @@ void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
  * Parameter:
  *  p_factoryMaxTxPower - desired maxTxPower ( 0 to 18 dBm), in 1dB steps
  */
-u_int8_t GetFactoryMax()
+unsigned GetFactoryMax()
 {
-    u_int8_t msgData[2];
+    u_int8_t data[2];
 
     /* read max and min factory-set power levels */
-    SendGetParamMsg(PARAM_FACTORY_SET_TX_MAX_POWER, msgData, sizeof(msgData));
+    get_param(PARAM_FACTORY_TX_POWER, data, sizeof(data));
 
-    /* msgData[0] = max power, msgData[1] = min power */
-    return msgData[0];
+    /* data[0] = max power, data[1] = min power */
+    return data[0];
 }

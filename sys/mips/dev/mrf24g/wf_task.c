@@ -14,10 +14,8 @@ void WF_Task()
 
     // if PS-Poll was disabled temporarily and needs to be reenabled, and, we are in
     // a connected state
-    if (isPsPollNeedReactivate() &&
-        UdGetConnectionState() == CS_CONNECTED)
-    {
+    if (isPsPollNeedReactivate() && UdGetConnectionState() == CS_CONNECTED) {
         ClearPsPollReactivate();
-        WFConfigureLowPowerMode(WF_LOW_POWER_MODE_ON);
+        WFConfigureLowPowerMode(1);
     }
 }

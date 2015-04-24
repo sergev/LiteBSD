@@ -7,20 +7,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-#define WF_TX_PREAMBLE_SIZE 4
-#define ETHER_HEADER_SIZE   16  // 6 bytes dest address, 6 bytes src address, 2 bytes for type field
-#define ENC_PREAMBLE_OFFSET 14
-
-typedef struct {
-    u_int8_t type;
-    u_int8_t subType;
-} t_rxPreamble;
-
-// will be overwriting the ethernet header source address with the snap header
-static const u_int8_t snapHdr[6] = {
-    SNAP_VAL, SNAP_VAL, SNAP_CTRL_VAL, SNAP_TYPE_VAL, SNAP_TYPE_VAL, SNAP_TYPE_VAL
-};
-
 static bool g_HostRAWPacketRx;
 
 void SignalPacketRx()
@@ -59,15 +45,15 @@ void RxPacketCheck()
  * Parameters:
  *  bytes_needed -- number of bytes needed for the data tx message
  */
-bool WF_TxPacketAllocate(u_int16_t bytes_needed)
+int WF_TxPacketAllocate(unsigned bytes_needed)
 {
     unsigned buf_avail, nbytes;
     u_int32_t startTime;
 
     EnsureWFisAwake();
 
-    // allocate an extra 4 bytes for WiFi message preamble
-    bytes_needed += WF_TX_PREAMBLE_SIZE;
+    /* Allocate an extra 4 bytes for WiFi message preamble. */
+    bytes_needed += 4;
 
     startTime = mrf_timer_read();
     while (mrf_timer_elapsed(startTime) < 20) {
@@ -94,63 +80,68 @@ bool WF_TxPacketAllocate(u_int16_t bytes_needed)
     return 0;
 }
 
-void WF_TxPacketCopy(u_int8_t *buf, u_int16_t length)
+/*
+ * Copy Ethernet packet contents to the RAW data transmit buffer.
+ */
+void WF_TxPacketCopy(u_int8_t *buf, unsigned length)
 {
+    /* The RAW index has been previously set to 4
+     * by WF_TxPacketAllocate function. */
     mrf_raw_write(RAW_ID_TRANSMIT, buf, length);
 }
 
-void WF_TxPacketTransmit(u_int16_t packetSize)
+void WF_TxPacketTransmit(unsigned packet_size)
 {
     /* create internal preamble */
-    u_int8_t txDataPreamble[4] = {
-        WF_TYPE_DATA_REQUEST, WF_SUBTYPE_STD_DATA, 1, 0,
-    };
+    static const u_int8_t tx_preamble[4] =
+        { WF_TYPE_DATA_REQUEST, WF_SUBTYPE_STD_DATA, 1, 0 };
+
+    /* will be overwriting the ethernet header source address with the snap header */
+    static const u_int8_t snap_hdr[6] =
+        { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
 
     EnsureWFisAwake();
 
-    // write out internal preamble, starting at index 0 in the raw window
-    mrf_raw_pwrite(RAW_ID_TRANSMIT, txDataPreamble, sizeof(txDataPreamble), 0);
+    /* Write out internal preamble, starting at index 0 in the raw window. */
+    mrf_raw_pwrite(RAW_ID_TRANSMIT, tx_preamble, sizeof(tx_preamble), 0);
 
-    // overwrite the Ethernet source address in Tx packet with SNAP header
-    // (starts at index 10 within packet, after 4 bytes of preamble and 6 bytes of dest address)
-    mrf_raw_pwrite(RAW_ID_TRANSMIT, snapHdr, SNAP_SIZE,
-        sizeof(txDataPreamble) + WF_MAC_ADDRESS_LENGTH);
+    /* Overwrite the Ethernet source address in Tx packet with SNAP header.
+     * Ethernet header starts at index 10 within packet, after 4 bytes
+     * of preamble and 6 bytes of dest address). */
+    mrf_raw_pwrite(RAW_ID_TRANSMIT, snap_hdr, sizeof(snap_hdr),
+        sizeof(tx_preamble) + WF_MAC_ADDRESS_LENGTH);
 
-    // Notify WiFi device that there is a transmit frame to send.  The frame will
-    // be automatically deallocated after RF transmission is completed.
-    mrf_raw_move(RAW_ID_TRANSMIT, RAW_MAC, 0, packetSize + sizeof(txDataPreamble));
-
-    // this raw window is logically no longer mounted.  The WiFi chip will
-    // automatically deallocate after RF transmission.
-    //SetRawDataWindowState(RAW_ID_TRANSMIT, WF_RAW_UNMOUNTED);
+    /* Notify WiFi device that there is a transmit frame to send.
+     * The frame will be automatically deallocated after RF transmission
+     * is completed. */
+    mrf_raw_move(RAW_ID_TRANSMIT, RAW_MAC, 0, packet_size + sizeof(tx_preamble));
 }
 
-u_int16_t WF_RxPacketLengthGet()
+unsigned WF_RxPacketLengthGet()
 {
-    u_int16_t len;
-    t_rxPreamble rxPreamble;
+    unsigned len;
+    u_int8_t rx_preamble[2];
 
-    /* Mount Read FIFO to RAW Rx window.  Allows use of RAW engine to read rx data packet. */
-    /* Function call returns number of bytes in the data packet.                           */
+    /* Mount Read FIFO to RAW Rx window.
+     * Allows use of RAW engine to read rx data packet.
+     * Function call returns number of bytes in the data packet. */
     len = mrf_raw_move(RAW_ID_RECEIVE, RAW_MAC, 1, 0);
     if (len == 0) {
         printf("--- %s: failed\n", __func__);
         return 0;
     }
 
-    // read the data frame internal preamble (type and subtype) to verify that we did, in
-    // fact, mount an Rx data packet.  This read auto-increments the raw index to the first
-    // actual data byte in the frame.
-    mrf_raw_read(RAW_ID_RECEIVE, (u_int8_t*) &rxPreamble, sizeof(t_rxPreamble));
-    if (rxPreamble.type != WF_TYPE_DATA_RX_INDICATE) {
-        printf("--- %s: invalid preamble type=%u\n", __func__, rxPreamble.type);
+    /* Read the data frame internal preamble (type and subtype) to verify
+     * that we did, in fact, mount an Rx data packet. */
+    mrf_raw_read(RAW_ID_RECEIVE, rx_preamble, sizeof(rx_preamble));
+    if (rx_preamble[0] != WF_TYPE_DATA_RX_INDICATE) {
+        printf("--- %s: invalid preamble type=%u\n", __func__, rx_preamble[0]);
         return 0;
     }
 
-    // set raw pointer to start of 802.11 payload (start of Ethernet packet)
-    mrf_raw_seek(RAW_ID_RECEIVE, sizeof(t_rxPreamble) + ENC_PREAMBLE_OFFSET);
-
-    return len - sizeof(t_rxPreamble) - ENC_PREAMBLE_OFFSET;
+    /* Set raw pointer to start of Ethernet packet. */
+    mrf_raw_seek(RAW_ID_RECEIVE, 16);
+    return len - 16;
 }
 
 /*
@@ -161,7 +152,7 @@ void WF_RxPacketDeallocate()
     mrf_raw_move(RAW_ID_RECEIVE, RAW_DATA_POOL, 0, 0);
 }
 
-void WF_RxPacketCopy(u_int8_t *buf, u_int16_t length)
+void WF_RxPacketCopy(u_int8_t *buf, unsigned length)
 {
     mrf_raw_read(RAW_ID_RECEIVE, buf, length);
 }

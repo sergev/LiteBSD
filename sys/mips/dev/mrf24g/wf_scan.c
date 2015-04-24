@@ -23,32 +23,24 @@
  *  2.  MRF24W reset.
  *
  * Parameters:
- *  mode - WF_SCAN_FILTERED or WF_SCAN_ALL
+ *  scan_all - True or False
  *
- *    WF_SCAN_FILTERED:
+ *    False - filtered scan mode:
  *          * If SSID defined only scan results with that SSID are retained
  *          * If SSID not defined all scanned SSID?s will be retained
  *          * Only scan results from Infrastructure or AdHoc networks are
  *             retained, depending on the configured network type
  *          * The only channels scanned are those set in WF_SetChannelList()
  *
- *    WF_SCAN_ALL:
+ *    True - scan all mode:
  *          * Can be called after WF_Init() successfully completes (see WF_INIT_SUCCESSFUL eventData)
  *          * All scan results are retained (both Infrastructure and Ad Hoc networks).
  *          * All channels within the MRF24W's regional domain will be scanned.
  */
-void WF_Scan(u_int8_t scanMode)
+void WF_Scan(int scan_all)
 {
     int connectionState;
     u_int8_t hdr[4];
-
-#if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdScan(scanMode);
-    if (errorCode != UD_SUCCESS) {
-        printf("--- %s: invalid scan mode=%u\n", __func__, scanMode);
-        return;
-    }
-#endif
 
     // Can only scan when connected or idle
     connectionState = WF_ConnectionStateGet();
@@ -60,7 +52,7 @@ void WF_Scan(u_int8_t scanMode)
 
     hdr[0] = WF_TYPE_MGMT_REQUEST;
     hdr[1] = WF_SUBTYPE_SCAN_START;
-    hdr[2] = (scanMode == WF_SCAN_FILTERED) ? GetCpid() : 0xff;
+    hdr[2] = scan_all ? 0xff : GetCpid();
     hdr[3] = 0;                                 /* not used */
     mrf_mgmt_send(hdr, sizeof(hdr), 0, 0, 1);
 }
@@ -81,7 +73,7 @@ void WF_Scan(u_int8_t scanMode)
  *  list_index  - Index (0-based list) of the scan entry to retrieve.
  *  scan_result - Pointer to location to store the scan result structure
  */
-void WF_ScanResultGet(u_int8_t list_index, t_scanResult *scan_result)
+void WF_ScanResultGet(unsigned list_index, t_scanResult *scan_result)
 {
     u_int8_t hdr[4];
 
