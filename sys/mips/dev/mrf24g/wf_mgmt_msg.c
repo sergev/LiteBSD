@@ -10,13 +10,13 @@ static void WFProcessMgmtIndicateMsg()
     u_int8_t buf[6];
 
     /* read 2-byte header of management message */
-    mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t*) &hdr, sizeof(t_mgmtIndicateHdr), 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtIndicateHdr), 0);
 
     /* Determine which event occurred and handle it */
     switch (hdr.subType) {
     case WF_EVENT_CONNECTION_ATTEMPT_STATUS_SUBTYPE:
         /* read first 2 bytes after header */
-        mrf_raw_pread(RAW_MGMT_RX_ID, buf, 2, sizeof(t_mgmtIndicateHdr));
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(t_mgmtIndicateHdr));
 
         if (buf[0] == CONNECTION_ATTEMPT_SUCCESSFUL) {
             // if connection attempt successful
@@ -34,7 +34,7 @@ static void WFProcessMgmtIndicateMsg()
         /* read index 2 and 3 from message and store in buf[0] and buf[1]
            buf[0] -- 1: Connection temporarily lost  2: Connection permanently lost 3: Connection Reestablished
            buf[1] -- 0: Beacon Timeout  1: Deauth from AP  */
-        mrf_raw_pread(RAW_MGMT_RX_ID, buf, 2, sizeof(t_mgmtIndicateHdr));
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(t_mgmtIndicateHdr));
 
         switch (buf[0]) {
         case CONNECTION_TEMPORARILY_LOST:
@@ -57,14 +57,14 @@ static void WFProcessMgmtIndicateMsg()
 
     case WF_EVENT_SCAN_RESULTS_READY_SUBTYPE:
         /* read index 2 of mgmt indicate to get the number of scan results */
-        mrf_raw_pread(RAW_MGMT_RX_ID, buf, 1, sizeof(t_mgmtIndicateHdr));
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 1, sizeof(t_mgmtIndicateHdr));
         printf("--- %s: scan results ready, count=%u\n", __func__, buf[0]);
         break;
 
     case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
         printf("--- %s: key calculation finished\n", __func__);
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
-        mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t *)GetWpsPassPhraseInfo(),
+        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t *)GetWpsPassPhraseInfo(),
             sizeof(t_wpaKeyInfo), sizeof(t_mgmtIndicateHdr));
         break;
 
@@ -74,7 +74,7 @@ static void WFProcessMgmtIndicateMsg()
     }
 
     /* free mgmt buffer */
-    mrf_raw_move(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
+    mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
 }
 
 /*
@@ -86,14 +86,14 @@ int ReceiveMgmtConfirmMsg()
     u_int8_t msgType;
 
     // mount the mgmt pool rx data.
-    len = mrf_raw_move(RAW_MGMT_RX_ID, RAW_MAC, 1, 0);
+    len = mrf_raw_move(RAW_ID_MGMT_RX, RAW_MAC, 1, 0);
     if (len == 0) {
         printf("--- %s: failed\n", __func__);
         return 0;
     }
 
     // read first byte from this mgmt msg (msg type)
-    mrf_raw_pread(RAW_MGMT_RX_ID, &msgType, 1, 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, &msgType, 1, 0);
 
     switch (msgType) {
     case WF_MGMT_CONFIRM_TYPE:
@@ -113,28 +113,33 @@ int ReceiveMgmtConfirmMsg()
 }
 
 /*
- * Send a management message
+ * Send a management message, and wait for a response.
+ * The caller can optionally request the the management
+ * response be freed immediately (by this function) or not freed.
+ * If not freed the caller is responsible to free the response buffer.
  *
  * Parameters:
- *  p_header      -- pointer to mgmt message header data
- *  headerLength  -- number of bytes in the header
- *                   will be written
- *  p_data        -- pointer to mgmt message data
- *  dataLength    -- number of byte of data
+ *  header        -- message header data
+ *  header_len    -- number of bytes in the header
+ *  data          -- message data
+ *  data_len      -- number of data bytes
+ *  free_response -- whether to deallocate response buffer immediately
  */
-void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
-    u_int8_t *p_data, u_int8_t dataLength)
+void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
+                   u_int8_t *data, unsigned data_len,
+                   int free_response)
 {
-    unsigned start_time, elapsed_time, buf_avail, nbytes;
+    unsigned start_time, elapsed_time, buf_avail, nbytes, intr;
+    t_mgmtMsgRxHdr hdr;
 
     EnsureWFisAwake();
 #if 0
-    printf("--- %s: send %u+%u bytes: %02x", __func__, headerLength, dataLength, p_header[0]);
+    printf("--- %s: send %u+%u bytes: %02x", __func__, header_len, data_len, header[0]);
     int i;
-    for (i=1; i<headerLength; ++i)
-        printf("-%02x", p_header[i]);
-    for (i=0; i<dataLength; ++i)
-        printf("-%02x", p_data[i]);
+    for (i=1; i<header_len; ++i)
+        printf("-%02x", header[i]);
+    for (i=0; i<data_len; ++i)
+        printf("-%02x", data[i]);
     printf("\n");
 #endif
     start_time = mrf_timer_read();
@@ -148,7 +153,7 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
         /* if enough bytes available to allocate */
         if (buf_avail >= WF_MAX_TX_MGMT_MSG_SIZE) {
             /* allocate and create the new Mgmt Tx buffer */
-            nbytes = mrf_raw_move(RAW_MGMT_TX_ID, RAW_MGMT_POOL, 1, WF_MAX_TX_MGMT_MSG_SIZE);
+            nbytes = mrf_raw_move(RAW_ID_MGMT_TX, RAW_MGMT_POOL, 1, WF_MAX_TX_MGMT_MSG_SIZE);
             if (nbytes > 0)
                 break;
             /*printf("--- %s: cannot allocate %u bytes of %u free\n",
@@ -166,31 +171,15 @@ void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength,
     }
 
     /* write out management header */
-    mrf_raw_write(RAW_MGMT_TX_ID, p_header, headerLength);
+    mrf_raw_write(RAW_ID_MGMT_TX, header, header_len);
 
     /* write out data (if any) */
-    if (dataLength > 0) {
-        mrf_raw_write(RAW_MGMT_TX_ID, p_data, dataLength);
+    if (data_len > 0) {
+        mrf_raw_write(RAW_ID_MGMT_TX, data, data_len);
     }
 
     /* signal MRF24W that mgmt message is ready to be processed */
-    mrf_raw_move(RAW_MGMT_TX_ID, RAW_MAC, 0, headerLength + dataLength);
-}
-
-/*
- * Called after sending a mgmt request.  This function waits for a mgmt
- * response.  The caller can optionally request the the management
- * response be freed immediately (by this function) or not freed.  If not
- * freed the caller is responsible to free the response buffer.
- *
- * Parameters:
- *  expectedSubtype -- The expected subtype of the mgmt response
- *  freeAction      -- FREE_MGMT_BUFFER or DO_NOT_FREE_MGMT_BUFFER
- */
-void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
-{
-    unsigned start_time, elapsed_time, intr;
-    t_mgmtMsgRxHdr  hdr;
+    mrf_raw_move(RAW_ID_MGMT_TX, RAW_MAC, 0, header_len + data_len);
 
     /* Wait until mgmt response is received */
     start_time = mrf_timer_read();
@@ -225,67 +214,59 @@ void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction)
     }
 
     /* if the caller wants to delete the response immediately (doesn't need any data from it */
-    if (freeAction == FREE_MGMT_BUFFER) {
+    if (free_response) {
         /* read and verify result before freeing up buffer to ensure our message send was successful */
-        mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t*) &hdr, sizeof(t_mgmtMsgRxHdr), 0);
+        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtMsgRxHdr), 0);
 
         if (hdr.result != MGMT_RESP_SUCCESS) {
             printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
         }
-        else if (hdr.subtype != expectedSubtype) {
+        else if (hdr.subtype != header[1]) {
             printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
-                __func__, hdr.subtype, expectedSubtype);
+                __func__, hdr.subtype, header[1]);
         }
 
         /* free mgmt buffer */
-        mrf_raw_move(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
+        mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
     }
 }
 
 /*
- * Wait for the mgmt response message and validate it by:
- *  1) checking the result field
- *  2) verifying that the received subtype matches the execpted subtype
- *
- * In addition, this function reads the desired number of data bytes from
- * the mgmt response, copies them to p_data, and then frees the mgmt buffer.
+ * Send a management message, and wait for a response.
+ * Read the desired number of data bytes from the mgmt response,
+ * copy them to p_data, and then free the mgmt buffer.
  *
  * Parameters:
- *  expectedSubtype -- management message subtype that we are expecting
- *  p_data          -- pointer where any desired management data bytes
- *                     will be written
- *  numDataBytes    -- Number of data bytes from mgmt response to write to
- *                     p_data.  Data always starts at index 4 of mgmt response.
- *  skipDataRead    -- if TRUE, then no data will be read and the mgmt buffer will not
- *                     be freed.  If FALSE, the data will be read and the mgmt buffer
- *                     will be freed.
+ *  header     -- pointer to mgmt message header data
+ *  header_len -- number of bytes in the header
+ *  reply      -- pointer where any received management data will be written
+ *  reply_len  -- number of data bytes to receive
+ *  offset     -- skip this number of bytes in receive data
  */
-void WaitForMgmtResponseAndReadData(u_int8_t expectedSubtype,
-                                    u_int8_t numDataBytes,
-                                    u_int8_t startIndex,
-                                    u_int8_t *p_data)
+void mrf_mgmt_send_receive(u_int8_t *message, unsigned message_len,
+        u_int8_t *reply, unsigned reply_len, unsigned offset)
 {
-    t_mgmtMsgRxHdr hdr;     /* management msg header struct */
+    t_mgmtMsgRxHdr hdr;     /* header of reply message */
 
-    WaitForMgmtResponse(expectedSubtype, DO_NOT_FREE_MGMT_BUFFER);
+    mrf_mgmt_send(message, message_len, 0, 0, 0);
 
-    // if made it here then received a management message; read out header
-    mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t*) &hdr, sizeof(t_mgmtMsgRxHdr), 0);
+    /* Read out header of the received response. */
+    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
 
     if (hdr.result != MGMT_RESP_SUCCESS &&
         hdr.result != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR) {
         printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
     }
-    else if (hdr.subtype != expectedSubtype) {
+    else if (hdr.subtype != message[1]) {
         printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
-            __func__, hdr.subtype, expectedSubtype);
+            __func__, hdr.subtype, message[1]);
     }
 
     /* if caller wants to read data from this mgmt response */
-    if (numDataBytes > 0) {
-        mrf_raw_pread(RAW_MGMT_RX_ID, p_data, numDataBytes, startIndex);
+    if (reply_len > 0) {
+        mrf_raw_pread(RAW_ID_MGMT_RX, reply, reply_len, offset);
     }
 
     /* free the mgmt buffer */
-    mrf_raw_move(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
+    mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
 }

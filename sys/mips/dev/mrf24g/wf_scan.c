@@ -39,8 +39,8 @@
  */
 void WF_Scan(u_int8_t scanMode)
 {
-    u_int8_t connectionState;
-    u_int8_t   hdr[4];
+    int connectionState;
+    u_int8_t hdr[4];
 
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdScan(scanMode);
@@ -51,7 +51,7 @@ void WF_Scan(u_int8_t scanMode)
 #endif
 
     // Can only scan when connected or idle
-    WF_ConnectionStateGet(&connectionState);
+    connectionState = WF_ConnectionStateGet();
     if (connectionState == WF_CSTATE_CONNECTION_IN_PROGRESS ||
         connectionState == WF_CSTATE_RECONNECTION_IN_PROGRESS) {
         printf("--- %s: scan not allowed\n", __func__);
@@ -61,11 +61,8 @@ void WF_Scan(u_int8_t scanMode)
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SCAN_START_SUBTYPE;
     hdr[2] = (scanMode == WF_SCAN_FILTERED) ? GetCpid() : 0xff;
-    hdr[3] = 0; /* not used */
-    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
-
-    /* wait for mgmt response, free it after it comes in (no data needed) */
-    WaitForMgmtResponse(WF_SCAN_START_SUBTYPE, FREE_MGMT_BUFFER);
+    hdr[3] = 0;                                 /* not used */
+    mrf_mgmt_send(hdr, sizeof(hdr), 0, 0, 1);
 }
 
 /*
@@ -81,28 +78,24 @@ void WF_Scan(u_int8_t scanMode)
  * already occurrerd.
  *
  * Parameters:
- *  listIndex    - Index (0-based list) of the scan entry to retrieve.
- *  p_scanResult - Pointer to location to store the scan result structure
+ *  list_index  - Index (0-based list) of the scan entry to retrieve.
+ *  scan_result - Pointer to location to store the scan result structure
  */
-void WF_ScanResultGet(u_int8_t listIndex, t_scanResult *p_scanResult)
+void WF_ScanResultGet(u_int8_t list_index, t_scanResult *scan_result)
 {
-    u_int8_t   hdr[4];
-    /* char rssiChan[48]; */ /* reference for how to retrieve RSSI */
+    u_int8_t hdr[4];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SCAN_GET_RESULTS_SUBTYPE;
-    hdr[2] = listIndex;        /* scan result index to read from */
-    hdr[3] = 1;                /* number of results to read */
-    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
+    hdr[2] = list_index;        /* scan result index to read from */
+    hdr[3] = 1;                 /* number of results to read */
 
-    /* index 4 contains number of scan results returned, index 5 is first byte of first scan result */
-    WaitForMgmtResponseAndReadData(
-        WF_SCAN_GET_RESULTS_SUBTYPE,    /* expected subtype */
-        sizeof(t_scanResult),           /* num data bytes to read */
-        5,                              /* starting at this index */
-        (u_int8_t *)p_scanResult);       /* write the response data here */
+    /* Index 4 contains number of scan results returned,
+     * index 5 is first byte of first scan result. */
+    mrf_mgmt_send_receive(hdr, sizeof(hdr),
+        (u_int8_t*) scan_result, sizeof(*scan_result), 5);
 
     /* fix up endianness for the two 16-bit values in the scan results */
-    p_scanResult->beaconPeriod = htons(p_scanResult->beaconPeriod);
-    p_scanResult->atimWindow   = htons(p_scanResult->atimWindow);
+    scan_result->beaconPeriod = htons(scan_result->beaconPeriod);
+    scan_result->atimWindow   = htons(scan_result->atimWindow);
 }

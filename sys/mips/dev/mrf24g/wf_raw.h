@@ -6,34 +6,34 @@
 #ifndef __WF_RAW_H
 #define __WF_RAW_H
 
-#define NUM_RAW_WINDOWS                 6   /* only using raw windows 0 thru 4 */
+#define NUM_RAW_WINDOWS         6   /* Total number of raw windows */
 
 /*
  * Usage of RAW Windows
  */
-#define RAW_DATA_RX_ID                  0
-#define RAW_DATA_TX_ID                  1
-#define RAW_MGMT_RX_ID                  2
-#define RAW_MGMT_TX_ID                  3
-#define RAW_SCRATCH_ID                  4
-#define RAW_UNUSED_ID                   5
+#define RAW_ID_RECEIVE          0   /* Network data receive */
+#define RAW_ID_TRANSMIT         1   /* Network data transmit */
+#define RAW_ID_MGMT_RX          2   /* Receive of management messages */
+#define RAW_ID_MGMT_TX          3   /* Transmit of management messages */
+#define RAW_ID_SCRATCH          4   /* Not used */
+#define RAW_ID_UNUSED           5   /* Not used */
 
 /*
- * Source/Destination objects on the MRF24W
+ * Source/Destination objects for mrf_raw_move()
  */
-#define RAW_MAC                         0x00    /* Cmd processor (aka MRF24W MAC) */
-#define RAW_MGMT_POOL                   0x10    /* For 802.11 Management packets */
-#define RAW_DATA_POOL                   0x20    /* Data Memory pool used for tx and rx operations */
-#define RAW_SCRATCH_POOL                0x30    /* Scratch object */
-#define RAW_STACK_MEM                   0x40    /* single level stack to save state of RAW */
-#define RAW_COPY                        0x70    /* RAW to RAW copy */
+#define RAW_MAC                 0x00    /* MRF24W MAC as command processor */
+#define RAW_MGMT_POOL           0x10    /* For management packets */
+#define RAW_DATA_POOL           0x20    /* For network packets */
+#define RAW_SCRATCH_POOL        0x30    /* Scratch object, not used */
+#define RAW_STACK_MEM           0x40    /* Single level stack to save state of RAW, not used */
+#define RAW_COPY                0x70    /* RAW to RAW copy, not used */
 
-void        mrf_raw_init(void);
-unsigned    mrf_raw_move(unsigned raw_id, unsigned src_dest, bool raw_is_destination, unsigned size);
-void        mrf_raw_seek(unsigned raw_id, unsigned index);
-void        mrf_raw_read(unsigned raw_id, u_int8_t *dest, unsigned length);
-void        mrf_raw_write(unsigned raw_id, const u_int8_t *src, unsigned length);
-void        mrf_raw_pread(unsigned raw_id, u_int8_t *dest, unsigned length, unsigned offset);
-void        mrf_raw_pwrite(unsigned raw_id, const u_int8_t *src, unsigned length, unsigned offset);
+void     mrf_raw_init(void);
+unsigned mrf_raw_move(unsigned raw_id, unsigned raw_obj, bool raw_is_destination, unsigned size);
+void     mrf_raw_seek(unsigned raw_id, unsigned index);
+void     mrf_raw_read(unsigned raw_id, u_int8_t *dest, unsigned nbytes);
+void     mrf_raw_write(unsigned raw_id, const u_int8_t *src, unsigned nbytes);
+void     mrf_raw_pread(unsigned raw_id, u_int8_t *dest, unsigned nbytes, unsigned offset);
+void     mrf_raw_pwrite(unsigned raw_id, const u_int8_t *src, unsigned nbytes, unsigned offset);
 
 #endif /* __WF_RAW_H */

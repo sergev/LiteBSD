@@ -19,10 +19,11 @@
 /*
  * Connection profile functions.
  */
-u_int8_t GetCpid(void);
+void WF_CPCreate(void);
+unsigned GetCpid(void);
 
 void SetHiddenSsid(bool hiddenSsid);
-void SetAdHocMode(u_int8_t mode);
+void SetAdHocMode(int mode);
 
 t_wpaKeyInfo * GetWpsPassPhraseInfo(void);
 

@@ -30,25 +30,20 @@
  *  3     mac state      (not used)
  *
  * Parameters:
- *  paramType - Parameter type associated with the SetParam msg.
- *  p_paramData - pointer to parameter data
- *  paramDataLength - Number of bytes pointed to by p_paramData
+ *  param    - Parameter type associated with the SetParam msg.
+ *  data     - Parameter data
+ *  data_len - Number of data bytes
  */
-static void SendSetParamMsg(u_int8_t paramType,
-                            u_int8_t *p_paramData,
-                            u_int8_t paramDataLength)
+static void SendSetParamMsg(unsigned param, u_int8_t *data, unsigned data_len)
 {
     u_int8_t hdr[4];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_SET_PARAM_SUBTYPE;
-    hdr[2] = 0x00;                 /* MS 8 bits of param Id, always 0 */
-    hdr[3] = paramType;            /* LS 8 bits of param ID           */
+    hdr[2] = 0;                     /* MS 8 bits of param Id, always 0 */
+    hdr[3] = param;                 /* LS 8 bits of param ID           */
 
-    SendMgmtMsg(hdr, sizeof(hdr), p_paramData, paramDataLength);
-
-    /* wait for MRF24W management response; free response because not needed */
-    WaitForMgmtResponse(WF_SET_PARAM_SUBTYPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(hdr, sizeof(hdr), data, data_len, 1);
 }
 
 /*
@@ -77,21 +72,18 @@ static void SendSetParamMsg(u_int8_t paramType,
  *  6     Data[0]        first byte of returned parameter data
  *  N     Data[N]        Nth byte of param data
  */
-static void SendGetParamMsg(u_int8_t paramType, u_int8_t *p_paramData, u_int8_t paramDataLength)
+static void SendGetParamMsg(unsigned param_type, u_int8_t *reply, unsigned reply_len)
 {
     u_int8_t hdr[4];
 
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_GET_PARAM_SUBTYPE;
-    hdr[2] = 0x00;                      /* MS 8 bits of param Id, always 0 */
-    hdr[3] = paramType;                 /* LS 8 bits of param ID           */
+    hdr[2] = 0;                         /* MS 8 bits of param Id, always 0 */
+    hdr[3] = param_type;                /* LS 8 bits of param ID */
 
-    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
-
-    WaitForMgmtResponseAndReadData(WF_GET_PARAM_SUBTYPE,       /* expected subtype                           */
-                                   paramDataLength,            /* num data bytes to read                     */
-                                   MSG_PARAM_START_DATA_INDEX, /* data for GetParam always starts at index 6 */
-                                   p_paramData);               /* write the response data here               */
+    mrf_mgmt_send_receive(hdr, sizeof(hdr),
+        reply, reply_len,               /* write the response data here */
+        MSG_PARAM_START_DATA_INDEX);    /* data for GetParam always starts at index 6 */
 }
 
 /*

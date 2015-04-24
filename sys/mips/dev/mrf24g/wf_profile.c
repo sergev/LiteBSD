@@ -54,23 +54,19 @@ static t_wpaKeyInfo *g_p_wpaKeyInfo;
  *  p_elementData - Pointer to element data
  *  elementDataLength - Number of bytes pointed to by p_elementData
  */
-static void LowLevel_CPSetElement(u_int8_t elementId,
-                                  u_int8_t *p_elementData,
-                                  u_int8_t elementDataLength)
+static void LowLevel_CPSetElement(unsigned element_id,
+    u_int8_t *data, unsigned data_len)
 {
-    u_int8_t  hdrBuf[5];
+    u_int8_t  header[5];
 
     /* Write out header portion of msg */
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CP_SET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
-    hdrBuf[2] = g_cpid;                     /* Connection Profile ID */
-    hdrBuf[3] = elementId;                  /* Element ID */
-    hdrBuf[4] = elementDataLength;          /* number of bytes of element data */
+    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
+    header[1] = WF_CP_SET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[2] = g_cpid;                     /* Connection Profile ID */
+    header[3] = element_id;                 /* Element ID */
+    header[4] = data_len;                   /* number of bytes of element data */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), p_elementData, elementDataLength);
-
-    /* wait for mgmt response, free after it comes in, don't need data bytes */
-    WaitForMgmtResponse(WF_CP_SET_ELEMENT_SUBTYPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(header, sizeof(header), data, data_len, 1);
 }
 
 /*
@@ -90,29 +86,24 @@ static void LowLevel_CPSetElement(u_int8_t elementId,
  *                   received, do not read any data as the caller will do that,
  *                   and don't free buffer, as caller will do that as well.
  */
-static void LowLevel_CPGetElement(u_int8_t elementId,
-                                  u_int8_t *p_elementData,
-                                  u_int8_t elementDataLength,
-                                  bool     dataReadAction)
+static void LowLevel_CPGetElement(u_int8_t element_id,
+                                  u_int8_t *reply,
+                                  u_int8_t reply_len)
 {
-    u_int8_t  hdrBuf[4];
+    u_int8_t  header[4];
 
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CP_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
-    hdrBuf[2] = g_cpid;                     /* Connection Profile ID */
-    hdrBuf[3] = elementId;                  /* Element ID */
+    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
+    header[1] = WF_CP_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[2] = g_cpid;                     /* Connection Profile ID */
+    header[3] = element_id;                 /* Element ID */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
-
-    if (dataReadAction) {
-        /* wait for mgmt response, read desired data, and then free response buffer */
-        WaitForMgmtResponseAndReadData(WF_CP_GET_ELEMENT_SUBTYPE,
-                                       elementDataLength,                   /* num data bytes to read */
-                                       sizeof(t_cPElementResponseHdr),      /* index of first byte of element data */
-                                       p_elementData);                      /* where to write element data */
+    if (reply) {
+        mrf_mgmt_send_receive(header, sizeof(header),
+            reply, reply_len,               /* where to write element data */
+            sizeof(t_cPElementResponseHdr)); /* index of first byte of element data */
     } else {
-        /* wait for mgmt response, don't read any data bytes, do not release mgmt buffer */
-        WaitForMgmtResponse(WF_CP_GET_ELEMENT_SUBTYPE, DO_NOT_FREE_MGMT_BUFFER);
+        /* don't read any data bytes, do not release mgmt buffer */
+        mrf_mgmt_send(header, sizeof(header), 0, 0, 0);
     }
 }
 
@@ -141,46 +132,42 @@ static void LowLevel_CPGetElement(u_int8_t elementId,
  *  securityKeyLength - Number of bytes in p_securityKey (not used if security
  *                      is WF_SECURITY_OPEN)
  */
-static void LowLevel_SetSecurity(u_int8_t securityType,
-                                 u_int8_t wepKeyIndex,
+static void LowLevel_SetSecurity(unsigned securityType,
+                                 unsigned wepKeyIndex,
                                  u_int8_t *p_securityKey,
-                                 u_int8_t securityKeyLength)
+                                 unsigned securityKeyLength)
 {
-    u_int8_t  hdrBuf[7];
-    u_int8_t  *p_key;
+    u_int8_t header[7], *p_key;
 
     /* Write out header portion of msg */
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CP_SET_ELEMENT_SUBTYPE;      /* mgmt request subtype */
-    hdrBuf[2] = GetCpid();                      /* Connection Profile ID */
-    hdrBuf[3] = WF_CP_ELEMENT_SECURITY;         /* Element ID */
+    header[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
+    header[1] = WF_CP_SET_ELEMENT_SUBTYPE;      /* mgmt request subtype */
+    header[2] = GetCpid();                      /* Connection Profile ID */
+    header[3] = WF_CP_ELEMENT_SECURITY;         /* Element ID */
 
     /* Next to header bytes are really part of data, but need to put them in header */
     /* bytes in order to prepend to security key */
-    hdrBuf[5] = securityType;
-    hdrBuf[6] = wepKeyIndex;
+    header[5] = securityType;
+    header[6] = wepKeyIndex;
 
     /* if security is open (no key) or WPS push button method */
     if (securityType == WF_SECURITY_OPEN ||
         securityType == WF_SECURITY_WPS_PUSH_BUTTON)
     {
-        hdrBuf[4]         = 2;      /* Only data is security type and wep index */
+        header[4]         = 2;      /* Only data is security type and wep index */
         p_key             = 0;
         securityKeyLength = 0;
     }
     /* else security is selected, so need to send key */
     else {
-        hdrBuf[4] = 2 + securityKeyLength;  /* data is security type + wep index + key */
+        header[4] = 2 + securityKeyLength;  /* data is security type + wep index + key */
         p_key     = p_securityKey;
     }
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), p_key, securityKeyLength);
-
-    /* wait for mgmt response, free after it comes in, don't need data bytes */
-    WaitForMgmtResponse(WF_CP_SET_ELEMENT_SUBTYPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(header, sizeof(header), p_key, securityKeyLength, 1);
 }
 
-u_int8_t GetCpid()
+unsigned GetCpid()
 {
     return g_cpid;
 }
@@ -203,18 +190,13 @@ void WF_CPCreate()
 {
     u_int8_t hdr[2];
 
-    g_cpid = 0xff;
-
     hdr[0] = WF_MGMT_REQUEST_TYPE;
     hdr[1] = WF_CP_CREATE_PROFILE_SUBTYPE;
+    g_cpid = 0xff;
 
-    SendMgmtMsg(hdr, sizeof(hdr), 0, 0);
-
-    /* wait for MRF24W management response, read data, free response after read */
-    WaitForMgmtResponseAndReadData(WF_CP_CREATE_PROFILE_SUBTYPE,
-                                   1,                             /* num data bytes to read */
-                                   MGMT_RESP_1ST_DATA_BYTE_INDEX, /* read starting at index 4 */
-                                   &g_cpid);                      /* write data here */
+    mrf_mgmt_send_receive(hdr, sizeof(hdr),
+        &g_cpid, 1,                         /* write data here */
+        MGMT_RESP_1ST_DATA_BYTE_INDEX);     /* read starting at index 4 */
 }
 
 /*
@@ -238,9 +220,7 @@ void WF_SsidSet(u_int8_t *p_ssid, u_int8_t ssidLength)
         return;
     }
 #endif
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID,   /* Element ID */
-                          p_ssid,               /* pointer to element data */
-                          ssidLength);          /* number of element data bytes */
+    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID, p_ssid, ssidLength);
 }
 
 /*
@@ -255,26 +235,23 @@ void WF_SsidGet(u_int8_t *p_ssid, u_int8_t *p_ssidLength)
     t_cPElementResponseHdr  mgmtHdr;
 
     /* Request SSID, but don't have this function read data or free response buffer. */
-    LowLevel_CPGetElement(WF_CP_ELEMENT_SSID,   /* Element ID */
-                          0,                    /* ptr to element data (not used here */
-                          0,                    /* num data bytes to read (not used here */
-                          0);                   /* no read, leave response mounted */
+    LowLevel_CPGetElement(WF_CP_ELEMENT_SSID, 0, 0);
 
     /* At this point, management response is mounted and ready to be read.
      * Set raw index to 0, read normal 4 byte header plus the next 3 bytes, these will be:
      *   profile id             [4]
      *   element id             [5]
      *   element data length    [6] */
-    mrf_raw_pread(RAW_MGMT_RX_ID, (u_int8_t*) &mgmtHdr, sizeof(t_cPElementResponseHdr), 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &mgmtHdr, sizeof(t_cPElementResponseHdr), 0);
 
     /* extract SSID length and write to caller */
     *p_ssidLength = mgmtHdr.elementDataLength;
 
     /* copy SSID name to callers buffer */
-    mrf_raw_pread(RAW_MGMT_RX_ID, p_ssid, *p_ssidLength, sizeof(t_cPElementResponseHdr));
+    mrf_raw_pread(RAW_ID_MGMT_RX, p_ssid, *p_ssidLength, sizeof(t_cPElementResponseHdr));
 
     /* free management buffer */
-    mrf_raw_move(RAW_MGMT_RX_ID, RAW_MGMT_POOL, 0, 0);
+    mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
 }
 
 /*
@@ -298,9 +275,7 @@ void WF_NetworkTypeSet(u_int8_t networkType)
     }
 #endif
 
-    LowLevel_CPSetElement(WF_CP_ELEMENT_NETWORK_TYPE,   /* Element ID */
-                          &networkType,                 /* pointer to element data */
-                          1);                           /* number of element data bytes */
+    LowLevel_CPSetElement(WF_CP_ELEMENT_NETWORK_TYPE, &networkType, 1);
 }
 
 /*
@@ -315,9 +290,7 @@ void WF_NetworkTypeSet(u_int8_t networkType)
  */
 void WF_SsidTypeSet(bool hidden)
 {
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE,  /* Element ID */
-                          (u_int8_t *)&hidden,       /* pointer to element data */
-                          1);                       /* number of element data bytes */
+    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hidden, 1);
 }
 
 void WF_SecurityOpenSet()
@@ -417,26 +390,19 @@ void WF_BssidSet(u_int8_t *p_bssid)
     }
 
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_BSSID,  // Element ID
-                          p_bssid,              // pointer to element data
-                          WF_BSSID_LENGTH,      // number of element data bytes
-                          1);                   // read data, free buffer after read
+    LowLevel_CPGetElement(WF_CP_ELEMENT_BSSID, p_bssid, WF_BSSID_LENGTH);
 }
 
 // called from SetAdhocContext().  Error checking performed there
 void SetHiddenSsid(bool hiddenSsid)
 {
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, // Element ID
-                          (u_int8_t *)&hiddenSsid,  // pointer to element data
-                          1);                      // number of element data bytes
+    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hiddenSsid, 1);
 }
 
 // called from SetAdhocContext().  Error checking performed there
-void SetAdHocMode(u_int8_t mode)
+void SetAdHocMode(int mode)
 {
-    LowLevel_CPSetElement(WF_CP_ELEMENT_ADHOC_BEHAVIOR,  // Element ID
-                          &mode,                         // pointer to element data
-                          1);                            // number of element data bytes
+    LowLevel_CPSetElement(WF_CP_ELEMENT_ADHOC_BEHAVIOR, (u_int8_t*) &mode, 1);
 }
 
 void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
@@ -448,8 +414,5 @@ void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
         return;
     }
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_READ_WPS_CRED,  // Element ID
-                          (u_int8_t *)p_cred,           // pointer to element data
-                          sizeof(*p_cred),              // number of element data bytes
-                          1);                           // read data, free buffer after read
+    LowLevel_CPGetElement(WF_CP_ELEMENT_READ_WPS_CRED, (u_int8_t*) p_cred, sizeof(*p_cred));
 }

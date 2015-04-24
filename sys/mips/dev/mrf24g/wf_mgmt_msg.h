@@ -122,7 +122,6 @@ typedef enum {
     PARAM_SET_PSK                       = 39,      /* set psk */
     PARAM_YIELD_PASSPHRASE_TOHOST       = 40,      /* forces module FW to send passphrase to host in WPS */
     PARAM_USE_SW_MULTICAST_FILTER       = 41       /* force to use sw multicast filter instead of hw filter */
-
 } tWFParam;
 
 /*-------------------------------------------------------------*/
@@ -172,15 +171,15 @@ typedef enum t_mgmtIndicateSubtypes {
 #define CONNECTION_PERMANENTLY_LOST      ((u_int8_t)2)
 #define CONNECTION_REESTABLISHED         ((u_int8_t)3)
 
-
-/* This structure describes the format of the first four bytes of all */
-/* mgmt response messages received from the MRF24W */
+/*
+ * This structure describes the format of the first four bytes of all
+ * mgmt response messages received from the MRF24W
+ */
 typedef struct mgmtRxHdrStruct {
-    u_int8_t  type;         /* always 0x02 */
-    u_int8_t  subtype;      /* mgmt msg subtype */
-    u_int8_t  result;       /* 1 if success, else failure */
-    u_int8_t  macState;     /* not used */
-
+    u_int8_t type;          /* always 0x02 */
+    u_int8_t subtype;       /* mgmt msg subtype */
+    u_int8_t result;        /* 1 if success, else failure */
+    u_int8_t macState;      /* not used */
 } t_mgmtMsgRxHdr;
 
 typedef struct mgmtIndicateHdrStruct {
@@ -188,11 +187,11 @@ typedef struct mgmtIndicateHdrStruct {
     u_int8_t subType;       /* event type */
 } t_mgmtIndicateHdr;
 
-
-void WF_CPCreate(void);
 int ReceiveMgmtConfirmMsg(void);
-void SendMgmtMsg(u_int8_t *p_header, u_int8_t headerLength, u_int8_t *p_data, u_int8_t dataLength);
-void WaitForMgmtResponse(u_int8_t expectedSubtype, u_int8_t freeAction);
-void WaitForMgmtResponseAndReadData(u_int8_t expectedSubtype, u_int8_t numDataBytes, u_int8_t startIndex, u_int8_t *p_data);
+
+void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
+        u_int8_t *data, unsigned data_len, int free_response);
+void mrf_mgmt_send_receive(u_int8_t *header, unsigned header_len,
+        u_int8_t *reply, unsigned reply_len, unsigned offset);
 
 #endif /* __WF_MGMT_MSG_H */

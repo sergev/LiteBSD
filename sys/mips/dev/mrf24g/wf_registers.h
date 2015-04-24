@@ -112,6 +112,11 @@
 #define HW_STATUS_RESET_DONE    0x1000  /* hardware reset completed */
 
 /*
+ * Bits for RAWx_STATUS register.
+ */
+#define RAW_STATUS_BUSY         0x0001  /* still busy */
+
+/*
  * Address bits used when accessing analog chip registers
  * through software SPI via RESET register.
  */
@@ -136,5 +141,17 @@
 #define ANALOG_REG_PLDO         (3 * 2)
 #define ANALOG_REG_BIAS         (4 * 2)
 #define ANALOG_REG_SPARE        (5 * 2)
+
+#ifdef KERNEL
+/*
+ * SPI Functions
+ */
+unsigned mrf_read_byte(unsigned regno);
+void     mrf_write_byte(unsigned regno, unsigned value);
+void     mrf_write(unsigned regno, unsigned value);
+unsigned mrf_read(unsigned regno);
+void     mrf_write_array(unsigned regno, const u_int8_t *src, unsigned nbytes);
+void     mrf_read_array(unsigned regno, u_int8_t *dest, unsigned nbytes);
+#endif
 
 #endif /* __WF_REGISTERS_H */

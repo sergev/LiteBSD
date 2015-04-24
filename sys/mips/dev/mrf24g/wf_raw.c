@@ -6,8 +6,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-#define WF_RAW_STATUS_REG_BUSY_MASK     0x0001
-
 /*
  * Raw registers for each raw window being used
  */
@@ -199,10 +197,10 @@ void mrf_raw_init()
      * Permanently mount scratch memory, index defaults to 0.
      * This function returns the number of bytes in scratch memory.
      */
-    mrf_raw_move(RAW_SCRATCH_ID, RAW_SCRATCH_POOL, 1, 0);
+    mrf_raw_move(RAW_ID_SCRATCH, RAW_SCRATCH_POOL, 1, 0);
 
-    //SetRawDataWindowState(RAW_DATA_TX_ID, WF_RAW_UNMOUNTED);
-    //SetRawDataWindowState(RAW_DATA_RX_ID, WF_RAW_UNMOUNTED);
+    //SetRawDataWindowState(RAW_ID_DATA_TX, WF_RAW_UNMOUNTED);
+    //SetRawDataWindowState(RAW_ID_DATA_RX, WF_RAW_UNMOUNTED);
 }
 
 /*
@@ -229,9 +227,8 @@ void mrf_raw_seek(unsigned raw_id, unsigned offset)
     start_time = mrf_timer_read();
     for (;;) {
         status = mrf_read(raw_status_reg[raw_id]);
-        if ((status & WF_RAW_STATUS_REG_BUSY_MASK) == 0) {
+        if (! (status & RAW_STATUS_BUSY))
             break;
-        }
 
         if (mrf_timer_elapsed(start_time) > 5) {
             // if we timed out that means that the caller is trying to set the index

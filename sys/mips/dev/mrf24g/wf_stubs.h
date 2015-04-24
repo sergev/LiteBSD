@@ -7,16 +7,6 @@
 #define __WF_STUBS_H
 
 /*
- * SPI Functions
- */
-unsigned mrf_read_byte(unsigned regId);
-void     mrf_write_byte(unsigned regId, unsigned value);
-void     mrf_write(unsigned regId, unsigned value);
-unsigned mrf_read(unsigned regId);
-void     mrf_write_array(unsigned regId, const u_int8_t *p_Buf, unsigned length);
-void     mrf_read_array(unsigned regId, u_int8_t *p_Buf, unsigned length);
-
-/*
  * External Interrupt Functions
  */
 void    mrf_intr_init(void);

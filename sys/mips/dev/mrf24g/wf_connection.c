@@ -39,21 +39,17 @@ extern void pbkdf2_sha1(const char *passphrase, const char *ssid, u_int16_t ssid
  * to construct the management message.  The caller must fix up any endian
  * issues prior to calling this function.
  */
-static void LowLevel_CASetElement(u_int8_t elementId,
-                                  u_int8_t *p_elementData,
-                                  u_int8_t elementDataLength)
+static void LowLevel_CASetElement(unsigned element_id,
+    u_int8_t *data, unsigned data_len)
 {
-    u_int8_t  hdrBuf[4];
+    u_int8_t header[4];
 
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;           /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CA_SET_ELEMENT_SUBTYPE;      /* mgmt request subtype */
-    hdrBuf[2] = elementId;                      /* Element ID */
-    hdrBuf[3] = elementDataLength;              /* number of bytes of element data */
+    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
+    header[1] = WF_CA_SET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[2] = element_id;                 /* Element ID */
+    header[3] = data_len;                   /* number of bytes of element data */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), p_elementData, elementDataLength);
-
-    /* wait for mgmt response, free after it comes in, don't need data bytes */
-    WaitForMgmtResponse(WF_CA_SET_ELEMENT_SUBTYPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(header, sizeof(header), data, data_len, 1);
 }
 
 #if 0
@@ -77,29 +73,24 @@ static void LowLevel_CASetElement(u_int8_t elementId,
  * construct the management message.  The caller must fix up any endian issues
  * after getting the data from this function.
  */
-static void LowLevel_CAGetElement(u_int8_t elementId,
-                                  u_int8_t *p_elementData,
-                                  u_int8_t elementDataLength,
-                                  bool    dataReadAction)
+static void LowLevel_CAGetElement(unsigned elementId,
+    u_int8_t *data, unsigned data_len)
 {
-    u_int8_t  hdrBuf[4];
+    u_int8_t  header[4];
 
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CA_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
-    hdrBuf[2] = elementId;                  /* Element ID */
-    hdrBuf[3] = 0;                          /* not used */
+    header[0] = WF_MGMT_REQUEST_TYPE;       /* indicate this is a mgmt msg */
+    header[1] = WF_CA_GET_ELEMENT_SUBTYPE;  /* mgmt request subtype */
+    header[2] = elementId;                  /* Element ID */
+    header[3] = 0;                          /* not used */
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
-
-    if (dataReadAction) {
-        /* wait for mgmt response, read desired data, and then free response buffer */
-        WaitForMgmtResponseAndReadData(WF_CA_GET_ELEMENT_SUBTYPE,
-                                       elementDataLength,               /* num data bytes to read */
-                                       sizeof(tCAElementResponseHdr),   /* index of first byte of element data */
-                                       p_elementData);                  /* where to write element data */
+    if (data) {
+        /* read desired data, and then free response buffer */
+        mrf_mgmt_send_receive(header, sizeof(header),
+            data, data_len,                 /* data bytes to read */
+            sizeof(tCAElementResponseHdr)); /* index of first byte of element data */
     } else {
-        /* wait for mgmt response, don't read any data bytes, do not release mgmt buffer */
-        WaitForMgmtResponse(WF_CA_GET_ELEMENT_SUBTYPE, DO_NOT_FREE_MGMT_BUFFER);
+        /* don't read any data bytes, do not release mgmt buffer */
+        mrf_mgmt_send(header, sizeof(header), 0, 0, 0);
     }
 }
 #endif
@@ -128,7 +119,7 @@ static void LowLevel_CAGetElement(u_int8_t elementId,
  */
 void WF_Connect()
 {
-    u_int8_t  hdrBuf[4];
+    u_int8_t header[4];
 
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
@@ -141,15 +132,12 @@ void WF_Connect()
 #endif /* WF_ERROR_CHECKING */
 
     /* Write out header portion of msg (which is whole msg, there is no data) */
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;    /* indicate this is a mgmt msg */
-    hdrBuf[1] = WF_CM_CONNECT_SUBYTPE;   /* mgmt request subtype */
-    hdrBuf[2] = GetCpid();
-    hdrBuf[3] = 0;
+    header[0] = WF_MGMT_REQUEST_TYPE;    /* indicate this is a mgmt msg */
+    header[1] = WF_CM_CONNECT_SUBYTPE;   /* mgmt request subtype */
+    header[2] = GetCpid();
+    header[3] = 0;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
-
-    /* wait for mgmt response, free after it comes in, don't need data bytes */
-    WaitForMgmtResponse(WF_CM_CONNECT_SUBYTPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(header, sizeof(header), 0, 0, 1);
 }
 
 /*
@@ -246,8 +234,8 @@ void WF_ReconnectModeSet(u_int8_t retryCount, u_int8_t deauthAction,
  */
 void WF_Disconnect()
 {
-    u_int8_t  hdrBuf[2];
-    u_int8_t   connectionState; // not used, but required for function call
+    int connectionState;
+    u_int8_t header[2];
 
     /* WARNING !!! :
      * Disconnect is allowed only in connected state.
@@ -256,20 +244,17 @@ void WF_Disconnect()
      * fatal failure in module FW operation. */
 
     // verify it is OK to issue a disconnect command
-    WF_ConnectionStateGet(&connectionState);
-    if ((connectionState != WF_CSTATE_CONNECTED_INFRASTRUCTURE) &&
-        (connectionState != WF_CSTATE_CONNECTED_ADHOC)) {
+    connectionState = WF_ConnectionStateGet();
+    if (connectionState != WF_CSTATE_CONNECTED_INFRASTRUCTURE &&
+        connectionState != WF_CSTATE_CONNECTED_ADHOC) {
         printf("--- %s: disconnect not allowed\n", __func__);
         return;
     }
 
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;
-    hdrBuf[1] = WF_CM_DISCONNECT_SUBYTPE;
+    header[0] = WF_MGMT_REQUEST_TYPE;
+    header[1] = WF_CM_DISCONNECT_SUBYTPE;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
-
-    /* wait for mgmt response, free after it comes in, don't need data bytes */
-    WaitForMgmtResponse(WF_CM_DISCONNECT_SUBYTPE, FREE_MGMT_BUFFER);
+    mrf_mgmt_send(header, sizeof(header), 0, 0, 1);
 
     UdSetConnectionState(CS_NOT_CONNECTED);
 }
@@ -381,23 +366,17 @@ void WF_RssiSet(u_int8_t rssi)
  * Response msg is actually two bytes, the second byte being the Connection Profile ID.
  * Since this is not being used, set msgData to a 1-byte array.
  */
-void WF_ConnectionStateGet(u_int8_t *p_state)
+int WF_ConnectionStateGet()
 {
-    u_int8_t  hdrBuf[2];
-    u_int8_t  msgData[1];
+    u_int8_t header[2], reply[1];
 
-    hdrBuf[0] = WF_MGMT_REQUEST_TYPE;
-    hdrBuf[1] = WF_CM_GET_CONNECTION_STATUS_SUBYTPE;
+    header[0] = WF_MGMT_REQUEST_TYPE;
+    header[1] = WF_CM_GET_CONNECTION_STATUS_SUBYTPE;
 
-    SendMgmtMsg(hdrBuf, sizeof(hdrBuf), 0, 0);
+    mrf_mgmt_send_receive(header, sizeof(header),
+        reply, sizeof(reply), MGMT_RESP_1ST_DATA_BYTE_INDEX);
 
-    // wait for mgmt response, read data, free after read
-    WaitForMgmtResponseAndReadData(WF_CM_GET_CONNECTION_STATUS_SUBYTPE,
-                                   sizeof(msgData),                  // num data bytes to read
-                                   MGMT_RESP_1ST_DATA_BYTE_INDEX,    // only used if num data bytes > 0
-                                   msgData);                         // only used if num data bytes > 0
-
-    *p_state = msgData[0]; // connection state
+    return reply[0]; // connection state
 }
 
 /*

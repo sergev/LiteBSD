@@ -453,7 +453,7 @@ void WF_WpsKeyGenerate(void);
 //--------------------------
 void WF_Connect(void);
 void WF_Disconnect(void);
-void WF_ConnectionStateGet(u_int8_t *p_state);
+int WF_ConnectionStateGet(void);
 
 // WiFi scanning functions
 //------------------------
