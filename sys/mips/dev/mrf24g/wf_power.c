@@ -22,7 +22,7 @@ typedef struct WFPwrModeReq {
 } t_WFPwrModeReq;
 
 static u_int8_t g_powerSaveState = WF_PS_OFF;
-static bool     g_reactivatePsPoll = 0;
+static int      g_reactivatePsPoll = 0;
 
 extern void SetListenInterval(u_int16_t listenInterval);
 extern void SetDtimInterval(u_int16_t dtimInterval);
@@ -66,7 +66,7 @@ static void SetPsPollReactivate()
     g_reactivatePsPoll = 1;
 }
 
-bool isPsPollNeedReactivate()
+int isPsPollNeedReactivate()
 {
     return g_reactivatePsPoll;
 }
@@ -206,22 +206,6 @@ void WF_Hibernate()
     PowerStateSet(WF_PS_HIBERNATE);
 }
 #endif
-
-void WF_TxPowerMaxSet(u_int8_t maxTxPower)
-{
-#if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = udSetTxPowerMax(maxTxPower);
-    if (errorCode != UD_SUCCESS) {
-        printf("--- %s: invalid tx power=%u\n", __func__, maxTxPower);
-        return;
-    }
-#endif
-}
-
-void WF_TxPowerFactoryMaxGet(u_int8_t *p_maxPower)
-{
-    *p_maxPower = GetFactoryMax();
-}
 
 void EnsureWFisAwake()
 {

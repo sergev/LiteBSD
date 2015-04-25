@@ -7,14 +7,14 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static bool g_HostRAWPacketRx;
+static int g_HostRAWPacketRx;
 
 void SignalPacketRx()
 {
     g_HostRAWPacketRx = 1;
 }
 
-bool isPacketRx()
+int isPacketRx()
 {
     return g_HostRAWPacketRx;
 }

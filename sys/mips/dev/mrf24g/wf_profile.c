@@ -12,7 +12,7 @@
  * Used in conjunction with the WF_SUBTYPE_CP_SET_ELEMENT and
  * WF_SUBTYPE_CP_GET_ELEMENT message subtypes
  */
-typedef enum tCPElementIds {
+enum {
     WF_CP_ELEMENT_ALL               = 0,  /* sends all elements in CP struct (not used)*/
     WF_CP_ELEMENT_SSID              = 1,
     WF_CP_ELEMENT_BSSID             = 2,
@@ -24,7 +24,7 @@ typedef enum tCPElementIds {
     WF_CP_ELEMENT_WEPKEY_TYPE       = 8,
     WF_CP_ELEMENT_UPDATE_PMK        = 9,
     WF_CP_ELEMENT_READ_WPS_CRED     = 10
-} tCPElementIds;
+};
 
 /*
  * header format for response to CP Get Element message
@@ -37,9 +37,21 @@ typedef struct cpElementResponseStruct {
     /* element data follow */
 } t_cPElementResponseHdr;
 
-static u_int8_t g_cpid;
-
 static t_wpaKeyInfo *g_p_wpaKeyInfo;
+
+t_wpaKeyInfo *GetWpsPassPhraseInfo()
+{
+   return g_p_wpaKeyInfo;
+}
+
+void WF_WpsKeyGenerate()
+{
+    // create the binary key
+    WF_WpaConvPassphraseToKey(g_p_wpaKeyInfo);
+
+    // send it to MRF24WG
+    mrf_set_psk(g_p_wpaKeyInfo->key);
+}
 
 /*
  * Set an element of the connection profile on the MRF24W.
@@ -54,16 +66,15 @@ static t_wpaKeyInfo *g_p_wpaKeyInfo;
  *  p_elementData - Pointer to element data
  *  elementDataLength - Number of bytes pointed to by p_elementData
  */
-static void LowLevel_CPSetElement(unsigned element_id,
-    u_int8_t *data, unsigned data_len)
+static void set_element(unsigned id, u_int8_t *data, unsigned data_len)
 {
     u_int8_t  header[5];
 
     /* Write out header portion of msg */
     header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
     header[1] = WF_SUBTYPE_CP_SET_ELEMENT;  /* mgmt request subtype */
-    header[2] = g_cpid;                     /* Connection Profile ID */
-    header[3] = element_id;                 /* Element ID */
+    header[2] = GetCpid();                  /* Connection Profile ID */
+    header[3] = id;                         /* Element ID */
     header[4] = data_len;                   /* number of bytes of element data */
 
     mrf_mgmt_send(header, sizeof(header), data, data_len, 1);
@@ -86,16 +97,14 @@ static void LowLevel_CPSetElement(unsigned element_id,
  *                   received, do not read any data as the caller will do that,
  *                   and don't free buffer, as caller will do that as well.
  */
-static void LowLevel_CPGetElement(u_int8_t element_id,
-                                  u_int8_t *reply,
-                                  u_int8_t reply_len)
+static void get_element(unsigned id, u_int8_t *reply, unsigned reply_len)
 {
     u_int8_t header[4];
 
     header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
     header[1] = WF_SUBTYPE_CP_GET_ELEMENT;  /* mgmt request subtype */
-    header[2] = g_cpid;                     /* Connection Profile ID */
-    header[3] = element_id;                 /* Element ID */
+    header[2] = GetCpid();                  /* Connection Profile ID */
+    header[3] = id;                         /* Element ID */
 
     if (reply) {
         mrf_mgmt_send_receive(header, sizeof(header),
@@ -124,20 +133,20 @@ static void LowLevel_CPGetElement(u_int8_t element_id,
  *   WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE   ascii       8-63 ascii characters
  *
  * Parameters:
- *  securityType      - Value corresponding to the security type desired.
- *  wepKeyIndex       - 0 thru 3 (only used if security type is WF_SECURITY_WEP_40 or
- *                      WF_SECURITY_WEP_104)
- *  p_securityKey     - Binary key or passphrase (not used if security is
- *                      WF_SECURITY_OPEN)
- *  securityKeyLength - Number of bytes in p_securityKey (not used if security
- *                      is WF_SECURITY_OPEN)
+ *  security_type - Value corresponding to the security type desired.
+ *  wep_key_index - 0 thru 3 (only used if security type is WF_SECURITY_WEP_40 or
+ *                  WF_SECURITY_WEP_104)
+ *  key           - Binary key or passphrase (not used if security is
+ *                  WF_SECURITY_OPEN)
+ *  key_length    - Number of bytes in p_securityKey (not used if security
+ *                  is WF_SECURITY_OPEN)
  */
-static void LowLevel_SetSecurity(unsigned securityType,
-                                 unsigned wepKeyIndex,
-                                 u_int8_t *p_securityKey,
-                                 unsigned securityKeyLength)
+static void set_security(unsigned security_type,
+                         unsigned wep_key_index,
+                         u_int8_t *key,
+                         unsigned key_length)
 {
-    u_int8_t header[7], *p_key;
+    u_int8_t header[7];
 
     /* Write out header portion of msg */
     header[0] = WF_TYPE_MGMT_REQUEST;           /* indicate this is a mgmt msg */
@@ -145,31 +154,24 @@ static void LowLevel_SetSecurity(unsigned securityType,
     header[2] = GetCpid();                      /* Connection Profile ID */
     header[3] = WF_CP_ELEMENT_SECURITY;         /* Element ID */
 
-    /* Next to header bytes are really part of data, but need to put them in header */
-    /* bytes in order to prepend to security key */
-    header[5] = securityType;
-    header[6] = wepKeyIndex;
+    /* Next to header bytes are really part of data, but need to put
+     * them in header bytes in order to prepend to security key. */
+    header[5] = security_type;
+    header[6] = wep_key_index;
 
     /* if security is open (no key) or WPS push button method */
-    if (securityType == WF_SECURITY_OPEN ||
-        securityType == WF_SECURITY_WPS_PUSH_BUTTON)
-    {
-        header[4]         = 2;      /* Only data is security type and wep index */
-        p_key             = 0;
-        securityKeyLength = 0;
-    }
-    /* else security is selected, so need to send key */
-    else {
-        header[4] = 2 + securityKeyLength;  /* data is security type + wep index + key */
-        p_key     = p_securityKey;
+    if (security_type == WF_SECURITY_OPEN ||
+        security_type == WF_SECURITY_WPS_PUSH_BUTTON) {
+        /* Only data is security type and wep index */
+        header[4]  = 2;
+        key        = 0;
+        key_length = 0;
+    } else {
+        /* Security is selected, so need to send key */
+        header[4] = 2 + key_length; /* data is security type + wep index + key */
     }
 
-    mrf_mgmt_send(header, sizeof(header), p_key, securityKeyLength, 1);
-}
-
-unsigned GetCpid()
-{
-    return g_cpid;
+    mrf_mgmt_send(header, sizeof(header), key, key_length, 1);
 }
 
 /*
@@ -186,17 +188,18 @@ unsigned GetCpid()
  *  p_CpId - Pointer to where Connection Profile ID will be written.  If
  *           function fails, the CP ID will be set to 0xff.
  */
-void WF_CPCreate()
+unsigned mrf_profile_create()
 {
-    u_int8_t hdr[2];
+    u_int8_t hdr[2], cpid;
 
     hdr[0] = WF_TYPE_MGMT_REQUEST;
     hdr[1] = WF_SUBTYPE_CP_CREATE_PROFILE;
-    g_cpid = 0xff;
+    cpid = 0xff;
 
     mrf_mgmt_send_receive(hdr, sizeof(hdr),
-        &g_cpid, 1,                         /* write data here */
+        &cpid, 1,                           /* write data here */
         MGMT_RESP_1ST_DATA_BYTE_INDEX);     /* read starting at index 4 */
+    return cpid;
 }
 
 /*
@@ -211,48 +214,50 @@ void WF_CPCreate()
  *   p_ssid - Pointer to the SSID string
  *   ssidLength - Number of bytes in the SSID
  */
-void WF_SsidSet(u_int8_t *p_ssid, u_int8_t ssidLength)
+void mrf_profile_set_ssid(u_int8_t *ssid, unsigned ssid_len)
 {
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetSsid(p_ssid, ssidLength);
+    u_int32_t errorCode = UdSetSsid(ssid, ssid_len);
     if (errorCode != UD_SUCCESS) {
         printf("--- %s: invalid SSID\n", __func__);
         return;
     }
 #endif
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID, p_ssid, ssidLength);
+    set_element(WF_CP_ELEMENT_SSID, ssid, ssid_len);
 }
 
+#if 0
 /*
- * Gets the SSID and SSID Length elements in the Connection Profile.
+ * Get the SSID of the Connection Profile.
+ * Return length of SSID string.
  *
  * Parameters:
  *  p_ssid - Pointer to the SSID string
- *  ssidLength - Pumber of bytes in the SSID
  */
-void WF_SsidGet(u_int8_t *p_ssid, u_int8_t *p_ssidLength)
+unsigned mrf_profile_get_ssid(u_int8_t *ssid)
 {
-    t_cPElementResponseHdr  mgmtHdr;
+    t_cPElementResponseHdr hdr;
 
     /* Request SSID, but don't have this function read data or free response buffer. */
-    LowLevel_CPGetElement(WF_CP_ELEMENT_SSID, 0, 0);
+    get_element(WF_CP_ELEMENT_SSID, 0, 0);
 
     /* At this point, management response is mounted and ready to be read.
      * Set raw index to 0, read normal 4 byte header plus the next 3 bytes, these will be:
      *   profile id             [4]
      *   element id             [5]
      *   element data length    [6] */
-    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &mgmtHdr, sizeof(t_cPElementResponseHdr), 0);
-
-    /* extract SSID length and write to caller */
-    *p_ssidLength = mgmtHdr.elementDataLength;
+    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
 
     /* copy SSID name to callers buffer */
-    mrf_raw_pread(RAW_ID_MGMT_RX, p_ssid, *p_ssidLength, sizeof(t_cPElementResponseHdr));
+    mrf_raw_pread(RAW_ID_MGMT_RX, ssid, hdr.elementDataLength, sizeof(hdr));
 
     /* free management buffer */
     mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
+
+    /* extract SSID length and write to caller */
+    return hdr.elementDataLength;
 }
+#endif
 
 /*
  * Set the Network Type element a Connection Profile.
@@ -263,19 +268,19 @@ void WF_SsidGet(u_int8_t *p_ssid, u_int8_t *p_ssidLength)
  * Parameter:
  *  networkType - Type of network to create (infrastructure or adhoc)
  */
-void WF_NetworkTypeSet(u_int8_t networkType)
+void mrf_profile_set_network_type(unsigned nettype)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
 
-    errorCode = UdSetNetworkType(networkType);
+    errorCode = UdSetNetworkType(nettype);
     if (errorCode != UD_SUCCESS) {
-        printf("--- %s: invalid network type=%u\n", __func__, networkType);
+        printf("--- %s: invalid network type=%u\n", __func__, nettype);
         return;
     }
 #endif
 
-    LowLevel_CPSetElement(WF_CP_ELEMENT_NETWORK_TYPE, &networkType, 1);
+    set_element(WF_CP_ELEMENT_NETWORK_TYPE, (u_int8_t*) &nettype, 1);
 }
 
 /*
@@ -288,12 +293,12 @@ void WF_NetworkTypeSet(u_int8_t networkType)
  *  CpId   - Connection Profile ID
  *  hidden - True or False
  */
-void WF_SsidTypeSet(bool hidden)
+void mrf_profile_set_hidden(int hidden)
 {
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hidden, 1);
+    set_element(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hidden, 1);
 }
 
-void WF_SecurityOpenSet()
+void mrf_profile_set_open()
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityOpen();
@@ -303,109 +308,110 @@ void WF_SecurityOpenSet()
     }
 #endif
 
-    LowLevel_SetSecurity(WF_SECURITY_OPEN, 0, 0, 0);
+    set_security(WF_SECURITY_OPEN, 0, 0, 0);
 }
 
-void WF_SecurityWepSet(t_wepContext* p_context)
+/*
+ * Set WEP security type.
+ * Parameters:
+ *  type      - WF_SECURITY_WEP_40 or WF_SECURITY_WEP_104
+ *  key_index - 0 thru 3
+ *  key       - binary (4 5-byte keys for WEP-40, 4 13-byte keys for WEP-104)
+ *  key_len   - 20 bytes for WEP-40, 52 bytes for WEP-104
+ */
+void mrf_profile_set_wep(unsigned type,
+    unsigned key_index, u_int8_t *key, unsigned key_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
 
-    errorCode = UdSetSecurityWep(p_context);
+    errorCode = UdSetSecurityWep(type, key_index, key, key_len);
     if (errorCode != UD_SUCCESS) {
         printf("--- %s: cannot set WEP security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
 
-    LowLevel_SetSecurity(p_context->wepSecurityType,
-                         p_context->wepKeyIndex,
-                         p_context->wepKey,
-                         p_context->wepKeyLength);
+    set_security(type, key_index, key, key_len);
 }
 
-void WF_SecurityWpaSet(t_wpaContext* p_context)
+/*
+ * Set WPA security type.
+ * Parameters:
+ *  type     - WF_SECURITY_WPA_WITH_KEY, WF_SECURITY_WPA_WITH_PASS_PHRASE,
+ *             WF_SECURITY_WPA2_WITH_KEY, WF_SECURITY_WPA2_WITH_PASS_PHRASE
+ *             WF_SECURITY_WPA_AUTO_WITH_KEY, WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE
+ *  key       - binary or text
+ *  key_len   - 32 for binary, 8...63 for text
+ */
+void mrf_profile_set_wpa(unsigned type, u_int8_t *key, unsigned key_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
 
-    errorCode = UdSetSecurityWpa(p_context);
+    errorCode = UdSetSecurityWpa(type, key, key_len);
     if (errorCode != UD_SUCCESS) {
         printf("--- %s: cannot set WPA security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
 
-    LowLevel_SetSecurity(p_context->wpaSecurityType,
-                         0, // not used
-                         p_context->keyInfo.key,
-                         p_context->keyInfo.keyLength);
+    set_security(type, 0, key, key_len);
 }
 
-void WF_SecurityWpsSet(t_wpsContext *p_context)
+/*
+ * Set WPA security type.
+ * Parameters:
+ *  type     - WF_SECURITY_WPS_PUSH_BUTTON or WF_SECURITY_WPS_PIN
+ *  pin      - 8-digit pin for PUSH_BUTTON
+ *  pin_len  - 8 for PUSH_BUTTON
+ *  key_info - Pointer to where the Universal driver will
+ *             store passphrase info (must be global memory)
+ *             so host can (more quickly) calculate binary key.
+ *             Zero if the MRF24WG should calculate the binary key.
+ */
+void mrf_profile_set_wps(unsigned type, u_int8_t *pin,
+    unsigned pin_len, t_wpaKeyInfo *key_info)
 {
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetSecurityWps(p_context);
+    u_int32_t errorCode = UdSetSecurityWps(type, pin, pin_len);
     if (errorCode != UD_SUCCESS) {
         printf("--- %s: cannot set WPS security\n", __func__);
         return;
     }
 #endif /* WF_ERROR_CHECKING */
 
-    LowLevel_SetSecurity(p_context->wpsSecurityType,
-                         0,
-                         p_context->wpsPin,
-                         p_context->wpsPinLength);
+    set_security(type, 0, pin, pin_len);
 
     // if host wants the host to calculate a binary key from a possible WPS-PSK passphrase
-    if (p_context->getPassPhrase) {
+    if (key_info) {
         // tell MRF24WG to send wpa-psk passphrase back to host (if AP using WPA passphrase)
-        YieldPassPhraseToHost();
+        mrf_yield_passphrase_to_host();
 
         // save pointer to passphrase info block
-        g_p_wpaKeyInfo = p_context->p_keyInfo;
+        g_p_wpaKeyInfo = key_info;
     }
 }
 
-t_wpaKeyInfo *GetWpsPassPhraseInfo()
-{
-   return g_p_wpaKeyInfo;
-}
-
-void WF_WpsKeyGenerate()
-{
-    // create the binary key
-    WF_WpaConvPassphraseToKey(g_p_wpaKeyInfo);
-
-    // send it to MRF24WG
-    SetPSK(g_p_wpaKeyInfo->key);
-}
-
-void WF_BssidSet(u_int8_t *p_bssid)
+void mrf_profile_set_bssid(u_int8_t *bssid)
 {
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetBssid(p_bssid);
+    u_int32_t errorCode = UdSetBssid(bssid);
     if (errorCode != UD_SUCCESS) {
         return;
     }
 
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_BSSID, p_bssid, WF_BSSID_LENGTH);
+    set_element(WF_CP_ELEMENT_BSSID, bssid, WF_BSSID_LENGTH);
 }
 
 // called from SetAdhocContext().  Error checking performed there
-void SetHiddenSsid(bool hiddenSsid)
+void mrf_profile_set_adhoc_mode(int mode)
 {
-    LowLevel_CPSetElement(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hiddenSsid, 1);
+    set_element(WF_CP_ELEMENT_ADHOC_BEHAVIOR, (u_int8_t*) &mode, 1);
 }
 
-// called from SetAdhocContext().  Error checking performed there
-void SetAdHocMode(int mode)
-{
-    LowLevel_CPSetElement(WF_CP_ELEMENT_ADHOC_BEHAVIOR, (u_int8_t*) &mode, 1);
-}
-
-void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
+void mrf_profile_get_wps_cred(t_wpsCredentials *cred)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdGetWpsCredentials();
@@ -414,5 +420,5 @@ void WF_WpsCredentialsGet(t_wpsCredentials *p_cred)
         return;
     }
 #endif
-    LowLevel_CPGetElement(WF_CP_ELEMENT_READ_WPS_CRED, (u_int8_t*) p_cred, sizeof(*p_cred));
+    get_element(WF_CP_ELEMENT_READ_WPS_CRED, (u_int8_t*) cred, sizeof(*cred));
 }

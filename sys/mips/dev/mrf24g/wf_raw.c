@@ -89,13 +89,13 @@ static const u_int16_t raw_int_mask[NUM_RAW_WINDOWS] = {
  *  size -- number of bytes to overlay (not always applicable)
  */
 unsigned mrf_raw_move(unsigned raw_id, unsigned src_dest,
-    bool raw_is_destination, unsigned size)
+    int raw_is_destination, unsigned size)
 {
     unsigned intr, mask, start_time, nbytes, ctrl0 = 0;
-    bool intEnabled;
+    int int_enabled;
 
     // save current state of External interrupt and disable it
-    intEnabled = mrf_intr_disable();
+    int_enabled = mrf_intr_disable();
 
     /* Create control value that will be written to raw control register,
      * which initiates the raw move */
@@ -171,7 +171,7 @@ unsigned mrf_raw_move(unsigned raw_id, unsigned src_dest,
     nbytes = mrf_read(raw_ctrl1_reg[raw_id]);
 
     // if interrupts were enabled coming into this function, put back to that state
-    if (intEnabled) {
+    if (int_enabled) {
         mrf_intr_enable();
     }
 

@@ -56,21 +56,6 @@ typedef enum t_udEventErrors {
     MGMT_RESP_ERROR_INVALID_WPS_PIN                                = 44,
     // end of mgmt response error code block
 
-    UD_ERROR_MGMT_RESPONSE_TIMEOUT           = 50,     // timed out waiting for mgmt response msg
-    UD_ERROR_MGMT_BUFFER_ALLOCATION_FAILED   = 51,     // allocation should have worked, but failed
-    UD_ERROR_RAW_RX_MOUNT_FAILED             = 52,     // notified of Rx msg (mgmt or data), but length was 0
-    UD_ERROR_RAW_SET_INDEX_OUT_OF_BOUNDS     = 53,     // trying to set raw index past end of raw window
-    UD_ERROR_RAW_GET_BYTE_OUT_OF_BOUNDS      = 54,     // trying to read past end of raw window
-    UD_ERROR_RAW_SET_BYTE_OUT_OF_BOUNDS      = 55,     // trying to write past end of raw window
-    UD_ERROR_INVALID_MGMT_TYPE               = 56,     // unknown mgmt msg type was received
-    UD_ERROR_INVALID_MGMT_SUBTYPE            = 57,     // unexpected mgmt confirm subtype received
-    UD_ERROR_UNKNOWN_DEVICE                  = 58,     // Unknown device (not an MRF24WG)
-    UD_ERROR_MRF24WB_NOT_SUPPORTED           = 59,     // MRF24WB not supported, only MRF24WG supported
-    UD_ERROR_RAW_INTERRUPT_TIMEOUT           = 60,     // Timed out waiting for raw move complete interrupt
-    UD_ERROR_UNKNOWN_EVENT_TYPE              = 61,     // Unknown event type received from MRF24WG
-    UD_ERROR_BAD_PARAM_IN_CONN_LOST_EVENT    = 62,     // Unknown param in WF_EVENT_CONNECTION_LOST_SUBTYPE event
-
-    UD_ERROR_INVALID_DOMAIN                  = 100,     // Domain parameter is invalid
     UD_ERROR_SSID_BUFFER_EMPTY               = 101,     // SSID length > 0, but SSID string is empty
     UD_ERROR_SSID_NOT_DEFINED                = 103,     // An SSID is required for this connection mode
     UD_ERROR_SSID_TOO_LONG                   = 104,     // SSID cannot be longer than 32 characters
@@ -85,7 +70,6 @@ typedef enum t_udEventErrors {
     UD_ERROR_WEP_40_KEY_INVALID_LENGTH       = 113,     // WEP-40 key must be 4 5-byte keys, or 20 bytes
     UD_ERROR_WEP_104_KEY_INVALID_LENGTH      = 114,     // WEP-104 key must be 4 13-byte keys, or 52 bytes
     UD_ERROR_INVALID_WEP_KEY_INDEX           = 115,     // WEP key index must be between and 0 and 3
-    UD_ERROR_INIT_NOT_DONE                   = 116,     // Trying to connect, but WF_Init() either not called or not finished
     UD_ERROR_INVALID_CONFIG                  = 117,     // A previous error event occurred that prevents a connection
     UD_ERROR_INVALID_WPA_KEY_LENGTH          = 118,     // WPA/WPA2 binary key length is invalid (must be 32 bytes)
     UD_ERROR_INVALID_WPA_PASSPHRASE_LENGTH   = 119,     // WPA/WPA2 ASCII passphrase must be between 8 and 63 characters
@@ -101,29 +85,18 @@ typedef enum t_udEventErrors {
     UD_ERROR_INVALID_DEAUTH_PARAM            = 128,     // UdSetReconnectMode(), deauthAction param invalid
     UD_ERROR_INVALID_BEACON_TIMEOUT_PARAM    = 129,     // UdSetReconnectMode(), beaconTimeoutAction param invalid
     UD_ERROR_INVALID_RECONNECT_MODE          = 130,     // UdSetReconnectMode(), can't have retry count of 0 and attempt to reconnect
-    UD_ERROR_DISCONNECT_NOT_ALLOWED          = 131,     // WF_Disconnect() not allowed, MRF24WG either trying to reconnect or has no connection
     UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED   = 132,     // Can only perform this action when not connected
     UD_ERROR_INVALID_WEP_SECURITY_TYPE       = 133,     // t_wepContext has an invalid WEP security type
     UD_ERROR_INVALID_WEP_KEY_TYPE            = 134,     // t_wepContext has an invalid key type
-    UD_ERROR_INVALID_WPA_SECURITY_TYPE       = 135,     // t_wpaContext has an invalid WPA security type
     UD_ERROR_INVALID_SCAN_TYPE               = 136,     // WF_ScanContextSet(), scanType parameter is invalid
     UD_ERROR_INVALID_HIDDEN_SSID             = 137,     // SetAdhocContext(), hiddenSsid param must be true or false
     UD_ERROR_INVALID_ADHOC_MODE              = 138,     // SetAdhocContext(), mode param invalid
     UD_ERROR_INVALID_TX_MODE                 = 139,     // WF_TxModeSet(), invalid mode param
     UD_ERROR_INVALID_RTS_THRESHOLD           = 140,     // WF_SetRtsTheshold(), invalid rtsThreshold param
-    UD_ERROR_SCAN_NOT_ALLOWED                = 141,     // WF_Scan() not allowed in midst of connection or connection retry
-    UD_ERROR_INVALID_SCAN_MODE               = 142,     // WF_Scan(), invalid scanMode param
-    UD_ERROR_INVALID_MAX_POWER               = 143,     // WF_SetTxPowerMax, maxTxPower param out of range
     UD_ERROR_INVALID_MULTICAST_FILTER_ID     = 144,     // t_swMulticastConfig(), or WF_SwMulticastFilterSet(); invalid Multicast filter ID paramter
-    UD_ERROR_INVALID_MULTICAST_ACTION        = 145,     // WF_SwMulticastFilterSet(), invalid action parameter
     UD_ERROR_INVALID_GET_PASS_PHRASE         = 146,     // WF_SetSecurityWps(), getPassphrase param must be true or false
     UD_ERROR_NULL_PASS_PHRASE_INFO           = 148,     // WF_SetSecurityWps(), illegal null pointer for p_wpsPassPhraseInfo param
-    UD_ERROR_PASSPHRASE_WPA_NOT_SUPPORTED    = 149,     // UdSetSecurityWpa(), passphrase not supported without defining WF_USE_HOST_WPA_KEY_CALCULATION
     UD_ERROR_NOT_WPS_SECURITY                = 150,     // WF_GetWpsCredentials(), invalid to call this if not using WPS security
-    UD_ERROR_RAW_TX_ALLOC_FAILED             = 151,     // AllocateDataTxBuffer(); unable to allocate memory for tx packet
-    UD_INVALID_PS_POLL_ERROR                 = 152,     // Cannot enable PS-Poll mode until after WiFi connection complete.
-    UD_INVALID_DATA_MSG                      = 153,     // Internal driver error (should never happen).
-    UD_TX_ALLOCATION_FAILED                  = 154      // AllocateDataTxBuffer failed
 } t_udEventErrors;
 
 #endif /* __WF_EVENTS_H */

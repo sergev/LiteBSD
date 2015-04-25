@@ -11,7 +11,7 @@
 /*
  * true if external interrupt needs processing, else false
  */
-static volatile bool g_ExIntNeedsServicing;
+static volatile int g_ExIntNeedsServicing;
 
 /*
  * MRF24WG interrupt handler, called directly from the the interrupt routine,

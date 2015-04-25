@@ -41,7 +41,7 @@ typedef struct udStateStruct {
     u_int32_t       errorState;    // bit mask
     u_int8_t        connectionState;
     u_int8_t        retryCount;
-    bool            psPollEnabled;
+    int             psPollEnabled;
     t_psPollContext psPollContext;
 
 #if defined(WF_ERROR_CHECKING)
@@ -110,7 +110,7 @@ extern t_udState g_udState;  // only accessed via macros from external modules
 void  UdStateInit(void);
 void  UdEnablePsPoll(t_psPollContext *p_context);
 void  UdDisablePsPoll(void);
-bool  UdisPsPollEnabled(void);
+int   UdisPsPollEnabled(void);
 
 #if defined(WF_ERROR_CHECKING)
     u_int32_t UdSetDomain(u_int8_t domain);
@@ -118,9 +118,9 @@ bool  UdisPsPollEnabled(void);
     u_int32_t UdSetSsid(u_int8_t *p_ssid, u_int8_t ssidLength);
     u_int32_t UdSetNetworkType(u_int8_t networkType);
     u_int32_t UdSetSecurityOpen(void);
-    u_int32_t UdSetSecurityWep(t_wepContext *p_context);
-    u_int32_t UdSetSecurityWpa(t_wpaContext *p_context);
-    u_int32_t UdSetSecurityWps(t_wpsContext *p_context);
+    u_int32_t UdSetSecurityWep(unsigned wep_security_type, unsigned key_index, u_int8_t *key, unsigned key_len);
+    u_int32_t UdSetSecurityWpa(unsigned wpa_security_type, u_int8_t *key, unsigned key_len);
+    u_int32_t UdSetSecurityWps(unsigned wps_security_type, u_int8_t *pin, unsigned pin_len);
     u_int32_t UdCheckConnectionConfig(void);
     u_int32_t UdSetReconnectMode(u_int8_t retryCount, u_int8_t deauthAction, u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction);
     u_int32_t UdSetScanContext(t_scanContext *p_context);

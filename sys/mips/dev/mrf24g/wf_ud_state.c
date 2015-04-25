@@ -48,7 +48,11 @@ u_int32_t UdSetSecurityOpen()
     }
 }
 
-u_int32_t UdSetSecurityWep(t_wepContext *p_context)
+u_int32_t UdSetSecurityWep(
+    unsigned wep_security_type, // WF_SECURITY_WEP_40 or WF_SECURITY_WEP_104
+    unsigned key_index,         // 0 thru 3
+    u_int8_t *key,              // binary (4 5-byte keys for WEP-40, 4 13-byte keys for WEP-104)
+    unsigned key_len)           // number of bytes pointed to by key
 {
     u_int32_t errorCode = UD_SUCCESS;
 
@@ -58,16 +62,16 @@ u_int32_t UdSetSecurityWep(t_wepContext *p_context)
         goto errorExit;
     }
 
-    if (p_context->wepSecurityType != WF_SECURITY_WEP_40 &&
-        p_context->wepSecurityType != WF_SECURITY_WEP_104) {
+    if (wep_security_type != WF_SECURITY_WEP_40 &&
+        wep_security_type != WF_SECURITY_WEP_104) {
         errorCode = UD_ERROR_INVALID_WEP_SECURITY_TYPE;
         goto errorExit;
     }
 
     // if WEP-40
-    if (p_context->wepSecurityType == WF_SECURITY_WEP_40) {
+    if (wep_security_type == WF_SECURITY_WEP_40) {
         // key must be 4 5-byte keys, or 20 bytes
-        if (p_context->wepKeyLength != 20) {
+        if (key_len != 20) {
             errorCode = UD_ERROR_WEP_40_KEY_INVALID_LENGTH;
             goto errorExit;
         }
@@ -75,42 +79,32 @@ u_int32_t UdSetSecurityWep(t_wepContext *p_context)
     // else WEP-104
     else {
         // key must be 4 13-byte keys, or 52 bytes
-        if (p_context->wepKeyLength != 52) {
+        if (key_len != 52) {
             errorCode = UD_ERROR_WEP_104_KEY_INVALID_LENGTH;
             goto errorExit;
         }
     }
 
     // WEP key index must be 0-3
-    if (p_context->wepKeyIndex > 3) {
+    if (key_index > 3) {
         errorCode = UD_ERROR_INVALID_WEP_KEY_INDEX;
-        goto errorExit;
-    }
-
-    if (p_context->wepKeyType != WF_SECURITY_WEP_SHAREDKEY &&
-        p_context->wepKeyType != WF_SECURITY_WEP_OPENKEY) {
-        errorCode = UD_ERROR_INVALID_WEP_KEY_TYPE;
         goto errorExit;
     }
 
 errorExit:
     if (errorCode == UD_SUCCESS) {
         UdSetSecurityValid();
-        g_udState.securityType = p_context->wepSecurityType;
+        g_udState.securityType = wep_security_type;
     } else {
         UdSetSecurityInvalid();
     }
     return errorCode;
 }
 
-u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
+u_int32_t UdSetSecurityWpa(unsigned type, u_int8_t *key, unsigned key_len)
 {
     u_int32_t errorCode = UD_SUCCESS;
-    u_int8_t securityType;
-    u_int8_t securityKeyLength;
     int i;
-
-    securityKeyLength = p_context->keyInfo.keyLength;
 
     // can't change security unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -119,9 +113,8 @@ u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
     }
 
     // security type must be one of the WPA security types
-    securityType = p_context->wpaSecurityType;
-    if (securityType < WF_SECURITY_WPA_WITH_KEY ||
-        securityType > WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE) {
+    if (type < WF_SECURITY_WPA_WITH_KEY ||
+        type > WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE) {
         errorCode = UD_ERROR_INVALID_SECURITY_TYPE;
         goto errorExit;
     }
@@ -129,11 +122,11 @@ u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
     //-----------------------------
     // if using WPA with binary key
     //----------------------------------
-    if ((securityType == WF_SECURITY_WPA_WITH_KEY)       ||
-        (securityType == WF_SECURITY_WPA2_WITH_KEY)      ||
-        (securityType == WF_SECURITY_WPA_AUTO_WITH_KEY)) {
+    if ((type == WF_SECURITY_WPA_WITH_KEY)       ||
+        (type == WF_SECURITY_WPA2_WITH_KEY)      ||
+        (type == WF_SECURITY_WPA_AUTO_WITH_KEY)) {
         // binary key must be 64 hex digits (32 bytes)
-        if (securityKeyLength != 32) {
+        if (key_len != 32) {
             errorCode = UD_ERROR_INVALID_WPA_KEY_LENGTH;
             goto errorExit;
         }
@@ -141,18 +134,18 @@ u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
     //----------------------------------
     // else if using WPA with passphrase
     //----------------------------------
-    if ((securityType == WF_SECURITY_WPA_WITH_PASS_PHRASE)       ||
-        (securityType == WF_SECURITY_WPA2_WITH_PASS_PHRASE)      ||
-        (securityType == WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE)) {
+    if ((type == WF_SECURITY_WPA_WITH_PASS_PHRASE)       ||
+        (type == WF_SECURITY_WPA2_WITH_PASS_PHRASE)      ||
+        (type == WF_SECURITY_WPA_AUTO_WITH_PASS_PHRASE)) {
         // ASCII key phrase must be between 8 and 63 bytes
-        if ((securityKeyLength < 8) || (securityKeyLength > 63)) {
+        if (key_len < 8 || key_len > 63) {
             errorCode = UD_ERROR_INVALID_WPA_PASSPHRASE_LENGTH;
             goto errorExit;
         }
 
         // ASCII passphase characters must be printable (0x20 thru 0x7E)
-        for (i = 0; i < securityKeyLength; ++i) {
-            u_int8_t tmp = p_context->keyInfo.key[i];
+        for (i = 0; i < key_len; ++i) {
+            u_int8_t tmp = key[i];
 
             if (tmp < 0x20 || tmp > 0x7e) {
                 errorCode = UD_ERROR_INVALID_WPA_PASSPHRASE_CHARACTERS;
@@ -164,14 +157,14 @@ u_int32_t UdSetSecurityWpa(t_wpaContext *p_context)
 errorExit:
     if (errorCode == UD_SUCCESS) {
         UdSetSecurityValid();
-        g_udState.securityType = p_context->wpaSecurityType;
+        g_udState.securityType = type;
     } else {
         UdSetSecurityInvalid();
     }
     return errorCode;
 }
 
-static u_int32_t ValidateWpsPin(u_int8_t *p_wpsPin)
+static u_int32_t ValidateWpsPin(u_int8_t *wps_pin)
 {
     u_int32_t pin = 0;
     u_int32_t accum = 0;
@@ -181,10 +174,10 @@ static u_int32_t ValidateWpsPin(u_int8_t *p_wpsPin)
     // convert 8-byte array of pin numbers to unsigned long
     for (i = 0; i < 8; ++i) {
         if (i < 7) {
-            pin += (p_wpsPin[i] * mult);
+            pin += (wps_pin[i] * mult);
             mult /= 10;
         } else {
-            pin += p_wpsPin[i];
+            pin += wps_pin[i];
             break;
         }
     }
@@ -209,12 +202,9 @@ static u_int32_t ValidateWpsPin(u_int8_t *p_wpsPin)
     }
 }
 
-u_int32_t UdSetSecurityWps(t_wpsContext *p_context)
+u_int32_t UdSetSecurityWps(unsigned type, u_int8_t *pin, unsigned pin_len)
 {
     u_int32_t errorCode = UD_SUCCESS;
-    u_int8_t  securityType;
-
-    securityType = p_context->wpsSecurityType;
 
     // can't change security unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
@@ -222,32 +212,19 @@ u_int32_t UdSetSecurityWps(t_wpsContext *p_context)
         goto errorExit;
     }
 
-    if (p_context->getPassPhrase != 1 &&
-        p_context->getPassPhrase != 0) {
-        errorCode = UD_ERROR_INVALID_GET_PASS_PHRASE;
-        goto errorExit;
-    }
-
-    if (p_context->getPassPhrase == 1) {
-        if (p_context->p_keyInfo == 0) {
-            errorCode = UD_ERROR_NULL_PASS_PHRASE_INFO;
-            goto errorExit;
-        }
-    }
-
-    if (securityType == WF_SECURITY_WPS_PUSH_BUTTON) {
+    if (type == WF_SECURITY_WPS_PUSH_BUTTON) {
         // nothing to check here
     }
     //----------------------
     // else if using WPS PIN
     //----------------------
-    else if (securityType == WF_SECURITY_WPS_PIN) {
-        if (p_context->wpsPinLength != 8) {
+    else if (type == WF_SECURITY_WPS_PIN) {
+        if (pin_len != 8) {
             errorCode = UD_ERROR_WPS_PIN_LENGTH_INVALID;
             goto errorExit;
         }
 
-        errorCode = ValidateWpsPin(p_context->wpsPin);
+        errorCode = ValidateWpsPin(pin);
         if (errorCode != UD_SUCCESS) {
             goto errorExit;
         }
@@ -256,7 +233,7 @@ u_int32_t UdSetSecurityWps(t_wpsContext *p_context)
 errorExit:
     if (errorCode == UD_SUCCESS) {
         UdSetSecurityValid();
-        g_udState.securityType = p_context->wpsSecurityType;
+        g_udState.securityType = type;
     } else {
         UdSetSecurityInvalid();
     }
@@ -272,8 +249,8 @@ u_int32_t UdSetScanContext(t_scanContext *p_context)
         return UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED;
     }
 
-    if (p_context->scanType != WF_ACTIVE_SCAN &&
-        p_context->scanType != WF_PASSIVE_SCAN) {
+    if (p_context->scanType != WF_SCAN_ACTIVE &&
+        p_context->scanType != WF_SCAN_PASSIVE) {
         errorCode = UD_ERROR_INVALID_SCAN_TYPE;
         goto errorExit;
     }
@@ -543,7 +520,7 @@ errorExit:
     return errorCode;
 }
 
-static bool isSsidDefined()
+static int isSsidDefined()
 {
     return (g_udState.ssidLength > 0);
 }
@@ -733,15 +710,6 @@ u_int32_t UdSetTxMode(u_int8_t mode)
     }
 }
 
-u_int32_t udSetTxPowerMax(u_int8_t maxTxPower)
-{
-    if (maxTxPower < 9 || maxTxPower > 18) {
-        return UD_ERROR_INVALID_MAX_POWER;
-    } else {
-        return UD_SUCCESS;
-    }
-}
-
 u_int32_t UdSetHwMulticastFilter(u_int8_t multicastFilterId, u_int8_t *p_multicastAddress)
 {
     p_multicastAddress = p_multicastAddress;  // avoid warning
@@ -812,7 +780,7 @@ void UdDisablePsPoll()
     g_udState.psPollEnabled = 0;
 }
 
-bool UdisPsPollEnabled()
+int UdisPsPollEnabled()
 {
     return g_udState.psPollEnabled;
 }

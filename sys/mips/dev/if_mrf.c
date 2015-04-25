@@ -638,7 +638,7 @@ mrf_probe(config)
      * Extract the MAC address. */
     int s = splimp();
     w->rom_version = WF_Init();
-    WF_MacAddressGet(w->macaddr);
+    mrf_get_mac_address(w->macaddr);
     splx(s);
 
     if (w->rom_version == 0) {

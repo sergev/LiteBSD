@@ -29,7 +29,7 @@
 #define RAW_COPY                0x70    /* RAW to RAW copy, not used */
 
 void     mrf_raw_init(void);
-unsigned mrf_raw_move(unsigned raw_id, unsigned raw_obj, bool raw_is_destination, unsigned size);
+unsigned mrf_raw_move(unsigned raw_id, unsigned raw_obj, int raw_is_destination, unsigned size);
 void     mrf_raw_seek(unsigned raw_id, unsigned index);
 void     mrf_raw_read(unsigned raw_id, u_int8_t *dest, unsigned nbytes);
 void     mrf_raw_write(unsigned raw_id, const u_int8_t *src, unsigned nbytes);

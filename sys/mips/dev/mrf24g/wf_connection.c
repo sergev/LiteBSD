@@ -323,25 +323,25 @@ void WF_ScanContextSet(t_scanContext *p_context)
                           sizeof(tmp));
 }
 
-void WF_AdhocContextSet(t_adHocNetworkContext *p_context)
+void WF_AdhocContextSet(t_adHocNetworkContext *context)
 {
     u_int16_t tmp;
 
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetAdhocNetworkContext(p_context);
+    u_int32_t errorCode = UdSetAdhocNetworkContext(context);
     if (errorCode != UD_SUCCESS) {
         return;
     }
 #endif
 
-    SetHiddenSsid(p_context->hiddenSsid);
+    mrf_profile_set_hidden(context->hiddenSsid);
 
-    tmp = htons(p_context->beaconPeriod);
+    tmp = htons(context->beaconPeriod);
     LowLevel_CASetElement(WF_CA_ELEMENT_BEACON_PERIOD,  // Element ID
                           (u_int8_t *)&tmp,              // pointer to element data
                           sizeof(tmp));                 // number of element data bytes
 
-    SetAdHocMode(p_context->mode);
+    mrf_profile_set_adhoc_mode(context->mode);
 }
 
 void WF_RssiSet(u_int8_t rssi)

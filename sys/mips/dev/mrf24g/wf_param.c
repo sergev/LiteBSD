@@ -9,7 +9,6 @@
 
 /*
  * Send a SetParam Mgmt request to MRF24W and waits for response.
- * MACInit must be called first.
  *
  * Index Set Param Request
  * ----- -----------------
@@ -50,7 +49,6 @@ static void set_param(unsigned param, u_int8_t *data, unsigned data_len)
  * Send a GetParam Mgmt request to MRF24W and waits for response.
  * After response is received the param data is read from message and written
  * to p_paramData.  It is up to the caller to fix up endianness.
- * MACInit must be called first.
  *
  * Index Get Param Request
  * ----- -----------------
@@ -87,7 +85,6 @@ static void get_param(unsigned param_type, u_int8_t *reply, unsigned reply_len)
 
 /*
  * Must be called to configure the MRF24W for operations.
- * MACInit must be called first.
  */
 void mrf_enable_module_operation()
 {
@@ -98,7 +95,6 @@ void mrf_enable_module_operation()
 
 /*
  * Retrieve WF device information.
- * MACInit must be called first.
  * Return ROM version and patch version as a 16-bit number.
  */
 unsigned mrf_get_system_version()
@@ -158,13 +154,12 @@ unsigned mrf_get_regional_domain()
  * default, which is in FLASH memory ? it simply tells the MRF24W to use a
  * different MAC.
  *
- * MACInit must be called first.  Cannot be called when the MRF24W is in a
- * connected state.
+ * Cannot be called when the MRF24W is in a connected state.
  *
  * Parameter:
- *  p_mac - Pointer to 6-byte MAC that will be sent to MRF24W
+ *  mac - Pointer to 6-byte MAC that will be sent to MRF24W
  */
-void WF_MacAddressSet(u_int8_t *p_mac)
+void mrf_set_mac_address(u_int8_t *mac)
 {
 #if defined(WF_ERROR_CHECKING)
     // can't change MAC address unless not connected
@@ -173,28 +168,27 @@ void WF_MacAddressSet(u_int8_t *p_mac)
         return;
     }
 #endif
-    set_param(PARAM_MAC_ADDRESS, p_mac, WF_MAC_ADDRESS_LENGTH);
+    set_param(PARAM_MAC_ADDRESS, mac, WF_MAC_ADDRESS_LENGTH);
 }
 
-void WF_MacAddressGet(u_int8_t *p_macAddress)
+void mrf_get_mac_address(u_int8_t *mac_address)
 {
-    get_param(PARAM_MAC_ADDRESS, p_macAddress, WF_MAC_ADDRESS_LENGTH);
+    get_param(PARAM_MAC_ADDRESS, mac_address, WF_MAC_ADDRESS_LENGTH);
 }
 
 /*
  * Enables or disables the MRF24W Tx data confirm mgmt message.
  * Data confirms should always be disabled.
- * MACInit must be called first.
  *
  * Parameters:
- *  state - WF_DISABLED or WF_ENABLED
+ *  enable - True or False
  */
-void WF_SetTxDataConfirm(u_int8_t state)
+void mrf_set_tx_confirm(unsigned enable)
 {
-    set_param(PARAM_CONFIRM_DATA_TX_REQ, &state, 1);
+    set_param(PARAM_CONFIRM_DATA_TX_REQ, (u_int8_t*) &enable, 1);
 }
 
-void WF_TxModeSet(u_int8_t mode)
+void mrf_set_tx_mode(unsigned mode)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetTxMode(mode);
@@ -202,23 +196,24 @@ void WF_TxModeSet(u_int8_t mode)
         printf("--- %s: invalid tx mode=%u\n", __func__, mode);
     }
 #endif
-    set_param(PARAM_TX_MODE, &mode, 1);
+    set_param(PARAM_TX_MODE, (u_int8_t*) &mode, 1);
 }
 
-void WF_RtsThresholdSet(u_int16_t rtsThreshold)
+void mrf_set_rts_threshold(unsigned rts_threshold)
 {
-    u_int16_t tmp;
+    u_int8_t data[2];
 
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetRtsThreshold(rtsThreshold);
+    u_int32_t errorCode = UdSetRtsThreshold(rts_threshold);
     if (errorCode != UD_SUCCESS) {
-        printf("--- %s: invalid RTC threshold=%u\n", __func__, rtsThreshold);
+        printf("--- %s: invalid RTS threshold=%u\n", __func__, rts_threshold);
         return;
     }
 #endif
 
-    tmp = htons(rtsThreshold);
-    set_param(PARAM_RTS_THRESHOLD, (u_int8_t *)&tmp, sizeof(tmp));
+    data[0] = rts_threshold >> 8;
+    data[1] = rts_threshold;
+    set_param(PARAM_RTS_THRESHOLD, data, sizeof(data));
 }
 
 /*
@@ -226,44 +221,34 @@ void WF_RtsThresholdSet(u_int16_t rtsThreshold)
  * Only applicable if WPSDirects the MRF24WG to send, if applicable,
  * the ASCII WPA-PSK passphrase to the
  * host so the host can calculate the binary key.
- *
- * MACInit must be called first.
  */
-void YieldPassPhraseToHost()
+void mrf_yield_passphrase_to_host()
 {
     u_int8_t yield = 1;
 
     set_param(PARAM_YIELD_PASSPHRASE_TOHOST, &yield, 1);
 }
 
-void SetPSK(u_int8_t *psk)
+void mrf_set_psk(u_int8_t *psk)
 {
     set_param(PARAM_SET_PSK, psk, WF_WPA_KEY_LENGTH);
 }
 
 /*
  * Get MAC statistics.
- * MACInit must be called first.
  *
  * Parameters:
- *  p_macStats - Pointer to where MAC statistics are written
+ *  stats - array where MAC statistics are written
  */
-void WF_MacStatsGet(t_macStats *p_macStats)
+void mrf_get_stats(u_int32_t stats[STATS_SIZE])
 {
-    u_int32_t *p_value;
-    unsigned numElements, i;
+    unsigned i;
 
-    get_param(PARAM_STAT_COUNTERS, (u_int8_t *)p_macStats, sizeof(t_macStats));
+    get_param(PARAM_STAT_COUNTERS, (u_int8_t*) stats, sizeof(stats));
 
-    // calculate number of 32-bit counters in the stats structure and point to first element
-    numElements = sizeof(t_macStats) / sizeof(u_int32_t);
-    p_value = (u_int32_t *)p_macStats;
-
-    /* correct endianness on all counters in structure */
-    for (i = 0; i < numElements; ++i) {
-        *p_value = htonl(*p_value);
-        ++p_value;
-    }
+    /* Correct endianness on all counters in structure. */
+    for (i = 0; i < STATS_SIZE; ++i)
+        stats[i] = htonl(stats[i]);
 }
 
 /*
@@ -293,9 +278,9 @@ void WF_MacStatsGet(t_macStats *p_macStats)
  *  threshold -- 0:     disable this feature; MRF24WG does not track missed ack's (default)
  *               1-255: after this many missed ack's, signal connection lost event
  */
-void WF_LinkDownThresholdSet(u_int8_t threshold)
+void mrf_set_link_down_threshold(unsigned level)
 {
-    set_param(PARAM_LINK_DOWN_THRESHOLD, &threshold, 1);
+    set_param(PARAM_LINK_DOWN_THRESHOLD, (u_int8_t*) &level, 1);
 }
 
 /*
@@ -315,49 +300,51 @@ void WF_LinkDownThresholdSet(u_int8_t threshold)
  *  multicastFilterId - WF_MULTICAST_FILTER_1 or WF_MULTICAST_FILTER_2
  *  multicastAddress  - 6-byte address (all 0xFF will inactivate the filter)
  */
-void WF_SetHwMultiCastFilter(u_int8_t multicastFilterId,
-                             u_int8_t multicastAddress[WF_MAC_ADDRESS_LENGTH])
+void mrf_set_multicast_filter(unsigned mcast_filter_id,
+    u_int8_t mcast_address[WF_MAC_ADDRESS_LENGTH])
 {
-    int i, deactivateFlag = 1;
+    int i, deactivate_flag = 1;
     u_int8_t data[8];
 
 #if defined(WF_ERROR_CHECKING)
-    u_int32_t errorCode = UdSetHwMulticastFilter(multicastFilterId, multicastAddress);
+    u_int32_t errorCode = UdSetHwMulticastFilter(mcast_filter_id, mcast_address);
     if (errorCode != UD_SUCCESS) {
         printf("--- %s: invalid multicast filter\n", __func__);
     }
 #endif
 
-    /* check if all 6 bytes of the address are 0xff, implying that the caller wants to deactivate */
-    /* the multicast filter.                                                                      */
+    /* C if all 6 bytes of the address are 0xff, implying that the caller
+     * wants to deactivate the multicast filter. */
     for (i = 0; i < 6; ++i) {
         /* if any byte is not 0xff then a presume a valid multicast address */
-        if (multicastAddress[i] != 0xff)
-        {
-            deactivateFlag = 0;
+        if (mcast_address[i] != 0xff) {
+            deactivate_flag = 0;
             break;
         }
     }
 
-    data[0] = multicastFilterId;     /* Address Compare Register number to use   */
-    if (deactivateFlag) {
-        data[1] = 0;                 /* deactivate address filter */
+    data[0] = mcast_filter_id;      /* Address Compare Register number to use */
+    if (deactivate_flag) {
+        data[1] = 0;                /* deactivate address filter */
     } else {
-        data[1] = 6;                 /* use multicast filter */
+        data[1] = 6;                /* use multicast filter */
     }
-
-    bcopy((void*)multicastAddress, &data[2], WF_MAC_ADDRESS_LENGTH);
+    data[2] = mcast_address[0];
+    data[3] = mcast_address[1];
+    data[4] = mcast_address[2];
+    data[5] = mcast_address[3];
+    data[6] = mcast_address[4];
+    data[7] = mcast_address[5];
     set_param(PARAM_COMPARE_ADDRESS, data, sizeof(data));
 }
 
 /*
  * Retrieve the factory-set max Tx power from the MRF24WB0MA/B and MRF24WG0MA/B.
- * MACInit must be called first.
  *
  * Parameter:
- *  p_factoryMaxTxPower - desired maxTxPower ( 0 to 18 dBm), in 1dB steps
+ *  p_factoryMaxTxPower - desired maxTxPower (0 to 18 dBm), in 1dB steps
  */
-unsigned GetFactoryMax()
+unsigned mrf_get_max_power()
 {
     u_int8_t data[2];
 

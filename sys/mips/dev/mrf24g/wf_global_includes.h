@@ -19,25 +19,14 @@
 /*
  * Connection profile functions.
  */
-void WF_CPCreate(void);
+unsigned mrf_profile_create(void);
 unsigned GetCpid(void);
-
-void SetHiddenSsid(bool hiddenSsid);
-void SetAdHocMode(int mode);
+void mrf_profile_set_adhoc_mode(int mode);
 
 t_wpaKeyInfo *GetWpsPassPhraseInfo(void);
 
-/*
- * Data Tx/Rx definitions
- */
-#define SNAP_VAL        ((u_int8_t)0xaa)
-#define SNAP_CTRL_VAL   ((u_int8_t)0x03)
-#define SNAP_TYPE_VAL   ((u_int8_t)0x00)
-
-#define SNAP_SIZE       (6)
-
 void SignalPacketRx(void);
-bool isPacketRx(void);
+int isPacketRx(void);
 void ClearPacketRx(void);
 void WF_ProcessWiFiRxData(void);
 void RxPacketCheck(void);
@@ -46,14 +35,6 @@ void RxPacketCheck(void);
  * External interrupt definitions
  */
 void InterruptCheck(void);
-
-/*
- * Parameter message defintions
- */
-void mrf_enable_module_operation(void);
-unsigned GetFactoryMax(void);
-void YieldPassPhraseToHost(void);
-void SetPSK(u_int8_t *psk);
 
 /*
  * Defintions for the PLL work-around
@@ -65,7 +46,7 @@ void ResetPll(void);
  */
 void WFConfigureLowPowerMode(int enable_low_power);
 void EnsureWFisAwake(void);
-bool isPsPollNeedReactivate(void);
+int isPsPollNeedReactivate(void);
 void ClearPsPollReactivate(void);
 
 #endif /* __WF_GLOBAL_INCLUDES_H */
