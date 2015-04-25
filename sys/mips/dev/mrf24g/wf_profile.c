@@ -37,22 +37,6 @@ typedef struct cpElementResponseStruct {
     /* element data follow */
 } t_cPElementResponseHdr;
 
-static t_wpaKeyInfo *g_p_wpaKeyInfo;
-
-t_wpaKeyInfo *GetWpsPassPhraseInfo()
-{
-   return g_p_wpaKeyInfo;
-}
-
-void WF_WpsKeyGenerate()
-{
-    // create the binary key
-    WF_WpaConvPassphraseToKey(g_p_wpaKeyInfo);
-
-    // send it to MRF24WG
-    mrf_set_psk(g_p_wpaKeyInfo->key);
-}
-
 /*
  * Set an element of the connection profile on the MRF24W.
  * MACInit must be called first.
@@ -363,15 +347,10 @@ void mrf_profile_set_wpa(unsigned type, u_int8_t *key, unsigned key_len)
  * Set WPA security type.
  * Parameters:
  *  type     - WF_SECURITY_WPS_PUSH_BUTTON or WF_SECURITY_WPS_PIN
- *  pin      - 8-digit pin for PUSH_BUTTON
- *  pin_len  - 8 for PUSH_BUTTON
- *  key_info - Pointer to where the Universal driver will
- *             store passphrase info (must be global memory)
- *             so host can (more quickly) calculate binary key.
- *             Zero if the MRF24WG should calculate the binary key.
+ *  pin      - 8-digit pin for WPS_PIN mode
+ *  pin_len  - 8 for WPS_PIN mode
  */
-void mrf_profile_set_wps(unsigned type, u_int8_t *pin,
-    unsigned pin_len, t_wpaKeyInfo *key_info)
+void mrf_profile_set_wps(unsigned type, u_int8_t *pin, unsigned pin_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityWps(type, pin, pin_len);
@@ -382,15 +361,6 @@ void mrf_profile_set_wps(unsigned type, u_int8_t *pin,
 #endif /* WF_ERROR_CHECKING */
 
     set_security(type, 0, pin, pin_len);
-
-    // if host wants the host to calculate a binary key from a possible WPS-PSK passphrase
-    if (key_info) {
-        // tell MRF24WG to send wpa-psk passphrase back to host (if AP using WPA passphrase)
-        mrf_yield_passphrase_to_host();
-
-        // save pointer to passphrase info block
-        g_p_wpaKeyInfo = key_info;
-    }
 }
 
 void mrf_profile_set_bssid(u_int8_t *bssid)

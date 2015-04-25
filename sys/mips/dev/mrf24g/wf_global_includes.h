@@ -23,8 +23,6 @@ unsigned mrf_profile_create(void);
 unsigned GetCpid(void);
 void mrf_profile_set_adhoc_mode(int mode);
 
-t_wpaKeyInfo *GetWpsPassPhraseInfo(void);
-
 void SignalPacketRx(void);
 int isPacketRx(void);
 void ClearPacketRx(void);

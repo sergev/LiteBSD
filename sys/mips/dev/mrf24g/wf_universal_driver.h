@@ -328,10 +328,10 @@ void WF_ReconnectModeSet(u_int8_t retryCount, u_int8_t deauthAction, u_int8_t be
 void mrf_profile_set_open(void);
 void mrf_profile_set_wep(unsigned wep_security_type, unsigned key_index, u_int8_t *key, unsigned key_len);
 void mrf_profile_set_wpa(unsigned wpa_security_type, u_int8_t *key, unsigned key_len);
-void mrf_profile_set_wps(unsigned wps_security_type, u_int8_t *pin, unsigned pin_len, t_wpaKeyInfo *key_info);
+void mrf_profile_set_wps(unsigned wps_security_type, u_int8_t *pin, unsigned pin_len);
 void mrf_profile_get_wps_cred(t_wpsCredentials *p_cred);
 void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo);
-void WF_WpsKeyGenerate(void);
+void WF_WpsKeyGenerate(t_wpaKeyInfo *key_info);
 
 // WiFi Connection functions
 //--------------------------

@@ -8,6 +8,7 @@ static void WFProcessMgmtIndicateMsg()
 {
     t_mgmtIndicateHdr hdr;
     u_int8_t buf[6];
+    t_wpaKeyInfo key_info;
 
     /* read 2-byte header of management message */
     mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtIndicateHdr), 0);
@@ -64,8 +65,9 @@ static void WFProcessMgmtIndicateMsg()
     case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
         printf("--- %s: key calculation finished\n", __func__);
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
-        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t *)GetWpsPassPhraseInfo(),
+        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &key_info,
             sizeof(t_wpaKeyInfo), sizeof(t_mgmtIndicateHdr));
+        //TODO: process the key info
         break;
 
     default:

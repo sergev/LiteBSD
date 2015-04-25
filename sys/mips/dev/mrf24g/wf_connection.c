@@ -420,6 +420,15 @@ void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo)
     p_keyInfo->keyLength = WF_WPA_KEY_LENGTH;
 }
 
+void WF_WpsKeyGenerate(t_wpaKeyInfo *key_info)
+{
+    // create the binary key
+    WF_WpaConvPassphraseToKey(key_info);
+
+    // send it to MRF24WG
+    mrf_set_psk(key_info->key);
+}
+
 void SetListenInterval(u_int16_t listenInterval)
 {
     /* correct endianness before sending message */
