@@ -92,7 +92,7 @@ void InterruptCheck()
 
         // signal that a mgmt msg, either confirm or indicate, has been received
         // and needs to be processed
-        ReceiveMgmtConfirmMsg();
+        mrf_mgmt_receive_confirm();
 
         mrf_intr_enable();
     }

@@ -6,13 +6,6 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
-static u_int8_t g_cpid;     // connection profile ID
-
-unsigned GetCpid()
-{
-    return g_cpid;
-}
-
 /*
  * Initialize the MRF24WG for operations.
  * Must be called before any other WiFi API calls.
@@ -88,7 +81,6 @@ unsigned WF_Init()
     }
 
     mrf_set_tx_confirm(0);              // Disable Tx Data confirms (from the MRF24W)
-    g_cpid = mrf_profile_create();      // Create a connection profile, get its ID and store it
     WF_PsPollDisable();
     ClearPsPollReactivate();
     UdSetInitValid();                   // Chip initialized successfully.

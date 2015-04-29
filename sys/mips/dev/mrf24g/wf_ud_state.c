@@ -240,7 +240,7 @@ errorExit:
     return errorCode;
 }
 
-u_int32_t UdSetScanContext(t_scanContext *p_context)
+u_int32_t UdSetScanContext(unsigned scan_type)
 {
     u_int32_t errorCode = UD_SUCCESS;
 
@@ -249,8 +249,8 @@ u_int32_t UdSetScanContext(t_scanContext *p_context)
         return UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED;
     }
 
-    if (p_context->scanType != WF_SCAN_ACTIVE &&
-        p_context->scanType != WF_SCAN_PASSIVE) {
+    if (scan_type != WF_SCAN_ACTIVE &&
+        scan_type != WF_SCAN_PASSIVE) {
         errorCode = UD_ERROR_INVALID_SCAN_TYPE;
         goto errorExit;
     }
@@ -264,7 +264,7 @@ errorExit:
     return errorCode;
 }
 
-u_int32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context)
+u_int32_t UdSetAdhocNetworkContext(int hidden_ssid, unsigned mode)
 {
     u_int32_t errorCode = UD_SUCCESS;
 
@@ -273,13 +273,13 @@ u_int32_t UdSetAdhocNetworkContext(t_adHocNetworkContext *p_context)
         return UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED;
     }
 
-    if (p_context->hiddenSsid != 1 &&
-        p_context->hiddenSsid != 0) {
+    if (hidden_ssid != 1 &&
+        hidden_ssid != 0) {
        errorCode = UD_ERROR_INVALID_HIDDEN_SSID;
        goto errorExit;
     }
 
-    if (p_context->mode > WF_ADHOC_START_ONLY) {
+    if (mode > WF_ADHOC_START_ONLY) {
         errorCode = UD_ERROR_INVALID_ADHOC_MODE;
         goto errorExit;
     }
@@ -368,7 +368,7 @@ static u_int32_t ValidateSsid(u_int8_t *p_ssid, u_int8_t ssidLength)
     u_int32_t errorCode = UD_SUCCESS;
 
     // With the exception of WPS_PUSH_BUTTON an SSID must be defined.  This will
-    // be checked when WF_Connect() is called.
+    // be checked when mrf_connect() is called.
 
     if (ssidLength > WF_MAX_SSID_LENGTH) {
         errorCode = UD_ERROR_SSID_TOO_LONG;
@@ -424,10 +424,8 @@ u_int32_t UdSetBssid(u_int8_t *p_bssid)
     }
 }
 
-u_int32_t UdSetRssi(u_int8_t rssi)
+u_int32_t UdSetRssi()
 {
-    rssi = rssi; // avoid warning
-
     // can't change RSSI unless not connected
     if (UdGetConnectionState() != CS_NOT_CONNECTED) {
         return UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED;
@@ -665,7 +663,7 @@ errorExit:
     return errorCode;
 }
 
-// called by WF_Connect
+// called by mrf_connect
 u_int32_t UdCheckConnectionConfig()
 {
     u_int32_t errorCode = UD_SUCCESS;
@@ -722,19 +720,6 @@ u_int32_t UdSetHwMulticastFilter(u_int8_t multicastFilterId, u_int8_t *p_multica
     }
 }
 
-u_int32_t UdConvWpaPassphrase(t_wpaKeyInfo *p_keyInfo)
-{
-    // WPA passphrase must be between 8 and 63 bytes
-    if (p_keyInfo->keyLength < 8 || p_keyInfo->keyLength > 63) {
-        return UD_ERROR_INVALID_WPA_PASSPHRASE_LENGTH;
-    }
-
-    if (p_keyInfo->ssidLen > WF_MAX_SSID_LENGTH) {
-        return UD_ERROR_SSID_TOO_LONG;
-    }
-    return UD_SUCCESS;
-}
-
 u_int32_t UdGetWpsCredentials()
 {
     if (g_udState.securityType != WF_SECURITY_WPS_PIN ||
@@ -758,7 +743,6 @@ void UdStateInit()
     UdSetInitInvalid();     // cleared after WF_Init() state machine complete
     UdSetConnectionState(CS_NOT_CONNECTED);
     UdSetRetryCount(DEFAULT_RETRY_COUNT);
-    UdDisablePsPoll();
 
 #if defined(WF_ERROR_CHECKING)
     UdSetSsid(0, 0);
@@ -767,20 +751,4 @@ void UdStateInit()
     UdSetNetworkType(DEFAULT_NETWORK_TYPE);
     UdSetSecurityOpen();
 #endif
-}
-
-void UdEnablePsPoll(t_psPollContext *p_context)
-{
-    g_udState.psPollEnabled = 1;
-    bcopy(p_context, &g_udState.psPollContext, sizeof(t_psPollContext));
-}
-
-void UdDisablePsPoll()
-{
-    g_udState.psPollEnabled = 0;
-}
-
-int UdisPsPollEnabled()
-{
-    return g_udState.psPollEnabled;
 }

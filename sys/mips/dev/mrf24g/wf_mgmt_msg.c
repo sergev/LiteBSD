@@ -4,11 +4,35 @@
 #include "wf_universal_driver.h"
 #include "wf_global_includes.h"
 
+/*
+ * This structure describes the format of the first four bytes of all
+ * mgmt response messages received from the MRF24W
+ */
+typedef struct mgmtRxHdrStruct {
+    u_int8_t type;          /* always 0x02 */
+    u_int8_t subtype;       /* mgmt msg subtype */
+    u_int8_t result;        /* 1 if success, else failure */
+    u_int8_t macState;      /* not used */
+} t_mgmtMsgRxHdr;
+
+typedef struct mgmtIndicateHdrStruct {
+    u_int8_t type;          /* always WF_MGMT_INDICATE_MSG_TYPE (2) */
+    u_int8_t subType;       /* event type */
+} t_mgmtIndicateHdr;
+
+// used in set_wps
+typedef struct {
+    char pass[WF_MAX_PASSPHRASE_LENGTH];    /* passphrase */
+    u_int8_t pass_len;                      /* number of bytes in passphrase */
+    u_int8_t ssid[WF_MAX_SSID_LENGTH];      /* ssid */
+    u_int8_t ssid_len;                      /* number of bytes in SSID */
+} key_info_t;
+
 static void WFProcessMgmtIndicateMsg()
 {
     t_mgmtIndicateHdr hdr;
     u_int8_t buf[6];
-    t_wpaKeyInfo key_info;
+    key_info_t key_info;
 
     /* read 2-byte header of management message */
     mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtIndicateHdr), 0);
@@ -66,8 +90,13 @@ static void WFProcessMgmtIndicateMsg()
         printf("--- %s: key calculation finished\n", __func__);
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
         mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &key_info,
-            sizeof(t_wpaKeyInfo), sizeof(t_mgmtIndicateHdr));
-        //TODO: process the key info
+            sizeof(key_info_t), sizeof(t_mgmtIndicateHdr));
+        //TODO: create the binary key.
+        // This is too cpu-consuming.
+        //u_int8_t key[32];
+        //mrf_passphrase_to_key(key_info.pass, key_info.ssid, key_info.ssid_len, key);
+        // Send it to MRF24WG.
+        //mrf_set_psk(key);
         break;
 
     default:
@@ -82,7 +111,7 @@ static void WFProcessMgmtIndicateMsg()
 /*
  * Receive mgmt Confirm message.
  */
-int ReceiveMgmtConfirmMsg()
+int mrf_mgmt_receive_confirm()
 {
     unsigned len;
     u_int8_t msgType;
@@ -203,7 +232,7 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
 
             // signal that a mgmt msg, either confirm or indicate, has been received
             // and needs to be processed
-            if (ReceiveMgmtConfirmMsg())
+            if (mrf_mgmt_receive_confirm())
                 break;
         }
 
@@ -218,7 +247,7 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
     /* if the caller wants to delete the response immediately (doesn't need any data from it */
     if (free_response) {
         /* read and verify result before freeing up buffer to ensure our message send was successful */
-        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtMsgRxHdr), 0);
+        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
 
         if (hdr.result != MGMT_RESP_SUCCESS) {
             printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);

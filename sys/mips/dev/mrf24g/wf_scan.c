@@ -23,27 +23,28 @@
  *  2.  MRF24W reset.
  *
  * Parameters:
- *  scan_all - True or False
+ *  cpid - Connection profile ID for filtered scan,
+ *         or 0xFF for 'scan all' mode.
  *
- *    False - filtered scan mode:
+ *    Filtered scan mode:
  *          * If SSID defined only scan results with that SSID are retained
  *          * If SSID not defined all scanned SSID?s will be retained
  *          * Only scan results from Infrastructure or AdHoc networks are
  *             retained, depending on the configured network type
  *          * The only channels scanned are those set in WF_SetChannelList()
  *
- *    True - scan all mode:
+ *    Scan all mode:
  *          * Can be called after WF_Init() successfully completes (see WF_INIT_SUCCESSFUL eventData)
  *          * All scan results are retained (both Infrastructure and Ad Hoc networks).
  *          * All channels within the MRF24W's regional domain will be scanned.
  */
-void WF_Scan(int scan_all)
+void WF_Scan(unsigned cpid)
 {
     int connectionState;
     u_int8_t hdr[4];
 
     // Can only scan when connected or idle
-    connectionState = WF_ConnectionStateGet();
+    connectionState = mrf_conn_get_state();
     if (connectionState == WF_CSTATE_CONNECTION_IN_PROGRESS ||
         connectionState == WF_CSTATE_RECONNECTION_IN_PROGRESS) {
         printf("--- %s: scan not allowed\n", __func__);
@@ -52,7 +53,7 @@ void WF_Scan(int scan_all)
 
     hdr[0] = WF_TYPE_MGMT_REQUEST;
     hdr[1] = WF_SUBTYPE_SCAN_START;
-    hdr[2] = scan_all ? 0xff : GetCpid();
+    hdr[2] = cpid;
     hdr[3] = 0;                                 /* not used */
     mrf_mgmt_send(hdr, sizeof(hdr), 0, 0, 1);
 }
@@ -73,7 +74,7 @@ void WF_Scan(int scan_all)
  *  list_index  - Index (0-based list) of the scan entry to retrieve.
  *  scan_result - Pointer to location to store the scan result structure
  */
-void WF_ScanResultGet(unsigned list_index, t_scanResult *scan_result)
+void WF_ScanResultGet(unsigned list_index, scan_result_t *scan_result)
 {
     u_int8_t hdr[4];
 

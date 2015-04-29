@@ -58,6 +58,7 @@ struct wifi_port {
     struct spiio spiio;             /* interface to SPI port */
     unsigned    rom_version;        /* device ROM version */
     unsigned    int_mask;           /* mask for interrupt pin */
+    unsigned    cpid;               /* connection profile ID */
     int         pin_irq;            /* /Int pin number */
     int         pin_reset;          /* /Reset pin number */
     int         pin_hibernate;      /* Hibernate pin number */
@@ -639,6 +640,7 @@ mrf_probe(config)
     int s = splimp();
     w->rom_version = WF_Init();
     mrf_get_mac_address(w->macaddr);
+    w->cpid = mrf_profile_create();     /* Create a connection profile */
     splx(s);
 
     if (w->rom_version == 0) {

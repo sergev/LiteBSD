@@ -240,15 +240,29 @@ void mrf_set_psk(u_int8_t *psk)
  * Parameters:
  *  stats - array where MAC statistics are written
  */
-void mrf_get_stats(u_int32_t stats[STATS_SIZE])
+void mrf_get_stats(mac_stats_t *stats)
 {
-    unsigned i;
-
-    get_param(PARAM_STAT_COUNTERS, (u_int8_t*) stats, sizeof(stats));
+    get_param(PARAM_STAT_COUNTERS, (u_int8_t*) stats, sizeof(*stats));
 
     /* Correct endianness on all counters in structure. */
-    for (i = 0; i < STATS_SIZE; ++i)
-        stats[i] = htonl(stats[i]);
+    stats->wep_exclude      = htonl(stats->wep_exclude);
+    stats->tx_bytes         = htonl(stats->tx_bytes);
+    stats->tx_multicast     = htonl(stats->tx_multicast);
+    stats->tx_failed        = htonl(stats->tx_failed);
+    stats->tx_rtry          = htonl(stats->tx_rtry);
+    stats->tx_mult_rtry     = htonl(stats->tx_mult_rtry);
+    stats->tx_success       = htonl(stats->tx_success);
+    stats->rx_dup           = htonl(stats->rx_dup);
+    stats->rx_cts_succ      = htonl(stats->rx_cts_succ);
+    stats->rx_cts_fail      = htonl(stats->rx_cts_fail);
+    stats->rx_ack_fail      = htonl(stats->rx_ack_fail);
+    stats->rx_bytes         = htonl(stats->rx_bytes);
+    stats->rx_frag          = htonl(stats->rx_frag);
+    stats->rx_mult          = htonl(stats->rx_mult);
+    stats->rx_fcs_err       = htonl(stats->rx_fcs_err);
+    stats->rx_wep_undecrypt = htonl(stats->rx_wep_undecrypt);
+    stats->rx_frag_aged     = htonl(stats->rx_frag_aged);
+    stats->rx_mic_failure   = htonl(stats->rx_mic_failure);
 }
 
 /*

@@ -27,17 +27,6 @@ enum {
 };
 
 /*
- * header format for response to CP Get Element message
- */
-typedef struct cpElementResponseStruct {
-    t_mgmtMsgRxHdr   mgmtHdr;                /* normal 4-byte hdr for all mgmt responses */
-    u_int8_t         profileId;
-    u_int8_t         elementId;
-    u_int8_t         elementDataLength;
-    /* element data follow */
-} t_cPElementResponseHdr;
-
-/*
  * Set an element of the connection profile on the MRF24W.
  * MACInit must be called first.
  *
@@ -50,14 +39,14 @@ typedef struct cpElementResponseStruct {
  *  p_elementData - Pointer to element data
  *  elementDataLength - Number of bytes pointed to by p_elementData
  */
-static void set_element(unsigned id, u_int8_t *data, unsigned data_len)
+static void set_element(unsigned cpid, unsigned id, u_int8_t *data, unsigned data_len)
 {
     u_int8_t  header[5];
 
     /* Write out header portion of msg */
     header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
     header[1] = WF_SUBTYPE_CP_SET_ELEMENT;  /* mgmt request subtype */
-    header[2] = GetCpid();                  /* Connection Profile ID */
+    header[2] = cpid;                       /* Connection Profile ID */
     header[3] = id;                         /* Element ID */
     header[4] = data_len;                   /* number of bytes of element data */
 
@@ -81,19 +70,18 @@ static void set_element(unsigned id, u_int8_t *data, unsigned data_len)
  *                   received, do not read any data as the caller will do that,
  *                   and don't free buffer, as caller will do that as well.
  */
-static void get_element(unsigned id, u_int8_t *reply, unsigned reply_len)
+static void get_element(unsigned cpid, unsigned id, u_int8_t *reply, unsigned reply_len)
 {
     u_int8_t header[4];
 
     header[0] = WF_TYPE_MGMT_REQUEST;       /* indicate this is a mgmt msg */
     header[1] = WF_SUBTYPE_CP_GET_ELEMENT;  /* mgmt request subtype */
-    header[2] = GetCpid();                  /* Connection Profile ID */
+    header[2] = cpid;                       /* Connection Profile ID */
     header[3] = id;                         /* Element ID */
 
     if (reply) {
-        mrf_mgmt_send_receive(header, sizeof(header),
-            reply, reply_len,               /* where to write element data */
-            sizeof(t_cPElementResponseHdr)); /* index of first byte of element data */
+        /* 7 = index of first byte of element data */
+        mrf_mgmt_send_receive(header, sizeof(header), reply, reply_len, 7);
     } else {
         /* don't read any data bytes, do not release mgmt buffer */
         mrf_mgmt_send(header, sizeof(header), 0, 0, 0);
@@ -125,17 +113,15 @@ static void get_element(unsigned id, u_int8_t *reply, unsigned reply_len)
  *  key_length    - Number of bytes in p_securityKey (not used if security
  *                  is WF_SECURITY_OPEN)
  */
-static void set_security(unsigned security_type,
-                         unsigned wep_key_index,
-                         u_int8_t *key,
-                         unsigned key_length)
+static void set_security(unsigned cpid, unsigned security_type,
+    unsigned wep_key_index, u_int8_t *key, unsigned key_length)
 {
     u_int8_t header[7];
 
     /* Write out header portion of msg */
     header[0] = WF_TYPE_MGMT_REQUEST;           /* indicate this is a mgmt msg */
     header[1] = WF_SUBTYPE_CP_SET_ELEMENT;      /* mgmt request subtype */
-    header[2] = GetCpid();                      /* Connection Profile ID */
+    header[2] = cpid;                           /* Connection Profile ID */
     header[3] = WF_CP_ELEMENT_SECURITY;         /* Element ID */
 
     /* Next to header bytes are really part of data, but need to put
@@ -180,9 +166,8 @@ unsigned mrf_profile_create()
     hdr[1] = WF_SUBTYPE_CP_CREATE_PROFILE;
     cpid = 0xff;
 
-    mrf_mgmt_send_receive(hdr, sizeof(hdr),
-        &cpid, 1,                           /* write data here */
-        MGMT_RESP_1ST_DATA_BYTE_INDEX);     /* read starting at index 4 */
+    /* read 1 byte of data, starting at index 4 */
+    mrf_mgmt_send_receive(hdr, sizeof(hdr), &cpid, 1, 4);
     return cpid;
 }
 
@@ -198,7 +183,7 @@ unsigned mrf_profile_create()
  *   p_ssid - Pointer to the SSID string
  *   ssidLength - Number of bytes in the SSID
  */
-void mrf_profile_set_ssid(u_int8_t *ssid, unsigned ssid_len)
+void mrf_profile_set_ssid(unsigned cpid, u_int8_t *ssid, unsigned ssid_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSsid(ssid, ssid_len);
@@ -207,7 +192,7 @@ void mrf_profile_set_ssid(u_int8_t *ssid, unsigned ssid_len)
         return;
     }
 #endif
-    set_element(WF_CP_ELEMENT_SSID, ssid, ssid_len);
+    set_element(cpid, WF_CP_ELEMENT_SSID, ssid, ssid_len);
 }
 
 #if 0
@@ -218,28 +203,30 @@ void mrf_profile_set_ssid(u_int8_t *ssid, unsigned ssid_len)
  * Parameters:
  *  p_ssid - Pointer to the SSID string
  */
-unsigned mrf_profile_get_ssid(u_int8_t *ssid)
+unsigned mrf_profile_get_ssid(unsigned cpid, u_int8_t *ssid)
 {
-    t_cPElementResponseHdr hdr;
+    u_int8_t hdr[7];
+    unsigned ssid_len;
 
     /* Request SSID, but don't have this function read data or free response buffer. */
-    get_element(WF_CP_ELEMENT_SSID, 0, 0);
+    get_element(cpid, WF_CP_ELEMENT_SSID, 0, 0);
 
     /* At this point, management response is mounted and ready to be read.
      * Set raw index to 0, read normal 4 byte header plus the next 3 bytes, these will be:
      *   profile id             [4]
      *   element id             [5]
      *   element data length    [6] */
-    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, hdr, sizeof(hdr), 0);
+    ssid_len = hdr[6];
 
     /* copy SSID name to callers buffer */
-    mrf_raw_pread(RAW_ID_MGMT_RX, ssid, hdr.elementDataLength, sizeof(hdr));
+    mrf_raw_pread(RAW_ID_MGMT_RX, ssid, ssid_len, sizeof(hdr));
 
     /* free management buffer */
     mrf_raw_move(RAW_ID_MGMT_RX, RAW_MGMT_POOL, 0, 0);
 
     /* extract SSID length and write to caller */
-    return hdr.elementDataLength;
+    return ssid_len;
 }
 #endif
 
@@ -252,7 +239,7 @@ unsigned mrf_profile_get_ssid(u_int8_t *ssid)
  * Parameter:
  *  networkType - Type of network to create (infrastructure or adhoc)
  */
-void mrf_profile_set_network_type(unsigned nettype)
+void mrf_profile_set_network_type(unsigned cpid, unsigned nettype)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
@@ -264,7 +251,7 @@ void mrf_profile_set_network_type(unsigned nettype)
     }
 #endif
 
-    set_element(WF_CP_ELEMENT_NETWORK_TYPE, (u_int8_t*) &nettype, 1);
+    set_element(cpid, WF_CP_ELEMENT_NETWORK_TYPE, (u_int8_t*) &nettype, 1);
 }
 
 /*
@@ -277,12 +264,12 @@ void mrf_profile_set_network_type(unsigned nettype)
  *  CpId   - Connection Profile ID
  *  hidden - True or False
  */
-void mrf_profile_set_hidden(int hidden)
+void mrf_profile_set_hidden(unsigned cpid, int hidden)
 {
-    set_element(WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hidden, 1);
+    set_element(cpid, WF_CP_ELEMENT_SSID_TYPE, (u_int8_t*) &hidden, 1);
 }
 
-void mrf_profile_set_open()
+void mrf_profile_set_open(unsigned cpid)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityOpen();
@@ -292,7 +279,7 @@ void mrf_profile_set_open()
     }
 #endif
 
-    set_security(WF_SECURITY_OPEN, 0, 0, 0);
+    set_security(cpid, WF_SECURITY_OPEN, 0, 0, 0);
 }
 
 /*
@@ -303,7 +290,7 @@ void mrf_profile_set_open()
  *  key       - binary (4 5-byte keys for WEP-40, 4 13-byte keys for WEP-104)
  *  key_len   - 20 bytes for WEP-40, 52 bytes for WEP-104
  */
-void mrf_profile_set_wep(unsigned type,
+void mrf_profile_set_wep(unsigned cpid, unsigned type,
     unsigned key_index, u_int8_t *key, unsigned key_len)
 {
 #if defined(WF_ERROR_CHECKING)
@@ -316,7 +303,7 @@ void mrf_profile_set_wep(unsigned type,
     }
 #endif /* WF_ERROR_CHECKING */
 
-    set_security(type, key_index, key, key_len);
+    set_security(cpid, type, key_index, key, key_len);
 }
 
 /*
@@ -328,7 +315,8 @@ void mrf_profile_set_wep(unsigned type,
  *  key       - binary or text
  *  key_len   - 32 for binary, 8...63 for text
  */
-void mrf_profile_set_wpa(unsigned type, u_int8_t *key, unsigned key_len)
+void mrf_profile_set_wpa(unsigned cpid, unsigned type,
+    u_int8_t *key, unsigned key_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode;
@@ -340,7 +328,7 @@ void mrf_profile_set_wpa(unsigned type, u_int8_t *key, unsigned key_len)
     }
 #endif /* WF_ERROR_CHECKING */
 
-    set_security(type, 0, key, key_len);
+    set_security(cpid, type, 0, key, key_len);
 }
 
 /*
@@ -350,7 +338,7 @@ void mrf_profile_set_wpa(unsigned type, u_int8_t *key, unsigned key_len)
  *  pin      - 8-digit pin for WPS_PIN mode
  *  pin_len  - 8 for WPS_PIN mode
  */
-void mrf_profile_set_wps(unsigned type, u_int8_t *pin, unsigned pin_len)
+void mrf_profile_set_wps(unsigned cpid, unsigned type, u_int8_t *pin, unsigned pin_len)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetSecurityWps(type, pin, pin_len);
@@ -360,10 +348,10 @@ void mrf_profile_set_wps(unsigned type, u_int8_t *pin, unsigned pin_len)
     }
 #endif /* WF_ERROR_CHECKING */
 
-    set_security(type, 0, pin, pin_len);
+    set_security(cpid, type, 0, pin, pin_len);
 }
 
-void mrf_profile_set_bssid(u_int8_t *bssid)
+void mrf_profile_set_bssid(unsigned cpid, u_int8_t *bssid)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdSetBssid(bssid);
@@ -372,16 +360,16 @@ void mrf_profile_set_bssid(u_int8_t *bssid)
     }
 
 #endif
-    set_element(WF_CP_ELEMENT_BSSID, bssid, WF_BSSID_LENGTH);
+    set_element(cpid, WF_CP_ELEMENT_BSSID, bssid, WF_BSSID_LENGTH);
 }
 
 // called from SetAdhocContext().  Error checking performed there
-void mrf_profile_set_adhoc_mode(int mode)
+void mrf_profile_set_adhoc_mode(unsigned cpid, int mode)
 {
-    set_element(WF_CP_ELEMENT_ADHOC_BEHAVIOR, (u_int8_t*) &mode, 1);
+    set_element(cpid, WF_CP_ELEMENT_ADHOC_BEHAVIOR, (u_int8_t*) &mode, 1);
 }
 
-void mrf_profile_get_wps_cred(t_wpsCredentials *cred)
+void mrf_profile_get_wps_credentials(unsigned cpid, wps_credentials_t *cred)
 {
 #if defined(WF_ERROR_CHECKING)
     u_int32_t errorCode = UdGetWpsCredentials();
@@ -390,5 +378,5 @@ void mrf_profile_get_wps_cred(t_wpsCredentials *cred)
         return;
     }
 #endif
-    get_element(WF_CP_ELEMENT_READ_WPS_CRED, (u_int8_t*) cred, sizeof(*cred));
+    get_element(cpid, WF_CP_ELEMENT_READ_WPS_CRED, (u_int8_t*) cred, sizeof(*cred));
 }

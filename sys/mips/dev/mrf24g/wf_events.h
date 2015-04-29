@@ -6,7 +6,7 @@
 #ifndef __WF_EVENTS_H
 #define __WF_EVENTS_H
 
-typedef enum t_udEventErrors {
+enum {
     UD_SUCCESS = 0,
 
     // this block of error codes are returned from the MRF24WG in the result field
@@ -97,6 +97,6 @@ typedef enum t_udEventErrors {
     UD_ERROR_INVALID_GET_PASS_PHRASE         = 146,     // WF_SetSecurityWps(), getPassphrase param must be true or false
     UD_ERROR_NULL_PASS_PHRASE_INFO           = 148,     // WF_SetSecurityWps(), illegal null pointer for p_wpsPassPhraseInfo param
     UD_ERROR_NOT_WPS_SECURITY                = 150,     // WF_GetWpsCredentials(), invalid to call this if not using WPS security
-} t_udEventErrors;
+};
 
 #endif /* __WF_EVENTS_H */

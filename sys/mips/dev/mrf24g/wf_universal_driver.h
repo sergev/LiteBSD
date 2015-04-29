@@ -10,7 +10,6 @@
 
 #include "wf_events.h"
 #include "wf_connection_event_codes.h"
-#include "wf_stubs.h"
 
 //==============================================================================
 //                                  DEFINES/CONSTANTS
@@ -40,12 +39,12 @@
 #define WF_DEFAULT_SCAN_MAX_CHANNEL_TIME    400     // ms
 #define WF_DEFAULT_SCAN_PROBE_DELAY         20      // us
 
-// see t_adHocNetworkContext
+// see mrf_conn_set_adhoc()
 #define WF_DEFAULT_ADHOC_HIDDEN_SSID        0
 #define WF_DEFAULT_ADHOC_BEACON_PERIOD      100     // ms
 #define WF_DEFAULT_ADHOC_MODE               WF_ADHOC_CONNECT_THEN_START
 
-// see t_psPollContext
+// see WF_PsPollEnable()
 #define WF_DEFAULT_PS_LISTEN_INTERVAL       1       // 100ms multiplier, e.g. 1 * 100ms = 100ms
 #define WF_DEFAULT_PS_DTIM_INTERVAL         2       // number of beacon periods
 #define WF_DEFAULT_PS_DTIM_ENABLED          true    // DTIM wake-up enabled (normally the case)
@@ -53,7 +52,7 @@
 // see t_txmode
 #define WF_DEFAULT_TX_MODE                  WF_TXMODE_G_RATES   // full 802.11 g rates
 
-// see WF_RssiSet()
+// see mrf_conn_set_rssi()
 #define WF_DEFAULT_RSSI                     255     // connect to highest RSSI found
 
 // see WF_RtsThresholdSet()
@@ -98,7 +97,7 @@ enum {
     WF_ATTEMPT_TO_RECONNECT        = 1,
 };
 
-// WF_ScanContextSet()
+// mrf_conn_set_scan()
 enum {
     WF_SCAN_ACTIVE          = 1,
     WF_SCAN_PASSIVE         = 2,
@@ -121,7 +120,7 @@ enum {
     WF_SECURITY_WEP_OPENKEY   = 1,
 };
 
-// see WF_AdhocContextSet()
+// see mrf_conn_set_adhoc()
 enum {
     WF_ADHOC_CONNECT_THEN_START = 0,
     WF_ADHOC_CONNECT_ONLY       = 1,
@@ -143,7 +142,7 @@ enum {
     WF_TXMODE_LEGACY_RATES  = 2,
 };
 
-// see WF_ConnectionStateGet()
+// see mrf_conn_get_state()
 enum {
     WF_CSTATE_NOT_CONNECTED               = 1,
     WF_CSTATE_CONNECTION_IN_PROGRESS      = 2,
@@ -159,7 +158,7 @@ enum {
     WF_MULTICAST_FILTER_2   = 5,
 };
 
-// see mrf_profile_get_wps_cred()
+// see mrf_profile_get_wps_credentials()
 enum {
     WF_WPS_AUTH_OPEN        = 0x01,
     WF_WPS_AUTH_WPA_PSK     = 0x02,
@@ -169,7 +168,7 @@ enum {
     WF_WPS_AUTH_WPA2_PSK    = 0x20,
 };
 
-// see mrf_profile_get_wps_cred()
+// see mrf_profile_get_wps_credentials()
 enum {
     WF_WPS_ENC_NONE         = 0x01,
     WF_WPS_ENC_WEP          = 0x02,
@@ -177,71 +176,9 @@ enum {
     WF_WPS_ENC_AES          = 0x08,
 };
 
-// Indexes for stats array
-enum {
-    STATS_WEP_EXCLUDE,      // Number of frames received with the Protected Frame subfield of the Frame
-                            //  Control field set to zero and the value of dot11ExcludeUnencrypted causes
-                            //  that frame to be discarded
-    STATS_TX_BYTES,         // Total number of Tx bytes that have been transmitted
-    STATS_TX_MULTICAST,     // Number of frames successfully transmitted that had the multicast bit set
-                            //  in the destination MAC address.
-    STATS_TX_FAILED,        // Number of Tx frames that failed due to the number of transmits exceeding the retry count
-    STATS_TX_RETRY,         // Number of times a transmitted frame needed to be retried
-    STATS_TX_MULT_RETRY,    // Number of times a frame was successfully transmitted after more than one retransmission.
-    STATS_TX_SUCCESS,       // Number of Tx frames successfully transmitted.
-    STATS_RX_DUP,           // Number of frames received where the Sequence Control field indicates a duplicate.
-    STATS_RX_CTS_SUCC,      // Number of CTS frames received in response to an RTS frame.
-    STATS_RX_CTS_FAIL,      // Number of times an RTS frame was not received in response to a CTS frame.
-    STATS_RX_ACK_FAIL,      // Number of times an Ack was not received in response to a Tx frame.
-    STATS_RX_BYTES,         // Total number of Rx bytes received.
-    STATS_RX_FRAG,          // Number of successful received frames (management or data)
-    STATS_RX_MULT,          // Number of frames received with the multicast bit set in the destination MAC address.
-    STATS_RX_FCS_ERR,       // Number of frames received with an invalid Frame Checksum (FCS).
-    STATS_RX_WEP_UNDECRYPT, // Number of frames received where the Protected Frame subfield of the Frame Control Field is set to
-                            //  one and the WEPOn value for the key mapped to the transmitter's MAC address indicates the frame
-                            //  should not have been encrypted.
-    STATS_RX_FRAG_AGED,     // Number of times that fragments 'aged out', or were not received in the allowable time.
-    STATS_RX_MIC_FAIL,      // Number of MIC failures that have occurred.
-    STATS_SIZE
-};
-
 //==============================================================================
 //                                  DATA TYPES
 //==============================================================================
-// See WF_ScanContextSet()
-typedef struct scanContext {
-    u_int8_t  scanType;                 // see WF_SCAN_*
-    u_int8_t  scanCount;
-    u_int16_t minChannelTime;           // ms
-    u_int16_t maxChannelTime;           // ms
-    u_int16_t probeDelay;               // us
-} t_scanContext;
-
-// See SetAdhocContext()
-typedef struct adHocNetworkContext {
-    int       hiddenSsid;               // True if SSID should be hidden, else False (normally False)
-    u_int16_t beaconPeriod;             // beacon period, in ms
-    u_int8_t  mode;                     // see WF_ADHOC_*
-} t_adHocNetworkContext;
-
-// used in set_wps
-typedef struct {
-    u_int8_t key[WF_MAX_PASSPHRASE_LENGTH]; // binary key or passphrase
-    u_int8_t keyLength;                     // number of bytes in binary key (always 32) or passphrase
-    u_int8_t ssid[WF_MAX_SSID_LENGTH];      // ssid
-    u_int8_t ssidLen;                       // number of bytes in SSID
-} t_wpaKeyInfo;
-
-// See WF_PsPollEnable()
-typedef struct psPollContext {
-    u_int16_t listenInterval; // Number of 100ms intervals between instances when
-                              // the MRF24W wakes up to receive buffered messages
-                              // from the network (1 = 100ms, 2 = 200ms, etc.)
-    u_int16_t dtimInterval;   // Number of DTIM intervals between instances when
-                              // the MRF24W wakes up to receive buffered messages
-                              // from the network.
-    int       useDtim;        // true if dtimInterval is being used, else false
-} t_psPollContext;
 
 // See WF_ScanResultGet()
 typedef struct {
@@ -291,9 +228,9 @@ typedef struct {
     u_int8_t    bssType;                        // WF_INFRASTRUCTURE or WF_ADHOC
     u_int8_t    channel;                        // Channel number
     u_int8_t    ssidLen;                        // Number of valid characters in ssid
-} t_scanResult;
+} scan_result_t;
 
-typedef struct wpsCredentialsStruct {
+typedef struct {
     u_int8_t  ssid[WF_MAX_SSID_LENGTH];         // network SSID
     u_int8_t  netKey[WF_MAX_PASSPHRASE_LENGTH]; // binary security key
     u_int16_t authType;                         // see WF_WPS_AUTH_*
@@ -303,7 +240,34 @@ typedef struct wpsCredentialsStruct {
     u_int8_t  keyIdx;                           // WEP key index (only valid if encType = WF_ENC_WEP)
     u_int8_t  keyLen;                           // key length, in bytes
     u_int8_t  bssid[WF_MAC_ADDRESS_LENGTH];     // BSSID
-} t_wpsCredentials;
+} wps_credentials_t;
+
+// MAC Statistics
+typedef struct {
+    u_int32_t wep_exclude;      // Number of frames received with the Protected Frame subfield of the Frame
+                                //  Control field set to zero and the value of dot11ExcludeUnencrypted causes
+                                //  that frame to be discarded
+    u_int32_t tx_bytes;         // Total number of Tx bytes that have been transmitted
+    u_int32_t tx_multicast;     // Number of frames successfully transmitted that had the multicast bit set
+                                //  in the destination MAC address.
+    u_int32_t tx_failed;        // Number of Tx frames that failed due to the number of transmits exceeding the retry count
+    u_int32_t tx_rtry;          // Number of times a transmitted frame needed to be retried
+    u_int32_t tx_mult_rtry;     // Number of times a frame was successfully transmitted after more than one retransmission.
+    u_int32_t tx_success;       // Number of Tx frames successfully transmitted.
+    u_int32_t rx_dup;           // Number of frames received where the Sequence Control field indicates a duplicate.
+    u_int32_t rx_cts_succ;      // Number of CTS frames received in response to an RTS frame.
+    u_int32_t rx_cts_fail;      // Number of times an RTS frame was not received in response to a CTS frame.
+    u_int32_t rx_ack_fail;      // Number of times an Ack was not received in response to a Tx frame.
+    u_int32_t rx_bytes;         // Total number of Rx bytes received.
+    u_int32_t rx_frag;          // Number of successful received frames (management or data)
+    u_int32_t rx_mult;          // Number of frames received with the multicast bit set in the destination MAC address.
+    u_int32_t rx_fcs_err;       // Number of frames received with an invalid Frame Checksum (FCS).
+    u_int32_t rx_wep_undecrypt; // Number of frames received where the Protected Frame subfield of the Frame Control Field is set to
+                                //  one and the WEPOn value for the key mapped to the transmitter's MAC address indicates the frame
+                                //  should not have been encrypted.
+    u_int32_t rx_frag_aged;     // Number of times that fragments 'aged out', or were not received in the allowable time.
+    u_int32_t rx_mic_failure;   // Number of MIC failures that have occurred.
+} mac_stats_t;
 
 //==============================================================================
 //                                  MRF24WG API
@@ -314,42 +278,50 @@ typedef struct wpsCredentialsStruct {
 unsigned WF_Init(void);                         // must be called first
 void WF_Task(void);
 
-// Core WiFi configuration functions (must always be called)
+// Profile configuration functions
 //----------------------------------------------------------
-void mrf_set_regional_domain(unsigned regional_domain);
-void mrf_profile_set_ssid(u_int8_t *ssid, unsigned ssid_len);
-void mrf_profile_set_network_type(unsigned nettype);
-void mrf_profile_set_hidden(int hidden);
-void WF_ChannelListSet(u_int8_t *p_channelList, u_int8_t numChannels);
-void WF_ReconnectModeSet(u_int8_t retryCount, u_int8_t deauthAction, u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction);
+unsigned mrf_profile_create(void);
+void mrf_profile_set_ssid(unsigned cpid, u_int8_t *ssid, unsigned ssid_len);
+void mrf_profile_set_network_type(unsigned cpid, unsigned nettype);
+void mrf_profile_set_hidden(unsigned cpid, int hidden);
+void mrf_profile_set_adhoc_mode(unsigned cpid, int mode);
+void mrf_profile_set_bssid(unsigned cpid, u_int8_t *bssid);
+void mrf_profile_get_wps_credentials(unsigned cpid, wps_credentials_t *cred);
 
 // WiFi security functions
 //------------------------
-void mrf_profile_set_open(void);
-void mrf_profile_set_wep(unsigned wep_security_type, unsigned key_index, u_int8_t *key, unsigned key_len);
-void mrf_profile_set_wpa(unsigned wpa_security_type, u_int8_t *key, unsigned key_len);
-void mrf_profile_set_wps(unsigned wps_security_type, u_int8_t *pin, unsigned pin_len);
-void mrf_profile_get_wps_cred(t_wpsCredentials *p_cred);
-void WF_WpaConvPassphraseToKey(t_wpaKeyInfo *p_keyInfo);
-void WF_WpsKeyGenerate(t_wpaKeyInfo *key_info);
+void mrf_profile_set_open(unsigned cpid);
+void mrf_profile_set_wep(unsigned cpid, unsigned wep_security_type,
+    unsigned key_index, u_int8_t *key, unsigned key_len);
+void mrf_profile_set_wpa(unsigned cpid, unsigned wpa_security_type,
+    u_int8_t *key, unsigned key_len);
+void mrf_profile_set_wps(unsigned cpid, unsigned wps_security_type,
+    u_int8_t *pin, unsigned pin_len);
+void mrf_passphrase_to_key(const char *passphrase,
+    const u_int8_t *ssid, unsigned ssid_len, u_int8_t *key);
 
 // WiFi Connection functions
 //--------------------------
-void WF_Connect(void);
-void WF_Disconnect(void);
-int WF_ConnectionStateGet(void);
+void mrf_connect(unsigned cpid);
+void mrf_disconnect(void);
+int mrf_conn_get_state(void);
+void mrf_conn_set_channels(u_int8_t *channel_list, unsigned num_channels);
+void mrf_conn_set_mode(unsigned retry_count, unsigned deauth_action,
+    unsigned beacon_timeout, unsigned beacon_timeout_action);
+void mrf_conn_set_listen_interval(unsigned value);
+void mrf_conn_set_dtim_interval(unsigned value);
 
 // WiFi scanning functions
 //------------------------
-void WF_Scan(int scan_all);
-void WF_ScanResultGet(unsigned list_index, t_scanResult *p_scanResult);
+void WF_Scan(unsigned cpid);
+void WF_ScanResultGet(unsigned list_index, scan_result_t *scan_result);
 
 // Power-save mode (PS-Poll)
 //--------------------------
-void WF_PsPollEnable(t_psPollContext *p_context);
+void WF_PsPollEnable(unsigned listenInterval, unsigned dtimInterval, int useDtim);
 void WF_PsPollDisable(void);
 void WF_Hibernate(void);
-void WF_PowerStateGet(u_int8_t *p_powerState);
+void WF_PowerStateGet(u_int8_t *power_state);
 
 // Maximum Tx power functions
 //---------------------------
@@ -358,26 +330,27 @@ unsigned mrf_get_max_power(void);
 // WiFi status functions
 //----------------------
 unsigned mrf_get_system_version();
-void mrf_get_stats(u_int32_t stats[18]);
+void mrf_get_stats(mac_stats_t *stats);
 
 // Multicast filter functions
-void mrf_set_multicast_filter(unsigned filter_id, u_int8_t address[]);
+void mrf_set_multicast_filter(unsigned filter_id, u_int8_t *address);
 
 // Data tx functions
 //------------------
 int WF_TxPacketAllocate(unsigned bytes_needed);
-void WF_TxPacketCopy(u_int8_t *p_buf, unsigned length);
+void WF_TxPacketCopy(u_int8_t *buf, unsigned length);
 void WF_TxPacketTransmit(unsigned packet_size);
 
 // Data rx functions
 //------------------
 void WF_ProcessRxPacket(void);
 unsigned WF_RxPacketLengthGet(void);
-void WF_RxPacketCopy(u_int8_t *p_buf, unsigned len);
+void WF_RxPacketCopy(u_int8_t *buf, unsigned len);
 void WF_RxPacketDeallocate(void);
 
 // Miscellaneous functions
 //------------------------
+void mrf_set_regional_domain(unsigned regional_domain);
 void mrf_set_mac_address(u_int8_t *mac_address);
 void mrf_get_mac_address(u_int8_t *mac_address);
 void mrf_set_tx_confirm(unsigned state);
@@ -385,11 +358,13 @@ void mrf_set_tx_confirm(unsigned state);
 // Advanced functions.  These are not typically needed because the MRF24WG
 // defaults suffice for most applications.
 //------------------------------------------------------------------------
-void WF_ScanContextSet(t_scanContext *p_context);
-void WF_AdhocContextSet(t_adHocNetworkContext *p_context);
+void mrf_conn_set_scan(unsigned scan_type,      // see WF_SCAN_*
+    unsigned scan_count, unsigned min_channel_msec, unsigned max_channel_msec,
+    unsigned probe_delay_usec);
+void mrf_conn_set_adhoc(unsigned cpid, int hidden_ssid, unsigned beacon_msec,
+    unsigned mode);                             // see WF_ADHOC_*
 void mrf_set_tx_mode(unsigned mode);
-void mrf_profile_set_bssid(u_int8_t *p_bssid);
-void WF_RssiSet(u_int8_t rssi);
+void mrf_conn_set_rssi(unsigned rssi);
 void mrf_set_rts_threshold(unsigned level);
 void mrf_set_link_down_threshold(unsigned level);
 
@@ -399,5 +374,24 @@ void mrf_set_link_down_threshold(unsigned level);
 void mrf_enable_module_operation(void);
 void mrf_yield_passphrase_to_host(void);
 void mrf_set_psk(u_int8_t *psk);
+
+/*
+ * External Interrupt Functions
+ */
+void mrf_intr_init(void);
+int mrf_intr_enable(void);
+int mrf_intr_disable(void);
+void WF_EintHandler(void);
+
+/*
+ * 1ms Timer Function
+ */
+unsigned mrf_timer_read(void);
+int mrf_timer_elapsed(unsigned start_time);
+
+/*
+ * Event Handler Functions
+ */
+void WF_ProcessRxPacket(void);
 
 #endif /* __MRF24WG_UNIVERSAL_DRIVER_API_H */

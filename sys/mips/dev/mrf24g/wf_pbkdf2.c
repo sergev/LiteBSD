@@ -425,34 +425,33 @@ static void pbkdf2_sha1_f(const char *passphrase, const char *ssid,
     }
 }
 
-/**
- * pbkdf2_sha1 - SHA1-based key derivation function (PBKDF2) for IEEE 802.11i
- * @passphrase: ASCII passphrase
- * @ssid: SSID
- * @ssid_len: SSID length in bytes
- * @interations: Number of iterations to run
- * @buf: Buffer for the generated key
- * @buflen: Length of the buffer in bytes
+/*
+ * Convert the input WPA/WPA2 passphrase to a 32-byte binary key
+ * SHA1-based key derivation function (PBKDF2) for IEEE 802.11i.
+ *
+ * Parameters:
+ *  passphrase - ASCII passphrase, zero terminated
+ *  ssid       - Network service ID
+ *  ssid_len   - SSID length in bytes
+ *  buf        - Buffer for the generated key, 32 bytes
  *
  * This function is used to derive PSK for WPA-PSK. For this protocol,
  * iterations is set to 4096 and buflen to 32. This function is described in
  * IEEE Std 802.11-2004, Clause H.4. The main construction is from PKCS#5 v2.0.
  */
-void pbkdf2_sha1(const char *passphrase, const char *ssid, u_int16_t ssid_len,
-         u_int16_t iterations, u_int8_t *buf, u_int16_t buflen)
+void mrf_passphrase_to_key(const char *passphrase, const u_int8_t *ssid,
+    unsigned ssid_len, u_int8_t *key)
 {
     int count = 0;
-    unsigned char *pos = buf;
-    size_t left = buflen, plen;
+    size_t left = 32, plen;
     unsigned char digest[SHA1_MAC_LEN];
 
     while (left > 0) {
         count++;
-        pbkdf2_sha1_f(passphrase, ssid, ssid_len, iterations, count,
-                  digest);
-        plen = left > SHA1_MAC_LEN ? SHA1_MAC_LEN : left;
-        bcopy(digest, pos, plen);
-        pos += plen;
+        pbkdf2_sha1_f(passphrase, (const char*)ssid, ssid_len, 4096, count, digest);
+        plen = (left > SHA1_MAC_LEN) ? SHA1_MAC_LEN : left;
+        bcopy(digest, key, plen);
+        key += plen;
         left -= plen;
     }
 }

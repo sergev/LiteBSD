@@ -26,7 +26,6 @@ mips/dev/mrf24g/wf_eint.c       optional mrf device-driver
 mips/dev/mrf24g/wf_init.c       optional mrf device-driver
 mips/dev/mrf24g/wf_mgmt_msg.c   optional mrf device-driver
 mips/dev/mrf24g/wf_param.c      optional mrf device-driver
-mips/dev/mrf24g/wf_pbkdf2.c     optional mrf device-driver
 mips/dev/mrf24g/wf_power.c      optional mrf device-driver
 mips/dev/mrf24g/wf_raw.c        optional mrf device-driver
 mips/dev/mrf24g/wf_scan.c       optional mrf device-driver

@@ -24,9 +24,6 @@ typedef struct WFPwrModeReq {
 static u_int8_t g_powerSaveState = WF_PS_OFF;
 static int      g_reactivatePsPoll = 0;
 
-extern void SetListenInterval(u_int16_t listenInterval);
-extern void SetDtimInterval(u_int16_t dtimInterval);
-
 static void SendPowerModeMsg(t_WFPwrModeReq *power_mode)
 {
     u_int8_t hdr[2];
@@ -94,12 +91,16 @@ void ClearPsPollReactivate()
  *  2. Performance will be impacted adversely as the WiFi Host Driver
  *     continually activates and deactivates PS-Poll mode via SPI messages.
  *
- * MACInit must be called first.
- *
  * Parameters:
- *  p_context -  pointer to ps poll context
+ *  listenInterval - Number of 100ms intervals between instances when
+ *                   the MRF24W wakes up to receive buffered messages
+ *                   from the network (1 = 100ms, 2 = 200ms, etc.)
+ *  dtimInterval   - Number of DTIM intervals between instances when
+ *                   the MRF24W wakes up to receive buffered messages
+ *                   from the network.
+ *  useDtim        - true if dtimInterval is being used, else false
  */
-void WF_PsPollEnable(t_psPollContext *p_context)
+void WF_PsPollEnable(unsigned listenInterval, unsigned dtimInterval, int useDtim)
 {
     t_WFPwrModeReq   pwrModeReq;
 
@@ -109,21 +110,18 @@ void WF_PsPollEnable(t_psPollContext *p_context)
         return;
     }
 
-    // save the Ps-Poll context
-    UdEnablePsPoll(p_context);
-
-    SetListenInterval(p_context->listenInterval);
-    SetDtimInterval(p_context->dtimInterval);
+    mrf_conn_set_listen_interval(listenInterval);
+    mrf_conn_set_dtim_interval(dtimInterval);
 
     // fill in request structure and send message to MRF24WG
     pwrModeReq.mode     = PS_POLL_ENABLED;
     pwrModeReq.wake     = 0;
-    pwrModeReq.rcvDtims = p_context->useDtim;
+    pwrModeReq.rcvDtims = useDtim;
     SendPowerModeMsg(&pwrModeReq);
 
     WFConfigureLowPowerMode(1);
 
-    if (p_context->useDtim) {
+    if (useDtim) {
         PowerStateSet(WF_PS_PS_POLL_DTIM_ENABLED);
     } else {
         PowerStateSet(WF_PS_PS_POLL_DTIM_DISABLED);
@@ -136,8 +134,6 @@ void WF_PsPollEnable(t_psPollContext *p_context)
  */
 void WF_PsPollDisable()
 {
-    UdDisablePsPoll();
-
     t_WFPwrModeReq pwrModeReq;
 
     pwrModeReq.mode     = PS_POLL_DISABLED;
