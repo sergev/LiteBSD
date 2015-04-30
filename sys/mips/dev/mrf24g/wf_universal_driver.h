@@ -44,7 +44,7 @@
 #define WF_DEFAULT_ADHOC_BEACON_PERIOD      100     // ms
 #define WF_DEFAULT_ADHOC_MODE               WF_ADHOC_CONNECT_THEN_START
 
-// see WF_PsPollEnable()
+// see mrf_powersave_enable()
 #define WF_DEFAULT_PS_LISTEN_INTERVAL       1       // 100ms multiplier, e.g. 1 * 100ms = 100ms
 #define WF_DEFAULT_PS_DTIM_INTERVAL         2       // number of beacon periods
 #define WF_DEFAULT_PS_DTIM_ENABLED          true    // DTIM wake-up enabled (normally the case)
@@ -180,7 +180,7 @@ enum {
 //                                  DATA TYPES
 //==============================================================================
 
-// See WF_ScanResultGet()
+// See mrf_scan_get_result()
 typedef struct {
     u_int8_t    bssid[WF_BSSID_LENGTH];     // Network BSSID value
     u_int8_t    ssid[WF_MAX_SSID_LENGTH];   // Network SSID value
@@ -313,15 +313,15 @@ void mrf_conn_set_dtim_interval(unsigned value);
 
 // WiFi scanning functions
 //------------------------
-void WF_Scan(unsigned cpid);
-void WF_ScanResultGet(unsigned list_index, scan_result_t *scan_result);
+void mrf_scan_start(unsigned cpid);
+void mrf_scan_get_result(unsigned list_index, scan_result_t *scan_result);
 
 // Power-save mode (PS-Poll)
 //--------------------------
-void WF_PsPollEnable(unsigned listenInterval, unsigned dtimInterval, int useDtim);
-void WF_PsPollDisable(void);
-void WF_Hibernate(void);
-void WF_PowerStateGet(u_int8_t *power_state);
+void mrf_powersave_enable(unsigned listenInterval, unsigned dtimInterval, int useDtim);
+void mrf_powersave_disable(void);
+void mrf_powersave_activate(int enable);
+void mrf_awake(void);
 
 // Maximum Tx power functions
 //---------------------------

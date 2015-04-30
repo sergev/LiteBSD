@@ -32,8 +32,6 @@ void InterruptCheck(void);
 /*
  * Definitions for power control
  */
-void WFConfigureLowPowerMode(int enable_low_power);
-void EnsureWFisAwake(void);
 int isPsPollNeedReactivate(void);
 void ClearPsPollReactivate(void);
 

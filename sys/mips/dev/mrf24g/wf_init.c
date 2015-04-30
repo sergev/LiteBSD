@@ -81,8 +81,7 @@ unsigned WF_Init()
     }
 
     mrf_set_tx_confirm(0);              // Disable Tx Data confirms (from the MRF24W)
-    WF_PsPollDisable();
-    ClearPsPollReactivate();
+    mrf_powersave_disable();
     UdSetInitValid();                   // Chip initialized successfully.
     return rom_version;
 }

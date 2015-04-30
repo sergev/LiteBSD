@@ -63,6 +63,8 @@ struct wifi_port {
     int         pin_reset;          /* /Reset pin number */
     int         pin_hibernate;      /* Hibernate pin number */
     int         is_up;              /* whether the link is up */
+    int         is_powersave_active; /* power save mode enabled */
+    int         need_powersave;     /* reactivate PS mode when appropriate */
 
 } wifi_port[NMRF];
 
@@ -481,6 +483,38 @@ void WF_ProcessRxPacket()
         }
     }
 #endif
+}
+
+#if 0
+void WF_Task()
+{
+    InterruptCheck();
+
+    RxPacketCheck();
+
+    // if PS-Poll was disabled temporarily and needs to be reenabled, and, we are in
+    // a connected state
+    if (w->need_powersave && UdGetConnectionState() == CS_CONNECTED) {
+        mrf_powersave_activate(1);
+        w->need_powersave = 0;
+        w->is_powersave_active = 1;
+    }
+}
+#endif
+
+/*
+ * Get the device out of power save mode before any message transmission.
+ * Set flag to reactivate power save mode later.
+ */
+void mrf_awake()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    if (w->is_powersave_active) {   /* if the application has enabled PS mode */
+        mrf_powersave_activate(0);  /* wake up MRF24WG */
+        w->is_powersave_active = 0;
+        w->need_powersave = 1;      /* set flag to put PS mode back later */
+    }
 }
 
 /*

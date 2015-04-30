@@ -88,7 +88,7 @@ enum {
     UD_ERROR_ONLY_VALID_WHEN_NOT_CONNECTED   = 132,     // Can only perform this action when not connected
     UD_ERROR_INVALID_WEP_SECURITY_TYPE       = 133,     // t_wepContext has an invalid WEP security type
     UD_ERROR_INVALID_WEP_KEY_TYPE            = 134,     // t_wepContext has an invalid key type
-    UD_ERROR_INVALID_SCAN_TYPE               = 136,     // WF_ScanContextSet(), scanType parameter is invalid
+    UD_ERROR_INVALID_SCAN_TYPE               = 136,     // mrf_conn_set_scan(), scan_type parameter is invalid
     UD_ERROR_INVALID_HIDDEN_SSID             = 137,     // SetAdhocContext(), hiddenSsid param must be true or false
     UD_ERROR_INVALID_ADHOC_MODE              = 138,     // SetAdhocContext(), mode param invalid
     UD_ERROR_INVALID_TX_MODE                 = 139,     // WF_TxModeSet(), invalid mode param

@@ -163,7 +163,7 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
     unsigned start_time, elapsed_time, buf_avail, nbytes, intr;
     t_mgmtMsgRxHdr hdr;
 
-    EnsureWFisAwake();
+    mrf_awake();
 #if 0
     printf("--- %s: send %u+%u bytes: %02x", __func__, header_len, data_len, header[0]);
     int i;

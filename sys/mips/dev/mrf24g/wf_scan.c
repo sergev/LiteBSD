@@ -15,30 +15,29 @@
  * results are ready when it receives the WF_EVENT_SCAN_RESULTS_READY event.
  * The eventInfo field for this event will contain the number of scan results.
  * Once the scan results are ready they can be retrieved with
- * WF_ScanResultGet().
+ * mrf_scan_get_result().
  *
  * Scan results are retained on the MRF24W until:
- *  1.  Calling WF_Scan() again (after scan results returned from previous
- *      call).
- *  2.  MRF24W reset.
+ *  - Calling mrf_scan() again (after scan results returned from previous call).
+ *  - MRF24W reset.
  *
  * Parameters:
  *  cpid - Connection profile ID for filtered scan,
  *         or 0xFF for 'scan all' mode.
  *
- *    Filtered scan mode:
- *          * If SSID defined only scan results with that SSID are retained
- *          * If SSID not defined all scanned SSID?s will be retained
- *          * Only scan results from Infrastructure or AdHoc networks are
- *             retained, depending on the configured network type
- *          * The only channels scanned are those set in WF_SetChannelList()
+ * Filtered scan mode:
+ *  - If SSID defined only scan results with that SSID are retained.
+ *  - If SSID not defined all scanned SSID?s will be retained.
+ *  - Only scan results from Infrastructure or AdHoc networks are
+ *    retained, depending on the configured network type.
+ *  - The only channels scanned are those set in WF_SetChannelList().
  *
- *    Scan all mode:
- *          * Can be called after WF_Init() successfully completes (see WF_INIT_SUCCESSFUL eventData)
- *          * All scan results are retained (both Infrastructure and Ad Hoc networks).
- *          * All channels within the MRF24W's regional domain will be scanned.
+ * Scan all mode:
+ *  - Can be called after WF_Init() successfully completes (see WF_INIT_SUCCESSFUL eventData).
+ *  - All scan results are retained (both Infrastructure and Ad Hoc networks).
+ *  - All channels within the MRF24W's regional domain will be scanned.
  */
-void WF_Scan(unsigned cpid)
+void mrf_scan_start(unsigned cpid)
 {
     int connectionState;
     u_int8_t hdr[4];
@@ -72,9 +71,9 @@ void WF_Scan(unsigned cpid)
  *
  * Parameters:
  *  list_index  - Index (0-based list) of the scan entry to retrieve.
- *  scan_result - Pointer to location to store the scan result structure
+ *  scan_result - Pointer to location to store the scan result structure.
  */
-void WF_ScanResultGet(unsigned list_index, scan_result_t *scan_result)
+void mrf_scan_get_result(unsigned list_index, scan_result_t *scan_result)
 {
     u_int8_t hdr[4];
 

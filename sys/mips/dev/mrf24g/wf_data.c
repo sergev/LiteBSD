@@ -50,7 +50,7 @@ int WF_TxPacketAllocate(unsigned bytes_needed)
     unsigned buf_avail, nbytes;
     u_int32_t startTime;
 
-    EnsureWFisAwake();
+    mrf_awake();
 
     /* Allocate an extra 4 bytes for WiFi message preamble. */
     bytes_needed += 4;
@@ -100,7 +100,7 @@ void WF_TxPacketTransmit(unsigned packet_size)
     static const u_int8_t snap_hdr[6] =
         { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
 
-    EnsureWFisAwake();
+    mrf_awake();
 
     /* Write out internal preamble, starting at index 0 in the raw window. */
     mrf_raw_pwrite(RAW_ID_TRANSMIT, tx_preamble, sizeof(tx_preamble), 0);
