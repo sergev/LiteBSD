@@ -3,8 +3,9 @@
  *
  * Functions to initiate a scan and retrieve scan results.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
 
 /*
  * Commands the MRF24W to start a scan operation.  This will generate the
@@ -33,7 +34,7 @@
  *  - The only channels scanned are those set in WF_SetChannelList().
  *
  * Scan all mode:
- *  - Can be called after WF_Init() successfully completes (see WF_INIT_SUCCESSFUL eventData).
+ *  - Can be called after mrf_init() successfully completes (see WF_INIT_SUCCESSFUL eventData).
  *  - All scan results are retained (both Infrastructure and Ad Hoc networks).
  *  - All channels within the MRF24W's regional domain will be scanned.
  */

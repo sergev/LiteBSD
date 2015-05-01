@@ -4,36 +4,9 @@
  * Functions that allocate and deallocate Tx/Rx data messages
  * as well as functions that perform Tx/Rx processing.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
-
-static int g_HostRAWPacketRx;
-
-void SignalPacketRx()
-{
-    g_HostRAWPacketRx = 1;
-}
-
-int isPacketRx()
-{
-    return g_HostRAWPacketRx;
-}
-
-void ClearPacketRx()
-{
-    g_HostRAWPacketRx = 0;
-}
-
-/*
- * called from WiFi_Task
- */
-void RxPacketCheck()
-{
-    if (isPacketRx()) {
-        ClearPacketRx();
-        WF_ProcessRxPacket();
-    }
-}
 
 /*
  * Allocate a Data Tx buffer for use by the TCP/IP stack.
@@ -45,18 +18,17 @@ void RxPacketCheck()
  * Parameters:
  *  bytes_needed -- number of bytes needed for the data tx message
  */
-int WF_TxPacketAllocate(unsigned bytes_needed)
+int mrf_tx_allocate(unsigned bytes_needed)
 {
-    unsigned buf_avail, nbytes;
-    u_int32_t startTime;
+    unsigned buf_avail, nbytes, start_time;
 
     mrf_awake();
 
     /* Allocate an extra 4 bytes for WiFi message preamble. */
     bytes_needed += 4;
 
-    startTime = mrf_timer_read();
-    while (mrf_timer_elapsed(startTime) < 20) {
+    start_time = mrf_timer_read();
+    while (mrf_timer_elapsed(start_time) < 20) {
         /* get total bytes available for DATA tx memory pool */
         buf_avail = mrf_read(MRF24_REG_WFIFO_BCNT0) & FIFO_BCNT_MASK;
         if (buf_avail < bytes_needed) {
@@ -83,14 +55,14 @@ int WF_TxPacketAllocate(unsigned bytes_needed)
 /*
  * Copy Ethernet packet contents to the RAW data transmit buffer.
  */
-void WF_TxPacketCopy(u_int8_t *buf, unsigned length)
+void mrf_tx_copy(u_int8_t *buf, unsigned length)
 {
     /* The RAW index has been previously set to 4
-     * by WF_TxPacketAllocate function. */
+     * by mrf_tx_allocate function. */
     mrf_raw_write(RAW_ID_TRANSMIT, buf, length);
 }
 
-void WF_TxPacketTransmit(unsigned packet_size)
+void mrf_tx_start(unsigned packet_size)
 {
     /* create internal preamble */
     static const u_int8_t tx_preamble[4] =
@@ -117,7 +89,7 @@ void WF_TxPacketTransmit(unsigned packet_size)
     mrf_raw_move(RAW_ID_TRANSMIT, RAW_MAC, 0, packet_size + sizeof(tx_preamble));
 }
 
-unsigned WF_RxPacketLengthGet()
+unsigned mrf_rx_get_length()
 {
     unsigned len;
     u_int8_t rx_preamble[2];
@@ -126,7 +98,7 @@ unsigned WF_RxPacketLengthGet()
      * Allows use of RAW engine to read rx data packet.
      * Function call returns number of bytes in the data packet. */
     len = mrf_raw_move(RAW_ID_RECEIVE, RAW_MAC, 1, 0);
-    if (len == 0) {
+    if (len <= 16) {
         printf("--- %s: failed\n", __func__);
         return 0;
     }
@@ -142,17 +114,4 @@ unsigned WF_RxPacketLengthGet()
     /* Set raw pointer to start of Ethernet packet. */
     mrf_raw_seek(RAW_ID_RECEIVE, 16);
     return len - 16;
-}
-
-/*
- * Deallocate a Data Rx buffer.
- */
-void WF_RxPacketDeallocate()
-{
-    mrf_raw_move(RAW_ID_RECEIVE, RAW_DATA_POOL, 0, 0);
-}
-
-void WF_RxPacketCopy(u_int8_t *buf, unsigned length)
-{
-    mrf_raw_read(RAW_ID_RECEIVE, buf, length);
 }

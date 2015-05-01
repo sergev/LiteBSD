@@ -6,10 +6,11 @@
 #ifndef __MRF24WG_UNIVERSAL_DRIVER_API_H
 #define __MRF24WG_UNIVERSAL_DRIVER_API_H
 
-#include <sys/types.h>
-
+#include "wf_registers.h"
 #include "wf_events.h"
 #include "wf_connection_event_codes.h"
+#include "wf_mgmt_msg.h"
+#include "wf_raw.h"
 
 //==============================================================================
 //                                  DEFINES/CONSTANTS
@@ -25,7 +26,6 @@
 #define WF_WEP104_KEY_LENGTH                52      // 4 keys of 13 bytes each
 #define WF_MAX_WEP_KEY_LENGTH               WF_WEP104_KEY_LENGTH
 #define WF_NO_EVENT_DATA                    0xffffffffU
-#define WF_RETRY_FOREVER                    0xff
 #define WF_MAX_NUM_RATES                    8
 
 //==============================================================================
@@ -55,10 +55,10 @@
 // see mrf_conn_set_rssi()
 #define WF_DEFAULT_RSSI                     255     // connect to highest RSSI found
 
-// see WF_RtsThresholdSet()
+// see mrf_set_rts_threshold()
 #define WF_DEFAULT_RTS_THRESHOLD            2347
 
-// see WF_SetSecurityWep() and t_WepContext
+// see mrf_profile_set_wep()
 #define WF_DEFAULT_WEP_KEY_INDEX            0
 #define WF_DEFAULT_WEP_KEY_TYPE             WF_SECURITY_WEP_OPENKEY
 
@@ -91,19 +91,13 @@ enum {
     WF_MAX_SECURITY_TYPE                     = 10,
 };
 
-// see WF_SetReconnectMode
-enum {
-    WF_DO_NOT_ATTEMPT_TO_RECONNECT = 0,
-    WF_ATTEMPT_TO_RECONNECT        = 1,
-};
-
 // mrf_conn_set_scan()
 enum {
     WF_SCAN_ACTIVE          = 1,
     WF_SCAN_PASSIVE         = 2,
 };
 
-// see WF_SetNetworkType()
+// see mrf_profile_set_network_type()
 enum {
     WF_MIN_NETWORK_TYPE            = 1,
 
@@ -114,7 +108,7 @@ enum {
     WF_MAX_NETWORK_TYPE            = 3,
 };
 
-// see WF_SetSecurityWep()
+// see mrf_profile_set_wep()
 enum {
     WF_SECURITY_WEP_SHAREDKEY = 0,
     WF_SECURITY_WEP_OPENKEY   = 1,
@@ -125,14 +119,6 @@ enum {
     WF_ADHOC_CONNECT_THEN_START = 0,
     WF_ADHOC_CONNECT_ONLY       = 1,
     WF_ADHOC_START_ONLY         = 2,
-};
-
-// see WF_PowerStateGet()
-enum {
-    WF_PS_HIBERNATE             = 1,
-    WF_PS_PS_POLL_DTIM_ENABLED  = 2,
-    WF_PS_PS_POLL_DTIM_DISABLED = 3,
-    WF_PS_OFF                   = 4,
 };
 
 // See mrf_set_tx_mode()
@@ -176,9 +162,35 @@ enum {
     WF_WPS_ENC_AES          = 0x08,
 };
 
+// Event Types - see mrf_event()
+typedef enum {
+    // Connection events
+    WF_EVENT_CONNECTION_SUCCESSFUL          = 1,
+    WF_EVENT_CONNECTION_FAILED              = 2,
+    WF_EVENT_CONNECTION_TEMPORARILY_LOST    = 3,
+    WF_EVENT_CONNECTION_PERMANENTLY_LOST    = 4,
+    WF_EVENT_CONNECTION_REESTABLISHED       = 5,
+
+    // WiFi scan event
+    WF_EVENT_SCAN_RESULTS_READY             = 6,
+
+    // WPS WPA-PSK key calculation needed
+    WF_WPS_EVENT_KEY_CALCULATION_REQUEST    = 8,
+
+    // Error events
+    WF_EVENT_MRF24WG_MODULE_ASSERT          = 52,
+} event_t;
+
 //==============================================================================
 //                                  DATA TYPES
 //==============================================================================
+
+typedef struct {
+    char pass[WF_MAX_PASSPHRASE_LENGTH];    /* passphrase */
+    u_int8_t pass_len;                      /* number of bytes in passphrase */
+    u_int8_t ssid[WF_MAX_SSID_LENGTH];      /* ssid */
+    u_int8_t ssid_len;                      /* number of bytes in SSID */
+} key_info_t;
 
 // See mrf_scan_get_result()
 typedef struct {
@@ -273,10 +285,11 @@ typedef struct {
 //                                  MRF24WG API
 //==============================================================================
 
-// WiFi init and task functions
-//-----------------------------
-unsigned WF_Init(void);                         // must be called first
-void WF_Task(void);
+// WiFi init functions
+//-----------------------
+unsigned mrf_setup(void);                       // must be called first
+void mrf_intr_init(void);
+void mrf_event(event_t event, void *data);
 
 // Profile configuration functions
 //----------------------------------------------------------
@@ -306,8 +319,8 @@ void mrf_connect(unsigned cpid);
 void mrf_disconnect(void);
 int mrf_conn_get_state(void);
 void mrf_conn_set_channels(u_int8_t *channel_list, unsigned num_channels);
-void mrf_conn_set_mode(unsigned retry_count, unsigned deauth_action,
-    unsigned beacon_timeout, unsigned beacon_timeout_action);
+void mrf_conn_set_mode(unsigned retry_count, int reconnect_on_deauth,
+    unsigned beacon_timeout, int reconnect_on_loss);
 void mrf_conn_set_listen_interval(unsigned value);
 void mrf_conn_set_dtim_interval(unsigned value);
 
@@ -335,18 +348,12 @@ void mrf_get_stats(mac_stats_t *stats);
 // Multicast filter functions
 void mrf_set_multicast_filter(unsigned filter_id, u_int8_t *address);
 
-// Data tx functions
+// Data tx/rx functions
 //------------------
-int WF_TxPacketAllocate(unsigned bytes_needed);
-void WF_TxPacketCopy(u_int8_t *buf, unsigned length);
-void WF_TxPacketTransmit(unsigned packet_size);
-
-// Data rx functions
-//------------------
-void WF_ProcessRxPacket(void);
-unsigned WF_RxPacketLengthGet(void);
-void WF_RxPacketCopy(u_int8_t *buf, unsigned len);
-void WF_RxPacketDeallocate(void);
+int mrf_tx_allocate(unsigned bytes_needed);
+void mrf_tx_copy(u_int8_t *buf, unsigned length);
+void mrf_tx_start(unsigned packet_size);
+unsigned mrf_rx_get_length(void);
 
 // Miscellaneous functions
 //------------------------
@@ -376,22 +383,9 @@ void mrf_yield_passphrase_to_host(void);
 void mrf_set_psk(u_int8_t *psk);
 
 /*
- * External Interrupt Functions
- */
-void mrf_intr_init(void);
-int mrf_intr_enable(void);
-int mrf_intr_disable(void);
-void WF_EintHandler(void);
-
-/*
  * 1ms Timer Function
  */
 unsigned mrf_timer_read(void);
 int mrf_timer_elapsed(unsigned start_time);
-
-/*
- * Event Handler Functions
- */
-void WF_ProcessRxPacket(void);
 
 #endif /* __MRF24WG_UNIVERSAL_DRIVER_API_H */

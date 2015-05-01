@@ -3,15 +3,17 @@
  *
  * Functions pertaining Universal Driver and MRF24WG initialization.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 /*
  * Initialize the MRF24WG for operations.
  * Must be called before any other WiFi API calls.
  * Returns the device ROM and patch version.
  */
-unsigned WF_Init()
+unsigned mrf_setup()
 {
     unsigned msec, value, mask, mask2, rom_version;
 
@@ -57,7 +59,6 @@ unsigned WF_Init()
     /* Initialize the /INT signal allowing the MRF24 to interrupt
      * the Host from this point forward. */
     mrf_intr_init();
-    mrf_intr_enable();
 
     /* Enable the following interrupts in the 8-bit int register. */
     mask = INTR_FIFO0 | INTR_FIFO1 | INTR_RAW0 | INTR_RAW1 /*| INTR_INT2*/;

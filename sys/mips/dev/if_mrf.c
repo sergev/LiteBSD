@@ -18,8 +18,6 @@
 #include <mips/dev/device.h>
 #include <mips/dev/spi.h>
 #include <mips/dev/mrf24g/wf_universal_driver.h>
-#include <mips/dev/mrf24g/wf_registers.h>
-#include <mips/dev/mrf24g/wf_raw.h>
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
 
@@ -63,8 +61,10 @@ struct wifi_port {
     int         pin_reset;          /* /Reset pin number */
     int         pin_hibernate;      /* Hibernate pin number */
     int         is_up;              /* whether the link is up */
+    int         is_connected;       /* whether the wifi is connected */
     int         is_powersave_active; /* power save mode enabled */
     int         need_powersave;     /* reactivate PS mode when appropriate */
+    key_info_t  key_info;
 
 } wifi_port[NMRF];
 
@@ -346,161 +346,72 @@ void mrf_intr_init()
     IECSET(0) = w->int_mask;            /* enable the interrupt */
 }
 
-/*
- * Disable the MRF24WG external interrupt.
- * Return True if interrupt was enabled, else False.
- */
-int mrf_intr_disable()
-{
-    struct wifi_port *w = &wifi_port[0];
-    int was_enabled = (IEC(0) & w->int_mask) != 0;
-
-    IECCLR(0) = w->int_mask;
-    return was_enabled;
-}
-
-/*
- * Enable the MRF24WG external interrupt.
- * Return True if interrupt was enabled, else False.
- *
- * When using level-triggered interrupts it is possible that host MCU
- * could miss a falling edge; this can occur because during normal
- * operations as the Universal Driver disables the external interrupt for
- * short periods.  If the MRF24WG asserts the interrupt line while the
- * interrupt is disabled the falling edge won't be detected.  So, a
- * check must be made to determine if an interrupt is pending; if so, the
- * interrupt must be forced.
- * This is not an issue for level-triggered interrupts.
- */
-int mrf_intr_enable()
-{
-    struct wifi_port *w = &wifi_port[0];
-    int was_enabled = (IEC(0) & w->int_mask) != 0;
-
-    /* PIC32 uses level-triggered interrupts, so it is possible the Universal Driver
-     * may have temporarily disabled the external interrupt, and then missed the
-     * falling edge when the MRF24WG asserted the interrupt line.  The code below
-     * checks for this condition and forces the interrupt if needed. */
-
-    /* If interrupt line is low, then PIC32 may have missed the falling edge
-     * while the interrupt was disabled. */
-    if (gpio_get(w->pin_irq) == 0) {
-        /* Need to force the interrupt for two reasons:
-         *  1) there is an event that needs to be serviced
-         *  2) MRF24WG won't generate another falling edge until the interrupt
-         *     is processed. */
-        IFSSET(0) = w->int_mask;
-    }
-
-    /* Enable the external interrupt. */
-    IECSET(0) = w->int_mask;
-    return was_enabled;
-}
-
 /*-------------------------------------------------------------
  * Called by Universal Driver to inform application of MRF24WG events.
  *
  * Various events are reported to the application via this function callback.
  * The application should take appropriate action based on the event.
  */
-#if 0
-void WF_ProcessEvent(unsigned event_type, unsigned event_data)
+void mrf_event(event_t event_type, void *event_data)
 {
-    //TODO
-    wfmrf24.priv.fMRFBusy = 0;
-    wfmrf24.priv.lastEventType = eventType;
-    wfmrf24.priv.lastEventData = eventData;
+    struct wifi_port *w = &wifi_port[0];
 
-    switch (eventType) {
-    case WF_EVENT_INITIALIZATION:
-        if (eventData == WF_INIT_SUCCESSFUL) {
-            wfmrf24.priv.initStatus = ForceIPStatus(InitMask | eventData);
-        } else {
-            wfmrf24.priv.initStatus = ForceIPError(InitMask | eventData);
-        }
-        break;
-
+    switch (event_type) {
     case WF_EVENT_CONNECTION_SUCCESSFUL:
-        wfmrf24.priv.connectionStatus = ipsSuccess;
-        break;
-
-    case WF_EVENT_CONNECTION_TEMPORARILY_LOST:
-        wfmrf24.priv.connectionStatus = ForceIPStatus((CLMask | eventData));
-        wfmrf24.priv.fMRFBusy = 1;  // don't do anything during the reconnect!
-        break;
-
-    case WF_EVENT_CONNECTION_REESTABLISHED:
-        wfmrf24.priv.connectionStatus = ipsSuccess;
-        break;
-
-    case WF_EVENT_CONNECTION_PERMANENTLY_LOST:
-        wfmrf24.priv.connectionStatus = ForceIPError((CLMask | eventData));
+        printf("--- %s: connection successful\n", __func__);
+        w->is_connected = 1;
         break;
 
     case WF_EVENT_CONNECTION_FAILED:
-        wfmrf24.priv.connectionStatus = ForceIPError((CFMask | eventData));
+        printf("--- %s: connection failed, code=0x%x\n",
+            __func__, (unsigned) event_data);
+        w->is_connected = 0;
+        break;
+
+    case WF_EVENT_CONNECTION_TEMPORARILY_LOST:
+        printf("--- %s: connection temporarily lost, code=0x%x\n",
+            __func__, (unsigned) event_data);
+        w->is_connected = 0;
+        break;
+
+    case WF_EVENT_CONNECTION_PERMANENTLY_LOST:
+        printf("--- %s: connection lost, code=0x%x\n",
+            __func__, (unsigned) event_data);
+        w->is_connected = 0;
+        break;
+
+    case WF_EVENT_CONNECTION_REESTABLISHED:
+        printf("--- %s: connection reestablished, code=0x%x\n",
+            __func__, (unsigned) event_data);
+        w->is_connected = 1;
         break;
 
     case WF_EVENT_SCAN_RESULTS_READY:
-        wfmrf24.priv.cScanResults = eventData;
+        printf("--- %s: scan results ready, count=%u\n", __func__, (unsigned) event_data);
+        //TODO
         break;
 
     case WF_WPS_EVENT_KEY_CALCULATION_REQUEST:
-        WF_WpsKeyGenerate();        // can be called here or later, but must be called
-                                    // to complete WPS connection
-        wfmrf24.priv.fMRFBusy = 1;  // wait for connection status or error.
+        printf("--- %s: key calculation request\n", __func__);
+        bcopy(event_data, &w->key_info, sizeof(w->key_info));
+#if 0
+        // Create the binary key.
+        // This is too cpu-consuming to run with interrupts disabled.
+        //TODO: reschedule to handle it in the watchdog routine.
+        u_int8_t key[32];
+        mrf_passphrase_to_key(w->key_info.pass, w->key_info.ssid,
+            w->key_info.ssid_len, key);
+
+        // Send it to MRF24WG.
+        mrf_set_psk(key);
+#endif
         break;
 
-    default:
+    case WF_EVENT_MRF24WG_MODULE_ASSERT:
+        printf("--- %s: assert info=%04x\n", __func__, (unsigned) event_data);
         break;
     }
 }
-#endif
-
-/*
- * Called by Universal Driver to notify application of incoming packet.
- */
-void WF_ProcessRxPacket()
-{
-    //TODO
-#if 0
-    u_int16_t nbytes = WF_RxPacketLengthGet();
-
-    if (nbytes > 0) {
-        // now that buffer mounted it is safe to reenable interrupts, which were left disabled
-        // in the WiFi interrupt handler.
-        WF_EintEnable();
-
-        char *data = malloc(nbytes);
-        if (data != 0) {
-            WF_RxPacketCopy(data, nbytes);
-            WF_RxPacketDeallocate();
-
-            //TODO: process the data.
-        } else {
-            // if we know we can never allocate this packet, then just drop it
-            WF_RxPacketDeallocate();
-        }
-    }
-#endif
-}
-
-#if 0
-void WF_Task()
-{
-    InterruptCheck();
-
-    RxPacketCheck();
-
-    // if PS-Poll was disabled temporarily and needs to be reenabled, and, we are in
-    // a connected state
-    if (w->need_powersave && UdGetConnectionState() == CS_CONNECTED) {
-        mrf_powersave_activate(1);
-        w->need_powersave = 0;
-        w->is_powersave_active = 1;
-    }
-}
-#endif
 
 /*
  * Get the device out of power save mode before any message transmission.
@@ -573,11 +484,72 @@ static void mrf_watchdog(int unit)
 void mrfintr(dev_t dev)
 {
     struct wifi_port *w = &wifi_port[0];
-printf("---mrf0 interrupt\n");
+    unsigned intr, intr2 = 0, assert_info, nbytes;
 
-    IFSCLR(0) = w->int_mask;            /* clear the interrupt */
-    IECCLR(0) = w->int_mask;            /* disable external interrupt */
-    WF_EintHandler();                   /* call handler function */
+    /* Read INTR register to determine cause of interrupt.
+     * AND it with mask to determine which enabled interrupt has occurred. */
+    intr = mrf_read_byte(MRF24_REG_INTR);
+    if (intr & INTR_INT2)
+        intr2 = mrf_read(MRF24_REG_INTR2);
+printf("---mrf0 interrupt: intr = %02x\n", intr);
+
+    /* Clear this interrupt. */
+    mrf_write(MRF24_REG_INTR, intr);
+
+    if (intr & INTR_INT2) {
+        /*
+         * Either a mgmt tx or mgmt rx Raw move complete occurred.
+         * There is one other event to check for;
+         * this interrupt is also used by the MRF24WG to signal that it has
+         * hit an assert condition.  So, we check for that here.
+         */
+        if (intr2 & INTR2_MAILBOX) {
+            /* MRF24WG has hit an assert condition.
+             * Module number in upper 8 bits,
+             * assert information in lower 20 bits. */
+            assert_info = (mrf_read(MRF24_REG_MAILBOX0_HI) << 16) |
+                          mrf_read(MRF24_REG_MAILBOX0_LO);
+            mrf_event(WF_EVENT_MRF24WG_MODULE_ASSERT, (void*) assert_info);
+        }
+    }
+    if (intr & INTR_FIFO1) {
+        /*
+         * Got a FIFO 1 Threshold interrupt (Management Fifo).
+         * Receive a mgmt msg, either confirm or indicate.
+         */
+        mrf_mgmt_receive_confirm();
+    }
+    if (intr & INTR_FIFO0) {
+        /*
+         * Got a FIFO 0 Threshold Interrupt (Data Fifo).
+         * Receive data packet.
+         */
+        nbytes = mrf_rx_get_length();
+        if (nbytes > 0) {
+#if 0
+            char *data = malloc(nbytes);
+            if (data != 0) {
+                /* Extract received data. */
+                mrf_raw_read(RAW_ID_RECEIVE, data, nbytes);
+                //TODO: process the data.
+            }
+#endif
+            /* Deallocate a Data Rx buffer. */
+            mrf_raw_move(RAW_ID_RECEIVE, RAW_DATA_POOL, 0, 0);
+        }
+    }
+    //TODO: process TX confirm interrupt.
+
+    /* Clear the interrupt flag on exit from the service routine. */
+    IFSCLR(0) = w->int_mask;
+
+    /* Check whether PS-Poll was disabled temporarily and needs
+     * to be reenabled, and we are in a connected state. */
+    if (w->need_powersave && w->is_connected) {
+        mrf_powersave_activate(1);
+        w->need_powersave = 0;
+        w->is_powersave_active = 1;
+    }
 }
 
 /*
@@ -672,7 +644,7 @@ mrf_probe(config)
     /* Initialize the chip with interrupts disabled.
      * Extract the MAC address. */
     int s = splimp();
-    w->rom_version = WF_Init();
+    w->rom_version = mrf_setup();
     mrf_get_mac_address(w->macaddr);
     w->cpid = mrf_profile_create();     /* Create a connection profile */
     splx(s);
@@ -700,6 +672,9 @@ mrf_probe(config)
     bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
 #endif
     if_attach(ifp);
+
+    /* Enable the external interrupt. */
+    IECSET(0) = w->int_mask;
     return 1;
 }
 

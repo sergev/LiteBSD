@@ -4,8 +4,10 @@
  * Functions pertaining MRF24WG set/get parameter message processing.
  * Parameter messages are a subset of management messages.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 /*
  * Send a SetParam Mgmt request to MRF24W and waits for response.

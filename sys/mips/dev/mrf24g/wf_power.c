@@ -3,8 +3,10 @@
  *
  * Functions to controll MRF24WG power
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 /*
  * Fill in request structure and send message to MRF24WG.

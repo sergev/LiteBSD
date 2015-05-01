@@ -7,9 +7,9 @@
  * This program is free software; distributed under the terms of BSD
  * license.
  */
-#include "wf_universal_driver.h"
 #include <sys/param.h>
 #include <sys/systm.h>
+#include "wf_universal_driver.h"
 
 #define SHA1_MAC_LEN 20
 

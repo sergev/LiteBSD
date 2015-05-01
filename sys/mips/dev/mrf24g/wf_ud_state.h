@@ -117,7 +117,7 @@ void  UdStateInit(void);
     u_int32_t UdSetSecurityWpa(unsigned wpa_security_type, u_int8_t *key, unsigned key_len);
     u_int32_t UdSetSecurityWps(unsigned wps_security_type, u_int8_t *pin, unsigned pin_len);
     u_int32_t UdCheckConnectionConfig(void);
-    u_int32_t UdSetReconnectMode(u_int8_t retryCount, u_int8_t deauthAction, u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction);
+    u_int32_t UdSetReconnectMode(unsigned retryCount, int deauthAction, int beaconTimeoutAction);
     u_int32_t UdSetScanContext(unsigned scan_type);
     u_int32_t UdSetAdhocNetworkContext(int hidden_ssid, unsigned mode);
     u_int32_t UdSetTxMode(u_int8_t mode);

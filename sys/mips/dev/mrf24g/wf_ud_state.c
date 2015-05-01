@@ -3,8 +3,10 @@
  *
  * Functions performing run-time error checking.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 #define MAX_RTS_THRESHOLD   ((u_int16_t)2347)
 
@@ -447,33 +449,29 @@ u_int32_t UdSetRtsThreshold(u_int16_t rtsThreshold)
     return UD_SUCCESS;
 }
 
-u_int32_t UdSetReconnectMode(u_int8_t retryCount, u_int8_t deauthAction,
-    u_int8_t beaconTimeout, u_int8_t beaconTimeoutAction)
+u_int32_t UdSetReconnectMode(unsigned retry_count, int reconnect_on_deauth, int reconnect_on_loss)
 {
     u_int32_t errorCode = UD_SUCCESS;
 
-    if (deauthAction != WF_ATTEMPT_TO_RECONNECT &&
-        deauthAction != WF_DO_NOT_ATTEMPT_TO_RECONNECT) {
+    if (reconnect_on_deauth > 1) {
         errorCode = UD_ERROR_INVALID_DEAUTH_PARAM;
         goto errorExit;
     }
 
-    if (beaconTimeoutAction != WF_ATTEMPT_TO_RECONNECT &&
-        beaconTimeoutAction != WF_DO_NOT_ATTEMPT_TO_RECONNECT) {
+    if (reconnect_on_loss > 1) {
         errorCode = UD_ERROR_INVALID_BEACON_TIMEOUT_PARAM;
         goto errorExit;
     }
 
     // if no automatic retries
-    if (retryCount == 0) {
-        if (deauthAction == WF_ATTEMPT_TO_RECONNECT ||
-            beaconTimeoutAction == WF_ATTEMPT_TO_RECONNECT) {
+    if (retry_count == 0) {
+        if (reconnect_on_deauth || reconnect_on_loss) {
             errorCode = UD_ERROR_INVALID_RECONNECT_MODE;
         }
     }
 
 errorExit:
-    UdSetRetryCount(retryCount);
+    UdSetRetryCount(retry_count);
     return errorCode;
 }
 
@@ -623,7 +621,7 @@ static u_int32_t CheckAdHocConnect()
         goto errorExit;
     }
 
-    if (g_udState.retryCount == WF_RETRY_FOREVER) {
+    if (g_udState.retryCount == 255) {
         errorCode = UD_ERROR_INVALID_ADHOC_RETRY_COUNT;
         goto errorExit;
     }

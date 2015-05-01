@@ -4,8 +4,10 @@
  * Functions that connect, disconnect, get connection status,
  * set reconnection mode, and convert a WPA passphrase to a binary key.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 /*
  * Connection Profile Element IDs.

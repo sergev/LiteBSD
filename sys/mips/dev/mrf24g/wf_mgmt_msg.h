@@ -149,12 +149,12 @@ enum {
 /* (Used in Mgmt Indicate messages) */
 /*-------------------------------------------*/
 enum {
-    WF_EVENT_CONNECTION_ATTEMPT_STATUS_SUBTYPE  = 6,
-    WF_EVENT_CONNECTION_LOST_SUBTYPE            = 7,
-    WF_EVENT_CONNECTION_REESTABLISHED_SUBTYPE   = 8,
-    WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE    = 9,
-    WF_EVENT_SCAN_RESULTS_READY_SUBTYPE         = 11,
-    WF_EVENT_SCAN_IE_RESULTS_READY_SUBTYPE      = 12,
+    WF_EVENT_SUBTYPE_CONNECTION_ATTEMPT_STATUS  = 6,
+    WF_EVENT_SUBTYPE_CONNECTION_LOST            = 7,
+    WF_EVENT_SUBTYPE_CONNECTION_REESTABLISHED   = 8,
+    WF_EVENT_SUBTYPE_KEY_CALCULATION_REQUEST    = 9,
+    WF_EVENT_SUBTYPE_SCAN_RESULTS_READY         = 11,
+    WF_EVENT_SUBTYPE_SCAN_IE_RESULTS_READY      = 12,
 };
 
 /* event values for index 2 of WF_CONNECTION_ATTEMPT_STATUS_EVENT_SUBTYPE */
@@ -166,11 +166,10 @@ enum {
 #define CONNECTION_PERMANENTLY_LOST     2
 #define CONNECTION_REESTABLISHED        3
 
-int mrf_mgmt_receive_confirm(void);
-
 void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
         u_int8_t *data, unsigned data_len, int free_response);
 void mrf_mgmt_send_receive(u_int8_t *header, unsigned header_len,
         u_int8_t *reply, unsigned reply_len, unsigned offset);
+int mrf_mgmt_receive_confirm(void);
 
 #endif /* __WF_MGMT_MSG_H */

@@ -4,8 +4,10 @@
  * Functions that connect, disconnect, get connection status,
  * set reconnection mode, and convert a WPA passphrase to a binary key.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
 /*
  * Set an element of the connection algorithm on the MRF24W.
@@ -167,54 +169,57 @@ void mrf_disconnect()
  *     Instead, it is up to the host to reestablish the connection.
  *
  * Parameters:
- *  retryCount - the number of times the MRF24WG should try to regain a connection:
- *               0     - Do not try to regain the connection (simply report event to host application)
- *               1:254 - number of times to try to regain the connection
- *               255   - Retry forever (WF_RETRY_FOREVER)
+ *  retry_count - the number of times the MRF24WG should try to regain a connection:
+ *                0     - Do not try to regain the connection (simply report event to host application)
+ *                1:254 - number of times to try to regain the connection
+ *                255   - Retry forever
  *
- *  deauthAction - WF_ATTEMPT_TO_RECONNECT or WF_DO_NOT_ATTEMPT_TO_RECONNECT
+ *  reconnect_on_deauth - True or False
  *
- *  beaconTimeOut - Number of missed beacons before MRF24WG designates the
- *                  connection as lost:
- *                  0 - MRF24WG will NOT monitor the beacon timeout condition
- *                      and will not indicate this condition to Host
- *                  1:255 - number of missed beacons before connection declared lost
+ *  beacon_timeOut - Number of missed beacons before MRF24WG designates the
+ *                   connection as lost:
+ *                   0 - MRF24WG will NOT monitor the beacon timeout condition
+ *                       and will not indicate this condition to Host
+ *                   1:255 - number of missed beacons before connection declared lost
  *
- *  beaconTimeoutAction - WF_ATTEMPT_TO_RECONNECT or WF_DO_NOT_ATTEMPT_TO_RECONNECT
+ *  reconnect_on_loss - True or False
  *
  * If this function is not called, the MRF2WG default is the equivalent of:
- *      WF_SetReconnectMode(3, WF_ATTEMPT_TO_RECONNECT, 0, WF_DO_NOT_ATTEMPT_TO_RECONNECT);
+ *      mrf_conn_set_mode(3, True, 0, False);
  */
 
 /*
  * Examples of different scenarios are below.
  *
- * Example 1: MRF24WG should not do any connection retries and only report deauth events to host:
- *            WF_SetReconnectMode(0, WF_DO_NOT_ATTEMPT_TO_RECONNECT, 0, WF_DO_NOT_ATTEMPT_TO_RECONNECT);
+ * Example 1: MRF24WG should not do any connection retries and only
+ * report deauth events to host:
+ *      mrf_conn_set_mode(0, False, 0, False);
  *
- * Example 2: MRF24WG should not do any connection retries, but report deauth and beacon timeout events to host.
- *            Beacon timeout should be 5 beacon periods:
- *            WF_SetReconnectMode(0, WF_DO_NOT_ATTEMPT_TO_RECONNECT, 5, WF_DO_NOT_ATTEMPT_TO_RECONNECT);
+ * Example 2: MRF24WG should not do any connection retries, but report
+ * deauth and beacon timeout events to host.
+ * Beacon timeout should be 5 beacon periods:
+ *      mrf_conn_set_mode(0, False, 5, False);
  *
- * Example 3: MRF24WG should ignore beacon timeouts, but attempt to reconnect 3 times if a deauth occurs:
- *            WF_SetReconnectMode(3, WF_ATTEMPT_TO_RECONNECT, 0, WF_DO_NOT_ATTEMPT_TO_RECONNECT);
+ * Example 3: MRF24WG should ignore beacon timeouts, but attempt to reconnect
+ * 3 times if a deauth occurs:
+ *      mrf_conn_set_mode(3, True, 0, False);
  *
- * Example 4: MRF24WG should not do any connection retries if a deauth occcurs, but retry 3 times if a beacon
- *            timeout of 4 beacon periods occur:
- *            WF_SetReconnectMode(3, WF_DO_NOT_ATTEMPT_TO_RECONNECT, 4, WF_ATTEMPT_TO_RECONNECT);
+ * Example 4: MRF24WG should not do any connection retries if a deauth occcurs,
+ * but retry 3 times if a beacon timeout of 4 beacon periods occur:
+ *      mrf_conn_set_mode(3, False, 4, True);
  *
- * Example 5: MRF24WG should retry forever if either a deauth or beacon timeout occurs (beacon timeout is
- *            3 beacon periods):
- *            WF_SetReconnectMode(WF_RETRY_FOREVER, WF_ATTEMPT_TO_RECONNECT, 3, WF_ATTEMPT_TO_RECONNECT);
+ * Example 5: MRF24WG should retry forever if either a deauth or beacon
+ * timeout occurs (beacon timeout is 3 beacon periods):
+ *      mrf_conn_set_mode(255, True, 3, True);
  */
-void mrf_conn_set_mode(unsigned retry_count, unsigned deauth_action,
-    unsigned beacon_timeout, unsigned beacon_timeout_action)
+void mrf_conn_set_mode(unsigned retry_count, int reconnect_on_deauth,
+    unsigned beacon_timeout, int reconnect_on_loss)
 {
 #if defined(WF_ERROR_CHECKING)
     unsigned error_code;
 
-    error_code = UdSetReconnectMode(retry_count, deauth_action,
-        beacon_timeout, beacon_timeout_action);
+    error_code = UdSetReconnectMode(retry_count, reconnect_on_deauth,
+        reconnect_on_loss);
     if (error_code != UD_SUCCESS) {
         printf("--- %s: invalid reconnect mode\n", __func__);
         return;
@@ -224,11 +229,11 @@ void mrf_conn_set_mode(unsigned retry_count, unsigned deauth_action,
     set_element(WF_CA_ELEMENT_LIST_RETRY_COUNT,
         (u_int8_t*) &retry_count, 1);
     set_element(WF_CA_ELEMENT_DEAUTH_ACTION,
-        (u_int8_t*) &deauth_action, 1);
+        (u_int8_t*) &reconnect_on_deauth, 1);
     set_element(WF_CA_ELEMENT_BEACON_TIMEOUT,
         (u_int8_t*) &beacon_timeout, 1);
     set_element(WF_CA_ELEMENT_BEACON_TIMEOUT_ACTION,
-        (u_int8_t*) &beacon_timeout_action, 1);
+        (u_int8_t*) &reconnect_on_loss, 1);
 }
 
 /*

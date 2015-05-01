@@ -1,106 +1,88 @@
 /*
  * MRF24WG management message processing.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
+#include "wf_ud_state.h"
 
-/*
- * This structure describes the format of the first four bytes of all
- * mgmt response messages received from the MRF24W
- */
-typedef struct mgmtRxHdrStruct {
-    u_int8_t type;          /* always 0x02 */
-    u_int8_t subtype;       /* mgmt msg subtype */
-    u_int8_t result;        /* 1 if success, else failure */
-    u_int8_t macState;      /* not used */
-} t_mgmtMsgRxHdr;
-
-typedef struct mgmtIndicateHdrStruct {
-    u_int8_t type;          /* always WF_MGMT_INDICATE_MSG_TYPE (2) */
-    u_int8_t subType;       /* event type */
-} t_mgmtIndicateHdr;
-
-// used in set_wps
-typedef struct {
-    char pass[WF_MAX_PASSPHRASE_LENGTH];    /* passphrase */
-    u_int8_t pass_len;                      /* number of bytes in passphrase */
-    u_int8_t ssid[WF_MAX_SSID_LENGTH];      /* ssid */
-    u_int8_t ssid_len;                      /* number of bytes in SSID */
-} key_info_t;
-
-static void WFProcessMgmtIndicateMsg()
+static void handle_indicate_message()
 {
-    t_mgmtIndicateHdr hdr;
+    u_int8_t hdr[2];
     u_int8_t buf[6];
     key_info_t key_info;
+    unsigned code;
 
-    /* read 2-byte header of management message */
-    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(t_mgmtIndicateHdr), 0);
+    /* Read 2-byte header of management message.
+     * First byte is always WF_MGMT_INDICATE_MSG_TYPE (2).
+     * Second byte is event type. */
+    mrf_raw_pread(RAW_ID_MGMT_RX, hdr, sizeof(hdr), 0);
 
     /* Determine which event occurred and handle it */
-    switch (hdr.subType) {
-    case WF_EVENT_CONNECTION_ATTEMPT_STATUS_SUBTYPE:
-        /* read first 2 bytes after header */
-        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(t_mgmtIndicateHdr));
+    switch (hdr[1]) {
+    case WF_EVENT_SUBTYPE_CONNECTION_ATTEMPT_STATUS:
+        /* Read first 2 bytes after header. */
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(hdr));
 
         if (buf[0] == CONNECTION_ATTEMPT_SUCCESSFUL) {
-            // if connection attempt successful
-            printf("--- %s: connection attempt successful\n", __func__);
+            /* Connection successful. */
             UdSetConnectionState(CS_CONNECTED);
+            mrf_event(WF_EVENT_CONNECTION_SUCCESSFUL, 0);
         } else {
-            /* else connection attempt failed */
-            printf("--- %s: connection attempt failed, code=0x%x\n",
-                __func__, (buf[0] << 8) | buf[1]);
+            /* Connection failed. */
+            code = (buf[0] << 8) | buf[1];
             UdSetConnectionState(CS_NOT_CONNECTED);
+            mrf_event(WF_EVENT_CONNECTION_FAILED, (void*) code);
         }
         break;
 
-    case WF_EVENT_CONNECTION_LOST_SUBTYPE:
-        /* read index 2 and 3 from message and store in buf[0] and buf[1]
-           buf[0] -- 1: Connection temporarily lost  2: Connection permanently lost 3: Connection Reestablished
-           buf[1] -- 0: Beacon Timeout  1: Deauth from AP  */
-        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(t_mgmtIndicateHdr));
+    case WF_EVENT_SUBTYPE_CONNECTION_LOST:
+        /* Read index 2 and 3 from message and store in buf[0] and buf[1].
+         * buf[0] -- 1: Connection temporarily lost
+         *           2: Connection permanently lost
+         *           3: Connection Reestablished
+         * buf[1] -- 0: Beacon Timeout
+         *           1: Deauth from AP */
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 2, sizeof(hdr));
+        code = buf[1];
 
         switch (buf[0]) {
         case CONNECTION_TEMPORARILY_LOST:
-            printf("--- %s: connection temporarily lost, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_CONNECTION_IN_PROGRESS);
+            mrf_event(WF_EVENT_CONNECTION_TEMPORARILY_LOST, (void*) code);
             break;
         case CONNECTION_PERMANENTLY_LOST:
-            printf("--- %s: connection lost, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_NOT_CONNECTED);
+            mrf_event(WF_EVENT_CONNECTION_PERMANENTLY_LOST, (void*) code);
             break;
         case CONNECTION_REESTABLISHED:
-            printf("--- %s: connection reestablished, code=0x%x\n", __func__, buf[1]);
             UdSetConnectionState(CS_CONNECTED);
+            mrf_event(WF_EVENT_CONNECTION_REESTABLISHED, (void*) code);
             break;
         default:
-            printf("--- %s: invalid parameter=%u in received mgmt indicate message\n", __func__, buf[0]);
+            printf("--- %s: invalid parameter=%u in received mgmt indicate message\n",
+                __func__, buf[0]);
             break;
         }
         break;
 
-    case WF_EVENT_SCAN_RESULTS_READY_SUBTYPE:
-        /* read index 2 of mgmt indicate to get the number of scan results */
-        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 1, sizeof(t_mgmtIndicateHdr));
-        printf("--- %s: scan results ready, count=%u\n", __func__, buf[0]);
+    case WF_EVENT_SUBTYPE_SCAN_RESULTS_READY:
+        /* Read index 2 of mgmt indicate to get the number of scan results. */
+        mrf_raw_pread(RAW_ID_MGMT_RX, buf, 1, sizeof(hdr));
+        code = buf[0];
+        mrf_event(WF_EVENT_SCAN_RESULTS_READY, (void*) code);
         break;
 
-    case WF_EVENT_KEY_CALCULATION_REQUEST_SUBTYPE:
-        printf("--- %s: key calculation finished\n", __func__);
+    case WF_EVENT_SUBTYPE_KEY_CALCULATION_REQUEST:
         // read the passphrase data into the structure provided during WF_SetSecurityWps()
         mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &key_info,
-            sizeof(key_info_t), sizeof(t_mgmtIndicateHdr));
-        //TODO: create the binary key.
-        // This is too cpu-consuming.
-        //u_int8_t key[32];
-        //mrf_passphrase_to_key(key_info.pass, key_info.ssid, key_info.ssid_len, key);
-        // Send it to MRF24WG.
-        //mrf_set_psk(key);
+            sizeof(key_info), sizeof(hdr));
+        mrf_event(WF_WPS_EVENT_KEY_CALCULATION_REQUEST, &key_info);
         break;
 
     default:
-        printf("--- %s: unknown mgmt indicate message, subtype=%u\n", __func__, hdr.subType);
+        printf("--- %s: unknown mgmt indicate message, subtype=%u\n",
+            __func__, hdr[1]);
         break;
     }
 
@@ -134,7 +116,7 @@ int mrf_mgmt_receive_confirm()
     case WF_TYPE_MGMT_INDICATE:
         // if a mgmt indicated occurred (asynchronous event),
         // then process it right now
-        WFProcessMgmtIndicateMsg();
+        handle_indicate_message();
         return 0;
     default:
         // unknown mgmt msg type was received
@@ -160,8 +142,9 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
                    u_int8_t *data, unsigned data_len,
                    int free_response)
 {
-    unsigned start_time, elapsed_time, buf_avail, nbytes, intr;
-    t_mgmtMsgRxHdr hdr;
+    unsigned start_time, elapsed_time, buf_avail, nbytes;
+    unsigned intr, intr2, assert_info;
+    u_int8_t reply[4];
 
     mrf_awake();
 #if 0
@@ -219,7 +202,22 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
 
         // if received a level 2 interrupt
         if (intr & INTR_INT2) {
-            // Either a mgmt tx or mgmt rx Raw move complete occurred
+            /*
+             * Either a mgmt tx or mgmt rx Raw move complete occurred.
+             * There is one other event to check for;
+             * this interrupt is also used by the MRF24WG to signal that it has
+             * hit an assert condition.  So, we check for that here.
+             */
+            intr2 = mrf_read(MRF24_REG_INTR2);
+            if (intr2 & INTR2_MAILBOX) {
+                /* MRF24WG has hit an assert condition.
+                 * Module number in upper 8 bits,
+                 * assert information in lower 20 bits. */
+                assert_info = (mrf_read(MRF24_REG_MAILBOX0_HI) << 16) |
+                              mrf_read(MRF24_REG_MAILBOX0_LO);
+                mrf_event(WF_EVENT_MRF24WG_MODULE_ASSERT, (void*) assert_info);
+            }
+
             /* clear this interrupt */
             mrf_write(MRF24_REG_INTR2,
                 INTR2_RAW2 | INTR2_RAW3 | INTR2_RAW4 | INTR2_RAW5);
@@ -244,17 +242,19 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
         udelay(10);
     }
 
-    /* if the caller wants to delete the response immediately (doesn't need any data from it */
+    /* If the caller wants to delete the response immediately
+     * (doesn't need any data from it). */
     if (free_response) {
-        /* read and verify result before freeing up buffer to ensure our message send was successful */
-        mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
+        /* Read and verify result before freeing up buffer to ensure
+         * our message send was successful. */
+        mrf_raw_pread(RAW_ID_MGMT_RX, reply, sizeof(reply), 0);
 
-        if (hdr.result != MGMT_RESP_SUCCESS) {
-            printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
+        if (reply[2] != MGMT_RESP_SUCCESS) {
+            printf("--- %s: mgmt response failed, result=%u\n", __func__, reply[2]);
         }
-        else if (hdr.subtype != header[1]) {
+        else if (reply[1] != header[1]) {
             printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
-                __func__, hdr.subtype, header[1]);
+                __func__, reply[1], header[1]);
         }
 
         /* free mgmt buffer */
@@ -277,20 +277,20 @@ void mrf_mgmt_send(u_int8_t *header, unsigned header_len,
 void mrf_mgmt_send_receive(u_int8_t *message, unsigned message_len,
         u_int8_t *reply, unsigned reply_len, unsigned offset)
 {
-    t_mgmtMsgRxHdr hdr;     /* header of reply message */
+    u_int8_t hdr[4];        /* header of reply message */
 
     mrf_mgmt_send(message, message_len, 0, 0, 0);
 
     /* Read out header of the received response. */
-    mrf_raw_pread(RAW_ID_MGMT_RX, (u_int8_t*) &hdr, sizeof(hdr), 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, hdr, sizeof(hdr), 0);
 
-    if (hdr.result != MGMT_RESP_SUCCESS &&
-        hdr.result != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR) {
-        printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr.result);
+    if (hdr[2] != MGMT_RESP_SUCCESS &&
+        hdr[2] != MGMT_RESP_ERROR_NO_STORED_BSS_DESCRIPTOR) {
+        printf("--- %s: mgmt response failed, result=%u\n", __func__, hdr[2]);
     }
-    else if (hdr.subtype != message[1]) {
+    else if (hdr[1] != message[1]) {
         printf("--- %s: invalid mgmt response subtype=%u, expected=%u\n",
-            __func__, hdr.subtype, message[1]);
+            __func__, hdr[1], message[1]);
     }
 
     /* if caller wants to read data from this mgmt response */

@@ -3,8 +3,9 @@
  *
  * Functions to control RAW windows.
  */
+#include <sys/param.h>
+#include <sys/systm.h>
 #include "wf_universal_driver.h"
-#include "wf_global_includes.h"
 
 /*
  * Raw registers for each raw window being used
@@ -92,10 +93,10 @@ unsigned mrf_raw_move(unsigned raw_id, unsigned src_dest,
     int raw_is_destination, unsigned size)
 {
     unsigned intr, mask, start_time, nbytes, ctrl0 = 0;
-    int int_enabled;
+    int x;
 
     // save current state of External interrupt and disable it
-    int_enabled = mrf_intr_disable();
+    x = splimp();
 
     /* Create control value that will be written to raw control register,
      * which initiates the raw move */
@@ -171,9 +172,7 @@ unsigned mrf_raw_move(unsigned raw_id, unsigned src_dest,
     nbytes = mrf_read(raw_ctrl1_reg[raw_id]);
 
     // if interrupts were enabled coming into this function, put back to that state
-    if (int_enabled) {
-        mrf_intr_enable();
-    }
+    splx(x);
 
     /* byte count is not valid for some raw move operations */
     return nbytes;
