@@ -77,8 +77,7 @@ struct  timezone tz = { TIMEZONE, DST };
 
 int maxproc = NPROC;
 
-#define NTEXT (8 + NPROC / 4)           /* actually the object cache */
-#define NVNODE (NPROC + NTEXT + 16)
+#define NVNODE (NPROC + 2 * MAXUSERS + 24)
 
 int desiredvnodes = NVNODE;
 int maxfiles = 2 * NPROC + 16;
