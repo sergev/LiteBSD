@@ -53,9 +53,9 @@ options         INET            # Internet protocols
 #options        MULTICAST       # Multicast support
 #options        MROUTING        # Multicast routing support
 
-config          vmunix  root on major0 minor1
-                        swap on major0 minor2
-                        dumps on major0 minor2
+config          vmunix  root on sd0a
+                        swap on sd0b
+                        dumps on sd0b
 
 device          uart1   flags 0x1e1f    # pins rx=RA14, tx=RA15 - 4,6 at PICtail connector
 # Uncomment this to increase the size of the UART buffers

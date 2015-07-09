@@ -978,11 +978,11 @@ void checksystemspec(fl)
 		if (minor(dev) & 07) {
 			(void) sprintf(buf,
 "Warning, swap defaulted to 'b' partition with root on '%c' partition",
-				(minor(dev) & 07) + 'a');
+				(minor(dev) & 07) + 'a' - 1);
 			yyerror(buf);
 		}
 		swap->f_swapdev =
-		   makedev(major(dev), (minor(dev) &~ 07) | ('b' - 'a'));
+		   makedev(major(dev), (minor(dev) &~ 07) | ('b' - 'a' + 1));
 		swap->f_fn = devtoname(swap->f_swapdev);
 		mkswap(fl, swap, 0, 0);
 	}

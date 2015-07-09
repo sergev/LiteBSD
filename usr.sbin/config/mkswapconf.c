@@ -194,7 +194,7 @@ nametodev(name, defunit, defpartition)
 		fprintf(stderr, "config: %s: unknown device\n", name);
 		return (NODEV);
 	}
-	return (makedev(dp->dev_major, (unit << 3) + (partition - 'a')));
+	return (makedev(dp->dev_major, (unit << 3) + (partition - 'a' + 1)));
 }
 
 char *
@@ -212,6 +212,6 @@ devtoname(dev)
 	if (dp == 0)
 		dp = devtable;
 	(void) sprintf(buf, "%s%d%c", dp->dev_name,
-		minor(dev) >> 3, (minor(dev) & 07) + 'a');
+		minor(dev) >> 3, (minor(dev) & 07) + 'a' - 1);
 	return (ns(buf));
 }
