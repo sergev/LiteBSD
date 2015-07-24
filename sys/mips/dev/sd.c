@@ -82,7 +82,7 @@ static int sd_type[NSD];                /* Card type */
 #define TYPE_SDHC       3
 
 #define TIMO_WAIT_WDONE 400000
-#define TIMO_WAIT_WIDLE 200000
+#define TIMO_WAIT_WIDLE 300000
 #define TIMO_WAIT_CMD   100000
 #define TIMO_WAIT_WDATA 30000
 #define TIMO_READ       90000
