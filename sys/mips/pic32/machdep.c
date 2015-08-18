@@ -107,7 +107,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(ECMB)
+#if defined(MEBII) || defined(Whitecat)
 /*
  * Chip configuration.
  */
@@ -131,7 +131,32 @@ PIC32_DEVCFG (
 
     DEVCFG3_FETHIO |            /* Default Ethernet pins */
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
+#endif
 
+#if defined(HMZ144)
+PIC32_DEVCFG (
+    DEVCFG0_JTAG_DISABLE |      /* Disable JTAG port */
+    DEVCFG0_TRC_DISABLE,        /* Disable trace port */
+
+    /* Using primary oscillator with crystal 12 MHz.
+     * PLL multiplies it to 200 MHz. */
+    DEVCFG1_FNOSC_SPLL |        /* use system PLL */
+    DEVCFG1_POSCMOD_HS |        /* primary oscillator HS mode */
+    DEVCFG1_FSOSCEN |           /* Enable secondary oscillator */
+    DEVCFG1_FCKM_ENABLE |       /* Enable fail-safe clock monitoring */
+    DEVCFG1_IESO |              /* Internal-external switch over enable */
+    DEVCFG1_CLKO_DISABLE,       /* CLKO output disable */
+
+    DEVCFG2_FPLLIDIV_3 |        /* PLL input divider = 2 */
+    DEVCFG2_FPLLRNG_5_10 |      /* PLL input range is 5-10 MHz */
+    DEVCFG2_FPLLMULT(100) |     /* PLL multiplier = 100x */
+    DEVCFG2_FPLLODIV_2,         /* PLL postscaler = 1/3 */
+
+    DEVCFG3_FETHIO |            /* Default Ethernet pins */
+    DEVCFG3_USERID(0xffff));    /* User-defined ID */
+#endif
+
+#if defined(MEBII) || defined(Whitecat) || defined(HMZ144)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -200,10 +225,20 @@ mach_init()
     RPA15R = 1;             /* Group 2: 0001 = U1TX */
 #endif
 
-#if defined(ECMB)
-    /* ECMB Board : use UART1 for console. Map signals rx=RF4, tx=RF5. */
+#if defined(Whitecat)
+    /* ECMB Board: use UART1 for console.
+     * Map signals rx=RF4, tx=RF5. */
     U1RXR = 2;              /* Group 1: 0010 = RF4  */
     RPF5R = 1;              /* Group 2: 0001 = U1TX */
+#endif
+
+#if defined(HMZ144)
+    /* Olimex HMZ144 Board: use UART2 for console.
+     * Map signals rx=RE9, tx=RE8. */
+    ANSELECLR = (1 << 8) |
+                (1 << 9);   /* Set digital mode for RE8 and RE9 */
+    U2RXR = 13;             /* Group 3: 1101 = RE9 */
+    RPE8R = 2;              /* Group 4: 0010 = U2TX */
 #endif
 
     /*
