@@ -1,15 +1,15 @@
-7#
-# PIC32MZ target: ECMB Board (Embedded Computer Module Board PIC32MZ2048ECM064)
+#
+# PIC32MZ target: Whitecat board
 #
 # To build the kernel, use:
-#   ../../../usr.sbin/config/config ECMB.pic32
-#   cd ../../compile/ECMB.pic32
+#   ../../../usr.sbin/config/config Whitecat.pic32
+#   cd ../../compile/Whitecat.pic32
 #   bmake depend
 #   bmake
 #
 machine         "pic32"
 cpu             "PIC32MZ"
-ident           ECMB
+ident           Whitecat
 
 # Linker script
 ldscript        "pic32/bare-mz.ld"
