@@ -107,7 +107,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(Whitecat)
+#if defined(MEBII) || defined(WHITECAT)
 /*
  * Chip configuration.
  */
@@ -156,7 +156,7 @@ PIC32_DEVCFG (
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
 #endif
 
-#if defined(MEBII) || defined(Whitecat) || defined(HMZ144)
+#if defined(MEBII) || defined(WHITECAT) || defined(HMZ144)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -225,7 +225,7 @@ mach_init()
     RPA15R = 1;             /* Group 2: 0001 = U1TX */
 #endif
 
-#if defined(Whitecat)
+#if defined(WHITECAT)
     /* ECMB Board: use UART1 for console.
      * Map signals rx=RF4, tx=RF5. */
     U1RXR = 2;              /* Group 1: 0010 = RF4  */
