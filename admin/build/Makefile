@@ -46,7 +46,7 @@ litebsd-$(TARGET)-$(DATE).zip: update-skeleton
 		zip -rq $@ litebsd-$(TARGET)-$(DATE)
 
 build-$(DATE).log:
-		echo === LiteBSD Revision $(shell git rev-list HEAD --count) === > build-$(DATE).log
+		echo === LiteBSD Revision $(shell git rev-list HEAD --count), Commit Id $(shell git rev-parse --short HEAD) === > build-$(DATE).log
 		bmake -C../.. build >> build-$(DATE).log 2>&1
 		bmake -C../.. fs >> build-$(DATE).log 2>&1
 		bmake -C../../sys/compile all >> build-$(DATE).log 2>&1
