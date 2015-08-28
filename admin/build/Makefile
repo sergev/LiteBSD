@@ -17,8 +17,8 @@ DATE            := $(shell date +'%Y-%m-%d')
 #
 export MIPS_GCC_ROOT    ?= /usr/local/mips-2014.05
 
-export BSDSRC           ?= $(abspath $(PWD)/../..)
-export MAKESYSPATH      ?= $(abspath $(PWD)/../../share/mk-pic32)
+export BSDSRC           ?= $(abspath ../..)
+export MAKESYSPATH      ?= $(abspath ../../share/mk-pic32)
 
 all:            build sdcard-$(DATE).zip
 		for b in $(BOARD_LIST); do \
