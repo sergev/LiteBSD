@@ -15,11 +15,10 @@ DATE            := $(shell date +'%Y-%m-%d')
 #
 # Use this GCC toochain.
 #
-MIPS_GCC_ROOT   ?= /usr/local/mips-2014.05
+export MIPS_GCC_ROOT    ?= /usr/local/mips-2014.05
 
-ENV             = BSDSRC=$(abspath $(PWD)/../..)\
-                  MAKESYSPATH=$(abspath $(PWD)/../../share/mk-pic32)\
-                  MIPS_GCC_ROOT=$(MIPS_GCC_ROOT)
+export BSDSRC           ?= $(abspath $(PWD)/../..)
+export MAKESYSPATH      ?= $(abspath $(PWD)/../../share/mk-pic32)
 
 all:            build sdcard-$(DATE).zip
 		for b in $(BOARD_LIST); do \
@@ -48,9 +47,9 @@ litebsd-$(TARGET)-$(DATE).zip: update-skeleton
 
 build-$(DATE).log:
 		echo === LiteBSD Revision $(shell git rev-list HEAD --count) === > build-$(DATE).log
-		bmake -C../.. build $(ENV) >> build-$(DATE).log 2>&1
-		bmake -C../.. fs $(ENV) >> build-$(DATE).log 2>&1
-		bmake -C../../sys/compile all $(ENV) >> build-$(DATE).log 2>&1
+		bmake -C../.. build >> build-$(DATE).log 2>&1
+		bmake -C../.. fs >> build-$(DATE).log 2>&1
+		bmake -C../../sys/compile all >> build-$(DATE).log 2>&1
 
 update-skeleton: skeleton/linux32/pic32prog skeleton/linux64/pic32prog \
                  skeleton/macosx/pic32prog skeleton/pic32prog.exe \
