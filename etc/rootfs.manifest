@@ -1672,6 +1672,7 @@ file /usr/share/man/cat1/nfsstat.0
 file /usr/share/man/cat1/nice.0
 file /usr/share/man/cat1/nm.0
 file /usr/share/man/cat1/nohup.0
+file /usr/share/man/cat1/nvi.0
 file /usr/share/man/cat1/od.0
 file /usr/share/man/cat1/pagesize.0
 file /usr/share/man/cat1/passwd.0
@@ -1814,6 +1815,12 @@ link /usr/share/man/cat1/reset.0
 target /usr/share/man/cat1/tset.0
 link /usr/share/man/cat1/uudecode.0
 target /usr/share/man/cat1/uuencode.0
+link /usr/share/man/cat1/vi.0
+target /usr/share/man/cat1/nvi.0
+link /usr/share/man/cat1/ex.0
+target /usr/share/man/cat1/nvi.0
+link /usr/share/man/cat1/view.0
+target /usr/share/man/cat1/nvi.0
 
 file /usr/share/man/cat2/accept.0
 file /usr/share/man/cat2/access.0
