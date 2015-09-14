@@ -933,6 +933,7 @@ file /usr/bin/sendbug
 file /usr/bin/shar
 file /usr/bin/showmount
 file /usr/bin/size
+file /usr/bin/sl
 file /usr/bin/soelim
 file /usr/bin/sort
 file /usr/bin/split
@@ -1706,6 +1707,7 @@ file /usr/share/man/cat1/sh.0
 file /usr/share/man/cat1/shar.0
 file /usr/share/man/cat1/showmount.0
 file /usr/share/man/cat1/size.0
+file /usr/share/man/cat1/sl.0
 file /usr/share/man/cat1/sleep.0
 file /usr/share/man/cat1/soelim.0
 file /usr/share/man/cat1/sort.0
