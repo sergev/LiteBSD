@@ -52,9 +52,8 @@ options         INET                    # Internet protocols
 #options        MULTICAST               # Multicast support
 #options        MROUTING                # Multicast routing support
 
-config          vmunix                  root on major0 minor1
-                                        swap on major0 minor2
-                                        dumps on major0 minor2
+config          vmunix  root on sd0a
+                        swap on sd0b
 
 # UART configuration
 device          uart1   flags 0x6465    # pins rx=RF4 ,tx=RF5  - tty1 console

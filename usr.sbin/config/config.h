@@ -195,8 +195,8 @@ int	seen_cd;
 
 struct	device *connect();
 struct	device *dtab;
-dev_t	nametodev();
-char	*devtoname();
+dev_t	nametodev(char *, int);
+char	*devtoname(dev_t);
 
 char	errbuf[80];
 int	yyline;

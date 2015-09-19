@@ -54,9 +54,8 @@ options         INET            # Internet protocols
 #options        MROUTING        # Multicast routing support
 
 # Root filesystem at /dev/sd0a, swap at /dev/sd0b
-config          vmunix  root on major0 minor1
-                        swap on major0 minor2
-                        dumps on major0 minor2
+config          vmunix  root on sd0a
+                        swap on sd0b
 
 # UART ports
 device          uart1   flags 0x614f    # pins rx=RD14, tx=RD15 - logical 39/40

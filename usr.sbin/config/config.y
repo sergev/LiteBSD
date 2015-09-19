@@ -274,7 +274,7 @@ swap_device_spec:
 			if (eq($1, "generic"))
 				fl->f_fn = $1;
 			else {
-				fl->f_swapdev = nametodev($1, 0, 'b');
+				fl->f_swapdev = nametodev($1, 0);
 				fl->f_fn = devtoname(fl->f_swapdev);
 			}
 			$$ = fl;
@@ -303,7 +303,7 @@ root_spec:
 
 root_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'a'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -322,7 +322,7 @@ dump_spec:
 
 dump_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'b'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -333,7 +333,7 @@ arg_spec:
 
 arg_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'b'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -498,7 +498,7 @@ comp_device_spec:
 		= {
 			struct file_list *fl = newflist(COMPSPEC);
 
-			fl->f_compdev = nametodev($1, 0, 'c');
+			fl->f_compdev = nametodev($1, 0);
 			fl->f_fn = devtoname(fl->f_compdev);
 			$$ = fl;
 		}
@@ -978,11 +978,11 @@ void checksystemspec(fl)
 		if (minor(dev) & 07) {
 			(void) sprintf(buf,
 "Warning, swap defaulted to 'b' partition with root on '%c' partition",
-				(minor(dev) & 07) + 'a');
+				(minor(dev) & 07) + 'a' - 1);
 			yyerror(buf);
 		}
 		swap->f_swapdev =
-		   makedev(major(dev), (minor(dev) &~ 07) | ('b' - 'a'));
+		   makedev(major(dev), (minor(dev) &~ 07) | ('b' - 'a' + 1));
 		swap->f_fn = devtoname(swap->f_swapdev);
 		mkswap(fl, swap, 0, 0);
 	}
