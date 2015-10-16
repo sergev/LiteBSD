@@ -242,8 +242,23 @@ main(argc, argv)
 	handle(transition_handler, SIGHUP, SIGTERM, SIGTSTP, 0);
 	handle(alrm_handler, SIGALRM, 0);
 	sigfillset(&mask);
+    sigdelset(&mask, SIGABRT);
+    sigdelset(&mask, SIGFPE);
+    sigdelset(&mask, SIGILL);
+    sigdelset(&mask, SIGSEGV);
+    sigdelset(&mask, SIGBUS);
+    sigdelset(&mask, SIGSYS);
+    sigdelset(&mask, SIGXCPU);
+    sigdelset(&mask, SIGXFSZ);
+    sigdelset(&mask, SIGHUP);
+    sigdelset(&mask, SIGTERM);
+    sigdelset(&mask, SIGTSTP);
+    sigdelset(&mask, SIGALRM);
+// Disabled as variadics are playing up
+#if 0
 	delset(&mask, SIGABRT, SIGFPE, SIGILL, SIGSEGV, SIGBUS, SIGSYS,
 		SIGXCPU, SIGXFSZ, SIGHUP, SIGTERM, SIGTSTP, SIGALRM, 0);
+#endif
 	sigprocmask(SIG_SETMASK, &mask, (sigset_t *) 0);
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
@@ -305,6 +320,8 @@ handle(va_alist)
 	va_end(ap);
 }
 
+// Disabled as variadics are playing up
+#if 0
 /*
  * Delete a set of signals from a mask.
  */
@@ -331,6 +348,7 @@ delset(va_alist)
 		sigdelset(maskp, sig);
 	va_end(ap);
 }
+#endif
 
 /*
  * Log a message and sleep for a while (to give someone an opportunity
