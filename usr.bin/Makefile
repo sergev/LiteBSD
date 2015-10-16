@@ -2,7 +2,7 @@
 
 SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
-	comm cpp ctags cut diff dirname du \
+	comm compress cpp ctags cut diff dirname du \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
