@@ -122,6 +122,9 @@ main(argc, argv)
 	if (!nflag)
 		sync();
 
+        printf("killing processes...");
+        fflush(stdout);
+
 	/* Just stop init -- if we fail, we'll restart it. */
 	if (kill(1, SIGTSTP) == -1)
 		err("SIGTSTP init: %s", strerror(errno));
@@ -135,27 +138,29 @@ main(argc, argv)
 
 	/*
 	 * After the processes receive the signal, start the rest of the
-	 * buffers on their way.  Wait 5 seconds between the SIGTERM and
+	 * buffers on their way.  Wait between the SIGTERM and
 	 * the SIGKILL to give everybody a chance.
 	 */
-	sleep(2);
+	sleep(1);
 	if (!nflag)
 		sync();
-	sleep(3);
 
 	for (i = 1;; ++i) {
+                sleep(1);
 		if (kill(-1, SIGKILL) == -1) {
 			if (errno == ESRCH)
 				break;
 			goto restart;
 		}
 		if (i > 5) {
+                        printf(" failed\n");
 			(void)fprintf(stderr,
 			    "WARNING: some process(es) wouldn't die\n");
 			break;
 		}
-		(void)sleep(2 * i);
 	}
+        if (i <= 5)
+                printf(" done\n");
 
 	reboot(howto);
 	/* FALLTHROUGH */
