@@ -48,7 +48,7 @@ void	cdup __P((int, char **));
 void	changetype __P((int, int));
 void	cmdabort __P(());
 void	cmdscanner __P((int));
-int	command __P(());
+int	command (char *, ...);
 int	confirm __P((char *, char *));
 FILE   *dataconn __P((char *));
 void	delete __P((int, char **));

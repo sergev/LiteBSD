@@ -254,13 +254,15 @@ slopen(dev, tp)
     if (error)
         return (error);
 
-    if (tp->t_line == SLIPDISC)
+    if (tp->t_line == SLIPDISC) {
         return (0);
+    }
 
     for (nsl = NSL, sc = sl_softc; --nsl >= 0; sc++)
         if (sc->sc_ttyp == NULL) {
-            if (slinit(sc) == 0)
+            if (slinit(sc) == 0) {
                 return (ENOBUFS);
+            }
             tp->t_sc = (caddr_t)sc;
             sc->sc_ttyp = tp;
             sc->sc_if.if_baudrate = tp->t_ospeed;

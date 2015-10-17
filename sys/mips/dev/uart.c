@@ -170,7 +170,7 @@ uartparam(tp, t)
     struct termios *t;
 {
     int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     const struct uart_irq *irq = &uartirq[unit];
     unsigned cflag = t->c_cflag;
     unsigned mode, divisor, sta, s, timo;
@@ -255,7 +255,7 @@ uartstart(tp)
     struct tty *tp;
 {
     int unit = minor(tp->t_dev);
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     const struct uart_irq *irq = &uartirq[unit];
     int c, s, x;
 
@@ -375,7 +375,7 @@ uartclose(dev, flag, mode, p)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
 
     if (reg->sta & PIC32_USTA_UTXBRK) {
         /* Stop sending break. */
@@ -431,7 +431,7 @@ uartioctl(dev, cmd, data, flag, p)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     int error;
 
     error = (*linesw[tp->t_line].l_ioctl)(tp, cmd, data, flag, p);
@@ -501,14 +501,15 @@ uartintr(dev)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     const struct uart_irq *irq = &uartirq[unit];
     int c;
 
     /* Receive */
     while (reg->sta & PIC32_USTA_URXDA) {
         c = reg->rxreg;
-        ttyinput(c, tp);
+        (*linesw[tp->t_line].l_rint)(c, tp);
+//        ttyinput(c, tp);
     }
     if (reg->sta & PIC32_USTA_OERR) {
         reg->staclr = PIC32_USTA_OERR;
@@ -538,7 +539,7 @@ uart_getc(dev)
     dev_t dev;
 {
     int unit = minor(dev);
-    uart_regmap_t *reg = uart_tty[unit].t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     const struct uart_irq *irq = &uartirq[unit];
     int s, c;
 
@@ -574,7 +575,7 @@ uart_putc(dev, c)
 {
     int unit = minor(dev);
     struct tty *tp = &uart_tty[unit];
-    uart_regmap_t *reg = tp->t_sc;
+    uart_regmap_t *reg = uart_base[unit];
     const struct uart_irq *irq = &uartirq[unit];
     int timo, s;
 
@@ -751,7 +752,7 @@ uartprobe(config)
 
     tp = &uart_tty[unit];
     tp->t_dev = unit;
-    tp->t_sc = reg;
+//    tp->t_sc = reg;
 
     printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u",
         unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
