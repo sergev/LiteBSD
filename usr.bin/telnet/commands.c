@@ -55,7 +55,7 @@ static char sccsid[] = "@(#)commands.c	8.4 (Berkeley) 5/30/95";
 #include <netdb.h>
 #include <ctype.h>
 #include <pwd.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -98,7 +98,8 @@ extern int isprefix();
 extern char **genget();
 extern int Ambiguous();
 
-static call();
+typedef int (*intrtn_t)();
+static void call(intrtn_t, ...);
 
 typedef struct {
 	char	*name;		/* command name */
@@ -2543,25 +2544,19 @@ static Command cmdtab2[] = {
 /*
  * Call routine with argc, argv set from args (terminated by 0).
  */
-
-    /*VARARGS1*/
-    static
-call(va_alist)
-    va_dcl
+    static void
+call(intrtn_t routine, ...)
 {
     va_list ap;
-    typedef int (*intrtn_t)();
-    intrtn_t routine;
     char *args[100];
     int argno = 0;
 
-    va_start(ap);
-    routine = (va_arg(ap, intrtn_t));
+    va_start(ap, routine);
     while ((args[argno++] = va_arg(ap, char *)) != 0) {
 	;
     }
     va_end(ap);
-    return (*routine)(argno-1, args);
+    (*routine)(argno-1, args);
 }
 
 

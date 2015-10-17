@@ -1182,7 +1182,6 @@ file /usr/include/machine/signal.h
 file /usr/include/machine/stdarg.h
 file /usr/include/machine/trap.h
 file /usr/include/machine/types.h
-file /usr/include/machine/varargs.h
 file /usr/include/machine/vmparam.h
 
 #dir /usr/include/net
@@ -1400,9 +1399,6 @@ target sys/syslog.h
 
 symlink /usr/include/termios.h
 target sys/termios.h
-
-symlink /usr/include/varargs.h
-target machine/varargs.h
 
 #
 # Files: /usr/lib

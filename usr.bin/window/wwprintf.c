@@ -39,18 +39,17 @@ static char sccsid[] = "@(#)wwprintf.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include "ww.h"
-#include <varargs.h>
+#include <stdarg.h>
 
 /*VARARGS2*/
 wwprintf(w, fmt, va_alist)
 struct ww *w;
 char *fmt;
-va_dcl
 {
 	char buf[1024];
 	va_list ap;
 
-	va_start(ap);
+	va_start(ap, fmt);
 	/* buffer can overflow */
 	(void) wwwrite(w, buf, vsprintf(buf, fmt, ap));
 	va_end(ap);
