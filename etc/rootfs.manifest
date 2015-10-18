@@ -3200,16 +3200,13 @@ file /usr/share/zoneinfo/GMT-9
 file /usr/share/zoneinfo/GMT+9
 file /usr/share/zoneinfo/Greenwich
 file /usr/share/zoneinfo/Hongkong
-file /usr/share/zoneinfo/Iceland
 file /usr/share/zoneinfo/Iran
 file /usr/share/zoneinfo/Israel
 file /usr/share/zoneinfo/Jamaica
 file /usr/share/zoneinfo/Japan
 file /usr/share/zoneinfo/Libya
-file /usr/share/zoneinfo/MET
 file /usr/share/zoneinfo/Navajo
 file /usr/share/zoneinfo/NZ
-file /usr/share/zoneinfo/Poland
 file /usr/share/zoneinfo/posixrules
 file /usr/share/zoneinfo/PRC
 file /usr/share/zoneinfo/ROC
