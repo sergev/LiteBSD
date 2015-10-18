@@ -62,6 +62,7 @@ config          vmunix  root on sd0a
 
 device          uart1   flags 0x4243    # pins rx=RD2,  tx=RD3  - logical 39/40
 device          uart2   flags 0x2726    # pins rx=RB7,  tx=RB6  - serial-to-USB converter
+options         "UART_BAUD=115200"      # initial baud rate
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
 

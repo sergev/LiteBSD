@@ -35,9 +35,12 @@
 #include <machine/pic32mz.h>
 #include <machine/pic32_gpio.h>
 
-
 #ifndef UART_BUFSZ
-#define UART_BUFSZ 256
+#define UART_BUFSZ  256
+#endif
+
+#ifndef UART_BAUD
+#define UART_BAUD   TTYDEF_SPEED
 #endif
 
 /*
@@ -334,8 +337,8 @@ uartopen(dev, flag, mode, p)
             tp->t_oflag = TTYDEF_OFLAG;
             tp->t_cflag = TTYDEF_CFLAG;
             tp->t_lflag = TTYDEF_LFLAG;
-            tp->t_ispeed = TTYDEF_SPEED;
-            tp->t_ospeed = TTYDEF_SPEED;
+            tp->t_ispeed = UART_BAUD;
+            tp->t_ospeed = UART_BAUD;
         }
         uartparam(tp, &tp->t_termios);
 
