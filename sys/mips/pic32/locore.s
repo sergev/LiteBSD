@@ -281,14 +281,10 @@ done_icache:
 
         //
         // Enable cacheability of kseg0 segment.
-        // Need to switch to kseg1, modify kseg0 CCA, then switch back.
+        // Until this point the code is executed from segment bfc00000,
+        // (i.e. kseg1), so I-cache is not used.
+        // Here we jump to kseg0 and run with I-cache enabled.
         //
-        la      a2, enable_k0_cache
-        li      a1, 0xf
-        ins     a2, a1, 29, 1           # changed to KSEG1 address by setting bit 29
-        jr      a2
-        nop
-
 enable_k0_cache:
         # Set CCA for kseg0 to cacheable.
         # NOTE! This code must be executed in KSEG1 (not KSEG0 uncached)
