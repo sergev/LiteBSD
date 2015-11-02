@@ -5,7 +5,8 @@ BOARD_LIST      = WIFIRE.pic32\
                   SDZL.pic32\
                   MEBII.pic32\
                   HMZ144.pic32\
-                  Whitecat.pic32
+                  Whitecat.pic32\
+                  SNADPIC.pic32
 
 all:            ../../usr.sbin/config/config
 		for b in $(BOARD_LIST); do $(MAKE) kernel BOARD=$$b; done
