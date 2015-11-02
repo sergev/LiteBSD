@@ -46,32 +46,31 @@ options         INET            # Internet protocols
 config          vmunix  root on sd0a
                         swap on sd0b
 
+# UART ports
 device          uart2   flags 0x5958    # pins rx=RE9, tx=RE8
 
 # Console options
 options         "CONS_MAJOR=17"         # UART device
 options         "CONS_MINOR=1"          # UART2
 
-controller      spi1    flags 0x4e4f    # pins sdi=RD14, sdo=RD15 - UEXT
-controller      spi2    flags 0x4778    # pins sdi=RD7,  sdo=RG8  - SD card
+# SPI ports
+controller      spi4    flags 0x4b1f    # pins sdi=RD11, sdo=RA15 - SD card
 
-disk            sd0     at spi2 drive 0 flags 0x2e      # select pin RB14
-options         "SD_LED=0x82"                           # LED is RH2
-
+# SD card
+disk            sd0     at spi4 drive 0 flags 0x44      # select pin RD4
+options         "SD_LED=0x68"                           # LED1 is RF8 - use
+                                                        # jumper wire to connect
 # General purpose I/O ports
-device          gpio0   flags 0xc6fc    # port A
-device          gpio1   flags 0xbf3f    # port B
+device          gpio0   flags 0x46fc    # port A
+device          gpio1   flags 0xff3f    # port B
 device          gpio2   flags 0x001e    # port C
-device          gpio3   flags 0x3e7d    # port D
+device          gpio3   flags 0xf22d    # port D
 device          gpio4   flags 0x00ff    # port E
 device          gpio5   flags 0x013f    # port F
-device          gpio6   flags 0xf283    # port G
-device          gpio7   flags 0xffff    # port H
-device          gpio8   flags 0xffff    # port J
-device          gpio9   flags 0x00ff    # port K
+device          gpio6   flags 0xf383    # port G
 
 # Buttons
-options         "BUTTON1=0x2c"          # button 1 at pin RB12
+options         "BUTTON1=0x4f"          # button 1 at pin RD15
 
 pseudo-device   pty             4       # pseudo ptys
 pseudo-device   loop                    # network loopback interface

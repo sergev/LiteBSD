@@ -107,7 +107,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(WHITECAT)
+#if defined(MEBII) || defined(WHITECAT) || defined(SNADPIC)
 /*
  * Chip configuration.
  */
@@ -156,7 +156,7 @@ PIC32_DEVCFG (
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
 #endif
 
-#if defined(MEBII) || defined(WHITECAT) || defined(HMZ144)
+#if defined(MEBII) || defined(WHITECAT) || defined(HMZ144) || defined(SNADPIC)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -233,8 +233,8 @@ mach_init()
     RPF5R = 1;              /* Group 2: 0001 = U1TX */
 #endif
 
-#if defined(HMZ144)
-    /* Olimex HMZ144 Board: use UART2 for console.
+#if defined(HMZ144) || defined(SNADPIC)
+    /* Olimex HMZ144 board, SnadPIC board: use UART2 for console.
      * Map signals rx=RE9, tx=RE8. */
     ANSELECLR = (1 << 8) |
                 (1 << 9);   /* Set digital mode for RE8 and RE9 */

@@ -1,4 +1,4 @@
-BOARD_LIST      = WIFIRE SDZL MEBII HMZ144 Whitecat
+BOARD_LIST      = WIFIRE SDZL MEBII HMZ144 Whitecat SNADPIC
 
 SKEL_SCRATCH    = skeleton/linux32/pic32prog \
                   skeleton/linux64/pic32prog \
