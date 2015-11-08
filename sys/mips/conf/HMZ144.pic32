@@ -8,7 +8,6 @@
 #   bmake
 #
 machine         "pic32"
-
 cpu             "PIC32MZ"
 ident           "HMZ144"
 
