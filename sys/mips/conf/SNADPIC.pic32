@@ -1,0 +1,78 @@
+#
+# PIC32MZ target: SnadPIC MZ Board
+#
+# To build the kernel, use:
+#   ../../../usr.sbin/config/config SNADPIC.pic32
+#   cd ../../compile/SNADPIC.pic32
+#   bmake depend
+#   bmake
+#
+machine         "pic32"
+
+cpu             "PIC32MZ"
+ident           "SNADPIC"
+
+# Linker script
+ldscript        "pic32/bare-mz.ld"
+
+# Need to set locally
+timezone        8 dst
+maxusers        2
+
+# Standard system options
+options         SWAPPAGER               # swap pager (anonymous and swap space)
+options         VNODEPAGER              # vnode pager (mapped files)
+options         DEVPAGER                # device pager (mapped devices)
+options         DIAGNOSTIC              # extra kernel debugging checks
+options         DEBUG                   # extra kernel debugging support
+options         "NKMEMCLUSTERS=32"      # 4K pages in kernel malloc pool, default 128 pages
+options         "NMBCLUSTERS=16"        # 4K pages in network mbuf pool, default 256/512 pages
+options         "NBUF=18"               # Number of i/o buffers (4k), min 16
+options         "BUFPAGES=18"           # Number of i/o pages, default 10% of ram, min 16
+options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
+options         "HZ=100"                # Frequency of clock interrupt
+
+# Filesystem options
+options         FIFO            # POSIX fifo support (in all filesystems)
+options         FFS             # fast filesystem with user and group quotas
+options         UNION           # Union filesystem
+options         KERNFS          # kernel data-structure filesystem
+options         FDESC           # user file descriptor filesystem
+options         PROCFS          # /proc filesystem
+
+# Networking options
+options         INET            # Internet protocols
+
+config          vmunix  root on sd0a
+                        swap on sd0b
+
+# UART ports
+device          uart2   flags 0x5958    # pins rx=RE9, tx=RE8
+
+# Console options
+options         "CONS_MAJOR=17"         # UART device
+options         "CONS_MINOR=1"          # UART2
+
+# SPI ports
+controller      spi4    flags 0x4b1f    # pins sdi=RD11, sdo=RA15 - SD card
+
+# SD card
+disk            sd0     at spi4 drive 0 flags 0x44      # select pin RD4
+options         "SD_LED=0x68"                           # LED1 is RF8 - use
+                                                        # jumper wire to connect
+# General purpose I/O ports
+device          gpio0   flags 0x46fc    # port A
+device          gpio1   flags 0xff3f    # port B
+device          gpio2   flags 0x001e    # port C
+device          gpio3   flags 0xf22d    # port D
+device          gpio4   flags 0x00ff    # port E
+device          gpio5   flags 0x013f    # port F
+device          gpio6   flags 0xf383    # port G
+
+# Buttons
+options         "BUTTON1=0x4f"          # button 1 at pin RD15
+
+pseudo-device   pty             4       # pseudo ptys
+pseudo-device   loop                    # network loopback interface
+pseudo-device   ether                   # generic Ethernet protocol
+pseudo-device   vn                      # block/character interface to a vnode

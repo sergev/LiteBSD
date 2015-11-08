@@ -60,7 +60,7 @@ static char sccsid[] = "@(#)ftp.c	8.6 (Berkeley) 10/27/94";
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <varargs.h>
+#include <stdarg.h>
 
 #include "ftp_var.h"
 
@@ -76,6 +76,7 @@ int	ptflag = 0;
 struct	sockaddr_in myctladdr;
 off_t	restart_point = 0;
 
+int command(char *, ...);
 
 FILE	*cin, *cout;
 
@@ -225,6 +226,7 @@ login(host)
 	if (n == CONTINUE) {
 		if (pass == NULL)
 			pass = getpass("Password:");
+printf("I got the password %s\n", pass);
 		n = command("PASS %s", pass);
 	}
 	if (n == CONTINUE) {
@@ -262,24 +264,21 @@ cmdabort()
 		longjmp(ptabort,1);
 }
 
-/*VARARGS*/
-int
-command(va_alist)
-va_dcl
+int command(char *fmt, ...)
 {
 	va_list ap;
-	char *fmt;
 	int r;
 	sig_t oldintr;
+
+    va_start(ap, fmt);
 
 	abrtflag = 0;
 	if (debug) {
 		printf("---> ");
-		va_start(ap);
-		fmt = va_arg(ap, char *);
-		if (strncmp("PASS ", fmt, 5) == 0)
-			printf("PASS XXXX");
-		else 
+		va_start(ap, fmt);
+//		if (strncmp("PASS ", fmt, 5) == 0)
+//			printf("PASS XXXX");
+//		else 
 			vfprintf(stdout, fmt, ap);
 		va_end(ap);
 		printf("\n");
@@ -291,9 +290,10 @@ va_dcl
 		return (0);
 	}
 	oldintr = signal(SIGINT, cmdabort);
-	va_start(ap);
-	fmt = va_arg(ap, char *);
+	va_start(ap, fmt);
 	vfprintf(cout, fmt, ap);
+	vfprintf(stdout, fmt, ap);
+    fprintf(stdout, "\n");
 	va_end(ap);
 	fprintf(cout, "\r\n");
 	(void) fflush(cout);

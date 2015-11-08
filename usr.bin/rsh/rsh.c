@@ -63,7 +63,6 @@ static char sccsid[] = "@(#)rsh.c	8.4 (Berkeley) 4/29/95";
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <varargs.h>
 
 #include "pathnames.h"
 
@@ -336,7 +335,7 @@ reread:		errno = 0;
 			goto done;
 		bp = buf;
 
-rewrite:	
+rewrite:
 		FD_ZERO(&rembits);
 		FD_SET(rem, &rembits);
 		if (select(16, 0, &rembits, 0, 0) < 0) {

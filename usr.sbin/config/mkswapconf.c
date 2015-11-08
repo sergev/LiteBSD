@@ -152,10 +152,9 @@ void initdevtable()
  * terms of major/minor instead of string names.
  */
 dev_t
-nametodev(name, defunit, defpartition)
+nametodev(name, defunit)
 	char *name;
 	int defunit;
-	char defpartition;
 {
 	char *cp, partition;
 	int unit;
@@ -179,11 +178,11 @@ nametodev(name, defunit, defpartition)
 		while (*cp && isdigit(*cp))
 			cp++;
 	}
-	partition = *cp ? *cp : defpartition;
-	if (partition < 'a' || partition > 'h') {
+	partition = *cp ? *cp : '`';
+	if (partition < '`' || partition > 'd') {
 		fprintf(stderr,
 "config: %c: invalid device specification, bad partition\n", *cp);
-		partition = defpartition;	/* carry on */
+		partition = 'a';	/* carry on */
 	}
 	if (devtablenotread)
 		initdevtable();

@@ -54,9 +54,8 @@ options         INET            # Internet protocols
 #options        MROUTING        # Multicast routing support
 
 # Root filesystem at /dev/sd0a, swap at /dev/sd0b
-config          vmunix  root on major0 minor1
-                        swap on major0 minor2
-                        dumps on major0 minor2
+config          vmunix  root on sd0a
+                        swap on sd0b
 
 # UART ports
 device          uart1   flags 0x614f    # pins rx=RD14, tx=RD15 - logical 39/40
@@ -78,6 +77,7 @@ controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interf
 # microSD card
 disk            sd0     at spi3 drive 0 flags 0x33      # select pin RC3
 options         "SD_LED=0x7f"                           # LED4 is G15
+options         "SD_KHZ=16000"                          # speed 16MHz
 #disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
 
 # General purpose I/O ports

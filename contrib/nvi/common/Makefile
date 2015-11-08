@@ -9,7 +9,7 @@ VI=	nvi
 EX=	nex
 VIEW=	nview
 PROG=	nvi
-LINKS=	${BINDIR}/${VI} ${BINDIR}/${EX} ${BINDIR}/${VI} ${BINDIR}/${VIEW}
+#LINKS=	${BINDIR}/${VI} ${BINDIR}/${EX} ${BINDIR}/${VI} ${BINDIR}/${VIEW}
 
 #CFLAGS=-g -DDEBUG #-DCOMLOG
 #CFLAGS+=-pg

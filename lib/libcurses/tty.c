@@ -74,7 +74,7 @@ int
 gettmode()
 {
 	useraw = 0;
-	
+
 	if (tcgetattr(STDIN_FILENO, &__orig_termios))
 		return (ERR);
 
@@ -83,6 +83,7 @@ gettmode()
 
 	GT = 0;		/* historical. was used before we wired OXTABS off */
 	NONL = (__baset.c_oflag & ONLCR) == 0;
+	__pfast = NONL;
 
 	/*
 	 * XXX
@@ -157,14 +158,14 @@ nocbreak()
 	return (tcsetattr(STDIN_FILENO, __tcaction ?
 	    TCSASOFT | TCSADRAIN : TCSADRAIN, curt) ? ERR : OK);
 }
-	
+
 int
 echo()
 {
 	rawt.c_lflag |= ECHO;
 	cbreakt.c_lflag |= ECHO;
 	__baset.c_lflag |= ECHO;
-	
+
 	__echoit = 1;
 	return (tcsetattr(STDIN_FILENO, __tcaction ?
 	    TCSASOFT | TCSADRAIN : TCSADRAIN, curt) ? ERR : OK);
@@ -176,7 +177,7 @@ noecho()
 	rawt.c_lflag &= ~ECHO;
 	cbreakt.c_lflag &= ~ECHO;
 	__baset.c_lflag &= ~ECHO;
-	
+
 	__echoit = 0;
 	return (tcsetattr(STDIN_FILENO, __tcaction ?
 	    TCSASOFT | TCSADRAIN : TCSADRAIN, curt) ? ERR : OK);

@@ -726,7 +726,7 @@ void i386_ioconf()
 }
 
 char *
-sirq(num)
+sirq(int num)
 {
 
 	if (num == -1)
@@ -1055,7 +1055,7 @@ intv(dev)
 }
 
 char *
-qu(num)
+qu(int num)
 {
 
 	if (num == QUES)
@@ -1067,7 +1067,7 @@ qu(num)
 }
 
 char *
-wnum(num)
+wnum(int num)
 {
 
 	if (num == QUES || num == UNKNOWN)

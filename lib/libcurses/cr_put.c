@@ -81,8 +81,8 @@ __mvcur(ly, lx, y, x, in_refresh)
 	outline = ly;
 	fgoto(in_refresh);
 	return (OK);
-}	
-        
+}
+
 static void
 fgoto(in_refresh)
 	int in_refresh;
@@ -136,7 +136,7 @@ fgoto(in_refresh)
 			 * list this won't work.  We should probably have an
 			 * sc capability but sf will generally take the place
 			 * if it works.
-			 * 
+			 *
 			 * Superbee glitch: in the middle of the screen have
 			 * to use esc B (down) because linefeed screws up in
 			 * "Efficient Paging" (what a joke) mode (which is
@@ -166,7 +166,7 @@ fgoto(in_refresh)
 		 */
 		if (outcol != COLS - 1 && plod(strlen(cgp), in_refresh) > 0)
 			plod(0, in_refresh);
-		else 
+		else
 			tputs(cgp, 0, __cputchar);
 	} else
 		plod(0, in_refresh);
@@ -283,7 +283,7 @@ plod(cnt, in_refresh)
 	 * If we will later need a \n which will turn into a \r\n by the
 	 * system or the terminal, then don't bother to try to \r.
 	 */
-	if ((NONL || !__pfast) && outline < destline)
+	if (!__pfast && outline < destline)
 		goto dontcr;
 
 	/*
@@ -320,12 +320,13 @@ dontcr:	while (outline < destline) {
 		outline++;
 		if (NL)
 			tputs(NL, 0, plodput);
-		else
+		else {
 			plodput('\n');
+                        if (__pfast == 0)
+                                outcol = 0;
+                }
 		if (plodcnt < 0)
 			goto out;
-		if (NONL || __pfast == 0)
-			outcol = 0;
 	}
 	if (BT)
 		k = strlen(BT);

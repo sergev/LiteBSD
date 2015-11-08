@@ -1,1 +1,0 @@
-../../aix.3.2/local/force_endwin.c

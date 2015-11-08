@@ -45,7 +45,6 @@ options         INET            # Internet protocols
 
 config          vmunix  root on sd0a
                         swap on sd0b
-                        dumps on sd0b
 
 device          uart2   flags 0x5958    # pins rx=RE9, tx=RE8
 

@@ -274,7 +274,7 @@ swap_device_spec:
 			if (eq($1, "generic"))
 				fl->f_fn = $1;
 			else {
-				fl->f_swapdev = nametodev($1, 0, 'b');
+				fl->f_swapdev = nametodev($1, 0);
 				fl->f_fn = devtoname(fl->f_swapdev);
 			}
 			$$ = fl;
@@ -303,7 +303,7 @@ root_spec:
 
 root_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'a'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -322,7 +322,7 @@ dump_spec:
 
 dump_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'b'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -333,7 +333,7 @@ arg_spec:
 
 arg_device_spec:
 	  device_name
-		= { $$ = nametodev($1, 0, 'b'); }
+		= { $$ = nametodev($1, 0); }
 	| major_minor
 	;
 
@@ -498,7 +498,7 @@ comp_device_spec:
 		= {
 			struct file_list *fl = newflist(COMPSPEC);
 
-			fl->f_compdev = nametodev($1, 0, 'c');
+			fl->f_compdev = nametodev($1, 0);
 			fl->f_fn = devtoname(fl->f_compdev);
 			$$ = fl;
 		}

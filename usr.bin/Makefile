@@ -2,7 +2,7 @@
 
 SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
-	comm cpp ctags cut diff dirname du \
+	comm compress cpp ctags cut diff dirname du \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
@@ -10,7 +10,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	mkfifo mklocale mkstr more msgs mt netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pr printenv printf quota \
 	ranlib rdist renice rev rlogin rs rsh ruptime rwho sccs \
-	script sed shar showmount size soelim split \
+	script sed shar showmount size sl soelim split \
 	strings strip su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \

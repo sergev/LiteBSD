@@ -1,1 +1,0 @@
-../../irix.4.05F/include/pathnames.h

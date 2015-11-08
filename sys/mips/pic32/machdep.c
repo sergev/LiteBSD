@@ -107,7 +107,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(ECMB)
+#if defined(MEBII) || defined(WHITECAT) || defined(SNADPIC)
 /*
  * Chip configuration.
  */
@@ -131,7 +131,32 @@ PIC32_DEVCFG (
 
     DEVCFG3_FETHIO |            /* Default Ethernet pins */
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
+#endif
 
+#if defined(HMZ144)
+PIC32_DEVCFG (
+    DEVCFG0_JTAG_DISABLE |      /* Disable JTAG port */
+    DEVCFG0_TRC_DISABLE,        /* Disable trace port */
+
+    /* Using primary oscillator with crystal 12 MHz.
+     * PLL multiplies it to 200 MHz. */
+    DEVCFG1_FNOSC_SPLL |        /* use system PLL */
+    DEVCFG1_POSCMOD_HS |        /* primary oscillator HS mode */
+    DEVCFG1_FSOSCEN |           /* Enable secondary oscillator */
+    DEVCFG1_FCKM_ENABLE |       /* Enable fail-safe clock monitoring */
+    DEVCFG1_IESO |              /* Internal-external switch over enable */
+    DEVCFG1_CLKO_DISABLE,       /* CLKO output disable */
+
+    DEVCFG2_FPLLIDIV_3 |        /* PLL input divider = 2 */
+    DEVCFG2_FPLLRNG_5_10 |      /* PLL input range is 5-10 MHz */
+    DEVCFG2_FPLLMULT(100) |     /* PLL multiplier = 100x */
+    DEVCFG2_FPLLODIV_2,         /* PLL postscaler = 1/3 */
+
+    DEVCFG3_FETHIO |            /* Default Ethernet pins */
+    DEVCFG3_USERID(0xffff));    /* User-defined ID */
+#endif
+
+#if defined(MEBII) || defined(WHITECAT) || defined(HMZ144) || defined(SNADPIC)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -167,6 +192,7 @@ mach_init()
     int i;
     unsigned firstaddr;
     caddr_t v, start;
+    const char *model = 0;
     extern char __data_start[], _edata[], _end[];
     extern void _etext(), _tlb_vector();
 
@@ -200,10 +226,20 @@ mach_init()
     RPA15R = 1;             /* Group 2: 0001 = U1TX */
 #endif
 
-#if defined(ECMB)
-    /* ECMB Board : use UART1 for console. Map signals rx=RF4, tx=RF5. */
+#if defined(WHITECAT)
+    /* ECMB Board: use UART1 for console.
+     * Map signals rx=RF4, tx=RF5. */
     U1RXR = 2;              /* Group 1: 0010 = RF4  */
     RPF5R = 1;              /* Group 2: 0001 = U1TX */
+#endif
+
+#if defined(HMZ144) || defined(SNADPIC)
+    /* Olimex HMZ144 board, SnadPIC board: use UART2 for console.
+     * Map signals rx=RE9, tx=RE8. */
+    ANSELECLR = (1 << 8) |
+                (1 << 9);   /* Set digital mode for RE8 and RE9 */
+    U2RXR = 13;             /* Group 3: 1101 = RE9 */
+    RPE8R = 2;              /* Group 4: 0010 = U2TX */
 #endif
 
     /*
@@ -250,20 +286,47 @@ mach_init()
     bzero(start, v - start);
 
     switch (DEVID & 0x0fffffff) {
-    case 0x05104053: strcpy(cpu_model, "PIC32MZ2048ECG064"); break;
-    case 0x0510E053: strcpy(cpu_model, "PIC32MZ2048ECG100"); break;
-    case 0x05118053: strcpy(cpu_model, "PIC32MZ2048ECG124"); break;
-    case 0x05122053: strcpy(cpu_model, "PIC32MZ2048ECG144"); break;
-    case 0x05109053: strcpy(cpu_model, "PIC32MZ2048ECH064"); break;
-    case 0x05113053: strcpy(cpu_model, "PIC32MZ2048ECH100"); break;
-    case 0x0511D053: strcpy(cpu_model, "PIC32MZ2048ECH124"); break;
-    case 0x05127053: strcpy(cpu_model, "PIC32MZ2048ECH144"); break;
-    case 0x05131053: strcpy(cpu_model, "PIC32MZ2048ECM064"); break;
-    case 0x0513B053: strcpy(cpu_model, "PIC32MZ2048ECM100"); break;
-    case 0x05145053: strcpy(cpu_model, "PIC32MZ2048ECM124"); break;
-    case 0x0514F053: strcpy(cpu_model, "PIC32MZ2048ECM144"); break;
-    default:         sprintf(cpu_model, "PIC32MZ DevID %08x", DEVID);
+    case 0x05104053: model = "PIC32MZ2048ECG064"; break;
+    case 0x0510E053: model = "PIC32MZ2048ECG100"; break;
+    case 0x05118053: model = "PIC32MZ2048ECG124"; break;
+    case 0x05122053: model = "PIC32MZ2048ECG144"; break;
+    case 0x05109053: model = "PIC32MZ2048ECH064"; break;
+    case 0x05113053: model = "PIC32MZ2048ECH100"; break;
+    case 0x0511D053: model = "PIC32MZ2048ECH124"; break;
+    case 0x05127053: model = "PIC32MZ2048ECH144"; break;
+    case 0x05131053: model = "PIC32MZ2048ECM064"; break;
+    case 0x0513B053: model = "PIC32MZ2048ECM100"; break;
+    case 0x05145053: model = "PIC32MZ2048ECM124"; break;
+    case 0x0514F053: model = "PIC32MZ2048ECM144"; break;
+    case 0x07203053: model = "PIC32MZ1024EFG064"; break;
+    case 0x07208053: model = "PIC32MZ1024EFH064"; break;
+    case 0x07230053: model = "PIC32MZ1024EFM064"; break;
+    case 0x07204053: model = "PIC32MZ2048EFG064"; break;
+    case 0x07209053: model = "PIC32MZ2048EFH064"; break;
+    case 0x07231053: model = "PIC32MZ2048EFM064"; break;
+    case 0x0720D053: model = "PIC32MZ1024EFG100"; break;
+    case 0x07212053: model = "PIC32MZ1024EFH100"; break;
+    case 0x0723A053: model = "PIC32MZ1024EFM100"; break;
+    case 0x0720E053: model = "PIC32MZ2048EFG100"; break;
+    case 0x07213053: model = "PIC32MZ2048EFH100"; break;
+    case 0x0723B053: model = "PIC32MZ2048EFM100"; break;
+    case 0x07217053: model = "PIC32MZ1024EFG124"; break;
+    case 0x0721C053: model = "PIC32MZ1024EFH124"; break;
+    case 0x07244053: model = "PIC32MZ1024EFM124"; break;
+    case 0x07218053: model = "PIC32MZ2048EFG124"; break;
+    case 0x0721D053: model = "PIC32MZ2048EFH124"; break;
+    case 0x07245053: model = "PIC32MZ2048EFM124"; break;
+    case 0x07221053: model = "PIC32MZ1024EFG144"; break;
+    case 0x07226053: model = "PIC32MZ1024EFH144"; break;
+    case 0x0724E053: model = "PIC32MZ1024EFM144"; break;
+    case 0x07222053: model = "PIC32MZ2048EFG144"; break;
+    case 0x07227053: model = "PIC32MZ2048EFH144"; break;
+    case 0x0724F053: model = "PIC32MZ2048EFM144"; break;
     }
+    if (model)
+        strcpy(cpu_model, model);
+    else
+        sprintf(cpu_model, "PIC32MZ DevID %x", DEVID);
 
     /*
      * Find out how much memory is available.

@@ -15,7 +15,7 @@ FILES=	a.out.h ar.h assert.h bitstring.h ctype.h db.h dirent.h disktab.h \
 	struct.h sysexits.h tar.h time.h ttyent.h tzfile.h unistd.h utime.h \
 	utmp.h vis.h
 
-MFILES=	float.h frame.h stdarg.h varargs.h
+MFILES=	float.h frame.h stdarg.h
 LFILES=	errno.h fcntl.h syslog.h termios.h
 
 DIRS=arpa protocols

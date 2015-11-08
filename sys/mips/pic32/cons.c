@@ -68,6 +68,10 @@ dev_t cn_dev = makedev(CONS_MAJOR, CONS_MINOR);
 #error Console: cannot redirect
 #endif
 
+#ifndef UART_BAUD
+#define UART_BAUD   TTYDEF_SPEED
+#endif
+
 /*
  * Console initialization: called early on from main,
  * before vm init or startup.  Do enough configuration
@@ -82,8 +86,8 @@ consinit()
     ctty.t_dev = cn_dev;
     ctty.t_sc = 0;
     cterm.c_cflag = CS8;
-    cterm.c_ospeed = TTYDEF_SPEED;
-    cterm.c_ispeed = TTYDEF_SPEED;
+    cterm.c_ospeed = UART_BAUD;
+    cterm.c_ispeed = UART_BAUD;
     uartparam(&ctty, &cterm);
     udelay(1000);
 }

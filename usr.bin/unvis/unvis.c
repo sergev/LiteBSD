@@ -30,57 +30,44 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1989, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)unvis.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <sys/errno.h>
 #include <vis.h>
 
 char	*Program;
+
 #define usage()	fprintf(stderr, "usage: %s %s\n", Program, USAGE)
 #define USAGE "[file...]"
 
-main(argc, argv)
-	char *argv[];
+void
+error(char *fmt, ...)
 {
-	FILE *fp;
-	extern char *optarg;
-	extern int optind;
-	int ch;
+	va_list ap;
 
-	Program = argv[0];
-	while ((ch = getopt(argc, argv, "")) != EOF)
-		switch((char)ch) {
-		case '?':
-		default:
-			usage();
-			exit(1);
-		}
-	argc -= optind;
-	argv += optind;
-
-	if (*argv)
-		while (*argv) {
-			if ((fp=fopen(*argv, "r")) != NULL)
-				process(fp, *argv);
-			else
-				syserror("%s", *argv);
-			argv++;
-		}
-	else
-		process(stdin, "<stdin>");
-	exit(0);
+	fprintf(stderr, "%s: ", Program);
+	va_start(ap, fmt);
+	(void) vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, "\n");
 }
 
+void
+syserror(char *fmt, ...)
+{
+	va_list ap;
+
+	fprintf(stderr, "%s: ", Program);
+	va_start(ap, fmt);
+	(void) vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, ": %s\n", strerror(errno));
+}
+
+void
 process(fp, filename)
 	FILE *fp;
 	char *filename;
@@ -115,34 +102,33 @@ process(fp, filename)
 		putchar(outc);
 }
 
-#include <varargs.h>
-
-error(va_alist)
-	va_dcl
+int
+main(argc, argv)
+	char *argv[];
 {
-	char *fmt;
-	va_list ap;
-	extern errno;
+	FILE *fp;
+	int ch;
 
-	fprintf(stderr, "%s: ", Program);
-	va_start(ap);
-	fmt = va_arg(ap, char *);
-	(void) vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, "\n");
-}
+	Program = argv[0];
+	while ((ch = getopt(argc, argv, "")) != EOF)
+		switch((char)ch) {
+		case '?':
+		default:
+			usage();
+			exit(1);
+		}
+	argc -= optind;
+	argv += optind;
 
-syserror(va_alist)
-	va_dcl
-{
-	char *fmt;
-	va_list ap;
-	extern errno;
-
-	fprintf(stderr, "%s: ", Program);
-	va_start(ap);
-	fmt = va_arg(ap, char *);
-	(void) vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	fprintf(stderr, ": %s\n", strerror(errno));
+	if (*argv)
+		while (*argv) {
+			if ((fp=fopen(*argv, "r")) != NULL)
+				process(fp, *argv);
+			else
+				syserror("%s", *argv);
+			argv++;
+		}
+	else
+		process(stdin, "<stdin>");
+	exit(0);
 }

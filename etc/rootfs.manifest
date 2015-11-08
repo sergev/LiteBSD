@@ -892,11 +892,11 @@ file /usr/bin/nohup
 
 file /usr/bin/nvi
 symlink /usr/bin/vi
-target /usr/bin/nvi
+target nvi
 symlink /usr/bin/view
-target /usr/bin/nvi
+target nvi
 symlink /usr/bin/ex
-target /usr/bin/nvi
+target nvi
 
 file /usr/bin/pagesize
 file /usr/bin/passwd
@@ -933,6 +933,7 @@ file /usr/bin/sendbug
 file /usr/bin/shar
 file /usr/bin/showmount
 file /usr/bin/size
+file /usr/bin/sl
 file /usr/bin/soelim
 file /usr/bin/sort
 file /usr/bin/split
@@ -1181,7 +1182,6 @@ file /usr/include/machine/signal.h
 file /usr/include/machine/stdarg.h
 file /usr/include/machine/trap.h
 file /usr/include/machine/types.h
-file /usr/include/machine/varargs.h
 file /usr/include/machine/vmparam.h
 
 #dir /usr/include/net
@@ -1399,9 +1399,6 @@ target sys/syslog.h
 
 symlink /usr/include/termios.h
 target sys/termios.h
-
-symlink /usr/include/varargs.h
-target machine/varargs.h
 
 #
 # Files: /usr/lib
@@ -1672,6 +1669,7 @@ file /usr/share/man/cat1/nfsstat.0
 file /usr/share/man/cat1/nice.0
 file /usr/share/man/cat1/nm.0
 file /usr/share/man/cat1/nohup.0
+file /usr/share/man/cat1/nvi.0
 file /usr/share/man/cat1/od.0
 file /usr/share/man/cat1/pagesize.0
 file /usr/share/man/cat1/passwd.0
@@ -1705,6 +1703,7 @@ file /usr/share/man/cat1/sh.0
 file /usr/share/man/cat1/shar.0
 file /usr/share/man/cat1/showmount.0
 file /usr/share/man/cat1/size.0
+file /usr/share/man/cat1/sl.0
 file /usr/share/man/cat1/sleep.0
 file /usr/share/man/cat1/soelim.0
 file /usr/share/man/cat1/sort.0
@@ -1814,6 +1813,12 @@ link /usr/share/man/cat1/reset.0
 target /usr/share/man/cat1/tset.0
 link /usr/share/man/cat1/uudecode.0
 target /usr/share/man/cat1/uuencode.0
+link /usr/share/man/cat1/vi.0
+target /usr/share/man/cat1/nvi.0
+link /usr/share/man/cat1/ex.0
+target /usr/share/man/cat1/nvi.0
+link /usr/share/man/cat1/view.0
+target /usr/share/man/cat1/nvi.0
 
 file /usr/share/man/cat2/accept.0
 file /usr/share/man/cat2/access.0
@@ -3195,16 +3200,13 @@ file /usr/share/zoneinfo/GMT-9
 file /usr/share/zoneinfo/GMT+9
 file /usr/share/zoneinfo/Greenwich
 file /usr/share/zoneinfo/Hongkong
-file /usr/share/zoneinfo/Iceland
 file /usr/share/zoneinfo/Iran
 file /usr/share/zoneinfo/Israel
 file /usr/share/zoneinfo/Jamaica
 file /usr/share/zoneinfo/Japan
 file /usr/share/zoneinfo/Libya
-file /usr/share/zoneinfo/MET
 file /usr/share/zoneinfo/Navajo
 file /usr/share/zoneinfo/NZ
-file /usr/share/zoneinfo/Poland
 file /usr/share/zoneinfo/posixrules
 file /usr/share/zoneinfo/PRC
 file /usr/share/zoneinfo/ROC

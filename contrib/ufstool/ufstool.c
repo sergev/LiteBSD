@@ -182,6 +182,31 @@ extract_inode (ufs_inode_t *inode, char *path)
 }
 
 static void
+extract_symlink (ufs_inode_t *inode, char *path)
+{
+    unsigned bsize = inode->disk->d_fs.fs_bsize;
+    char data [MAXBSIZE];
+
+    if (inode->size >= bsize) {
+        fprintf (stderr, "%s: too long symlink\n", path);
+        return;
+    }
+    if (inode->size < inode->disk->d_fs.fs_maxsymlinklen) {
+        /* Short symlink is stored in inode. */
+        strcpy (data, (char*)inode->daddr);
+
+    } else if (ufs_inode_read (inode, 0, (unsigned char*)data, inode->size) < 0) {
+        fprintf (stderr, "%s: error reading symlink\n", path);
+        return;
+    }
+    data[inode->size] = 0;
+    if (symlink(data, path) < 0) {
+        perror (path);
+        return;
+    }
+}
+
+static void
 scan_extract (ufs_inode_t *dir, ufs_inode_t *inode,
     const char *dirname, const char *filename, void *arg)
 {
@@ -192,7 +217,8 @@ scan_extract (ufs_inode_t *dir, ufs_inode_t *inode,
         ufs_inode_print_path (inode, dirname, filename, out);
 
     if ((inode->mode & IFMT) != IFDIR &&
-        (inode->mode & IFMT) != IFREG)
+        (inode->mode & IFMT) != IFREG &&
+        (inode->mode & IFMT) != IFLNK)
         return;
 
     path = alloca (strlen (dirname) + strlen (filename) + 2);
@@ -202,13 +228,19 @@ scan_extract (ufs_inode_t *dir, ufs_inode_t *inode,
     for (relpath=path; *relpath == '/'; relpath++)
         continue;
 
-    if ((inode->mode & IFMT) == IFDIR) {
+    switch (inode->mode & IFMT) {
+    case IFDIR:
         if (mkdir (relpath, 0775) < 0 && errno != EEXIST)
             perror (relpath);
         /* Scan subdirectory. */
         ufs_directory_scan (inode, path, scan_extract, arg);
-    } else {
+        break;
+    case IFREG:
         extract_inode (inode, relpath);
+        break;
+    case IFLNK:
+        extract_symlink (inode, relpath);
+        break;
     }
 }
 
