@@ -100,5 +100,6 @@ void enintr(dev_t);
 
 /* Wi-Fi driver. */
 void mrfintr(dev_t);
+void wifi_scan(void);
 
 #endif

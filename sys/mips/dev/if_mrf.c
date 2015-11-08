@@ -63,6 +63,7 @@ struct wifi_port {
     int         is_up;              /* whether the link is up */
     int         is_connected;       /* whether the wifi is connected */
     int         is_powersave_active; /* power save mode enabled */
+    int         is_scan_ready;      /* scan results ready */
     int         need_powersave;     /* reactivate PS mode when appropriate */
     key_info_t  key_info;
 
@@ -388,7 +389,7 @@ void mrf_event(event_t event_type, void *event_data)
 
     case WF_EVENT_SCAN_RESULTS_READY:
         printf("--- %s: scan results ready, count=%u\n", __func__, (unsigned) event_data);
-        //TODO
+        w->is_scan_ready = (unsigned) event_data;
         break;
 
     case WF_WPS_EVENT_KEY_CALCULATION_REQUEST:
@@ -471,6 +472,46 @@ static int mrf_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 static void mrf_watchdog(int unit)
 {
     //TODO
+}
+
+/*
+ * Scan the band for networksTimeout routine.
+ */
+void wifi_scan()
+{
+    struct wifi_port *w = &wifi_port[0];
+
+    if (w->is_scan_ready) {
+        /* Print the results of scan request. */
+        int n = w->is_scan_ready;
+
+        w->is_scan_ready = 0;
+#if 1
+        int i;
+        scan_result_t scan;
+        for (i=0; i<n; i++) {
+            mrf_scan_get_result(i, &scan);
+            scan.ssid[scan.ssidLen] = 0;
+            printf("%02x:%02x:%02x:%02x:%02x:%02x ch%u, rssi=%u, ",
+                scan.bssid[0], scan.bssid[1], scan.bssid[2],
+                scan.bssid[3], scan.bssid[4], scan.bssid[5],
+                scan.channel, scan.rssi);
+            if (scan.apConfig & 0x10) {
+                switch (scan.apConfig & 0xc0) {
+                case 0x00: printf("WEP"); break;
+                case 0x40: printf("WPA"); break;
+                case 0x80: printf("WPA2"); break;
+                case 0xc0: printf("WPA2+WPA"); break;
+                }
+            } else {
+                printf("Open");
+            }
+            printf(", '%s'\n", scan.ssid);
+        }
+#endif
+    }
+    mrf_scan_start(w->cpid);
+printf("--- %s() scan started\n", __func__);
 }
 
 /*

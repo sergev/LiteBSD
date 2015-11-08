@@ -121,12 +121,14 @@ union cpuprid {
  */
 #define CPU_CONSDEV     1       /* dev_t: console terminal device */
 #define CPU_NLIST       2       /* int: address of kernel symbol */
-#define CPU_MAXID       3       /* number of valid machdep ids */
+#define CPU_WIFI_SCAN   3       /* int: start scanning for Wi-Fi networks */
+#define CPU_MAXID       4       /* number of valid machdep ids */
 
 #define CTL_MACHDEP_NAMES { \
     { 0, 0 }, \
     { "console_device", CTLTYPE_STRUCT }, \
     { "nlist", CTLTYPE_STRUCT }, \
+    { "wifi_scan", CTLTYPE_INT }, \
 }
 
 #ifdef KERNEL

@@ -207,6 +207,16 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
             }
         }
         return EOPNOTSUPP;
+
+    case CPU_WIFI_SCAN:
+        /* Scan the Wi-Fi network. */
+#ifdef WF_INT
+        if (newp) {
+            wifi_scan();
+            return 0;
+        }
+#endif
+        break;
     }
     return EOPNOTSUPP;
 }
