@@ -730,7 +730,7 @@ static void assign_tx(int channel, int pin)
     case RP('G',8):  RPG8R  = output_map1(channel); return;
     case RP('G',9):  RPG9R  = output_map4(channel); return;
     }
-    printf ("uart%u: cannot map TX pin %c%d\n",
+    printf ("uart%u: cannot map TX pin R%c%d\n",
         channel, pin_name[pin>>4], pin & 15);
 }
 
@@ -757,7 +757,7 @@ uartprobe(config)
     tp->t_dev = unit;
 //    tp->t_sc = reg;
 
-    printf("uart%d at pins rx=%c%d/tx=%c%d, interrupts %u/%u/%u",
+    printf("uart%d at pins rx=R%c%d/tx=R%c%d, interrupts %u/%u/%u",
         unit+1, pin_name[rx>>4], rx & 15, pin_name[tx>>4], tx & 15,
         uartirq[unit].er, uartirq[unit].rx, uartirq[unit].tx);
     if (is_console)

@@ -631,11 +631,11 @@ mrf_probe(config)
     w->pin_reset = config->dev_flags >> 16 & 0xFF;
     w->pin_hibernate = config->dev_flags >> 24 & 0xFF;
     if (mrf_detect(w) < 0) {
-        printf("mrf%u not found at port %s, pin cs=%c%d\n",
+        printf("mrf%u not found at port %s, pin cs=R%c%d\n",
             unit, spi_name(io), spi_csname(io), spi_cspin(io));
         return 0;
     }
-    printf("mrf%u at port %s, pins cs=%c%d, irq=%c%d, reset=%c%d, hibernate=%c%d\n",
+    printf("mrf%u at port %s, pins cs=R%c%d, irq=R%c%d, reset=R%c%d, hibernate=R%c%d\n",
         unit, spi_name(io), spi_csname(io), spi_cspin(io),
         gpio_portname(w->pin_irq), gpio_pinno(w->pin_irq),
         gpio_portname(w->pin_reset), gpio_pinno(w->pin_reset),

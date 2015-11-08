@@ -899,7 +899,7 @@ sdprobe(config)
     spi_set_speed(io, SD_KHZ);
     spi_set(io, PIC32_SPICON_CKE);
 
-    printf("sd%u at port %s, pin cs=%c%d\n", unit,
+    printf("sd%u at port %s, pin cs=R%c%d\n", unit,
         spi_name(io), spi_csname(io), spi_cspin(io));
 
     /* Assign disk index. */

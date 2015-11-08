@@ -829,7 +829,7 @@ static void assign_sdo(int channel, int pin)
     case RP('G',8):  RPG8R  = output_map1(channel); return;
     case RP('G',9):  RPG9R  = output_map4(channel); return;
     }
-    printf ("spi%u: cannot map SDO pin %c%d\n",
+    printf ("spi%u: cannot map SDO pin R%c%d\n",
         channel, gpio_portname(pin), gpio_pinno(pin));
 }
 
@@ -859,7 +859,7 @@ spiprobe(config)
     if (channel < 0 || channel >= NSPI)
         return 0;
     sck = sck_tab[channel];
-    printf ("spi%u at pins sdi=%c%d/sdo=%c%d/sck=%c%d\n", channel+1,
+    printf ("spi%u at pins sdi=R%c%d/sdo=R%c%d/sck=R%c%d\n", channel+1,
         gpio_portname(sdi), gpio_pinno(sdi),
         gpio_portname(sdo), gpio_pinno(sdo),
         gpio_portname(sck), gpio_pinno(sck)
