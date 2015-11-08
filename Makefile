@@ -1,25 +1,62 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/19/93
+#
+# Top level makefile for the LiteBSD project.
+# Usage:
+#       make all        -- Compile binaries and create SD image
+#       make clean      -- Delete build results
+#       make build      -- Compile binaries
+#       make kernel     -- Compile kernels for all board types
+#       make fs         -- Create SD image
+#       make installfs  -- Write the image to SD card
+#
 
 SUBDIR=	bin contrib games include lib libexec old sbin \
 	share usr.bin usr.sbin
 
-afterinstall:
-	${MAKE} -Cshare/man makedb
-
-beforeinstall:
-	${MAKE} -Cetc install
+#
+# Build binaries and create a filesystem image.
+#
+all:    build fs
 
 #
-# Build the whole DESTDIR tree.
+# Delete all results of the build.
 #
-build ${DESTDIR}:
+clean:  cleandir
+	rm -rf sdcard.img ${DESTDIR}
+
+#
+# Create the DESTDIR tree.
+# Install /etc and /usr/include files.
+# Build and install the libraries.
+#
+${DESTDIR}:
 	${MAKE} -Cetc install
 	${MAKE} -Cinclude install
 	${MAKE} cleandir
-	${MAKE} -Clib depend all install
-	${MAKE} depend all install
+	${MAKE} -Clib depend
+	${MAKE} depend
+	${MAKE} -Clib all install
 
+#
+# Build all the binaries.
+#
+build:  ${DESTDIR}
+	@for d in ${SUBDIR}; do \
+		if test $${d} != lib -a $${d} != include -a $${d} != etc; then \
+			echo "===> $$d"; \
+			${MAKE} -C${.CURDIR}/$${d} all install; \
+		fi; \
+	done
+	${MAKE} -Cshare/man makedb
+
+#
+# Build kernels for all boards.
+#
+kernel:
+	${MAKE} -Csys/compile all
+
+#
 # Filesystem and swap sizes.
+#
 ROOT_MBYTES = 200
 SWAP_MBYTES = 32
 U_MBYTES    = 100
@@ -31,7 +68,8 @@ UFSTOOL     = contrib/ufstool/ufstool
 fs:     sdcard.img
 
 .PHONY: sdcard.img
-sdcard.img: ${UFSTOOL} etc/rootfs.manifest ${DESTDIR}
+sdcard.img: ${UFSTOOL} etc/rootfs.manifest
+	test -d ${DESTDIR} || ${MAKE} build
 	rm -f $@
 	${UFSTOOL} --repartition=fs=${ROOT_MBYTES}M:swap=${SWAP_MBYTES}M:fs=${U_MBYTES}M $@
 	${UFSTOOL} --new --partition=1 --manifest=etc/rootfs.manifest $@ ${DESTDIR}
@@ -50,29 +88,5 @@ installfs:
 .else
 	@echo "Error: No SDCARD defined."
 .endif
-
-#
-# Build kernel.
-#
-ARCH    = mips
-BOARD  ?= WIFIRE.pic32
-
-kernel: usr.sbin/config/config sys/compile/${BOARD}/.depend
-	${MAKE} -Csys/compile/${BOARD}
-
-usr.sbin/config/config:
-	${MAKE} -Cusr.sbin/config
-
-sys/compile/${BOARD}/.depend: sys/${ARCH}/conf/${BOARD}
-	(cd sys/${ARCH}/conf; ../../../usr.sbin/config/config -g ${BOARD})
-	${MAKE} -Csys/compile/${BOARD} depend clean
-
-#
-# Upload the kernel to chipKIT Wi-Fire board.
-#
-PORT   ?= /dev/ttyUSB0
-
-load:   kernel
-	sudo pic32prog -d ${PORT} sys/compile/${BOARD}/vmunix.hex
 
 .include <bsd.subdir.mk>
