@@ -319,23 +319,23 @@ void mrf_intr_init()
         w->int_mask = 1 << PIC32_IRQ_INT0;
         IPC(PIC32_IRQ_INT0/4) |= PIC32_IPC_IP(0, 0, 0, LETH);
         break;
-    case 1:                             /* External Interrupt 1 */
-        INT1R = gpio_input_map1(w->pin_irq);
+    case 1:                             /* External Interrupt 1 - group 4 */
+        INT1R = gpio_input_map4(w->pin_irq);
         w->int_mask = 1 << PIC32_IRQ_INT1;
         IPC(PIC32_IRQ_INT1/4) |= PIC32_IPC_IP(LETH, 0, 0, 0);
         break;
-    case 2:                             /* External Interrupt 2 */
-        INT2R = gpio_input_map2(w->pin_irq);
+    case 2:                             /* External Interrupt 2 - group 3 */
+        INT2R = gpio_input_map3(w->pin_irq);
         w->int_mask = 1 << PIC32_IRQ_INT2;
         IPC(PIC32_IRQ_INT2/4) |= PIC32_IPC_IP(0, LETH, 0, 0);
         break;
-    case 3:                             /* External Interrupt 3 */
-        INT3R = gpio_input_map3(w->pin_irq);
+    case 3:                             /* External Interrupt 3 - group 1 */
+        INT3R = gpio_input_map1(w->pin_irq);
         w->int_mask = 1 << PIC32_IRQ_INT3;
         IPC(PIC32_IRQ_INT3/4) |= PIC32_IPC_IP(0, 0, LETH, 0);
         break;
-    case 4:                             /* External Interrupt 4 */
-        INT4R = gpio_input_map4(w->pin_irq);
+    case 4:                             /* External Interrupt 4 - group 2 */
+        INT4R = gpio_input_map2(w->pin_irq);
         w->int_mask = 1 << PIC32_IRQ_INT4;
         IPC(PIC32_IRQ_INT4/4) |= PIC32_IPC_IP(0, 0, 0, LETH);
         break;
@@ -480,6 +480,7 @@ static void mrf_watchdog(int unit)
 void wifi_scan()
 {
     struct wifi_port *w = &wifi_port[0];
+    int s = splimp();
 
     if (w->is_scan_ready) {
         /* Print the results of scan request. */
@@ -512,6 +513,7 @@ void wifi_scan()
     }
     mrf_scan_start(w->cpid);
 printf("--- %s() scan started\n", __func__);
+    splx(s);
 }
 
 /*
@@ -533,9 +535,6 @@ void mrfintr(dev_t dev)
     if (intr & INTR_INT2)
         intr2 = mrf_read(MRF24_REG_INTR2);
 printf("---mrf0 interrupt: intr = %02x\n", intr);
-
-    /* Clear this interrupt. */
-    mrf_write(MRF24_REG_INTR, intr);
 
     if (intr & INTR_INT2) {
         /*
@@ -580,6 +579,9 @@ printf("---mrf0 interrupt: intr = %02x\n", intr);
         }
     }
     //TODO: process TX confirm interrupt.
+
+    /* Clear this interrupt. */
+    mrf_write(MRF24_REG_INTR, intr);
 
     /* Clear the interrupt flag on exit from the service routine. */
     IFSCLR(0) = w->int_mask;
@@ -713,9 +715,6 @@ mrf_probe(config)
     bpfattach(&ifp->if_bpf, ifp, DLT_EN10MB, sizeof(struct ether_header));
 #endif
     if_attach(ifp);
-
-    /* Enable the external interrupt. */
-    IECSET(0) = w->int_mask;
     return 1;
 }
 
