@@ -482,37 +482,7 @@ void wifi_scan()
     struct wifi_port *w = &wifi_port[0];
     int s = splimp();
 
-    if (w->is_scan_ready) {
-        /* Print the results of scan request. */
-        int n = w->is_scan_ready;
-
-        w->is_scan_ready = 0;
-#if 1
-        int i;
-        scan_result_t scan;
-        for (i=0; i<n; i++) {
-            mrf_scan_get_result(i, &scan);
-            scan.ssid[scan.ssidLen] = 0;
-            printf("%02x:%02x:%02x:%02x:%02x:%02x ch%u, rssi=%u, ",
-                scan.bssid[0], scan.bssid[1], scan.bssid[2],
-                scan.bssid[3], scan.bssid[4], scan.bssid[5],
-                scan.channel, scan.rssi);
-            if (scan.apConfig & 0x10) {
-                switch (scan.apConfig & 0xc0) {
-                case 0x00: printf("WEP"); break;
-                case 0x40: printf("WPA"); break;
-                case 0x80: printf("WPA2"); break;
-                case 0xc0: printf("WPA2+WPA"); break;
-                }
-            } else {
-                printf("Open");
-            }
-            printf(", '%s'\n", scan.ssid);
-        }
-#endif
-    }
     mrf_scan_start(w->cpid);
-printf("--- %s() scan started\n", __func__);
     splx(s);
 }
 
@@ -531,10 +501,11 @@ void mrfintr(dev_t dev)
 
     /* Read INTR register to determine cause of interrupt.
      * AND it with mask to determine which enabled interrupt has occurred. */
+again:
     intr = mrf_read_byte(MRF24_REG_INTR);
     if (intr & INTR_INT2)
         intr2 = mrf_read(MRF24_REG_INTR2);
-printf("---mrf0 interrupt: intr = %02x\n", intr);
+//printf("---mrf0 interrupt: intr = %02x:%02x, mask = %02x:%02x\n", intr, intr2, mrf_read_byte(MRF24_REG_MASK), mrf_read(MRF24_REG_MASK2));
 
     if (intr & INTR_INT2) {
         /*
@@ -551,6 +522,9 @@ printf("---mrf0 interrupt: intr = %02x\n", intr);
                           mrf_read(MRF24_REG_MAILBOX0_LO);
             mrf_event(WF_EVENT_MRF24WG_MODULE_ASSERT, (void*) assert_info);
         }
+
+        /* Clear this interrupt. */
+        mrf_write(MRF24_REG_INTR2, intr2);
     }
     if (intr & INTR_FIFO1) {
         /*
@@ -558,6 +532,33 @@ printf("---mrf0 interrupt: intr = %02x\n", intr);
          * Receive a mgmt msg, either confirm or indicate.
          */
         mrf_mgmt_receive_confirm();
+#if 1
+        if (w->is_scan_ready) {
+            scan_result_t scan;
+            int i, n = w->is_scan_ready;
+
+            for (i=0; i<n; i++) {
+                mrf_scan_get_result(i, &scan);
+                scan.ssid[scan.ssidLen] = 0;
+                printf("%02x:%02x:%02x:%02x:%02x:%02x ch%u, rssi=%u, ",
+                    scan.bssid[0], scan.bssid[1], scan.bssid[2],
+                    scan.bssid[3], scan.bssid[4], scan.bssid[5],
+                    scan.channel, scan.rssi);
+                if (scan.apConfig & 0x10) {
+                    switch (scan.apConfig & 0xc0) {
+                    case 0x00: printf("WEP"); break;
+                    case 0x40: printf("WPA"); break;
+                    case 0x80: printf("WPA2"); break;
+                    case 0xc0: printf("WPA2+WPA"); break;
+                    }
+                } else {
+                    printf("Open");
+                }
+                printf(", '%s'\n", scan.ssid);
+            }
+            w->is_scan_ready = 0;
+        }
+#endif
     }
     if (intr & INTR_FIFO0) {
         /*
@@ -565,6 +566,7 @@ printf("---mrf0 interrupt: intr = %02x\n", intr);
          * Receive data packet.
          */
         nbytes = mrf_rx_get_length();
+printf("--- got data message nbytes=%u\n", nbytes);
         if (nbytes > 0) {
 #if 0
             char *data = malloc(nbytes);
@@ -585,6 +587,10 @@ printf("---mrf0 interrupt: intr = %02x\n", intr);
 
     /* Clear the interrupt flag on exit from the service routine. */
     IFSCLR(0) = w->int_mask;
+    if (gpio_get(w->pin_irq) == 0)
+        goto again;
+    mrf_write_byte(MRF24_REG_MASK, INTR_FIFO0 | INTR_FIFO1 | INTR_RAW0 | INTR_RAW1);
+    mrf_write(MRF24_REG_MASK2, INTR2_RAW2 | INTR2_RAW3 | INTR2_RAW4 | INTR2_RAW5 | INTR2_MAILBOX);
 
     /* Check whether PS-Poll was disabled temporarily and needs
      * to be reenabled, and we are in a connected state. */
