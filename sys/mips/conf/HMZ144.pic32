@@ -24,8 +24,8 @@ options         VNODEPAGER              # vnode pager (mapped files)
 options         DEVPAGER                # device pager (mapped devices)
 options         DIAGNOSTIC              # extra kernel debugging checks
 options         DEBUG                   # extra kernel debugging support
-options         "NKMEMCLUSTERS=32"      # 4K pages in kernel malloc pool, default 128 pages
-options         "NMBCLUSTERS=16"        # 4K pages in network mbuf pool, default 256/512 pages
+options         "NKMEMCLUSTERS=64"      # 4K pages in kernel malloc pool, default 128 pages
+options         "NMBCLUSTERS=32"        # 4K pages in network mbuf pool, default 256/512 pages
 options         "NBUF=18"               # Number of i/o buffers (4k), min 16
 options         "BUFPAGES=18"           # Number of i/o pages, default 10% of ram, min 16
 options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
