@@ -96,22 +96,22 @@ static void handle_indicate_message()
 int mrf_mgmt_receive_confirm()
 {
     unsigned len;
-    u_int8_t msgType;
+    u_int8_t msg_type;
 
     // mount the mgmt pool rx data.
     len = mrf_raw_move(RAW_ID_MGMT_RX, RAW_MAC, 1, 0);
     if (len == 0) {
-        printf("--- %s: failed\n", __func__);
+        //printf("--- %s: empty\n", __func__);
         return 0;
     }
 
     // read first byte from this mgmt msg (msg type)
-    mrf_raw_pread(RAW_ID_MGMT_RX, &msgType, 1, 0);
+    mrf_raw_pread(RAW_ID_MGMT_RX, &msg_type, 1, 0);
 
-    switch (msgType) {
+    switch (msg_type) {
     case WF_TYPE_MGMT_CONFIRM:
         // if a mgmt confirm then the Universal Driver is waiting for it.
-        //TODO: receive mgmt message
+        // A caller is expected to receive the mgmt message.
         return 1;
     case WF_TYPE_MGMT_INDICATE:
         // if a mgmt indicated occurred (asynchronous event),
@@ -120,7 +120,7 @@ int mrf_mgmt_receive_confirm()
         return 0;
     default:
         // unknown mgmt msg type was received
-        printf("--- %s: unknown mgmt message received, type=%u\n", __func__, msgType);
+        printf("--- %s: unknown message type=%u\n", __func__, msg_type);
         return 0;
     }
 }
