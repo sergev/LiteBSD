@@ -71,7 +71,6 @@ controller      spi3    flags 0x2923    # pins sdi=RB9,  sdo=RB3 - logical A5/A1
 controller      spi4    flags 0x4b40    # pins sdi=RD11, sdo=RD0 - logical 4/5/3
 
 disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9  - logical 27
-options         "SD_KHZ=16000"                          # speed 16MHz
 options         "SD_LED=0x57"                           # LED4 is RE7
 #disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
 
