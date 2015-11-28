@@ -87,6 +87,7 @@ struct disk {
     u_int   openpart;       /* all units open on this drive */
     u_char  ocr[4];         /* operation condition register */
     u_char  csd[16];        /* card-specific data */
+    u_short group[6];       /* function group bitmasks */
     int     ma;             /* power consumption */
 };
 
@@ -477,7 +478,23 @@ static void card_high_speed(int unit)
         /* The card has switched to high-speed mode. */
         spi_set_speed(io, SD_FAST_KHZ);
     }
+
+    /* Save function group information for later use. */
     u->ma = status[0] << 8 | status[1];
+    u->group[0] = status[12] << 8 | status[13];
+    u->group[1] = status[10] << 8 | status[11];
+    u->group[2] = status[8] << 8 | status[9];
+    u->group[3] = status[6] << 8 | status[7];
+    u->group[4] = status[4] << 8 | status[5];
+    u->group[5] = status[2] << 8 | status[3];
+
+    printf("sd%d: function groups %x/%x/%x/%x/%x/%x", unit,
+        u->group[0] & 0x7fff, u->group[1] & 0x7fff,
+        u->group[2] & 0x7fff, u->group[3] & 0x7fff,
+        u->group[4] & 0x7fff, u->group[5] & 0x7fff);
+    if (u->ma > 0)
+        printf(", max current %u mA", u->ma);
+    printf("\n");
 }
 
 /*
@@ -677,14 +694,11 @@ sd_setup(struct disk *u)
          * SPI interface of pic32 allows up to 25MHz clock rate. */
         card_high_speed(unit);
     }
-    printf("sd%d: type %s, size %u kbytes, speed %u Mbit/sec", unit,
+    printf("sd%d: type %s, size %u kbytes, speed %u Mbit/sec\n", unit,
         u->card_type==TYPE_SDHC ? "SDHC" :
         u->card_type==TYPE_SD_II ? "II" : "I",
         u->part[RAWPART].dp_size / 2,
         spi_get_speed(&u->spiio) / 1000);
-    if (u->ma > 0)
-        printf(", current %u mA", u->ma);
-    printf("\n");
 
     /* Read partition table. */
     u_int16_t buf[256];
@@ -956,12 +970,12 @@ sdprobe(config)
     struct conf_device *config;
 {
     int unit = config->dev_unit;
-    struct disk *du = &sddrives[unit];
+    struct disk *u = &sddrives[unit];
     struct spiio *io;
 
     if (unit < 0 || unit >= NSD)
         return 0;
-    io = &du->spiio;
+    io = &u->spiio;
 
     if (spi_setup(io, config->dev_ctlr, config->dev_flags) != 0) {
         printf("sd%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
@@ -976,12 +990,12 @@ sdprobe(config)
 
     /* Assign disk index. */
     if (dk_ndrive < DK_NDRIVE) {
-        du->dkindex = dk_ndrive++;
+        u->dkindex = dk_ndrive++;
 
         /* Estimated transfer rate in 16-bit words per second. */
-        dk_wpms[du->dkindex] = SD_KHZ / 32;
+        dk_wpms[u->dkindex] = SD_KHZ / 32;
     } else
-        du->dkindex = -1;
+        u->dkindex = -1;
     return 1;
 }
 
