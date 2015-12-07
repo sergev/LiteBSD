@@ -42,17 +42,20 @@
 
 #define sdunit(dev)     ((minor(dev) & 8) >> 3)
 #define sdpart(dev)     ((minor(dev) & 7))
-#define RAWPART         0               /* 'x' partition */
+#define RAWPART         0           /* whole disk */
 
 #define NPARTITIONS     4
 #define SECTSIZE        512
 #define MBR_MAGIC       0xaa55
 
 #ifndef SD_KHZ
-#define SD_KHZ          12500           /* speed 12.5 MHz */
+#define SD_KHZ          12500       /* speed 12.5 MHz */
 #endif
 #ifndef SD_FAST_KHZ
 #define SD_FAST_KHZ     25000       /* up to 25 Mhz is allowed by the spec */
+#endif
+#ifndef SD_FASTEST_KHZ
+#define SD_FASTEST_KHZ  50000       /* max speed for pic32mz SPI is 50 MHz */
 #endif
 
 #if DEV_BSIZE != 512
@@ -87,6 +90,11 @@ struct disk {
     u_int   openpart;       /* all units open on this drive */
     u_char  ocr[4];         /* operation condition register */
     u_char  csd[16];        /* card-specific data */
+#define TRANS_SPEED_25MHZ   0x32
+#define TRANS_SPEED_50MHZ   0x5a
+#define TRANS_SPEED_100MHZ  0x0b
+#define TRANS_SPEED_200MHZ  0x2b
+
     u_short group[6];       /* function group bitmasks */
     int     ma;             /* power consumption */
 };
@@ -94,7 +102,7 @@ struct disk {
 static struct disk sddrives[NSD];       /* Table of units */
 
 #define TIMO_WAIT_WDONE 400000
-#define TIMO_WAIT_WIDLE 300000
+#define TIMO_WAIT_WIDLE 399000
 #define TIMO_WAIT_CMD   100000
 #define TIMO_WAIT_WDATA 30000
 #define TIMO_READ       90000
@@ -366,28 +374,23 @@ static int card_init(int unit)
 }
 
 /*
- * Get number of sectors on the disk.
- * Return nonzero if successful.
+ * Get the value of CSD register.
  */
-static int card_size(int unit)
+static int card_read_csd(int unit)
 {
     struct disk *u = &sddrives[unit];
     struct spiio *io = &u->spiio;
-    unsigned csize, n;
     int reply, i;
-    int nsectors;
 
     sd_select(io);
-    reply = card_cmd(unit,CMD_SEND_CSD, 0);
-    if (reply != 0)
-    {
+    reply = card_cmd(unit, CMD_SEND_CSD, 0);
+    if (reply != 0) {
         /* Command rejected. */
         sd_deselect(io);
         return 0;
     }
     /* Wait for a response. */
-    for (i=0; ; i++)
-    {
+    for (i=0; ; i++) {
         reply = spi_transfer(io, 0xFF);
         if (reply == DATA_START_BLOCK)
             break;
@@ -404,8 +407,7 @@ static int card_size(int unit)
         sd_timo_send_csd = i;
 
     /* Read data. */
-    for (i=0; i<16; i++)
-    {
+    for (i=0; i<16; i++) {
         u->csd[i] = spi_transfer(io, 0xFF);
     }
     /* Ignore CRC. */
@@ -414,6 +416,21 @@ static int card_size(int unit)
 
     /* Disable the card. */
     sd_deselect(io);
+    return 1;
+}
+
+/*
+ * Get number of sectors on the disk.
+ * Return nonzero if successful.
+ */
+static int card_size(int unit)
+{
+    struct disk *u = &sddrives[unit];
+    unsigned csize, n;
+    int nsectors;
+
+    if (! card_read_csd(unit))
+        return 0;
 
     /* CSD register has different structure
      * depending upon protocol version. */
@@ -476,7 +493,31 @@ static void card_high_speed(int unit)
 
     if ((status[16] & 0xF) == 1) {
         /* The card has switched to high-speed mode. */
-        spi_set_speed(io, SD_FAST_KHZ);
+        int khz;
+
+        card_read_csd(unit);
+        switch (u->csd[3]) {
+        default:
+            printf("sd%d: Unknown speed csd[3] = %02x\n", unit, u->csd[3]);
+            /* fall through... */
+        case TRANS_SPEED_25MHZ:
+            /* 25 MHz - default clock for high speed mode. */
+            khz = SD_FAST_KHZ;
+            break;
+        case TRANS_SPEED_50MHZ:
+            /* 50 MHz - typical clock for SDHC cards. */
+            khz = SD_FASTEST_KHZ;
+            break;
+        case TRANS_SPEED_100MHZ:
+            printf("sd%d: fast clock 100MHz\n", unit);
+            khz = SD_FASTEST_KHZ;
+            break;
+        case TRANS_SPEED_200MHZ:
+            printf("sd%d: fast clock 200MHz\n", unit);
+            khz = SD_FASTEST_KHZ;
+            break;
+        }
+        spi_set_speed(io, khz);
     }
 
     /* Save function group information for later use. */
