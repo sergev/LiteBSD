@@ -489,6 +489,10 @@ static void card_high_speed(int unit)
     /* Read 64-byte status. */
     for (i=0; i<64; i++)
         status[i] = spi_transfer(io, 0xFF);
+
+    /* Do at least 8 _slow_ clocks to switch into the HS mode. */
+    spi_transfer(io, 0xFF);
+    spi_transfer(io, 0xFF);
     sd_deselect(io);
 
     if ((status[16] & 0xF) == 1) {
@@ -530,9 +534,9 @@ static void card_high_speed(int unit)
     u->group[5] = status[2] << 8 | status[3];
 
     printf("sd%d: function groups %x/%x/%x/%x/%x/%x", unit,
-        u->group[0] & 0x7fff, u->group[1] & 0x7fff,
-        u->group[2] & 0x7fff, u->group[3] & 0x7fff,
-        u->group[4] & 0x7fff, u->group[5] & 0x7fff);
+        u->group[5] & 0x7fff, u->group[4] & 0x7fff,
+        u->group[3] & 0x7fff, u->group[2] & 0x7fff,
+        u->group[1] & 0x7fff, u->group[0] & 0x7fff);
     if (u->ma > 0)
         printf(", max current %u mA", u->ma);
     printf("\n");
