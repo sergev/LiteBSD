@@ -2150,7 +2150,7 @@ file /usr/share/man/cat3/memory.0
 file /usr/share/man/cat3/memset.0
 file /usr/share/man/cat3/mktemp.0
 file /usr/share/man/cat3/modf.0
-file /usr/share/man/cat3/moncontrol.0
+#file /usr/share/man/cat3/moncontrol.0
 file /usr/share/man/cat3/multibyte.0
 file /usr/share/man/cat3/nice.0
 file /usr/share/man/cat3/nlist.0
@@ -2539,8 +2539,8 @@ link /usr/share/man/cat3/linkntoa.0
 target /usr/share/man/cat3/linkaddr.0
 link /usr/share/man/cat3/mkstemp.0
 target /usr/share/man/cat3/mktemp.0
-link /usr/share/man/cat3/monstartup.0
-target /usr/share/man/cat3/moncontrol.0
+#link /usr/share/man/cat3/monstartup.0
+#target /usr/share/man/cat3/moncontrol.0
 link /usr/share/man/cat3/pclose.0
 target /usr/share/man/cat3/popen.0
 link /usr/share/man/cat3/fprintf.0
