@@ -1,7 +1,46 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/6/93
-
 PROG=	ld
-SRCS=	ld.c cplus-dem.c
-NOMAN=	noman
+
+SRCS=	ld_arch.c		\
+	ld_dynamic.c		\
+	ld_ehframe.c		\
+	ld_error.c 		\
+	ld_exp.c		\
+	ld_file.c		\
+	ld_hash.c		\
+	ld_input.c		\
+	ld_layout.c		\
+	ld_main.c 		\
+	ld_options.c		\
+	ld_output.c		\
+	ld_path.c		\
+	ld_reloc.c		\
+	ld_script.c		\
+	ld_script_lexer.l	\
+	ld_script_parser.y	\
+	ld_strtab.c		\
+	ld_symbols.c		\
+	ld_symver.c		\
+	mips.c			\
+	littlemips_script.c	\
+	bigmips_script.c	\
+	y.tab.h
+
+.SUFFIXES:	.ld .c
+.ld.c:
+	awk -f ld_script.awk ${.ALLSRC} > ${.TARGET}
+
+ld_script_lexer.l: ld_script_parser.o
+
+GENSRCS=	littlemips_script.c bigmips_script.c
+
+CLEANFILES+=	${GENSRCS}
+
+DPADD=	${LIBELFTC} ${LIBELF} ${LIBDWARF}
+LDADD=	-lelftc -ldwarf -lelf
+
+CFLAGS+= -DARCH_MIPS
+YFLAGS=	-d
+
+NOMAN=
 
 .include <bsd.prog.mk>

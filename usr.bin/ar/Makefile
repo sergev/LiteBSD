@@ -1,16 +1,35 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/6/93
+# $Id$
+
+TOP=	..
 
 PROG=	ar
-CFLAGS+=-I${.CURDIR}
-SRCS=	append.c ar.c archive.c contents.c delete.c extract.c misc.c \
-	move.c print.c replace.c
-MAN1=	ar.0
-CLEANFILES=ar.5.0
+SRCS=	ar.c read.c util.c write.c
+LSRC=	acplex.l
+YSRC=	acpyacc.y
 
-ar.0: ar.5.0
+WARNS?=	5
 
-afterinstall:
-	install -d ${DESTDIR}${MANDIR}5
-	install -c -m ${MANMODE} ar.5.0 ${DESTDIR}${MANDIR}5/ar.0
+DPADD=	${LIBARCHIVE} ${LIBELFTC} ${LIBELF} ${LIBZ}
+LDADD=	-larchive -lelftc -lelf -lz
 
-.include <bsd.prog.mk>
+CFLAGS+=-I. -I${.CURDIR}
+
+LINKS=	${BINDIR}/ar ${BINDIR}/ranlib
+
+EXTRA_TARGETS=	ranlib
+
+CLEANFILES+= 	${EXTRA_TARGETS}
+
+MAN=	ar.1 ranlib.1 ar.5
+
+all:	${EXTRA_TARGETS}
+
+${EXTRA_TARGETS}:	${PROG}
+	ln -s ${PROG} ${.TARGET}
+
+.include "${TOP}/mk/elftoolchain.prog.mk"
+
+.if ${OS_HOST} == "OpenBSD"
+CFLAGS+=	-I/usr/local/include
+LDFLAGS+=	-L/usr/local/lib
+.endif

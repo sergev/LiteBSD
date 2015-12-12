@@ -1,5 +1,13 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/6/93
+
+# $Id$
+
+TOP=	..
 
 PROG=	nm
+SRCS=	nm.c
 
-.include <bsd.prog.mk>
+WARNS?=	6
+
+LDADD=	-ldwarf -lelftc -lelf
+
+.include "${TOP}/mk/elftoolchain.prog.mk"

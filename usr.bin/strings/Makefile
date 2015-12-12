@@ -1,5 +1,11 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/6/93
+# $Id$
 
-PROG=	strings
+TOP=	..
 
-.include <bsd.prog.mk>
+PROG=   strings
+WARNS?= 6
+DPADD=	${LIBELFTC} ${LIBELF}
+LDADD=  -lelftc -lelf
+
+.include "${TOP}/mk/elftoolchain.prog.mk"
+
