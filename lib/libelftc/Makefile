@@ -1,7 +1,3 @@
-# $Id$
-
-TOP=	${.CURDIR}/..
-
 LIB=	elftc
 
 SRCS=	elftc_bfdtarget.c			\
@@ -18,17 +14,10 @@ SRCS=	elftc_bfdtarget.c			\
 	libelftc_vstr.c
 
 INCS=		libelftc.h
-INCSDIR=	/usr/include
-
-RELEASE=	HEAD		# Change this on release branches.
 
 SHLIB_MAJOR=	1
 
 WARNS?=	6
-
-CLEANFILES+=	elftc_version.c
-
-LDADD+=	-lelf
 
 MAN=	elftc.3 \
 	elftc_bfd_find_target.3 \
@@ -56,10 +45,7 @@ MLINKS=	elftc_bfd_find_target.3 elftc_bfd_target_byteorder.3 \
 	elftc_symbol_table_create.3 elftc_symbol_table_lookup.3 \
 	elftc_symbol_table_create.3 elftc_symbol_table_to_image.3
 
-.if	!make(clean) && !make(clobber)
-.BEGIN:	.SILENT
-	${.CURDIR}/make-toolchain-version -t ${TOP} -r ${RELEASE} \
-	    -h ${OS_HOST}
-.endif
+GITCOUNT!= git rev-list HEAD --count
+CFLAGS+= -DGITCOUNT='"$(GITCOUNT)"'
 
-.include "${TOP}/mk/elftoolchain.lib.mk"
+.include <bsd.lib.mk>

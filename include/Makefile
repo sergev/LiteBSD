@@ -8,10 +8,10 @@
 all clean cleandir depend lint tags:
 
 FILES=	a.out.h ar.h assert.h bitstring.h ctype.h db.h dirent.h disktab.h \
-	elfdefinitions.h err.h fnmatch.h fstab.h fts.h gelf.h glob.h grp.h kvm.h libelf.h limits.h locale.h \
+	elfdefinitions.h err.h fnmatch.h fstab.h fts.h gelf.h glob.h grp.h kvm.h libelf.h libelftc.h limits.h locale.h \
 	math.h memory.h mpool.h ndbm.h netdb.h nlist.h paths.h pwd.h \
 	ranlib.h regex.h regexp.h resolv.h rune.h runetype.h setjmp.h \
-	sgtty.h signal.h stab.h stddef.h stdint.h stdio.h stdlib.h string.h strings.h \
+	sgtty.h signal.h stab.h stdbool.h stddef.h stdint.h stdio.h stdlib.h string.h strings.h \
 	struct.h sysexits.h tar.h time.h ttyent.h tzfile.h unistd.h utime.h \
 	utmp.h vis.h
 
