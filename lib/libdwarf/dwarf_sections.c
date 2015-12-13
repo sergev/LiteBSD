@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	SET(N, V)				\
 	do {					\
 		if ((N) != NULL)		\

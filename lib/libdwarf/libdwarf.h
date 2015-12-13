@@ -34,11 +34,11 @@
 
 typedef int		Dwarf_Bool;
 typedef off_t		Dwarf_Off;
-typedef uint64_t	Dwarf_Unsigned;
-typedef uint16_t	Dwarf_Half;
-typedef uint8_t		Dwarf_Small;
+typedef u_int64_t	Dwarf_Unsigned;
+typedef u_int16_t	Dwarf_Half;
+typedef u_int8_t	Dwarf_Small;
 typedef int64_t		Dwarf_Signed;
-typedef uint64_t	Dwarf_Addr;
+typedef u_int64_t	Dwarf_Addr;
 typedef void		*Dwarf_Ptr;
 
 typedef struct _Dwarf_Abbrev	*Dwarf_Abbrev;

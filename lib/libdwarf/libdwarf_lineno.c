@@ -26,15 +26,13 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
-_dwarf_lineno_add_file(Dwarf_LineInfo li, uint8_t **p, const char *compdir,
+_dwarf_lineno_add_file(Dwarf_LineInfo li, u_int8_t **p, const char *compdir,
     Dwarf_Error *error, Dwarf_Debug dbg)
 {
 	Dwarf_LineFile lf;
 	const char *dirname;
-	uint8_t *src;
+	u_int8_t *src;
 	int slen;
 
 	src = *p;
@@ -82,12 +80,12 @@ _dwarf_lineno_add_file(Dwarf_LineInfo li, uint8_t **p, const char *compdir,
 }
 
 static int
-_dwarf_lineno_run_program(Dwarf_CU cu, Dwarf_LineInfo li, uint8_t *p,
-    uint8_t *pe, const char *compdir, Dwarf_Error *error)
+_dwarf_lineno_run_program(Dwarf_CU cu, Dwarf_LineInfo li, u_int8_t *p,
+    u_int8_t *pe, const char *compdir, Dwarf_Error *error)
 {
 	Dwarf_Debug dbg;
 	Dwarf_Line ln, tln;
-	uint64_t address, file, line, column, opsize;
+	u_int64_t address, file, line, column, opsize;
 	int is_stmt, basic_block, end_sequence;
 	int ret;
 
@@ -248,7 +246,7 @@ prog_fail:
 }
 
 int
-_dwarf_lineno_init(Dwarf_Die die, uint64_t offset, Dwarf_Error *error)
+_dwarf_lineno_init(Dwarf_Die die, u_int64_t offset, Dwarf_Error *error)
 {
 	Dwarf_Debug dbg;
 	Dwarf_Section *ds;
@@ -257,8 +255,8 @@ _dwarf_lineno_init(Dwarf_Die die, uint64_t offset, Dwarf_Error *error)
 	Dwarf_LineInfo li;
 	Dwarf_LineFile lf, tlf;
 	const char *compdir;
-	uint64_t length, hdroff, endoff;
-	uint8_t *p;
+	u_int64_t length, hdroff, endoff;
+	u_int8_t *p;
 	int dwarf_size, i, ret;
 
 	cu = die->die_cu;
@@ -614,7 +612,7 @@ gen_fail:
 #undef	RESET_REGISTERS
 }
 
-static uint8_t
+static u_int8_t
 _dwarf_get_minlen(Dwarf_P_Debug dbg)
 {
 
@@ -631,7 +629,7 @@ _dwarf_get_minlen(Dwarf_P_Debug dbg)
 	}
 }
 
-static uint8_t oplen[] = {0, 1, 1, 1, 1, 0, 0, 0, 1};
+static u_int8_t oplen[] = {0, 1, 1, 1, 1, 0, 0, 0, 1};
 
 int
 _dwarf_lineno_gen(Dwarf_P_Debug dbg, Dwarf_Error *error)

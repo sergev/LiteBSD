@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 copy_locdesc(Dwarf_Debug dbg, Dwarf_Locdesc *dst, Dwarf_Locdesc *src,
     Dwarf_Error *error)
@@ -216,7 +214,7 @@ dwarf_get_loclist_entry(Dwarf_Debug dbg, Dwarf_Unsigned offset,
 
 	ds = _dwarf_find_section(dbg, ".debug_loc");
 	assert(ds != NULL);
-	*data = (uint8_t *) ds->ds_data + offset;
+	*data = (u_int8_t *) ds->ds_data + offset;
 	*next_entry = offset + *entry_len;
 
 	return (DW_DLV_OK);

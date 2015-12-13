@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_Unsigned
 dwarf_add_arange(Dwarf_P_Debug dbg, Dwarf_Addr start, Dwarf_Unsigned length,
     Dwarf_Signed symbol_index, Dwarf_Error *error)

@@ -42,7 +42,7 @@
 #include "libdwarf.h"
 #include "uthash.h"
 
-#include "_elftc.h"
+#include "../libelftc/_elftc.h"
 
 #define DWARF_DIE_HASH_SIZE		8191
 
@@ -92,40 +92,40 @@ extern struct _libdwarf_globals _libdwarf;
 typedef struct _Dwarf_CU *Dwarf_CU;
 
 struct _Dwarf_AttrDef {
-	uint64_t	ad_attrib;		/* DW_AT_XXX */
-	uint64_t	ad_form;		/* DW_FORM_XXX */
-	uint64_t	ad_offset;		/* Offset in abbrev section. */
+	u_int64_t	ad_attrib;		/* DW_AT_XXX */
+	u_int64_t	ad_form;		/* DW_FORM_XXX */
+	u_int64_t	ad_offset;		/* Offset in abbrev section. */
 	STAILQ_ENTRY(_Dwarf_AttrDef) ad_next;	/* Next attribute define. */
 };
 
 struct _Dwarf_Attribute {
 	Dwarf_Die		at_die;		/* Ptr to containing DIE. */
 	Dwarf_Die		at_refdie;	/* Ptr to reference DIE. */
-	uint64_t		at_offset;	/* Offset in info section. */
-	uint64_t		at_attrib;	/* DW_AT_XXX */
-	uint64_t		at_form;	/* DW_FORM_XXX */
+	u_int64_t		at_offset;	/* Offset in info section. */
+	u_int64_t		at_attrib;	/* DW_AT_XXX */
+	u_int64_t		at_form;	/* DW_FORM_XXX */
 	int			at_indirect;	/* Has indirect form. */
 	union {
-		uint64_t	u64;		/* Unsigned value. */
+		u_int64_t	u64;		/* Unsigned value. */
 		int64_t		s64;		/* Signed value. */
 		char		*s;   		/* String. */
-		uint8_t		*u8p;		/* Block data. */
+		u_int8_t	*u8p;		/* Block data. */
 	} u[2];					/* Value. */
 	Dwarf_Block		at_block;	/* Block. */
 	Dwarf_Locdesc		*at_ld;		/* at value is locdesc. */
 	Dwarf_P_Expr		at_expr;	/* at value is expr. */
-	uint64_t		at_relsym;	/* Relocation symbol index. */
+	u_int64_t		at_relsym;	/* Relocation symbol index. */
 	const char		*at_relsec;	/* Rel. to dwarf section. */
 	STAILQ_ENTRY(_Dwarf_Attribute) at_next;	/* Next attribute. */
 };
 
 struct _Dwarf_Abbrev {
-	uint64_t	ab_entry;	/* Abbrev entry. */
-	uint64_t	ab_tag;		/* Tag: DW_TAG_ */
-	uint8_t		ab_children;	/* DW_CHILDREN_no or DW_CHILDREN_yes */
-	uint64_t	ab_offset;	/* Offset in abbrev section. */
-	uint64_t	ab_length;	/* Length of this abbrev entry. */
-	uint64_t	ab_atnum;	/* Number of attribute defines. */
+	u_int64_t	ab_entry;	/* Abbrev entry. */
+	u_int64_t	ab_tag;		/* Tag: DW_TAG_ */
+	u_int8_t	ab_children;	/* DW_CHILDREN_no or DW_CHILDREN_yes */
+	u_int64_t	ab_offset;	/* Offset in abbrev section. */
+	u_int64_t	ab_length;	/* Length of this abbrev entry. */
+	u_int64_t	ab_atnum;	/* Number of attribute defines. */
 	UT_hash_handle	ab_hh;		/* Uthash handle. */
 	STAILQ_HEAD(, _Dwarf_AttrDef) ab_attrdef; /* List of attribute defs. */
 };
@@ -135,9 +135,9 @@ struct _Dwarf_Die {
 	Dwarf_Die	die_child;	/* First child DIE. */
 	Dwarf_Die	die_left;	/* Left sibling DIE. */
 	Dwarf_Die	die_right;	/* Right sibling DIE. */
-	uint64_t	die_offset;	/* DIE offset in section. */
-	uint64_t	die_next_off;	/* Next DIE offset in section. */
-	uint64_t	die_abnum;	/* Abbrev number. */
+	u_int64_t	die_offset;	/* DIE offset in section. */
+	u_int64_t	die_next_off;	/* Next DIE offset in section. */
+	u_int64_t	die_abnum;	/* Abbrev number. */
 	Dwarf_Abbrev	die_ab;		/* Abbrev pointer. */
 	Dwarf_Tag	die_tag;	/* DW_TAG_ */
 	Dwarf_Debug	die_dbg;	/* Dwarf_Debug pointer. */
@@ -156,7 +156,7 @@ struct _Dwarf_P_Expr_Entry {
 
 struct _Dwarf_P_Expr {
 	Dwarf_Debug	pe_dbg;		/* Dwarf_Debug pointer. */
-	uint8_t		*pe_block;	/* Expression block data. */
+	u_int8_t	*pe_block;	/* Expression block data. */
 	int		pe_invalid;	/* Block data is up-to-date or not. */
 	Dwarf_Unsigned	pe_length;	/* Length of the block. */
 	STAILQ_HEAD(, _Dwarf_P_Expr_Entry) pe_eelist; /* List of entries. */
@@ -241,8 +241,8 @@ struct _Dwarf_Fde {
 	Dwarf_Unsigned	fde_initloc;	/* Initial location. */
 	Dwarf_Unsigned	fde_adrange;	/* Address range. */
 	Dwarf_Unsigned	fde_auglen;	/* Augmentation length. */
-	uint8_t		*fde_augdata;	/* Augmentation data. */
-	uint8_t		*fde_inst;	/* Instructions. */
+	u_int8_t	*fde_augdata;	/* Augmentation data. */
+	u_int8_t	*fde_inst;	/* Instructions. */
 	Dwarf_Unsigned	fde_instlen;	/* Length of instructions. */
 	Dwarf_Unsigned	fde_instcap;	/* Capacity of inst buffer. */
 	Dwarf_Unsigned	fde_symndx;	/* Symbol index for relocation. */
@@ -257,16 +257,16 @@ struct _Dwarf_Cie {
 	Dwarf_Unsigned	cie_offset;	/* Offset of the CIE. */
 	Dwarf_Unsigned	cie_length;	/* Length of the CIE. */
 	Dwarf_Half	cie_version;	/* CIE version. */
-	uint8_t		*cie_augment;	/* CIE augmentation (UTF-8). */
+	u_int8_t	*cie_augment;	/* CIE augmentation (UTF-8). */
 	Dwarf_Unsigned	cie_ehdata;	/* Optional EH Data. */
-	uint8_t		cie_addrsize;	/* Address size. (DWARF4) */
-	uint8_t		cie_segmentsize; /* Segment size. (DWARF4) */
+	u_int8_t	cie_addrsize;	/* Address size. (DWARF4) */
+	u_int8_t	cie_segmentsize; /* Segment size. (DWARF4) */
 	Dwarf_Unsigned	cie_caf;	/* Code alignment factor. */
 	Dwarf_Signed	cie_daf;	/* Data alignment factor. */
 	Dwarf_Unsigned	cie_ra;		/* Return address register. */
 	Dwarf_Unsigned	cie_auglen;	/* Augmentation length. */
-	uint8_t		*cie_augdata;	/* Augmentation data; */
-	uint8_t		cie_fde_encode; /* FDE PC start/range encode. */
+	u_int8_t	*cie_augdata;	/* Augmentation data; */
+	u_int8_t	cie_fde_encode; /* FDE PC start/range encode. */
 	Dwarf_Ptr	cie_initinst;	/* Initial instructions. */
 	Dwarf_Unsigned	cie_instlen;	/* Length of init instructions. */
 	STAILQ_ENTRY(_Dwarf_Cie) cie_next;  /* Next CIE in list. */
@@ -319,20 +319,20 @@ struct _Dwarf_Rangelist {
 struct _Dwarf_CU {
 	Dwarf_Debug	cu_dbg;		/* Ptr to containing dbg. */
 	Dwarf_Off	cu_offset;	/* Offset to the this CU. */
-	uint32_t	cu_length;	/* Length of CU data. */
-	uint16_t	cu_length_size; /* Size in bytes of the length field. */
-	uint16_t	cu_version;	/* DWARF version. */
-	uint64_t	cu_abbrev_offset; /* Offset into .debug_abbrev. */
-	uint64_t	cu_abbrev_offset_cur; /* Current abbrev offset. */
+	u_int32_t	cu_length;	/* Length of CU data. */
+	u_int16_t	cu_length_size; /* Size in bytes of the length field. */
+	u_int16_t	cu_version;	/* DWARF version. */
+	u_int64_t	cu_abbrev_offset; /* Offset into .debug_abbrev. */
+	u_int64_t	cu_abbrev_offset_cur; /* Current abbrev offset. */
 	int		cu_abbrev_loaded; /* Abbrev table parsed. */
-	uint64_t	cu_abbrev_cnt;	/* Abbrev entry count. */
-	uint64_t	cu_lineno_offset; /* Offset into .debug_lineno. */
-	uint8_t		cu_pointer_size;/* Number of bytes in pointer. */
-	uint8_t		cu_dwarf_size;	/* CU section dwarf size. */
+	u_int64_t	cu_abbrev_cnt;	/* Abbrev entry count. */
+	u_int64_t	cu_lineno_offset; /* Offset into .debug_lineno. */
+	u_int8_t	cu_pointer_size;/* Number of bytes in pointer. */
+	u_int8_t	cu_dwarf_size;	/* CU section dwarf size. */
 	Dwarf_Sig8	cu_type_sig;	/* Type unit's signature. */
-	uint64_t	cu_type_offset; /* Type unit's type offset. */
+	u_int64_t	cu_type_offset; /* Type unit's type offset. */
 	Dwarf_Off	cu_next_offset; /* Offset to the next CU. */
-	uint64_t	cu_1st_offset;	/* First DIE offset. */
+	u_int64_t	cu_1st_offset;	/* First DIE offset. */
 	int		cu_pass2;	/* Two pass DIE traverse. */
 	Dwarf_LineInfo	cu_lineinfo;	/* Ptr to Dwarf_LineInfo. */
 	Dwarf_Abbrev	cu_abbrev_hash; /* Abbrev hash table. */
@@ -429,11 +429,11 @@ struct _Dwarf_Debug {
 	Dwarf_Unsigned	dbg_strtab_size; /* Dwarf string table size. */
 	STAILQ_HEAD(, _Dwarf_MacroSet) dbg_mslist; /* List of macro set. */
 	STAILQ_HEAD(, _Dwarf_Rangelist) dbg_rllist; /* List of rangelist. */
-	uint64_t	(*read)(uint8_t *, uint64_t *, int);
-	void		(*write)(uint8_t *, uint64_t *, uint64_t, int);
-	int		(*write_alloc)(uint8_t **, uint64_t *, uint64_t *,
-			    uint64_t, int, Dwarf_Error *);
-	uint64_t	(*decode)(uint8_t **, int);
+	u_int64_t	(*read)(u_int8_t *, u_int64_t *, int);
+	void		(*write)(u_int8_t *, u_int64_t *, u_int64_t, int);
+	int		(*write_alloc)(u_int8_t **, u_int64_t *, u_int64_t *,
+			    u_int64_t, int, Dwarf_Error *);
+	u_int64_t	(*decode)(u_int8_t **, int);
 
 	Dwarf_Half	dbg_frame_rule_table_size;
 	Dwarf_Half	dbg_frame_rule_initial_value;
@@ -480,10 +480,10 @@ struct _Dwarf_Debug {
  * Internal function prototypes.
  */
 
-int		_dwarf_abbrev_add(Dwarf_CU, uint64_t, uint64_t, uint8_t,
-		    uint64_t, Dwarf_Abbrev *, Dwarf_Error *);
+int		_dwarf_abbrev_add(Dwarf_CU, u_int64_t, u_int64_t, u_int8_t,
+		    u_int64_t, Dwarf_Abbrev *, Dwarf_Error *);
 void		_dwarf_abbrev_cleanup(Dwarf_CU);
-int		_dwarf_abbrev_find(Dwarf_CU, uint64_t, Dwarf_Abbrev *,
+int		_dwarf_abbrev_find(Dwarf_CU, u_int64_t, Dwarf_Abbrev *,
 		    Dwarf_Error *);
 int		_dwarf_abbrev_gen(Dwarf_P_Debug, Dwarf_Error *);
 int		_dwarf_abbrev_parse(Dwarf_Debug, Dwarf_CU, Dwarf_Unsigned *,
@@ -502,15 +502,15 @@ int		_dwarf_attr_alloc(Dwarf_Die, Dwarf_Attribute *, Dwarf_Error *);
 Dwarf_Attribute	_dwarf_attr_find(Dwarf_Die, Dwarf_Half);
 int		_dwarf_attr_gen(Dwarf_P_Debug, Dwarf_P_Section, Dwarf_Rel_Section,
 		    Dwarf_CU, Dwarf_Die, int, Dwarf_Error *);
-int		_dwarf_attr_init(Dwarf_Debug, Dwarf_Section *, uint64_t *, int,
-		    Dwarf_CU, Dwarf_Die, Dwarf_AttrDef, uint64_t, int,
+int		_dwarf_attr_init(Dwarf_Debug, Dwarf_Section *, u_int64_t *, int,
+		    Dwarf_CU, Dwarf_Die, Dwarf_AttrDef, u_int64_t, int,
 		    Dwarf_Error *);
-int		_dwarf_attrdef_add(Dwarf_Debug, Dwarf_Abbrev, uint64_t,
-		    uint64_t, uint64_t, Dwarf_AttrDef *, Dwarf_Error *);
-uint64_t	_dwarf_decode_lsb(uint8_t **, int);
-uint64_t	_dwarf_decode_msb(uint8_t **, int);
-int64_t		_dwarf_decode_sleb128(uint8_t **);
-uint64_t	_dwarf_decode_uleb128(uint8_t **);
+int		_dwarf_attrdef_add(Dwarf_Debug, Dwarf_Abbrev, u_int64_t,
+		    u_int64_t, u_int64_t, Dwarf_AttrDef *, Dwarf_Error *);
+u_int64_t	_dwarf_decode_lsb(u_int8_t **, int);
+u_int64_t	_dwarf_decode_msb(u_int8_t **, int);
+int64_t		_dwarf_decode_sleb128(u_int8_t **);
+u_int64_t	_dwarf_decode_uleb128(u_int8_t **);
 void		_dwarf_deinit(Dwarf_Debug);
 int		_dwarf_die_alloc(Dwarf_Debug, Dwarf_Die *, Dwarf_Error *);
 int		_dwarf_die_count_links(Dwarf_P_Die, Dwarf_P_Die,
@@ -521,7 +521,7 @@ int		_dwarf_die_gen(Dwarf_P_Debug, Dwarf_CU, Dwarf_Rel_Section,
 void		_dwarf_die_link(Dwarf_P_Die, Dwarf_P_Die, Dwarf_P_Die,
 		    Dwarf_P_Die, Dwarf_P_Die);
 int		_dwarf_die_parse(Dwarf_Debug, Dwarf_Section *, Dwarf_CU, int,
-		    uint64_t, uint64_t, Dwarf_Die *, int, Dwarf_Error *);
+		    u_int64_t, u_int64_t, Dwarf_Die *, int, Dwarf_Error *);
 void		_dwarf_die_pro_cleanup(Dwarf_P_Debug);
 void		_dwarf_elf_deinit(Dwarf_Debug);
 int		_dwarf_elf_init(Dwarf_Debug, Elf *, Dwarf_Error *);
@@ -541,7 +541,7 @@ void		_dwarf_frame_cleanup(Dwarf_Debug);
 int		_dwarf_frame_fde_add_inst(Dwarf_P_Fde, Dwarf_Small,
 		    Dwarf_Unsigned, Dwarf_Unsigned, Dwarf_Error *);
 int		_dwarf_frame_gen(Dwarf_P_Debug, Dwarf_Error *);
-int		_dwarf_frame_get_fop(Dwarf_Debug, uint8_t, uint8_t *,
+int		_dwarf_frame_get_fop(Dwarf_Debug, u_int8_t, u_int8_t *,
 		    Dwarf_Unsigned, Dwarf_Frame_Op **, Dwarf_Signed *,
 		    Dwarf_Error *);
 int		_dwarf_frame_get_internal_table(Dwarf_Fde, Dwarf_Addr,
@@ -568,20 +568,20 @@ void		_dwarf_info_pro_cleanup(Dwarf_P_Debug);
 int		_dwarf_init(Dwarf_Debug, Dwarf_Unsigned, Dwarf_Handler,
 		    Dwarf_Ptr, Dwarf_Error *);
 int		_dwarf_lineno_gen(Dwarf_P_Debug, Dwarf_Error *);
-int		_dwarf_lineno_init(Dwarf_Die, uint64_t, Dwarf_Error *);
+int		_dwarf_lineno_init(Dwarf_Die, u_int64_t, Dwarf_Error *);
 void		_dwarf_lineno_cleanup(Dwarf_LineInfo);
 void		_dwarf_lineno_pro_cleanup(Dwarf_P_Debug);
 int		_dwarf_loc_fill_locdesc(Dwarf_Debug, Dwarf_Locdesc *,
-		    uint8_t *, uint64_t, uint8_t, uint8_t, uint8_t,
+		    u_int8_t *, u_int64_t, u_int8_t, u_int8_t, u_int8_t,
 		    Dwarf_Error *);
 int		_dwarf_loc_fill_locexpr(Dwarf_Debug, Dwarf_Locdesc **,
-		    uint8_t *, uint64_t, uint8_t, uint8_t, uint8_t,
+		    u_int8_t *, u_int64_t, u_int8_t, u_int8_t, u_int8_t,
 		    Dwarf_Error *);
 int		_dwarf_loc_add(Dwarf_Die, Dwarf_Attribute, Dwarf_Error *);
-int		_dwarf_loc_expr_add_atom(Dwarf_Debug, uint8_t *, uint8_t *,
+int		_dwarf_loc_expr_add_atom(Dwarf_Debug, u_int8_t *, u_int8_t *,
 		    Dwarf_Small, Dwarf_Unsigned, Dwarf_Unsigned, int *,
 		    Dwarf_Error *);
-int		_dwarf_loclist_find(Dwarf_Debug, Dwarf_CU, uint64_t,
+int		_dwarf_loclist_find(Dwarf_Debug, Dwarf_CU, u_int64_t,
 		    Dwarf_Locdesc ***, Dwarf_Signed *, Dwarf_Unsigned *,
 		    Dwarf_Error *);
 void		_dwarf_macinfo_cleanup(Dwarf_Debug);
@@ -598,16 +598,16 @@ int		_dwarf_pro_callback(Dwarf_P_Debug, char *, int, Dwarf_Unsigned,
 		    Dwarf_Unsigned, Dwarf_Unsigned, Dwarf_Unsigned,
 		    Dwarf_Unsigned *, int *);
 Dwarf_P_Section	_dwarf_pro_find_section(Dwarf_P_Debug, const char *);
-int		_dwarf_ranges_add(Dwarf_Debug, Dwarf_CU, uint64_t,
+int		_dwarf_ranges_add(Dwarf_Debug, Dwarf_CU, u_int64_t,
 		    Dwarf_Rangelist *, Dwarf_Error *);
 void		_dwarf_ranges_cleanup(Dwarf_Debug);
-int		_dwarf_ranges_find(Dwarf_Debug, uint64_t, Dwarf_Rangelist *);
-uint64_t	_dwarf_read_lsb(uint8_t *, uint64_t *, int);
-uint64_t	_dwarf_read_msb(uint8_t *, uint64_t *, int);
-int64_t		_dwarf_read_sleb128(uint8_t *, uint64_t *);
-uint64_t	_dwarf_read_uleb128(uint8_t *, uint64_t *);
-char		*_dwarf_read_string(void *, Dwarf_Unsigned, uint64_t *);
-uint8_t		*_dwarf_read_block(void *, uint64_t *, uint64_t);
+int		_dwarf_ranges_find(Dwarf_Debug, u_int64_t, Dwarf_Rangelist *);
+u_int64_t	_dwarf_read_lsb(u_int8_t *, u_int64_t *, int);
+u_int64_t	_dwarf_read_msb(u_int8_t *, u_int64_t *, int);
+int64_t		_dwarf_read_sleb128(u_int8_t *, u_int64_t *);
+u_int64_t	_dwarf_read_uleb128(u_int8_t *, u_int64_t *);
+char		*_dwarf_read_string(void *, Dwarf_Unsigned, u_int64_t *);
+u_int8_t	*_dwarf_read_block(void *, u_int64_t *, u_int64_t);
 int		_dwarf_reloc_section_finalize(Dwarf_P_Debug, Dwarf_Rel_Section,
 		    Dwarf_Error *);
 int		_dwarf_reloc_entry_add(Dwarf_P_Debug, Dwarf_Rel_Section,
@@ -634,33 +634,33 @@ int		_dwarf_section_init(Dwarf_P_Debug, Dwarf_P_Section *,
 		    const char *, int, Dwarf_Error *);
 void		_dwarf_set_error(Dwarf_Debug, Dwarf_Error *, int, int,
 		    const char *, int);
-int		_dwarf_strtab_add(Dwarf_Debug, char *, uint64_t *,
+int		_dwarf_strtab_add(Dwarf_Debug, char *, u_int64_t *,
 		    Dwarf_Error *);
 void		_dwarf_strtab_cleanup(Dwarf_Debug);
 int		_dwarf_strtab_gen(Dwarf_P_Debug, Dwarf_Error *);
 char		*_dwarf_strtab_get_table(Dwarf_Debug);
 int		_dwarf_strtab_init(Dwarf_Debug, Dwarf_Error *);
 void		_dwarf_type_unit_cleanup(Dwarf_Debug);
-void		_dwarf_write_block(void *, uint64_t *, uint8_t *, uint64_t);
-int		_dwarf_write_block_alloc(uint8_t **, uint64_t *, uint64_t *,
-		    uint8_t *, uint64_t, Dwarf_Error *);
-void		_dwarf_write_lsb(uint8_t *, uint64_t *, uint64_t, int);
-int		_dwarf_write_lsb_alloc(uint8_t **, uint64_t *, uint64_t *,
-		    uint64_t, int, Dwarf_Error *);
-void		_dwarf_write_msb(uint8_t *, uint64_t *, uint64_t, int);
-int		_dwarf_write_msb_alloc(uint8_t **, uint64_t *, uint64_t *,
-		    uint64_t, int, Dwarf_Error *);
-void		_dwarf_write_padding(void *, uint64_t *, uint8_t, uint64_t);
-int		_dwarf_write_padding_alloc(uint8_t **, uint64_t *, uint64_t *,
-		    uint8_t, uint64_t, Dwarf_Error *);
-void		_dwarf_write_string(void *, uint64_t *, char *);
-int		_dwarf_write_string_alloc(uint8_t **, uint64_t *, uint64_t *,
+void		_dwarf_write_block(void *, u_int64_t *, u_int8_t *, u_int64_t);
+int		_dwarf_write_block_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
+		    u_int8_t *, u_int64_t, Dwarf_Error *);
+void		_dwarf_write_lsb(u_int8_t *, u_int64_t *, u_int64_t, int);
+int		_dwarf_write_lsb_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
+		    u_int64_t, int, Dwarf_Error *);
+void		_dwarf_write_msb(u_int8_t *, u_int64_t *, u_int64_t, int);
+int		_dwarf_write_msb_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
+		    u_int64_t, int, Dwarf_Error *);
+void		_dwarf_write_padding(void *, u_int64_t *, u_int8_t, u_int64_t);
+int		_dwarf_write_padding_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
+		    u_int8_t, u_int64_t, Dwarf_Error *);
+void		_dwarf_write_string(void *, u_int64_t *, char *);
+int		_dwarf_write_string_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
 		    char *, Dwarf_Error *);
-int		_dwarf_write_sleb128(uint8_t *, uint8_t *, int64_t);
-int		_dwarf_write_sleb128_alloc(uint8_t **, uint64_t *, uint64_t *,
+int		_dwarf_write_sleb128(u_int8_t *, u_int8_t *, int64_t);
+int		_dwarf_write_sleb128_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
 		    int64_t, Dwarf_Error *);
-int		_dwarf_write_uleb128(uint8_t *, uint8_t *, uint64_t);
-int		_dwarf_write_uleb128_alloc(uint8_t **, uint64_t *, uint64_t *,
-		    uint64_t, Dwarf_Error *);
+int		_dwarf_write_uleb128(u_int8_t *, u_int8_t *, u_int64_t);
+int		_dwarf_write_uleb128_alloc(u_int8_t **, u_int64_t *, u_int64_t *,
+		    u_int64_t, Dwarf_Error *);
 
 #endif /* !__LIBDWARF_H_ */

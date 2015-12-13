@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_P_Debug
 dwarf_producer_init(Dwarf_Unsigned flags, Dwarf_Callback_Func func,
     Dwarf_Handler errhand, Dwarf_Ptr errarg, Dwarf_Error *error)

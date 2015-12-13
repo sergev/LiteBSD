@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 _dwarf_attr_alloc(Dwarf_Die die, Dwarf_Attribute *atp, Dwarf_Error *error)
 {
@@ -95,9 +93,9 @@ _dwarf_attr_find(Dwarf_Die die, Dwarf_Half attr)
 }
 
 int
-_dwarf_attr_init(Dwarf_Debug dbg, Dwarf_Section *ds, uint64_t *offsetp,
+_dwarf_attr_init(Dwarf_Debug dbg, Dwarf_Section *ds, u_int64_t *offsetp,
     int dwarf_size, Dwarf_CU cu, Dwarf_Die die, Dwarf_AttrDef ad,
-    uint64_t form, int indirect, Dwarf_Error *error)
+    u_int64_t form, int indirect, Dwarf_Error *error)
 {
 	struct _Dwarf_Attribute atref;
 	Dwarf_Section *str;
@@ -219,7 +217,7 @@ _dwarf_attr_write(Dwarf_P_Debug dbg, Dwarf_P_Section ds, Dwarf_Rel_Section drs,
     Dwarf_CU cu, Dwarf_Attribute at, int pass2, Dwarf_Error *error)
 {
 	struct _Dwarf_P_Expr_Entry *ee;
-	uint64_t value, offset, bs;
+	u_int64_t value, offset, bs;
 	int ret;
 
 	assert(dbg != NULL && ds != NULL && cu != NULL && at != NULL);

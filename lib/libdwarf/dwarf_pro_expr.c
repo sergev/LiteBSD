@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static struct _Dwarf_P_Expr_Entry *
 _dwarf_add_expr(Dwarf_P_Expr expr, Dwarf_Small opcode, Dwarf_Unsigned val1,
     Dwarf_Unsigned val2, Dwarf_Error *error)
@@ -210,14 +208,14 @@ dwarf_expr_into_block(Dwarf_P_Expr expr, Dwarf_Unsigned *length,
 
 	if (expr == NULL || length == NULL) {
 		DWARF_SET_ERROR(dbg, error, DW_DLE_ARGUMENT);
-		return ((Dwarf_Addr) (uintptr_t) DW_DLV_BADADDR);
+		return ((Dwarf_Addr) (u_intptr_t) DW_DLV_BADADDR);
 	}
 
 	if (expr->pe_block == NULL || expr->pe_invalid)
 		if (_dwarf_expr_into_block(expr, error) != DW_DLE_NONE)
-			return ((Dwarf_Addr) (uintptr_t) DW_DLV_BADADDR);
+			return ((Dwarf_Addr) (u_intptr_t) DW_DLV_BADADDR);
 
 	*length = expr->pe_length;
 
-	return ((Dwarf_Addr) (uintptr_t) expr->pe_block);
+	return ((Dwarf_Addr) (u_intptr_t) expr->pe_block);
 }

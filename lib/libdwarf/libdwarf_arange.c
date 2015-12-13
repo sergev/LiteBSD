@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 void
 _dwarf_arange_cleanup(Dwarf_Debug dbg)
 {
@@ -58,7 +56,7 @@ _dwarf_arange_init(Dwarf_Debug dbg, Dwarf_Error *error)
 	Dwarf_ArangeSet as;
 	Dwarf_Arange ar;
 	Dwarf_Section *ds;
-	uint64_t offset, dwarf_size, length, addr, range;
+	u_int64_t offset, dwarf_size, length, addr, range;
 	int i, ret;
 
 	ret = DW_DLE_NONE;
@@ -168,7 +166,7 @@ _dwarf_arange_gen(Dwarf_P_Debug dbg, Dwarf_Error *error)
 	Dwarf_Rel_Section drs;
 	Dwarf_ArangeSet as;
 	Dwarf_Arange ar;
-	uint64_t offset;
+	u_int64_t offset;
 	int ret;
 
 	as = dbg->dbgp_as;
@@ -181,7 +179,7 @@ _dwarf_arange_gen(Dwarf_P_Debug dbg, Dwarf_Error *error)
 	as->as_cu_offset = 0;	/* We have only one CU. */
 	as->as_addrsz = dbg->dbg_pointer_size;
 	as->as_segsz = 0;	/* XXX */
-	
+
 	/* Create .debug_arange section. */
 	if ((ret = _dwarf_section_init(dbg, &ds, ".debug_aranges", 0, error)) !=
 	    DW_DLE_NONE)

@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 _dwarf_die_alloc(Dwarf_Debug dbg, Dwarf_Die *ret_die, Dwarf_Error *error)
 {
@@ -49,7 +47,7 @@ _dwarf_die_alloc(Dwarf_Debug dbg, Dwarf_Die *ret_die, Dwarf_Error *error)
 }
 
 static int
-_dwarf_die_add(Dwarf_CU cu, uint64_t offset, uint64_t abnum, Dwarf_Abbrev ab,
+_dwarf_die_add(Dwarf_CU cu, u_int64_t offset, u_int64_t abnum, Dwarf_Abbrev ab,
     Dwarf_Die *diep, Dwarf_Error *error)
 {
 	Dwarf_Debug dbg;
@@ -102,14 +100,14 @@ _dwarf_die_find(Dwarf_Die die, Dwarf_Unsigned off)
 
 int
 _dwarf_die_parse(Dwarf_Debug dbg, Dwarf_Section *ds, Dwarf_CU cu,
-    int dwarf_size, uint64_t offset, uint64_t next_offset, Dwarf_Die *ret_die,
+    int dwarf_size, u_int64_t offset, u_int64_t next_offset, Dwarf_Die *ret_die,
     int search_sibling, Dwarf_Error *error)
 {
 	Dwarf_Abbrev ab;
 	Dwarf_AttrDef ad;
 	Dwarf_Die die;
-	uint64_t abnum;
-	uint64_t die_offset;
+	u_int64_t abnum;
+	u_int64_t die_offset;
 	int ret, level;
 
 	assert(cu != NULL);

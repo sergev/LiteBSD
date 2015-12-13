@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_Unsigned
 dwarf_add_die_to_debug(Dwarf_P_Debug dbg, Dwarf_P_Die first_die,
     Dwarf_Error *error)

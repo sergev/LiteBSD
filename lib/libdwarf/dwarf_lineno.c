@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_srclines(Dwarf_Die die, Dwarf_Line **linebuf, Dwarf_Signed *linecount,
     Dwarf_Error *error)
@@ -36,7 +34,7 @@ dwarf_srclines(Dwarf_Die die, Dwarf_Line **linebuf, Dwarf_Signed *linecount,
 	Dwarf_Debug dbg;
 	Dwarf_Line ln;
 	Dwarf_CU cu;
-	Dwarf_Attribute at; 
+	Dwarf_Attribute at;
 	int i;
 
 	dbg = die != NULL ? die->die_dbg : NULL;
@@ -98,7 +96,7 @@ dwarf_srcfiles(Dwarf_Die die, char ***srcfiles, Dwarf_Signed *srccount,
 	Dwarf_LineFile lf;
 	Dwarf_Debug dbg;
 	Dwarf_CU cu;
-	Dwarf_Attribute at; 
+	Dwarf_Attribute at;
 	int i;
 
 	dbg = die != NULL ? die->die_dbg : NULL;

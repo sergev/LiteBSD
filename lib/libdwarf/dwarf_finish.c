@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_finish(Dwarf_Debug dbg, Dwarf_Error *error)
 {

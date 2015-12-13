@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _dwarf_consumer_init(Dwarf_Debug dbg, Dwarf_Error *error)
 {
@@ -201,7 +199,7 @@ _dwarf_init(Dwarf_Debug dbg, Dwarf_Unsigned pro_flags, Dwarf_Handler errhand,
 	int ret;
 
 	ret = DW_DLE_NONE;
-	
+
 	/*
 	 * Set the error handler fields early, so that the application
 	 * is notified of initialization errors.

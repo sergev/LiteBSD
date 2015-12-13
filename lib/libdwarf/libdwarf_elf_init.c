@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static const char *debug_name[] = {
 	".debug_abbrev",
 	".debug_aranges",
@@ -51,7 +49,7 @@ static const char *debug_name[] = {
 
 static void
 _dwarf_elf_write_reloc(Dwarf_Debug dbg, Elf_Data *symtab_data, int endian,
-    void *buf, uint64_t offset, GElf_Xword r_info, GElf_Sxword r_addend)
+    void *buf, u_int64_t offset, GElf_Xword r_info, GElf_Sxword r_addend)
 {
 	GElf_Sym sym;
 	int size;

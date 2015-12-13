@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_child(Dwarf_Die die, Dwarf_Die *ret_die, Dwarf_Error *error)
 {
@@ -69,7 +67,7 @@ dwarf_siblingof_b(Dwarf_Debug dbg, Dwarf_Die die, Dwarf_Die *ret_die,
 	Dwarf_CU cu;
 	Dwarf_Attribute at;
 	Dwarf_Section *ds;
-	uint64_t offset;
+	u_int64_t offset;
 	int ret, search_sibling;
 
 	if (dbg == NULL || ret_die == NULL) {
@@ -124,7 +122,7 @@ dwarf_siblingof_b(Dwarf_Debug dbg, Dwarf_Die die, Dwarf_Die *ret_die,
 
 	ret = _dwarf_die_parse(die->die_dbg, ds, cu, cu->cu_dwarf_size, offset,
 	    cu->cu_next_offset, ret_die, search_sibling, error);
-	
+
 	if (ret == DW_DLE_NO_ENTRY) {
 		DWARF_SET_ERROR(dbg, error, DW_DLE_NO_ENTRY);
 		return (DW_DLV_NO_ENTRY);

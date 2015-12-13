@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 _dwarf_info_first_cu(Dwarf_Debug dbg, Dwarf_Error *error)
 {
@@ -142,9 +140,9 @@ _dwarf_info_load(Dwarf_Debug dbg, Dwarf_Bool load_all, Dwarf_Bool is_info,
 	Dwarf_CU cu;
 	Dwarf_Section *ds;
 	int dwarf_size, ret;
-	uint64_t length;
-	uint64_t next_offset;
-	uint64_t offset;
+	u_int64_t length;
+	u_int64_t next_offset;
+	u_int64_t offset;
 
 	ret = DW_DLE_NONE;
 

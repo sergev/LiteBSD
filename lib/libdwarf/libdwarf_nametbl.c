@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 void
 _dwarf_nametbl_cleanup(Dwarf_NameSec *nsp)
 {
@@ -62,7 +60,7 @@ _dwarf_nametbl_init(Dwarf_Debug dbg, Dwarf_NameSec *namesec, Dwarf_Section *ds,
 	Dwarf_NameSec ns;
 	Dwarf_NameTbl nt;
 	Dwarf_NamePair np;
-	uint64_t offset, dwarf_size, length, cuoff;
+	u_int64_t offset, dwarf_size, length, cuoff;
 	char *p;
 	int i, ret;
 
@@ -172,7 +170,7 @@ _dwarf_nametbl_gen(Dwarf_P_Debug dbg, const char *name, Dwarf_NameTbl nt,
 	Dwarf_P_Section ds;
 	Dwarf_Rel_Section drs;
 	Dwarf_NamePair np;
-	uint64_t offset;
+	u_int64_t offset;
 	int ret;
 
 	assert(dbg != NULL && name != NULL);

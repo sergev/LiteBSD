@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	_SECTION_INIT_SIZE	128
 
 int
@@ -202,7 +200,7 @@ _dwarf_generate_sections(Dwarf_P_Debug dbg, Dwarf_Error *error)
 	/* Set section/relocation iterator to the first element. */
 	dbg->dbgp_secpos = STAILQ_FIRST(&dbg->dbgp_seclist);
 	dbg->dbgp_drspos = STAILQ_FIRST(&dbg->dbgp_drslist);
-	
+
 	return (DW_DLE_NONE);
 }
 

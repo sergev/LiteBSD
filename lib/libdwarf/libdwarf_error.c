@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 void
 _dwarf_set_error(Dwarf_Debug dbg, Dwarf_Error *error, int errorcode,
     int elferrorcode, const char *functionname, int linenumber)
@@ -39,7 +37,7 @@ _dwarf_set_error(Dwarf_Debug dbg, Dwarf_Error *error, int errorcode,
 	de.err_func  = functionname;
 	de.err_line  = linenumber;
 	de.err_msg[0] = '\0';
-	
+
 	/*
 	 * If the user supplied a destination for the error, copy the
 	 * error descriptor over and return.  Otherwise, if the debug

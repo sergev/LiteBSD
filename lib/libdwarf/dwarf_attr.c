@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_attr(Dwarf_Die die, Dwarf_Half attr, Dwarf_Attribute *atp,
     Dwarf_Error *error)
@@ -293,7 +291,7 @@ dwarf_arrayorder(Dwarf_Die die, Dwarf_Unsigned *ret_order, Dwarf_Error *error)
 {
 	Dwarf_Attribute at;
 	Dwarf_Debug dbg;
-	
+
 	dbg = die != NULL ? die->die_dbg : NULL;
 
 	if (die == NULL || ret_order == NULL) {

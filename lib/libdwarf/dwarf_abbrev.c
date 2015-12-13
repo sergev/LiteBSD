@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_get_abbrev(Dwarf_Debug dbg, Dwarf_Unsigned offset,
     Dwarf_Abbrev *return_abbrev, Dwarf_Unsigned *length,
@@ -117,7 +115,7 @@ dwarf_get_abbrev_entry(Dwarf_Abbrev abbrev, Dwarf_Signed ndx,
 		return (DW_DLV_ERROR);
 	}
 
-	if (ndx < 0 || (uint64_t) ndx >= abbrev->ab_atnum) {
+	if (ndx < 0 || (u_int64_t) ndx >= abbrev->ab_atnum) {
 		DWARF_SET_ERROR(NULL, error, DW_DLE_NO_ENTRY);
 		return (DW_DLV_NO_ENTRY);
 	}

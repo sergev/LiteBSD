@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _dwarf_frame_find_cie(Dwarf_FrameSec fs, Dwarf_Unsigned offset,
     Dwarf_Cie *ret_cie)
@@ -49,11 +47,11 @@ _dwarf_frame_find_cie(Dwarf_FrameSec fs, Dwarf_Unsigned offset,
 }
 
 static int
-_dwarf_frame_read_lsb_encoded(Dwarf_Debug dbg, Dwarf_Cie cie, uint64_t *val,
-    uint8_t *data, uint64_t *offsetp, uint8_t encode, Dwarf_Addr pc,
+_dwarf_frame_read_lsb_encoded(Dwarf_Debug dbg, Dwarf_Cie cie, u_int64_t *val,
+    u_int8_t *data, u_int64_t *offsetp, u_int8_t encode, Dwarf_Addr pc,
     Dwarf_Error *error)
 {
-	uint8_t application;
+	u_int8_t application;
 
 	if (encode == DW_EH_PE_omit)
 		return (DW_DLE_NONE);
@@ -126,9 +124,9 @@ static int
 _dwarf_frame_parse_lsb_cie_augment(Dwarf_Debug dbg, Dwarf_Cie cie,
     Dwarf_Error *error)
 {
-	uint8_t *aug_p, *augdata_p;
-	uint64_t val, offset;
-	uint8_t encode;
+	u_int8_t *aug_p, *augdata_p;
+	u_int64_t val, offset;
+	u_int8_t encode;
 	int ret;
 
 	assert(cie->cie_augment != NULL && *cie->cie_augment == 'z');
@@ -175,7 +173,7 @@ _dwarf_frame_add_cie(Dwarf_Debug dbg, Dwarf_FrameSec fs, Dwarf_Section *ds,
     Dwarf_Unsigned *off, Dwarf_Cie *ret_cie, Dwarf_Error *error)
 {
 	Dwarf_Cie cie;
-	uint64_t length;
+	u_int64_t length;
 	int dwarf_size, ret;
 	char *p;
 
@@ -304,7 +302,7 @@ _dwarf_frame_add_fde(Dwarf_Debug dbg, Dwarf_FrameSec fs, Dwarf_Section *ds,
 	Dwarf_Cie cie;
 	Dwarf_Fde fde;
 	Dwarf_Unsigned cieoff;
-	uint64_t length, val;
+	u_int64_t length, val;
 	int dwarf_size, ret;
 
 	if ((fde = calloc(1, sizeof(struct _Dwarf_Fde))) == NULL) {
@@ -441,7 +439,7 @@ _dwarf_frame_section_init(Dwarf_Debug dbg, Dwarf_FrameSec *frame_sec,
 	Dwarf_FrameSec fs;
 	Dwarf_Cie cie;
 	Dwarf_Fde fde;
-	uint64_t length, offset, cie_id, entry_off;
+	u_int64_t length, offset, cie_id, entry_off;
 	int dwarf_size, i, ret;
 
 	assert(frame_sec != NULL);
@@ -544,14 +542,14 @@ fail_cleanup:
 }
 
 static int
-_dwarf_frame_run_inst(Dwarf_Debug dbg, Dwarf_Regtable3 *rt, uint8_t addr_size,
-    uint8_t *insts, Dwarf_Unsigned len, Dwarf_Unsigned caf, Dwarf_Signed daf,
+_dwarf_frame_run_inst(Dwarf_Debug dbg, Dwarf_Regtable3 *rt, u_int8_t addr_size,
+    u_int8_t *insts, Dwarf_Unsigned len, Dwarf_Unsigned caf, Dwarf_Signed daf,
     Dwarf_Addr pc, Dwarf_Addr pc_req, Dwarf_Addr *row_pc, Dwarf_Error *error)
 {
 	Dwarf_Regtable3 *init_rt, *saved_rt;
-	uint8_t *p, *pe;
-	uint8_t high2, low6;
-	uint64_t reg, reg2, uoff, soff;
+	u_int8_t *p, *pe;
+	u_int8_t high2, low6;
+	u_int64_t reg, reg2, uoff, soff;
 	int ret;
 
 #define	CFA	rt->rt3_cfa_rule
@@ -912,13 +910,13 @@ program_done:
 }
 
 static int
-_dwarf_frame_convert_inst(Dwarf_Debug dbg, uint8_t addr_size, uint8_t *insts,
+_dwarf_frame_convert_inst(Dwarf_Debug dbg, u_int8_t addr_size, u_int8_t *insts,
     Dwarf_Unsigned len, Dwarf_Unsigned *count, Dwarf_Frame_Op *fop,
     Dwarf_Frame_Op3 *fop3, Dwarf_Error *error)
 {
-	uint8_t *p, *pe;
-	uint8_t high2, low6;
-	uint64_t reg, reg2, uoff, soff, blen;
+	u_int8_t *p, *pe;
+	u_int8_t high2, low6;
+	u_int64_t reg, reg2, uoff, soff, blen;
 
 #define	SET_BASE_OP(x)						\
 	do {							\
@@ -1115,7 +1113,7 @@ _dwarf_frame_convert_inst(Dwarf_Debug dbg, uint8_t addr_size, uint8_t *insts,
 }
 
 int
-_dwarf_frame_get_fop(Dwarf_Debug dbg, uint8_t addr_size, uint8_t *insts,
+_dwarf_frame_get_fop(Dwarf_Debug dbg, u_int8_t addr_size, u_int8_t *insts,
     Dwarf_Unsigned len, Dwarf_Frame_Op **ret_oplist, Dwarf_Signed *ret_opcnt,
     Dwarf_Error *error)
 {
@@ -1332,7 +1330,7 @@ _dwarf_frame_fde_add_inst(Dwarf_P_Fde fde, Dwarf_Small op, Dwarf_Unsigned val1,
     Dwarf_Unsigned val2, Dwarf_Error *error)
 {
 	Dwarf_P_Debug dbg;
-	uint8_t high2, low6;
+	u_int8_t high2, low6;
 	int ret;
 
 #define	ds	fde
@@ -1427,7 +1425,7 @@ _dwarf_frame_gen_cie(Dwarf_P_Debug dbg, Dwarf_P_Section ds, Dwarf_P_Cie cie,
     Dwarf_Error *error)
 {
 	Dwarf_Unsigned len;
-	uint64_t offset;
+	u_int64_t offset;
 	int ret;
 
 	assert(dbg != NULL && ds != NULL && cie != NULL);
@@ -1469,7 +1467,7 @@ _dwarf_frame_gen_cie(Dwarf_P_Debug dbg, Dwarf_P_Section ds, Dwarf_P_Cie cie,
 
 	/* Fill in the length field. */
 	dbg->write(ds->ds_data, &offset, cie->cie_length, 4);
-	
+
 	return (DW_DLE_NONE);
 
 gen_fail:
@@ -1481,7 +1479,7 @@ _dwarf_frame_gen_fde(Dwarf_P_Debug dbg, Dwarf_P_Section ds,
     Dwarf_Rel_Section drs, Dwarf_P_Fde fde, Dwarf_Error *error)
 {
 	Dwarf_Unsigned len;
-	uint64_t offset;
+	u_int64_t offset;
 	int ret;
 
 	assert(dbg != NULL && ds != NULL && drs != NULL);

@@ -1,0 +1,11 @@
+dwarf_funcs.c
+dwarf_pro_funcs.c
+dwarf_pro_pubnames.c
+dwarf_pro_types.c
+dwarf_pro_vars.c
+dwarf_pro_weaks.c
+dwarf_pubnames.c
+dwarf_pubtypes.c
+dwarf_types.c
+dwarf_vars.c
+dwarf_weaks.c

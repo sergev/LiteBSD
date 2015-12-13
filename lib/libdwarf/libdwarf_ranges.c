@@ -26,11 +26,9 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _dwarf_ranges_parse(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Section *ds,
-    uint64_t off, Dwarf_Ranges *rg, Dwarf_Unsigned *cnt)
+    u_int64_t off, Dwarf_Ranges *rg, Dwarf_Unsigned *cnt)
 {
 	Dwarf_Unsigned start, end;
 	int i;
@@ -66,7 +64,7 @@ _dwarf_ranges_parse(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Section *ds,
 }
 
 int
-_dwarf_ranges_find(Dwarf_Debug dbg, uint64_t off, Dwarf_Rangelist *ret_rl)
+_dwarf_ranges_find(Dwarf_Debug dbg, u_int64_t off, Dwarf_Rangelist *ret_rl)
 {
 	Dwarf_Rangelist rl;
 
@@ -100,7 +98,7 @@ _dwarf_ranges_cleanup(Dwarf_Debug dbg)
 }
 
 int
-_dwarf_ranges_add(Dwarf_Debug dbg, Dwarf_CU cu, uint64_t off,
+_dwarf_ranges_add(Dwarf_Debug dbg, Dwarf_CU cu, u_int64_t off,
     Dwarf_Rangelist *ret_rl, Dwarf_Error *error)
 {
 	Dwarf_Section *ds;

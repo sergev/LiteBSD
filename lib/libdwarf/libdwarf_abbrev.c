@@ -27,11 +27,9 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
-_dwarf_abbrev_add(Dwarf_CU cu, uint64_t entry, uint64_t tag, uint8_t children,
-    uint64_t aboff, Dwarf_Abbrev *abp, Dwarf_Error *error)
+_dwarf_abbrev_add(Dwarf_CU cu, u_int64_t entry, u_int64_t tag, u_int8_t children,
+    u_int64_t aboff, Dwarf_Abbrev *abp, Dwarf_Error *error)
 {
 	Dwarf_Abbrev ab;
 	Dwarf_Debug dbg;
@@ -66,8 +64,8 @@ _dwarf_abbrev_add(Dwarf_CU cu, uint64_t entry, uint64_t tag, uint8_t children,
 }
 
 int
-_dwarf_attrdef_add(Dwarf_Debug dbg, Dwarf_Abbrev ab, uint64_t attr,
-    uint64_t form, uint64_t adoff, Dwarf_AttrDef *adp, Dwarf_Error *error)
+_dwarf_attrdef_add(Dwarf_Debug dbg, Dwarf_Abbrev ab, u_int64_t attr,
+    u_int64_t form, u_int64_t adoff, Dwarf_AttrDef *adp, Dwarf_Error *error)
 {
 	Dwarf_AttrDef ad;
 
@@ -103,13 +101,13 @@ _dwarf_abbrev_parse(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Unsigned *offset,
     Dwarf_Abbrev *abp, Dwarf_Error *error)
 {
 	Dwarf_Section *ds;
-	uint64_t attr;
-	uint64_t entry;
-	uint64_t form;
-	uint64_t aboff;
-	uint64_t adoff;
-	uint64_t tag;
-	uint8_t children;
+	u_int64_t attr;
+	u_int64_t entry;
+	u_int64_t form;
+	u_int64_t aboff;
+	u_int64_t adoff;
+	u_int64_t tag;
+	u_int8_t children;
 	int ret;
 
 	assert(abp != NULL);
@@ -156,7 +154,7 @@ _dwarf_abbrev_parse(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Unsigned *offset,
 }
 
 int
-_dwarf_abbrev_find(Dwarf_CU cu, uint64_t entry, Dwarf_Abbrev *abp,
+_dwarf_abbrev_find(Dwarf_CU cu, u_int64_t entry, Dwarf_Abbrev *abp,
     Dwarf_Error *error)
 {
 	Dwarf_Abbrev ab;

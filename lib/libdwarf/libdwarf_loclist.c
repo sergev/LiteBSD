@@ -26,14 +26,12 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _dwarf_loclist_add_locdesc(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Section *ds,
     Dwarf_Unsigned *off, Dwarf_Locdesc **ld, Dwarf_Signed *ldlen,
     Dwarf_Unsigned *total_len, Dwarf_Error *error)
 {
-	uint64_t start, end;
+	u_int64_t start, end;
 	int i, len, ret;
 
 	if (total_len != NULL)
@@ -91,7 +89,7 @@ _dwarf_loclist_add_locdesc(Dwarf_Debug dbg, Dwarf_CU cu, Dwarf_Section *ds,
 }
 
 int
-_dwarf_loclist_find(Dwarf_Debug dbg, Dwarf_CU cu, uint64_t lloff,
+_dwarf_loclist_find(Dwarf_Debug dbg, Dwarf_CU cu, u_int64_t lloff,
     Dwarf_Locdesc ***ret_llbuf, Dwarf_Signed *listlen,
     Dwarf_Unsigned *entry_len, Dwarf_Error *error)
 {

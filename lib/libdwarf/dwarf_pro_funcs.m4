@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 /* WARNING: GENERATED FROM __file__. */
 
 divert(-1)

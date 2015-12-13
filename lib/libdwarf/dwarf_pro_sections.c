@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_Signed
 dwarf_transform_to_disk_form(Dwarf_P_Debug dbg, Dwarf_Error *error)
 {

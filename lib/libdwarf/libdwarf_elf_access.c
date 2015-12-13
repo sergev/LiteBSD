@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 _dwarf_elf_get_section_info(void *obj, Dwarf_Half ndx,
     Dwarf_Obj_Access_Section *ret_section, int *error)

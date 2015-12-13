@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static const char *_libdwarf_errors[] = {
 #define	DEFINE_ERROR(N,S)		[DW_DLE_##N] = S
 	DEFINE_ERROR(NONE, "No Error"),

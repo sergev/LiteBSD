@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_next_cu_header_c(Dwarf_Debug dbg, Dwarf_Bool is_info,
     Dwarf_Unsigned *cu_length, Dwarf_Half *cu_version,

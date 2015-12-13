@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_hasform(Dwarf_Attribute at, Dwarf_Half form, Dwarf_Bool *return_hasform,
     Dwarf_Error *error)
@@ -330,7 +328,7 @@ dwarf_formsig8(Dwarf_Attribute at, Dwarf_Sig8 *return_sig8, Dwarf_Error *error)
 		DWARF_SET_ERROR(dbg, error, DW_DLE_ARGUMENT);
 		return (DW_DLV_ERROR);
 	}
-	
+
 	if (at->at_form != DW_FORM_ref_sig8) {
 		DWARF_SET_ERROR(dbg, error, DW_DLE_ATTR_FORM_BAD);
 		return (DW_DLV_ERROR);

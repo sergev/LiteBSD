@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _dwarf_add_macro(Dwarf_P_Debug dbg, int type, Dwarf_Unsigned lineno,
     Dwarf_Signed fileindex, char *str1, char *str2, Dwarf_Error *error)

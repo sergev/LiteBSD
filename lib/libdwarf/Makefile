@@ -1,7 +1,3 @@
-# $Id$
-
-TOP=	${.CURDIR}/..
-
 LIB=	dwarf
 
 SRCS=	\
@@ -71,7 +67,6 @@ SRCS=	\
 	libdwarf_str.c
 
 INCS=		dwarf.h libdwarf.h
-INCSDIR=	/usr/include
 
 GENSRCS=	dwarf_pubnames.c dwarf_pubtypes.c dwarf_weaks.c \
 		dwarf_funcs.c dwarf_vars.c dwarf_types.c	\
@@ -83,8 +78,6 @@ CLEANFILES=	${GENSRCS}
 SHLIB_MAJOR=	3
 
 WARNS?=	6
-
-LDADD+=		-lelf
 
 MAN=	dwarf.3                                         \
 	dwarf_add_arange.3				\
@@ -323,15 +316,26 @@ MLINKS+= \
 	dwarf_set_frame_cfa_value.3 dwarf_set_frame_undefined_value.3
 
 dwarf_pubnames.c:	dwarf_nametbl.m4 dwarf_pubnames.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pubnames.m4 > $@
 dwarf_pubtypes.c:	dwarf_nametbl.m4 dwarf_pubtypes.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pubtypes.m4 > $@
 dwarf_weaks.c:		dwarf_nametbl.m4 dwarf_weaks.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_weaks.m4 > $@
 dwarf_funcs.c:		dwarf_nametbl.m4 dwarf_funcs.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_funcs.m4 > $@
 dwarf_vars.c:		dwarf_nametbl.m4 dwarf_vars.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_vars.m4 > $@
 dwarf_types.c:		dwarf_nametbl.m4 dwarf_types.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_types.m4 > $@
 dwarf_pro_pubnames.c:	dwarf_pro_nametbl.m4 dwarf_pro_pubnames.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pro_pubnames.m4 > $@
 dwarf_pro_weaks.c:	dwarf_pro_nametbl.m4 dwarf_pro_weaks.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pro_weaks.m4 > $@
 dwarf_pro_funcs.c:	dwarf_pro_nametbl.m4 dwarf_pro_funcs.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pro_funcs.m4 > $@
 dwarf_pro_types.c:	dwarf_pro_nametbl.m4 dwarf_pro_types.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pro_types.m4 > $@
 dwarf_pro_vars.c:	dwarf_pro_nametbl.m4 dwarf_pro_vars.m4
+	m4 -D SRCDIR=$(.CURDIR) dwarf_pro_vars.m4 > $@
 
-.include "${TOP}/mk/elftoolchain.lib.mk"
+.include <bsd.lib.mk>

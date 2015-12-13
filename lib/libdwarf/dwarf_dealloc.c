@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 void
 dwarf_dealloc(Dwarf_Debug dbg, Dwarf_Ptr p, Dwarf_Unsigned alloc_type)
 {
@@ -81,7 +79,7 @@ dwarf_srclines_dealloc(Dwarf_Debug dbg, Dwarf_Line *linebuf,
 	 * associated with the DIE for a compilation unit for the
 	 * lifetime of the DIE.  The client does not need to free
 	 * the memory returned by `dwarf_srclines()`.
-	 */ 
+	 */
 
 	(void) dbg; (void) linebuf; (void) count;
 }

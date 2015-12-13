@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_P_Fde
 dwarf_new_fde(Dwarf_P_Debug dbg, Dwarf_Error *error)
 {
@@ -69,7 +67,7 @@ dwarf_add_frame_cie(Dwarf_P_Debug dbg, char *augmenter, Dwarf_Small caf,
 	cie->cie_index = dbg->dbgp_cielen++;
 
 	if (augmenter != NULL) {
-		cie->cie_augment = (uint8_t *) strdup(augmenter);
+		cie->cie_augment = (u_int8_t *) strdup(augmenter);
 		if (cie->cie_augment == NULL) {
 			DWARF_SET_ERROR(dbg, error, DW_DLE_MEMORY);
 			return (DW_DLV_NOCOUNT);

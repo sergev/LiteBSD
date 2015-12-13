@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 dwarf_get_aranges(Dwarf_Debug dbg, Dwarf_Arange **arlist,
     Dwarf_Signed *ret_arange_cnt, Dwarf_Error *error)

@@ -154,12 +154,12 @@ MLINKS+= \
 .endfor
 
 libelf_convert.c:	elf_types.m4 libelf_convert.m4
-	m4 -D SRCDIR=$(PWD) libelf_fsize.m4 > $@
+	m4 -D SRCDIR=$(.CURDIR) libelf_convert.m4 > $@
 
 libelf_fsize.c:		elf_types.m4 libelf_fsize.m4
-	m4 -D SRCDIR=$(PWD) libelf_msize.m4 > $@
+	m4 -D SRCDIR=$(.CURDIR) libelf_fsize.m4 > $@
 
 libelf_msize.c:		elf_types.m4 libelf_msize.m4
-	m4 -D SRCDIR=$(PWD) libelf_convert.m4 > $@
+	m4 -D SRCDIR=$(.CURDIR) libelf_msize.m4 > $@
 
 .include <bsd.lib.mk>

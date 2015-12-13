@@ -27,8 +27,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Given an array of bytes of length 'len' representing a
  * DWARF expression, compute the number of operations based
@@ -38,13 +36,13 @@ ELFTC_VCSID("$Id$");
  * the opcode and oprand in it.
  */
 static int
-_dwarf_loc_fill_loc(Dwarf_Debug dbg, Dwarf_Locdesc *lbuf, uint8_t pointer_size,
-    uint8_t offset_size, uint8_t version, uint8_t *p, int len)
+_dwarf_loc_fill_loc(Dwarf_Debug dbg, Dwarf_Locdesc *lbuf, u_int8_t pointer_size,
+    u_int8_t offset_size, u_int8_t version, u_int8_t *p, int len)
 {
 	int count;
-	uint64_t operand1;
-	uint64_t operand2;
-	uint8_t *ps, *pe, s;
+	u_int64_t operand1;
+	u_int64_t operand2;
+	u_int8_t *ps, *pe, s;
 
 	count = 0;
 	ps = p;
@@ -293,7 +291,7 @@ _dwarf_loc_fill_loc(Dwarf_Debug dbg, Dwarf_Locdesc *lbuf, uint8_t pointer_size,
 		case DW_OP_implicit_value:
 		case DW_OP_GNU_entry_value:
 			operand1 = _dwarf_decode_uleb128(&p);
-			operand2 = (Dwarf_Unsigned) (uintptr_t) p;
+			operand2 = (Dwarf_Unsigned) (u_intptr_t) p;
 			p += operand1;
 			break;
 
@@ -343,7 +341,7 @@ _dwarf_loc_fill_loc(Dwarf_Debug dbg, Dwarf_Locdesc *lbuf, uint8_t pointer_size,
 		 */
 		case DW_OP_GNU_const_type:
 			operand1 = _dwarf_decode_uleb128(&p);
-			operand2 = (Dwarf_Unsigned) (uintptr_t) p;
+			operand2 = (Dwarf_Unsigned) (u_intptr_t) p;
 			s = *p++;
 			p += s;
 			break;
@@ -367,13 +365,13 @@ done:
 }
 
 int
-_dwarf_loc_expr_add_atom(Dwarf_Debug dbg, uint8_t *out, uint8_t *end,
+_dwarf_loc_expr_add_atom(Dwarf_Debug dbg, u_int8_t *out, u_int8_t *end,
     Dwarf_Small atom, Dwarf_Unsigned operand1, Dwarf_Unsigned operand2,
     int *length, Dwarf_Error *error)
 {
-	uint8_t buf[64];
-	uint8_t *p, *pe;
-	uint64_t offset;
+	u_int8_t buf[64];
+	u_int8_t *p, *pe;
+	u_int64_t offset;
 	int len;
 
 	if (out != NULL && end != NULL) {
@@ -497,7 +495,7 @@ _dwarf_loc_expr_add_atom(Dwarf_Debug dbg, uint8_t *out, uint8_t *end,
 	case DW_OP_deref_size:
 	case DW_OP_xderef_size:
 		*p++ = atom;
-		*p++ = (uint8_t) operand1;
+		*p++ = (u_int8_t) operand1;
 		break;
 
 	/* Operations with 2-byte operands. */
@@ -616,9 +614,9 @@ _dwarf_loc_expr_add_atom(Dwarf_Debug dbg, uint8_t *out, uint8_t *end,
 }
 
 int
-_dwarf_loc_fill_locdesc(Dwarf_Debug dbg, Dwarf_Locdesc *llbuf, uint8_t *in,
-    uint64_t in_len, uint8_t pointer_size, uint8_t offset_size,
-    uint8_t version, Dwarf_Error *error)
+_dwarf_loc_fill_locdesc(Dwarf_Debug dbg, Dwarf_Locdesc *llbuf, u_int8_t *in,
+    u_int64_t in_len, u_int8_t pointer_size, u_int8_t offset_size,
+    u_int8_t version, Dwarf_Error *error)
 {
 	int num;
 
@@ -649,9 +647,9 @@ _dwarf_loc_fill_locdesc(Dwarf_Debug dbg, Dwarf_Locdesc *llbuf, uint8_t *in,
 }
 
 int
-_dwarf_loc_fill_locexpr(Dwarf_Debug dbg, Dwarf_Locdesc **ret_llbuf, uint8_t *in,
-    uint64_t in_len, uint8_t pointer_size, uint8_t offset_size,
-    uint8_t version, Dwarf_Error *error)
+_dwarf_loc_fill_locexpr(Dwarf_Debug dbg, Dwarf_Locdesc **ret_llbuf, u_int8_t *in,
+    u_int64_t in_len, u_int8_t pointer_size, u_int8_t offset_size,
+    u_int8_t version, Dwarf_Error *error)
 {
 	Dwarf_Locdesc *llbuf;
 	int ret;

@@ -26,8 +26,6 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 Dwarf_Unsigned
 dwarf_add_line_entry(Dwarf_P_Debug dbg, Dwarf_Unsigned file,
     Dwarf_Addr off, Dwarf_Unsigned lineno, Dwarf_Signed column,

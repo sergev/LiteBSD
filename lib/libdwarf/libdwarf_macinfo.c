@@ -26,12 +26,10 @@
 
 #include "_libdwarf.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	_FILEINDEX_STACK_SIZE	16384
 
 static int
-_dwarf_macinfo_parse(Dwarf_Debug dbg, Dwarf_Section *ds, uint64_t *off,
+_dwarf_macinfo_parse(Dwarf_Debug dbg, Dwarf_Section *ds, u_int64_t *off,
     Dwarf_Macro_Details *dmd, Dwarf_Unsigned *cnt, Dwarf_Error *error)
 {
 	Dwarf_Unsigned lineno;
@@ -127,7 +125,7 @@ _dwarf_macinfo_init(Dwarf_Debug dbg, Dwarf_Error *error)
 	Dwarf_MacroSet ms;
 	Dwarf_Unsigned cnt;
 	Dwarf_Section *ds;
-	uint64_t offset, entry_off;
+	u_int64_t offset, entry_off;
 	int ret;
 
 	if ((ds = _dwarf_find_section(dbg, ".debug_macinfo")) == NULL)
