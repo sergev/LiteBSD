@@ -31,8 +31,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 GElf_Rel *
 gelf_getrel(Elf_Data *ed, int ndx, GElf_Rel *dst)
 {
@@ -40,7 +38,7 @@ gelf_getrel(Elf_Data *ed, int ndx, GElf_Rel *dst)
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	Elf32_Rel *rel32;
 	Elf64_Rel *rel64;
 	struct _Libelf_Data *d;
@@ -102,7 +100,7 @@ gelf_update_rel(Elf_Data *ed, int ndx, GElf_Rel *dr)
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	Elf32_Rel *rel32;
 	Elf64_Rel *rel64;
 	struct _Libelf_Data *d;

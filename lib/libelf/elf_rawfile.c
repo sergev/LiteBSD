@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 char *
 elf_rawfile(Elf *e, size_t *sz)
 {

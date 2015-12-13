@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf_Data *
 elf32_xlatetof(Elf_Data *dst, const Elf_Data *src, unsigned int encoding)
 {

@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
 elf_errno(void)
 {

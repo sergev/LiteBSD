@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 GElf_Syminfo *
 gelf_getsyminfo(Elf_Data *ed, int ndx, GElf_Syminfo *dst)
 {
@@ -38,7 +36,7 @@ gelf_getsyminfo(Elf_Data *ed, int ndx, GElf_Syminfo *dst)
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 	Elf32_Syminfo *syminfo32;
 	Elf64_Syminfo *syminfo64;
@@ -99,7 +97,7 @@ gelf_update_syminfo(Elf_Data *ed, int ndx, GElf_Syminfo *gs)
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 	Elf32_Syminfo *syminfo32;
 	Elf64_Syminfo *syminfo64;

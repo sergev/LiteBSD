@@ -37,8 +37,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 /**
  * @file cpp_demangle_gnu2.c
  * @brief Decode function name encoding in GNU 2.
@@ -267,10 +265,10 @@ is_cpp_mangled_gnu2(const char *org)
 			    *(str + 2) == 'Q' ||
 			    ELFTC_ISDIGIT(*(str + 2))) {
 				rtn |= true;
-				
+
 				break;
 			}
-			
+
 			if (*(str + 3) != '\0') {
 				switch (SIMPLE_HASH(*(str + 2), *(str + 3))) {
 				case SIMPLE_HASH('m', 'l') :
@@ -565,7 +563,7 @@ read_func_name(struct demangle_data *d)
 
 			if (vector_str_push(&d->vec, "__", 2) == false)
 				return (false);
-			
+
 			return (read_func(d));
 		}
 

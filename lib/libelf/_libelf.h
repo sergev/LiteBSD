@@ -33,7 +33,7 @@
 
 #include "_libelf_config.h"
 
-#include "_elftc.h"
+#include "../libelftc/_elftc.h"
 
 /*
  * Library-private data structures.
@@ -151,9 +151,9 @@ struct _Elf_Scn {
 	struct _Elf	*s_elf;		/* parent ELF descriptor */
 	unsigned int	s_flags;	/* flags for the section as a whole */
 	size_t		s_ndx;		/* index# for this section */
-	uint64_t	s_offset;	/* managed by elf_update() */
-	uint64_t	s_rawoff;	/* original offset in the file */
-	uint64_t	s_size;		/* managed by elf_update() */
+	u_int64_t	s_offset;	/* managed by elf_update() */
+	u_int64_t	s_rawoff;	/* original offset in the file */
+	u_int64_t	s_size;		/* managed by elf_update() */
 };
 
 
@@ -231,7 +231,7 @@ int	_libelf_setshstrndx(Elf *_e, void *_eh, int _elfclass,
     size_t _shstrndx);
 Elf_Data *_libelf_xlate(Elf_Data *_d, const Elf_Data *_s,
     unsigned int _encoding, int _elfclass, int _direction);
-int	_libelf_xlate_shtype(uint32_t _sht);
+int	_libelf_xlate_shtype(u_int32_t _sht);
 #ifdef __cplusplus
 }
 #endif

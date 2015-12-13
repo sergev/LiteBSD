@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Translate to/from the file representation of ELF objects.
  *
@@ -49,7 +47,7 @@ _libelf_xlate(Elf_Data *dst, const Elf_Data *src, unsigned int encoding,
 {
 	int byteswap;
 	size_t cnt, dsz, fsz, msz;
-	uintptr_t sb, se, db, de;
+	u_intptr_t sb, se, db, de;
 
 	if (encoding == ELFDATANONE)
 		encoding = LIBELF_PRIVATE(byteorder);
@@ -109,9 +107,9 @@ _libelf_xlate(Elf_Data *dst, const Elf_Data *src, unsigned int encoding,
 		return (NULL);
 	}
 
-	sb = (uintptr_t) src->d_buf;
+	sb = (u_intptr_t) src->d_buf;
 	se = sb + (size_t) src->d_size;
-	db = (uintptr_t) dst->d_buf;
+	db = (u_intptr_t) dst->d_buf;
 	de = db + (size_t) dst->d_size;
 
 	/*

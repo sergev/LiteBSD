@@ -28,10 +28,8 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 int
-_libelf_xlate_shtype(uint32_t sht)
+_libelf_xlate_shtype(u_int32_t sht)
 {
 	/*
 	 * Look for known section types.

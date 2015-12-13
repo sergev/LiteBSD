@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 struct align {
 	unsigned int a32;
 	unsigned int a64;

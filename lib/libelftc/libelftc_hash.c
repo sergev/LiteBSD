@@ -38,8 +38,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Use the size of an 'int' to determine the magic numbers used by the
  * hash function.

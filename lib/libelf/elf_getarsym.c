@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf_Arsym *
 elf_getarsym(Elf *ar, size_t *ptr)
 {

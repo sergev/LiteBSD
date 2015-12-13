@@ -37,8 +37,6 @@
 #include <sys/mman.h>
 #endif
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Copy the contents referenced by 'ifd' to 'ofd'.  Returns 0 on
  * success and -1 on error.
@@ -106,4 +104,3 @@ elftc_copyfile(int ifd, int ofd)
 
 	return (n > 0 ? -1 : 0);
 }
-

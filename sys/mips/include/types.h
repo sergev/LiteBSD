@@ -39,9 +39,6 @@
 #ifndef _MACHTYPES_H_
 #define _MACHTYPES_H_
 
-typedef unsigned long   vm_offset_t;
-typedef unsigned long   vm_size_t;
-
 /*
  * Basic integral types.  Omit the typedef if
  * not possible for a machine/compiler combination.
@@ -55,6 +52,13 @@ typedef unsigned int            u_int32_t;
 typedef long long                 int64_t;
 typedef unsigned long long      u_int64_t;
 
-typedef int32_t                 register_t;
+typedef int32_t                register_t;
+typedef int32_t                  intptr_t;
+typedef u_int32_t              u_intptr_t;
+
+#ifdef KERNEL
+typedef u_int32_t               vm_offset_t;
+typedef u_int32_t               vm_size_t;
+#endif
 
 #endif  /* _MACHTYPES_H_ */

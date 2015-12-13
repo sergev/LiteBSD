@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /* WARNING: GENERATED FROM __file__. */
 
 divert(-1)
@@ -48,7 +46,7 @@ include(SRCDIR`/elf_types.m4')
 #
 # 1. Whether the ELF type can be directly mapped to an integral C
 #    language type.  For example, the ELF_T_WORD type maps directly to
-#    a 'uint32_t', but ELF_T_GNUHASH lacks a matching C type.
+#    a 'u_int32_t', but ELF_T_GNUHASH lacks a matching C type.
 #
 # 2. Whether the type has word size dependent variants.  For example,
 #    ELT_T_EHDR is represented using C types Elf32_Ehdr and El64_Ehdr,
@@ -144,7 +142,7 @@ static int
 _libelf_cvt_$1$4_tof(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t count, int byteswap)
 {
-	Elf$3_$2 t, *s = (Elf$3_$2 *) (uintptr_t) src;
+	Elf$3_$2 t, *s = (Elf$3_$2 *) (u_intptr_t) src;
 	size_t c;
 
 	(void) dsz;
@@ -167,7 +165,7 @@ static int
 _libelf_cvt_$1$4_tom(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t count, int byteswap)
 {
-	Elf$3_$2 t, *d = (Elf$3_$2 *) (uintptr_t) dst;
+	Elf$3_$2 t, *d = (Elf$3_$2 *) (u_intptr_t) dst;
 	size_t c;
 
 	if (dsz < count * sizeof(Elf$3_$2))
@@ -273,7 +271,7 @@ _libelf_cvt_$1$3_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 
 	(void) dsz;
 
-	s = (Elf$3_$2 *) (uintptr_t) src;
+	s = (Elf$3_$2 *) (u_intptr_t) src;
 	for (c = 0; c < count; c++) {
 		t = *s++;
 		if (byteswap) {
@@ -294,7 +292,7 @@ _libelf_cvt_$1$3_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 	size_t		fsz;
 
 	fsz = elf$3_fsize(ELF_T_$1, (size_t) 1, EV_CURRENT);
-	d   = ((Elf$3_$2 *) (uintptr_t) dst) + (count - 1);
+	d   = ((Elf$3_$2 *) (u_intptr_t) dst) + (count - 1);
 	s0  = src + (count - 1) * fsz;
 
 	if (dsz < count * sizeof(Elf$3_$2))
@@ -415,7 +413,7 @@ _libelf_cvt_$1$5_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 	     dtmp += vnext, src += vnext) {
 
 		/* Read in an Elf$5_$2 structure. */
-		t = *((Elf$5_$2 *) (uintptr_t) src);
+		t = *((Elf$5_$2 *) (u_intptr_t) src);
 
 		aux = t.$4_aux;
 		cnt = t.$4_cnt;
@@ -438,7 +436,7 @@ _libelf_cvt_$1$5_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 		     dstaux += anext, srcaux += anext, cnt--) {
 
 			/* Read in an Elf$5_$3 structure. */
-			a = *((Elf$5_$3 *) (uintptr_t) srcaux);
+			a = *((Elf$5_$3 *) (u_intptr_t) srcaux);
 			anext = a.$4a_next;
 
 			if (byteswap) {
@@ -485,7 +483,7 @@ _libelf_cvt_$1$5_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 			SWAP_STRUCT($2, $5)
 		}
 
-		dp = (Elf$5_$2 *) (uintptr_t) dst;
+		dp = (Elf$5_$2 *) (u_intptr_t) dst;
 		*dp = t;
 
 		aux = t.$4_aux;
@@ -510,7 +508,7 @@ _libelf_cvt_$1$5_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 
 			anext = a.$4a_next;
 
-			ap = ((Elf$5_$3 *) (uintptr_t) dstaux);
+			ap = ((Elf$5_$3 *) (u_intptr_t) dstaux);
 			*ap = a;
 		}
 
@@ -533,14 +531,14 @@ divert(0)
 #define	SWAP_BYTE(X)	do { (void) (X); } while (0)
 #define	SWAP_IDENT(X)	do { (void) (X); } while (0)
 #define	SWAP_HALF(X)	do {						\
-		uint16_t _x = (uint16_t) (X);				\
-		uint32_t _t = _x & 0xFFU;				\
+		u_int16_t _x = (u_int16_t) (X);				\
+		u_int32_t _t = _x & 0xFFU;				\
 		_t <<= 8U; _x >>= 8U; _t |= _x & 0xFFU;			\
-		(X) = (uint16_t) _t;					\
+		(X) = (u_int16_t) _t;					\
 	} while (0)
 #define	_SWAP_WORD(X, T) do {						\
-		uint32_t _x = (uint32_t) (X);				\
-		uint32_t _t = _x & 0xFF;				\
+		u_int32_t _x = (u_int32_t) (X);				\
+		u_int32_t _t = _x & 0xFF;				\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
@@ -551,8 +549,8 @@ divert(0)
 #define	SWAP_SWORD(X)	_SWAP_WORD(X, Elf32_Sword)
 #define	SWAP_WORD(X)	_SWAP_WORD(X, Elf32_Word)
 #define	_SWAP_WORD64(X, T) do {						\
-		uint64_t _x = (uint64_t) (X);				\
-		uint64_t _t = _x & 0xFF;				\
+		u_int64_t _x = (u_int64_t) (X);				\
+		u_int64_t _t = _x & 0xFF;				\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
 		_t <<= 8; _x >>= 8; _t |= _x & 0xFF;			\
@@ -582,7 +580,7 @@ divert(0)
 		(P)		= _p + 1;				\
 	} while (0)
 #define	WRITE_HALF(P,X)	do {						\
-		uint16_t _t	= (X);					\
+		u_int16_t _t	= (X);					\
 		unsigned char *const _p	= (unsigned char *) (P);	\
 		const unsigned char *const _q = (unsigned char *) &_t;	\
 		_p[0]		= _q[0];				\
@@ -590,7 +588,7 @@ divert(0)
 		(P)		= _p + 2;				\
 	} while (0)
 #define	WRITE_WORD(P,X) do {						\
-		uint32_t _t	= (uint32_t) (X);			\
+		u_int32_t _t	= (u_int32_t) (X);			\
 		unsigned char *const _p	= (unsigned char *) (P);	\
 		const unsigned char *const _q = (unsigned char *) &_t;	\
 		_p[0]		= _q[0];				\
@@ -603,7 +601,7 @@ divert(0)
 #define	WRITE_OFF32(P,X)	WRITE_WORD(P,X)
 #define	WRITE_SWORD(P,X)	WRITE_WORD(P,X)
 #define	WRITE_WORD64(P,X)	do {					\
-		uint64_t _t	= (uint64_t) (X);			\
+		u_int64_t _t	= (u_int64_t) (X);			\
 		unsigned char *const _p	= (unsigned char *) (P);	\
 		const unsigned char *const _q = (unsigned char *) &_t;	\
 		_p[0]		= _q[0];				\
@@ -642,7 +640,7 @@ divert(0)
 		(P)		= (P) + 1;				\
 	} while (0)
 #define	READ_HALF(P,X)	do {						\
-		uint16_t _t;						\
+		u_int16_t _t;						\
 		unsigned char *const _q = (unsigned char *) &_t;	\
 		const unsigned char *const _p =				\
 			(const unsigned char *) (P);			\
@@ -652,7 +650,7 @@ divert(0)
 		(X)		= _t;					\
 	} while (0)
 #define	_READ_WORD(P,X,T) do {						\
-		uint32_t _t;						\
+		u_int32_t _t;						\
 		unsigned char *const _q = (unsigned char *) &_t;	\
 		const unsigned char *const _p =				\
 			(const unsigned char *) (P);			\
@@ -668,7 +666,7 @@ divert(0)
 #define	READ_SWORD(P,X)		_READ_WORD(P, X, Elf32_Sword)
 #define	READ_WORD(P,X)		_READ_WORD(P, X, Elf32_Word)
 #define	_READ_WORD64(P,X,T)	do {					\
-		uint64_t _t;						\
+		u_int64_t _t;						\
 		unsigned char *const _q = (unsigned char *) &_t;	\
 		const unsigned char *const _p =				\
 			(const unsigned char *) (P);			\
@@ -735,7 +733,7 @@ static int
 _libelf_cvt_GNUHASH32_tom(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t srcsz, int byteswap)
 {
-	return (_libelf_cvt_WORD_tom(dst, dsz, src, srcsz / sizeof(uint32_t),
+	return (_libelf_cvt_WORD_tom(dst, dsz, src, srcsz / sizeof(u_int32_t),
 		byteswap));
 }
 
@@ -743,7 +741,7 @@ static int
 _libelf_cvt_GNUHASH32_tof(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t srcsz, int byteswap)
 {
-	return (_libelf_cvt_WORD_tof(dst, dsz, src, srcsz / sizeof(uint32_t),
+	return (_libelf_cvt_WORD_tof(dst, dsz, src, srcsz / sizeof(u_int32_t),
 		byteswap));
 }
 
@@ -752,12 +750,12 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t srcsz, int byteswap)
 {
 	size_t sz;
-	uint64_t t64, *bloom64;
+	u_int64_t t64, *bloom64;
 	Elf_GNU_Hash_Header *gh;
-	uint32_t n, nbuckets, nchains, maskwords, shift2, symndx, t32;
-	uint32_t *buckets, *chains;
+	u_int32_t n, nbuckets, nchains, maskwords, shift2, symndx, t32;
+	u_int32_t *buckets, *chains;
 
-	sz = 4 * sizeof(uint32_t);	/* File header is 4 words long. */
+	sz = 4 * sizeof(u_int32_t);	/* File header is 4 words long. */
 	if (dsz < sizeof(Elf_GNU_Hash_Header) || srcsz < sz)
 		return (0);
 
@@ -777,11 +775,11 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 	}
 
 	/* Check source buffer and destination buffer sizes. */
-	sz = nbuckets * sizeof(uint32_t) + maskwords * sizeof(uint64_t);
+	sz = nbuckets * sizeof(u_int32_t) + maskwords * sizeof(u_int64_t);
 	if (srcsz < sz || dsz < sz + sizeof(Elf_GNU_Hash_Header))
 		return (0);
 
-	gh = (Elf_GNU_Hash_Header *) (uintptr_t) dst;
+	gh = (Elf_GNU_Hash_Header *) (u_intptr_t) dst;
 	gh->gh_nbuckets  = nbuckets;
 	gh->gh_symndx    = symndx;
 	gh->gh_maskwords = maskwords;
@@ -790,7 +788,7 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 	dsz -= sizeof(Elf_GNU_Hash_Header);
 	dst += sizeof(Elf_GNU_Hash_Header);
 
-	bloom64 = (uint64_t *) (uintptr_t) dst;
+	bloom64 = (u_int64_t *) (u_intptr_t) dst;
 
 	/* Copy bloom filter data. */
 	for (n = 0; n < maskwords; n++) {
@@ -801,8 +799,8 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 	}
 
 	/* The hash buckets follows the bloom filter. */
-	dst += maskwords * sizeof(uint64_t);
-	buckets = (uint32_t *) (uintptr_t) dst;
+	dst += maskwords * sizeof(u_int64_t);
+	buckets = (u_int32_t *) (u_intptr_t) dst;
 
 	for (n = 0; n < nbuckets; n++) {
 		READ_WORD(src, t32);
@@ -811,7 +809,7 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 		buckets[n] = t32;
 	}
 
-	dst += nbuckets * sizeof(uint32_t);
+	dst += nbuckets * sizeof(u_int32_t);
 
 	/* The hash chain follows the hash buckets. */
 	dsz -= sz;
@@ -820,8 +818,8 @@ _libelf_cvt_GNUHASH64_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 	if (dsz < srcsz)	/* Destination lacks space. */
 		return (0);
 
-	nchains = srcsz / sizeof(uint32_t);
-	chains = (uint32_t *) (uintptr_t) dst;
+	nchains = srcsz / sizeof(u_int32_t);
+	chains = (u_int32_t *) (u_intptr_t) dst;
 
 	for (n = 0; n < nchains; n++) {
 		READ_WORD(src, t32);
@@ -837,17 +835,17 @@ static int
 _libelf_cvt_GNUHASH64_tof(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t srcsz, int byteswap)
 {
-	uint32_t *s32;
+	u_int32_t *s32;
 	size_t sz, hdrsz;
-	uint64_t *s64, t64;
+	u_int64_t *s64, t64;
 	Elf_GNU_Hash_Header *gh;
-	uint32_t maskwords, n, nbuckets, nchains, t0, t1, t2, t3, t32;
+	u_int32_t maskwords, n, nbuckets, nchains, t0, t1, t2, t3, t32;
 
-	hdrsz = 4 * sizeof(uint32_t);	/* Header is 4x32 bits. */
+	hdrsz = 4 * sizeof(u_int32_t);	/* Header is 4x32 bits. */
 	if (dsz < hdrsz || srcsz < sizeof(Elf_GNU_Hash_Header))
 		return (0);
 
-	gh = (Elf_GNU_Hash_Header *) (uintptr_t) src;
+	gh = (Elf_GNU_Hash_Header *) (u_intptr_t) src;
 
 	t0 = nbuckets = gh->gh_nbuckets;
 	t1 = gh->gh_symndx;
@@ -858,8 +856,8 @@ _libelf_cvt_GNUHASH64_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 	srcsz -= sizeof(Elf_GNU_Hash_Header);
 	dsz   -= hdrsz;
 
-	sz = gh->gh_nbuckets * sizeof(uint32_t) + gh->gh_maskwords *
-	    sizeof(uint64_t);
+	sz = gh->gh_nbuckets * sizeof(u_int32_t) + gh->gh_maskwords *
+	    sizeof(u_int64_t);
 
 	if (srcsz < sz || dsz < sz)
 		return (0);
@@ -878,7 +876,7 @@ _libelf_cvt_GNUHASH64_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 	WRITE_WORD(dst, t3);
 
 	/* Copy the bloom filter and the hash table. */
-	s64 = (uint64_t *) (uintptr_t) src;
+	s64 = (u_int64_t *) (u_intptr_t) src;
 	for (n = 0; n < maskwords; n++) {
 		t64 = *s64++;
 		if (byteswap)
@@ -886,7 +884,7 @@ _libelf_cvt_GNUHASH64_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 		WRITE_WORD64(dst, t64);
 	}
 
-	s32 = (uint32_t *) s64;
+	s32 = (u_int32_t *) s64;
 	for (n = 0; n < nbuckets; n++) {
 		t32 = *s32++;
 		if (byteswap)
@@ -901,7 +899,7 @@ _libelf_cvt_GNUHASH64_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 	if (dsz < srcsz)
 		return (0);
 
-	nchains = srcsz / sizeof(uint32_t);
+	nchains = srcsz / sizeof(u_int32_t);
 	for (n = 0; n < nchains; n++) {
 		t32 = *s32++;
 		if (byteswap)
@@ -924,14 +922,14 @@ static int
 _libelf_cvt_NOTE_tom(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t count, int byteswap)
 {
-	uint32_t namesz, descsz, type;
+	u_int32_t namesz, descsz, type;
 	Elf_Note *en;
 	size_t sz, hdrsz;
 
 	if (dsz < count)	/* Destination buffer is too small. */
 		return (0);
 
-	hdrsz = 3 * sizeof(uint32_t);
+	hdrsz = 3 * sizeof(u_int32_t);
 	if (count < hdrsz)		/* Source too small. */
 		return (0);
 
@@ -953,7 +951,7 @@ _libelf_cvt_NOTE_tom(unsigned char *dst, size_t dsz, unsigned char *src,
 		SWAP_WORD(type);
 
 		/* Copy out the translated note header. */
-		en = (Elf_Note *) (uintptr_t) dst;
+		en = (Elf_Note *) (u_intptr_t) dst;
 		en->n_namesz = namesz;
 		en->n_descsz = descsz;
 		en->n_type = type;
@@ -986,7 +984,7 @@ static int
 _libelf_cvt_NOTE_tof(unsigned char *dst, size_t dsz, unsigned char *src,
     size_t count, int byteswap)
 {
-	uint32_t namesz, descsz, type;
+	u_int32_t namesz, descsz, type;
 	Elf_Note *en;
 	size_t sz;
 
@@ -1000,7 +998,7 @@ _libelf_cvt_NOTE_tof(unsigned char *dst, size_t dsz, unsigned char *src,
 
 	while (count > sizeof(Elf_Note)) {
 
-		en = (Elf_Note *) (uintptr_t) src;
+		en = (Elf_Note *) (u_intptr_t) src;
 		namesz = en->n_namesz;
 		descsz = en->n_descsz;
 		type = en->n_type;

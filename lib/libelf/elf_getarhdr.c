@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf_Arhdr *
 elf_getarhdr(Elf *e)
 {

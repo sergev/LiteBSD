@@ -39,8 +39,6 @@
 #include <sys/mman.h>
 #endif
 
-ELFTC_VCSID("$Id$");
-
 #define	_LIBELF_INITSIZE	(64*1024)
 
 /*

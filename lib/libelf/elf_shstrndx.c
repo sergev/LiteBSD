@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 _libelf_getshdrstrndx(Elf *e, size_t *strndx)
 {

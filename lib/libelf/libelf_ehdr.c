@@ -31,21 +31,19 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Retrieve counts for sections, phdrs and the section string table index
  * from section header #0 of the ELF object.
  */
 static int
-_libelf_load_extended(Elf *e, int ec, uint64_t shoff, uint16_t phnum,
-    uint16_t strndx)
+_libelf_load_extended(Elf *e, int ec, u_int64_t shoff, u_int16_t phnum,
+    u_int16_t strndx)
 {
 	Elf_Scn *scn;
 	size_t fsz;
 	int (*xlator)(unsigned char *_d, size_t _dsz, unsigned char *_s,
 	    size_t _c, int _swap);
-	uint32_t shtype;
+	u_int32_t shtype;
 
 	assert(STAILQ_EMPTY(&e->e_u.e_elf.e_scn));
 
@@ -102,8 +100,8 @@ _libelf_ehdr(Elf *e, int ec, int allocate)
 {
 	void *ehdr;
 	size_t fsz, msz;
-	uint16_t phnum, shnum, strndx;
-	uint64_t shoff;
+	u_int16_t phnum, shnum, strndx;
+	u_int64_t shoff;
 	int (*xlator)(unsigned char *_d, size_t _dsz, unsigned char *_s,
 	    size_t _c, int _swap);
 

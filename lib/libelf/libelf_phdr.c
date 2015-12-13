@@ -31,14 +31,12 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 void *
 _libelf_getphdr(Elf *e, int ec)
 {
 	size_t phnum;
 	size_t fsz, msz;
-	uint64_t phoff;
+	u_int64_t phoff;
 	Elf32_Ehdr *eh32;
 	Elf64_Ehdr *eh64;
 	void *ehdr, *phdr;
@@ -68,17 +66,17 @@ _libelf_getphdr(Elf *e, int ec)
 
 	if (ec == ELFCLASS32) {
 		eh32      = (Elf32_Ehdr *) ehdr;
-		phoff     = (uint64_t) eh32->e_phoff;
+		phoff     = (u_int64_t) eh32->e_phoff;
 	} else {
 		eh64      = (Elf64_Ehdr *) ehdr;
-		phoff     = (uint64_t) eh64->e_phoff;
+		phoff     = (u_int64_t) eh64->e_phoff;
 	}
 
 	fsz = gelf_fsize(e, ELF_T_PHDR, phnum, e->e_version);
 
 	assert(fsz > 0);
 
-	if ((uint64_t) e->e_rawsize < (phoff + fsz)) {
+	if ((u_int64_t) e->e_rawsize < (phoff + fsz)) {
 		LIBELF_SET_ERROR(HEADER, 0);
 		return (NULL);
 	}

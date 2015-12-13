@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 char *
 elf_getident(Elf *e, size_t *sz)
 {

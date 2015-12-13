@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 void *
 _libelf_getshdr(Elf_Scn *s, int ec)
 {

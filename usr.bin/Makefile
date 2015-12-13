@@ -9,9 +9,9 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	lock logger login logname lorder m4 mail make man mesg mkdep \
 	mkfifo mklocale mkstr more msgs mt netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pr printenv printf quota \
-	ranlib rdist renice rev rlogin rs rsh ruptime rwho sccs \
+	rdist renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size sl soelim split \
-	strings strip su talk tcopy tee telnet tftp time tip \
+	strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \
 	vis w wall wc what whatis whereis who whois window write \

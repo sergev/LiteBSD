@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /* WARNING: GENERATED FROM __file__. */
 
 struct msize {

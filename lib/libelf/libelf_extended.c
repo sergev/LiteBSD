@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Retrieve section #0, allocating a new section if needed.
  */

@@ -30,8 +30,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf_Cmd
 elf_next(Elf *e)
 {

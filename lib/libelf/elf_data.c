@@ -32,8 +32,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf_Data *
 elf_getdata(Elf_Scn *s, Elf_Data *ed)
 {
@@ -42,7 +40,7 @@ elf_getdata(Elf_Scn *s, Elf_Data *ed)
 	int elfclass, elftype;
 	size_t count, fsz, msz;
 	struct _Libelf_Data *d;
-	uint64_t sh_align, sh_offset, sh_size;
+	u_int64_t sh_align, sh_offset, sh_size;
 	int (*xlate)(unsigned char *_d, size_t _dsz, unsigned char *_s,
 	    size_t _c, int _swap);
 
@@ -77,9 +75,9 @@ elf_getdata(Elf_Scn *s, Elf_Data *ed)
 
 	if (elfclass == ELFCLASS32) {
 		sh_type   = s->s_shdr.s_shdr32.sh_type;
-		sh_offset = (uint64_t) s->s_shdr.s_shdr32.sh_offset;
-		sh_size   = (uint64_t) s->s_shdr.s_shdr32.sh_size;
-		sh_align  = (uint64_t) s->s_shdr.s_shdr32.sh_addralign;
+		sh_offset = (u_int64_t) s->s_shdr.s_shdr32.sh_offset;
+		sh_size   = (u_int64_t) s->s_shdr.s_shdr32.sh_size;
+		sh_align  = (u_int64_t) s->s_shdr.s_shdr32.sh_addralign;
 	} else {
 		sh_type   = s->s_shdr.s_shdr64.sh_type;
 		sh_offset = s->s_shdr.s_shdr64.sh_offset;
@@ -94,7 +92,7 @@ elf_getdata(Elf_Scn *s, Elf_Data *ed)
 
 	if ((elftype = _libelf_xlate_shtype(sh_type)) < ELF_T_FIRST ||
 	    elftype > ELF_T_LAST || (sh_type != SHT_NOBITS &&
-	    sh_offset + sh_size > (uint64_t) e->e_rawsize)) {
+	    sh_offset + sh_size > (u_int64_t) e->e_rawsize)) {
 		LIBELF_SET_ERROR(SECTION, 0);
 		return (NULL);
 	}
@@ -193,7 +191,7 @@ elf_newdata(Elf_Scn *s)
 
 	d->d_data.d_align = 1;
 	d->d_data.d_buf = NULL;
-	d->d_data.d_off = (uint64_t) ~0;
+	d->d_data.d_off = (u_int64_t) ~0;
 	d->d_data.d_size = 0;
 	d->d_data.d_type = ELF_T_BYTE;
 	d->d_data.d_version = LIBELF_PRIVATE(version);
@@ -213,9 +211,9 @@ elf_rawdata(Elf_Scn *s, Elf_Data *ed)
 {
 	Elf *e;
 	int elf_class;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
-	uint64_t sh_align, sh_offset, sh_size;
+	u_int64_t sh_align, sh_offset, sh_size;
 
 	if (s == NULL || (e = s->s_elf) == NULL || e->e_rawfile == NULL) {
 		LIBELF_SET_ERROR(ARGUMENT, 0);
@@ -238,9 +236,9 @@ elf_rawdata(Elf_Scn *s, Elf_Data *ed)
 
 	if (elf_class == ELFCLASS32) {
 		sh_type   = s->s_shdr.s_shdr32.sh_type;
-		sh_offset = (uint64_t) s->s_shdr.s_shdr32.sh_offset;
-		sh_size   = (uint64_t) s->s_shdr.s_shdr32.sh_size;
-		sh_align  = (uint64_t) s->s_shdr.s_shdr32.sh_addralign;
+		sh_offset = (u_int64_t) s->s_shdr.s_shdr32.sh_offset;
+		sh_size   = (u_int64_t) s->s_shdr.s_shdr32.sh_size;
+		sh_align  = (u_int64_t) s->s_shdr.s_shdr32.sh_addralign;
 	} else {
 		sh_type   = s->s_shdr.s_shdr64.sh_type;
 		sh_offset = s->s_shdr.s_shdr64.sh_offset;
@@ -254,7 +252,7 @@ elf_rawdata(Elf_Scn *s, Elf_Data *ed)
 	}
 
 	if (sh_type != SHT_NOBITS &&
-	    sh_offset + sh_size > (uint64_t) e->e_rawsize) {
+	    sh_offset + sh_size > (u_int64_t) e->e_rawsize) {
 		LIBELF_SET_ERROR(SECTION, 0);
 		return (NULL);
 	}

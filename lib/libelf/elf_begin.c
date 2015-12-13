@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf *
 elf_begin(int fd, Elf_Cmd c, Elf *a)
 {

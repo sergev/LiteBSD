@@ -105,10 +105,10 @@ typedef struct _Elf_Data {
 	/*
 	 * `Public' members that are part of the ELF(3) API.
 	 */
-	uint64_t	d_align;
+	u_int64_t	d_align;
 	void		*d_buf;
-	uint64_t	d_off;
-	uint64_t	d_size;
+	u_int64_t	d_off;
+	u_int64_t	d_size;
 	Elf_Type	d_type;
 	unsigned int	d_version;
 } Elf_Data;

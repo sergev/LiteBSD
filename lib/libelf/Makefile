@@ -1,7 +1,3 @@
-# $Id$
-
-TOP=	${.CURDIR}/..
-
 LIB=	elf
 
 SRCS=	elf.c							\
@@ -60,7 +56,6 @@ SRCS=	elf.c							\
 	${GENSRCS}
 
 INCS=		libelf.h gelf.h
-INCSDIR=	/usr/include
 
 GENSRCS=	libelf_fsize.c libelf_msize.c libelf_convert.c
 CLEANFILES=	${GENSRCS}
@@ -159,7 +154,12 @@ MLINKS+= \
 .endfor
 
 libelf_convert.c:	elf_types.m4 libelf_convert.m4
-libelf_fsize.c:		elf_types.m4 libelf_fsize.m4
-libelf_msize.c:		elf_types.m4 libelf_msize.m4
+	m4 -D SRCDIR=$(PWD) libelf_fsize.m4 > $@
 
-.include "${TOP}/mk/elftoolchain.lib.mk"
+libelf_fsize.c:		elf_types.m4 libelf_fsize.m4
+	m4 -D SRCDIR=$(PWD) libelf_msize.m4 > $@
+
+libelf_msize.c:		elf_types.m4 libelf_msize.m4
+	m4 -D SRCDIR=$(PWD) libelf_convert.m4 > $@
+
+.include <bsd.lib.mk>

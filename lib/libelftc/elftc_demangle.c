@@ -33,8 +33,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 static int
 is_mangled(const char *s, int style)
 {

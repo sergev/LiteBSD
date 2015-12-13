@@ -31,8 +31,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 GElf_Dyn *
 gelf_getdyn(Elf_Data *ed, int ndx, GElf_Dyn *dst)
 {
@@ -42,7 +40,7 @@ gelf_getdyn(Elf_Data *ed, int ndx, GElf_Dyn *dst)
 	Elf_Scn *scn;
 	Elf32_Dyn *dyn32;
 	Elf64_Dyn *dyn64;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 
 	d = (struct _Libelf_Data *) ed;
@@ -102,7 +100,7 @@ gelf_update_dyn(Elf_Data *ed, int ndx, GElf_Dyn *ds)
 	Elf_Scn *scn;
 	Elf32_Dyn *dyn32;
 	Elf64_Dyn *dyn64;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 
 	d = (struct _Libelf_Data *) ed;

@@ -31,8 +31,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Create an ELF descriptor for a memory image, optionally reporting
  * parse errors.

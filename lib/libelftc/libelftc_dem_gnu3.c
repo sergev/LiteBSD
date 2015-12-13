@@ -36,8 +36,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 /**
  * @file cpp_demangle.c
  * @brief Decode IA-64 C++ ABI style implementation.

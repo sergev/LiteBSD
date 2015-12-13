@@ -37,8 +37,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 /**
  * @file cpp_demangle_arm.c
  * @brief Decode function name encoding in ARM.

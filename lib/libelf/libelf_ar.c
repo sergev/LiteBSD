@@ -33,8 +33,6 @@
 #include "_libelf.h"
 #include "_libelf_ar.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	LIBELF_NALLOC_SIZE	16
 
 /*
@@ -120,10 +118,10 @@ _libelf_ar_gethdr(Elf *e)
 
 	assert((e->e_flags & LIBELF_F_AR_HEADER) == 0);
 
-	arh = (struct ar_hdr *) (uintptr_t) e->e_hdr.e_rawhdr;
+	arh = (struct ar_hdr *) (u_intptr_t) e->e_hdr.e_rawhdr;
 
-	assert((uintptr_t) arh >= (uintptr_t) parent->e_rawfile + SARMAG);
-	assert((uintptr_t) arh <= (uintptr_t) parent->e_rawfile +
+	assert((u_intptr_t) arh >= (u_intptr_t) parent->e_rawfile + SARMAG);
+	assert((u_intptr_t) arh <= (u_intptr_t) parent->e_rawfile +
 	    parent->e_rawsize - sizeof(struct ar_hdr));
 
 	if ((eh = malloc(sizeof(Elf_Arhdr))) == NULL) {
@@ -398,7 +396,7 @@ symtaberror:
 Elf_Arsym *
 _libelf_ar_process_svr4_symtab(Elf *e, size_t *count)
 {
-	uint32_t off;
+	u_int32_t off;
 	size_t n, nentries;
 	Elf_Arsym *symtab, *sym;
 	unsigned char *p, *s, *end;

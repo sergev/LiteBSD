@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 off_t
 elf_rand(Elf *ar, off_t offset)
 {

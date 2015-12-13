@@ -36,8 +36,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Load an ELF section table and create a list of Elf_Scn structures.
  */
@@ -45,7 +43,7 @@ int
 _libelf_load_section_headers(Elf *e, void *ehdr)
 {
 	Elf_Scn *scn;
-	uint64_t shoff;
+	u_int64_t shoff;
 	Elf32_Ehdr *eh32;
 	Elf64_Ehdr *eh64;
 	int ec, swapbytes;
@@ -76,7 +74,7 @@ _libelf_load_section_headers(Elf *e, void *ehdr)
 
 	if (ec == ELFCLASS32) {
 		eh32 = (Elf32_Ehdr *) ehdr;
-		shoff = (uint64_t) eh32->e_shoff;
+		shoff = (u_int64_t) eh32->e_shoff;
 		CHECK_EHDR(e, eh32);
 	} else {
 		eh64 = (Elf64_Ehdr *) ehdr;

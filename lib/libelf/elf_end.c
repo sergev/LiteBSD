@@ -34,8 +34,6 @@
 #include <sys/mman.h>
 #endif
 
-ELFTC_VCSID("$Id$");
-
 int
 elf_end(Elf *e)
 {

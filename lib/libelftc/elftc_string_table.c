@@ -36,8 +36,6 @@
 #include "libelftc.h"
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	ELFTC_STRING_TABLE_DEFAULT_SIZE			(4*1024)
 #define ELFTC_STRING_TABLE_EXPECTED_STRING_SIZE		16
 #define ELFTC_STRING_TABLE_EXPECTED_CHAIN_LENGTH	8

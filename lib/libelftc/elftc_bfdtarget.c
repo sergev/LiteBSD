@@ -30,8 +30,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 Elftc_Bfd_Target *
 elftc_bfd_find_target(const char *tgt_name)
 {

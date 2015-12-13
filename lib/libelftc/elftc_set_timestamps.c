@@ -30,8 +30,6 @@
 
 #include "_libelftc.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Determine the field name for the timestamp fields inside a 'struct
  * stat'.

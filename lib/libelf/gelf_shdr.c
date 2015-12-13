@@ -32,8 +32,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 Elf32_Shdr *
 elf32_getshdr(Elf_Scn *s)
 {

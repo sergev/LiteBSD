@@ -32,8 +32,6 @@
 #include "_libelf.h"
 #include "_libelf_ar.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Convert a string bounded by `start' and `start+sz' (exclusive) to a
  * number in the specified base.

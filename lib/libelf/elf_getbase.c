@@ -28,8 +28,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 off_t
 elf_getbase(Elf *e)
 {
@@ -41,6 +39,6 @@ elf_getbase(Elf *e)
 	if (e->e_parent == NULL)
 		return ((off_t) 0);
 
-	return ((off_t) ((uintptr_t) e->e_rawfile -
-	    (uintptr_t) e->e_parent->e_rawfile));
+	return ((off_t) ((u_intptr_t) e->e_rawfile -
+	    (u_intptr_t) e->e_parent->e_rawfile));
 }

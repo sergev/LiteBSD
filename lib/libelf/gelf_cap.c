@@ -31,8 +31,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 GElf_Cap *
 gelf_getcap(Elf_Data *ed, int ndx, GElf_Cap *dst)
 {
@@ -42,7 +40,7 @@ gelf_getcap(Elf_Data *ed, int ndx, GElf_Cap *dst)
 	Elf_Scn *scn;
 	Elf32_Cap *cap32;
 	Elf64_Cap *cap64;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 
 	d = (struct _Libelf_Data *) ed;
@@ -102,7 +100,7 @@ gelf_update_cap(Elf_Data *ed, int ndx, GElf_Cap *gc)
 	Elf_Scn *scn;
 	Elf32_Cap *cap32;
 	Elf64_Cap *cap64;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *d;
 
 	d = (struct _Libelf_Data *) ed;

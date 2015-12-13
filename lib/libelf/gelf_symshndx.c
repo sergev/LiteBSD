@@ -29,8 +29,6 @@
 
 #include "_libelf.h"
 
-ELFTC_VCSID("$Id$");
-
 GElf_Sym *
 gelf_getsymshndx(Elf_Data *d, Elf_Data *id, int ndx, GElf_Sym *dst,
     Elf32_Word *shindex)
@@ -39,7 +37,7 @@ gelf_getsymshndx(Elf_Data *d, Elf_Data *id, int ndx, GElf_Sym *dst,
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *ld, *lid;
 
 	ld = (struct _Libelf_Data *) d;
@@ -92,7 +90,7 @@ gelf_update_symshndx(Elf_Data *d, Elf_Data *id, int ndx, GElf_Sym *gs,
 	Elf *e;
 	size_t msz;
 	Elf_Scn *scn;
-	uint32_t sh_type;
+	u_int32_t sh_type;
 	struct _Libelf_Data *ld, *lid;
 
 	ld = (struct _Libelf_Data *) d;
