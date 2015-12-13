@@ -43,12 +43,11 @@
 /*
  * MIPS process control block
  */
-struct pcb
-{
-    int     pcb_regs[69];   /* saved CPU and floating point registers */
-    label_t pcb_context;    /* kernel context for resume */
-    int     pcb_onfault;    /* for copyin/copyout faults */
-    void    *pcb_segtab;    /* copy of pmap pm_segtab */
+struct pcb {
+    int     pcb_regs[69];       /* saved CPU and floating point registers */
+    int     pcb_context[12];    /* kernel context for resume */
+    int     pcb_onfault;        /* for copyin/copyout faults */
+    void    *pcb_segtab;        /* copy of pmap pm_segtab */
 };
 
 /*

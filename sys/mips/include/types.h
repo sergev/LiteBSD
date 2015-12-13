@@ -39,14 +39,6 @@
 #ifndef _MACHTYPES_H_
 #define _MACHTYPES_H_
 
-#if !defined(_ANSI_SOURCE) && !defined(_POSIX_SOURCE)
-
-typedef struct label_t {
-    int val[12];
-} label_t;
-
-#endif
-
 typedef unsigned long   vm_offset_t;
 typedef unsigned long   vm_size_t;
 
