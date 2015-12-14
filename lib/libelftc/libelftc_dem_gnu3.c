@@ -1694,13 +1694,19 @@ static int
 cpp_demangle_read_number_as_string(struct cpp_demangle_data *ddata, char **str)
 {
 	long n;
+	int str_len = 24;
 
 	if (!cpp_demangle_read_number(ddata, &n)) {
 		*str = NULL;
 		return (0);
 	}
 
-	if (asprintf(str, "%ld", n) < 0) {
+	*str = malloc(str_len);
+        if (*str == NULL)
+                return (0);
+
+	if (snprintf(*str, str_len, "%ld", n) < 0) {
+	        free(*str);
 		*str = NULL;
 		return (0);
 	}

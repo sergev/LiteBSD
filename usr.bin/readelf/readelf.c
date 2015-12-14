@@ -36,7 +36,7 @@
 #include <getopt.h>
 #include <libdwarf.h>
 #include <libelftc.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -45,9 +45,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "_elftc.h"
-
-ELFTC_VCSID("$Id$");
+//#include "_elftc.h"
 
 /*
  * readelf(1) options.
@@ -104,15 +102,15 @@ ELFTC_VCSID("$Id$");
 struct section {
 	const char	*name;		/* section name */
 	Elf_Scn		*scn;		/* section scn */
-	uint64_t	 off;		/* section offset */
-	uint64_t	 sz;		/* section size */
-	uint64_t	 entsize;	/* section entsize */
-	uint64_t	 align;		/* section alignment */
-	uint64_t	 type;		/* section type */
-	uint64_t	 flags;		/* section flags */
-	uint64_t	 addr;		/* section virtual addr */
-	uint32_t	 link;		/* section link ndx */
-	uint32_t	 info;		/* section info ndx */
+	u_int64_t	 off;		/* section offset */
+	u_int64_t	 sz;		/* section size */
+	u_int64_t	 entsize;	/* section entsize */
+	u_int64_t	 align;		/* section alignment */
+	u_int64_t	 type;		/* section type */
+	u_int64_t	 flags;		/* section flags */
+	u_int64_t	 addr;		/* section virtual addr */
+	u_int32_t	 link;		/* section link ndx */
+	u_int32_t	 info;		/* section info ndx */
 };
 
 struct dumpop {
@@ -155,14 +153,14 @@ struct readelf {
 	struct section	 *vd_s;		/* Verdef section. */
 	struct section	 *vn_s;		/* Verneed section. */
 	struct section	 *vs_s;		/* Versym section. */
-	uint16_t	 *vs;		/* Versym array. */
+	u_int16_t	 *vs;		/* Versym array. */
 	int		  vs_sz;	/* Versym array size. */
 	struct symver	 *ver;		/* Version array. */
 	int		  ver_sz;	/* Size of version array. */
 	struct section	 *sl;		/* list of sections. */
 	STAILQ_HEAD(, dumpop) v_dumpop; /* list of dump ops. */
-	uint64_t	(*dw_read)(Elf_Data *, uint64_t *, int);
-	uint64_t	(*dw_decode)(uint8_t **, int);
+	u_int64_t	(*dw_read)(Elf_Data *, u_int64_t *, int);
+	u_int64_t	(*dw_decode)(u_int8_t **, int);
 };
 
 enum options
@@ -202,50 +200,50 @@ static struct option longopts[] = {
 };
 
 struct eflags_desc {
-	uint64_t flag;
+	u_int64_t flag;
 	const char *desc;
 };
 
 struct mips_option {
-	uint64_t flag;
+	u_int64_t flag;
 	const char *desc;
 };
 
 static void add_dumpop(struct readelf *re, size_t si, const char *sn, int op,
     int t);
-static const char *aeabi_adv_simd_arch(uint64_t simd);
-static const char *aeabi_align_needed(uint64_t an);
-static const char *aeabi_align_preserved(uint64_t ap);
-static const char *aeabi_arm_isa(uint64_t ai);
-static const char *aeabi_cpu_arch(uint64_t arch);
-static const char *aeabi_cpu_arch_profile(uint64_t pf);
-static const char *aeabi_div(uint64_t du);
-static const char *aeabi_enum_size(uint64_t es);
-static const char *aeabi_fp_16bit_format(uint64_t fp16);
-static const char *aeabi_fp_arch(uint64_t fp);
-static const char *aeabi_fp_denormal(uint64_t fd);
-static const char *aeabi_fp_exceptions(uint64_t fe);
-static const char *aeabi_fp_hpext(uint64_t fh);
-static const char *aeabi_fp_number_model(uint64_t fn);
-static const char *aeabi_fp_optm_goal(uint64_t fog);
-static const char *aeabi_fp_rounding(uint64_t fr);
-static const char *aeabi_hardfp(uint64_t hfp);
-static const char *aeabi_mpext(uint64_t mp);
-static const char *aeabi_optm_goal(uint64_t og);
-static const char *aeabi_pcs_config(uint64_t pcs);
-static const char *aeabi_pcs_got(uint64_t got);
-static const char *aeabi_pcs_r9(uint64_t r9);
-static const char *aeabi_pcs_ro(uint64_t ro);
-static const char *aeabi_pcs_rw(uint64_t rw);
-static const char *aeabi_pcs_wchar_t(uint64_t wt);
-static const char *aeabi_t2ee(uint64_t t2ee);
-static const char *aeabi_thumb_isa(uint64_t ti);
-static const char *aeabi_fp_user_exceptions(uint64_t fu);
-static const char *aeabi_unaligned_access(uint64_t ua);
-static const char *aeabi_vfp_args(uint64_t va);
-static const char *aeabi_virtual(uint64_t vt);
-static const char *aeabi_wmmx_arch(uint64_t wmmx);
-static const char *aeabi_wmmx_args(uint64_t wa);
+static const char *aeabi_adv_simd_arch(u_int64_t simd);
+static const char *aeabi_align_needed(u_int64_t an);
+static const char *aeabi_align_preserved(u_int64_t ap);
+static const char *aeabi_arm_isa(u_int64_t ai);
+static const char *aeabi_cpu_arch(u_int64_t arch);
+static const char *aeabi_cpu_arch_profile(u_int64_t pf);
+static const char *aeabi_div(u_int64_t du);
+static const char *aeabi_enum_size(u_int64_t es);
+static const char *aeabi_fp_16bit_format(u_int64_t fp16);
+static const char *aeabi_fp_arch(u_int64_t fp);
+static const char *aeabi_fp_denormal(u_int64_t fd);
+static const char *aeabi_fp_exceptions(u_int64_t fe);
+static const char *aeabi_fp_hpext(u_int64_t fh);
+static const char *aeabi_fp_number_model(u_int64_t fn);
+static const char *aeabi_fp_optm_goal(u_int64_t fog);
+static const char *aeabi_fp_rounding(u_int64_t fr);
+static const char *aeabi_hardfp(u_int64_t hfp);
+static const char *aeabi_mpext(u_int64_t mp);
+static const char *aeabi_optm_goal(u_int64_t og);
+static const char *aeabi_pcs_config(u_int64_t pcs);
+static const char *aeabi_pcs_got(u_int64_t got);
+static const char *aeabi_pcs_r9(u_int64_t r9);
+static const char *aeabi_pcs_ro(u_int64_t ro);
+static const char *aeabi_pcs_rw(u_int64_t rw);
+static const char *aeabi_pcs_wchar_t(u_int64_t wt);
+static const char *aeabi_t2ee(u_int64_t t2ee);
+static const char *aeabi_thumb_isa(u_int64_t ti);
+static const char *aeabi_fp_user_exceptions(u_int64_t fu);
+static const char *aeabi_unaligned_access(u_int64_t ua);
+static const char *aeabi_vfp_args(u_int64_t va);
+static const char *aeabi_virtual(u_int64_t vt);
+static const char *aeabi_wmmx_arch(u_int64_t wmmx);
+static const char *aeabi_wmmx_args(u_int64_t wa);
 static const char *elf_class(unsigned int class);
 static const char *elf_endian(unsigned int endian);
 static const char *elf_machine(unsigned int mach);
@@ -254,18 +252,18 @@ static const char *elf_type(unsigned int type);
 static const char *elf_ver(unsigned int ver);
 static const char *dt_type(unsigned int mach, unsigned int dtype);
 static void dump_ar(struct readelf *re, int);
-static void dump_arm_attributes(struct readelf *re, uint8_t *p, uint8_t *pe);
+static void dump_arm_attributes(struct readelf *re, u_int8_t *p, u_int8_t *pe);
 static void dump_attributes(struct readelf *re);
-static uint8_t *dump_compatibility_tag(uint8_t *p, uint8_t *pe);
+static u_int8_t *dump_compatibility_tag(u_int8_t *p, u_int8_t *pe);
 static void dump_dwarf(struct readelf *re);
 static void dump_dwarf_abbrev(struct readelf *re);
 static void dump_dwarf_aranges(struct readelf *re);
-static void dump_dwarf_block(struct readelf *re, uint8_t *b,
+static void dump_dwarf_block(struct readelf *re, u_int8_t *b,
     Dwarf_Unsigned len);
 static void dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level);
 static void dump_dwarf_frame(struct readelf *re, int alt);
 static void dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie,
-    uint8_t *insts, Dwarf_Unsigned len, Dwarf_Unsigned caf, Dwarf_Signed daf,
+    u_int8_t *insts, Dwarf_Unsigned len, Dwarf_Unsigned caf, Dwarf_Signed daf,
     Dwarf_Addr pc, Dwarf_Debug dbg);
 static int dump_dwarf_frame_regtable(struct readelf *re, Dwarf_Fde fde,
     Dwarf_Addr pc, Dwarf_Unsigned func_len, Dwarf_Half cie_ra);
@@ -282,16 +280,16 @@ static void dump_dwarf_ranges(struct readelf *re);
 static void dump_dwarf_ranges_foreach(struct readelf *re, Dwarf_Die die,
     Dwarf_Addr base);
 static void dump_dwarf_str(struct readelf *re);
-static void dump_eflags(struct readelf *re, uint64_t e_flags);
+static void dump_eflags(struct readelf *re, u_int64_t e_flags);
 static void dump_elf(struct readelf *re);
-static void dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab);
+static void dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, u_int32_t stab);
 static void dump_dynamic(struct readelf *re);
 static void dump_liblist(struct readelf *re);
-static void dump_mips_attributes(struct readelf *re, uint8_t *p, uint8_t *pe);
-static void dump_mips_odk_reginfo(struct readelf *re, uint8_t *p, size_t sz);
+static void dump_mips_attributes(struct readelf *re, u_int8_t *p, u_int8_t *pe);
+static void dump_mips_odk_reginfo(struct readelf *re, u_int8_t *p, size_t sz);
 static void dump_mips_options(struct readelf *re, struct section *s);
 static void dump_mips_option_flags(const char *name, struct mips_option *opt,
-    uint64_t info);
+    u_int64_t info);
 static void dump_mips_reginfo(struct readelf *re, struct section *s);
 static void dump_mips_specific_info(struct readelf *re);
 static void dump_notes(struct readelf *re);
@@ -302,11 +300,11 @@ static void dump_svr4_hash64(struct readelf *re, struct section *s);
 static void dump_gnu_hash(struct readelf *re, struct section *s);
 static void dump_hash(struct readelf *re);
 static void dump_phdr(struct readelf *re);
-static void dump_ppc_attributes(uint8_t *p, uint8_t *pe);
+static void dump_ppc_attributes(u_int8_t *p, u_int8_t *pe);
 static void dump_section_groups(struct readelf *re);
 static void dump_symtab(struct readelf *re, int i);
 static void dump_symtabs(struct readelf *re);
-static uint8_t *dump_unknown_tag(uint64_t tag, uint8_t *p, uint8_t *pe);
+static u_int8_t *dump_unknown_tag(u_int64_t tag, u_int8_t *p, u_int8_t *pe);
 static void dump_ver(struct readelf *re);
 static void dump_verdef(struct readelf *re, int dump);
 static void dump_verneed(struct readelf *re, int dump);
@@ -320,9 +318,9 @@ static char *get_regoff_str(struct readelf *re, Dwarf_Half reg,
     Dwarf_Addr off);
 static const char *get_string(struct readelf *re, int strtab, size_t off);
 static const char *get_symbol_name(struct readelf *re, int symtab, int i);
-static uint64_t get_symbol_value(struct readelf *re, int symtab, int i);
+static u_int64_t get_symbol_value(struct readelf *re, int symtab, int i);
 static void load_sections(struct readelf *re);
-static const char *mips_abi_fp(uint64_t fp);
+static const char *mips_abi_fp(u_int64_t fp);
 static const char *note_type(const char *note_name, unsigned int et,
     unsigned int nt);
 static const char *note_type_freebsd(unsigned int nt);
@@ -332,10 +330,10 @@ static const char *note_type_gnu(unsigned int nt);
 static const char *note_type_netbsd(unsigned int nt);
 static const char *note_type_openbsd(unsigned int nt);
 static const char *note_type_unknown(unsigned int nt);
-static const char *option_kind(uint8_t kind);
+static const char *option_kind(u_int8_t kind);
 static const char *phdr_type(unsigned int ptype);
-static const char *ppc_abi_fp(uint64_t fp);
-static const char *ppc_abi_vector(uint64_t vec);
+static const char *ppc_abi_fp(u_int64_t fp);
+static const char *ppc_abi_vector(u_int64_t vec);
 static const char *r_type(unsigned int mach, unsigned int type);
 static void readelf_usage(void);
 static void readelf_version(void);
@@ -351,14 +349,14 @@ static const char *st_type(unsigned int stype);
 static const char *st_vis(unsigned int svis);
 static const char *top_tag(unsigned int tag);
 static void unload_sections(struct readelf *re);
-static uint64_t _read_lsb(Elf_Data *d, uint64_t *offsetp,
+static u_int64_t _read_lsb(Elf_Data *d, u_int64_t *offsetp,
     int bytes_to_read);
-static uint64_t _read_msb(Elf_Data *d, uint64_t *offsetp,
+static u_int64_t _read_msb(Elf_Data *d, u_int64_t *offsetp,
     int bytes_to_read);
-static uint64_t _decode_lsb(uint8_t **data, int bytes_to_read);
-static uint64_t _decode_msb(uint8_t **data, int bytes_to_read);
-static int64_t _decode_sleb128(uint8_t **dp, uint8_t *dpe);
-static uint64_t _decode_uleb128(uint8_t **dp, uint8_t *dpe);
+static u_int64_t _decode_lsb(u_int8_t **data, int bytes_to_read);
+static u_int64_t _decode_msb(u_int8_t **data, int bytes_to_read);
+static int64_t _decode_sleb128(u_int8_t **dp, u_int8_t *dpe);
+static u_int64_t _decode_uleb128(u_int8_t **dp, u_int8_t *dpe);
 
 static struct eflags_desc arm_eflags_desc[] = {
 	{EF_ARM_RELEXEC, "relocatable executable"},
@@ -1756,7 +1754,7 @@ static struct mips_option mips_hwo_option[] = {
 };
 
 static const char *
-option_kind(uint8_t kind)
+option_kind(u_int8_t kind)
 {
 	static char s_kind[32];
 
@@ -1794,7 +1792,7 @@ top_tag(unsigned int tag)
 }
 
 static const char *
-aeabi_cpu_arch(uint64_t arch)
+aeabi_cpu_arch(u_int64_t arch)
 {
 	static char s_cpu_arch[32];
 
@@ -1815,13 +1813,13 @@ aeabi_cpu_arch(uint64_t arch)
 	case 13: return "ARM v7E-M";
 	default:
 		snprintf(s_cpu_arch, sizeof(s_cpu_arch),
-		    "Unknown (%ju)", (uintmax_t) arch);
+		    "Unknown (%ju)", (u_intmax_t) arch);
 		return (s_cpu_arch);
 	}
 }
 
 static const char *
-aeabi_cpu_arch_profile(uint64_t pf)
+aeabi_cpu_arch_profile(u_int64_t pf)
 {
 	static char s_arch_profile[32];
 
@@ -1838,13 +1836,13 @@ aeabi_cpu_arch_profile(uint64_t pf)
 		return "Application or Real-Time Profile";
 	default:
 		snprintf(s_arch_profile, sizeof(s_arch_profile),
-		    "Unknown (%ju)\n", (uintmax_t) pf);
+		    "Unknown (%ju)\n", (u_intmax_t) pf);
 		return (s_arch_profile);
 	}
 }
 
 static const char *
-aeabi_arm_isa(uint64_t ai)
+aeabi_arm_isa(u_int64_t ai)
 {
 	static char s_ai[32];
 
@@ -1853,13 +1851,13 @@ aeabi_arm_isa(uint64_t ai)
 	case 1: return "Yes";
 	default:
 		snprintf(s_ai, sizeof(s_ai), "Unknown (%ju)\n",
-		    (uintmax_t) ai);
+		    (u_intmax_t) ai);
 		return (s_ai);
 	}
 }
 
 static const char *
-aeabi_thumb_isa(uint64_t ti)
+aeabi_thumb_isa(u_int64_t ti)
 {
 	static char s_ti[32];
 
@@ -1869,13 +1867,13 @@ aeabi_thumb_isa(uint64_t ti)
 	case 2: return "32-bit Thumb";
 	default:
 		snprintf(s_ti, sizeof(s_ti), "Unknown (%ju)\n",
-		    (uintmax_t) ti);
+		    (u_intmax_t) ti);
 		return (s_ti);
 	}
 }
 
 static const char *
-aeabi_fp_arch(uint64_t fp)
+aeabi_fp_arch(u_int64_t fp)
 {
 	static char s_fp_arch[32];
 
@@ -1889,13 +1887,13 @@ aeabi_fp_arch(uint64_t fp)
 	case 6: return "VFPv4-D16";
 	default:
 		snprintf(s_fp_arch, sizeof(s_fp_arch), "Unknown (%ju)",
-		    (uintmax_t) fp);
+		    (u_intmax_t) fp);
 		return (s_fp_arch);
 	}
 }
 
 static const char *
-aeabi_wmmx_arch(uint64_t wmmx)
+aeabi_wmmx_arch(u_int64_t wmmx)
 {
 	static char s_wmmx[32];
 
@@ -1905,13 +1903,13 @@ aeabi_wmmx_arch(uint64_t wmmx)
 	case 2: return "WMMXv2";
 	default:
 		snprintf(s_wmmx, sizeof(s_wmmx), "Unknown (%ju)",
-		    (uintmax_t) wmmx);
+		    (u_intmax_t) wmmx);
 		return (s_wmmx);
 	}
 }
 
 static const char *
-aeabi_adv_simd_arch(uint64_t simd)
+aeabi_adv_simd_arch(u_int64_t simd)
 {
 	static char s_simd[32];
 
@@ -1921,13 +1919,13 @@ aeabi_adv_simd_arch(uint64_t simd)
 	case 2: return "NEONv2";
 	default:
 		snprintf(s_simd, sizeof(s_simd), "Unknown (%ju)",
-		    (uintmax_t) simd);
+		    (u_intmax_t) simd);
 		return (s_simd);
 	}
 }
 
 static const char *
-aeabi_pcs_config(uint64_t pcs)
+aeabi_pcs_config(u_int64_t pcs)
 {
 	static char s_pcs[32];
 
@@ -1942,13 +1940,13 @@ aeabi_pcs_config(uint64_t pcs)
 	case 7: return "Symbian OS (future)";
 	default:
 		snprintf(s_pcs, sizeof(s_pcs), "Unknown (%ju)",
-		    (uintmax_t) pcs);
+		    (u_intmax_t) pcs);
 		return (s_pcs);
 	}
 }
 
 static const char *
-aeabi_pcs_r9(uint64_t r9)
+aeabi_pcs_r9(u_int64_t r9)
 {
 	static char s_r9[32];
 
@@ -1958,13 +1956,13 @@ aeabi_pcs_r9(uint64_t r9)
 	case 2: return "TLS pointer";
 	case 3: return "Unused";
 	default:
-		snprintf(s_r9, sizeof(s_r9), "Unknown (%ju)", (uintmax_t) r9);
+		snprintf(s_r9, sizeof(s_r9), "Unknown (%ju)", (u_intmax_t) r9);
 		return (s_r9);
 	}
 }
 
 static const char *
-aeabi_pcs_rw(uint64_t rw)
+aeabi_pcs_rw(u_int64_t rw)
 {
 	static char s_rw[32];
 
@@ -1974,13 +1972,13 @@ aeabi_pcs_rw(uint64_t rw)
 	case 2: return "SB-relative";
 	case 3: return "None";
 	default:
-		snprintf(s_rw, sizeof(s_rw), "Unknown (%ju)", (uintmax_t) rw);
+		snprintf(s_rw, sizeof(s_rw), "Unknown (%ju)", (u_intmax_t) rw);
 		return (s_rw);
 	}
 }
 
 static const char *
-aeabi_pcs_ro(uint64_t ro)
+aeabi_pcs_ro(u_int64_t ro)
 {
 	static char s_ro[32];
 
@@ -1989,13 +1987,13 @@ aeabi_pcs_ro(uint64_t ro)
 	case 1: return "PC-relative";
 	case 2: return "None";
 	default:
-		snprintf(s_ro, sizeof(s_ro), "Unknown (%ju)", (uintmax_t) ro);
+		snprintf(s_ro, sizeof(s_ro), "Unknown (%ju)", (u_intmax_t) ro);
 		return (s_ro);
 	}
 }
 
 static const char *
-aeabi_pcs_got(uint64_t got)
+aeabi_pcs_got(u_int64_t got)
 {
 	static char s_got[32];
 
@@ -2005,13 +2003,13 @@ aeabi_pcs_got(uint64_t got)
 	case 2: return "indirect via GOT";
 	default:
 		snprintf(s_got, sizeof(s_got), "Unknown (%ju)",
-		    (uintmax_t) got);
+		    (u_intmax_t) got);
 		return (s_got);
 	}
 }
 
 static const char *
-aeabi_pcs_wchar_t(uint64_t wt)
+aeabi_pcs_wchar_t(u_int64_t wt)
 {
 	static char s_wt[32];
 
@@ -2020,13 +2018,13 @@ aeabi_pcs_wchar_t(uint64_t wt)
 	case 2: return "wchar_t size 2";
 	case 4: return "wchar_t size 4";
 	default:
-		snprintf(s_wt, sizeof(s_wt), "Unknown (%ju)", (uintmax_t) wt);
+		snprintf(s_wt, sizeof(s_wt), "Unknown (%ju)", (u_intmax_t) wt);
 		return (s_wt);
 	}
 }
 
 static const char *
-aeabi_enum_size(uint64_t es)
+aeabi_enum_size(u_int64_t es)
 {
 	static char s_es[32];
 
@@ -2036,13 +2034,13 @@ aeabi_enum_size(uint64_t es)
 	case 2: return "32-bit";
 	case 3: return "visible 32-bit";
 	default:
-		snprintf(s_es, sizeof(s_es), "Unknown (%ju)", (uintmax_t) es);
+		snprintf(s_es, sizeof(s_es), "Unknown (%ju)", (u_intmax_t) es);
 		return (s_es);
 	}
 }
 
 static const char *
-aeabi_align_needed(uint64_t an)
+aeabi_align_needed(u_int64_t an)
 {
 	static char s_align_n[64];
 
@@ -2055,16 +2053,16 @@ aeabi_align_needed(uint64_t an)
 		if (an >= 4 && an <= 12)
 			snprintf(s_align_n, sizeof(s_align_n), "8-byte align"
 			    " and up to 2^%ju-byte extended align",
-			    (uintmax_t) an);
+			    (u_intmax_t) an);
 		else
 			snprintf(s_align_n, sizeof(s_align_n), "Unknown (%ju)",
-			    (uintmax_t) an);
+			    (u_intmax_t) an);
 		return (s_align_n);
 	}
 }
 
 static const char *
-aeabi_align_preserved(uint64_t ap)
+aeabi_align_preserved(u_int64_t ap)
 {
 	static char s_align_p[128];
 
@@ -2077,16 +2075,16 @@ aeabi_align_preserved(uint64_t ap)
 		if (ap >= 4 && ap <= 12)
 			snprintf(s_align_p, sizeof(s_align_p), "8-byte align"
 			    " and SP %% 8 == 0 and up to 2^%ju-byte extended"
-			    " align", (uintmax_t) ap);
+			    " align", (u_intmax_t) ap);
 		else
 			snprintf(s_align_p, sizeof(s_align_p), "Unknown (%ju)",
-			    (uintmax_t) ap);
+			    (u_intmax_t) ap);
 		return (s_align_p);
 	}
 }
 
 static const char *
-aeabi_fp_rounding(uint64_t fr)
+aeabi_fp_rounding(u_int64_t fr)
 {
 	static char s_fp_r[32];
 
@@ -2095,13 +2093,13 @@ aeabi_fp_rounding(uint64_t fr)
 	case 1: return "Needed";
 	default:
 		snprintf(s_fp_r, sizeof(s_fp_r), "Unknown (%ju)",
-		    (uintmax_t) fr);
+		    (u_intmax_t) fr);
 		return (s_fp_r);
 	}
 }
 
 static const char *
-aeabi_fp_denormal(uint64_t fd)
+aeabi_fp_denormal(u_int64_t fd)
 {
 	static char s_fp_d[32];
 
@@ -2111,13 +2109,13 @@ aeabi_fp_denormal(uint64_t fd)
 	case 2: return "Sign Only";
 	default:
 		snprintf(s_fp_d, sizeof(s_fp_d), "Unknown (%ju)",
-		    (uintmax_t) fd);
+		    (u_intmax_t) fd);
 		return (s_fp_d);
 	}
 }
 
 static const char *
-aeabi_fp_exceptions(uint64_t fe)
+aeabi_fp_exceptions(u_int64_t fe)
 {
 	static char s_fp_e[32];
 
@@ -2126,13 +2124,13 @@ aeabi_fp_exceptions(uint64_t fe)
 	case 1: return "Needed";
 	default:
 		snprintf(s_fp_e, sizeof(s_fp_e), "Unknown (%ju)",
-		    (uintmax_t) fe);
+		    (u_intmax_t) fe);
 		return (s_fp_e);
 	}
 }
 
 static const char *
-aeabi_fp_user_exceptions(uint64_t fu)
+aeabi_fp_user_exceptions(u_int64_t fu)
 {
 	static char s_fp_u[32];
 
@@ -2141,13 +2139,13 @@ aeabi_fp_user_exceptions(uint64_t fu)
 	case 1: return "Needed";
 	default:
 		snprintf(s_fp_u, sizeof(s_fp_u), "Unknown (%ju)",
-		    (uintmax_t) fu);
+		    (u_intmax_t) fu);
 		return (s_fp_u);
 	}
 }
 
 static const char *
-aeabi_fp_number_model(uint64_t fn)
+aeabi_fp_number_model(u_int64_t fn)
 {
 	static char s_fp_n[32];
 
@@ -2158,13 +2156,13 @@ aeabi_fp_number_model(uint64_t fn)
 	case 3: return "IEEE 754";
 	default:
 		snprintf(s_fp_n, sizeof(s_fp_n), "Unknown (%ju)",
-		    (uintmax_t) fn);
+		    (u_intmax_t) fn);
 		return (s_fp_n);
 	}
 }
 
 static const char *
-aeabi_fp_16bit_format(uint64_t fp16)
+aeabi_fp_16bit_format(u_int64_t fp16)
 {
 	static char s_fp_16[64];
 
@@ -2174,13 +2172,13 @@ aeabi_fp_16bit_format(uint64_t fp16)
 	case 2: return "VFPv3/Advanced SIMD (alternative format)";
 	default:
 		snprintf(s_fp_16, sizeof(s_fp_16), "Unknown (%ju)",
-		    (uintmax_t) fp16);
+		    (u_intmax_t) fp16);
 		return (s_fp_16);
 	}
 }
 
 static const char *
-aeabi_mpext(uint64_t mp)
+aeabi_mpext(u_int64_t mp)
 {
 	static char s_mp[32];
 
@@ -2189,13 +2187,13 @@ aeabi_mpext(uint64_t mp)
 	case 1: return "Allowed";
 	default:
 		snprintf(s_mp, sizeof(s_mp), "Unknown (%ju)",
-		    (uintmax_t) mp);
+		    (u_intmax_t) mp);
 		return (s_mp);
 	}
 }
 
 static const char *
-aeabi_div(uint64_t du)
+aeabi_div(u_int64_t du)
 {
 	static char s_du[32];
 
@@ -2205,13 +2203,13 @@ aeabi_div(uint64_t du)
 	case 2: return "Yes (V7-A)";
 	default:
 		snprintf(s_du, sizeof(s_du), "Unknown (%ju)",
-		    (uintmax_t) du);
+		    (u_intmax_t) du);
 		return (s_du);
 	}
 }
 
 static const char *
-aeabi_t2ee(uint64_t t2ee)
+aeabi_t2ee(u_int64_t t2ee)
 {
 	static char s_t2ee[32];
 
@@ -2220,14 +2218,14 @@ aeabi_t2ee(uint64_t t2ee)
 	case 1: return "Allowed";
 	default:
 		snprintf(s_t2ee, sizeof(s_t2ee), "Unknown(%ju)",
-		    (uintmax_t) t2ee);
+		    (u_intmax_t) t2ee);
 		return (s_t2ee);
 	}
 
 }
 
 static const char *
-aeabi_hardfp(uint64_t hfp)
+aeabi_hardfp(u_int64_t hfp)
 {
 	static char s_hfp[32];
 
@@ -2238,13 +2236,13 @@ aeabi_hardfp(uint64_t hfp)
 	case 3: return "both SP and DP";
 	default:
 		snprintf(s_hfp, sizeof(s_hfp), "Unknown (%ju)",
-		    (uintmax_t) hfp);
+		    (u_intmax_t) hfp);
 		return (s_hfp);
 	}
 }
 
 static const char *
-aeabi_vfp_args(uint64_t va)
+aeabi_vfp_args(u_int64_t va)
 {
 	static char s_va[32];
 
@@ -2253,13 +2251,13 @@ aeabi_vfp_args(uint64_t va)
 	case 1: return "AAPCS (VFP variant)";
 	case 2: return "toolchain-specific";
 	default:
-		snprintf(s_va, sizeof(s_va), "Unknown (%ju)", (uintmax_t) va);
+		snprintf(s_va, sizeof(s_va), "Unknown (%ju)", (u_intmax_t) va);
 		return (s_va);
 	}
 }
 
 static const char *
-aeabi_wmmx_args(uint64_t wa)
+aeabi_wmmx_args(u_int64_t wa)
 {
 	static char s_wa[32];
 
@@ -2268,13 +2266,13 @@ aeabi_wmmx_args(uint64_t wa)
 	case 1: return "Intel WMMX";
 	case 2: return "toolchain-specific";
 	default:
-		snprintf(s_wa, sizeof(s_wa), "Unknown(%ju)", (uintmax_t) wa);
+		snprintf(s_wa, sizeof(s_wa), "Unknown(%ju)", (u_intmax_t) wa);
 		return (s_wa);
 	}
 }
 
 static const char *
-aeabi_unaligned_access(uint64_t ua)
+aeabi_unaligned_access(u_int64_t ua)
 {
 	static char s_ua[32];
 
@@ -2282,13 +2280,13 @@ aeabi_unaligned_access(uint64_t ua)
 	case 0: return "Not allowed";
 	case 1: return "Allowed";
 	default:
-		snprintf(s_ua, sizeof(s_ua), "Unknown(%ju)", (uintmax_t) ua);
+		snprintf(s_ua, sizeof(s_ua), "Unknown(%ju)", (u_intmax_t) ua);
 		return (s_ua);
 	}
 }
 
 static const char *
-aeabi_fp_hpext(uint64_t fh)
+aeabi_fp_hpext(u_int64_t fh)
 {
 	static char s_fh[32];
 
@@ -2296,13 +2294,13 @@ aeabi_fp_hpext(uint64_t fh)
 	case 0: return "Not allowed";
 	case 1: return "Allowed";
 	default:
-		snprintf(s_fh, sizeof(s_fh), "Unknown(%ju)", (uintmax_t) fh);
+		snprintf(s_fh, sizeof(s_fh), "Unknown(%ju)", (u_intmax_t) fh);
 		return (s_fh);
 	}
 }
 
 static const char *
-aeabi_optm_goal(uint64_t og)
+aeabi_optm_goal(u_int64_t og)
 {
 	static char s_og[32];
 
@@ -2315,13 +2313,13 @@ aeabi_optm_goal(uint64_t og)
 	case 5: return "Debugging";
 	case 6: return "Best Debugging";
 	default:
-		snprintf(s_og, sizeof(s_og), "Unknown(%ju)", (uintmax_t) og);
+		snprintf(s_og, sizeof(s_og), "Unknown(%ju)", (u_intmax_t) og);
 		return (s_og);
 	}
 }
 
 static const char *
-aeabi_fp_optm_goal(uint64_t fog)
+aeabi_fp_optm_goal(u_int64_t fog)
 {
 	static char s_fog[32];
 
@@ -2335,13 +2333,13 @@ aeabi_fp_optm_goal(uint64_t fog)
 	case 6: return "Best Accurary";
 	default:
 		snprintf(s_fog, sizeof(s_fog), "Unknown(%ju)",
-		    (uintmax_t) fog);
+		    (u_intmax_t) fog);
 		return (s_fog);
 	}
 }
 
 static const char *
-aeabi_virtual(uint64_t vt)
+aeabi_virtual(u_int64_t vt)
 {
 	static char s_virtual[64];
 
@@ -2352,15 +2350,15 @@ aeabi_virtual(uint64_t vt)
 	case 3: return "TrustZone and virtualization extension";
 	default:
 		snprintf(s_virtual, sizeof(s_virtual), "Unknown(%ju)",
-		    (uintmax_t) vt);
+		    (u_intmax_t) vt);
 		return (s_virtual);
 	}
 }
 
 static struct {
-	uint64_t tag;
+	u_int64_t tag;
 	const char *s_tag;
-	const char *(*get_desc)(uint64_t val);
+	const char *(*get_desc)(u_int64_t val);
 } aeabi_tags[] = {
 	{4, "Tag_CPU_raw_name", NULL},
 	{5, "Tag_CPU_name", NULL},
@@ -2405,7 +2403,7 @@ static struct {
 };
 
 static const char *
-mips_abi_fp(uint64_t fp)
+mips_abi_fp(u_int64_t fp)
 {
 	static char s_mips_abi_fp[64];
 
@@ -2417,13 +2415,13 @@ mips_abi_fp(uint64_t fp)
 	case 4: return "64-bit float (-mips32r2 -mfp64)";
 	default:
 		snprintf(s_mips_abi_fp, sizeof(s_mips_abi_fp), "Unknown(%ju)",
-		    (uintmax_t) fp);
+		    (u_intmax_t) fp);
 		return (s_mips_abi_fp);
 	}
 }
 
 static const char *
-ppc_abi_fp(uint64_t fp)
+ppc_abi_fp(u_int64_t fp)
 {
 	static char s_ppc_abi_fp[64];
 
@@ -2434,13 +2432,13 @@ ppc_abi_fp(uint64_t fp)
 	case 3: return "Hard float (single precision)";
 	default:
 		snprintf(s_ppc_abi_fp, sizeof(s_ppc_abi_fp), "Unknown(%ju)",
-		    (uintmax_t) fp);
+		    (u_intmax_t) fp);
 		return (s_ppc_abi_fp);
 	}
 }
 
 static const char *
-ppc_abi_vector(uint64_t vec)
+ppc_abi_vector(u_int64_t vec)
 {
 	static char s_vec[64];
 
@@ -2450,7 +2448,7 @@ ppc_abi_vector(uint64_t vec)
 	case 2: return "AltiVec registers";
 	case 3: return "SPE registers";
 	default:
-		snprintf(s_vec, sizeof(s_vec), "Unknown(%ju)", (uintmax_t) vec);
+		snprintf(s_vec, sizeof(s_vec), "Unknown(%ju)", (u_intmax_t) vec);
 		return (s_vec);
 	}
 }
@@ -2615,15 +2613,15 @@ dump_ehdr(struct readelf *re)
 
 	/* e_entry. */
 	printf("%-37s%#jx\n", "  Entry point address:",
-	    (uintmax_t)re->ehdr.e_entry);
+	    (u_intmax_t)re->ehdr.e_entry);
 
 	/* e_phoff. */
 	printf("%-37s%ju (bytes into file)\n", "  Start of program headers:",
-	    (uintmax_t)re->ehdr.e_phoff);
+	    (u_intmax_t)re->ehdr.e_phoff);
 
 	/* e_shoff. */
 	printf("%-37s%ju (bytes into file)\n", "  Start of section headers:",
-	    (uintmax_t)re->ehdr.e_shoff);
+	    (u_intmax_t)re->ehdr.e_shoff);
 
 	/* e_flags. */
 	printf("%-37s%#x", "  Flags:", re->ehdr.e_flags);
@@ -2650,7 +2648,7 @@ dump_ehdr(struct readelf *re)
 	if (re->ehdr.e_shnum == SHN_UNDEF) {
 		/* Extended section numbering is in use. */
 		if (elf_getshnum(re->elf, &shnum))
-			printf(" (%ju)", (uintmax_t)shnum);
+			printf(" (%ju)", (u_intmax_t)shnum);
 	}
 	putchar('\n');
 
@@ -2660,13 +2658,13 @@ dump_ehdr(struct readelf *re)
 	if (re->ehdr.e_shstrndx == SHN_XINDEX) {
 		/* Extended section numbering is in use. */
 		if (elf_getshstrndx(re->elf, &shstrndx))
-			printf(" (%ju)", (uintmax_t)shstrndx);
+			printf(" (%ju)", (u_intmax_t)shstrndx);
 	}
 	putchar('\n');
 }
 
 static void
-dump_eflags(struct readelf *re, uint64_t e_flags)
+dump_eflags(struct readelf *re, u_int64_t e_flags)
 {
 	struct eflags_desc *edesc;
 	int arm_eabi;
@@ -2759,13 +2757,13 @@ dump_phdr(struct readelf *re)
 
 #define	PH_HDR	"Type", "Offset", "VirtAddr", "PhysAddr", "FileSiz",	\
 		"MemSiz", "Flg", "Align"
-#define	PH_CT	phdr_type(phdr.p_type), (uintmax_t)phdr.p_offset,	\
-		(uintmax_t)phdr.p_vaddr, (uintmax_t)phdr.p_paddr,	\
-		(uintmax_t)phdr.p_filesz, (uintmax_t)phdr.p_memsz,	\
+#define	PH_CT	phdr_type(phdr.p_type), (u_intmax_t)phdr.p_offset,	\
+		(u_intmax_t)phdr.p_vaddr, (u_intmax_t)phdr.p_paddr,	\
+		(u_intmax_t)phdr.p_filesz, (u_intmax_t)phdr.p_memsz,	\
 		phdr.p_flags & PF_R ? 'R' : ' ',			\
 		phdr.p_flags & PF_W ? 'W' : ' ',			\
 		phdr.p_flags & PF_X ? 'E' : ' ',			\
-		(uintmax_t)phdr.p_align
+		(u_intmax_t)phdr.p_align
 
 	if (elf_getphnum(re->elf, &phnum) == 0) {
 		warnx("elf_getphnum failed: %s", elf_errmsg(-1));
@@ -2777,9 +2775,9 @@ dump_phdr(struct readelf *re)
 	}
 
 	printf("\nElf file type is %s", elf_type(re->ehdr.e_type));
-	printf("\nEntry point 0x%jx\n", (uintmax_t)re->ehdr.e_entry);
+	printf("\nEntry point 0x%jx\n", (u_intmax_t)re->ehdr.e_entry);
 	printf("There are %ju program headers, starting at offset %ju\n",
-	    (uintmax_t)phnum, (uintmax_t)re->ehdr.e_phoff);
+	    (u_intmax_t)phnum, (u_intmax_t)re->ehdr.e_phoff);
 
 	/* Dump program headers. */
 	printf("\nProgram Headers:\n");
@@ -2854,7 +2852,7 @@ section_flags(struct readelf *re, struct section *s)
 	nb = re->ec == ELFCLASS32 ? 8 : 16;
 	if (re->options & RE_T) {
 		snprintf(buf, BUF_SZ, "[%*.*jx]: ", nb, nb,
-		    (uintmax_t)s->flags);
+		    (u_intmax_t)s->flags);
 		p += nb + 4;
 	}
 	for (i = 0; section_flag[i].ln != NULL; i++) {
@@ -2889,24 +2887,24 @@ dump_shdr(struct readelf *re)
 #define	ST_HDRL	"[Nr] Name", "Type", "Address", "Offset", "Link",	\
 		"Size", "EntSize", "Info", "Align", "Flags"
 #define	S_CT	i, s->name, section_type(re->ehdr.e_machine, s->type),	\
-		(uintmax_t)s->addr, (uintmax_t)s->off, (uintmax_t)s->sz,\
-		(uintmax_t)s->entsize, section_flags(re, s),		\
-		s->link, s->info, (uintmax_t)s->align
+		(u_intmax_t)s->addr, (u_intmax_t)s->off, (u_intmax_t)s->sz,\
+		(u_intmax_t)s->entsize, section_flags(re, s),		\
+		s->link, s->info, (u_intmax_t)s->align
 #define	ST_CT	i, s->name, section_type(re->ehdr.e_machine, s->type),  \
-		(uintmax_t)s->addr, (uintmax_t)s->off, (uintmax_t)s->sz,\
-		(uintmax_t)s->entsize, s->link, s->info,		\
-		(uintmax_t)s->align, section_flags(re, s)
+		(u_intmax_t)s->addr, (u_intmax_t)s->off, (u_intmax_t)s->sz,\
+		(u_intmax_t)s->entsize, s->link, s->info,		\
+		(u_intmax_t)s->align, section_flags(re, s)
 #define	ST_CTL	i, s->name, section_type(re->ehdr.e_machine, s->type),  \
-		(uintmax_t)s->addr, (uintmax_t)s->off, s->link,		\
-		(uintmax_t)s->sz, (uintmax_t)s->entsize, s->info,	\
-		(uintmax_t)s->align, section_flags(re, s)
+		(u_intmax_t)s->addr, (u_intmax_t)s->off, s->link,		\
+		(u_intmax_t)s->sz, (u_intmax_t)s->entsize, s->info,	\
+		(u_intmax_t)s->align, section_flags(re, s)
 
 	if (re->shnum == 0) {
 		printf("\nThere are no sections in this file.\n");
 		return;
 	}
 	printf("There are %ju section headers, starting at offset 0x%jx:\n",
-	    (uintmax_t)re->shnum, (uintmax_t)re->ehdr.e_shoff);
+	    (u_intmax_t)re->shnum, (u_intmax_t)re->ehdr.e_shoff);
 	printf("\nSection Headers:\n");
 	if (re->ec == ELFCLASS32) {
 		if (re->options & RE_T)
@@ -3036,7 +3034,7 @@ dump_dynamic(struct readelf *re)
 				break;
                 }
 
-		printf("\nDynamic section at offset 0x%jx", (uintmax_t)s->off);
+		printf("\nDynamic section at offset 0x%jx", (u_intmax_t)s->off);
 		printf(" contains %u entries:\n", nentries);
 
 		if (re->ec == ELFCLASS32)
@@ -3049,9 +3047,9 @@ dump_dynamic(struct readelf *re)
 				continue;
 			/* Dump dynamic entry type. */
 			if (re->ec == ELFCLASS32)
-				printf(" 0x%8.8jx", (uintmax_t)dyn.d_tag);
+				printf(" 0x%8.8jx", (u_intmax_t)dyn.d_tag);
 			else
-				printf(" 0x%16.16jx", (uintmax_t)dyn.d_tag);
+				printf(" 0x%16.16jx", (u_intmax_t)dyn.d_tag);
 			printf(" %-20s", dt_type(re->ehdr.e_machine,
 			    dyn.d_tag));
 			/* Dump dynamic entry value. */
@@ -3078,7 +3076,7 @@ timestamp(time_t ti)
 }
 
 static const char *
-dyn_str(struct readelf *re, uint32_t stab, uint64_t d_val)
+dyn_str(struct readelf *re, u_int32_t stab, u_int64_t d_val)
 {
 	const char *name;
 
@@ -3093,7 +3091,7 @@ dyn_str(struct readelf *re, uint32_t stab, uint64_t d_val)
 }
 
 static void
-dump_arch_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
+dump_arch_dyn_val(struct readelf *re, GElf_Dyn *dyn, u_int32_t stab)
 {
 	const char *name;
 
@@ -3118,7 +3116,7 @@ dump_arch_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
 		case DT_MIPS_LOCAL_GOTIDX:
 		case DT_MIPS_HIDDEN_GOTIDX:
 		case DT_MIPS_PROTECTED_GOTIDX:
-			printf(" %ju\n", (uintmax_t) dyn->d_un.d_val);
+			printf(" %ju\n", (u_intmax_t) dyn->d_un.d_val);
 			break;
 		case DT_MIPS_ICHECKSUM:
 		case DT_MIPS_FLAGS:
@@ -3145,7 +3143,7 @@ dump_arch_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
 		case DT_MIPS_PLTGOT:
 		case DT_MIPS_RLD_OBJ_UPDATE:
 		case DT_MIPS_RWPLT:
-			printf(" 0x%jx\n", (uintmax_t) dyn->d_un.d_val);
+			printf(" 0x%jx\n", (u_intmax_t) dyn->d_un.d_val);
 			break;
 		case DT_MIPS_IVERSION:
 		case DT_MIPS_PERF_SUFFIX:
@@ -3166,7 +3164,7 @@ dump_arch_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
 }
 
 static void
-dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
+dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, u_int32_t stab)
 {
 	const char *name;
 
@@ -3201,7 +3199,7 @@ dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
 	case DT_GNU_HASH:
 	case DT_GNU_LIBLIST:
 	case DT_GNU_CONFLICT:
-		printf(" 0x%jx\n", (uintmax_t) dyn->d_un.d_val);
+		printf(" 0x%jx\n", (u_intmax_t) dyn->d_un.d_val);
 		break;
 	case DT_PLTRELSZ:
 	case DT_RELASZ:
@@ -3214,13 +3212,13 @@ dump_dyn_val(struct readelf *re, GElf_Dyn *dyn, uint32_t stab)
 	case DT_FINI_ARRAYSZ:
 	case DT_GNU_CONFLICTSZ:
 	case DT_GNU_LIBLISTSZ:
-		printf(" %ju (bytes)\n", (uintmax_t) dyn->d_un.d_val);
+		printf(" %ju (bytes)\n", (u_intmax_t) dyn->d_un.d_val);
 		break;
  	case DT_RELACOUNT:
 	case DT_RELCOUNT:
 	case DT_VERDEFNUM:
 	case DT_VERNEEDNUM:
-		printf(" %ju\n", (uintmax_t) dyn->d_un.d_val);
+		printf(" %ju\n", (u_intmax_t) dyn->d_un.d_val);
 		break;
 	case DT_NEEDED:
 		printf(" Shared library: [%s]\n", name);
@@ -3250,19 +3248,19 @@ dump_rel(struct readelf *re, struct section *s, Elf_Data *d)
 {
 	GElf_Rel r;
 	const char *symname;
-	uint64_t symval;
+	u_int64_t symval;
 	int i, len;
 
 	if (s->link >= re->shnum)
 		return;
 
 #define	REL_HDR "r_offset", "r_info", "r_type", "st_value", "st_name"
-#define	REL_CT32 (uintmax_t)r.r_offset, (uintmax_t)r.r_info,	    \
+#define	REL_CT32 (u_intmax_t)r.r_offset, (u_intmax_t)r.r_info,	    \
 		r_type(re->ehdr.e_machine, ELF32_R_TYPE(r.r_info)), \
-		(uintmax_t)symval, symname
-#define	REL_CT64 (uintmax_t)r.r_offset, (uintmax_t)r.r_info,	    \
+		(u_intmax_t)symval, symname
+#define	REL_CT64 (u_intmax_t)r.r_offset, (u_intmax_t)r.r_info,	    \
 		r_type(re->ehdr.e_machine, ELF64_R_TYPE(r.r_info)), \
-		(uintmax_t)symval, symname
+		(u_intmax_t)symval, symname
 
 	printf("\nRelocation section (%s):\n", s->name);
 	if (re->ec == ELFCLASS32)
@@ -3306,7 +3304,7 @@ dump_rela(struct readelf *re, struct section *s, Elf_Data *d)
 {
 	GElf_Rela r;
 	const char *symname;
-	uint64_t symval;
+	u_int64_t symval;
 	int i, len;
 
 	if (s->link >= re->shnum)
@@ -3314,12 +3312,12 @@ dump_rela(struct readelf *re, struct section *s, Elf_Data *d)
 
 #define	RELA_HDR "r_offset", "r_info", "r_type", "st_value", \
 		"st_name + r_addend"
-#define	RELA_CT32 (uintmax_t)r.r_offset, (uintmax_t)r.r_info,	    \
+#define	RELA_CT32 (u_intmax_t)r.r_offset, (u_intmax_t)r.r_info,	    \
 		r_type(re->ehdr.e_machine, ELF32_R_TYPE(r.r_info)), \
-		(uintmax_t)symval, symname
-#define	RELA_CT64 (uintmax_t)r.r_offset, (uintmax_t)r.r_info,	    \
+		(u_intmax_t)symval, symname
+#define	RELA_CT64 (u_intmax_t)r.r_offset, (u_intmax_t)r.r_info,	    \
 		r_type(re->ehdr.e_machine, ELF64_R_TYPE(r.r_info)), \
-		(uintmax_t)symval, symname
+		(u_intmax_t)symval, symname
 
 	printf("\nRelocation section with addend (%s):\n", s->name);
 	if (re->ec == ELFCLASS32)
@@ -3344,7 +3342,7 @@ dump_rela(struct readelf *re, struct section *s, Elf_Data *d)
 			r.r_info = ELF32_R_INFO(ELF64_R_SYM(r.r_info),
 			    ELF64_R_TYPE(r.r_info));
 			printf("%8.8jx %8.8jx %-19.19s %8.8jx %s", RELA_CT32);
-			printf(" + %x\n", (uint32_t) r.r_addend);
+			printf(" + %x\n", (u_int32_t) r.r_addend);
 		} else {
 			if (re->options & RE_WW)
 				printf("%16.16jx %16.16jx %-24.24s"
@@ -3352,7 +3350,7 @@ dump_rela(struct readelf *re, struct section *s, Elf_Data *d)
 			else
 				printf("%12.12jx %12.12jx %-19.19s"
 				    " %16.16jx %s", RELA_CT64);
-			printf(" + %jx\n", (uintmax_t) r.r_addend);
+			printf(" + %jx\n", (u_intmax_t) r.r_addend);
 		}
 	}
 
@@ -3393,9 +3391,9 @@ dump_symtab(struct readelf *re, int i)
 	Elf_Data *d;
 	GElf_Sym sym;
 	const char *name;
-	uint32_t stab;
+	u_int32_t stab;
 	int elferr, j, len;
-	uint16_t vs;
+	u_int16_t vs;
 
 	s = &re->sl[i];
 	if (s->link >= re->shnum)
@@ -3423,8 +3421,8 @@ dump_symtab(struct readelf *re, int i)
 			continue;
 		}
 		printf("%6d:", j);
-		printf(" %16.16jx", (uintmax_t)sym.st_value);
-		printf(" %5ju", (uintmax_t)sym.st_size);
+		printf(" %16.16jx", (u_intmax_t)sym.st_value);
+		printf(" %5ju", (u_intmax_t)sym.st_size);
 		printf(" %-7s", st_type(GELF_ST_TYPE(sym.st_info)));
 		printf(" %-6s", st_bind(GELF_ST_BIND(sym.st_info)));
 		printf(" %-8s", st_vis(GELF_ST_VISIBILITY(sym.st_other)));
@@ -3455,7 +3453,7 @@ dump_symtabs(struct readelf *re)
 	GElf_Dyn dyn;
 	Elf_Data *d;
 	struct section *s;
-	uint64_t dyn_off;
+	u_int64_t dyn_off;
 	int elferr, i, len;
 
 	/*
@@ -3515,10 +3513,10 @@ static void
 dump_svr4_hash(struct section *s)
 {
 	Elf_Data	*d;
-	uint32_t	*buf;
-	uint32_t	 nbucket, nchain;
-	uint32_t	*bucket, *chain;
-	uint32_t	*bl, *c, maxl, total;
+	u_int32_t	*buf;
+	u_int32_t	 nbucket, nchain;
+	u_int32_t	*bucket, *chain;
+	u_int32_t	*bl, *c, maxl, total;
 	int		 elferr, i, j;
 
 	/* Read and parse the content of .hash section. */
@@ -3529,7 +3527,7 @@ dump_svr4_hash(struct section *s)
 			warnx("elf_getdata failed: %s", elf_errmsg(elferr));
 		return;
 	}
-	if (d->d_size < 2 * sizeof(uint32_t)) {
+	if (d->d_size < 2 * sizeof(u_int32_t)) {
 		warnx(".hash section too small");
 		return;
 	}
@@ -3540,7 +3538,7 @@ dump_svr4_hash(struct section *s)
 		warnx("Malformed .hash section");
 		return;
 	}
-	if (d->d_size != (nbucket + nchain + 2) * sizeof(uint32_t)) {
+	if (d->d_size != (nbucket + nchain + 2) * sizeof(u_int32_t)) {
 		warnx("Malformed .hash section");
 		return;
 	}
@@ -3550,19 +3548,19 @@ dump_svr4_hash(struct section *s)
 	maxl = 0;
 	if ((bl = calloc(nbucket, sizeof(*bl))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint32_t)i < nbucket; i++)
-		for (j = bucket[i]; j > 0 && (uint32_t)j < nchain; j = chain[j])
+	for (i = 0; (u_int32_t)i < nbucket; i++)
+		for (j = bucket[i]; j > 0 && (u_int32_t)j < nchain; j = chain[j])
 			if (++bl[i] > maxl)
 				maxl = bl[i];
 	if ((c = calloc(maxl + 1, sizeof(*c))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint32_t)i < nbucket; i++)
+	for (i = 0; (u_int32_t)i < nbucket; i++)
 		c[bl[i]]++;
 	printf("\nHistogram for bucket list length (total of %u buckets):\n",
 	    nbucket);
 	printf(" Length\tNumber\t\t%% of total\tCoverage\n");
 	total = 0;
-	for (i = 0; (uint32_t)i <= maxl; i++) {
+	for (i = 0; (u_int32_t)i <= maxl; i++) {
 		total += c[i] * i;
 		printf("%7u\t%-10u\t(%5.1f%%)\t%5.1f%%\n", i, c[i],
 		    c[i] * 100.0 / nbucket, total * 100.0 / (nchain - 1));
@@ -3575,10 +3573,10 @@ static void
 dump_svr4_hash64(struct readelf *re, struct section *s)
 {
 	Elf_Data	*d, dst;
-	uint64_t	*buf;
-	uint64_t	 nbucket, nchain;
-	uint64_t	*bucket, *chain;
-	uint64_t	*bl, *c, maxl, total;
+	u_int64_t	*buf;
+	u_int64_t	 nbucket, nchain;
+	u_int64_t	*bucket, *chain;
+	u_int64_t	*bl, *c, maxl, total;
 	int		 elferr, i, j;
 
 	/*
@@ -3601,7 +3599,7 @@ dump_svr4_hash64(struct readelf *re, struct section *s)
 		warnx("gelf_xlatetom failed: %s", elf_errmsg(-1));
 		return;
 	}
-	if (dst.d_size < 2 * sizeof(uint64_t)) {
+	if (dst.d_size < 2 * sizeof(u_int64_t)) {
 		warnx(".hash section too small");
 		return;
 	}
@@ -3612,7 +3610,7 @@ dump_svr4_hash64(struct readelf *re, struct section *s)
 		warnx("Malformed .hash section");
 		return;
 	}
-	if (d->d_size != (nbucket + nchain + 2) * sizeof(uint32_t)) {
+	if (d->d_size != (nbucket + nchain + 2) * sizeof(u_int32_t)) {
 		warnx("Malformed .hash section");
 		return;
 	}
@@ -3622,21 +3620,21 @@ dump_svr4_hash64(struct readelf *re, struct section *s)
 	maxl = 0;
 	if ((bl = calloc(nbucket, sizeof(*bl))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint32_t)i < nbucket; i++)
-		for (j = bucket[i]; j > 0 && (uint32_t)j < nchain; j = chain[j])
+	for (i = 0; (u_int32_t)i < nbucket; i++)
+		for (j = bucket[i]; j > 0 && (u_int32_t)j < nchain; j = chain[j])
 			if (++bl[i] > maxl)
 				maxl = bl[i];
 	if ((c = calloc(maxl + 1, sizeof(*c))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint64_t)i < nbucket; i++)
+	for (i = 0; (u_int64_t)i < nbucket; i++)
 		c[bl[i]]++;
 	printf("Histogram for bucket list length (total of %ju buckets):\n",
-	    (uintmax_t)nbucket);
+	    (u_intmax_t)nbucket);
 	printf(" Length\tNumber\t\t%% of total\tCoverage\n");
 	total = 0;
-	for (i = 0; (uint64_t)i <= maxl; i++) {
+	for (i = 0; (u_int64_t)i <= maxl; i++) {
 		total += c[i] * i;
-		printf("%7u\t%-10ju\t(%5.1f%%)\t%5.1f%%\n", i, (uintmax_t)c[i],
+		printf("%7u\t%-10ju\t(%5.1f%%)\t%5.1f%%\n", i, (u_intmax_t)c[i],
 		    c[i] * 100.0 / nbucket, total * 100.0 / (nchain - 1));
 	}
 	free(c);
@@ -3648,10 +3646,10 @@ dump_gnu_hash(struct readelf *re, struct section *s)
 {
 	struct section	*ds;
 	Elf_Data	*d;
-	uint32_t	*buf;
-	uint32_t	*bucket, *chain;
-	uint32_t	 nbucket, nchain, symndx, maskwords;
-	uint32_t	*bl, *c, maxl, total;
+	u_int32_t	*buf;
+	u_int32_t	*bucket, *chain;
+	u_int32_t	 nbucket, nchain, symndx, maskwords;
+	u_int32_t	*bl, *c, maxl, total;
 	int		 elferr, dynsymcount, i, j;
 
 	(void) elf_errno();
@@ -3662,7 +3660,7 @@ dump_gnu_hash(struct readelf *re, struct section *s)
 			    elf_errmsg(elferr));
 		return;
 	}
-	if (d->d_size < 4 * sizeof(uint32_t)) {
+	if (d->d_size < 4 * sizeof(u_int32_t)) {
 		warnx(".gnu.hash section too small");
 		return;
 	}
@@ -3677,9 +3675,9 @@ dump_gnu_hash(struct readelf *re, struct section *s)
 	if (!get_ent_count(ds, &dynsymcount))
 		return;
 	nchain = dynsymcount - symndx;
-	if (d->d_size != 4 * sizeof(uint32_t) + maskwords *
-	    (re->ec == ELFCLASS32 ? sizeof(uint32_t) : sizeof(uint64_t)) +
-	    (nbucket + nchain) * sizeof(uint32_t)) {
+	if (d->d_size != 4 * sizeof(u_int32_t) + maskwords *
+	    (re->ec == ELFCLASS32 ? sizeof(u_int32_t) : sizeof(u_int64_t)) +
+	    (nbucket + nchain) * sizeof(u_int32_t)) {
 		warnx("Malformed .gnu.hash section");
 		return;
 	}
@@ -3689,8 +3687,8 @@ dump_gnu_hash(struct readelf *re, struct section *s)
 	maxl = 0;
 	if ((bl = calloc(nbucket, sizeof(*bl))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint32_t)i < nbucket; i++)
-		for (j = bucket[i]; j > 0 && (uint32_t)j - symndx < nchain;
+	for (i = 0; (u_int32_t)i < nbucket; i++)
+		for (j = bucket[i]; j > 0 && (u_int32_t)j - symndx < nchain;
 		     j++) {
 			if (++bl[i] > maxl)
 				maxl = bl[i];
@@ -3699,13 +3697,13 @@ dump_gnu_hash(struct readelf *re, struct section *s)
 		}
 	if ((c = calloc(maxl + 1, sizeof(*c))) == NULL)
 		errx(EXIT_FAILURE, "calloc failed");
-	for (i = 0; (uint32_t)i < nbucket; i++)
+	for (i = 0; (u_int32_t)i < nbucket; i++)
 		c[bl[i]]++;
 	printf("Histogram for bucket list length (total of %u buckets):\n",
 	    nbucket);
 	printf(" Length\tNumber\t\t%% of total\tCoverage\n");
 	total = 0;
-	for (i = 0; (uint32_t)i <= maxl; i++) {
+	for (i = 0; (u_int32_t)i <= maxl; i++) {
 		total += c[i] * i;
 		printf("%7u\t%-10u\t(%5.1f%%)\t%5.1f%%\n", i, c[i],
 		    c[i] * 100.0 / nbucket, total * 100.0 / (nchain - 1));
@@ -3800,7 +3798,7 @@ dump_notes_content(struct readelf *re, const char *buf, size_t sz, off_t off)
 	const char *end, *name;
 
 	printf("\nNotes at offset %#010jx with length %#010jx:\n",
-	    (uintmax_t) off, (uintmax_t) sz);
+	    (u_intmax_t) off, (u_intmax_t) sz);
 	printf("  %-13s %-15s %s\n", "Owner", "Data size", "Description");
 	end = buf + sz;
 	while (buf < end) {
@@ -3808,8 +3806,8 @@ dump_notes_content(struct readelf *re, const char *buf, size_t sz, off_t off)
 			warnx("invalid note header");
 			return;
 		}
-		note = (Elf_Note *)(uintptr_t) buf;
-		name = (char *)(uintptr_t)(note + 1);
+		note = (Elf_Note *)(u_intptr_t) buf;
+		name = (char *)(u_intptr_t)(note + 1);
 		/*
 		 * The name field is required to be nul-terminated, and
 		 * n_namesz includes the terminating nul in observed
@@ -3824,7 +3822,7 @@ dump_notes_content(struct readelf *re, const char *buf, size_t sz, off_t off)
 			name = "CORE";
 		else if (strnlen(name, note->n_namesz) >= note->n_namesz)
 			name = "<invalid>";
-		printf("  %-13s %#010jx", name, (uintmax_t) note->n_descsz);
+		printf("  %-13s %#010jx", name, (u_intmax_t) note->n_descsz);
 		printf("      %s\n", note_type(name, re->ehdr.e_type,
 		    note->n_type));
 		buf += sizeof(Elf_Note) + roundup2(note->n_namesz, 4) +
@@ -3873,7 +3871,7 @@ dump_verdef(struct readelf *re, int dump)
 	Elf_Data *d;
 	Elf_Verdef *vd;
 	Elf_Verdaux *vda;
-	uint8_t *buf, *end, *buf2;
+	u_int8_t *buf, *end, *buf2;
 	const char *name;
 	int elferr, i, j;
 
@@ -3908,10 +3906,10 @@ dump_verdef(struct readelf *re, int dump)
 	buf = d->d_buf;
 	end = buf + d->d_size;
 	while (buf + sizeof(Elf_Verdef) <= end) {
-		vd = (Elf_Verdef *) (uintptr_t) buf;
+		vd = (Elf_Verdef *) (u_intptr_t) buf;
 		if (dump) {
 			printf("  0x%4.4lx", (unsigned long)
-			    (buf - (uint8_t *)d->d_buf));
+			    (buf - (u_int8_t *)d->d_buf));
 			printf(" vd_version: %u vd_flags: %d"
 			    " vd_ndx: %u vd_cnt: %u", vd->vd_version,
 			    vd->vd_flags, vd->vd_ndx, vd->vd_cnt);
@@ -3919,7 +3917,7 @@ dump_verdef(struct readelf *re, int dump)
 		buf2 = buf + vd->vd_aux;
 		j = 0;
 		while (buf2 + sizeof(Elf_Verdaux) <= end && j < vd->vd_cnt) {
-			vda = (Elf_Verdaux *) (uintptr_t) buf2;
+			vda = (Elf_Verdaux *) (u_intptr_t) buf2;
 			name = get_string(re, s->link, vda->vda_name);
 			if (j == 0) {
 				if (dump)
@@ -3928,7 +3926,7 @@ dump_verdef(struct readelf *re, int dump)
 			} else if (dump)
 				printf("  0x%4.4lx parent: %s\n",
 				    (unsigned long) (buf2 -
-				    (uint8_t *)d->d_buf), name);
+				    (u_int8_t *)d->d_buf), name);
 			if (vda->vda_next == 0)
 				break;
 			buf2 += vda->vda_next;
@@ -3948,7 +3946,7 @@ dump_verneed(struct readelf *re, int dump)
 	Elf_Data *d;
 	Elf_Verneed *vn;
 	Elf_Vernaux *vna;
-	uint8_t *buf, *end, *buf2;
+	u_int8_t *buf, *end, *buf2;
 	const char *name;
 	int elferr, i, j;
 
@@ -3983,10 +3981,10 @@ dump_verneed(struct readelf *re, int dump)
 	buf = d->d_buf;
 	end = buf + d->d_size;
 	while (buf + sizeof(Elf_Verneed) <= end) {
-		vn = (Elf_Verneed *) (uintptr_t) buf;
+		vn = (Elf_Verneed *) (u_intptr_t) buf;
 		if (dump) {
 			printf("  0x%4.4lx", (unsigned long)
-			    (buf - (uint8_t *)d->d_buf));
+			    (buf - (u_int8_t *)d->d_buf));
 			printf(" vn_version: %u vn_file: %s vn_cnt: %u\n",
 			    vn->vn_version,
 			    get_string(re, s->link, vn->vn_file),
@@ -3995,10 +3993,10 @@ dump_verneed(struct readelf *re, int dump)
 		buf2 = buf + vn->vn_aux;
 		j = 0;
 		while (buf2 + sizeof(Elf_Vernaux) <= end && j < vn->vn_cnt) {
-			vna = (Elf32_Vernaux *) (uintptr_t) buf2;
+			vna = (Elf32_Vernaux *) (u_intptr_t) buf2;
 			if (dump)
 				printf("  0x%4.4lx", (unsigned long)
-				    (buf2 - (uint8_t *)d->d_buf));
+				    (buf2 - (u_int8_t *)d->d_buf));
 			name = get_string(re, s->link, vna->vna_name);
 			if (dump)
 				printf("   vna_name: %s vna_flags: %u"
@@ -4020,7 +4018,7 @@ static void
 dump_versym(struct readelf *re)
 {
 	int i;
-	uint16_t vs;
+	u_int16_t vs;
 
 	if (re->vs_s == NULL || re->ver == NULL || re->vs == NULL)
 		return;
@@ -4138,7 +4136,7 @@ dump_liblist(struct readelf *re)
 		printf("contains %d entries:\n", len);
 		printf("%12s%24s%18s%10s%6s\n", "Library", "Time Stamp",
 		    "Checksum", "Version", "Flags");
-		for (j = 0; (uint64_t) j < s->sz / s->entsize; j++) {
+		for (j = 0; (u_int64_t) j < s->sz / s->entsize; j++) {
 			printf("%3d: ", j);
 			printf("%-20.20s ",
 			    get_string(re, s->link, lib->l_name));
@@ -4179,7 +4177,7 @@ dump_section_groups(struct readelf *re)
 	struct section *s;
 	const char *symname;
 	Elf_Data *d;
-	uint32_t *w;
+	u_int32_t *w;
 	int i, j, elferr;
 	size_t n;
 
@@ -4215,7 +4213,7 @@ dump_section_groups(struct readelf *re)
 			return;
 
 		printf("\nCOMDAT group section [%5d] `%s' [%s] contains %ju"
-		    " sections:\n", i, s->name, symname, (uintmax_t)n);
+		    " sections:\n", i, s->name, symname, (u_intmax_t)n);
 		printf("   %-10.10s %s\n", "[Index]", "Name");
 		for (j = 0; (size_t) j < n; j++, w++) {
 			if (*w >= re->shnum) {
@@ -4227,10 +4225,10 @@ dump_section_groups(struct readelf *re)
 	}
 }
 
-static uint8_t *
-dump_unknown_tag(uint64_t tag, uint8_t *p, uint8_t *pe)
+static u_int8_t *
+dump_unknown_tag(u_int64_t tag, u_int8_t *p, u_int8_t *pe)
 {
-	uint64_t val;
+	u_int64_t val;
 
 	/*
 	 * According to ARM EABI: For tags > 32, even numbered tags have
@@ -4239,35 +4237,35 @@ dump_unknown_tag(uint64_t tag, uint8_t *p, uint8_t *pe)
 	 * if the object arch is not ARM.
 	 */
 
-	printf("  Tag_unknown_%ju: ", (uintmax_t) tag);
+	printf("  Tag_unknown_%ju: ", (u_intmax_t) tag);
 
 	if (tag & 1) {
 		printf("%s\n", (char *) p);
 		p += strlen((char *) p) + 1;
 	} else {
 		val = _decode_uleb128(&p, pe);
-		printf("%ju\n", (uintmax_t) val);
+		printf("%ju\n", (u_intmax_t) val);
 	}
 
 	return (p);
 }
 
-static uint8_t *
-dump_compatibility_tag(uint8_t *p, uint8_t *pe)
+static u_int8_t *
+dump_compatibility_tag(u_int8_t *p, u_int8_t *pe)
 {
-	uint64_t val;
+	u_int64_t val;
 
 	val = _decode_uleb128(&p, pe);
-	printf("flag = %ju, vendor = %s\n", (uintmax_t)val, p);
+	printf("flag = %ju, vendor = %s\n", (u_intmax_t)val, p);
 	p += strlen((char *) p) + 1;
 
 	return (p);
 }
 
 static void
-dump_arm_attributes(struct readelf *re, uint8_t *p, uint8_t *pe)
+dump_arm_attributes(struct readelf *re, u_int8_t *p, u_int8_t *pe)
 {
-	uint64_t tag, val;
+	u_int64_t tag, val;
 	size_t i;
 	int found, desc;
 
@@ -4338,9 +4336,9 @@ dump_arm_attributes(struct readelf *re, uint8_t *p, uint8_t *pe)
 #endif
 
 static void
-dump_mips_attributes(struct readelf *re, uint8_t *p, uint8_t *pe)
+dump_mips_attributes(struct readelf *re, u_int8_t *p, u_int8_t *pe)
 {
-	uint64_t tag, val;
+	u_int64_t tag, val;
 
 	(void) re;
 
@@ -4370,9 +4368,9 @@ dump_mips_attributes(struct readelf *re, uint8_t *p, uint8_t *pe)
 #endif
 
 static void
-dump_ppc_attributes(uint8_t *p, uint8_t *pe)
+dump_ppc_attributes(u_int8_t *p, u_int8_t *pe)
 {
-	uint64_t tag, val;
+	u_int64_t tag, val;
 
 	while (p < pe) {
 		tag = _decode_uleb128(&p, pe);
@@ -4401,9 +4399,9 @@ dump_attributes(struct readelf *re)
 {
 	struct section *s;
 	Elf_Data *d;
-	uint8_t *p, *pe, *sp;
+	u_int8_t *p, *pe, *sp;
 	size_t len, seclen, nlen, sublen;
-	uint64_t val;
+	u_int64_t val;
 	int tag, i, elferr;
 
 	for (i = 0; (size_t) i < re->shnum; i++) {
@@ -4466,7 +4464,7 @@ dump_attributes(struct readelf *re)
 						val = _decode_uleb128(&p, pe);
 						if (val == 0)
 							break;
-						printf(" %ju", (uintmax_t) val);
+						printf(" %ju", (u_intmax_t) val);
 					}
 				}
 				putchar('\n');
@@ -4543,10 +4541,10 @@ static void
 dump_mips_options(struct readelf *re, struct section *s)
 {
 	Elf_Data *d;
-	uint32_t info;
-	uint16_t sndx;
-	uint8_t *p, *pe;
-	uint8_t kind, size;
+	u_int32_t info;
+	u_int16_t sndx;
+	u_int8_t *p, *pe;
+	u_int8_t kind, size;
 	int elferr;
 
 	(void) elf_errno();
@@ -4591,7 +4589,7 @@ dump_mips_options(struct readelf *re, struct section *s)
 			break;
 		case ODK_PAD:
 			printf(" %-10.10s section: %ju\n", "OPAD",
-			    (uintmax_t) sndx);
+			    (u_intmax_t) sndx);
 			dump_mips_option_flags("", mips_pad_option, info);
 			break;
 		case ODK_HWPATCH:
@@ -4605,7 +4603,7 @@ dump_mips_options(struct readelf *re, struct section *s)
 			dump_mips_option_flags("HWOR", mips_hwo_option, info);
 			break;
 		case ODK_FILL:
-			printf(" %-10.10s %#jx\n", "FILL", (uintmax_t) info);
+			printf(" %-10.10s %#jx\n", "FILL", (u_intmax_t) info);
 			break;
 		case ODK_TAGS:
 			printf(" %-10.10s\n", "TAGS");
@@ -4635,7 +4633,7 @@ dump_mips_options(struct readelf *re, struct section *s)
 }
 
 static void
-dump_mips_option_flags(const char *name, struct mips_option *opt, uint64_t info)
+dump_mips_option_flags(const char *name, struct mips_option *opt, u_int64_t info)
 {
 	int first;
 
@@ -4650,12 +4648,12 @@ dump_mips_option_flags(const char *name, struct mips_option *opt, uint64_t info)
 }
 
 static void
-dump_mips_odk_reginfo(struct readelf *re, uint8_t *p, size_t sz)
+dump_mips_odk_reginfo(struct readelf *re, u_int8_t *p, size_t sz)
 {
-	uint32_t ri_gprmask;
-	uint32_t ri_cprmask[4];
-	uint64_t ri_gp_value;
-	uint8_t *pe;
+	u_int32_t ri_gprmask;
+	u_int32_t ri_cprmask[4];
+	u_int64_t ri_gp_value;
+	u_int8_t *pe;
 	int i;
 
 	pe = p + sz;
@@ -4671,12 +4669,12 @@ dump_mips_odk_reginfo(struct readelf *re, uint8_t *p, size_t sz)
 		else
 			ri_gp_value = re->dw_decode(&p, 8);
 		printf(" %s    ", option_kind(ODK_REGINFO));
-		printf("ri_gprmask:    0x%08jx\n", (uintmax_t) ri_gprmask);
+		printf("ri_gprmask:    0x%08jx\n", (u_intmax_t) ri_gprmask);
 		for (i = 0; i < 4; i++)
 			printf("%11.11s ri_cprmask[%d]: 0x%08jx\n", "", i,
-			    (uintmax_t) ri_cprmask[i]);
+			    (u_intmax_t) ri_cprmask[i]);
 		printf("%12.12s", "");
-		printf("ri_gp_value:   %#jx\n", (uintmax_t) ri_gp_value);
+		printf("ri_gp_value:   %#jx\n", (u_intmax_t) ri_gp_value);
 	}
 }
 
@@ -4721,9 +4719,9 @@ dump_dwarf_line(struct readelf *re)
 	Dwarf_Small minlen, defstmt, lrange, opbase, oplen;
 	Elf_Data *d;
 	char *pn;
-	uint64_t address, file, line, column, isa, opsize, udelta;
+	u_int64_t address, file, line, column, isa, opsize, udelta;
 	int64_t sdelta;
-	uint8_t *p, *pe;
+	u_int8_t *p, *pe;
 	int8_t lbase;
 	int i, is_stmt, dwarf_size, elferr, ret;
 
@@ -4791,9 +4789,9 @@ dump_dwarf_line(struct readelf *re)
 		opbase = re->dw_read(d, &offset, 1);
 
 		printf("\n");
-		printf("  Length:\t\t\t%ju\n", (uintmax_t) length);
+		printf("  Length:\t\t\t%ju\n", (u_intmax_t) length);
 		printf("  DWARF version:\t\t%u\n", version);
-		printf("  Prologue Length:\t\t%ju\n", (uintmax_t) hdrlen);
+		printf("  Prologue Length:\t\t%ju\n", (u_intmax_t) hdrlen);
 		printf("  Minimum Instruction Length:\t%u\n", minlen);
 		printf("  Initial value of 'is_stmt':\t%u\n", defstmt);
 		printf("  Line Base:\t\t\t%d\n", lbase);
@@ -4811,7 +4809,7 @@ dump_dwarf_line(struct readelf *re)
 
 		printf("\n");
 		printf(" The Directory Table:\n");
-		p = (uint8_t *) d->d_buf + offset;
+		p = (u_int8_t *) d->d_buf + offset;
 		while (*p != '\0') {
 			printf("  %s\n", (char *) p);
 			p += strlen((char *) p) + 1;
@@ -4830,8 +4828,8 @@ dump_dwarf_line(struct readelf *re)
 			mtime = _decode_uleb128(&p, pe);
 			fsize = _decode_uleb128(&p, pe);
 			printf("  %d\t%ju\t%ju\t%ju\t%s\n", i,
-			    (uintmax_t) dirndx, (uintmax_t) mtime,
-			    (uintmax_t) fsize, pn);
+			    (u_intmax_t) dirndx, (u_intmax_t) mtime,
+			    (u_intmax_t) fsize, pn);
 		}
 
 #define	RESET_REGISTERS						\
@@ -4847,7 +4845,7 @@ dump_dwarf_line(struct readelf *re)
 #define	ADDRESS(x) ((((x) - opbase) / lrange) * minlen)
 
 		p++;
-		pe = (uint8_t *) d->d_buf + endoff;
+		pe = (u_int8_t *) d->d_buf + endoff;
 		printf("\n");
 		printf(" Line Number Statements:\n");
 
@@ -4873,7 +4871,7 @@ dump_dwarf_line(struct readelf *re)
 					address = re->dw_decode(&p,
 					    pointer_size);
 					printf("set Address to %#jx\n",
-					    (uintmax_t) address);
+					    (u_intmax_t) address);
 					break;
 				case DW_LNE_define_file:
 					p++;
@@ -4902,25 +4900,25 @@ dump_dwarf_line(struct readelf *re)
 					    minlen;
 					address += udelta;
 					printf("  Advance PC by %ju to %#jx\n",
-					    (uintmax_t) udelta,
-					    (uintmax_t) address);
+					    (u_intmax_t) udelta,
+					    (u_intmax_t) address);
 					break;
 				case DW_LNS_advance_line:
 					sdelta = _decode_sleb128(&p, pe);
 					line += sdelta;
 					printf("  Advance Line by %jd to %ju\n",
 					    (intmax_t) sdelta,
-					    (uintmax_t) line);
+					    (u_intmax_t) line);
 					break;
 				case DW_LNS_set_file:
 					file = _decode_uleb128(&p, pe);
 					printf("  Set File to %ju\n",
-					    (uintmax_t) file);
+					    (u_intmax_t) file);
 					break;
 				case DW_LNS_set_column:
 					column = _decode_uleb128(&p, pe);
 					printf("  Set Column to %ju\n",
-					    (uintmax_t) column);
+					    (u_intmax_t) column);
 					break;
 				case DW_LNS_negate_stmt:
 					is_stmt = !is_stmt;
@@ -4933,16 +4931,16 @@ dump_dwarf_line(struct readelf *re)
 					address += ADDRESS(255);
 					printf("  Advance PC by constant %ju"
 					    " to %#jx\n",
-					    (uintmax_t) ADDRESS(255),
-					    (uintmax_t) address);
+					    (u_intmax_t) ADDRESS(255),
+					    (u_intmax_t) address);
 					break;
 				case DW_LNS_fixed_advance_pc:
 					udelta = re->dw_decode(&p, 2);
 					address += udelta;
 					printf("  Advance PC by fixed value "
 					    "%ju to %#jx\n",
-					    (uintmax_t) udelta,
-					    (uintmax_t) address);
+					    (u_intmax_t) udelta,
+					    (u_intmax_t) address);
 					break;
 				case DW_LNS_set_prologue_end:
 					printf("  Set prologue end flag\n");
@@ -4952,7 +4950,7 @@ dump_dwarf_line(struct readelf *re)
 					break;
 				case DW_LNS_set_isa:
 					isa = _decode_uleb128(&p, pe);
-					printf("  Set isa to %ju\n", (uintmax_t)isa);
+					printf("  Set isa to %ju\n", (u_intmax_t)isa);
 					break;
 				default:
 					/* Unrecognized extended opcodes. */
@@ -4969,9 +4967,9 @@ dump_dwarf_line(struct readelf *re)
 				address += ADDRESS(*p);
 				printf("  Special opcode %u: advance Address "
 				    "by %ju to %#jx and Line by %jd to %ju\n",
-				    *p - opbase, (uintmax_t) ADDRESS(*p),
-				    (uintmax_t) address, (intmax_t) LINE(*p),
-				    (uintmax_t) line);
+				    *p - opbase, (u_intmax_t) ADDRESS(*p),
+				    (u_intmax_t) address, (intmax_t) LINE(*p),
+				    (u_intmax_t) line);
 				p++;
 			}
 
@@ -5031,8 +5029,8 @@ dump_dwarf_line_decoded(struct readelf *re)
 			if (dwarf_lineaddr(ln, &lineaddr, &de) != DW_DLV_OK)
 				continue;
 			printf("%-37s %11ju %#18jx\n",
-			    basename(srcfiles[fn - 1]), (uintmax_t) lineno,
-			    (uintmax_t) lineaddr);
+			    basename(srcfiles[fn - 1]), (u_intmax_t) lineno,
+			    (u_intmax_t) lineaddr);
 		}
 		putchar('\n');
 	}
@@ -5057,7 +5055,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 	const char *tag_str, *attr_str, *ate_str, *lang_str;
 	char unk_tag[32], unk_attr[32];
 	char *v_str;
-	uint8_t *b, *p;
+	u_int8_t *b, *p;
 	int i, j, abc, ret;
 
 	if (dwarf_dieoffset(die, &dieoff, &de) != DW_DLV_OK) {
@@ -5065,7 +5063,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 		goto cont_search;
 	}
 
-	printf(" <%d><%jx>: ", level, (uintmax_t) dieoff);
+	printf(" <%d><%jx>: ", level, (u_intmax_t) dieoff);
 
 	if (dwarf_die_CU_offset_range(die, &cuoff, &culen, &de) != DW_DLV_OK) {
 		warnx("dwarf_die_CU_offset_range failed: %s",
@@ -5111,7 +5109,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 			warnx("dwarf_attroffset failed: %s", dwarf_errmsg(de));
 			attroff = 0;
 		}
-		printf("    <%jx>   %-18s: ", (uintmax_t) attroff, attr_str);
+		printf("    <%jx>   %-18s: ", (u_intmax_t) attroff, attr_str);
 		switch (form) {
 		case DW_FORM_ref_addr:
 		case DW_FORM_sec_offset:
@@ -5122,9 +5120,9 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				continue;
 			}
 			if (form == DW_FORM_ref_addr)
-				printf("<0x%jx>", (uintmax_t) v_off);
+				printf("<0x%jx>", (u_intmax_t) v_off);
 			else
-				printf("0x%jx", (uintmax_t) v_off);
+				printf("0x%jx", (u_intmax_t) v_off);
 			break;
 
 		case DW_FORM_ref1:
@@ -5139,7 +5137,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				continue;
 			}
 			v_off += cuoff;
-			printf("<0x%jx>", (uintmax_t) v_off);
+			printf("<0x%jx>", (u_intmax_t) v_off);
 			break;
 
 		case DW_FORM_addr:
@@ -5149,7 +5147,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				    dwarf_errmsg(de));
 				continue;
 			}
-			printf("%#jx", (uintmax_t) v_addr);
+			printf("%#jx", (u_intmax_t) v_addr);
 			break;
 
 		case DW_FORM_data1:
@@ -5164,9 +5162,9 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				continue;
 			}
 			if (attr == DW_AT_high_pc)
-				printf("0x%jx", (uintmax_t) v_udata);
+				printf("0x%jx", (u_intmax_t) v_udata);
 			else
-				printf("%ju", (uintmax_t) v_udata);
+				printf("%ju", (u_intmax_t) v_udata);
 			break;
 
 		case DW_FORM_sdata:
@@ -5217,7 +5215,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				    dwarf_errmsg(de));
 				continue;
 			}
-			printf("%ju byte block:", (uintmax_t) v_block->bl_len);
+			printf("%ju byte block:", (u_intmax_t) v_block->bl_len);
 			b = v_block->bl_data;
 			for (j = 0; (Dwarf_Unsigned) j < v_block->bl_len; j++)
 				printf(" %x", b[j]);
@@ -5233,7 +5231,7 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				    dwarf_errmsg(de));
 				continue;
 			}
-			printf("%ju byte block:", (uintmax_t) v_udata);
+			printf("%ju byte block:", (u_intmax_t) v_udata);
 			b = v_expr;
 			for (j = 0; (Dwarf_Unsigned) j < v_udata; j++)
 				printf(" %x", b[j]);
@@ -5249,9 +5247,9 @@ dump_dwarf_die(struct readelf *re, Dwarf_Die die, int level)
 				    dwarf_errmsg(de));
 				continue;
 			}
-			p = (uint8_t *)(uintptr_t) &v_sig8.signature[0];
+			p = (u_int8_t *)(u_intptr_t) &v_sig8.signature[0];
 			v_sig = re->dw_decode(&p, 8);
-			printf("signature: 0x%jx", (uintmax_t) v_sig);
+			printf("signature: 0x%jx", (u_intmax_t) v_sig);
 		}
 		switch (attr) {
 		case DW_AT_encoding:
@@ -5339,7 +5337,7 @@ dump_dwarf_info(struct readelf *re, Dwarf_Bool is_info)
 	Dwarf_Unsigned typeoff;
 	Dwarf_Sig8 sig8;
 	Dwarf_Unsigned sig;
-	uint8_t *p;
+	u_int8_t *p;
 	const char *sn;
 	int i, ret;
 
@@ -5394,23 +5392,23 @@ dump_dwarf_info(struct readelf *re, Dwarf_Bool is_info)
 
 			sig = 0;
 			if (!is_info) {
-				p = (uint8_t *)(uintptr_t) &sig8.signature[0];
+				p = (u_int8_t *)(u_intptr_t) &sig8.signature[0];
 				sig = re->dw_decode(&p, 8);
 			}
 
 			printf("\n  Type Unit @ offset 0x%jx:\n",
-			    (uintmax_t) cu_offset);
+			    (u_intmax_t) cu_offset);
 			printf("    Length:\t\t%#jx (%d-bit)\n",
-			    (uintmax_t) cu_length, off_size == 4 ? 32 : 64);
+			    (u_intmax_t) cu_length, off_size == 4 ? 32 : 64);
 			printf("    Version:\t\t%u\n", version);
 			printf("    Abbrev Offset:\t0x%jx\n",
-			    (uintmax_t) aboff);
+			    (u_intmax_t) aboff);
 			printf("    Pointer Size:\t%u\n", pointer_size);
 			if (!is_info) {
 				printf("    Signature:\t\t0x%016jx\n",
-				    (uintmax_t) sig);
+				    (u_intmax_t) sig);
 				printf("    Type Offset:\t0x%jx\n",
-				    (uintmax_t) typeoff);
+				    (u_intmax_t) typeoff);
 			}
 
 			dump_dwarf_die(re, die, 0);
@@ -5551,12 +5549,12 @@ dump_dwarf_pubnames(struct readelf *re)
 	nt_version = re->dw_read(d, &offset, 2);
 	nt_cu_offset = re->dw_read(d, &offset, dwarf_size);
 	nt_cu_length = re->dw_read(d, &offset, dwarf_size);
-	printf("  Length:\t\t\t\t%ju\n", (uintmax_t) length);
+	printf("  Length:\t\t\t\t%ju\n", (u_intmax_t) length);
 	printf("  Version:\t\t\t\t%u\n", nt_version);
 	printf("  Offset into .debug_info section:\t%ju\n",
-	    (uintmax_t) nt_cu_offset);
+	    (u_intmax_t) nt_cu_offset);
 	printf("  Size of area in .debug_info section:\t%ju\n",
-	    (uintmax_t) nt_cu_length);
+	    (u_intmax_t) nt_cu_length);
 
 	if (dwarf_get_globals(re->dbg, &globs, &cnt, &de) != DW_DLV_OK) {
 		warnx("dwarf_get_globals failed: %s", dwarf_errmsg(de));
@@ -5575,7 +5573,7 @@ dump_dwarf_pubnames(struct readelf *re)
 			    dwarf_errmsg(de));
 			continue;
 		}
-		printf("    %-11ju %s\n", (uintmax_t) die_off, glob_name);
+		printf("    %-11ju %s\n", (u_intmax_t) die_off, glob_name);
 	}
 }
 
@@ -5633,9 +5631,9 @@ dump_dwarf_aranges(struct readelf *re)
 	as_addrsz = re->dw_read(d, &offset, 1);
 	as_segsz = re->dw_read(d, &offset, 1);
 
-	printf("  Length:\t\t\t%ju\n", (uintmax_t) length);
+	printf("  Length:\t\t\t%ju\n", (u_intmax_t) length);
 	printf("  Version:\t\t\t%u\n", as_version);
-	printf("  Offset into .debug_info:\t%ju\n", (uintmax_t) as_cu_offset);
+	printf("  Offset into .debug_info:\t%ju\n", (u_intmax_t) as_cu_offset);
 	printf("  Pointer Size:\t\t\t%u\n", as_addrsz);
 	printf("  Segment Size:\t\t\t%u\n", as_segsz);
 
@@ -5652,8 +5650,8 @@ dump_dwarf_aranges(struct readelf *re)
 			    dwarf_errmsg(de));
 			continue;
 		}
-		printf("    %08jx %ju\n", (uintmax_t) start,
-		    (uintmax_t) length);
+		printf("    %08jx %ju\n", (u_intmax_t) start,
+		    (u_intmax_t) length);
 	}
 }
 
@@ -5693,7 +5691,7 @@ dump_dwarf_ranges_foreach(struct readelf *re, Dwarf_Die die, Dwarf_Addr base)
 			continue;
 		base0 = base;
 		for (j = 0; j < cnt; j++) {
-			printf("    %08jx ", (uintmax_t) off);
+			printf("    %08jx ", (u_intmax_t) off);
 			if (ranges[j].dwr_type == DW_RANGES_END) {
 				printf("%s\n", "<End of list>");
 				continue;
@@ -5704,12 +5702,12 @@ dump_dwarf_ranges_foreach(struct readelf *re, Dwarf_Die die, Dwarf_Addr base)
 			}
 			if (re->ec == ELFCLASS32)
 				printf("%08jx %08jx\n",
-				    (uintmax_t) (ranges[j].dwr_addr1 + base0),
-				    (uintmax_t) (ranges[j].dwr_addr2 + base0));
+				    (u_intmax_t) (ranges[j].dwr_addr1 + base0),
+				    (u_intmax_t) (ranges[j].dwr_addr2 + base0));
 			else
 				printf("%016jx %016jx\n",
-				    (uintmax_t) (ranges[j].dwr_addr1 + base0),
-				    (uintmax_t) (ranges[j].dwr_addr2 + base0));
+				    (u_intmax_t) (ranges[j].dwr_addr1 + base0),
+				    (u_intmax_t) (ranges[j].dwr_addr2 + base0));
 		}
 	}
 
@@ -5825,7 +5823,7 @@ dump_dwarf_macinfo(struct readelf *re)
 }
 
 static void
-dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie, uint8_t *insts,
+dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie, u_int8_t *insts,
     Dwarf_Unsigned len, Dwarf_Unsigned caf, Dwarf_Signed daf, Dwarf_Addr pc,
     Dwarf_Debug dbg)
 {
@@ -5859,8 +5857,8 @@ dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie, uint8_t *insts,
 		case DW_CFA_advance_loc:
 			delta = oplist[i].fp_offset * caf;
 			pc += delta;
-			printf(": %ju to %08jx", (uintmax_t) delta,
-			    (uintmax_t) pc);
+			printf(": %ju to %08jx", (u_intmax_t) delta,
+			    (u_intmax_t) pc);
 			break;
 		case DW_CFA_offset:
 		case DW_CFA_offset_extended:
@@ -5876,19 +5874,19 @@ dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie, uint8_t *insts,
 			break;
 		case DW_CFA_set_loc:
 			pc = oplist[i].fp_offset;
-			printf(": to %08jx", (uintmax_t) pc);
+			printf(": to %08jx", (u_intmax_t) pc);
 			break;
 		case DW_CFA_advance_loc1:
 		case DW_CFA_advance_loc2:
 		case DW_CFA_advance_loc4:
 			pc += oplist[i].fp_offset;
 			printf(": %jd to %08jx", (intmax_t) oplist[i].fp_offset,
-			    (uintmax_t) pc);
+			    (u_intmax_t) pc);
 			break;
 		case DW_CFA_def_cfa:
 			printf(": r%u (%s) ofs %ju", oplist[i].fp_register,
 			    dwarf_regname(re, oplist[i].fp_register),
-			    (uintmax_t) oplist[i].fp_offset);
+			    (u_intmax_t) oplist[i].fp_offset);
 			break;
 		case DW_CFA_def_cfa_sf:
 			printf(": r%u (%s) ofs %jd", oplist[i].fp_register,
@@ -5900,7 +5898,7 @@ dump_dwarf_frame_inst(struct readelf *re, Dwarf_Cie cie, uint8_t *insts,
 			    dwarf_regname(re, oplist[i].fp_register));
 			break;
 		case DW_CFA_def_cfa_offset:
-			printf(": %ju", (uintmax_t) oplist[i].fp_offset);
+			printf(": %ju", (u_intmax_t) oplist[i].fp_offset);
 			break;
 		case DW_CFA_def_cfa_offset_sf:
 			printf(": %jd", (intmax_t) (oplist[i].fp_offset * daf));
@@ -5993,7 +5991,7 @@ dump_dwarf_frame_regtable(struct readelf *re, Dwarf_Fde fde, Dwarf_Addr pc,
 		if (row_pc == pre_pc)
 			continue;
 		pre_pc = row_pc;
-		printf("%08jx ", (uintmax_t) row_pc);
+		printf("%08jx ", (u_intmax_t) row_pc);
 		printf("%-8s ", get_regoff_str(re, RT(0).dw_regnum,
 		    RT(0).dw_offset));
 		for (i = 1; i < DW_REG_TABLE_SIZE; i++) {
@@ -6086,9 +6084,9 @@ dump_dwarf_frame_section(struct readelf *re, struct section *s, int alt)
 				continue;
 			}
 			printf("%08jx %08jx %8.8jx CIE",
-			    (uintmax_t) cie_offset,
-			    (uintmax_t) cie_length,
-			    (uintmax_t) (eh_frame ? 0 : ~0U));
+			    (u_intmax_t) cie_offset,
+			    (u_intmax_t) cie_length,
+			    (u_intmax_t) (eh_frame ? 0 : ~0U));
 			if (!alt) {
 				putchar('\n');
 				printf("  Version:\t\t\t%u\n", cie_version);
@@ -6097,11 +6095,11 @@ dump_dwarf_frame_section(struct readelf *re, struct section *s, int alt)
 					putchar(c);
 				printf("\"\n");
 				printf("  Code alignment factor:\t%ju\n",
-				    (uintmax_t) cie_caf);
+				    (u_intmax_t) cie_caf);
 				printf("  Data alignment factor:\t%jd\n",
 				    (intmax_t) cie_daf);
 				printf("  Return address column:\t%ju\n",
-				    (uintmax_t) cie_ra);
+				    (u_intmax_t) cie_ra);
 				putchar('\n');
 				dump_dwarf_frame_inst(re, cie, cie_inst,
 				    cie_instlen, cie_caf, cie_daf, 0,
@@ -6113,20 +6111,20 @@ dump_dwarf_frame_section(struct readelf *re, struct section *s, int alt)
 					putchar(c);
 				putchar('"');
 				printf(" cf=%ju df=%jd ra=%ju\n",
-				    (uintmax_t) cie_caf,
-				    (uintmax_t) cie_daf,
-				    (uintmax_t) cie_ra);
+				    (u_intmax_t) cie_caf,
+				    (u_intmax_t) cie_daf,
+				    (u_intmax_t) cie_ra);
 				dump_dwarf_frame_regtable(re, fde, low_pc, 1,
 				    cie_ra);
 				putchar('\n');
 			}
 		}
 		printf("%08jx %08jx %08jx FDE cie=%08jx pc=%08jx..%08jx\n",
-		    (uintmax_t) fde_offset, (uintmax_t) fde_length,
-		    (uintmax_t) cie_offset,
-		    (uintmax_t) (eh_frame ? fde_offset + 4 - cie_offset :
+		    (u_intmax_t) fde_offset, (u_intmax_t) fde_length,
+		    (u_intmax_t) cie_offset,
+		    (u_intmax_t) (eh_frame ? fde_offset + 4 - cie_offset :
 			cie_offset),
-		    (uintmax_t) low_pc, (uintmax_t) (low_pc + func_len));
+		    (u_intmax_t) low_pc, (u_intmax_t) (low_pc + func_len));
 		if (!alt)
 			dump_dwarf_frame_inst(re, cie, fde_inst, fde_instlen,
 			    cie_caf, cie_daf, low_pc, re->dbg);
@@ -6195,7 +6193,7 @@ dump_dwarf_str(struct readelf *re)
 				printf("  ");
 				continue;
 			}
-			printf("%02x", (uint8_t) p[j]);
+			printf("%02x", (u_int8_t) p[j]);
 		}
 		putchar(' ');
 		for (j = i; j < end; j++) {
@@ -6331,7 +6329,7 @@ dump_dwarf_loc(struct readelf *re, Dwarf_Loc *lr)
 {
 	const char *op_str;
 	char unk_op[32];
-	uint8_t *b, n;
+	u_int8_t *b, n;
 	int i;
 
 	if (dwarf_get_OP_name(lr->lr_atom, &op_str) !=
@@ -6460,7 +6458,7 @@ dump_dwarf_loc(struct readelf *re, Dwarf_Loc *lr)
 	case DW_OP_plus_uconst:
 	case DW_OP_regx:
 	case DW_OP_piece:
-		printf(": %ju", (uintmax_t)
+		printf(": %ju", (u_intmax_t)
 		    lr->lr_number);
 		break;
 
@@ -6517,55 +6515,55 @@ dump_dwarf_loc(struct readelf *re, Dwarf_Loc *lr)
 
 	case DW_OP_bregx:
 		printf(": %ju (%s) %jd",
-		    (uintmax_t) lr->lr_number,
+		    (u_intmax_t) lr->lr_number,
 		    dwarf_regname(re, (unsigned int) lr->lr_number),
 		    (intmax_t) lr->lr_number2);
 		break;
 
 	case DW_OP_addr:
 	case DW_OP_GNU_encoded_addr:
-		printf(": %#jx", (uintmax_t)
+		printf(": %#jx", (u_intmax_t)
 		    lr->lr_number);
 		break;
 
 	case DW_OP_GNU_implicit_pointer:
-		printf(": <0x%jx> %jd", (uintmax_t) lr->lr_number,
+		printf(": <0x%jx> %jd", (u_intmax_t) lr->lr_number,
 		    (intmax_t) lr->lr_number2);
 		break;
 
 	case DW_OP_implicit_value:
-		printf(": %ju byte block:", (uintmax_t) lr->lr_number);
-		b = (uint8_t *)(uintptr_t) lr->lr_number2;
+		printf(": %ju byte block:", (u_intmax_t) lr->lr_number);
+		b = (u_int8_t *)(u_intptr_t) lr->lr_number2;
 		for (i = 0; (Dwarf_Unsigned) i < lr->lr_number; i++)
 			printf(" %x", b[i]);
 		break;
 
 	case DW_OP_GNU_entry_value:
 		printf(": (");
-		dump_dwarf_block(re, (uint8_t *)(uintptr_t) lr->lr_number2,
+		dump_dwarf_block(re, (u_int8_t *)(u_intptr_t) lr->lr_number2,
 		    lr->lr_number);
 		putchar(')');
 		break;
 
 	case DW_OP_GNU_const_type:
-		printf(": <0x%jx> ", (uintmax_t) lr->lr_number);
-		b = (uint8_t *)(uintptr_t) lr->lr_number2;
+		printf(": <0x%jx> ", (u_intmax_t) lr->lr_number);
+		b = (u_int8_t *)(u_intptr_t) lr->lr_number2;
 		n = *b;
-		for (i = 1; (uint8_t) i < n; i++)
+		for (i = 1; (u_int8_t) i < n; i++)
 			printf(" %x", b[i]);
 		break;
 
 	case DW_OP_GNU_regval_type:
-		printf(": %ju (%s) <0x%jx>", (uintmax_t) lr->lr_number,
+		printf(": %ju (%s) <0x%jx>", (u_intmax_t) lr->lr_number,
 		    dwarf_regname(re, (unsigned int) lr->lr_number),
-		    (uintmax_t) lr->lr_number2);
+		    (u_intmax_t) lr->lr_number2);
 		break;
 
 	case DW_OP_GNU_convert:
 	case DW_OP_GNU_deref_type:
 	case DW_OP_GNU_parameter_ref:
 	case DW_OP_GNU_reinterpret:
-		printf(": <0x%jx>", (uintmax_t) lr->lr_number);
+		printf(": <0x%jx>", (u_intmax_t) lr->lr_number);
 		break;
 
 	default:
@@ -6574,7 +6572,7 @@ dump_dwarf_loc(struct readelf *re, Dwarf_Loc *lr)
 }
 
 static void
-dump_dwarf_block(struct readelf *re, uint8_t *b, Dwarf_Unsigned len)
+dump_dwarf_block(struct readelf *re, u_int8_t *b, Dwarf_Unsigned len)
 {
 	Dwarf_Locdesc *llbuf;
 	Dwarf_Signed lcnt;
@@ -6683,7 +6681,7 @@ dump_dwarf_loclist(struct readelf *re)
 		set_cu_context(re, la->la_cu_psize, la->la_cu_osize,
 		    la->la_cu_ver);
 		for (i = 0; i < lcnt; i++) {
-			printf("    %8.8jx ", (uintmax_t)la->la_off);
+			printf("    %8.8jx ", (u_intmax_t)la->la_off);
 			if (llbuf[i]->ld_lopc == 0 && llbuf[i]->ld_hipc == 0) {
 				printf("<End of list>\n");
 				continue;
@@ -6692,8 +6690,8 @@ dump_dwarf_loclist(struct readelf *re)
 			/* TODO: handle base selection entry. */
 
 			printf("%8.8jx %8.8jx ",
-			    (uintmax_t) (la->la_lowpc + llbuf[i]->ld_lopc),
-			    (uintmax_t) (la->la_lowpc + llbuf[i]->ld_hipc));
+			    (u_intmax_t) (la->la_lowpc + llbuf[i]->ld_lopc),
+			    (u_intmax_t) (la->la_lowpc + llbuf[i]->ld_hipc));
 
 			putchar('(');
 			for (j = 0; (Dwarf_Half) j < llbuf[i]->ld_cents; j++) {
@@ -6766,7 +6764,7 @@ get_symbol_name(struct readelf *re, int symtab, int i)
 	return (name);
 }
 
-static uint64_t
+static u_int64_t
 get_symbol_value(struct readelf *re, int symtab, int i)
 {
 	struct section	*s;
@@ -6795,9 +6793,9 @@ hex_dump(struct readelf *re)
 {
 	struct section *s;
 	Elf_Data *d;
-	uint8_t *buf;
+	u_int8_t *buf;
 	size_t sz, nbytes;
-	uint64_t addr;
+	u_int64_t addr;
 	int elferr, i, j;
 
 	for (i = 1; (size_t) i < re->shnum; i++) {
@@ -6822,7 +6820,7 @@ hex_dump(struct readelf *re)
 		addr = s->addr;
 		printf("\nHex dump of section '%s':\n", s->name);
 		while (sz > 0) {
-			printf("  0x%8.8jx ", (uintmax_t)addr);
+			printf("  0x%8.8jx ", (u_intmax_t)addr);
 			nbytes = sz > 16? 16 : sz;
 			for (j = 0; j < 16; j++) {
 				if ((size_t)j < nbytes)
@@ -7112,7 +7110,7 @@ dump_ar(struct readelf *re, int fd)
 			goto process_members;
 		}
 		printf("Index of archive %s: (%ju entries)\n", re->filename,
-		    (uintmax_t) sz - 1);
+		    (u_intmax_t) sz - 1);
 		off = 0;
 		for (i = 0; (size_t) i < sz; i++) {
 			if (arsym[i].as_name == NULL)
@@ -7312,23 +7310,23 @@ parse_dwarf_op_long(struct readelf *re, const char *op)
 	free(bp);
 }
 
-static uint64_t
-_read_lsb(Elf_Data *d, uint64_t *offsetp, int bytes_to_read)
+static u_int64_t
+_read_lsb(Elf_Data *d, u_int64_t *offsetp, int bytes_to_read)
 {
-	uint64_t ret;
-	uint8_t *src;
+	u_int64_t ret;
+	u_int8_t *src;
 
-	src = (uint8_t *) d->d_buf + *offsetp;
+	src = (u_int8_t *) d->d_buf + *offsetp;
 
 	ret = 0;
 	switch (bytes_to_read) {
 	case 8:
-		ret |= ((uint64_t) src[4]) << 32 | ((uint64_t) src[5]) << 40;
-		ret |= ((uint64_t) src[6]) << 48 | ((uint64_t) src[7]) << 56;
+		ret |= ((u_int64_t) src[4]) << 32 | ((u_int64_t) src[5]) << 40;
+		ret |= ((u_int64_t) src[6]) << 48 | ((u_int64_t) src[7]) << 56;
 	case 4:
-		ret |= ((uint64_t) src[2]) << 16 | ((uint64_t) src[3]) << 24;
+		ret |= ((u_int64_t) src[2]) << 16 | ((u_int64_t) src[3]) << 24;
 	case 2:
-		ret |= ((uint64_t) src[1]) << 8;
+		ret |= ((u_int64_t) src[1]) << 8;
 	case 1:
 		ret |= src[0];
 		break;
@@ -7341,30 +7339,30 @@ _read_lsb(Elf_Data *d, uint64_t *offsetp, int bytes_to_read)
 	return (ret);
 }
 
-static uint64_t
-_read_msb(Elf_Data *d, uint64_t *offsetp, int bytes_to_read)
+static u_int64_t
+_read_msb(Elf_Data *d, u_int64_t *offsetp, int bytes_to_read)
 {
-	uint64_t ret;
-	uint8_t *src;
+	u_int64_t ret;
+	u_int8_t *src;
 
-	src = (uint8_t *) d->d_buf + *offsetp;
+	src = (u_int8_t *) d->d_buf + *offsetp;
 
 	switch (bytes_to_read) {
 	case 1:
 		ret = src[0];
 		break;
 	case 2:
-		ret = src[1] | ((uint64_t) src[0]) << 8;
+		ret = src[1] | ((u_int64_t) src[0]) << 8;
 		break;
 	case 4:
-		ret = src[3] | ((uint64_t) src[2]) << 8;
-		ret |= ((uint64_t) src[1]) << 16 | ((uint64_t) src[0]) << 24;
+		ret = src[3] | ((u_int64_t) src[2]) << 8;
+		ret |= ((u_int64_t) src[1]) << 16 | ((u_int64_t) src[0]) << 24;
 		break;
 	case 8:
-		ret = src[7] | ((uint64_t) src[6]) << 8;
-		ret |= ((uint64_t) src[5]) << 16 | ((uint64_t) src[4]) << 24;
-		ret |= ((uint64_t) src[3]) << 32 | ((uint64_t) src[2]) << 40;
-		ret |= ((uint64_t) src[1]) << 48 | ((uint64_t) src[0]) << 56;
+		ret = src[7] | ((u_int64_t) src[6]) << 8;
+		ret |= ((u_int64_t) src[5]) << 16 | ((u_int64_t) src[4]) << 24;
+		ret |= ((u_int64_t) src[3]) << 32 | ((u_int64_t) src[2]) << 40;
+		ret |= ((u_int64_t) src[1]) << 48 | ((u_int64_t) src[0]) << 56;
 		break;
 	default:
 		return (0);
@@ -7375,23 +7373,23 @@ _read_msb(Elf_Data *d, uint64_t *offsetp, int bytes_to_read)
 	return (ret);
 }
 
-static uint64_t
-_decode_lsb(uint8_t **data, int bytes_to_read)
+static u_int64_t
+_decode_lsb(u_int8_t **data, int bytes_to_read)
 {
-	uint64_t ret;
-	uint8_t *src;
+	u_int64_t ret;
+	u_int8_t *src;
 
 	src = *data;
 
 	ret = 0;
 	switch (bytes_to_read) {
 	case 8:
-		ret |= ((uint64_t) src[4]) << 32 | ((uint64_t) src[5]) << 40;
-		ret |= ((uint64_t) src[6]) << 48 | ((uint64_t) src[7]) << 56;
+		ret |= ((u_int64_t) src[4]) << 32 | ((u_int64_t) src[5]) << 40;
+		ret |= ((u_int64_t) src[6]) << 48 | ((u_int64_t) src[7]) << 56;
 	case 4:
-		ret |= ((uint64_t) src[2]) << 16 | ((uint64_t) src[3]) << 24;
+		ret |= ((u_int64_t) src[2]) << 16 | ((u_int64_t) src[3]) << 24;
 	case 2:
-		ret |= ((uint64_t) src[1]) << 8;
+		ret |= ((u_int64_t) src[1]) << 8;
 	case 1:
 		ret |= src[0];
 		break;
@@ -7404,11 +7402,11 @@ _decode_lsb(uint8_t **data, int bytes_to_read)
 	return (ret);
 }
 
-static uint64_t
-_decode_msb(uint8_t **data, int bytes_to_read)
+static u_int64_t
+_decode_msb(u_int8_t **data, int bytes_to_read)
 {
-	uint64_t ret;
-	uint8_t *src;
+	u_int64_t ret;
+	u_int8_t *src;
 
 	src = *data;
 
@@ -7418,17 +7416,17 @@ _decode_msb(uint8_t **data, int bytes_to_read)
 		ret = src[0];
 		break;
 	case 2:
-		ret = src[1] | ((uint64_t) src[0]) << 8;
+		ret = src[1] | ((u_int64_t) src[0]) << 8;
 		break;
 	case 4:
-		ret = src[3] | ((uint64_t) src[2]) << 8;
-		ret |= ((uint64_t) src[1]) << 16 | ((uint64_t) src[0]) << 24;
+		ret = src[3] | ((u_int64_t) src[2]) << 8;
+		ret |= ((u_int64_t) src[1]) << 16 | ((u_int64_t) src[0]) << 24;
 		break;
 	case 8:
-		ret = src[7] | ((uint64_t) src[6]) << 8;
-		ret |= ((uint64_t) src[5]) << 16 | ((uint64_t) src[4]) << 24;
-		ret |= ((uint64_t) src[3]) << 32 | ((uint64_t) src[2]) << 40;
-		ret |= ((uint64_t) src[1]) << 48 | ((uint64_t) src[0]) << 56;
+		ret = src[7] | ((u_int64_t) src[6]) << 8;
+		ret |= ((u_int64_t) src[5]) << 16 | ((u_int64_t) src[4]) << 24;
+		ret |= ((u_int64_t) src[3]) << 32 | ((u_int64_t) src[2]) << 40;
+		ret |= ((u_int64_t) src[1]) << 48 | ((u_int64_t) src[0]) << 56;
 		break;
 	default:
 		return (0);
@@ -7441,13 +7439,13 @@ _decode_msb(uint8_t **data, int bytes_to_read)
 }
 
 static int64_t
-_decode_sleb128(uint8_t **dp, uint8_t *dpe)
+_decode_sleb128(u_int8_t **dp, u_int8_t *dpe)
 {
 	int64_t ret = 0;
-	uint8_t b;
+	u_int8_t b;
 	int shift = 0;
 
-	uint8_t *src = *dp;
+	u_int8_t *src = *dp;
 
 	do {
 		if (src >= dpe)
@@ -7465,14 +7463,14 @@ _decode_sleb128(uint8_t **dp, uint8_t *dpe)
 	return (ret);
 }
 
-static uint64_t
-_decode_uleb128(uint8_t **dp, uint8_t *dpe)
+static u_int64_t
+_decode_uleb128(u_int8_t **dp, u_int8_t *dpe)
 {
-	uint64_t ret = 0;
-	uint8_t b;
+	u_int64_t ret = 0;
+	u_int8_t b;
 	int shift = 0;
 
-	uint8_t *src = *dp;
+	u_int8_t *src = *dp;
 
 	do {
 		if (src >= dpe)

@@ -36,7 +36,7 @@
 #include <fcntl.h>
 #include <gelf.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <stdint.h>
 #include <libdwarf.h>
 #include <libelftc.h>
 #include <stdbool.h>
@@ -46,9 +46,7 @@
 #include <strings.h>
 #include <unistd.h>
 
-#include "_elftc.h"
-
-ELFTC_VCSID("$Id$");
+#include "queue.h"
 
 /* symbol information list */
 STAILQ_HEAD(sym_head, sym_entry);
@@ -58,6 +56,11 @@ struct sym_entry {
 	GElf_Sym	*sym;
 	STAILQ_ENTRY(sym_entry) sym_entries;
 };
+
+#define PRId64  "qd"
+#define PRIu64  "qu"
+#define PRIo64  "qo"
+#define PRIx64  "qx"
 
 typedef int (*fn_sort)(const void *, const void *);
 typedef void (*fn_elem_print)(char, const char *, const GElf_Sym *, const char *);
@@ -86,8 +89,8 @@ struct nm_prog_info {
 
 /* List for line number information. */
 struct line_info_entry {
-	uint64_t	addr;	/* address */
-	uint64_t	line;	/* line number */
+	u_int64_t	addr;	/* address */
+	u_int64_t	line;	/* line number */
 	char		*file;	/* file name with path */
 	SLIST_ENTRY(line_info_entry) entries;
 };
@@ -97,9 +100,9 @@ SLIST_HEAD(line_info_head, line_info_entry);
 struct func_info_entry {
 	char		*name;	/* function name */
 	char		*file;	/* file name with path */
-	uint64_t	lowpc;	/* low address */
-	uint64_t	highpc;	/* high address */
-	uint64_t	line;	/* line number */
+	u_int64_t	lowpc;	/* low address */
+	u_int64_t	highpc;	/* high address */
+	u_int64_t	line;	/* line number */
 	SLIST_ENTRY(func_info_entry) entries;
 };
 SLIST_HEAD(func_info_head, func_info_entry);
@@ -108,8 +111,8 @@ SLIST_HEAD(func_info_head, func_info_entry);
 struct var_info_entry {
 	char		*name;	/* variable name */
 	char		*file;	/* file name with path */
-	uint64_t	addr;	/* address */
-	uint64_t	line;	/* line number */
+	u_int64_t	addr;	/* address */
+	u_int64_t	line;	/* line number */
 	SLIST_ENTRY(var_info_entry) entries;
 };
 SLIST_HEAD(var_info_head, var_info_entry);
@@ -267,8 +270,10 @@ static const struct option nm_longopts[] = {
 	{ NULL,			0,			NULL,		0   }
 };
 
+#define ELFTC_NEED_BYTEORDER_EXTENSIONS
 #if defined(ELFTC_NEED_BYTEORDER_EXTENSIONS)
-static __inline uint32_t
+
+static __inline u_int32_t
 be32dec(const void *pp)
 {
 	unsigned char const *p = (unsigned char const *)pp;
@@ -276,7 +281,7 @@ be32dec(const void *pp)
 	return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
 }
 
-static __inline uint32_t
+static __inline u_int32_t
 le32dec(const void *pp)
 {
 	unsigned char const *p = (unsigned char const *)pp;
@@ -284,20 +289,20 @@ le32dec(const void *pp)
 	return ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0]);
 }
 
-static __inline uint64_t
+static __inline u_int64_t
 be64dec(const void *pp)
 {
 	unsigned char const *p = (unsigned char const *)pp;
 
-	return (((uint64_t)be32dec(p) << 32) | be32dec(p + 4));
+	return (((u_int64_t)be32dec(p) << 32) | be32dec(p + 4));
 }
 
-static __inline uint64_t
+static __inline u_int64_t
 le64dec(const void *pp)
 {
 	unsigned char const *p = (unsigned char const *)pp;
 
-	return (((uint64_t)le32dec(p + 4) << 32) | le32dec(p));
+	return (((u_int64_t)le32dec(p + 4) << 32) | le32dec(p));
 }
 #endif
 
@@ -742,11 +747,12 @@ global_dest(void)
 static void
 global_init(void)
 {
+	extern char *__progname;
 
 	if (elf_version(EV_CURRENT) == EV_NONE)
 		errx(EXIT_FAILURE, "elf_version error");
 
-	nm_info.name = ELFTC_GETPROGNAME();
+	nm_info.name = __progname;
 	nm_info.def_filename = "a.out";
 	nm_opts.print_symbol = PRINT_SYM_SYM;
 	nm_opts.print_name = PRINT_NAME_NONE;
@@ -916,7 +922,7 @@ print_version(void)
 	exit(0);
 }
 
-static uint64_t
+static u_int64_t
 get_block_value(Dwarf_Debug dbg, Dwarf_Block *block)
 {
 	Elf *elf;
@@ -935,14 +941,14 @@ get_block_value(Dwarf_Debug dbg, Dwarf_Block *block)
 
 	if (block->bl_len == 5) {
 		if (eh.e_ident[EI_DATA] == ELFDATA2LSB)
-			return (le32dec((uint8_t *) block->bl_data + 1));
+			return (le32dec((u_int8_t *) block->bl_data + 1));
 		else
-			return (be32dec((uint8_t *) block->bl_data + 1));
+			return (be32dec((u_int8_t *) block->bl_data + 1));
 	} else if (block->bl_len == 9) {
 		if (eh.e_ident[EI_DATA] == ELFDATA2LSB)
-			return (le64dec((uint8_t *) block->bl_data + 1));
+			return (le64dec((u_int8_t *) block->bl_data + 1));
 		else
-			return (be64dec((uint8_t *) block->bl_data + 1));
+			return (be64dec((u_int8_t *) block->bl_data + 1));
 	}
 
 	return (0);
@@ -1056,7 +1062,7 @@ search_line_attr(Dwarf_Debug dbg, struct func_info_head *func_info,
 			 * external varaibles which should always use DW_OP_addr
 			 * operator for DW_AT_location value.
 			 */
-			if (*((uint8_t *)block->bl_data) == DW_OP_addr)
+			if (*((u_int8_t *)block->bl_data) == DW_OP_addr)
 				var->addr = get_block_value(dbg, block);
 		}
 
@@ -1256,7 +1262,7 @@ read_elf(Elf *elf, const char *filename, Elf_Kind kind)
 					warnx("%s: elf_ndxscn failed: %s",
 					    OBJNAME, elf_errmsg(-1));
 					goto next_cmd;
-				}					
+				}
 			}
 		} else {
 			sec_table[i] = strdup("*UND*");
