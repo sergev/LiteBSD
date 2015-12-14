@@ -32,6 +32,11 @@
 #include "_libelf.h"
 
 /*
+ * Round the value up, when y is powers of two.
+ */
+#define roundup2(x, y)  (((x) + ((y)-1)) & ~((y)-1))
+
+/*
  * Convert an ELF section#,offset pair to a string pointer.
  */
 

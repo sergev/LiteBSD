@@ -238,8 +238,6 @@ void    timevaladd __P((struct timeval *, struct timeval *));
 void    timevalsub __P((struct timeval *, struct timeval *));
 void    setregs __P((struct proc *, u_long));
 void    exit1 __P((struct proc *, int));
-void    vmapbuf __P((struct buf *, vm_size_t));
-void    vunmapbuf __P((struct buf *, vm_size_t));
 void    brelvp __P((struct buf *));
 void    remrq __P((struct proc *));
 void    cpu_switch __P((struct proc *));

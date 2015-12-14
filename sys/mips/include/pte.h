@@ -71,7 +71,7 @@ typedef union pt_entry {
  * Kernel virtual address to page table entry and visa versa.
  */
 #define kvtopte(va) \
-    (Sysmap + (((vm_offset_t)(va) - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT))
+    (Sysmap + (((unsigned)(va) - VM_MIN_KERNEL_ADDRESS) >> PGSHIFT))
 #define ptetokv(pte) \
     ((((pt_entry_t *)(pte) - Sysmap) << PGSHIFT) + VM_MIN_KERNEL_ADDRESS)
 #define kvtophys(va) \

@@ -1303,7 +1303,7 @@ tlb_update (unsigned hi, pt_entry_t *pte)
  * The address can be any valid address so long as no TLB misses occur.
  */
 void
-mips_flush_icache(vm_offset_t addr, vm_offset_t len)
+mips_flush_icache(unsigned addr, unsigned len)
 {
     int x = mips_di();                  /* Disable interrupts */
 

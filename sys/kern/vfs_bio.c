@@ -48,6 +48,7 @@
 #include <sys/trace.h>
 #include <sys/malloc.h>
 #include <sys/resourcevar.h>
+#include <vm/vm.h>
 
 /* Macros to clear/set/test flags. */
 #define SET(t, f)   (t) |= (f)

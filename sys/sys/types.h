@@ -57,6 +57,8 @@ typedef unsigned int    uint;       /* Sys V compatibility */
 typedef u_int64_t   u_quad_t;   /* quads */
 typedef int64_t     quad_t;
 typedef quad_t *    qaddr_t;
+typedef u_int64_t   u_intmax_t;
+typedef int64_t     intmax_t;
 
 typedef char *      caddr_t;    /* core address */
 typedef int32_t     daddr_t;    /* disk address */

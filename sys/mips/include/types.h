@@ -56,9 +56,4 @@ typedef int32_t                register_t;
 typedef int32_t                  intptr_t;
 typedef u_int32_t              u_intptr_t;
 
-#ifdef KERNEL
-typedef u_int32_t               vm_offset_t;
-typedef u_int32_t               vm_size_t;
-#endif
-
 #endif  /* _MACHTYPES_H_ */

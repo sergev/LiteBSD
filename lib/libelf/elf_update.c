@@ -42,6 +42,11 @@
 #endif
 
 /*
+ * Round the value up, when y is powers of two.
+ */
+#define roundup2(x, y)  (((x) + ((y)-1)) & ~((y)-1))
+
+/*
  * Layout strategy:
  *
  * - Case 1: ELF_F_LAYOUT is asserted

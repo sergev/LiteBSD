@@ -155,7 +155,7 @@ struct proc;
 
 void dumpconf __P((void));
 void configure __P((void));
-void mips_flush_icache __P((vm_offset_t addr, vm_offset_t len));
+void mips_flush_icache __P((unsigned addr, unsigned len));
 void switch_exit __P((void));
 int savectx __P((struct user *));
 int copykstack __P((struct user *));

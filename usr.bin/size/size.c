@@ -23,7 +23,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <assert.h>
 #include <err.h>
 #include <fcntl.h>
@@ -35,10 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "_elftc.h"
-
-ELFTC_VCSID("$Id$");
 
 #define	BUF_SIZE			1024
 #define	ELF_ALIGN(val,x) (((val)+(x)-1) & ~((x)-1))
@@ -62,8 +57,8 @@ enum radix_style {
 	RADIX_HEX
 };
 
-static uint64_t bss_size, data_size, text_size, total_size;
-static uint64_t bss_size_total, data_size_total, text_size_total;
+static u_int64_t bss_size, data_size, text_size, total_size;
+static u_int64_t bss_size_total, data_size_total, text_size_total;
 static int show_totals;
 static int size_option;
 static enum radix_style radix = RADIX_DECIMAL;
@@ -88,7 +83,7 @@ static struct option size_longopts[] = {
 	{ "radix",	required_argument, &size_option, OPT_RADIX },
 	{ "totals",	no_argument,	NULL,	't' },
 	{ "version",	no_argument,	NULL,	'V' },
-	{ NULL, 0, NULL, 0 }  
+	{ NULL, 0, NULL, 0 }
 };
 
 static void	berkeley_calc(GElf_Shdr *);
@@ -98,7 +93,7 @@ static void	berkeley_totals(void);
 static int	handle_core(char const *, Elf *elf, GElf_Ehdr *);
 static void	handle_core_note(Elf *, GElf_Ehdr *, GElf_Phdr *, char **);
 static int	handle_elf(char const *);
-static void	handle_phdr(Elf *, GElf_Ehdr *, GElf_Phdr *, uint32_t,
+static void	handle_phdr(Elf *, GElf_Ehdr *, GElf_Phdr *, u_int32_t,
 		    const char *);
 static void	show_version(void);
 static void	sysv_header(const char *, Elf_Arhdr *);
@@ -107,7 +102,7 @@ static void	sysv_calc(Elf *, GElf_Ehdr *, GElf_Shdr *);
 static void	usage(void);
 static void	tbl_new(int);
 static void	tbl_print(const char *, int);
-static void	tbl_print_num(uint64_t, enum radix_style, int);
+static void	tbl_print_num(u_int64_t, enum radix_style, int);
 static void	tbl_append(void);
 static void	tbl_flush(void);
 
@@ -236,11 +231,11 @@ xlatetom(Elf *elf, GElf_Ehdr *elfhdr, void *_src, void *_dst,
 	    ELF_ALIGN((int32_t)namesz, 8) + offset)
 
 #define PID32(nhdr, namesz, offset) 				\
-	(pid_t)*((int *)((uintptr_t)NOTE_OFFSET_32(nhdr,	\
+	(pid_t)*((int *)((u_intptr_t)NOTE_OFFSET_32(nhdr,	\
 	    namesz, offset)));
 
 #define PID64(nhdr, namesz, offset) 				\
-	(pid_t)*((int *)((uintptr_t)NOTE_OFFSET_64(nhdr,	\
+	(pid_t)*((int *)((u_intptr_t)NOTE_OFFSET_64(nhdr,	\
 	    namesz, offset)));
 
 #define NEXT_NOTE(elfhdr, descsz, namesz, offset) do {		\
@@ -263,10 +258,10 @@ handle_core_note(Elf *elf, GElf_Ehdr *elfhdr, GElf_Phdr *phdr,
     char **cmd_line)
 {
 	size_t max_size;
-	uint64_t raw_size;
+	u_int64_t raw_size;
 	GElf_Off offset;
 	static pid_t pid;
-	uintptr_t ver;
+	u_intptr_t ver;
 	Elf32_Nhdr *nhdr, nhdr_l;
 	static int reg_pseudo = 0, reg2_pseudo = 0, regxfp_pseudo = 0;
 	char buf[BUF_SIZE], *data, *name;
@@ -277,7 +272,7 @@ handle_core_note(Elf *elf, GElf_Ehdr *elfhdr, GElf_Phdr *phdr,
 	data = elf_rawfile(elf, &max_size);
 	offset = phdr->p_offset;
 	while (data != NULL && offset < phdr->p_offset + phdr->p_filesz) {
-		nhdr = (Elf32_Nhdr *)(uintptr_t)((char*)data + offset);
+		nhdr = (Elf32_Nhdr *)(u_intptr_t)((char*)data + offset);
 		memset(&nhdr_l, 0, sizeof(Elf32_Nhdr));
 		if (!xlatetom(elf, elfhdr, &nhdr->n_type, &nhdr_l.n_type,
 			ELF_T_WORD, sizeof(Elf32_Word)) ||
@@ -295,27 +290,27 @@ handle_core_note(Elf *elf, GElf_Ehdr *elfhdr, GElf_Phdr *phdr,
 			    nhdr_l.n_namesz == 0x8 &&
 			    !strcmp(name,"FreeBSD")) {
 				if (elfhdr->e_ident[EI_CLASS] == ELFCLASS32) {
-					raw_size = (uint64_t)*((uint32_t *)
-					    (uintptr_t)(name +
+					raw_size = (u_int64_t)*((u_int32_t *)
+					    (u_intptr_t)(name +
 						ELF_ALIGN((int32_t)
 						nhdr_l.n_namesz, 4) + 8));
-					ver = (uintptr_t)NOTE_OFFSET_32(nhdr,
+					ver = (u_intptr_t)NOTE_OFFSET_32(nhdr,
 					    nhdr_l.n_namesz,0);
 					if (*((int *)ver) == 1)
 						pid = PID32(nhdr,
 						    nhdr_l.n_namesz, 24);
 				} else {
-					raw_size = *((uint64_t *)(uintptr_t)
+					raw_size = *((u_int64_t *)(u_intptr_t)
 					    (name + ELF_ALIGN((int32_t)
 						nhdr_l.n_namesz, 8) + 16));
-					ver = (uintptr_t)NOTE_OFFSET_64(nhdr,
+					ver = (u_intptr_t)NOTE_OFFSET_64(nhdr,
 					    nhdr_l.n_namesz,0);
 					if (*((int *)ver) == 1)
 						pid = PID64(nhdr,
 						    nhdr_l.n_namesz, 40);
 				}
 				xlatetom(elf, elfhdr, &raw_size, &raw_size,
-				    ELF_T_WORD, sizeof(uint64_t));
+				    ELF_T_WORD, sizeof(u_int64_t));
 				xlatetom(elf, elfhdr, &pid, &pid, ELF_T_WORD,
 				    sizeof(pid_t));
 			}
@@ -431,9 +426,9 @@ handle_core_note(Elf *elf, GElf_Ehdr *elfhdr, GElf_Phdr *phdr,
  */
 static void
 handle_phdr(Elf *elf, GElf_Ehdr *elfhdr, GElf_Phdr *phdr,
-    uint32_t idx, const char *name)
+    u_int32_t idx, const char *name)
 {
-	uint64_t addr, size;
+	u_int64_t addr, size;
 	int split;
 	char buf[BUF_SIZE];
 
@@ -484,7 +479,7 @@ static int
 handle_core(char const *name, Elf *elf, GElf_Ehdr *elfhdr)
 {
 	GElf_Phdr phdr;
-	uint32_t i;
+	u_int32_t i;
 	char *core_cmdline;
 	const char *seg_name;
 
@@ -812,12 +807,12 @@ tbl_print(const char *s, int col)
 }
 
 static void
-tbl_print_num(uint64_t num, enum radix_style rad, int col)
+tbl_print_num(u_int64_t num, enum radix_style rad, int col)
 {
 	char buf[BUF_SIZE];
 
 	(void) snprintf(buf, BUF_SIZE, (rad == RADIX_DECIMAL ? "%ju" :
-	    ((rad == RADIX_OCTAL) ? "0%jo" : "0x%jx")), (uintmax_t) num);
+	    ((rad == RADIX_OCTAL) ? "0%jo" : "0x%jx")), (u_intmax_t) num);
 	tbl_print(buf, col);
 }
 
@@ -897,16 +892,18 @@ Usage: %s [options] file ...\n\
   -t                 Equivalent to option --totals.\n\
   -x                 Equivalent to `--radix=16'.\n"
 
+extern char *__progname;
+
 static void
 usage(void)
 {
-	(void) fprintf(stderr, USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
 static void
 show_version(void)
 {
-	(void) printf("%s (%s)\n", ELFTC_GETPROGNAME(), elftc_version());
+	(void) printf("%s (%s)\n", __progname, elftc_version());
 	exit(EXIT_SUCCESS);
 }

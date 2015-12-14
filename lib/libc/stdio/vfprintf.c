@@ -474,6 +474,7 @@ reswitch:	switch (ch) {
 			flags |= LONGINT;
 			goto rflag;
 		case 'q':
+		case 'j':
 			flags |= QUADINT;
 			goto rflag;
 		case 'c':
@@ -537,7 +538,7 @@ fp_begin:		_double = va_arg(ap, double);
 					ch = (ch == 'g') ? 'e' : 'E';
 				else
 					ch = 'g';
-			} 
+			}
 			if (ch <= 'e') {	/* 'e' or 'E' fmt */
 				--expt;
 				expsize = exponent(expstr, expt, ch);

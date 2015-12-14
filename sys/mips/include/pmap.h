@@ -62,7 +62,7 @@
  * dynamically allocated at boot time.
  */
 
-#define mips_trunc_seg(x)   ((vm_offset_t)(x) & ~SEGOFSET)
+#define mips_trunc_seg(x)   ((unsigned)(x) & ~SEGOFSET)
 #define pmap_segmap(m, v)   ((m)->pm_segtab->seg_tab[((v) >> SEGSHIFT)])
 
 #define PMAP_SEGTABSIZE     512

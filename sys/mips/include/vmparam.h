@@ -193,13 +193,16 @@
  */
 
 /* user/kernel map constants */
-#define VM_MIN_ADDRESS          ((vm_offset_t)0x00001000)
-#define VM_MAXUSER_ADDRESS      ((vm_offset_t)0x80000000)
-#define VM_MAX_ADDRESS          ((vm_offset_t)0x80000000)
-#define VM_MIN_KERNEL_ADDRESS   ((vm_offset_t)0xC0000000)
-#define VM_MAX_KERNEL_ADDRESS   ((vm_offset_t)0xFFFFC000)
+#define VM_MIN_ADDRESS          0x00001000
+#define VM_MAXUSER_ADDRESS      0x80000000
+#define VM_MAX_ADDRESS          0x80000000
+#define VM_MIN_KERNEL_ADDRESS   0xC0000000
+#define VM_MAX_KERNEL_ADDRESS   0xFFFFC000
 
 /* virtual sizes (bytes) for various kernel submaps */
 #define VM_MBUF_SIZE            (NMBCLUSTERS*MCLBYTES)
 #define VM_KMEM_SIZE            (NKMEMCLUSTERS*CLBYTES)
 #define VM_PHYS_SIZE            (USRIOSIZE*CLBYTES)
+
+typedef u_int32_t               vm_offset_t;
+typedef u_int32_t               vm_size_t;
