@@ -31,6 +31,7 @@
 .Nm dwarf_get_abbrev
 .Nd retrieve abbreviation information
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -98,6 +99,7 @@ The memory area used for the
 descriptor returned in argument
 .Ar ret_abbrev
 is allocated by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 Application code should use function
 .Fn dwarf_dealloc

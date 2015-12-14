@@ -31,6 +31,7 @@
 .Nm dwarf_get_ranges
 .Nd retrieve non-contiguous address ranges
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -154,6 +155,7 @@ The memory area used for the array of
 descriptors returned in argument
 .Ar ranges
 is owned by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 The application should not attempt to directly free this pointer.
 Portable code should instead use
@@ -169,6 +171,7 @@ except that it requires one additional argument
 denoting the debugging information entry associated with
 the address range list.
 In this implementation of the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf ,
 the argument
 .Ar die

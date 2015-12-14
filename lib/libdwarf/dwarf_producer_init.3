@@ -32,6 +32,7 @@
 .Nm dwarf_producer_init_b
 .Nd allocate a DWARF producer descriptor
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -160,6 +161,7 @@ typedef int (*Dwarf_Callback_Func_b)(char *name, int size,
 .Ed
 .Pp
 This function is called by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 once for each section in the object file that the library needs to
 create.

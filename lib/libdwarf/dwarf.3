@@ -30,12 +30,14 @@
 .Nm dwarf
 .Nd access debugging information in object files
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
 .Sh DESCRIPTION
 .Pp
 The
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 provides functions that allow an application to read and write debugging
 information in object files.
@@ -137,6 +139,7 @@ other than
 .Dv DW_DLV_OK .
 .Pp
 The
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 allows applications to specify three levels of error handling:
 .Bl -enum -compact
@@ -576,6 +579,7 @@ Retrieve the ELF descriptor for a debug context, see
 Retrieve a NUL-terminated string from the DWARF string section.
 .It Fn dwarf_set_reloc_application
 Control whether relocations are to be handled by
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 .El
 .El

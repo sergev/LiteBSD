@@ -39,6 +39,7 @@
 .Nm dwarf_weaks_dealloc
 .Nd release resources
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -107,6 +108,7 @@
 The function
 .Fn dwarf_dealloc
 is used by applications to indicate that memory areas returned by
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 may be safely disposed off.
 Due to the way memory is managed in the current implementation, the

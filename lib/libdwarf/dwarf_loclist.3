@@ -32,6 +32,7 @@
 .Nm dwarf_loclist_n
 .Nd retrieve DWARF location expression information
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -150,6 +151,7 @@ expression.
 The memory area used for the descriptor array returned in argument
 .Ar llbuf
 is allocated by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 When the descriptor array is no longer needed, application code should
 use function

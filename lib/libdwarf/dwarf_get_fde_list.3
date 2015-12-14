@@ -31,6 +31,7 @@
 .Nm dwarf_get_fde_list
 .Nd retrieve frame information
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -116,6 +117,7 @@ The memory areas used for the arrays returned in arguments
 and
 .Ar fde_list
 are owned by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 Application code should not attempt to directly free these areas.
 Portable applications should instead use the

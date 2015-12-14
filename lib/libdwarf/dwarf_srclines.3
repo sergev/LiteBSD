@@ -30,6 +30,7 @@
 .Nm dwarf_srclines
 .Nd retrieve line number information for a debugging information entry
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -78,6 +79,7 @@ The memory area used for the array of
 descriptors returned in argument
 .Ar lines
 is owned by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 The application should not attempt to free this pointer.
 Portable code should instead use

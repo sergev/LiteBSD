@@ -35,6 +35,7 @@
 .Nm dwarf_funcname
 .Nd retrieve information about static functions
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -159,6 +160,7 @@ descriptors returned in argument
 by function
 .Fn dwarf_get_funcs
 is owned by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 Application code should not attempt to directly free this pointer.
 Portable code should instead use the function
@@ -172,6 +174,7 @@ argument to functions
 and
 .Fn dwarf_funcname
 is owned by the
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 Portable code should indicate that the memory area can
 be freed using the

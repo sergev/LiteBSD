@@ -31,6 +31,7 @@
 .Nm dwarf_get_aranges
 .Nd retrieve program address space mappings
 .Sh LIBRARY
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf
 .Sh SYNOPSIS
 .In libdwarf.h
@@ -76,6 +77,7 @@ error.
 The memory area used for the array returned in argument
 .Ar ar_list
 is owned by
+.ds str-Lb-libdwarf	DWARF Access Library (libdwarf, -ldwarf)
 .Lb libdwarf .
 Application code should not attempt to directly free this area.
 Portable applications should instead use
