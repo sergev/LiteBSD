@@ -45,7 +45,7 @@
 #include <time.h>
 #include <unistd.h>
 
-//#include "_elftc.h"
+#include "queue.h"
 
 /*
  * readelf(1) options.
@@ -95,6 +95,11 @@
  * readelf(1) run control flags.
  */
 #define	DISPLAY_FILENAME	0x0001
+
+/*
+ * Round the value up, when y is powers of two.
+ */
+#define roundup2(x, y)  (((x) + ((y)-1)) & ~((y)-1))
 
 /*
  * Internal data structure for sections.
@@ -4984,6 +4989,34 @@ dump_dwarf_line(struct readelf *re)
 #undef	ADDRESS
 }
 
+static const char *
+basename(const char *path)
+{
+	const char *endp, *startp;
+
+	/* Empty or NULL string gets treated as "." */
+	if (path == NULL || *path == '\0') {
+		return ".";
+	}
+
+	/* Strip any trailing slashes */
+	endp = path + strlen(path) - 1;
+	while (endp > path && *endp == '/')
+		endp--;
+
+	/* All slashes becomes "/" */
+	if (endp == path && *endp == '/') {
+		return "/";
+	}
+
+	/* Find the start of the base */
+	startp = endp;
+	while (startp > path && *(startp - 1) != '/')
+		startp--;
+
+	return startp;
+}
+
 static void
 dump_dwarf_line_decoded(struct readelf *re)
 {
@@ -7488,8 +7521,9 @@ _decode_uleb128(u_int8_t **dp, u_int8_t *dpe)
 static void
 readelf_version(void)
 {
-	(void) printf("%s (%s)\n", ELFTC_GETPROGNAME(),
-	    elftc_version());
+	extern char *__progname;
+
+	(void) printf("%s (%s)\n", __progname, elftc_version());
 	exit(EXIT_SUCCESS);
 }
 
@@ -7529,7 +7563,9 @@ Usage: %s [options] file...\n\
 static void
 readelf_usage(void)
 {
-	fprintf(stderr, USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	extern char *__progname;
+
+	fprintf(stderr, USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 

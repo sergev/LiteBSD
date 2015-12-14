@@ -5,7 +5,7 @@
 # machine-independent string sources
 SRCS+=	memccpy.c strcasecmp.c strcoll.c strdup.c strerror.c \
 	strftime.c strmode.c strtok.c strxfrm.c swab.c \
-	strlcat.c strlcpy.c
+	strlcat.c strlcpy.c strnlen.c
 
 # machine-dependent string sources
 .include "${.CURDIR}/${MACHINE}/string/Makefile.inc"
