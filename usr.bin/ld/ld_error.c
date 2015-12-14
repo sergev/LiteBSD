@@ -26,8 +26,6 @@
 
 #include "ld.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Support routines for error and warning message generation.
  */

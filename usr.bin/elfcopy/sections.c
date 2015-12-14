@@ -37,7 +37,7 @@
 ELFTC_VCSID("$Id$");
 
 static void	add_gnu_debuglink(struct elfcopy *ecp);
-static uint32_t calc_crc32(const char *p, size_t len, uint32_t crc);
+static u_int32_t calc_crc32(const char *p, size_t len, u_int32_t crc);
 static void	check_section_rename(struct elfcopy *ecp, struct section *s);
 static void	filter_reloc(struct elfcopy *ecp, struct section *s);
 static int	get_section_flags(struct elfcopy *ecp, const char *name);
@@ -107,7 +107,7 @@ is_remove_section(struct elfcopy *ecp, const char *name)
  * will be removed.
  */
 int
-is_remove_reloc_sec(struct elfcopy *ecp, uint32_t sh_info)
+is_remove_reloc_sec(struct elfcopy *ecp, u_int32_t sh_info)
 {
 	const char	*name;
 	GElf_Shdr	 ish;
@@ -341,7 +341,7 @@ create_scn(struct elfcopy *ecp)
 	Elf_Scn		*is;
 	GElf_Shdr	 ish;
 	size_t		 indx;
-	uint64_t	 oldndx, newndx;
+	u_int64_t	 oldndx, newndx;
 	int		 elferr, sec_flags;
 
 	/*
@@ -590,8 +590,8 @@ update_section_group(struct elfcopy *ecp, struct section *s)
 {
 	GElf_Shdr	 ish;
 	Elf_Data	*id;
-	uint32_t	*ws, *wd;
-	uint64_t	 n;
+	u_int32_t	*ws, *wd;
+	u_int64_t	 n;
 	size_t		 ishnum;
 	int		 i, j;
 
@@ -631,7 +631,7 @@ update_section_group(struct elfcopy *ecp, struct section *s)
 
 	/* Update the section indices. */
 	n = ish.sh_size / ish.sh_entsize;
-	for(i = 1, j = 1; (uint64_t)i < n; i++) {
+	for(i = 1, j = 1; (u_int64_t)i < n; i++) {
 		if (ws[i] != SHN_UNDEF && ws[i] < ishnum &&
 		    ecp->secndx[ws[i]] != 0)
 			wd[j++] = ecp->secndx[ws[i]];
@@ -658,7 +658,7 @@ filter_reloc(struct elfcopy *ecp, struct section *s)
 	Elf32_Rela	*rela32;
 	Elf64_Rela	*rela64;
 	Elf_Data	*id;
-	uint64_t	 cap, n, nrels;
+	u_int64_t	 cap, n, nrels;
 	int		 elferr, i;
 
 	if (gelf_getshdr(s->is, &ish) == NULL)
@@ -711,7 +711,7 @@ filter_reloc(struct elfcopy *ecp, struct section *s)
 		errx(EXIT_FAILURE, "elf_getdata() failed: %s",
 		    elf_errmsg(-1));
 	n = ish.sh_size / ish.sh_entsize;
-	for(i = 0; (uint64_t)i < n; i++) {
+	for(i = 0; (u_int64_t)i < n; i++) {
 		if (s->type == SHT_REL) {
 			if (gelf_getrel(id, i, &rel) != &rel)
 				errx(EXIT_FAILURE, "gelf_getrel failed: %s",
@@ -768,7 +768,7 @@ update_reloc(struct elfcopy *ecp, struct section *s)
 	GElf_Rel	 rel;
 	GElf_Rela	 rela;
 	Elf_Data	*od;
-	uint64_t	 n;
+	u_int64_t	 n;
 	int		 i;
 
 #define UPDATEREL(REL) do {						\
@@ -794,7 +794,7 @@ update_reloc(struct elfcopy *ecp, struct section *s)
 		errx(EXIT_FAILURE, "elf_getdata() failed: %s",
 		    elf_errmsg(-1));
 	n = osh.sh_size / osh.sh_entsize;
-	for(i = 0; (uint64_t)i < n; i++) {
+	for(i = 0; (u_int64_t)i < n; i++) {
 		if (s->type == SHT_REL)
 			UPDATEREL(rel);
 		else
@@ -841,7 +841,7 @@ resync_sections(struct elfcopy *ecp)
 {
 	struct section	*s, *ps;
 	GElf_Shdr	 osh;
-	uint64_t	 off;
+	u_int64_t	 off;
 	int		 first;
 
 	ps = NULL;
@@ -1168,8 +1168,8 @@ copy_data(struct section *s)
 
 struct section *
 create_external_section(struct elfcopy *ecp, const char *name, char *newname,
-    void *buf, uint64_t size, uint64_t off, uint64_t stype, Elf_Type dtype,
-    uint64_t flags, uint64_t align, uint64_t vma, int loadable)
+    void *buf, u_int64_t size, u_int64_t off, u_int64_t stype, Elf_Type dtype,
+    u_int64_t flags, u_int64_t align, u_int64_t vma, int loadable)
 {
 	struct section	*s;
 	Elf_Scn		*os;
@@ -1574,7 +1574,7 @@ lookup_string(struct section *t, const char *s)
 	return (-1);
 }
 
-static uint32_t crctable[256] =
+static u_int32_t crctable[256] =
 {
 	0x00000000L, 0x77073096L, 0xEE0E612CL, 0x990951BAL,
 	0x076DC419L, 0x706AF48FL, 0xE963A535L, 0x9E6495A3L,
@@ -1642,10 +1642,10 @@ static uint32_t crctable[256] =
 	0xB40BBE37L, 0xC30C8EA1L, 0x5A05DF1BL, 0x2D02EF8DL
 };
 
-static uint32_t
-calc_crc32(const char *p, size_t len, uint32_t crc)
+static u_int32_t
+calc_crc32(const char *p, size_t len, u_int32_t crc)
 {
-	uint32_t i;
+	u_int32_t i;
 
 	for (i = 0; i < len; i++) {
 		crc = crctable[(crc ^ *p++) & 0xFFL] ^ (crc >> 8);

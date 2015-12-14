@@ -30,7 +30,7 @@
 #include <gelf.h>
 #include <libelftc.h>
 
-#include "_elftc.h"
+#include "queue.h"
 
 /*
  * User specified symbol operation (strip, keep, localize, globalize,
@@ -70,8 +70,8 @@ struct sec_action {
 	const char	*addopt;
 	const char	*newname;
 	const char	*string;
-	uint64_t	 lma;
-	uint64_t	 vma;
+	u_int64_t	 lma;
+	u_int64_t	 vma;
 	int64_t		 lma_adjust;
 	int64_t		 vma_adjust;
 
@@ -121,15 +121,15 @@ struct section {
 	Elf_Scn		*is;	/* input scn */
 	Elf_Scn		*os;	/* output scn */
 	void		*buf;	/* section content */
-	uint8_t		*pad;	/* section padding */
-	uint64_t	 off;	/* section offset */
-	uint64_t	 sz;	/* section size */
-	uint64_t	 cap;	/* section capacity */
-	uint64_t	 align;	/* section alignment */
-	uint64_t	 type;	/* section type */
-	uint64_t	 vma;	/* section virtual addr */
-	uint64_t	 lma;	/* section load addr */
-	uint64_t	 pad_sz;/* section padding size */
+	u_int8_t		*pad;	/* section padding */
+	u_int64_t	 off;	/* section offset */
+	u_int64_t	 sz;	/* section size */
+	u_int64_t	 cap;	/* section capacity */
+	u_int64_t	 align;	/* section alignment */
+	u_int64_t	 type;	/* section type */
+	u_int64_t	 vma;	/* section virtual addr */
+	u_int64_t	 lma;	/* section load addr */
+	u_int64_t	 pad_sz;/* section padding size */
 	int		 loadable; /* whether loadable */
 	int		 pseudo;
 	int		 nocopy;
@@ -139,11 +139,11 @@ struct section {
 
 /* Internal data structure for segments. */
 struct segment {
-	uint64_t	addr;	/* load addr */
-	uint64_t	off;	/* file offset */
-	uint64_t	fsz;	/* file size */
-	uint64_t	msz;	/* memory size */
-	uint64_t	type;	/* segment type */
+	u_int64_t	addr;	/* load addr */
+	u_int64_t	off;	/* file offset */
+	u_int64_t	fsz;	/* file size */
+	u_int64_t	msz;	/* memory size */
+	u_int64_t	type;	/* segment type */
 	int		remove;	/* whether remove */
 	int		nsec;	/* number of sections contained */
 	struct section **v_sec;	/* list of sections contained */
@@ -223,10 +223,10 @@ struct elfcopy {
 	int		 flags;		/* elfcopy run control flags. */
 	int64_t		 change_addr;	/* Section address adjustment. */
 	int64_t		 change_start;	/* Entry point adjustment. */
-	uint64_t	 set_start;	/* Entry point value. */
+	u_int64_t	 set_start;	/* Entry point value. */
 	unsigned long	 srec_len;	/* S-Record length. */
-	uint64_t	 pad_to;	/* load address padding. */
-	uint8_t		 fill;		/* gap fill value. */
+	u_int64_t	 pad_to;	/* load address padding. */
+	u_int8_t		 fill;		/* gap fill value. */
 	char		*prefix_sec;	/* section prefix. */
 	char		*prefix_alloc;	/* alloc section prefix. */
 	char		*prefix_sym;	/* symbol prefix. */
@@ -234,8 +234,8 @@ struct elfcopy {
 	struct section	*symtab;	/* .symtab section. */
 	struct section	*strtab;	/* .strtab section. */
 	struct section	*shstrtab;	/* .shstrtab section. */
-	uint64_t	*secndx;	/* section index map. */
-	uint64_t	*symndx;	/* symbol index map. */
+	u_int64_t	*secndx;	/* section index map. */
+	u_int64_t	*symndx;	/* symbol index map. */
 	unsigned char	*v_rel;		/* symbols needed by relocation. */
 	unsigned char	*v_grp;		/* symbols refered by section group. */
 	unsigned char	*v_secsym;	/* sections with section symbol. */
@@ -252,8 +252,8 @@ struct elfcopy {
 	char		*as;		/* buffer for archive string table. */
 	size_t		 as_sz;		/* current size of as table. */
 	size_t		 as_cap;	/* capacity of as table buffer. */
-	uint32_t	 s_cnt;		/* current number of symbols. */
-	uint32_t	*s_so;		/* symbol offset table. */
+	u_int32_t	 s_cnt;		/* current number of symbols. */
+	u_int32_t	*s_so;		/* symbol offset table. */
 	size_t		 s_so_cap;	/* capacity of so table buffer. */
 	char		*s_sn;		/* symbol name table */
 	size_t		 s_sn_cap;	/* capacity of sn table buffer. */
@@ -267,7 +267,7 @@ void	add_to_shstrtab(struct elfcopy *_ecp, const char *_name);
 void	add_to_symop_list(struct elfcopy *_ecp, const char *_name,
     const char *_newname, unsigned int _op);
 void	add_to_symtab(struct elfcopy *_ecp, const char *_name,
-    uint64_t _st_value, uint64_t _st_size, uint16_t _st_shndx,
+    u_int64_t _st_value, u_int64_t _st_size, u_int16_t _st_shndx,
     unsigned char _st_info, unsigned char _st_other, int _ndx_known);
 int	add_to_inseg_list(struct elfcopy *_ecp, struct section *_sec);
 void	adjust_addr(struct elfcopy *_ecp);
@@ -282,8 +282,8 @@ void	create_elf_from_binary(struct elfcopy *_ecp, int _ifd, const char *ifn);
 void	create_elf_from_ihex(struct elfcopy *_ecp, int _ifd);
 void	create_elf_from_srec(struct elfcopy *_ecp, int _ifd);
 struct section *create_external_section(struct elfcopy *_ecp, const char *_name,
-    char *_newname, void *_buf, uint64_t _size, uint64_t _off, uint64_t _stype,
-    Elf_Type _dtype, uint64_t flags, uint64_t _align, uint64_t _vma,
+    char *_newname, void *_buf, u_int64_t _size, u_int64_t _off, u_int64_t _stype,
+    Elf_Type _dtype, u_int64_t flags, u_int64_t _align, u_int64_t _vma,
     int _loadable);
 void	create_external_symtab(struct elfcopy *_ecp);
 void	create_ihex(int _ifd, int _ofd);
@@ -301,7 +301,7 @@ void	init_shstrtab(struct elfcopy *_ecp);
 void	insert_to_sec_list(struct elfcopy *_ecp, struct section *_sec,
     int _tail);
 struct section *insert_shtab(struct elfcopy *_ecp, int tail);
-int	is_remove_reloc_sec(struct elfcopy *_ecp, uint32_t _sh_info);
+int	is_remove_reloc_sec(struct elfcopy *_ecp, u_int32_t _sh_info);
 int	is_remove_section(struct elfcopy *_ecp, const char *_name);
 struct sec_action *lookup_sec_act(struct elfcopy *_ecp,
     const char *_name, int _add);

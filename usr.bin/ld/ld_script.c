@@ -32,8 +32,6 @@
 #include "ld_symbols.h"
 #include "ld_output.h"
 
-ELFTC_VCSID("$Id$");
-
 static void _input_file_add(struct ld *ld, struct ld_script_input_file *ldif);
 static void _overlay_section_free(void *ptr);
 static struct ld_script_variable *_variable_find(struct ld *ld, char *name);
@@ -87,7 +85,7 @@ ld_script_assign_dump(struct ld *ld, struct ld_script_assign *lda)
 {
 
 	printf("%16s", "");
-	printf("0x%016jx ", (uintmax_t) lda->lda_res);
+	printf("0x%016jx ", (u_intmax_t) lda->lda_res);
 
 	if (lda->lda_provide)
 		printf("PROVIDE(");
@@ -199,12 +197,12 @@ ld_script_process_assign(struct ld *ld, struct ld_script_assign *lda)
 		 * outside output section descriptor, as long as the
 		 * move will not cause overlapping LMA's.
 		 */
-		if ((uint64_t) ldv->ldv_val < ls->ls_loc_counter)
+		if ((u_int64_t) ldv->ldv_val < ls->ls_loc_counter)
 			ld_fatal(ld, "cannot move location counter backwards"
 			    " from %#jx to %#jx",
-			    (uintmax_t) ls->ls_loc_counter,
-			    (uintmax_t) ldv->ldv_val);
-		ls->ls_loc_counter = (uint64_t) ldv->ldv_val;
+			    (u_intmax_t) ls->ls_loc_counter,
+			    (u_intmax_t) ldv->ldv_val);
+		ls->ls_loc_counter = (u_int64_t) ldv->ldv_val;
 
 	} else if (ldv->ldv_symbol != NULL) {
 		_update_variable_section(ld, ldv);

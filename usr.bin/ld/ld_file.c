@@ -29,8 +29,6 @@
 #include "ld_file.h"
 #include "ld_path.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Support routines for input file handling.
  */

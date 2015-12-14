@@ -30,8 +30,6 @@
 #include "ld_exp.h"
 #include "ld_layout.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Support routines for ldscript expression.
  */
@@ -336,10 +334,10 @@ ld_exp_dump(struct ld *ld, struct ld_exp *le)
 		_EXP_DUMP(le->le_e2);
 		break;
 	case LEOP_ASSIGN:
-		printf("0x%jx", (uintmax_t)  le->le_assign->lda_res);
+		printf("0x%jx", (u_intmax_t)  le->le_assign->lda_res);
 		break;
 	case LEOP_CONSTANT:
-		printf("0x%jx", (uintmax_t) le->le_val);
+		printf("0x%jx", (u_intmax_t) le->le_val);
 		break;
 	case LEOP_DIV:
 		_EXP_DUMP(le->le_e1);
@@ -496,7 +494,7 @@ ld_exp_dump(struct ld *ld, struct ld_exp *le)
 		break;
 	case LEOP_SYMBOLIC_CONSTANT:
 		printf("0x%jx",
-		    (uintmax_t) _symbolic_constant(ld, le->le_name));
+		    (u_intmax_t) _symbolic_constant(ld, le->le_name));
 		break;
 	case LEOP_TRINARY:
 		_EXP_DUMP(le->le_e1);
@@ -569,8 +567,8 @@ static int64_t
 _func_data_segment_align(struct ld *ld, struct ld_exp *le)
 {
 	struct ld_state *ls;
-	uint64_t maxpagesize;
-	//uint64_t commonpagesize;
+	u_int64_t maxpagesize;
+	//u_int64_t commonpagesize;
 
 	/*
 	 * TODO: test if align to common page size use less number
@@ -630,7 +628,7 @@ _func_loadaddr(struct ld *ld, struct ld_exp *le)
 static int64_t
 _func_max(struct ld *ld, struct ld_exp *le)
 {
-	uint64_t val1, val2;
+	u_int64_t val1, val2;
 
 	val1 = _EXP_EVAL(le->le_e1);
 	val2 = _EXP_EVAL(le->le_e2);
@@ -641,7 +639,7 @@ _func_max(struct ld *ld, struct ld_exp *le)
 static int64_t
 _func_min(struct ld *ld, struct ld_exp *le)
 {
-	uint64_t val1, val2;
+	u_int64_t val1, val2;
 
 	val1 = _EXP_EVAL(le->le_e1);
 	val2 = _EXP_EVAL(le->le_e2);

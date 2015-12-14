@@ -35,15 +35,13 @@
 #include "ld_utils.h"
 #include "amd64.h"
 
-ELFTC_VCSID("$Id$");
-
 static void _create_plt_reloc(struct ld *ld, struct ld_symbol *lsb,
-    uint64_t offset);
+    u_int64_t offset);
 static void _create_got_reloc(struct ld *ld, struct ld_symbol *lsb,
-    uint64_t type, uint64_t offset);
+    u_int64_t type, u_int64_t offset);
 static void _create_copy_reloc(struct ld *ld, struct ld_symbol *lsb);
 static void _create_dynamic_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_symbol *lsb, uint64_t type, uint64_t offset, int64_t addend);
+    struct ld_symbol *lsb, u_int64_t type, u_int64_t offset, int64_t addend);
 static void _scan_reloc(struct ld *ld, struct ld_input_section *is,
     struct ld_reloc_entry *lre);
 static struct ld_input_section *_find_and_create_got_section(struct ld *ld,
@@ -53,40 +51,40 @@ static struct ld_input_section *_find_and_create_gotplt_section(struct ld *ld,
 static struct ld_input_section *_find_and_create_plt_section(struct ld *ld,
     int create);
 static void _finalize_got_and_plt(struct ld *ld);
-static uint64_t _get_max_page_size(struct ld *ld);
-static uint64_t _get_common_page_size(struct ld *ld);
+static u_int64_t _get_max_page_size(struct ld *ld);
+static u_int64_t _get_common_page_size(struct ld *ld);
 static void _adjust_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf);
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf);
 static void _process_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf);
-static const char *_reloc2str(uint64_t r);
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf);
+static const char *_reloc2str(u_int64_t r);
 static void _reserve_got_entry(struct ld *ld, struct ld_symbol *lsb, int num);
 static void _reserve_gotplt_entry(struct ld *ld, struct ld_symbol *lsb);
 static void _reserve_plt_entry(struct ld *ld, struct ld_symbol *lsb);
-static int _is_absolute_reloc(uint64_t r);
+static int _is_absolute_reloc(u_int64_t r);
 static void _warn_pic(struct ld *ld, struct ld_reloc_entry *lre);
 static void _create_tls_gd_reloc(struct ld *ld, struct ld_symbol *lsb);
 static void _create_tls_ld_reloc(struct ld *ld, struct ld_symbol *lsb);
 static void _create_tls_ie_reloc(struct ld *ld, struct ld_symbol *lsb);
 static enum ld_tls_relax _tls_check_relax(struct ld *ld,
     struct ld_reloc_entry *lre);
-static uint64_t _got_offset(struct ld *ld, struct ld_symbol *lsb);
-static int _tls_verify_gd(uint8_t *buf, uint64_t off);
-static int _tls_verify_ld(uint8_t *buf, uint64_t off);
+static u_int64_t _got_offset(struct ld *ld, struct ld_symbol *lsb);
+static int _tls_verify_gd(u_int8_t *buf, u_int64_t off);
+static int _tls_verify_ld(u_int8_t *buf, u_int64_t off);
 static void _tls_relax_gd_to_ie(struct ld *ld, struct ld_state *ls,
-    struct ld_output *lo,struct ld_reloc_entry *lre, uint64_t p, uint64_t g,
-    uint8_t *buf);
+    struct ld_output *lo,struct ld_reloc_entry *lre, u_int64_t p, u_int64_t g,
+    u_int8_t *buf);
 static void _tls_relax_gd_to_le(struct ld *ld, struct ld_state *ls,
     struct ld_output *lo, struct ld_reloc_entry *lre, struct ld_symbol *lsb,
-    uint8_t *buf);
+    u_int8_t *buf);
 static void _tls_relax_ld_to_le(struct ld *ld, struct ld_state *ls,
-    struct ld_reloc_entry *lre, uint8_t *buf);
+    struct ld_reloc_entry *lre, u_int8_t *buf);
 static void _tls_relax_ie_to_le(struct ld *ld, struct ld_output *lo,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf);
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf);
 static int32_t _tls_dtpoff(struct ld_output *lo, struct ld_symbol *lsb);
 static int32_t _tls_tpoff(struct ld_output *lo, struct ld_symbol *lsb);
 
-static uint64_t
+static u_int64_t
 _get_max_page_size(struct ld *ld)
 {
 
@@ -94,7 +92,7 @@ _get_max_page_size(struct ld *ld)
 	return (0x200000);
 }
 
-static uint64_t
+static u_int64_t
 _get_common_page_size(struct ld *ld)
 {
 
@@ -103,7 +101,7 @@ _get_common_page_size(struct ld *ld)
 }
 
 static const char *
-_reloc2str(uint64_t r)
+_reloc2str(u_int64_t r)
 {
 	static char s[32];
 
@@ -133,13 +131,13 @@ _reloc2str(uint64_t r)
 		case 22: return "R_X86_64_GOTTPOFF";
 		case 23: return "R_X86_64_TPOFF32";
 	default:
-		snprintf(s, sizeof(s), "<unkown: %ju>", (uintmax_t)r);
+		snprintf(s, sizeof(s), "<unkown: %ju>", (u_intmax_t)r);
 		return (s);
 	}
 }
 
 static int
-_is_absolute_reloc(uint64_t r)
+_is_absolute_reloc(u_int64_t r)
 {
 
 	if (r == R_X86_64_64 || r == R_X86_64_32 || r == R_X86_64_32S ||
@@ -150,7 +148,7 @@ _is_absolute_reloc(uint64_t r)
 }
 
 static int
-_is_relative_reloc(uint64_t r)
+_is_relative_reloc(u_int64_t r)
 {
 
 	if (r == R_X86_64_RELATIVE)
@@ -268,7 +266,7 @@ static void
 _reserve_gotplt_entry(struct ld *ld, struct ld_symbol *lsb)
 {
 	//struct ld_input_section *is;
-	//uint64_t off;
+	//u_int64_t off;
 
 	//is = _find_and_create_gotplt_section(ld, 1);
 
@@ -296,7 +294,7 @@ _reserve_plt_entry(struct ld *ld, struct ld_symbol *lsb)
 }
 
 static void
-_create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t offset)
+_create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, u_int64_t offset)
 {
 
 	ld_reloc_create_entry(ld, ".rela.plt", NULL, R_X86_64_JUMP_SLOT,
@@ -306,8 +304,8 @@ _create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t offset)
 }
 
 static void
-_create_got_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t type,
-    uint64_t offset)
+_create_got_reloc(struct ld *ld, struct ld_symbol *lsb, u_int64_t type,
+    u_int64_t offset)
 {
 	struct ld_input_section *tis;
 
@@ -338,7 +336,7 @@ _create_copy_reloc(struct ld *ld, struct ld_symbol *lsb)
 
 static void
 _create_dynamic_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_symbol *lsb, uint64_t type, uint64_t offset, int64_t addend)
+    struct ld_symbol *lsb, u_int64_t type, u_int64_t offset, int64_t addend)
 {
 
 	if (lsb->lsb_bind == STB_LOCAL) {
@@ -409,8 +407,8 @@ _finalize_got_and_plt(struct ld *ld)
 	struct ld_reloc_entry *lre;
 	struct ld_symbol *lsb;
 	char dynamic_symbol[] = "_DYNAMIC";
-	uint8_t *got, *plt;
-	uint64_t u64;
+	u_int8_t *got, *plt;
+	u_int64_t u64;
 	int32_t s32, pltgot, gotpcrel;
 	int i, j;
 
@@ -433,7 +431,7 @@ _finalize_got_and_plt(struct ld *ld)
 		STAILQ_FOREACH(lre, rela_got_is->is_reloc, lre_next) {
 			if (lre->lre_type == R_X86_64_RELATIVE) {
 				lsb = lre->lre_sym;
-				got = (uint8_t *) got_is->is_ibuf +
+				got = (u_int8_t *) got_is->is_ibuf +
 				    lsb->lsb_got_off;
 				WRITE_64(got, lsb->lsb_value);
 			}
@@ -581,8 +579,8 @@ _finalize_got_and_plt(struct ld *ld)
 		i++;
 	}
 
-	assert(got == (uint8_t *) got_is->is_ibuf + got_is->is_size);
-	assert(plt == (uint8_t *) plt_is->is_ibuf + plt_is->is_size);
+	assert(got == (u_int8_t *) got_is->is_ibuf + got_is->is_size);
+	assert(plt == (u_int8_t *) plt_is->is_ibuf + plt_is->is_size);
 }
 
 static void
@@ -843,7 +841,7 @@ _scan_reloc(struct ld *ld, struct ld_input_section *is,
 	}
 }
 
-static uint64_t
+static u_int64_t
 _got_offset(struct ld *ld, struct ld_symbol *lsb)
 {
 	struct ld_output_section *os;
@@ -862,13 +860,13 @@ _got_offset(struct ld *ld, struct ld_symbol *lsb)
 
 static void
 _process_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	struct ld_state *ls;
 	struct ld_output *lo;
-	uint64_t u64, s, l, p, g;
+	u_int64_t u64, s, l, p, g;
 	int64_t s64;
-	uint32_t u32;
+	u_int32_t u32;
 	int32_t s32;
 	enum ld_tls_relax tr;
 
@@ -1017,7 +1015,7 @@ _process_reloc(struct ld *ld, struct ld_input_section *is,
 
 static void
 _adjust_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	struct ld_input_section *_is;
 
@@ -1096,7 +1094,7 @@ _tls_dtpoff(struct ld_output *lo, struct ld_symbol *lsb)
 }
 
 static int
-_tls_verify_gd(uint8_t *buf, uint64_t off)
+_tls_verify_gd(u_int8_t *buf, u_int64_t off)
 {
 	/*
 	 * Global Dynamic model:
@@ -1107,7 +1105,7 @@ _tls_verify_gd(uint8_t *buf, uint64_t off)
 	 * 0x0a rex64
 	 * 0x0b call _tls_get_addr@plt
 	 */
-	uint8_t gd[] = "\x66\x48\x8d\x3d\x00\x00\x00\x00"
+	u_int8_t gd[] = "\x66\x48\x8d\x3d\x00\x00\x00\x00"
 	    "\x66\x66\x48\xe8\x00\x00\x00\x00";
 
 	if (memcmp(buf + off, gd, sizeof(gd) - 1) == 0)
@@ -1117,7 +1115,7 @@ _tls_verify_gd(uint8_t *buf, uint64_t off)
 }
 
 static int
-_tls_verify_ld(uint8_t *buf, uint64_t off)
+_tls_verify_ld(u_int8_t *buf, u_int64_t off)
 {
 	/*
 	 * Local Dynamic model:
@@ -1125,7 +1123,7 @@ _tls_verify_ld(uint8_t *buf, uint64_t off)
 	 * 0x00 leaq x@tlsld(%rip), %rdi
 	 * 0x07 call _tls_get_addr@plt
 	 */
-	uint8_t ld[] = "\x48\x8d\x3d\x00\x00\x00\x00"
+	u_int8_t ld[] = "\x48\x8d\x3d\x00\x00\x00\x00"
 	    "\xe8\x00\x00\x00\x00";
 
 	if (memcmp(buf + off, ld, sizeof(ld) - 1) == 0)
@@ -1136,7 +1134,7 @@ _tls_verify_ld(uint8_t *buf, uint64_t off)
 
 static void
 _tls_relax_gd_to_ie(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
-    struct ld_reloc_entry *lre, uint64_t p, uint64_t g, uint8_t *buf)
+    struct ld_reloc_entry *lre, u_int64_t p, u_int64_t g, u_int8_t *buf)
 {
 	/*
 	 * Initial Exec model:
@@ -1144,7 +1142,7 @@ _tls_relax_gd_to_ie(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 	 * 0x00 movq %fs:0, %rax
 	 * 0x09 addq x@gottpoff(%rip), %rax
 	 */
-	uint8_t ie[] = "\x64\x48\x8b\x04\x25\x00\x00\x00\x00"
+	u_int8_t ie[] = "\x64\x48\x8b\x04\x25\x00\x00\x00\x00"
 	    "\x48\x03\x05\x00\x00\x00\x00";
 	int32_t s32;
 
@@ -1154,7 +1152,7 @@ _tls_relax_gd_to_ie(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 		ld_warn(ld, "unrecognized TLS global dynamic model code");
 
 	/* Rewrite Global Dynamic to Initial Exec model. */
-	memcpy((uint8_t *) buf + lre->lre_offset - 4, ie, sizeof(ie) - 1);
+	memcpy((u_int8_t *) buf + lre->lre_offset - 4, ie, sizeof(ie) - 1);
 
 	/*
 	 * R_X86_64_TLSGD relocation is applied at gd[4]. After it's relaxed
@@ -1173,7 +1171,7 @@ _tls_relax_gd_to_ie(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 
 static void
 _tls_relax_gd_to_le(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	/*
 	 * Local Exec model:
@@ -1181,7 +1179,7 @@ _tls_relax_gd_to_le(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 	 * 0x00 movq %fs:0, %rax
 	 * 0x09 leaq x@tpoff(%rax), %rax
 	 */
-	uint8_t le[] = "\x64\x48\x8b\x04\x25\x00\x00\x00\x00"
+	u_int8_t le[] = "\x64\x48\x8b\x04\x25\x00\x00\x00\x00"
 	    "\x48\x8d\x80\x00\x00\x00\x00";
 	int32_t s32;
 
@@ -1189,7 +1187,7 @@ _tls_relax_gd_to_le(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 		ld_warn(ld, "unrecognized TLS global dynamic model code");
 
 	/* Rewrite Global Dynamic to Local Exec model. */
-	memcpy((uint8_t *) buf + lre->lre_offset - 4, le, sizeof(le) - 1);
+	memcpy((u_int8_t *) buf + lre->lre_offset - 4, le, sizeof(le) - 1);
 
 	/*
 	 * R_X86_64_TLSGD relocation is applied at gd[4]. After it's relaxed
@@ -1205,7 +1203,7 @@ _tls_relax_gd_to_le(struct ld *ld, struct ld_state *ls, struct ld_output *lo,
 
 static void
 _tls_relax_ld_to_le(struct ld *ld, struct ld_state *ls,
-    struct ld_reloc_entry *lre, uint8_t *buf)
+    struct ld_reloc_entry *lre, u_int8_t *buf)
 {
 	/*
 	 * Local Exec model: (with padding)
@@ -1214,7 +1212,7 @@ _tls_relax_ld_to_le(struct ld *ld, struct ld_state *ls,
 	 * 0x02 .byte 0x66
 	 * 0x03 movq %fs:0, %rax
 	 */
-	uint8_t le_p[] = "\x66\x66\x66\x64\x48\x8b\x04\x25\x00\x00\x00\x00";
+	u_int8_t le_p[] = "\x66\x66\x66\x64\x48\x8b\x04\x25\x00\x00\x00\x00";
 
 	assert(lre->lre_type == R_X86_64_TLSLD);
 
@@ -1230,10 +1228,10 @@ _tls_relax_ld_to_le(struct ld *ld, struct ld_state *ls,
 
 static void
 _tls_relax_ie_to_le(struct ld *ld, struct ld_output *lo,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	int32_t s32;
-	uint8_t reg;
+	u_int8_t reg;
 
 	(void) ld;
 

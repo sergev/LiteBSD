@@ -30,8 +30,6 @@
 #include "ld_output.h"
 #include "ld_symbols.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * The number of buckets to use for a certain number of symbols.
  * If there are less than 3 symbols, 1 bucket will be used. If
@@ -53,7 +51,7 @@ ld_hash_create_svr4_hash_section(struct ld *ld)
 	struct ld_output_data_buffer *odb;
 	struct ld_symbol *lsb;
 	char hash_name[] = ".hash";
-	uint32_t *buf, *buckets, *chains, nbuckets, nchains;
+	u_int32_t *buf, *buckets, *chains, nbuckets, nchains;
 	int i, j;
 
 	lo = ld->ld_output;
@@ -90,7 +88,7 @@ ld_hash_create_svr4_hash_section(struct ld *ld)
 	if (nbuckets == 0)
 		nbuckets = hash_buckets[i - 1];
 
-	if ((buf = calloc(nbuckets + nchains + 2, sizeof(uint32_t))) == NULL)
+	if ((buf = calloc(nbuckets + nchains + 2, sizeof(u_int32_t))) == NULL)
 		ld_fatal_std(ld, "calloc");
 
 	buf[0] = nbuckets;
@@ -117,7 +115,7 @@ ld_hash_create_svr4_hash_section(struct ld *ld)
 		ld_fatal_std(ld, "calloc");
 
 	odb->odb_buf = (void *) buf;
-	odb->odb_size = (nbuckets + nchains + 2) * sizeof(uint32_t);
+	odb->odb_size = (nbuckets + nchains + 2) * sizeof(u_int32_t);
 	odb->odb_align = os->os_align;
 	odb->odb_type = ELF_T_WORD; /* enable libelf translation */
 

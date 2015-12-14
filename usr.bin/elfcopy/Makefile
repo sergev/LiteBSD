@@ -1,7 +1,3 @@
-# $Id$
-
-TOP=	..
-
 PROG=	elfcopy
 
 SRCS=	archive.c ascii.c binary.c main.c sections.c segments.c symbols.c
@@ -33,9 +29,4 @@ all:	${EXTRA_TARGETS}
 ${EXTRA_TARGETS}:	${PROG}
 	ln -s ${PROG} ${.TARGET}
 
-.include "${TOP}/mk/elftoolchain.prog.mk"
-
-.if ${OS_HOST} == "OpenBSD"
-CFLAGS+=	-I/usr/local/include
-LDFLAGS+=	-L/usr/local/lib
-.endif
+.include <bsd.prog.mk>

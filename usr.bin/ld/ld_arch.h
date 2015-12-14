@@ -36,20 +36,20 @@ struct ld_arch {
 	char name[MAX_ARCH_NAME_LEN + 1];
 	char *script;
 	const char *interp;
-	uint64_t (*get_max_page_size)(struct ld *);
-	uint64_t (*get_common_page_size)(struct ld *);
+	u_int64_t (*get_max_page_size)(struct ld *);
+	u_int64_t (*get_common_page_size)(struct ld *);
 	void (*scan_reloc)(struct ld *, struct ld_input_section *,
 	    struct ld_reloc_entry *);
 	void (*adjust_reloc)(struct ld *, struct ld_input_section *,
-	    struct ld_reloc_entry *, struct ld_symbol *, uint8_t *);
+	    struct ld_reloc_entry *, struct ld_symbol *, u_int8_t *);
 	void (*process_reloc)(struct ld *, struct ld_input_section *,
-	    struct ld_reloc_entry *, struct ld_symbol *, uint8_t *);
+	    struct ld_reloc_entry *, struct ld_symbol *, u_int8_t *);
 	void (*finalize_reloc)(struct ld *, struct ld_input_section *,
 	    struct ld_reloc_entry *);
 	void (*finalize_got_and_plt)(struct ld *);
 	void (*merge_flags)(struct ld *, unsigned flags);
-	int (*is_absolute_reloc)(uint64_t);
-	int (*is_relative_reloc)(uint64_t);
+	int (*is_absolute_reloc)(u_int64_t);
+	int (*is_relative_reloc)(u_int64_t);
 	unsigned char reloc_is_64bit;
 	unsigned char reloc_is_rela;
 	size_t reloc_entsize;

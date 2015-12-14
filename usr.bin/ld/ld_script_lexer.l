@@ -28,8 +28,6 @@
 #include "ld.h"
 #include "y.tab.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	YY_NO_UNPUT
 int lineno = 1;
 

@@ -32,14 +32,12 @@
 #include "ld_reloc.h"
 #include "ld_utils.h"
 
-ELFTC_VCSID("$Id$");
-
 struct ld_ehframe_cie {
-	uint64_t cie_off;	/* offset in section */
-	uint64_t cie_off_orig;	/* orignial offset (before optimze) */
-	uint64_t cie_size;	/* CIE size (include length field) */
-	uint8_t *cie_content;	/* CIE content */
-	uint8_t cie_fde_encode; /* FDE PC start/range encode. */
+	u_int64_t cie_off;	/* offset in section */
+	u_int64_t cie_off_orig;	/* orignial offset (before optimze) */
+	u_int64_t cie_size;	/* CIE size (include length field) */
+	u_int8_t *cie_content;	/* CIE content */
+	u_int8_t cie_fde_encode; /* FDE PC start/range encode. */
 	struct ld_ehframe_cie *cie_dup; /* duplicate entry */
 	STAILQ_ENTRY(ld_ehframe_cie) cie_next;
 };
@@ -48,8 +46,8 @@ STAILQ_HEAD(ld_ehframe_cie_head, ld_ehframe_cie);
 
 struct ld_ehframe_fde {
 	struct ld_ehframe_cie *fde_cie; /* associated CIE */
-	uint64_t fde_off;	/* offset in section */
-	uint64_t fde_off_pcbegin; /* section offset of "PC Begin" field */
+	u_int64_t fde_off;	/* offset in section */
+	u_int64_t fde_off_pcbegin; /* section offset of "PC Begin" field */
 	int32_t fde_pcrel;	/* relative offset to "PC Begin" */
 	int32_t fde_datarel;	/* relative offset to FDE entry */
 	STAILQ_ENTRY(ld_ehframe_fde) fde_next;
@@ -57,21 +55,21 @@ struct ld_ehframe_fde {
 
 STAILQ_HEAD(ld_ehframe_fde_head, ld_ehframe_fde);
 
-static int64_t _decode_sleb128(uint8_t **dp);
-static uint64_t _decode_uleb128(uint8_t **dp);
+static int64_t _decode_sleb128(u_int8_t **dp);
+static u_int64_t _decode_uleb128(u_int8_t **dp);
 static void _process_ehframe_section(struct ld *ld, struct ld_output *lo,
     struct ld_input_section *is);
-static int _read_encoded(struct ld *ld, struct ld_output *lo, uint64_t *val,
-    uint8_t *data, uint8_t encode, uint64_t pc);
+static int _read_encoded(struct ld *ld, struct ld_output *lo, u_int64_t *val,
+    u_int8_t *data, u_int8_t encode, u_int64_t pc);
 static int _cmp_fde(struct ld_ehframe_fde *a, struct ld_ehframe_fde *b);
 
 void
 ld_ehframe_adjust(struct ld *ld, struct ld_input_section *is)
 {
 	struct ld_output *lo;
-	uint8_t *p, *d, *end, *s;
-	uint64_t length, length_size, remain, adjust;
-	uint32_t cie_id;
+	u_int8_t *p, *d, *end, *s;
+	u_int64_t length, length_size, remain, adjust;
+	u_int32_t cie_id;
 
 	lo = ld->ld_output;
 	assert(lo != NULL);
@@ -162,7 +160,7 @@ ld_ehframe_scan(struct ld *ld)
 	struct ld_output_element *oe;
 	struct ld_input_section *is;
 	struct ld_input_section_head *islist;
-	uint64_t ehframe_off;
+	u_int64_t ehframe_off;
 	char ehframe_name[] = ".eh_frame";
 
 	lo = ld->ld_output;
@@ -237,9 +235,9 @@ ld_ehframe_finalize_hdr(struct ld *ld)
 	struct ld_output_element *oe;
 	struct ld_ehframe_fde *fde, *_fde;
 	char ehframe_name[] = ".eh_frame";
-	uint64_t pcbegin;
+	u_int64_t pcbegin;
 	int32_t pcrel;
-	uint8_t *p, *end;
+	u_int8_t *p, *end;
 
 	lo = ld->ld_output;
 	assert(lo != NULL);
@@ -312,7 +310,7 @@ ld_ehframe_finalize_hdr(struct ld *ld)
 				continue;
 			STAILQ_FOREACH_SAFE(fde, is->is_fde, fde_next, _fde) {
 				(void) _read_encoded(ld, lo, &pcbegin,
-				    (uint8_t *) is->is_ibuf +
+				    (u_int8_t *) is->is_ibuf +
 				    fde->fde_off_pcbegin,
 				    fde->fde_cie->cie_fde_encode, os->os_addr);
 				fde->fde_pcrel = pcbegin - hdr_os->os_addr;
@@ -353,11 +351,11 @@ _cmp_fde(struct ld_ehframe_fde *a, struct ld_ehframe_fde *b)
 }
 
 static void
-_parse_cie_augment(struct ld *ld, struct ld_ehframe_cie *cie, uint8_t *aug_p,
-    uint8_t *augdata_p, uint64_t auglen)
+_parse_cie_augment(struct ld *ld, struct ld_ehframe_cie *cie, u_int8_t *aug_p,
+    u_int8_t *augdata_p, u_int64_t auglen)
 {
-	uint64_t dummy;
-	uint8_t encode, *augdata_end;
+	u_int64_t dummy;
+	u_int8_t encode, *augdata_end;
 	int len;
 
 	assert(aug_p != NULL && *aug_p == 'z');
@@ -408,9 +406,9 @@ _process_ehframe_section(struct ld *ld, struct ld_output *lo,
 	struct ld_ehframe_cie_head cie_h;
 	struct ld_ehframe_fde *fde;
 	struct ld_reloc_entry *lre, *_lre;
-	uint64_t length, es, off, off_orig, remain, shrink, auglen;
-	uint32_t cie_id, cie_pointer, length_size;
-	uint8_t *p, *et, cie_version, *augment;
+	u_int64_t length, es, off, off_orig, remain, shrink, auglen;
+	u_int32_t cie_id, cie_pointer, length_size;
+	u_int8_t *p, *et, cie_version, *augment;
 
 	li = is->is_input;
 	os = is->is_output;
@@ -430,7 +428,7 @@ _process_ehframe_section(struct ld *ld, struct ld_output *lo,
 	while (remain > 0) {
 
 		et = p;
-		off = et - (uint8_t *) is->is_ibuf;
+		off = et - (u_int8_t *) is->is_ibuf;
 
 		/* Read CIE/FDE length field. */
 		READ_32(p, length);
@@ -607,7 +605,7 @@ _process_ehframe_section(struct ld *ld, struct ld_output *lo,
 					STAILQ_REMOVE(is->is_ris->is_reloc,
 					    lre, ld_reloc_entry, lre_next);
 					is->is_ris->is_num_reloc--;
-					is->is_ris->is_size -= 
+					is->is_ris->is_size -=
 					    ld->ld_arch->reloc_entsize;
 					if (os->os_r != NULL)
 						os->os_r->os_size -=
@@ -635,12 +633,12 @@ _process_ehframe_section(struct ld *ld, struct ld_output *lo,
 }
 
 static int
-_read_encoded(struct ld *ld, struct ld_output *lo, uint64_t *val,
-    uint8_t *data, uint8_t encode, uint64_t pc)
+_read_encoded(struct ld *ld, struct ld_output *lo, u_int64_t *val,
+    u_int8_t *data, u_int8_t encode, u_int64_t pc)
 {
 	int16_t s16;
 	int32_t s32;
-	uint8_t application, *begin;
+	u_int8_t application, *begin;
 	int len;
 
 	if (encode == DW_EH_PE_omit)
@@ -727,13 +725,13 @@ _read_encoded(struct ld *ld, struct ld_output *lo, uint64_t *val,
 }
 
 static int64_t
-_decode_sleb128(uint8_t **dp)
+_decode_sleb128(u_int8_t **dp)
 {
 	int64_t ret = 0;
-	uint8_t b;
+	u_int8_t b;
 	int shift = 0;
 
-	uint8_t *src = *dp;
+	u_int8_t *src = *dp;
 
 	do {
 		b = *src++;
@@ -749,14 +747,14 @@ _decode_sleb128(uint8_t **dp)
 	return (ret);
 }
 
-static uint64_t
-_decode_uleb128(uint8_t **dp)
+static u_int64_t
+_decode_uleb128(u_int8_t **dp)
 {
-	uint64_t ret = 0;
-	uint8_t b;
+	u_int64_t ret = 0;
+	u_int8_t b;
 	int shift = 0;
 
-	uint8_t *src = *dp;
+	u_int8_t *src = *dp;
 
 	do {
 		b = *src++;

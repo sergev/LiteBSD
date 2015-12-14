@@ -22,10 +22,8 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id$
  */
-
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/queue.h>
@@ -38,9 +36,8 @@
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <gelf.h>
-#include <inttypes.h>
 #include <libelftc.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -52,7 +49,7 @@
 #include "utarray.h"
 #define uthash_fatal(msg) ld_fatal(ld, msg)
 #include "uthash.h"
-#include "_elftc.h"
+#include "queue.h"
 
 struct ld_file;
 struct ld_input_section_head;
@@ -77,8 +74,8 @@ struct ld_state {
 	unsigned ls_extracted[LD_MAX_NESTED_GROUP + 1];
 					/* extracted from archive group */
 	unsigned ls_search_dir;		/* search library directories */
-	uint64_t ls_loc_counter;	/* location counter */
-	uint64_t ls_offset;		/* cur. output section file offset */
+	u_int64_t ls_loc_counter;	/* location counter */
+	u_int64_t ls_offset;		/* cur. output section file offset */
 	STAILQ_HEAD(, ld_path) ls_lplist; /* search path list */
 	STAILQ_HEAD(, ld_path) ls_rplist; /* rpath list */
 	STAILQ_HEAD(, ld_path) ls_rllist; /* rpath-link list */
@@ -89,7 +86,7 @@ struct ld_state {
 	unsigned ls_first_output_sec;	/* flag indicates 1st output section */
 	unsigned ls_ignore_next_plt;	/* ignore next PLT relocation */
 	unsigned ls_version_local;	/* version entry is local */
-	uint64_t ls_relative_reloc;	/* number of *_RELATIVE relocations */
+	u_int64_t ls_relative_reloc;	/* number of *_RELATIVE relocations */
 	struct ld_input_section_head *ls_gc;
 					/* garbage collection search list */
 };

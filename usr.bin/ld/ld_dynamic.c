@@ -37,8 +37,6 @@
 #include "ld_symver.h"
 #include "ld_strtab.h"
 
-ELFTC_VCSID("$Id$");
-
 static void _check_dso_needed(struct ld *ld, struct ld_output *lo);
 static void _create_dynamic(struct ld *ld, struct ld_output *lo);
 static void _create_interp(struct ld *ld, struct ld_output *lo);
@@ -165,7 +163,7 @@ ld_dynamic_reserve_dynbss_entry(struct ld *ld, struct ld_symbol *lsb)
 {
 	struct ld_input *li;
 	struct ld_input_section *dynbss, *is;
-	uint64_t a;
+	u_int64_t a;
 
 	/* Create .dynbss section if it doesn't yet exist. */
 	dynbss = ld_input_find_internal_section(ld, ".dynbss");
@@ -379,7 +377,7 @@ _create_dynamic(struct ld *ld, struct ld_output *lo)
 		if (lo->lo_ec == ELFCLASS32) {			\
 			assert(dt32 < end32); 			\
 			dt32->d_tag = (int32_t) (tag);		\
-			dt32->d_un.d_val = (uint32_t) (val);	\
+			dt32->d_un.d_val = (u_int32_t) (val);	\
 			dt32++;					\
 		} else {					\
 			assert(dt64 < end64); 			\
@@ -394,7 +392,7 @@ _create_dynamic(struct ld *ld, struct ld_output *lo)
 		if (lo->lo_ec == ELFCLASS32) {			\
 			assert(dt32 < end32); 			\
 			dt32->d_tag = (int32_t) (tag);		\
-			dt32->d_un.d_ptr = (uint32_t) (ptr);	\
+			dt32->d_un.d_ptr = (u_int32_t) (ptr);	\
 			dt32++;					\
 		} else {					\
 			assert(dt64 < end64); 			\
@@ -430,15 +428,15 @@ _finalize_dynamic(struct ld *ld, struct ld_output *lo)
 	odb = lo->lo_dynamic_odb;
 	assert(odb != NULL);
 
-	dt32 = (Elf32_Dyn *) (uintptr_t) odb->odb_buf;
-	dt64 = (Elf64_Dyn *) (uintptr_t) odb->odb_buf;
-	end32 = (Elf32_Dyn *) (uintptr_t) (odb->odb_buf + odb->odb_size);
-	end64 = (Elf64_Dyn *) (uintptr_t) (odb->odb_buf + odb->odb_size);
+	dt32 = (Elf32_Dyn *) (u_intptr_t) odb->odb_buf;
+	dt64 = (Elf64_Dyn *) (u_intptr_t) odb->odb_buf;
+	end32 = (Elf32_Dyn *) (u_intptr_t) (odb->odb_buf + odb->odb_size);
+	end64 = (Elf64_Dyn *) (u_intptr_t) (odb->odb_buf + odb->odb_size);
 
 	/* DT_NEEDED. */
-	for (p = (int *) (uintptr_t) utarray_front(lo->lo_dso_nameindex);
+	for (p = (int *) (u_intptr_t) utarray_front(lo->lo_dso_nameindex);
 	     p != NULL;
-	     p = (int *) (uintptr_t) utarray_next(lo->lo_dso_nameindex, p))
+	     p = (int *) (u_intptr_t) utarray_next(lo->lo_dso_nameindex, p))
 		DT_ENTRY_VAL(DT_NEEDED, *p);
 
 	/* DT_SONAME. */

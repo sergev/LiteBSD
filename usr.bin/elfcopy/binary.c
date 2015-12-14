@@ -139,7 +139,7 @@ create_elf_from_binary(struct elfcopy *ecp, int ifd, const char *ifn)
 	GElf_Ehdr oeh;
 	GElf_Shdr sh;
 	void *content;
-	uint64_t off, data_start, data_end, data_size;
+	u_int64_t off, data_start, data_end, data_size;
 
 	/* Reset internal section list. */
 	if (!TAILQ_EMPTY(&ecp->v_sec))

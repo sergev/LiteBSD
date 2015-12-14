@@ -30,17 +30,17 @@ struct ld_symver_verdef;
 
 struct ld_symbol {
 	char *lsb_name;			/* symbol name */
-	uint64_t lsb_nameindex;		/* symbol name index */
+	u_int64_t lsb_nameindex;	/* symbol name index */
 	char *lsb_ver;			/* symbol version */
 	char *lsb_longname;		/* symbol name+version (as hash key)*/
-	uint64_t lsb_size;		/* symbol size */
-	uint64_t lsb_value;		/* symbol value */
-	uint16_t lsb_shndx;		/* symbol section index */
-	uint64_t lsb_index;		/* symbol index */
-	uint64_t lsb_dyn_index;		/* dynamic symbol index */
-	uint64_t lsb_out_index;		/* symbol index (in output) */
-	uint64_t lsb_got_off;		/* got entry offset */
-	uint64_t lsb_plt_off;		/* plt entry offset */
+	u_int64_t lsb_size;		/* symbol size */
+	u_int64_t lsb_value;		/* symbol value */
+	u_int16_t lsb_shndx;		/* symbol section index */
+	u_int64_t lsb_index;		/* symbol index */
+	u_int64_t lsb_dyn_index;	/* dynamic symbol index */
+	u_int64_t lsb_out_index;	/* symbol index (in output) */
+	u_int64_t lsb_got_off;		/* got entry offset */
+	u_int64_t lsb_plt_off;		/* plt entry offset */
 	struct ld_script_variable *lsb_var; /* associated ldscript variable */
 	unsigned char lsb_bind;		/* symbol binding */
 	unsigned char lsb_type;		/* symbol type */
@@ -57,7 +57,7 @@ struct ld_symbol {
 	unsigned char lsb_func_addr;	/* symbol(function) has address */
 	unsigned char lsb_tls_ld;	/* local dynamic TLS symbol */
 	unsigned char lsb_vndx_known;	/* version index is known */
-	uint16_t lsb_vndx;		/* version index */
+	u_int16_t lsb_vndx;		/* version index */
 	struct ld_symver_verdef *lsb_vd; /* version definition */
 	struct ld_symbol *lsb_prev;	/* symbol resolved by this symbol */
 	struct ld_symbol *lsb_ref;	/* this symbol resolves to ... */
@@ -89,14 +89,14 @@ struct ld_symbol_defver {
 void	ld_symbols_add_extern(struct ld *, char *);
 void	ld_symbols_add_variable(struct ld *, struct ld_script_variable *,
     unsigned, unsigned);
-void	ld_symbols_add_internal(struct ld *, const char *, uint64_t, uint64_t,
-    uint16_t, unsigned char, unsigned char, unsigned char,
+void	ld_symbols_add_internal(struct ld *, const char *, u_int64_t, u_int64_t,
+    u_int16_t, unsigned char, unsigned char, unsigned char,
     struct ld_input_section *, struct ld_output_section *);
 void	ld_symbols_build_symtab(struct ld *);
 void	ld_symbols_cleanup(struct ld *);
 void	ld_symbols_scan(struct ld *);
 void	ld_symbols_finalize_dynsym(struct ld *);
-int	ld_symbols_get_value(struct ld *, char *, uint64_t *);
+int	ld_symbols_get_value(struct ld *, char *, u_int64_t *);
 void	ld_symbols_resolve(struct ld *);
 void	ld_symbols_update(struct ld *);
 struct ld_symbol *ld_symbols_ref(struct ld_symbol *);

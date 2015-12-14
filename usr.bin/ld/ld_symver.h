@@ -28,10 +28,10 @@
 
 struct ld_symver_vna {
 	char *sna_name;
-	uint32_t sna_hash;
-	uint16_t sna_flags;
-	uint16_t sna_other;
-	uint32_t sna_nameindex;
+	u_int32_t sna_hash;
+	u_int16_t sna_flags;
+	u_int16_t sna_other;
+	u_int32_t sna_nameindex;
 	STAILQ_ENTRY(ld_symver_vna) sna_next;
 };
 
@@ -39,9 +39,9 @@ STAILQ_HEAD(ld_symver_vna_head, ld_symver_vna);
 
 struct ld_symver_verneed {
 	char *svn_file;
-	uint16_t svn_version;
-	uint16_t svn_cnt;
-	uint32_t svn_fileindex;
+	u_int16_t svn_version;
+	u_int16_t svn_cnt;
+	u_int32_t svn_fileindex;
 	struct ld_symver_vna_head svn_aux;
 	STAILQ_ENTRY(ld_symver_verneed) svn_next;
 };
@@ -50,20 +50,20 @@ STAILQ_HEAD(ld_symver_verneed_head, ld_symver_verneed);
 
 struct ld_symver_vda {
 	char *sda_name;
-	uint32_t sda_nameindex;
+	u_int32_t sda_nameindex;
 	STAILQ_ENTRY(ld_symver_vda) sda_next;
 };
 
 STAILQ_HEAD(ld_symver_vda_head, ld_symver_vda);
 
 struct ld_symver_verdef {
-	uint16_t svd_version;
-	uint16_t svd_flags;
-	uint16_t svd_ndx;
-	uint16_t svd_ndx_output;
-	uint16_t svd_cnt;
-	uint32_t svd_hash;
-	uint64_t svd_ref;
+	u_int16_t svd_version;
+	u_int16_t svd_flags;
+	u_int16_t svd_ndx;
+	u_int16_t svd_ndx_output;
+	u_int16_t svd_cnt;
+	u_int32_t svd_hash;
+	u_int64_t svd_ref;
 	struct ld_symver_vda_head svd_aux;
 	STAILQ_ENTRY(ld_symver_verdef) svd_next;
 };
@@ -76,4 +76,4 @@ void	ld_symver_create_verdef_section(struct ld *);
 void	ld_symver_create_verneed_section(struct ld *);
 void	ld_symver_create_versym_section(struct ld *);
 void	ld_symver_add_verdef_refcnt(struct ld *, struct ld_symbol *);
-uint16_t ld_symver_search_version_script(struct ld *, struct ld_symbol *);
+u_int16_t ld_symver_search_version_script(struct ld *, struct ld_symbol *);

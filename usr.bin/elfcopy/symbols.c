@@ -80,7 +80,7 @@ static int	generate_symbols(struct elfcopy *ecp);
 static void	mark_reloc_symbols(struct elfcopy *ecp, size_t sc);
 static void	mark_section_group_symbols(struct elfcopy *ecp, size_t sc);
 static int	match_wildcard(const char *name, const char *pattern);
-uint32_t	str_hash(const char *s);
+u_int32_t	str_hash(const char *s);
 
 /* Convenient bit vector operation macros. */
 #define BIT_SET(v, n) (v[(n)>>3] |= 1U << ((n) & 7))
@@ -845,14 +845,14 @@ create_external_symtab(struct elfcopy *ecp)
 }
 
 void
-add_to_symtab(struct elfcopy *ecp, const char *name, uint64_t st_value,
-    uint64_t st_size, uint16_t st_shndx, unsigned char st_info,
+add_to_symtab(struct elfcopy *ecp, const char *name, u_int64_t st_value,
+    u_int64_t st_size, u_int16_t st_shndx, unsigned char st_info,
     unsigned char st_other, int ndx_known)
 {
 	struct symbuf *sy_buf;
 	struct strbuf *st_buf;
 	struct sthash *sh;
-	uint32_t hash;
+	u_int32_t hash;
 	int pos;
 
 	/*
@@ -1154,7 +1154,7 @@ static int
 lookup_exact_string(hash_head *buckets, const char *buf, const char *s)
 {
 	struct sthash	*sh;
-	uint32_t	 hash;
+	u_int32_t	 hash;
 
 	hash = str_hash(s);
 	LIST_FOREACH(sh, &buckets[hash], sh_next)
@@ -1163,10 +1163,10 @@ lookup_exact_string(hash_head *buckets, const char *buf, const char *s)
 	return (-1);
 }
 
-uint32_t
+u_int32_t
 str_hash(const char *s)
 {
-	uint32_t hash;
+	u_int32_t hash;
 
 	for (hash = 2166136261UL; *s; s++)
 		hash = (hash ^ *s) * 16777619;

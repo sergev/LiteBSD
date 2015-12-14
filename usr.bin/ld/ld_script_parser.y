@@ -34,8 +34,6 @@
 #include "ld_path.h"
 #include "ld_exp.h"
 
-ELFTC_VCSID("$Id$");
-
 struct yy_buffer_state;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 
@@ -863,7 +861,7 @@ output_section_command
 	}
 	| output_section_keywords {
 		$$ = ld_script_cmd(ld, LSC_SECTIONS_OUTPUT_KEYWORD,
-		    (void *) (uintptr_t) $1);
+		    (void *) (u_intptr_t) $1);
 	}
 	| ';' { $$ = NULL; }
 	;

@@ -39,8 +39,6 @@
 #include "ld_symbols.h"
 #include "ld_strtab.h"
 
-ELFTC_VCSID("$Id$");
-
 struct ld_wildcard_match {
 	char *wm_name;
 	unsigned wm_no_match;
@@ -168,11 +166,11 @@ ld_layout_print_linkmap(struct ld *ld)
 				printf(" %-20s ", is->is_name);
 				if (lo->lo_ec == ELFCLASS32)
 					printf("0x%08jx ",
-					    (uintmax_t) is->is_addr);
+					    (u_intmax_t) is->is_addr);
 				else
 					printf("0x%016jx ",
-					    (uintmax_t) is->is_addr);
-				printf("0x%jx ", (uintmax_t) is->is_size);
+					    (u_intmax_t) is->is_addr);
+				printf("0x%jx ", (u_intmax_t) is->is_size);
 				printf("%s\n", ld_input_get_fullname(ld, li));
 			}
 		}
@@ -226,10 +224,10 @@ _print_section_layout(struct ld *ld, struct ld_output_section *os)
 	else {
 		printf("\n%-15s", os->os_name);
 		if (lo->lo_ec == ELFCLASS32)
-			printf(" 0x%08jx", (uintmax_t) os->os_addr);
+			printf(" 0x%08jx", (u_intmax_t) os->os_addr);
 		else
-			printf(" 0x%016jx", (uintmax_t) os->os_addr);
-		printf(" %#10jx\n", (uintmax_t) os->os_size);
+			printf(" 0x%016jx", (u_intmax_t) os->os_addr);
+		printf(" %#10jx\n", (u_intmax_t) os->os_size);
 	}
 
 	STAILQ_FOREACH(oe, &os->os_e, oe_next) {
@@ -269,15 +267,15 @@ _print_section_layout(struct ld *ld, struct ld_output_section *os)
 					continue;
 				printf(" %-14s", is->is_name);
 				if (lo->lo_ec == ELFCLASS32)
-					printf(" 0x%08jx", (uintmax_t)
+					printf(" 0x%08jx", (u_intmax_t)
 					    (os->os_addr + is->is_reloff));
 				else
-					printf(" 0x%016jx", (uintmax_t)
+					printf(" 0x%016jx", (u_intmax_t)
 					    (os->os_addr + is->is_reloff));
 				if (is->is_size == 0)
 					printf(" %10s", "0x0");
 				else
-					printf(" %#10jx", (uintmax_t)
+					printf(" %#10jx", (u_intmax_t)
 					    is->is_size);
 				printf(" %s\n", ld_input_get_fullname(ld,
 				    is->is_input));
@@ -866,7 +864,7 @@ _layout_orphan_section(struct ld *ld, struct ld_input_section *is)
 
 struct ld_output_section *
 ld_layout_insert_output_section(struct ld *ld, const char *name,
-    uint64_t flags)
+    u_int64_t flags)
 {
 	struct ld_output *lo;
 	struct ld_output_section *os, *_os;
@@ -1076,7 +1074,7 @@ _calc_output_section_offset(struct ld *ld, struct ld_output_section *os)
 	struct ld_input_section_head *islist;
 	struct ld_symbol_table *sy;
 	struct ld_strtab *st;
-	uint64_t addr;
+	u_int64_t addr;
 
 	/* Relocation sections are handled separately. */
 	if (os->os_rel)
@@ -1228,7 +1226,7 @@ _calc_shdr_offset(struct ld *ld)
 	struct ld_state *ls;
 	struct ld_output *lo;
 	struct ld_output_section *os;
-	uint64_t shoff;
+	u_int64_t shoff;
 	int n;
 
 	ls = &ld->ld_state;

@@ -39,33 +39,33 @@
 ELFTC_VCSID("$Id$");
 
 static void append_data(struct section *s, const void *buf, size_t sz);
-static char hex_digit(uint8_t n);
+static char hex_digit(u_int8_t n);
 static int hex_value(int x);
 static void finalize_data_section(struct section *s);
 static int ishexdigit(int x);
-static int ihex_read(const char *line, char *type, uint64_t *addr,
-    uint64_t *num, uint8_t *data, size_t *sz);
-static void ihex_write(int ofd, int type, uint64_t addr, uint64_t num,
+static int ihex_read(const char *line, char *type, u_int64_t *addr,
+    u_int64_t *num, u_int8_t *data, size_t *sz);
+static void ihex_write(int ofd, int type, u_int64_t addr, u_int64_t num,
     const void *buf, size_t sz);
-static void ihex_write_00(int ofd, uint64_t addr, const void *buf, size_t sz);
+static void ihex_write_00(int ofd, u_int64_t addr, const void *buf, size_t sz);
 static void ihex_write_01(int ofd);
-static void ihex_write_04(int ofd, uint16_t addr);
-static void ihex_write_05(int ofd, uint64_t e_entry);
+static void ihex_write_04(int ofd, u_int16_t addr);
+static void ihex_write_05(int ofd, u_int64_t e_entry);
 static struct section *new_data_section(struct elfcopy *ecp, int sec_index,
-    uint64_t off, uint64_t addr);
-static int read_num(const char *line, int *len, uint64_t *num, size_t sz,
+    u_int64_t off, u_int64_t addr);
+static int read_num(const char *line, int *len, u_int64_t *num, size_t sz,
     int *checksum);
-static int srec_read(const char *line, char *type, uint64_t *addr,
-    uint8_t *data, size_t *sz);
-static void srec_write(int ofd, char type, uint64_t addr, const void *buf,
+static int srec_read(const char *line, char *type, u_int64_t *addr,
+    u_int8_t *data, size_t *sz);
+static void srec_write(int ofd, char type, u_int64_t addr, const void *buf,
     size_t sz);
 static void srec_write_symtab(int ofd, const char *ofn, Elf *e, Elf_Scn *scn,
     GElf_Shdr *sh);
 static void srec_write_S0(int ofd, const char *ofn);
-static void srec_write_Sd(int ofd, char dr, uint64_t addr, const void *buf,
+static void srec_write_Sd(int ofd, char dr, u_int64_t addr, const void *buf,
     size_t sz, size_t rlen);
-static void srec_write_Se(int ofd, uint64_t e_entry, int forceS3);
-static void write_num(char *line, int *len, uint64_t num, size_t sz,
+static void srec_write_Se(int ofd, u_int64_t e_entry, int forceS3);
+static void write_num(char *line, int *len, u_int64_t num, size_t sz,
     int *checksum);
 
 #define	_LINE_BUFSZ	1024
@@ -82,7 +82,7 @@ create_srec(struct elfcopy *ecp, int ifd, int ofd, const char *ofn)
 	Elf_Data *d;
 	GElf_Ehdr eh;
 	GElf_Shdr sh;
-	uint64_t max_addr;
+	u_int64_t max_addr;
 	size_t rlen;
 	int elferr, addr_sz;
 	char dr;
@@ -127,7 +127,7 @@ create_srec(struct elfcopy *ecp, int ifd, int ofd, const char *ofn)
 			    sh.sh_type == SHT_NOBITS ||
 			    sh.sh_size == 0)
 				continue;
-			if ((uint64_t) sh.sh_addr > max_addr)
+			if ((u_int64_t) sh.sh_addr > max_addr)
 				max_addr = sh.sh_addr;
 		}
 		elferr = elf_errno();
@@ -198,12 +198,12 @@ void
 create_elf_from_srec(struct elfcopy *ecp, int ifd)
 {
 	char line[_LINE_BUFSZ], name[_LINE_BUFSZ];
-	uint8_t data[_DATA_BUFSZ];
+	u_int8_t data[_DATA_BUFSZ];
 	GElf_Ehdr oeh;
 	struct section *s, *shtab;
 	FILE *ifp;
-	uint64_t addr, entry, off, sec_addr;
-	uintmax_t st_value;
+	u_int64_t addr, entry, off, sec_addr;
+	u_intmax_t st_value;
 	size_t sz;
 	int _ifd, first, sec_index, in_symtab, symtab_created;
 	char *rlt;
@@ -417,7 +417,7 @@ create_ihex(int ifd, int ofd)
 	GElf_Ehdr eh;
 	GElf_Shdr sh;
 	int elferr;
-	uint16_t addr_hi, old_addr_hi;
+	u_int16_t addr_hi, old_addr_hi;
 
 	if ((e = elf_begin(ifd, ELF_C_READ, NULL)) == NULL)
 		errx(EXIT_FAILURE, "elf_begin() failed: %s",
@@ -471,11 +471,11 @@ void
 create_elf_from_ihex(struct elfcopy *ecp, int ifd)
 {
 	char line[_LINE_BUFSZ];
-	uint8_t data[_DATA_BUFSZ];
+	u_int8_t data[_DATA_BUFSZ];
 	GElf_Ehdr oeh;
 	struct section *s, *shtab;
 	FILE *ifp;
-	uint64_t addr, addr_base, entry, num, off, rec_addr, sec_addr;
+	u_int64_t addr, addr_base, entry, num, off, rec_addr, sec_addr;
 	size_t sz;
 	int _ifd, first, sec_index;
 	char type;
@@ -639,8 +639,8 @@ done:
 #define	_SEC_INIT_CAP	1024
 
 static struct section *
-new_data_section(struct elfcopy *ecp, int sec_index, uint64_t off,
-    uint64_t addr)
+new_data_section(struct elfcopy *ecp, int sec_index, u_int64_t off,
+    u_int64_t addr)
 {
 	char *name;
 
@@ -670,7 +670,7 @@ finalize_data_section(struct section *s)
 static void
 append_data(struct section *s, const void *buf, size_t sz)
 {
-	uint8_t *p;
+	u_int8_t *p;
 
 	if (s->buf == NULL) {
 		s->sz = 0;
@@ -691,10 +691,10 @@ append_data(struct section *s, const void *buf, size_t sz)
 }
 
 static int
-srec_read(const char *line, char *type, uint64_t *addr, uint8_t *data,
+srec_read(const char *line, char *type, u_int64_t *addr, u_int8_t *data,
     size_t *sz)
 {
-	uint64_t count, _checksum, num;
+	u_int64_t count, _checksum, num;
 	size_t addr_sz;
 	int checksum, i, len;
 
@@ -727,10 +727,10 @@ srec_read(const char *line, char *type, uint64_t *addr, uint8_t *data,
 
 	count -= addr_sz + 1;
 	if (*type >= '0' && *type <= '3') {
-		for (i = 0; (uint64_t) i < count; i++) {
+		for (i = 0; (u_int64_t) i < count; i++) {
 			if (read_num(line, &len, &num, 1, &checksum) < 0)
 				return -1;
-			data[i] = (uint8_t) num;
+			data[i] = (u_int8_t) num;
 		}
 		*sz = count;
 	} else
@@ -788,7 +788,7 @@ srec_write_symtab(int ofd, const char *ofn, Elf *e, Elf_Scn *scn, GElf_Shdr *sh)
 			continue;
 		}
 		snprintf(line, sizeof(line), "  %s $%jx\r\n", name,
-		    (uintmax_t) sym.st_value);
+		    (u_intmax_t) sym.st_value);
 		_WRITE_LINE;
 	}
 	snprintf(line, sizeof(line), "$$ \r\n");
@@ -805,10 +805,10 @@ srec_write_S0(int ofd, const char *ofn)
 }
 
 static void
-srec_write_Sd(int ofd, char dr, uint64_t addr, const void *buf, size_t sz,
+srec_write_Sd(int ofd, char dr, u_int64_t addr, const void *buf, size_t sz,
     size_t rlen)
 {
-	const uint8_t *p, *pe;
+	const u_int8_t *p, *pe;
 
 	p = buf;
 	pe = p + sz;
@@ -822,7 +822,7 @@ srec_write_Sd(int ofd, char dr, uint64_t addr, const void *buf, size_t sz,
 }
 
 static void
-srec_write_Se(int ofd, uint64_t e_entry, int forceS3)
+srec_write_Se(int ofd, u_int64_t e_entry, int forceS3)
 {
 	char er;
 
@@ -846,10 +846,10 @@ srec_write_Se(int ofd, uint64_t e_entry, int forceS3)
 }
 
 static void
-srec_write(int ofd, char type, uint64_t addr, const void *buf, size_t sz)
+srec_write(int ofd, char type, u_int64_t addr, const void *buf, size_t sz)
 {
 	char line[_LINE_BUFSZ];
-	const uint8_t *p, *pe;
+	const u_int8_t *p, *pe;
 	int len, addr_sz, checksum;
 
 	if (type == '0' || type == '1' || type == '5' || type == '9')
@@ -875,10 +875,10 @@ srec_write(int ofd, char type, uint64_t addr, const void *buf, size_t sz)
 }
 
 static void
-ihex_write_00(int ofd, uint64_t addr, const void *buf, size_t sz)
+ihex_write_00(int ofd, u_int64_t addr, const void *buf, size_t sz)
 {
-	uint16_t addr_hi, old_addr_hi;
-	const uint8_t *p, *pe;
+	u_int16_t addr_hi, old_addr_hi;
+	const u_int8_t *p, *pe;
 
 	old_addr_hi = (addr >> 16) & 0xFFFF;
 	p = buf;
@@ -898,10 +898,10 @@ ihex_write_00(int ofd, uint64_t addr, const void *buf, size_t sz)
 }
 
 static int
-ihex_read(const char *line, char *type, uint64_t *addr, uint64_t *num,
-    uint8_t *data, size_t *sz)
+ihex_read(const char *line, char *type, u_int64_t *addr, u_int64_t *num,
+    u_int8_t *data, size_t *sz)
 {
-	uint64_t count, _checksum;
+	u_int64_t count, _checksum;
 	int checksum, i, len;
 
 	*sz = 0;
@@ -917,10 +917,10 @@ ihex_read(const char *line, char *type, uint64_t *addr, uint64_t *num,
 	checksum += *type - '0';
 	switch (*type) {
 	case '0':
-		for (i = 0; (uint64_t) i < count; i++) {
+		for (i = 0; (u_int64_t) i < count; i++) {
 			if (read_num(line, &len, num, 1, &checksum) < 0)
 				return (-1);
-			data[i] = (uint8_t) *num;
+			data[i] = (u_int8_t) *num;
 		}
 		*sz = count;
 		break;
@@ -964,14 +964,14 @@ ihex_write_01(int ofd)
 }
 
 static void
-ihex_write_04(int ofd, uint16_t addr)
+ihex_write_04(int ofd, u_int16_t addr)
 {
 
 	ihex_write(ofd, 4, 0, addr, NULL, 2);
 }
 
 static void
-ihex_write_05(int ofd, uint64_t e_entry)
+ihex_write_05(int ofd, u_int64_t e_entry)
 {
 
 	if (e_entry > 0xFFFFFFFF) {
@@ -983,11 +983,11 @@ ihex_write_05(int ofd, uint64_t e_entry)
 }
 
 static void
-ihex_write(int ofd, int type, uint64_t addr, uint64_t num, const void *buf,
+ihex_write(int ofd, int type, u_int64_t addr, u_int64_t num, const void *buf,
     size_t sz)
 {
 	char line[_LINE_BUFSZ];
-	const uint8_t *p, *pe;
+	const u_int8_t *p, *pe;
 	int len, checksum;
 
 	if (sz > 16)
@@ -1013,9 +1013,9 @@ ihex_write(int ofd, int type, uint64_t addr, uint64_t num, const void *buf,
 }
 
 static int
-read_num(const char *line, int *len, uint64_t *num, size_t sz, int *checksum)
+read_num(const char *line, int *len, u_int64_t *num, size_t sz, int *checksum)
 {
-	uint8_t b;
+	u_int8_t b;
 
 	*num = 0;
 	for (; sz > 0; sz--) {
@@ -1032,9 +1032,9 @@ read_num(const char *line, int *len, uint64_t *num, size_t sz, int *checksum)
 }
 
 static void
-write_num(char *line, int *len, uint64_t num, size_t sz, int *checksum)
+write_num(char *line, int *len, u_int64_t num, size_t sz, int *checksum)
 {
-	uint8_t b;
+	u_int8_t b;
 
 	for (; sz > 0; sz--) {
 		b = (num >> ((sz - 1) * 8)) & 0xFF;
@@ -1047,7 +1047,7 @@ write_num(char *line, int *len, uint64_t num, size_t sz, int *checksum)
 }
 
 static char
-hex_digit(uint8_t n)
+hex_digit(u_int8_t n)
 {
 
 	return ((n < 10) ? '0' + n : 'A' + (n - 10));

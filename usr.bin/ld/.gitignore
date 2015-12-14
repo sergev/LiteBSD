@@ -1,0 +1,5 @@
+bigmips_script.c
+lex.yy.c
+littlemips_script.c
+y.tab.c
+y.tab.h

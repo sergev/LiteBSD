@@ -29,8 +29,6 @@
 #include "ld_input.h"
 #include "ld_symbols.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Support routines for input section handling.
  */
@@ -122,10 +120,10 @@ ld_input_find_internal_section(struct ld *ld, const char *name)
 	return (is);
 }
 
-uint64_t
-ld_input_reserve_ibuf(struct ld_input_section *is, uint64_t n)
+u_int64_t
+ld_input_reserve_ibuf(struct ld_input_section *is, u_int64_t n)
 {
-	uint64_t off;
+	u_int64_t off;
 
 	assert(is->is_entsize != 0);
 
@@ -145,7 +143,7 @@ ld_input_alloc_internal_section_buffers(struct ld *ld)
 	li = STAILQ_FIRST(&ld->ld_lilist);
 	assert(li != NULL);
 
-	for (i = 0; (uint64_t) i < li->li_shnum; i++) {
+	for (i = 0; (u_int64_t) i < li->li_shnum; i++) {
 		is = &li->li_is[i];
 
 		if (is->is_type == SHT_NOBITS || is->is_size == 0 ||
@@ -620,7 +618,7 @@ static void
 _discard_section_group(struct ld *ld, struct ld_input *li, Elf_Scn *scn)
 {
 	Elf_Data *d;
-	uint32_t *w;
+	u_int32_t *w;
 	int elferr, i;
 
 	(void) elf_errno();

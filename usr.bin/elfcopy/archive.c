@@ -32,18 +32,16 @@
 #include <unistd.h>
 
 #ifndef LIBELF_AR
-#include <archive.h>
-#include <archive_entry.h>
+//#include <archive.h>
+//#include <archive_entry.h>
 #endif	/* ! LIBELF_AR */
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
-
 #define _ARMAG_LEN 8		/* length of ar magic string */
 #define _ARHDR_LEN 60		/* length of ar header */
 #define _INIT_AS_CAP 128	/* initial archive string table size */
-#define _INIT_SYMOFF_CAP (256*(sizeof(uint32_t))) /* initial so table size */
+#define _INIT_SYMOFF_CAP (256*(sizeof(u_int32_t))) /* initial so table size */
 #define _INIT_SYMNAME_CAP 1024			  /* initial sn table size */
 #define _MAXNAMELEN_SVR4 15	/* max member name length in svr4 variant */
 
@@ -159,7 +157,7 @@ add_to_ar_sym_table(struct elfcopy *ecp, const char *name)
 		ecp->s_sn_sz = 0;
 	}
 
-	if (ecp->s_cnt * sizeof(uint32_t) >= ecp->s_so_cap) {
+	if (ecp->s_cnt * sizeof(u_int32_t) >= ecp->s_so_cap) {
 		ecp->s_so_cap *= 2;
 		ecp->s_so = realloc(ecp->s_so, ecp->s_so_cap);
 		if (ecp->s_so == NULL)
@@ -215,7 +213,7 @@ sync_ar(struct elfcopy *ecp)
 	 */
 
 	if (ecp->s_cnt != 0) {
-		s_sz = (ecp->s_cnt + 1) * sizeof(uint32_t) + ecp->s_sn_sz;
+		s_sz = (ecp->s_cnt + 1) * sizeof(u_int32_t) + ecp->s_sn_sz;
 		pm_sz = _ARMAG_LEN + (_ARHDR_LEN + s_sz);
 		if (ecp->as != NULL)
 			pm_sz += _ARHDR_LEN + ecp->as_sz;
@@ -451,12 +449,12 @@ ac_write_objs(struct elfcopy *ecp, int ofd)
 	entry = archive_entry_new();
 	archive_entry_copy_pathname(entry, "/");
 	archive_entry_set_mtime(entry, time(NULL), 0);
-	archive_entry_set_size(entry, (ecp->s_cnt + 1) * sizeof(uint32_t) +
+	archive_entry_set_size(entry, (ecp->s_cnt + 1) * sizeof(u_int32_t) +
 	    ecp->s_sn_sz);
 	AC(archive_write_header(a, entry));
 	nr = htobe32(ecp->s_cnt);
-	ac_write_data(a, &nr, sizeof(uint32_t));
-	ac_write_data(a, ecp->s_so, sizeof(uint32_t) * ecp->s_cnt);
+	ac_write_data(a, &nr, sizeof(u_int32_t));
+	ac_write_data(a, ecp->s_so, sizeof(u_int32_t) * ecp->s_cnt);
 	ac_write_data(a, ecp->s_sn, ecp->s_sn_sz);
 	archive_entry_free(entry);
 

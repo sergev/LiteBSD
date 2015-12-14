@@ -34,8 +34,6 @@
 #include "ld_script.h"
 #include "ld_strtab.h"
 
-ELFTC_VCSID("$Id$");
-
 #define	_INIT_SYMTAB_SIZE	128
 
 static void _load_symbols(struct ld *ld, struct ld_file *lf);
@@ -187,8 +185,8 @@ ld_symbols_add_variable(struct ld *ld, struct ld_script_variable *ldv,
 }
 
 void
-ld_symbols_add_internal(struct ld *ld, const char *name, uint64_t size,
-    uint64_t value, uint16_t shndx, unsigned char bind, unsigned char type,
+ld_symbols_add_internal(struct ld *ld, const char *name, u_int64_t size,
+    u_int64_t value, u_int16_t shndx, unsigned char bind, unsigned char type,
     unsigned char other, struct ld_input_section *is,
     struct ld_output_section *preset_os)
 {
@@ -214,7 +212,7 @@ ld_symbols_add_internal(struct ld *ld, const char *name, uint64_t size,
 }
 
 int
-ld_symbols_get_value(struct ld *ld, char *name, uint64_t *val)
+ld_symbols_get_value(struct ld *ld, char *name, u_int64_t *val)
 {
 	struct ld_symbol *lsb;
 
@@ -277,7 +275,7 @@ ld_symbols_resolve(struct ld *ld)
 			printf("%-34s", lsb->lsb_name);
 			if (strlen(lsb->lsb_name) > 34)
 				printf("\n%-34s", "");
-			printf(" %#-10jx %s\n", (uintmax_t) lsb->lsb_size,
+			printf(" %#-10jx %s\n", (u_intmax_t) lsb->lsb_size,
 			    ld_input_get_fullname(ld, lsb->lsb_input));
 		}
 	}
@@ -1133,7 +1131,7 @@ _load_elf_symbols(struct ld *ld, struct ld_input *li, Elf *e)
 	strndx = dyn_strndx = SHN_UNDEF;
 	scn_sym = scn_versym = scn_verneed = scn_verdef = scn_dynamic = NULL;
 
-	for (i = 0; (uint64_t) i < li->li_shnum - 1; i++) {
+	for (i = 0; (u_int64_t) i < li->li_shnum - 1; i++) {
 		is = &li->li_is[i];
 		if (li->li_type == LIT_DSO) {
 			if (is->is_type == SHT_DYNSYM) {
@@ -1184,7 +1182,7 @@ _load_elf_symbols(struct ld *ld, struct ld_input *li, Elf *e)
 	}
 
 	li->li_symnum = d->d_size / shdr.sh_entsize;
-	for (i = 0; (uint64_t) i < li->li_symnum; i++) {
+	for (i = 0; (u_int64_t) i < li->li_symnum; i++) {
 		if (gelf_getsym(d, i, &sym) != &sym)
 			ld_warn(ld, "%s: gelf_getsym failed: %s", li->li_name,
 			    elf_errmsg(-1));
@@ -1213,7 +1211,7 @@ _unload_symbols(struct ld_input *li)
 	if (li->li_symindex == NULL)
 		return;
 
-	for (i = 0; (uint64_t) i < li->li_symnum; i++)
+	for (i = 0; (u_int64_t) i < li->li_symnum; i++)
 		_free_symbol(li->li_symindex[i]);
 }
 

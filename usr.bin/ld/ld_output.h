@@ -42,7 +42,7 @@ enum ld_output_element_type {
 
 struct ld_output_element {
 	enum ld_output_element_type oe_type; /* output element type */
-	uint64_t oe_off;		/* output element offset */
+	u_int64_t oe_off;		/* output element offset */
 	void *oe_entry;			/* output element */
 	void *oe_islist;		/* input section list */
 	unsigned char oe_insec;		/* element inside SECTIONS */
@@ -52,11 +52,11 @@ struct ld_output_element {
 STAILQ_HEAD(ld_output_element_head, ld_output_element);
 
 struct ld_output_data_buffer {
-	uint8_t *odb_buf;		/* point to data */
-	uint64_t odb_size;		/* buffer size */
-	uint64_t odb_off;		/* relative offset in output section */
-	uint64_t odb_align;		/* buffer alignment */
-	uint64_t odb_type;		/* buffer data type */
+	u_int8_t *odb_buf;		/* point to data */
+	u_int64_t odb_size;		/* buffer size */
+	u_int64_t odb_off;		/* relative offset in output section */
+	u_int64_t odb_align;		/* buffer alignment */
+	u_int64_t odb_type;		/* buffer data type */
 };
 
 struct ld_reloc_entry_head;
@@ -65,15 +65,15 @@ struct ld_symbol;
 struct ld_output_section {
 	Elf_Scn *os_scn;		/* output section descriptor */
 	char *os_name;			/* output section name */
-	uint64_t os_addr;		/* output section vma */
-	uint64_t os_lma;		/* output section lma */
-	uint64_t os_off;		/* output section offset */
-	uint64_t os_size;		/* output section size */
-	uint64_t os_align;		/* output section alignment */
-	uint64_t os_flags;		/* output section flags */
-	uint64_t os_type;		/* output section type */
-	uint64_t os_entsize;		/* output seciton entry size */
-	uint64_t os_info_val;		/* output section info */
+	u_int64_t os_addr;		/* output section vma */
+	u_int64_t os_lma;		/* output section lma */
+	u_int64_t os_off;		/* output section offset */
+	u_int64_t os_size;		/* output section size */
+	u_int64_t os_align;		/* output section alignment */
+	u_int64_t os_flags;		/* output section flags */
+	u_int64_t os_type;		/* output section type */
+	u_int64_t os_entsize;		/* output seciton entry size */
+	u_int64_t os_info_val;		/* output section info */
 	unsigned char os_empty;		/* output section is empty */
 	unsigned char os_dynrel;	/* contains dynamic relocations */
 	unsigned char os_pltrel;	/* contains PLT relocations */
@@ -88,7 +88,7 @@ struct ld_output_section {
 	struct ld_output_element *os_pe;    /* parent element */
 	struct ld_output_element_head os_e; /* list of child elements */
 	struct ld_reloc_entry_head *os_reloc; /* list of relocations */
-	uint64_t os_num_reloc;		/* number of relocations */
+	u_int64_t os_num_reloc;		/* number of relocations */
 	STAILQ_ENTRY(ld_output_section) os_next; /* next output section */
 	UT_hash_handle hh;		/* hash handle */
 };
@@ -114,10 +114,10 @@ struct ld_output {
 	unsigned lo_rel_plt_type;	 /* type of PLT relocation */
 	unsigned lo_rel_dyn_type;	 /* type of dynamic relocation */
 	unsigned lo_fde_num;		 /* num of FDE in .eh_frame */
-	uint64_t lo_shoff;		 /* section header table offset */
-	uint64_t lo_tls_size;		 /* TLS segment size */
-	uint64_t lo_tls_align;		 /* TLS segment align */
-	uint64_t lo_tls_addr;		 /* TLS segment VMA */
+	u_int64_t lo_shoff;		 /* section header table offset */
+	u_int64_t lo_tls_size;		 /* TLS segment size */
+	u_int64_t lo_tls_align;		 /* TLS segment align */
+	u_int64_t lo_tls_addr;		 /* TLS segment VMA */
 	size_t lo_symtab_shndx;		 /* .symtab section index */
 	UT_array *lo_dso_nameindex;	 /* array of DSO name indices */
 	struct ld_symver_verneed_head *lo_vnlist; /* Verneed list */

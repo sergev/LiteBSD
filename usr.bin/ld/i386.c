@@ -34,15 +34,13 @@
 #include "ld_utils.h"
 #include "i386.h"
 
-ELFTC_VCSID("$Id$");
-
 static void _create_plt_reloc(struct ld *ld, struct ld_symbol *lsb,
-    uint64_t offset);
+    u_int64_t offset);
 static void _create_got_reloc(struct ld *ld, struct ld_symbol *lsb,
-    uint64_t type, uint64_t offset);
+    u_int64_t type, u_int64_t offset);
 static void _create_copy_reloc(struct ld *ld, struct ld_symbol *lsb);
 static void _create_dynamic_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_symbol *lsb, uint64_t type, uint64_t offset);
+    struct ld_symbol *lsb, u_int64_t type, u_int64_t offset);
 static void _scan_reloc(struct ld *ld, struct ld_input_section *is,
     struct ld_reloc_entry *lre);
 static struct ld_input_section *_find_and_create_got_section(struct ld *ld,
@@ -51,20 +49,20 @@ static struct ld_input_section *_find_and_create_got_section(struct ld *ld,
 //    int create);
 static struct ld_input_section *_find_and_create_plt_section(struct ld *ld,
     int create);
-static uint64_t _get_max_page_size(struct ld *ld);
-static uint64_t _get_common_page_size(struct ld *ld);
+static u_int64_t _get_max_page_size(struct ld *ld);
+static u_int64_t _get_common_page_size(struct ld *ld);
 static void _process_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf);
-static const char *_reloc2str(uint64_t r);
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf);
+static const char *_reloc2str(u_int64_t r);
 static void _reserve_got_entry(struct ld *ld, struct ld_symbol *lsb, int num);
 static void _reserve_gotplt_entry(struct ld *ld, struct ld_symbol *lsb);
 static void _reserve_plt_entry(struct ld *ld, struct ld_symbol *lsb);
-static int _is_absolute_reloc(uint64_t r);
-static int _is_relative_reloc(uint64_t r);
+static int _is_absolute_reloc(u_int64_t r);
+static int _is_relative_reloc(u_int64_t r);
 static void _warn_pic(struct ld *ld, struct ld_reloc_entry *lre);
-static uint32_t _got_offset(struct ld *ld, struct ld_symbol *lsb);
+static u_int32_t _got_offset(struct ld *ld, struct ld_symbol *lsb);
 
-static uint64_t
+static u_int64_t
 _get_max_page_size(struct ld *ld)
 {
 
@@ -72,7 +70,7 @@ _get_max_page_size(struct ld *ld)
 	return (0x1000);
 }
 
-static uint64_t
+static u_int64_t
 _get_common_page_size(struct ld *ld)
 {
 
@@ -81,7 +79,7 @@ _get_common_page_size(struct ld *ld)
 }
 
 static const char *
-_reloc2str(uint64_t r)
+_reloc2str(u_int64_t r)
 {
 	static char s[32];
 
@@ -119,13 +117,13 @@ _reloc2str(uint64_t r)
 		case 37: return "R_386_TLS_TPOFF32";
 
 	default:
-		snprintf(s, sizeof(s), "<unkown: %ju>", (uintmax_t)r);
+		snprintf(s, sizeof(s), "<unkown: %ju>", (u_intmax_t)r);
 		return (s);
 	}
 }
 
 static int
-_is_absolute_reloc(uint64_t r)
+_is_absolute_reloc(u_int64_t r)
 {
 
 	if (r == R_386_32)
@@ -135,7 +133,7 @@ _is_absolute_reloc(uint64_t r)
 }
 
 static int
-_is_relative_reloc(uint64_t r)
+_is_relative_reloc(u_int64_t r)
 {
 
 	if (r == R_386_RELATIVE)
@@ -255,7 +253,7 @@ static void
 _reserve_gotplt_entry(struct ld *ld, struct ld_symbol *lsb)
 {
 	//struct ld_input_section *is;
-	//uint64_t off;
+	//u_int64_t off;
 
 	//is = _find_and_create_gotplt_section(ld, 1);
 
@@ -283,7 +281,7 @@ _reserve_plt_entry(struct ld *ld, struct ld_symbol *lsb)
 }
 
 static void
-_create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t offset)
+_create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, u_int64_t offset)
 {
 
 	ld_reloc_create_entry(ld, ".rel.plt", NULL, R_386_JMP_SLOT,
@@ -293,8 +291,8 @@ _create_plt_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t offset)
 }
 
 static void
-_create_got_reloc(struct ld *ld, struct ld_symbol *lsb, uint64_t type,
-    uint64_t offset)
+_create_got_reloc(struct ld *ld, struct ld_symbol *lsb, u_int64_t type,
+    u_int64_t offset)
 {
 	struct ld_input_section *tis;
 
@@ -325,7 +323,7 @@ _create_copy_reloc(struct ld *ld, struct ld_symbol *lsb)
 
 static void
 _create_dynamic_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_symbol *lsb, uint64_t type, uint64_t offset)
+    struct ld_symbol *lsb, u_int64_t type, u_int64_t offset)
 {
 
 	if (lsb->lsb_bind == STB_LOCAL) {
@@ -517,7 +515,7 @@ _scan_reloc(struct ld *ld, struct ld_input_section *is,
 	}
 }
 
-static uint32_t
+static u_int32_t
 _got_offset(struct ld *ld, struct ld_symbol *lsb)
 {
 	struct ld_output_section *os;
@@ -536,11 +534,11 @@ _got_offset(struct ld *ld, struct ld_symbol *lsb)
 
 static void
 _process_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	struct ld_state *ls;
 	struct ld_output *lo;
-	uint32_t p, s, l, g, got;
+	u_int32_t p, s, l, g, got;
 	int32_t a, v;
 
 	ls = &ld->ld_state;
@@ -551,7 +549,7 @@ _process_reloc(struct ld *ld, struct ld_input_section *is,
 	l = lsb->lsb_plt_off;
 	p = lre->lre_offset + is->is_output->os_addr + is->is_reloff;
 	got = ld->ld_got->is_output->os_addr;
-	s = (uint32_t) lsb->lsb_value;
+	s = (u_int32_t) lsb->lsb_value;
 	READ_32(buf + lre->lre_offset, a);
 
 	switch (lre->lre_type) {

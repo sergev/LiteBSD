@@ -38,18 +38,18 @@ struct ld_input_section {
 	char *is_name;			/* section name */
 	struct ld_input *is_input;	/* containing input object */
 	struct ld_output_section *is_output; /* containing output section */
-	uint64_t is_off;		/* section file offset */
-	uint64_t is_reloff;		/* relative offset in output section */
-	uint64_t is_addr;		/* section vma */
-	uint64_t is_size;		/* section file size */
-	uint64_t is_shrink;		/* section shrinked bytes */
-	uint64_t is_entsize;		/* seciton entry size */
-	uint64_t is_align;		/* section align */
-	uint64_t is_type;		/* section type */
-	uint64_t is_flags;		/* section flags */
-	uint64_t is_link;		/* section link */
-	uint64_t is_info;		/* section info */
-	uint64_t is_index;		/* section index */
+	u_int64_t is_off;		/* section file offset */
+	u_int64_t is_reloff;		/* relative offset in output section */
+	u_int64_t is_addr;		/* section vma */
+	u_int64_t is_size;		/* section file size */
+	u_int64_t is_shrink;		/* section shrinked bytes */
+	u_int64_t is_entsize;		/* seciton entry size */
+	u_int64_t is_align;		/* section align */
+	u_int64_t is_type;		/* section type */
+	u_int64_t is_flags;		/* section flags */
+	u_int64_t is_link;		/* section link */
+	u_int64_t is_info;		/* section info */
+	u_int64_t is_index;		/* section index */
 	unsigned char is_discard;	/* dicard section */
 	unsigned char is_dynrel;	/* section holds dynamic relocations */
 	unsigned char is_pltrel;	/* section holds PLT relocations */
@@ -59,7 +59,7 @@ struct ld_input_section {
 	void *is_ibuf;			/* buffer for internal sections */
 	void *is_ehframe;		/* temp buffer for ehframe section. */
 	struct ld_reloc_entry_head *is_reloc; /* list of relocation entries */
-	uint64_t is_num_reloc;		/* number of reloc entries */
+	u_int64_t is_num_reloc;		/* number of reloc entries */
 	struct ld_input_section *is_tis; /* relocation target */
 	struct ld_input_section *is_ris; /* relocation section */
 	struct ld_ehframe_fde_head *is_fde; /* list of FDE */
@@ -94,7 +94,7 @@ struct ld_input {
 	size_t li_symnum;		/* number of symbols */
 	char **li_vername;		/* version name array */
 	size_t li_vername_sz;		/* version name array size */
-	uint16_t *li_versym;		/* symbol version array */
+	u_int16_t *li_versym;		/* symbol version array */
 	size_t li_versym_sz;		/* symbol version array size */
 	int li_dso_refcnt;		/* symbol reference count (DSO) */
 	struct ld_symver_verdef_head *li_verdef; /* version definition */
@@ -118,4 +118,4 @@ void	ld_input_init_sections(struct ld *, struct ld_input *, Elf *);
 void	ld_input_link_objects(struct ld *);
 void	ld_input_load(struct ld *, struct ld_input *);
 void	ld_input_unload(struct ld *, struct ld_input *);
-uint64_t ld_input_reserve_ibuf(struct ld_input_section *, uint64_t);
+u_int64_t ld_input_reserve_ibuf(struct ld_input_section *, u_int64_t);

@@ -37,16 +37,15 @@
 #include "ld_path.h"
 #include "ld_symbols.h"
 
-ELFTC_VCSID("$Id$");
-
 static struct ld _ld;
 struct ld* ld = &_ld;
 
 static void
 _init(void)
 {
+        extern unsigned char *__progname;
 
-	if ((ld->ld_progname = ELFTC_GETPROGNAME()) == NULL)
+	if ((ld->ld_progname = __progname) == NULL)
 		ld->ld_progname = "ld";
 
 	/* Initialise libelf. */

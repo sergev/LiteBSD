@@ -34,8 +34,6 @@
 #include "ld_symbols.h"
 #include "ld_utils.h"
 
-ELFTC_VCSID("$Id$");
-
 static struct ld *_ld;
 
 /*
@@ -43,16 +41,16 @@ static struct ld *_ld;
  */
 
 static int _discard_reloc(struct ld *ld, struct ld_input_section *is,
-    uint64_t sym, uint64_t off, uint64_t *reloc_adjust);
+    u_int64_t sym, u_int64_t off, u_int64_t *reloc_adjust);
 static void _scan_reloc(struct ld *ld, struct ld_input_section *is,
-    uint64_t sym, struct ld_reloc_entry *lre);
+    u_int64_t sym, struct ld_reloc_entry *lre);
 static void _read_rel(struct ld *ld, struct ld_input_section *is,
     Elf_Data *d);
 static void _read_rela(struct ld *ld, struct ld_input_section *is,
     Elf_Data *d);
 static void _add_to_gc_search_list(struct ld_state *ls,
     struct ld_input_section *is);
-static uint64_t _reloc_addr(struct ld_reloc_entry *lre);
+static u_int64_t _reloc_addr(struct ld_reloc_entry *lre);
 static int _cmp_reloc(struct ld_reloc_entry *a, struct ld_reloc_entry *b);
 
 void
@@ -75,7 +73,7 @@ ld_reloc_load(struct ld *ld)
 		ld_input_load(ld, li);
 		e = li->li_elf;
 
-		for (i = 0; (uint64_t) i < li->li_shnum - 1; i++) {
+		for (i = 0; (u_int64_t) i < li->li_shnum - 1; i++) {
 			is = &li->li_is[i];
 
 			if (is->is_type != SHT_REL && is->is_type != SHT_RELA)
@@ -147,7 +145,7 @@ ld_reloc_deferred_scan(struct ld *ld)
 		if (li->li_name == NULL || li->li_type == LIT_DSO)
 			continue;
 
-		for (i = 0; (uint64_t) i < li->li_shnum - 1; i++) {
+		for (i = 0; (u_int64_t) i < li->li_shnum - 1; i++) {
 			is = &li->li_is[i];
 
 			if (is->is_type != SHT_REL && is->is_type != SHT_RELA)
@@ -164,13 +162,13 @@ ld_reloc_deferred_scan(struct ld *ld)
 }
 
 static int
-_discard_reloc(struct ld *ld, struct ld_input_section *is, uint64_t sym,
-    uint64_t off, uint64_t *reloc_adjust)
+_discard_reloc(struct ld *ld, struct ld_input_section *is, u_int64_t sym,
+    u_int64_t off, u_int64_t *reloc_adjust)
 {
 	struct ld_output *lo;
-	uint8_t *p;
-	uint64_t length;
-	uint32_t cie_id;
+	u_int8_t *p;
+	u_int64_t length;
+	u_int32_t cie_id;
 
 	lo = ld->ld_output;
 	assert(lo != NULL);
@@ -231,7 +229,7 @@ _read_rel(struct ld *ld, struct ld_input_section *is, Elf_Data *d)
 {
 	struct ld_reloc_entry *lre;
 	GElf_Rel r;
-	uint64_t reloc_adjust, sym;
+	u_int64_t reloc_adjust, sym;
 	int i, len;
 
 	assert(is->is_reloc != NULL);
@@ -264,7 +262,7 @@ _read_rela(struct ld *ld, struct ld_input_section *is, Elf_Data *d)
 {
 	struct ld_reloc_entry *lre;
 	GElf_Rela r;
-	uint64_t reloc_adjust, sym;
+	u_int64_t reloc_adjust, sym;
 	int i, len;
 
 	assert(is->is_reloc != NULL);
@@ -294,7 +292,7 @@ _read_rela(struct ld *ld, struct ld_input_section *is, Elf_Data *d)
 }
 
 static void
-_scan_reloc(struct ld *ld, struct ld_input_section *is, uint64_t sym,
+_scan_reloc(struct ld *ld, struct ld_input_section *is, u_int64_t sym,
     struct ld_reloc_entry *lre)
 {
 	struct ld_input *li;
@@ -397,10 +395,10 @@ ld_reloc_serialize(struct ld *ld, struct ld_output_section *os, size_t *sz)
 	Elf64_Rel *r64;
 	Elf32_Rela *ra32;
 	Elf64_Rela *ra64;
-	uint8_t *p;
+	u_int8_t *p;
 	void *b;
 	size_t entsize;
-	uint64_t sym;
+	u_int64_t sym;
 	unsigned char is_64;
 	unsigned char is_rela;
 
@@ -424,23 +422,23 @@ ld_reloc_serialize(struct ld *ld, struct ld_output_section *os, size_t *sz)
 			sym = 0;
 
 		if (is_64 && is_rela) {
-			ra64 = (Elf64_Rela *) (uintptr_t) p;
+			ra64 = (Elf64_Rela *) (u_intptr_t) p;
 			ra64->r_offset = lre->lre_offset;
 			ra64->r_info = ELF64_R_INFO(sym, lre->lre_type);
 			ra64->r_addend = lre->lre_addend;
 		} else if (!is_64 && !is_rela) {
-			r32 = (Elf32_Rel *) (uintptr_t) p;
-			r32->r_offset = (uint32_t) lre->lre_offset;
-			r32->r_info = (uint32_t) ELF32_R_INFO(sym,
+			r32 = (Elf32_Rel *) (u_intptr_t) p;
+			r32->r_offset = (u_int32_t) lre->lre_offset;
+			r32->r_info = (u_int32_t) ELF32_R_INFO(sym,
 			    lre->lre_type);
 		} else if (!is_64 && is_rela) {
-			ra32 = (Elf32_Rela *) (uintptr_t) p;
-			ra32->r_offset = (uint32_t) lre->lre_offset;
-			ra32->r_info = (uint32_t) ELF32_R_INFO(sym,
+			ra32 = (Elf32_Rela *) (u_intptr_t) p;
+			ra32->r_offset = (u_int32_t) lre->lre_offset;
+			ra32->r_info = (u_int32_t) ELF32_R_INFO(sym,
 			    lre->lre_type);
 			ra32->r_addend = (int32_t) lre->lre_addend;
 		} else if (is_64 && !is_rela) {
-			r64 = (Elf64_Rel *) (uintptr_t) p;
+			r64 = (Elf64_Rel *) (u_intptr_t) p;
 			r64->r_offset = lre->lre_offset;
 			r64->r_info = ELF64_R_INFO(sym, lre->lre_type);
 		}
@@ -449,15 +447,15 @@ ld_reloc_serialize(struct ld *ld, struct ld_output_section *os, size_t *sz)
 	}
 
 	*sz = entsize * os->os_num_reloc;
-	assert((size_t) (p - (uint8_t *) b) == *sz);
+	assert((size_t) (p - (u_int8_t *) b) == *sz);
 
 	return (b);
 }
 
 void
 ld_reloc_create_entry(struct ld *ld, const char *name,
-    struct ld_input_section *tis, uint64_t type, struct ld_symbol *lsb,
-    uint64_t offset, int64_t addend)
+    struct ld_input_section *tis, u_int64_t type, struct ld_symbol *lsb,
+    u_int64_t offset, int64_t addend)
 {
 	struct ld_input_section *is;
 	struct ld_reloc_entry *lre;
@@ -581,7 +579,7 @@ ld_reloc_join(struct ld *ld, struct ld_output_section *os,
 	is->is_reloc = NULL;
 }
 
-static uint64_t
+static u_int64_t
 _reloc_addr(struct ld_reloc_entry *lre)
 {
 
@@ -822,7 +820,7 @@ ld_reloc_process_input_section(struct ld *ld, struct ld_input_section *is,
 		ris = is->is_ris;
 	else {
 		ris = NULL;
-		for (i = 0; (uint64_t) i < li->li_shnum; i++) {
+		for (i = 0; (u_int64_t) i < li->li_shnum; i++) {
 			if (li->li_is[i].is_type != SHT_REL &&
 			    li->li_is[i].is_type != SHT_RELA)
 				continue;

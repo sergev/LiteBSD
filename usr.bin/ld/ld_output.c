@@ -36,8 +36,6 @@
 #include "ld_strtab.h"
 #include "ld_symbols.h"
 
-ELFTC_VCSID("$Id$");
-
 static void _alloc_input_section_data(struct ld *ld, Elf_Scn *scn,
     struct ld_input_section *is);
 static void _alloc_section_data_from_buffer(struct ld *ld, Elf_Scn *scn,
@@ -54,7 +52,7 @@ static Elf_Scn *_create_elf_scn(struct ld *ld, struct ld_output *lo,
 static void _create_elf_section(struct ld *ld, struct ld_output_section *os);
 static void _create_phdr(struct ld *ld);
 static void _create_symbol_table(struct ld *ld);
-static uint64_t _find_entry_point(struct ld *ld);
+static u_int64_t _find_entry_point(struct ld *ld);
 static void _produce_reloc_sections(struct ld *ld, struct ld_output *lo);
 static void _join_and_finalize_dynamic_reloc_sections(struct ld *ld,
     struct ld_output *lo);
@@ -435,7 +433,7 @@ _copy_and_reloc_input_sections(struct ld *ld)
 
 	STAILQ_FOREACH(li, &ld->ld_lilist, li_next) {
 		ld_input_load(ld, li);
-		for (i = 0; (uint64_t) i < li->li_shnum; i++) {
+		for (i = 0; (u_int64_t) i < li->li_shnum; i++) {
 			is = &li->li_is[i];
 
 			if (is->is_discard || !is->is_need_reloc)
@@ -619,13 +617,13 @@ ld_output_emit_gnu_stack_section(struct ld *ld)
 	 */
 }
 
-static uint64_t
+static u_int64_t
 _find_entry_point(struct ld *ld)
 {
 	struct ld_output *lo;
 	struct ld_output_section *os;
 	char entry_symbol[] = "start";
-	uint64_t entry;
+	u_int64_t entry;
 
 	lo = ld->ld_output;
 
@@ -662,9 +660,9 @@ _create_phdr(struct ld *ld)
 	Elf32_Phdr *p32;
 	Elf64_Phdr *p64;
 	void *phdrs;
-	uint64_t addr, off, align, flags, filesz, memsz, phdr_addr;
-	uint64_t tls_addr, tls_off, tls_align, tls_flags;
-	uint64_t tls_filesz, tls_memsz;
+	u_int64_t addr, off, align, flags, filesz, memsz, phdr_addr;
+	u_int64_t tls_addr, tls_off, tls_align, tls_flags;
+	u_int64_t tls_filesz, tls_memsz;
 	unsigned w;
 	int i, new, first, tls;
 
@@ -1028,8 +1026,8 @@ _update_section_header(struct ld *ld)
 
 #if 0
 		printf("name=%s, shname=%#jx, offset=%#jx, size=%#jx, type=%#jx\n",
-		    os->os_name, (uint64_t) sh.sh_name, (uint64_t) sh.sh_offset,
-		    (uint64_t) sh.sh_size, (uint64_t) sh.sh_type);
+		    os->os_name, (u_int64_t) sh.sh_name, (u_int64_t) sh.sh_offset,
+		    (u_int64_t) sh.sh_size, (u_int64_t) sh.sh_type);
 #endif
 
 		if (!gelf_update_shdr(os->os_scn, &sh))

@@ -566,7 +566,7 @@ copy_from_tempfile(const char *src, const char *dst, int infd, int *outfd,
 			return (0);
 		} else if (errno != EXDEV)
 			return (-1);
-	
+
 		/*
 		 * If the rename() failed due to 'src' and 'dst' residing in
 		 * two different file systems, invoke a helper function in
@@ -877,7 +877,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			/* default */
 			break;
 		case ECP_GAP_FILL:
-			ecp->fill = (uint8_t) strtoul(optarg, NULL, 0);
+			ecp->fill = (u_int8_t) strtoul(optarg, NULL, 0);
 			ecp->flags |= GAP_FILL;
 			break;
 		case ECP_GLOBALIZE_SYMBOL:
@@ -908,7 +908,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			ecp->strip = STRIP_NONDWO;
 			break;
 		case ECP_PAD_TO:
-			ecp->pad_to = (uint64_t) strtoull(optarg, NULL, 0);
+			ecp->pad_to = (u_int64_t) strtoull(optarg, NULL, 0);
 			break;
 		case ECP_PREFIX_ALLOC:
 			ecp->prefix_alloc = optarg;
@@ -958,7 +958,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			break;
 		case ECP_SET_START:
 			ecp->flags |= SET_START;
-			ecp->set_start = (uint64_t) strtoull(optarg, NULL, 0);
+			ecp->set_start = (u_int64_t) strtoull(optarg, NULL, 0);
 			break;
 		case ECP_SREC_FORCE_S3:
 			ecp->flags |= SREC_FORCE_S3;
@@ -1205,12 +1205,12 @@ parse_sec_address_op(struct elfcopy *ecp, int optnum, const char *optname,
 		if (optnum == ECP_CHANGE_SEC_LMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR) {
 			sac->setlma = 1;
-			sac->lma = (uint64_t) strtoull(v, NULL, 0);
+			sac->lma = (u_int64_t) strtoull(v, NULL, 0);
 		}
 		if (optnum == ECP_CHANGE_SEC_VMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR) {
 			sac->setvma = 1;
-			sac->vma = (uint64_t) strtoull(v, NULL, 0);
+			sac->vma = (u_int64_t) strtoull(v, NULL, 0);
 		}
 		break;
 	case '+':

@@ -33,9 +33,9 @@ struct ld_output_section;
 struct ld_reloc_entry {
 	struct ld_input_section *lre_tis; /* input section to apply to */
 	struct ld_symbol *lre_sym;	/* reloc symbol */
-	uint64_t lre_type;		/* reloc type */
-	uint64_t lre_offset;		/* reloc offset */
-	uint64_t lre_addend;		/* reloc addend */
+	u_int64_t lre_type;		/* reloc type */
+	u_int64_t lre_offset;		/* reloc offset */
+	u_int64_t lre_addend;		/* reloc addend */
 	STAILQ_ENTRY(ld_reloc_entry) lre_next; /* next reloc */
 };
 
@@ -48,7 +48,7 @@ enum ld_tls_relax {
 };
 
 void	ld_reloc_create_entry(struct ld *, const char *,
-    struct ld_input_section *, uint64_t, struct ld_symbol *, uint64_t,
+    struct ld_input_section *, u_int64_t, struct ld_symbol *, u_int64_t,
     int64_t);
 void	ld_reloc_deferred_scan(struct ld *);
 void	ld_reloc_finalize(struct ld *, struct ld_output_section *);

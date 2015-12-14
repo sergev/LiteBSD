@@ -29,5 +29,5 @@
 void	ld_layout_sections(struct ld *);
 off_t	ld_layout_calc_header_size(struct ld *);
 struct ld_output_section *ld_layout_insert_output_section(struct ld *,
-    const char *, uint64_t);
+    const char *, u_int64_t);
 void	ld_layout_print_linkmap(struct ld *);

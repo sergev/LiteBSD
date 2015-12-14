@@ -54,8 +54,6 @@
 #define EF_MIPS_ARCH_32R2	0x70000000	/* Mips32 Revision 2 */
 #define EF_MIPS_ARCH_64R2	0x80000000	/* Mips64 Revision 2 */
 
-ELFTC_VCSID("$Id$");
-
 static void
 _scan_reloc(struct ld *ld, struct ld_input_section *is,
     struct ld_reloc_entry *lre)
@@ -80,18 +78,18 @@ _scan_reloc(struct ld *ld, struct ld_input_section *is,
 
 static void
 _process_reloc(struct ld *ld, struct ld_input_section *is,
-    struct ld_reloc_entry *lre, struct ld_symbol *lsb, uint8_t *buf)
+    struct ld_reloc_entry *lre, struct ld_symbol *lsb, u_int8_t *buf)
 {
 	struct ld_output *lo = ld->ld_output;
-	uint32_t pc, s;
+	u_int32_t pc, s;
 	int32_t a, v, la;
-	static uint64_t gp;
+	static u_int64_t gp;
 	static char gp_name[] = "_gp";
 
 	assert(lo != NULL);
 
 	pc = lre->lre_offset + is->is_output->os_addr + is->is_reloff;
-	s = (uint32_t) lsb->lsb_value;
+	s = (u_int32_t) lsb->lsb_value;
 	READ_32(buf + lre->lre_offset, a);
 
 	switch (lre->lre_type) {
@@ -315,20 +313,20 @@ _merge_flags(struct ld *ld, unsigned new_flags)
 	la->flags |= value;
 }
 
-static uint64_t
+static u_int64_t
 _get_max_page_size(struct ld *ld)
 {
 	return 0x1000;
 }
 
-static uint64_t
+static u_int64_t
 _get_common_page_size(struct ld *ld)
 {
 	return 0x1000;
 }
 
 static int
-_is_absolute_reloc(uint64_t r)
+_is_absolute_reloc(u_int64_t r)
 {
 	if (r == R_MIPS_32)
 		return 1;
@@ -337,7 +335,7 @@ _is_absolute_reloc(uint64_t r)
 }
 
 static int
-_is_relative_reloc(uint64_t r)
+_is_relative_reloc(u_int64_t r)
 {
 	if (r == R_MIPS_REL32)
 		return 1;

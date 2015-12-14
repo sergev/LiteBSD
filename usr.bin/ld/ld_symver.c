@@ -33,8 +33,6 @@
 #include "ld_symver.h"
 #include "ld_strtab.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Symbol versioning sections are the same for 32bit and 64bit
  * ELF objects.
@@ -85,7 +83,7 @@ ld_symver_load_symbol_version_info(struct ld *ld, struct ld_input *li, Elf *e,
 	if ((li->li_versym = malloc(d_vs->d_size)) == NULL)
 		ld_fatal_std(ld, "malloc");
 	memcpy(li->li_versym, d_vs->d_buf, d_vs->d_size);
-	li->li_versym_sz = d_vs->d_size / sizeof(uint16_t);
+	li->li_versym_sz = d_vs->d_size / sizeof(u_int16_t);
 
 	_add_version_name(ld, li, 0, "*local*");
 	_add_version_name(ld, li, 1, "*global*");
@@ -111,7 +109,7 @@ ld_symver_create_verneed_section(struct ld *ld)
 	char verneed_name[] = ".gnu.version_r";
 	Elf_Verneed *vn;
 	Elf_Vernaux *vna;
-	uint8_t *buf, *buf2, *end;
+	u_int8_t *buf, *buf2, *end;
 	size_t sz;
 
 	lo = ld->ld_output;
@@ -222,7 +220,7 @@ ld_symver_create_verneed_section(struct ld *ld)
 	end = buf + sz;
 	vn = NULL;
 	STAILQ_FOREACH(svn, lo->lo_vnlist, svn_next){
-		vn = (Elf_Verneed *) (uintptr_t) buf;
+		vn = (Elf_Verneed *) (u_intptr_t) buf;
 		vn->vn_version = VER_NEED_CURRENT;
 		vn->vn_cnt = svn->svn_cnt;
 		vn->vn_file = svn->svn_fileindex;
@@ -236,7 +234,7 @@ ld_symver_create_verneed_section(struct ld *ld)
 		buf2 = buf + sizeof(Elf_Verneed);
 		vna = NULL;
 		STAILQ_FOREACH(sna, &svn->svn_aux, sna_next) {
-			vna = (Elf_Vernaux *) (uintptr_t) buf2;
+			vna = (Elf_Vernaux *) (u_intptr_t) buf2;
 			vna->vna_hash = sna->sna_hash;
 			vna->vna_flags = 0; /* TODO: VER_FLG_WEAK? */
 			vna->vna_other = sna->sna_other;
@@ -273,7 +271,7 @@ ld_symver_create_verdef_section(struct ld *ld)
 	char verdef_name[] = ".gnu.version_d";
 	Elf_Verdef *vd;
 	Elf_Verdaux *vda;
-	uint8_t *buf, *end;
+	u_int8_t *buf, *end;
 	char *soname;
 	size_t sz;
 
@@ -350,7 +348,7 @@ ld_symver_create_verdef_section(struct ld *ld)
 	}
 
 	/* Write file version entry. */
-	vd = (Elf_Verdef *) (uintptr_t) buf;
+	vd = (Elf_Verdef *) (u_intptr_t) buf;
 	vd->vd_version = VER_DEF_CURRENT;
 	vd->vd_flags |= VER_FLG_BASE;
 	vd->vd_ndx = 1;
@@ -361,15 +359,15 @@ ld_symver_create_verdef_section(struct ld *ld)
 	buf += sizeof(Elf_Verdef);
 
 	/* Write file version auxiliary entry. */
-	vda = (Elf_Verdaux *) (uintptr_t) buf;
+	vda = (Elf_Verdaux *) (u_intptr_t) buf;
 	vda->vda_name = ld_strtab_insert_no_suffix(ld, ld->ld_dynstr,
 	    soname);
 	vda->vda_next = 0;
 	buf += sizeof(Elf_Verdaux);
-	
+
 	/* Write symbol version definition entries. */
 	STAILQ_FOREACH(ldvn, &lds->lds_vn, ldvn_next) {
-		vd = (Elf_Verdef *) (uintptr_t) buf;
+		vd = (Elf_Verdef *) (u_intptr_t) buf;
 		vd->vd_version = VER_DEF_CURRENT;
 		vd->vd_flags = 0;
 		vd->vd_ndx = lo->lo_version_index++;
@@ -379,13 +377,13 @@ ld_symver_create_verdef_section(struct ld *ld)
 		if (STAILQ_NEXT(ldvn, ldvn_next) == NULL)
 			vd->vd_next = 0;
 		else
-			vd->vd_next = sizeof(Elf_Verdef) + 
+			vd->vd_next = sizeof(Elf_Verdef) +
 			    ((ldvn->ldvn_dep == NULL) ? 1 : 2) *
 				sizeof(Elf_Verdaux);
 		buf += sizeof(Elf_Verdef);
 
 		/* Write version name auxiliary entry. */
-		vda = (Elf_Verdaux *) (uintptr_t) buf;
+		vda = (Elf_Verdaux *) (u_intptr_t) buf;
 		vda->vda_name = ld_strtab_insert_no_suffix(ld, ld->ld_dynstr,
 		    ldvn->ldvn_name);
 		vda->vda_next = ldvn->ldvn_dep == NULL ? 0 :
@@ -394,9 +392,9 @@ ld_symver_create_verdef_section(struct ld *ld)
 
 		if (ldvn->ldvn_dep == NULL)
 			continue;
-		
+
 		/* Write version dependency auxiliary entry. */
-		vda = (Elf_Verdaux *) (uintptr_t) buf;
+		vda = (Elf_Verdaux *) (u_intptr_t) buf;
 		vda->vda_name = ld_strtab_insert_no_suffix(ld, ld->ld_dynstr,
 		    ldvn->ldvn_dep);
 		vda->vda_next = 0;
@@ -417,7 +415,7 @@ ld_symver_create_versym_section(struct ld *ld)
 	struct ld_output_data_buffer *odb;
 	struct ld_symbol *lsb;
 	char versym_name[] = ".gnu.version";
-	uint16_t *buf;
+	u_int16_t *buf;
 	size_t sz;
 	int i;
 
@@ -585,7 +583,7 @@ _alloc_vna(struct ld *ld, const char *name, struct ld_symver_verneed *svn)
 	if ((sna->sna_name = strdup(name)) == NULL)
 		ld_fatal_std(ld, "strdup");
 
-	sna->sna_hash = (uint32_t) elf_hash(sna->sna_name);
+	sna->sna_hash = (u_int32_t) elf_hash(sna->sna_name);
 
 	if (svn != NULL)
 		STAILQ_INSERT_TAIL(&svn->svn_aux, sna, sna_next);
@@ -664,7 +662,7 @@ _load_verneed_section(struct ld *ld, struct ld_input *li, Elf *e,
 	Elf_Verneed *vn;
 	Elf_Vernaux *vna;
 	GElf_Shdr sh_vn;
-	uint8_t *buf, *end, *buf2;
+	u_int8_t *buf, *end, *buf2;
 	char *name;
 	int elferr, i;
 
@@ -686,11 +684,11 @@ _load_verneed_section(struct ld *ld, struct ld_input *li, Elf *e,
 	buf = d_vn->d_buf;
 	end = buf + d_vn->d_size;
 	while (buf + sizeof(Elf_Verneed) <= end) {
-		vn = (Elf_Verneed *) (uintptr_t) buf;
+		vn = (Elf_Verneed *) (u_intptr_t) buf;
 		buf2 = buf + vn->vn_aux;
 		i = 0;
 		while (buf2 + sizeof(Elf_Vernaux) <= end && i < vn->vn_cnt) {
-			vna = (Elf32_Vernaux *) (uintptr_t) buf2;
+			vna = (Elf32_Vernaux *) (u_intptr_t) buf2;
 			name = elf_strptr(e, sh_vn.sh_link,
 			    vna->vna_name);
 			if (name != NULL)
@@ -714,7 +712,7 @@ _load_verdef_section(struct ld *ld, struct ld_input *li, Elf *e,
 	Elf_Verdef *vd;
 	Elf_Verdaux *vda;
 	GElf_Shdr sh_vd;
-	uint8_t *buf, *end, *buf2;
+	u_int8_t *buf, *end, *buf2;
 	char *name;
 	int elferr, i;
 
@@ -736,12 +734,12 @@ _load_verdef_section(struct ld *ld, struct ld_input *li, Elf *e,
 	buf = d_vd->d_buf;
 	end = buf + d_vd->d_size;
 	while (buf + sizeof(Elf_Verdef) <= end) {
-		vd = (Elf_Verdef *) (uintptr_t) buf;
+		vd = (Elf_Verdef *) (u_intptr_t) buf;
 		svd = _load_verdef(ld, li, vd);
 		buf2 = buf + vd->vd_aux;
 		i = 0;
 		while (buf2 + sizeof(Elf_Verdaux) <= end && i < vd->vd_cnt) {
-			vda = (Elf_Verdaux *) (uintptr_t) buf2;
+			vda = (Elf_Verdaux *) (u_intptr_t) buf2;
 			name = elf_strptr(e, sh_vd.sh_link, vda->vda_name);
 			if (name != NULL) {
 				_add_version_name(ld, li, (int) vd->vd_ndx,
@@ -781,13 +779,13 @@ _load_verdef(struct ld *ld, struct ld_input *li, Elf_Verdef *vd)
 	return (svd);
 }
 
-uint16_t
+u_int16_t
 ld_symver_search_version_script(struct ld *ld, struct ld_symbol *lsb)
 {
 	struct ld_script *lds;
 	struct ld_script_version_node *ldvn;
 	struct ld_script_version_entry *ldve, *ldve_g;
-	uint16_t ndx, ret_ndx, ret_ndx_g;
+	u_int16_t ndx, ret_ndx, ret_ndx_g;
 
 	/* If the symbol version index was known, return it directly. */
 	if (lsb->lsb_vndx_known)

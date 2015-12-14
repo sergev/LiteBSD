@@ -100,7 +100,7 @@ adjust_addr(struct elfcopy *ecp)
 	struct section *s, *s0;
 	struct segment *seg;
 	struct sec_action *sac;
-	uint64_t dl, lma, start, end;
+	u_int64_t dl, lma, start, end;
 	int found, i;
 
 	/*
@@ -175,14 +175,14 @@ adjust_addr(struct elfcopy *ecp)
 		if (lma % s->align != 0)
 			errx(EXIT_FAILURE, "The load address %#jx for "
 			    "section %s is not aligned to %ju",
-			    (uintmax_t) lma, s->name, (uintmax_t)s->align);
+			    (u_intmax_t) lma, s->name, (u_intmax_t)s->align);
 
 		if (lma < s->lma) {
 			/* Move section to lower address. */
 			if (lma < s->lma - s->seg->addr)
 				errx(EXIT_FAILURE, "Not enough space to move "
 				    "section %s load address to %#jx", s->name,
-				    (uintmax_t) lma);
+				    (u_intmax_t) lma);
 			start = lma - (s->lma - s->seg->addr);
 			if (s == s->seg->v_sec[s->seg->nsec - 1])
 				end = start + s->seg->msz;
@@ -199,7 +199,7 @@ adjust_addr(struct elfcopy *ecp)
 			if (end < start)
 				errx(EXIT_FAILURE, "Not enough space to move "
 				    "section %s load address to %#jx", s->name,
-				    (uintmax_t) lma);
+				    (u_intmax_t) lma);
 		}
 
 #ifdef	DEBUG
@@ -216,7 +216,7 @@ adjust_addr(struct elfcopy *ecp)
 				continue;
 			errx(EXIT_FAILURE, "The extent of segment containing "
 			    "section %s overlaps with segment(%#jx,%#jx)",
-			    s->name, (uintmax_t)seg->addr, (uintmax_t)(seg->addr + seg->msz));
+			    s->name, (u_intmax_t)seg->addr, (u_intmax_t)(seg->addr + seg->msz));
 		}
 
 		/*
@@ -236,7 +236,7 @@ adjust_addr(struct elfcopy *ecp)
 				s0->lma -= dl;
 #ifdef	DEBUG
 				printf("section %s LMA set to %#jx\n",
-				    s0->name, (uintmax_t) s0->lma);
+				    s0->name, (u_intmax_t) s0->lma);
 #endif
 				if (s0 == s)
 					break;
@@ -246,7 +246,7 @@ adjust_addr(struct elfcopy *ecp)
 				s0->off += dl;
 #ifdef	DEBUG
 				printf("section %s offset set to %#jx\n",
-				    s0->name, (uintmax_t) s0->off);
+				    s0->name, (u_intmax_t) s0->off);
 #endif
 			}
 		} else {
@@ -270,13 +270,13 @@ adjust_addr(struct elfcopy *ecp)
 				s0->lma += dl;
 #ifdef	DEBUG
 				printf("section %s LMA set to %#jx\n",
-				    s0->name, (uintmax_t) s0->lma);
+				    s0->name, (u_intmax_t) s0->lma);
 #endif
 				if (s != s->seg->v_sec[0]) {
 					s0->off += dl;
 #ifdef	DEBUG
 					printf("section %s offset set to %#jx\n",
-					    s0->name, (uintmax_t) s0->off);
+					    s0->name, (u_intmax_t) s0->off);
 #endif
 				}
 			}
@@ -321,7 +321,7 @@ adjust_addr(struct elfcopy *ecp)
 		s->pad_sz = ecp->pad_to - (s->lma + s->sz);
 #ifdef	DEBUG
 		printf("pad section %s load to address %#jx by %#jx\n", s->name,
-		    (uintmax_t) ecp->pad_to, (uintmax_t) s->pad_sz);
+		    (u_intmax_t) ecp->pad_to, (u_intmax_t) s->pad_sz);
 #endif
 	}
 
