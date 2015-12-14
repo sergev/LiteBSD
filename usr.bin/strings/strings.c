@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
-#include <inttypes.h>
+//#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,10 +42,6 @@
 #include <libelf.h>
 #include <libelftc.h>
 #include <gelf.h>
-
-#include "_elftc.h"
-
-ELFTC_VCSID("$Id$");
 
 enum return_code {
 	RETURN_OK,
@@ -144,7 +140,7 @@ main(int argc, char **argv)
 			show_filename = 1;
 			break;
 		case 'n':
-			min_len = (int)strtoimax(optarg, (char**)NULL, 10);
+			min_len = strtol(optarg, (char**)NULL, 10);
 			break;
 		case 'o':
 			show_loc = 1;
@@ -351,7 +347,7 @@ find_strings(const char *name, off_t offset, off_t size)
 		return (RETURN_SOFTWARE);
 	}
 
-	(void) fseeko(stdin, offset, SEEK_SET);
+	(void) fseek(stdin, offset, SEEK_SET);
 	cur_off = offset;
 	start_off = 0;
 	while(1) {
@@ -369,7 +365,7 @@ find_strings(const char *name, off_t offset, off_t size)
 		 		cur_off += encoding_size;
 		 	} else {
 				if (encoding == ENCODING_8BIT &&
-				    (uint8_t)c > 127) {
+				    (u_int8_t)c > 127) {
 			 		obuf[i] = c;
 			 		obuf[i+1] = 0;
 			 		cur_off += encoding_size;
@@ -388,15 +384,15 @@ find_strings(const char *name, off_t offset, off_t size)
 				switch(radix) {
 				case RADIX_DECIMAL:
 					(void) printf("%7ju ",
-					    (uintmax_t)start_off);
+					    (u_intmax_t)start_off);
 					break;
 				case RADIX_HEX:
 					(void) printf("%7jx ",
-					    (uintmax_t)start_off);
+					    (u_intmax_t)start_off);
 					break;
 				case RADIX_OCTAL:
 					(void) printf("%7jo ",
-					    (uintmax_t)start_off);
+					    (u_intmax_t)start_off);
 					break;
 				}
 			}
@@ -409,7 +405,7 @@ find_strings(const char *name, off_t offset, off_t size)
 				c = getcharacter();
 				cur_off += encoding_size;
 				if (encoding == ENCODING_8BIT &&
-				    (uint8_t)c > 127) {
+				    (u_int8_t)c > 127) {
 			 		putchar(c);
 			 		continue;
 			 	}
@@ -438,16 +434,18 @@ Usage: %s [options] [file...]\n\
   -t R   | --radix=R           Print offsets using the radix named by 'R'.\n\
   -v     | --version           Print a version identifier and exit.\n"
 
+extern char *__progname;
+
 void
 usage(void)
 {
-	(void) fprintf(stderr, USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
 void
 show_version(void)
 {
-        (void) printf("%s (%s)\n", ELFTC_GETPROGNAME(), elftc_version());
+        (void) printf("%s (%s)\n", __progname, elftc_version());
         exit(EXIT_SUCCESS);
 }
