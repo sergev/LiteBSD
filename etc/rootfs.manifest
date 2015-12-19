@@ -813,6 +813,7 @@ file /usr/bin/dirname
 file /usr/bin/diskspeed
 file /usr/bin/du
 file /usr/bin/egrep
+file /usr/bin/emg
 file /usr/bin/env
 file /usr/bin/error
 file /usr/bin/expand
@@ -1480,6 +1481,10 @@ file /usr/share/dict/README
 file /usr/share/dict/web2
 file /usr/share/dict/web2a
 file /usr/share/dict/words
+
+dir /usr/share/doc
+dir /usr/share/doc/emg
+file /usr/share/doc/emg/emg.keys
 
 dir /usr/share/misc
 file /usr/share/misc/airport
