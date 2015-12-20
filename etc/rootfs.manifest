@@ -704,6 +704,11 @@ file /bin/test
 link /bin/[
 target /bin/test
 
+link /bin/tar
+target /bin/pax
+link /bin/cpio
+target /bin/pax
+
 #
 # Files: /sbin
 #
@@ -836,6 +841,7 @@ file /usr/bin/fullsize
 file /usr/bin/gcore
 file /usr/bin/gprof
 file /usr/bin/groups
+file /usr/bin/gzip
 file /usr/bin/head
 file /usr/bin/hexdump
 file /usr/bin/id
@@ -1041,6 +1047,12 @@ target /usr/bin/elfcopy
 
 link /usr/bin/ranlib
 target /usr/bin/ar
+
+link /usr/bin/gunzip
+target /usr/bin/gzip
+
+link /usr/bin/gzcat
+target /usr/bin/gzip
 
 #
 # Files: /usr/sbin
@@ -1661,6 +1673,7 @@ file /usr/share/man/cat1/gcore.0
 file /usr/share/man/cat1/gprof.0
 file /usr/share/man/cat1/grep.0
 file /usr/share/man/cat1/groups.0
+file /usr/share/man/cat1/gzip.0
 file /usr/share/man/cat1/head.0
 file /usr/share/man/cat1/hexdump.0
 file /usr/share/man/cat1/hostname.0
@@ -1863,6 +1876,11 @@ link /usr/share/man/cat1/ex.0
 target /usr/share/man/cat1/nvi.0
 link /usr/share/man/cat1/view.0
 target /usr/share/man/cat1/nvi.0
+
+link /usr/share/man/cat1/gunzip.0
+target /usr/share/man/cat1/gzip.0
+link /usr/share/man/cat1/gzcat.0
+target /usr/share/man/cat1/gzip.0
 
 file /usr/share/man/cat2/accept.0
 file /usr/share/man/cat2/access.0
