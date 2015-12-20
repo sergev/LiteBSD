@@ -9,7 +9,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	lock logger login logname lorder m4 mail make man mesg mkdep \
 	mkfifo mklocale mkstr more msgs mt netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pr printenv printf quota \
-	rdist renice rev rlogin rs rsh ruptime rwho sccs \
+	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size sl soelim split \
 	strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
@@ -31,7 +31,7 @@ SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "luna68k"
 SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "mips"
-SUBDIR+=cmp look systat tail vmstat
+SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "sparc"
 SUBDIR+=cmp ld look tail vmstat.sparc
 .elif	${MACHINE} == "tahoe"

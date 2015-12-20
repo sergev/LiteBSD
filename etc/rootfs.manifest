@@ -846,6 +846,7 @@ file /usr/bin/ktrace
 file /usr/bin/lam
 file /usr/bin/last
 file /usr/bin/lastcomm
+file /usr/bin/ld
 file /usr/bin/leave
 file /usr/bin/locate
 file /usr/bin/lock
@@ -916,6 +917,7 @@ owner 0                 root
 file /usr/bin/rdist
 mode 04555
 owner 0                 root
+file /usr/bin/readelf
 file /usr/bin/renice
 file /usr/bin/rev
 file /usr/bin/rlogin
@@ -1716,6 +1718,7 @@ file /usr/share/man/cat1/quota.0
 file /usr/share/man/cat1/ranlib.0
 file /usr/share/man/cat1/rcp.0
 file /usr/share/man/cat1/rdist.0
+file /usr/share/man/cat1/readelf.0
 file /usr/share/man/cat1/renice.0
 file /usr/share/man/cat1/rev.0
 file /usr/share/man/cat1/rlogin.0
