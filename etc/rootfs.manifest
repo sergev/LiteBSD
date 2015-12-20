@@ -679,6 +679,7 @@ file /bin/ed
 file /bin/expr
 file /bin/hostname
 file /bin/kill
+file /bin/ksh
 file /bin/ln
 file /bin/ls
 file /bin/mkdir
@@ -1672,6 +1673,7 @@ file /usr/share/man/cat1/join.0
 file /usr/share/man/cat1/jot.0
 file /usr/share/man/cat1/kdump.0
 file /usr/share/man/cat1/kill.0
+file /usr/share/man/cat1/ksh.0
 file /usr/share/man/cat1/ktrace.0
 file /usr/share/man/cat1/lam.0
 file /usr/share/man/cat1/last.0
