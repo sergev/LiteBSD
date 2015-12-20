@@ -1,3 +1,6 @@
+/*	$OpenBSD: tables.h,v 1.5 2003/06/02 23:32:09 millert Exp $	*/
+/*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -14,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -44,7 +43,7 @@
 /*
  * Hash Table Sizes MUST BE PRIME, if set too small performance suffers.
  * Probably safe to expect 500000 inodes per tape. Assuming good key
- * distribution (inodes) chains of under 50 long (worse case) is ok.
+ * distribution (inodes) chains of under 50 long (worst case) is ok.
  */
 #define L_TAB_SZ	2503		/* hard link hash table size */
 #define F_TAB_SZ	50503		/* file time hash table size */
@@ -105,7 +104,7 @@ typedef struct namt {
  * this table. (When the inode field in the archive header are too small, we
  * remap the dev on writes to remove accidental collisions).
  *
- * The list is hashed by device number using chain collision resolution. Off of 
+ * The list is hashed by device number using chain collision resolution. Off of
  * each DEVT are linked the various remaps for this device based on those bits
  * in the inode which were truncated. For example if we are just remapping to
  * avoid a device number during an update append, off the DEVT we would have

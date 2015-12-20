@@ -1,3 +1,6 @@
+/*	$OpenBSD: tty_subs.c,v 1.12 2003/06/02 23:32:09 millert Exp $	*/
+/*	$NetBSD: tty_subs.c,v 1.5 1995/03/21 09:07:52 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -14,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +35,11 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)tty_subs.c	8.2 (Berkeley) 4/18/94";
+#if 0
+static const char sccsid[] = "@(#)tty_subs.c	8.2 (Berkeley) 4/18/94";
+#else
+static const char rcsid[] = "$OpenBSD: tty_subs.c,v 1.12 2003/06/02 23:32:09 millert Exp $";
+#endif
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -45,44 +48,34 @@ static char sccsid[] = "@(#)tty_subs.c	8.2 (Berkeley) 4/18/94";
 #include <sys/param.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include "pax.h"
 #include "extern.h"
-#if __STDC__
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 
 /*
  * routines that deal with I/O to and from the user
  */
 
-#define DEVTTY          "/dev/tty"      /* device for interactive i/o */
+#define DEVTTY		"/dev/tty"	/* device for interactive i/o */
 static FILE *ttyoutf = NULL;		/* output pointing at control tty */
 static FILE *ttyinf = NULL;		/* input pointing at control tty */
 
 /*
  * tty_init()
- *	try to open the controlling termina (if any) for this process. if the
+ *	try to open the controlling terminal (if any) for this process. if the
  *	open fails, future ops that require user input will get an EOF
  */
 
-#if __STDC__
 int
 tty_init(void)
-#else
-int
-tty_init()
-#endif
 {
 	int ttyfd;
 
-        if ((ttyfd = open(DEVTTY, O_RDWR)) >= 0) {
+	if ((ttyfd = open(DEVTTY, O_RDWR)) >= 0) {
 		if ((ttyoutf = fdopen(ttyfd, "w")) != NULL) {
 			if ((ttyinf = fdopen(ttyfd, "r")) != NULL)
 				return(0);
@@ -92,7 +85,7 @@ tty_init()
 	}
 
 	if (iflag) {
-		warn(1, "Fatal error, cannot open %s", DEVTTY);
+		paxwarn(1, "Fatal error, cannot open %s", DEVTTY);
 		return(-1);
 	}
 	return(0);
@@ -104,24 +97,16 @@ tty_init()
  *	if there is no controlling terminal, just return.
  */
 
-#if __STDC__
 void
-tty_prnt(char *fmt, ...)
-#else
-void
-tty_prnt(fmt, va_alist)
-	char *fmt;
-	va_dcl
-#endif
+tty_prnt(const char *fmt, ...)
 {
 	va_list ap;
-#	if __STDC__
+
 	va_start(ap, fmt);
-#	else
-	va_start(ap);
-#	endif
-	if (ttyoutf == NULL)
+	if (ttyoutf == NULL) {
+		va_end(ap);
 		return;
+	}
 	(void)vfprintf(ttyoutf, fmt, ap);
 	va_end(ap);
 	(void)fflush(ttyoutf);
@@ -135,17 +120,10 @@ tty_prnt(fmt, va_alist)
  *	0 if data was read, -1 otherwise.
  */
 
-#if __STDC__
 int
 tty_read(char *str, int len)
-#else
-int
-tty_read(str, len)
-	char *str;
-	int len;
-#endif
 {
-	register char *pt;
+	char *pt;
 
 	if ((--len <= 0) || (ttyinf == NULL) || (fgets(str,len,ttyinf) == NULL))
 		return(-1);
@@ -160,28 +138,17 @@ tty_read(str, len)
 }
 
 /*
- * warn()
+ * paxwarn()
  *	write a warning message to stderr. if "set" the exit value of pax
  *	will be non-zero.
  */
 
-#if __STDC__
 void
-warn(int set, char *fmt, ...)
-#else
-void
-warn(set, fmt, va_alist)
-	int set;
-	char *fmt;
-	va_dcl
-#endif
+paxwarn(int set, const char *fmt, ...)
 {
 	va_list ap;
-#	if __STDC__
+
 	va_start(ap, fmt);
-#	else
-	va_start(ap);
-#	endif
 	if (set)
 		exit_val = 1;
 	/*
@@ -189,6 +156,7 @@ warn(set, fmt, va_alist)
 	 * line by itself
 	 */
 	if (vflag && vfpart) {
+		(void)fflush(listf);
 		(void)fputc('\n', stderr);
 		vfpart = 0;
 	}
@@ -204,24 +172,12 @@ warn(set, fmt, va_alist)
  *	will be non-zero.
  */
 
-#if __STDC__
 void
-syswarn(int set, int errnum, char *fmt, ...)
-#else
-void
-syswarn(set, errnum, fmt, va_alist)
-	int set;
-	int errnum;
-	char *fmt;
-	va_dcl
-#endif
+syswarn(int set, int errnum, const char *fmt, ...)
 {
 	va_list ap;
-#	if __STDC__
+
 	va_start(ap, fmt);
-#	else
-	va_start(ap);
-#	endif
 	if (set)
 		exit_val = 1;
 	/*
@@ -229,6 +185,7 @@ syswarn(set, errnum, fmt, va_alist)
 	 * line by itself
 	 */
 	if (vflag && vfpart) {
+		(void)fflush(listf);
 		(void)fputc('\n', stderr);
 		vfpart = 0;
 	}
@@ -240,6 +197,6 @@ syswarn(set, errnum, fmt, va_alist)
 	 * format and print the errno
 	 */
 	if (errnum > 0)
-		(void)fprintf(stderr, " <%s>", sys_errlist[errnum]);
+		(void)fprintf(stderr, ": %s", strerror(errnum));
 	(void)fputc('\n', stderr);
 }

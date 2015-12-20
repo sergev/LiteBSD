@@ -1,3 +1,6 @@
+/*	$OpenBSD: cache.c,v 1.14 2003/06/02 23:32:08 millert Exp $	*/
+/*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -14,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +35,11 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)cache.c	8.1 (Berkeley) 5/31/93";
+#if 0
+static const char sccsid[] = "@(#)cache.c	8.1 (Berkeley) 5/31/93";
+#else
+static const char rcsid[] = "$OpenBSD: cache.c,v 1.14 2003/06/02 23:32:08 millert Exp $";
+#endif
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -45,7 +48,6 @@ static char sccsid[] = "@(#)cache.c	8.1 (Berkeley) 5/31/93";
 #include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
 #include <unistd.h>
@@ -70,18 +72,13 @@ static GIDC **grptb = NULL;	/* group name to gid cache */
 
 /*
  * uidtb_start
- *	creates an an empty uidtb
+ *	creates an empty uidtb
  * Return:
  *	0 if ok, -1 otherwise
  */
 
-#if __STDC__
 int
 uidtb_start(void)
-#else
-int
-uidtb_start()
-#endif
 {
 	static int fail = 0;
 
@@ -91,7 +88,7 @@ uidtb_start()
 		return(-1);
 	if ((uidtb = (UIDC **)calloc(UID_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
-		warn(1, "Unable to allocate memory for user id cache table");
+		paxwarn(1, "Unable to allocate memory for user id cache table");
 		return(-1);
 	}
 	return(0);
@@ -99,18 +96,13 @@ uidtb_start()
 
 /*
  * gidtb_start
- *	creates an an empty gidtb
+ *	creates an empty gidtb
  * Return:
  *	0 if ok, -1 otherwise
  */
 
-#if __STDC__
 int
 gidtb_start(void)
-#else
-int
-gidtb_start()
-#endif
 {
 	static int fail = 0;
 
@@ -120,7 +112,7 @@ gidtb_start()
 		return(-1);
 	if ((gidtb = (GIDC **)calloc(GID_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
-		warn(1, "Unable to allocate memory for group id cache table");
+		paxwarn(1, "Unable to allocate memory for group id cache table");
 		return(-1);
 	}
 	return(0);
@@ -128,18 +120,13 @@ gidtb_start()
 
 /*
  * usrtb_start
- *	creates an an empty usrtb
+ *	creates an empty usrtb
  * Return:
  *	0 if ok, -1 otherwise
  */
 
-#if __STDC__
 int
 usrtb_start(void)
-#else
-int
-usrtb_start()
-#endif
 {
 	static int fail = 0;
 
@@ -149,7 +136,7 @@ usrtb_start()
 		return(-1);
 	if ((usrtb = (UIDC **)calloc(UNM_SZ, sizeof(UIDC *))) == NULL) {
 		++fail;
-		warn(1, "Unable to allocate memory for user name cache table");
+		paxwarn(1, "Unable to allocate memory for user name cache table");
 		return(-1);
 	}
 	return(0);
@@ -157,18 +144,13 @@ usrtb_start()
 
 /*
  * grptb_start
- *	creates an an empty grptb
+ *	creates an empty grptb
  * Return:
  *	0 if ok, -1 otherwise
  */
 
-#if __STDC__
 int
 grptb_start(void)
-#else
-int
-grptb_start()
-#endif
 {
 	static int fail = 0;
 
@@ -178,7 +160,7 @@ grptb_start()
 		return(-1);
 	if ((grptb = (GIDC **)calloc(GNM_SZ, sizeof(GIDC *))) == NULL) {
 		++fail;
-		warn(1,"Unable to allocate memory for group name cache table");
+		paxwarn(1,"Unable to allocate memory for group name cache table");
 		return(-1);
 	}
 	return(0);
@@ -192,18 +174,11 @@ grptb_start()
  *	Pointer to stored name (or a empty string)
  */
 
-#if __STDC__
 char *
 name_uid(uid_t uid, int frc)
-#else
-char *
-name_uid(uid, frc)
-	uid_t uid;
-	int frc;
-#endif
 {
-	register struct passwd *pw;
-	register UIDC *ptr;
+	struct passwd *pw;
+	UIDC *ptr;
 
 	if ((uidtb == NULL) && (uidtb_start() < 0))
 		return("");
@@ -240,11 +215,8 @@ name_uid(uid, frc)
 			return("");
 		ptr->uid = uid;
 		ptr->valid = INVALID;
-#		ifdef NET2_STAT
-		(void)sprintf(ptr->name, "%u", uid);
-#		else
-		(void)sprintf(ptr->name, "%lu", uid);
-#		endif
+		(void)snprintf(ptr->name, sizeof(ptr->name), "%lu",
+			       (unsigned long)uid);
 		if (frc == 0)
 			return("");
 	} else {
@@ -254,8 +226,7 @@ name_uid(uid, frc)
 		if (ptr == NULL)
 			return(pw->pw_name);
 		ptr->uid = uid;
-		(void)strncpy(ptr->name, pw->pw_name, UNMLEN);
-		ptr->name[UNMLEN-1] = '\0';
+		(void)strlcpy(ptr->name, pw->pw_name, UNMLEN);
 		ptr->valid = VALID;
 	}
 	return(ptr->name);
@@ -269,18 +240,11 @@ name_uid(uid, frc)
  *	Pointer to stored name (or a empty string)
  */
 
-#if __STDC__
 char *
 name_gid(gid_t gid, int frc)
-#else
-char *
-name_gid(gid, frc)
-	gid_t gid;
-	int frc;
-#endif
 {
-	register struct group *gr;
-	register GIDC *ptr;
+	struct group *gr;
+	GIDC *ptr;
 
 	if ((gidtb == NULL) && (gidtb_start() < 0))
 		return("");
@@ -317,11 +281,8 @@ name_gid(gid, frc)
 			return("");
 		ptr->gid = gid;
 		ptr->valid = INVALID;
-#		ifdef NET2_STAT
-		(void)sprintf(ptr->name, "%u", gid);
-#		else
-		(void)sprintf(ptr->name, "%lu", gid);
-#		endif
+		(void)snprintf(ptr->name, sizeof(ptr->name), "%lu",
+			       (unsigned long)gid);
 		if (frc == 0)
 			return("");
 	} else {
@@ -331,8 +292,7 @@ name_gid(gid, frc)
 		if (ptr == NULL)
 			return(gr->gr_name);
 		ptr->gid = gid;
-		(void)strncpy(ptr->name, gr->gr_name, GNMLEN);
-		ptr->name[GNMLEN-1] = '\0';
+		(void)strlcpy(ptr->name, gr->gr_name, GNMLEN);
 		ptr->valid = VALID;
 	}
 	return(ptr->name);
@@ -345,19 +305,12 @@ name_gid(gid, frc)
  *	the uid (if any) for a user name, or a -1 if no match can be found
  */
 
-#if __STDC__
 int
 uid_name(char *name, uid_t *uid)
-#else
-int
-uid_name(name, uid)
-	char *name;
-	uid_t *uid;
-#endif
 {
-	register struct passwd *pw;
-	register UIDC *ptr;
-	register int namelen;
+	struct passwd *pw;
+	UIDC *ptr;
+	int namelen;
 
 	/*
 	 * return -1 for mangled names
@@ -385,7 +338,8 @@ uid_name(name, uid)
 	}
 
 	if (ptr == NULL)
-		ptr = (UIDC *)malloc(sizeof(UIDC));
+		ptr = usrtb[st_hash(name, namelen, UNM_SZ)] =
+		  (UIDC *)malloc(sizeof(UIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,
@@ -397,8 +351,7 @@ uid_name(name, uid)
 		*uid = pw->pw_uid;
 		return(0);
 	}
-	(void)strncpy(ptr->name, name, UNMLEN);
-	ptr->name[UNMLEN-1] = '\0';
+	(void)strlcpy(ptr->name, name, UNMLEN);
 	if ((pw = getpwnam(name)) == NULL) {
 		ptr->valid = INVALID;
 		return(-1);
@@ -415,19 +368,12 @@ uid_name(name, uid)
  *	the gid (if any) for a group name, or a -1 if no match can be found
  */
 
-#if __STDC__
 int
 gid_name(char *name, gid_t *gid)
-#else
-int
-gid_name(name, gid)
-	char *name;
-	gid_t *gid;
-#endif
 {
-	register struct group *gr;
-	register GIDC *ptr;
-	register int namelen;
+	struct group *gr;
+	GIDC *ptr;
+	int namelen;
 
 	/*
 	 * return -1 for mangled names
@@ -454,7 +400,8 @@ gid_name(name, gid)
 		++gropn;
 	}
 	if (ptr == NULL)
-		ptr = (GIDC *)malloc(sizeof(GIDC));
+		ptr = grptb[st_hash(name, namelen, GID_SZ)] =
+		  (GIDC *)malloc(sizeof(GIDC));
 
 	/*
 	 * no match, look it up, if no match store it as an invalid entry,
@@ -467,8 +414,7 @@ gid_name(name, gid)
 		return(0);
 	}
 
-	(void)strncpy(ptr->name, name, GNMLEN);
-	ptr->name[GNMLEN-1] = '\0';
+	(void)strlcpy(ptr->name, name, GNMLEN);
 	if ((gr = getgrnam(name)) == NULL) {
 		ptr->valid = INVALID;
 		return(-1);

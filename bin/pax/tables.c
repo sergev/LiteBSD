@@ -1,3 +1,6 @@
+/*	$OpenBSD: tables.c,v 1.20 2003/06/02 23:32:09 millert Exp $	*/
+/*	$NetBSD: tables.c,v 1.4 1995/03/21 09:07:45 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -14,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +35,11 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)tables.c	8.1 (Berkeley) 5/31/93";
+#if 0
+static const char sccsid[] = "@(#)tables.c	8.1 (Berkeley) 5/31/93";
+#else
+static const char rcsid[] = "$OpenBSD: tables.c,v 1.20 2003/06/02 23:32:09 millert Exp $";
+#endif
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -45,7 +48,6 @@ static char sccsid[] = "@(#)tables.c	8.1 (Berkeley) 5/31/93";
 #include <sys/param.h>
 #include <sys/fcntl.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -65,7 +67,7 @@ static char sccsid[] = "@(#)tables.c	8.1 (Berkeley) 5/31/93";
  * large archives. These database routines carefully combine memory usage and
  * temporary file storage in ways which will not significantly impact runtime
  * performance while allowing the largest possible archives to be handled.
- * Trying to force the fit to the posix databases routines was not considered
+ * Trying to force the fit to the posix database routines was not considered
  * time well spent.
  */
 
@@ -78,12 +80,12 @@ static int dirfd = -1;		/* storage for setting created dir time/mode */
 static u_long dircnt;		/* entries in dir time/mode storage */
 static int ffd = -1;		/* tmp file for file time table name storage */
 
-static DEVT *chk_dev __P((dev_t, int));
+static DEVT *chk_dev(dev_t, int);
 
 /*
  * hard link table routines
  *
- * The hard link table tries to detect hard links to files using the device and 
+ * The hard link table tries to detect hard links to files using the device and
  * inode values. We do this when writing an archive, so we can tell the format
  * write routine that this file is a hard link to another file. The format
  * write routine then can store this file in whatever way it wants (as a hard
@@ -103,20 +105,15 @@ static DEVT *chk_dev __P((dev_t, int));
  *	0 if created, -1 if failure
  */
 
-#if __STDC__
 int
 lnk_start(void)
-#else
-int
-lnk_start()
-#endif
 {
 	if (ltab != NULL)
 		return(0);
  	if ((ltab = (HRDLNK **)calloc(L_TAB_SZ, sizeof(HRDLNK *))) == NULL) {
-                warn(1, "Cannot allocate memory for hard link table");
-                return(-1);
-        }
+		paxwarn(1, "Cannot allocate memory for hard link table");
+		return(-1);
+	}
 	return(0);
 }
 
@@ -132,18 +129,12 @@ lnk_start()
  *	if found returns 1; if not found returns 0; -1 on error
  */
 
-#if __STDC__
 int
-chk_lnk(register ARCHD *arcn)
-#else
-int
-chk_lnk(arcn)
-	register ARCHD *arcn;
-#endif
+chk_lnk(ARCHD *arcn)
 {
-	register HRDLNK *pt;
-	register HRDLNK **ppt;
-	register u_int indx;
+	HRDLNK *pt;
+	HRDLNK **ppt;
+	u_int indx;
 
 	if (ltab == NULL)
 		return(-1);
@@ -177,8 +168,8 @@ chk_lnk(arcn)
 			 * handle hardlinks to regular files differently than
 			 * other links.
 			 */
-			arcn->ln_nlen = l_strncpy(arcn->ln_name, pt->name,
-				PAXPATHLEN+1);
+			arcn->ln_nlen = strlcpy(arcn->ln_name, pt->name,
+				sizeof(arcn->ln_name));
 			if (arcn->type == PAX_REG)
 				arcn->type = PAX_HRG;
 			else
@@ -213,7 +204,7 @@ chk_lnk(arcn)
 		(void)free((char *)pt);
 	}
 
-	warn(1, "Hard link table out of memory");
+	paxwarn(1, "Hard link table out of memory");
 	return(-1);
 }
 
@@ -224,18 +215,12 @@ chk_lnk(arcn)
  *	we do not want to accidently point another file at it later on.
  */
 
-#if __STDC__
 void
-purg_lnk(register ARCHD *arcn)
-#else
-void
-purg_lnk(arcn)
-	register ARCHD *arcn;
-#endif
+purg_lnk(ARCHD *arcn)
 {
-	register HRDLNK *pt;
-	register HRDLNK **ppt;
-	register u_int indx;
+	HRDLNK *pt;
+	HRDLNK **ppt;
+	u_int indx;
 
 	if (ltab == NULL)
 		return;
@@ -284,17 +269,12 @@ purg_lnk(arcn)
  *	write phase
  */
 
-#if __STDC__
 void
 lnk_end(void)
-#else
-void
-lnk_end()
-#endif
 {
-	register int i;
-	register HRDLNK *pt;
-	register HRDLNK *ppt;
+	int i;
+	HRDLNK *pt;
+	HRDLNK *ppt;
 
 	if (ltab == NULL)
 		return;
@@ -329,14 +309,14 @@ lnk_end()
  * An append with an -u must read the archive and store the modification time
  * for every file on that archive before starting the write phase. It is clear
  * that this is one HUGE database. To save memory space, the actual file names
- * are stored in a scatch file and indexed by an in memory hash table. The
+ * are stored in a scratch file and indexed by an in-memory hash table. The
  * hash table is indexed by hashing the file path. The nodes in the table store
- * the length of the filename and the lseek offset within the scratch file 
- * where the actual name is stored. Since there are never any deletions to this
- * table, fragmentation of the scratch file is never a issue. Lookups seem to
- * not exhibit any locality at all (files in the database are rarely 
- * looked up more than once...). So caching is just a waste of memory. The
- * only limitation is the amount of scatch file space available to store the
+ * the length of the filename and the lseek offset within the scratch file
+ * where the actual name is stored. Since there are never any deletions from
+ * this table, fragmentation of the scratch file is never a issue. Lookups 
+ * seem to not exhibit any locality at all (files in the database are rarely
+ * looked up more than once...), so caching is just a waste of memory. The
+ * only limitation is the amount of scratch file space available to store the
  * path names.
  */
 
@@ -349,37 +329,29 @@ lnk_end()
  *	0 if the table and file was created ok, -1 otherwise
  */
 
-#if __STDC__
 int
 ftime_start(void)
-#else
-int
-ftime_start()
-#endif
 {
-	char *pt;
 
 	if (ftab != NULL)
 		return(0);
  	if ((ftab = (FTM **)calloc(F_TAB_SZ, sizeof(FTM *))) == NULL) {
-                warn(1, "Cannot allocate memory for file time table");
-                return(-1);
-        }
+		paxwarn(1, "Cannot allocate memory for file time table");
+		return(-1);
+	}
 
 	/*
 	 * get random name and create temporary scratch file, unlink name
 	 * so it will get removed on exit
 	 */
-	if ((pt = tempnam((char *)NULL, (char *)NULL)) == NULL)
-		return(-1);
-	(void)unlink(pt);
-
-	if ((ffd = open(pt, O_RDWR | O_CREAT,  S_IRWXU)) < 0) {
-		syswarn(1, errno, "Unable to open temporary file: %s", pt);
+	memcpy(tempbase, _TFILE_BASE, sizeof(_TFILE_BASE));
+	if ((ffd = mkstemp(tempfile)) < 0) {
+		syswarn(1, errno, "Unable to create temporary file: %s",
+		    tempfile);
 		return(-1);
 	}
+	(void)unlink(tempfile);
 
-	(void)unlink(pt);
 	return(0);
 }
 
@@ -395,18 +367,12 @@ ftime_start()
  *	-1 on error
  */
 
-#if __STDC__
 int
-chk_ftime(register ARCHD *arcn)
-#else
-int
-chk_ftime(arcn)
-	register ARCHD *arcn;
-#endif
+chk_ftime(ARCHD *arcn)
 {
-	register FTM *pt;
-	register int namelen;
-	register u_int indx;
+	FTM *pt;
+	int namelen;
+	u_int indx;
 	char ckname[PAXPATHLEN+1];
 
 	/*
@@ -466,7 +432,7 @@ chk_ftime(arcn)
 				 */
 				pt->mtime = arcn->sb.st_mtime;
 				return(0);
-			} 
+			}
 			/*
 			 * file is older
 			 */
@@ -491,10 +457,10 @@ chk_ftime(arcn)
 				return(0);
 			}
 			syswarn(1, errno, "Failed write to file time table");
-		} else 
+		} else
 			syswarn(1, errno, "Failed seek on file time table");
 	} else
-		warn(1, "File time table ran out of memory");
+		paxwarn(1, "File time table ran out of memory");
 
 	if (pt != NULL)
 		(void)free((char *)pt);
@@ -505,7 +471,7 @@ chk_ftime(arcn)
  * Interactive rename table routines
  *
  * The interactive rename table keeps track of the new names that the user
- * assignes to files from tty input. Since this map is unique for each file
+ * assigns to files from tty input. Since this map is unique for each file
  * we must store it in case there is a reference to the file later in archive
  * (a link). Otherwise we will be unable to find the file we know was
  * extracted. The remapping of these files is stored in a memory based hash
@@ -520,20 +486,15 @@ chk_ftime(arcn)
  *	0 if successful, -1 otherwise
  */
 
-#if __STDC__
 int
 name_start(void)
-#else
-int
-name_start()
-#endif
 {
 	if (ntab != NULL)
 		return(0);
  	if ((ntab = (NAMT **)calloc(N_TAB_SZ, sizeof(NAMT *))) == NULL) {
-                warn(1, "Cannot allocate memory for interactive rename table");
-                return(-1);
-        }
+		paxwarn(1, "Cannot allocate memory for interactive rename table");
+		return(-1);
+	}
 	return(0);
 }
 
@@ -546,26 +507,18 @@ name_start()
  *	0 if added, -1 otherwise
  */
 
-#if __STDC__
 int
-add_name(register char *oname, int onamelen, char *nname)
-#else
-int
-add_name(oname, onamelen, nname)
-	register char *oname;
-	int onamelen;
-	char *nname;
-#endif
+add_name(char *oname, int onamelen, char *nname)
 {
-	register NAMT *pt;
-	register u_int indx;
+	NAMT *pt;
+	u_int indx;
 
 	if (ntab == NULL) {
 		/*
 		 * should never happen
 		 */
-		warn(0, "No interactive rename table, links may fail\n");
-		return(0); 
+		paxwarn(0, "No interactive rename table, links may fail\n");
+		return(0);
 	}
 
 	/*
@@ -590,7 +543,7 @@ add_name(oname, onamelen, nname)
 
 			(void)free((char *)pt->nname);
 			if ((pt->nname = strdup(nname)) == NULL) {
-				warn(1, "Cannot update rename table");
+				paxwarn(1, "Cannot update rename table");
 				return(-1);
 			}
 			return(0);
@@ -611,7 +564,7 @@ add_name(oname, onamelen, nname)
 		}
 		(void)free((char *)pt);
 	}
-	warn(1, "Interactive rename table out of memory");
+	paxwarn(1, "Interactive rename table out of memory");
 	return(-1);
 }
 
@@ -622,18 +575,11 @@ add_name(oname, onamelen, nname)
  *	new name (oname is the link to name)
  */
 
-#if __STDC__
 void
-sub_name(register char *oname, int *onamelen)
-#else
-void
-sub_name(oname, onamelen)
-	register char *oname;
-	int *onamelen;
-#endif
+sub_name(char *oname, int *onamelen, size_t onamesize)
 {
-	register NAMT *pt;
-	register u_int indx;
+	NAMT *pt;
+	u_int indx;
 
 	if (ntab == NULL)
 		return;
@@ -646,14 +592,14 @@ sub_name(oname, onamelen)
 
 	while (pt != NULL) {
 		/*
-		 * walk down the hash cahin looking for a match
+		 * walk down the hash chain looking for a match
 		 */
 		if (strcmp(oname, pt->oname) == 0) {
 			/*
 			 * found it, replace it with the new name
 			 * and return (we know that oname has enough space)
 			 */
-			*onamelen = l_strncpy(oname, pt->nname, PAXPATHLEN+1);
+			*onamelen = strlcpy(oname, pt->nname, onamesize);
 			return;
 		}
 		pt = pt->fow;
@@ -664,7 +610,7 @@ sub_name(oname, onamelen)
 	 */
 	return;
 }
-    
+
 /*
  * device/inode mapping table routines
  * (used with formats that store device and inodes fields)
@@ -712,20 +658,15 @@ sub_name(oname, onamelen)
  *	0 if successful, -1 otherwise
  */
 
-#if __STDC__
 int
 dev_start(void)
-#else
-int
-dev_start()
-#endif
 {
 	if (dtab != NULL)
 		return(0);
  	if ((dtab = (DEVT **)calloc(D_TAB_SZ, sizeof(DEVT *))) == NULL) {
-                warn(1, "Cannot allocate memory for device mapping table");
-                return(-1);
-        }
+		paxwarn(1, "Cannot allocate memory for device mapping table");
+		return(-1);
+	}
 	return(0);
 }
 
@@ -739,14 +680,8 @@ dev_start()
  *	0 if added ok, -1 otherwise
  */
 
-#if __STDC__
 int
-add_dev(register ARCHD *arcn)
-#else
-int
-add_dev(arcn)
-	register ARCHD *arcn;
-#endif
+add_dev(ARCHD *arcn)
 {
 	if (chk_dev(arcn->sb.st_dev, 1) == NULL)
 		return(-1);
@@ -758,7 +693,7 @@ add_dev(arcn)
  *	check for a device value in the device table. If not found and the add
  *	flag is set, it is added. This does NOT assign any mapping values, just
  *	adds the device number as one that need to be remapped. If this device
- *	is alread mapped, just return with a pointer to that entry.
+ *	is already mapped, just return with a pointer to that entry.
  * Return:
  *	pointer to the entry for this device in the device map table. Null
  *	if the add flag is not set and the device is not in the table (it is
@@ -766,18 +701,11 @@ add_dev(arcn)
  *	is returned (indicates an error).
  */
 
-#if __STDC__
 static DEVT *
 chk_dev(dev_t dev, int add)
-#else
-static DEVT *
-chk_dev(dev, add)
-	dev_t dev;
-	int add;
-#endif
 {
-	register DEVT *pt;
-	register u_int indx;
+	DEVT *pt;
+	u_int indx;
 
 	if (dtab == NULL)
 		return(NULL);
@@ -809,7 +737,7 @@ chk_dev(dev, add)
 	 * list must be NULL.
 	 */
 	if ((pt = (DEVT *)malloc(sizeof(DEVT))) == NULL) {
-		warn(1, "Device map table out of memory");
+		paxwarn(1, "Device map table out of memory");
 		return(NULL);
 	}
 	pt->dev = dev;
@@ -831,19 +759,11 @@ chk_dev(dev, add)
  *	0 if all ok, -1 otherwise.
  */
 
-#if __STDC__
 int
-map_dev(register ARCHD *arcn, u_long dev_mask, u_long ino_mask)
-#else
-int
-map_dev(arcn, dev_mask, ino_mask)
-	register ARCHD *arcn;
-	u_long dev_mask;
-	u_long ino_mask;
-#endif
+map_dev(ARCHD *arcn, u_long dev_mask, u_long ino_mask)
 {
-	register DEVT *pt;
-	register DLIST *dpt;
+	DEVT *pt;
+	DLIST *dpt;
 	static dev_t lastdev = 0;	/* next device number to try */
 	int trc_ino = 0;
 	int trc_dev = 0;
@@ -854,7 +774,7 @@ map_dev(arcn, dev_mask, ino_mask)
 		return(0);
 	/*
 	 * check for device and inode truncation, and extract the truncated
-	 * bit pattern. 
+	 * bit pattern.
 	 */
 	if ((arcn->sb.st_dev & (dev_t)dev_mask) != arcn->sb.st_dev)
 		++trc_dev;
@@ -951,23 +871,23 @@ map_dev(arcn, dev_mask, ino_mask)
 	return(0);
 
     bad:
-	warn(1, "Unable to fix truncated inode/device field when storing %s",
+	paxwarn(1, "Unable to fix truncated inode/device field when storing %s",
 	    arcn->name);
-	warn(0, "Archive may create improper hard links when extracted");
+	paxwarn(0, "Archive may create improper hard links when extracted");
 	return(0);
 }
 
 /*
  * directory access/mod time reset table routines (for directories READ by pax)
  *
- * The pax -t flag requires that access times of archive files to be the same
+ * The pax -t flag requires that access times of archive files be the same
  * before being read by pax. For regular files, access time is restored after
  * the file has been copied. This database provides the same functionality for
  * directories read during file tree traversal. Restoring directory access time
  * is more complex than files since directories may be read several times until
  * all the descendants in their subtree are visited by fts. Directory access
  * and modification times are stored during the fts pre-order visit (done
- * before any descendants in the subtree is visited) and restored after the
+ * before any descendants in the subtree are visited) and restored after the
  * fts post-order visit (after all the descendants have been visited). In the
  * case of premature exit from a subtree (like from the effects of -n), any
  * directory entries left in this database are reset during final cleanup
@@ -981,20 +901,15 @@ map_dev(arcn, dev_mask, ino_mask)
  *	0 is created ok, -1 otherwise.
  */
 
-#if __STDC__
 int
 atdir_start(void)
-#else
-int
-atdir_start()
-#endif
 {
 	if (atab != NULL)
 		return(0);
  	if ((atab = (ATDIR **)calloc(A_TAB_SZ, sizeof(ATDIR *))) == NULL) {
-                warn(1,"Cannot allocate space for directory access time table");
-                return(-1);
-        }
+		paxwarn(1,"Cannot allocate space for directory access time table");
+		return(-1);
+	}
 	return(0);
 }
 
@@ -1006,16 +921,11 @@ atdir_start()
  *	entries are for directories READ by pax
  */
 
-#if __STDC__
 void
 atdir_end(void)
-#else
-void
-atdir_end()
-#endif
 {
-	register ATDIR *pt;
-	register int i;
+	ATDIR *pt;
+	int i;
 
 	if (atab == NULL)
 		return;
@@ -1042,31 +952,21 @@ atdir_end()
  *	and chained by inode number. This is for directories READ by pax
  */
 
-#if __STDC__
 void
 add_atdir(char *fname, dev_t dev, ino_t ino, time_t mtime, time_t atime)
-#else
-void
-add_atdir(fname, dev, ino, mtime, atime)
-	char *fname;
-	dev_t dev;
-	ino_t ino;
-	time_t mtime;
-	time_t atime;
-#endif
 {
-	register ATDIR *pt;
-	register u_int indx;
+	ATDIR *pt;
+	u_int indx;
 
 	if (atab == NULL)
 		return;
 
 	/*
-	 * make sure this directory is not already in the table, if so just 
+	 * make sure this directory is not already in the table, if so just
 	 * return (the older entry always has the correct time). The only
 	 * way this will happen is when the same subtree can be traversed by
 	 * different args to pax and the -n option is aborting fts out of a
-	 * subtree before all the post-order visits have been made).
+	 * subtree before all the post-order visits have been made.
 	 */
 	indx = ((unsigned)ino) % A_TAB_SZ;
 	if ((pt = atab[indx]) != NULL) {
@@ -1099,7 +999,7 @@ add_atdir(fname, dev, ino, mtime, atime)
 		(void)free((char *)pt);
 	}
 
-	warn(1, "Directory access time reset table ran out of memory");
+	paxwarn(1, "Directory access time reset table ran out of memory");
 	return;
 }
 
@@ -1114,21 +1014,12 @@ add_atdir(fname, dev, ino, mtime, atime)
  *	0 if found, -1 if not found.
  */
 
-#if __STDC__
 int
 get_atdir(dev_t dev, ino_t ino, time_t *mtime, time_t *atime)
-#else
-int
-get_atdir(dev, ino, mtime, atime)
-	dev_t dev;
-	ino_t ino;
-	time_t *mtime;
-	time_t *atime;
-#endif
 {
-	register ATDIR *pt;
-	register ATDIR **ppt;
-	register u_int indx;
+	ATDIR *pt;
+	ATDIR **ppt;
+	u_int indx;
 
 	if (atab == NULL)
 		return(-1);
@@ -1198,30 +1089,23 @@ get_atdir(dev, ino, mtime, atime)
  *	0 if ok, -1 otherwise
  */
 
-#if __STDC__
 int
 dir_start(void)
-#else
-int
-dir_start()
-#endif
 {
-	char *pt;
 
 	if (dirfd != -1)
 		return(0);
-	if ((pt = tempnam((char *)NULL, (char *)NULL)) == NULL)
-		return(-1);
 
 	/*
 	 * unlink the file so it goes away at termination by itself
 	 */
-	(void)unlink(pt);
-	if ((dirfd = open(pt, O_RDWR|O_CREAT, 0600)) >= 0) {
-		(void)unlink(pt);
+	memcpy(tempbase, _TFILE_BASE, sizeof(_TFILE_BASE));
+	if ((dirfd = mkstemp(tempfile)) >= 0) {
+		(void)unlink(tempfile);
 		return(0);
 	}
-	warn(1, "Unable to create temporary file for directory times: %s", pt);
+	paxwarn(1, "Unable to create temporary file for directory times: %s",
+	    tempfile);
 	return(-1);
 }
 
@@ -1231,24 +1115,15 @@ dir_start()
  *	name is name of the directory, psb the stat buffer with the data in it,
  *	frc_mode is a flag that says whether to force the setting of the mode
  *	(ignoring the user set values for preserving file mode). Frc_mode is
- *	for the case where we created a file and found that the resulting 
+ *	for the case where we created a file and found that the resulting
  *	directory was not writeable and the user asked for file modes to NOT
  *	be preserved. (we have to preserve what was created by default, so we
  *	have to force the setting at the end. this is stated explicitly in the
  *	pax spec)
  */
 
-#if __STDC__
 void
 add_dir(char *name, int nlen, struct stat *psb, int frc_mode)
-#else
-void
-add_dir(name, nlen, psb, frc_mode)
-	char *name;
-	int nlen;
-	struct stat *psb;
-	int frc_mode;
-#endif
 {
 	DIRDATA dblk;
 
@@ -1260,7 +1135,7 @@ add_dir(name, nlen, psb, frc_mode)
 	 * in the trailer
 	 */
 	if ((dblk.npos = lseek(dirfd, 0L, SEEK_CUR)) < 0) {
-		warn(1,"Unable to store mode and times for directory: %s",name);
+		paxwarn(1,"Unable to store mode and times for directory: %s",name);
 		return;
 	}
 
@@ -1278,7 +1153,7 @@ add_dir(name, nlen, psb, frc_mode)
 		return;
 	}
 
-	warn(1,"Unable to store mode and times for created directory: %s",name);
+	paxwarn(1,"Unable to store mode and times for created directory: %s",name);
 	return;
 }
 
@@ -1288,13 +1163,8 @@ add_dir(name, nlen, psb, frc_mode)
  *	by pax
  */
 
-#if __STDC__
 void
 proc_dir(void)
-#else
-void
-proc_dir()
-#endif
 {
 	char name[PAXPATHLEN+1];
 	DIRDATA dblk;
@@ -1310,15 +1180,15 @@ proc_dir()
 		 * read the trailer, then the file name, if this fails
 		 * just give up.
 		 */
-		if (lseek(dirfd, -((off_t)sizeof(dblk)), SEEK_CUR) < 0) 
+		if (lseek(dirfd, -((off_t)sizeof(dblk)), SEEK_CUR) < 0)
 			break;
 		if (read(dirfd,(char *)&dblk, sizeof(dblk)) != sizeof(dblk))
 			break;
-		if (lseek(dirfd, dblk.npos, SEEK_SET) < 0) 
+		if (lseek(dirfd, dblk.npos, SEEK_SET) < 0)
 			break;
 		if (read(dirfd, name, dblk.nlen) != dblk.nlen)
 			break;
-		if (lseek(dirfd, dblk.npos, SEEK_SET) < 0) 
+		if (lseek(dirfd, dblk.npos, SEEK_SET) < 0)
 			break;
 
 		/*
@@ -1334,7 +1204,7 @@ proc_dir()
 	(void)close(dirfd);
 	dirfd = -1;
 	if (cnt != dircnt)
-		warn(1,"Unable to set mode and times for created directories");
+		paxwarn(1,"Unable to set mode and times for created directories");
 	return;
 }
 
@@ -1356,24 +1226,16 @@ proc_dir()
  *	the hash value of the string MOD (%) the table size.
  */
 
-#if __STDC__
 u_int
 st_hash(char *name, int len, int tabsz)
-#else
-u_int
-st_hash(name, len, tabsz)
-	char *name;
-	int len;
-	int tabsz;
-#endif
 {
-	register char *pt;
-	register char *dest;
-	register char *end;
-	register int i;
-	register u_int key = 0;
-	register int steps;
-	register int res;
+	char *pt;
+	char *dest;
+	char *end;
+	int i;
+	u_int key = 0;
+	int steps;
+	int res;
 	u_int val;
 
 	/*
@@ -1382,7 +1244,7 @@ st_hash(name, len, tabsz)
 	 * spread out the keys)
 	 */
 	if (len > MAXKEYLEN) {
-                pt = &(name[len - MAXKEYLEN]);
+		pt = &(name[len - MAXKEYLEN]);
 		len = MAXKEYLEN;
 	} else
 		pt = name;
