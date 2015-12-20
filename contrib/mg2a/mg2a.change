@@ -1,0 +1,123 @@
+Here is a list of some of the changes from Mg version 1b to 2a, in
+reverse semi-cronological order.  Much is only of interest if you are
+modifying Mg.  Some things may only apply relitive to beta versions.
+(I tried to edit these out.)
+
+
+    The kill buffer should now avoid growing bigger than possible.
+(malloc takes an unsigned arg, which may only be 16 bits.)  This is a
+temporary hack until the kill buffer code is rewriten.
+
+    Bcopy is NOT used properly, the third argument should be declared
+unsigned but isn't.  16 bit int systems need to treat the third agument
+as unsigned.
+
+    Added functions set-default-mode, global-unset-key, and
+local-unset-key.  dired_ functions in system dependent code now need
+to set bp->b_nmodes to 0.
+
+    Function key binding should finally work properly.  #define FKEYS
+if you have function keys that don't fit into a char.
+
+    Termcap XKEYS code completly rewritten.  It does not use the FKEYS
+code.  Terminal-dependant initialization files may now be present.
+
+    System dependent routine startupfile now takes a single char *
+arguement.  It is NULL for the normal startup file, the terminal type
+name for the terminal dependent file.  The BSD version no longer tries
+to use .emacs if .mg isn't found.  BSD, SYS V, and OSK versions can
+look for a system-wide startup file if STARTUPFILE is #defined to the
+directory to look in.
+
+    Extend.c now has a dependancy on key.h.
+
+    Insert-file now uses adjustname.
+
+    Optional SYSCLEANUP macro.
+
+    Various changes to make mg smaller and faster.
+
+    Portability issuses: Identifiers should now be unique in first 7
+chars.  (Change dired_makename to d_makename in fileio.c.) Lint found
+various bugs. 
+
+    Character set dependent portion of def.h moved to
+sys/default/chrdef.h.  Cinfo.c moved there.  tty/termcap/* moved
+there. 
+
+    Bug fixes: insert-file, fill-paragraph, startup code, "make lint"
+in bsd makefile.
+
+    "varargs.h" in sys/default is for systems that worked with the
+non-varargs code on mg1.  It does not work on systems that don't
+happen to pass arguments that way.
+
+    fncmp is now also used to compare buffer names.  Buffer names are
+now case sensitive iff file names are.
+
+    The #ifndef ... in some files moved after the #include "def.h".
+This should be better for systems that define various things in
+sysdef.h.  Let me know what I missed.
+
+    Minibuffer and search commands modified so ^H does the same as ^?,
+^\ as ^Q, and ^] as ^S.  bsmap-mode may be done by key bindings,
+flow-mode still needs to toggle system-dependent capture of ^S/^Q.
+re_search.c probably needs to change also.
+
+    dired mode.	 (requires a significant amount of system dependent code.)
+
+    Two case, non-case sensitive systems are now fully supported.  The
+routine fncmp is used to compare file names.  (strcmp may be used on
+monocase or case sensitive systems.)
+
+    If NO_DIR is not defined, adjustname (the replacement for
+adjustcase) must append the directory name to the filename if it
+doesn't have one already.
+
+    Cleanup and rearangement.  symbol.c has been renamed to keymap.c.
+The key name function has been moved to cinfo.c to reduce the number
+of files dependent on character set.
+
+    The terminal type determining code has been moved out of
+sys/default/tty.c.  For unix systems, just "#define gettermtype()
+getenv("TERM")".  For VMS and Primos, it's a bit more compicated.
+
+    I made some changes to the regular expression code to get it to
+compile under os9/68k.	It now compiles, but requires a number of
+routines not present in the library that would be difficult to
+implement.
+
+    lalloc has be rewriten and split into lallocx (for lines not
+expected to grow) and lalloc.  The OFFSET macro may have to be defined
+in the system dependent file if the normal definition supplied will
+not work with your compiler.  (I considered alternatives, but could
+not think of one that used as little storage.  Use the offsetof macro
+if your compiler conforms to the ANSI C draft standard.)  The
+MALLOCROUND macro should be defined if you can predict the behavior of
+your libraries malloc.	It takes a single lvalue arguement, and rounds
+it up to the amount of memory that realy would be allocated by a
+malloc of that size.  (This is most important on memory tight systems.)
+
+Apropos is new.	 It has a few minor problems:  slow, displays only
+global key bindings, dosn't like lots of keys bound to the same
+function.  (Digit-argument is closest to causing problems.)  Its
+output should probably be the basis of future functions files.
+
+The file reading and writing code has changed to fix a couple of
+long-standing bugs.  Files no longer get an extra newline at the end
+of the last line if it doesn't have one.  Line length is now only
+limited by memory and how big a number will fit in a short int.	 See
+description below on what needs to change.
+
+Umpteen minor bugs fixed.  If anyone is doing serious development
+based on 1b, some should be merged back in.  (Kill-buffer had several
+bugs, help didn't redisplay properly if the *help* buffer was already
+present, etc.)
+
+The display wrap code is better that what was done before, but not at
+all what GNU emacs does in the same situation.
+
+Compile options have been changed to make those things present in GNU
+emacs the default.   Compile-time options to turn on features not in
+GNU emacs and to turn of features that are in GNU emacs are documented
+below.

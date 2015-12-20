@@ -1,0 +1,156 @@
+/* +++ GENERATED FILE +++ DO NOT EDIT +++ */
+/*-
+ * Copyright (c) 2013, 2014, 2015
+ *	mirabilos <m@mirbsd.org>
+ *
+ * Provided that these terms and disclaimer and all copyright notices
+ * are retained or reproduced in an accompanying document, permission
+ * is granted to deal in this work without restriction, including un-
+ * limited rights to use, publicly perform, distribute, sell, modify,
+ * merge, give away, or sublicence.
+ *
+ * This work is provided "AS IS" and WITHOUT WARRANTY of any kind, to
+ * the utmost extent permitted by applicable law, neither express nor
+ * implied; without malicious intent or gross negligence. In no event
+ * may a licensor, author or contributor be held liable for indirect,
+ * direct, other damage, loss, or other issues arising in any way out
+ * of dealing in the work, even if advised of the possibility of such
+ * damage or existence of a defect, except proven that it results out
+ * of said person's immediate fault when using the work as intended.
+ */
+
+#ifndef SHFLAGS_OPTCS
+#if defined(SHFLAGS_DEFNS)
+__RCSID("$MirOS: src/bin/mksh/sh_flags.opt,v 1.4 2015/12/12 21:08:44 tg Exp $");
+#elif defined(SHFLAGS_ENUMS)
+#define FN(sname,cname,flags,ochar)	cname,
+#define F0(sname,cname,flags,ochar)	cname = 0,
+#elif defined(SHFLAGS_ITEMS)
+#define FN(sname,cname,flags,ochar)	((const char *)(&shoptione_ ## cname)) + 2,
+#endif
+#ifndef F0
+#define F0 FN
+#endif
+F0("allexport", FEXPORT, OF_ANY, 'a')
+#if HAVE_NICE
+FN("bgnice", FBGNICE, OF_ANY, 0)
+#endif
+FN("braceexpand", FBRACEEXPAND, OF_ANY, 0)
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("emacs", FEMACS, OF_ANY, 0)
+#endif
+FN("errexit", FERREXIT, OF_ANY, 'e')
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("gmacs", FGMACS, OF_ANY, 0)
+#endif
+FN("ignoreeof", FIGNOREEOF, OF_ANY, 0)
+FN("inherit-xtrace", FXTRACEREC, OF_ANY, 0)
+#ifndef SHFLAGS_NOT_CMD
+FN("interactive", FTALKING, OF_CMDLINE, 'i')
+#endif
+FN("keyword", FKEYWORD, OF_ANY, 'k')
+#ifndef SHFLAGS_NOT_CMD
+FN("login", FLOGIN, OF_CMDLINE, 'l')
+#endif
+FN("markdirs", FMARKDIRS, OF_ANY, 'X')
+#ifndef MKSH_UNEMPLOYED
+FN("monitor", FMONITOR, OF_ANY, 'm')
+#endif
+FN("noclobber", FNOCLOBBER, OF_ANY, 'C')
+FN("noexec", FNOEXEC, OF_ANY, 'n')
+FN("noglob", FNOGLOB, OF_ANY, 'f')
+FN("nohup", FNOHUP, OF_ANY, 0)
+FN("nolog", FNOLOG, OF_ANY, 0)
+#ifndef MKSH_UNEMPLOYED
+FN("notify", FNOTIFY, OF_ANY, 'b')
+#endif
+FN("nounset", FNOUNSET, OF_ANY, 'u')
+FN("physical", FPHYSICAL, OF_ANY, 0)
+FN("pipefail", FPIPEFAIL, OF_ANY, 0)
+FN("posix", FPOSIX, OF_ANY, 0)
+FN("privileged", FPRIVILEGED, OF_ANY, 'p')
+#ifndef SHFLAGS_NOT_CMD
+FN("restricted", FRESTRICTED, OF_CMDLINE, 'r')
+#endif
+FN("sh", FSH, OF_ANY, 0)
+#ifndef SHFLAGS_NOT_CMD
+FN("stdin", FSTDIN, OF_CMDLINE, 's')
+#endif
+FN("trackall", FTRACKALL, OF_ANY, 'h')
+FN("utf8-mode", FUNICODE, OF_ANY, 'U')
+FN("verbose", FVERBOSE, OF_ANY, 'v')
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("vi", FVI, OF_ANY, 0)
+#endif
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("vi-esccomplete", FVIESCCOMPLETE, OF_ANY, 0)
+#endif
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("vi-tabcomplete", FVITABCOMPLETE, OF_ANY, 0)
+#endif
+#if !defined(MKSH_NO_CMDLINE_EDITING) || defined(MKSH_LEGACY_MODE)
+FN("viraw", FVIRAW, OF_ANY, 0)
+#endif
+FN("xtrace", FXTRACE, OF_ANY, 'x')
+#ifndef SHFLAGS_NOT_CMD
+FN("", FCOMMAND, OF_CMDLINE, 'c')
+#endif
+FN("", FAS_BUILTIN, OF_INTERNAL, 0)
+FN("", FTALKING_I, OF_INTERNAL, 0)
+#undef F0
+#undef FN
+#undef SHFLAGS_DEFNS
+#undef SHFLAGS_ENUMS
+#undef SHFLAGS_ITEMS
+#else
+#ifndef SHFLAGS_NOT_SET
+"A:"
+#endif
+"a"
+#ifndef MKSH_UNEMPLOYED
+"b"
+#endif
+"C"
+#ifndef SHFLAGS_NOT_CMD
+"c"
+#endif
+"e"
+"f"
+"h"
+#ifndef SHFLAGS_NOT_CMD
+"i"
+#endif
+"k"
+#ifndef SHFLAGS_NOT_CMD
+"l"
+#endif
+#ifndef MKSH_UNEMPLOYED
+"m"
+#endif
+"n"
+#ifndef SHFLAGS_NOT_CMD
+"o:"
+#endif
+#ifndef SHFLAGS_NOT_SET
+"o;"
+#endif
+"p"
+#ifndef SHFLAGS_NOT_CMD
+"r"
+#endif
+#ifndef SHFLAGS_NOT_CMD
+"s"
+#endif
+#ifndef SHFLAGS_NOT_SET
+"s"
+#endif
+#ifndef SHFLAGS_NOT_CMD
+"T:"
+#endif
+"U"
+"u"
+"v"
+"X"
+"x"
+#undef SHFLAGS_OPTCS
+#endif

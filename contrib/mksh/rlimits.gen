@@ -1,0 +1,184 @@
+/* +++ GENERATED FILE +++ DO NOT EDIT +++ */
+/*-
+ * Copyright (c) 2013, 2015
+ *	mirabilos <m@mirbsd.org>
+ *
+ * Provided that these terms and disclaimer and all copyright notices
+ * are retained or reproduced in an accompanying document, permission
+ * is granted to deal in this work without restriction, including un-
+ * limited rights to use, publicly perform, distribute, sell, modify,
+ * merge, give away, or sublicence.
+ *
+ * This work is provided "AS IS" and WITHOUT WARRANTY of any kind, to
+ * the utmost extent permitted by applicable law, neither express nor
+ * implied; without malicious intent or gross negligence. In no event
+ * may a licensor, author or contributor be held liable for indirect,
+ * direct, other damage, loss, or other issues arising in any way out
+ * of dealing in the work, even if advised of the possibility of such
+ * damage or existence of a defect, except proven that it results out
+ * of said person's immediate fault when using the work as intended.
+ */
+
+#ifndef RLIMITS_OPTCS
+#if defined(RLIMITS_DEFNS)
+__RCSID("$MirOS: src/bin/mksh/rlimits.opt,v 1.3 2015/12/12 21:08:44 tg Exp $");
+#elif defined(RLIMITS_ITEMS)
+#define FN(lname,lid,lfac,lopt) (const struct limits *)(&rlimits_ ## lid),
+#endif
+#ifndef F0
+#define F0 FN
+#endif
+#ifdef RLIMIT_CPU
+FN("time(cpu-seconds)", RLIMIT_CPU, 1, 't')
+#endif
+#ifdef RLIMIT_FSIZE
+FN("file(blocks)", RLIMIT_FSIZE, 512, 'f')
+#endif
+#ifdef RLIMIT_CORE
+FN("coredump(blocks)", RLIMIT_CORE, 512, 'c')
+#endif
+#ifdef RLIMIT_DATA
+FN("data(KiB)", RLIMIT_DATA, 1024, 'd')
+#endif
+#ifdef RLIMIT_STACK
+FN("stack(KiB)", RLIMIT_STACK, 1024, 's')
+#endif
+#ifdef RLIMIT_MEMLOCK
+FN("lockedmem(KiB)", RLIMIT_MEMLOCK, 1024, 'l')
+#endif
+#ifdef RLIMIT_NOFILE
+FN("nofiles(descriptors)", RLIMIT_NOFILE, 1, 'n')
+#endif
+#ifdef RLIMIT_NPROC
+FN("processes", RLIMIT_NPROC, 1, 'p')
+#endif
+#ifdef RLIMIT_SWAP
+FN("swap(KiB)", RLIMIT_SWAP, 1024, 'w')
+#endif
+#ifdef RLIMIT_TIME
+FN("humantime(seconds)", RLIMIT_TIME, 1, 'T')
+#endif
+#ifdef RLIMIT_NOVMON
+FN("vnodemonitors", RLIMIT_NOVMON, 1, 'V')
+#endif
+#ifdef RLIMIT_SIGPENDING
+FN("sigpending", RLIMIT_SIGPENDING, 1, 'i')
+#endif
+#ifdef RLIMIT_MSGQUEUE
+FN("msgqueue(bytes)", RLIMIT_MSGQUEUE, 1, 'q')
+#endif
+#ifdef RLIMIT_AIO_MEM
+FN("AIOlockedmem(KiB)", RLIMIT_AIO_MEM, 1024, 'M')
+#endif
+#ifdef RLIMIT_AIO_OPS
+FN("AIOoperations", RLIMIT_AIO_OPS, 1, 'O')
+#endif
+#ifdef RLIMIT_TCACHE
+FN("cachedthreads", RLIMIT_TCACHE, 1, 'C')
+#endif
+#ifdef RLIMIT_SBSIZE
+FN("sockbufsiz(KiB)", RLIMIT_SBSIZE, 1024, 'B')
+#endif
+#ifdef RLIMIT_PTHREAD
+FN("threadsperprocess", RLIMIT_PTHREAD, 1, 'P')
+#endif
+#ifdef RLIMIT_NICE
+FN("maxnice", RLIMIT_NICE, 1, 'e')
+#endif
+#ifdef RLIMIT_RTPRIO
+FN("maxrtprio", RLIMIT_RTPRIO, 1, 'r')
+#endif
+#ifdef ULIMIT_M_IS_RSS
+FN("resident-set(KiB)", RLIMIT_RSS, 1024, 'm')
+#endif
+#ifdef ULIMIT_M_IS_VMEM
+FN("memory(KiB)", RLIMIT_VMEM, 1024, 'm')
+#endif
+#ifdef ULIMIT_V_IS_VMEM
+FN("virtual-memory(KiB)", RLIMIT_VMEM, 1024, 'v')
+#endif
+#ifdef ULIMIT_V_IS_AS
+FN("address-space(KiB)", RLIMIT_AS, 1024, 'v')
+#endif
+#undef F0
+#undef FN
+#undef RLIMITS_DEFNS
+#undef RLIMITS_ITEMS
+#else
+"a"
+#ifdef RLIMIT_SBSIZE
+"B"
+#endif
+#ifdef RLIMIT_TCACHE
+"C"
+#endif
+#ifdef RLIMIT_CORE
+"c"
+#endif
+#ifdef RLIMIT_DATA
+"d"
+#endif
+#ifdef RLIMIT_NICE
+"e"
+#endif
+#ifdef RLIMIT_FSIZE
+"f"
+#endif
+"H"
+#ifdef RLIMIT_SIGPENDING
+"i"
+#endif
+#ifdef RLIMIT_MEMLOCK
+"l"
+#endif
+#ifdef RLIMIT_AIO_MEM
+"M"
+#endif
+#ifdef ULIMIT_M_IS_RSS
+"m"
+#endif
+#ifdef ULIMIT_M_IS_VMEM
+"m"
+#endif
+#ifdef RLIMIT_NOFILE
+"n"
+#endif
+#ifdef RLIMIT_AIO_OPS
+"O"
+#endif
+#ifdef RLIMIT_PTHREAD
+"P"
+#endif
+#ifdef RLIMIT_NPROC
+"p"
+#endif
+#ifdef RLIMIT_MSGQUEUE
+"q"
+#endif
+#ifdef RLIMIT_RTPRIO
+"r"
+#endif
+"S"
+#ifdef RLIMIT_STACK
+"s"
+#endif
+#ifdef RLIMIT_TIME
+"T"
+#endif
+#ifdef RLIMIT_CPU
+"t"
+#endif
+#ifdef RLIMIT_NOVMON
+"V"
+#endif
+#ifdef ULIMIT_V_IS_AS
+"v"
+#endif
+#ifdef ULIMIT_V_IS_VMEM
+"v"
+#endif
+#ifdef RLIMIT_SWAP
+"w"
+#endif
+#undef RLIMITS_OPTCS
+#endif

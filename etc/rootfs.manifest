@@ -600,6 +600,7 @@ file /root/.klogin
 file /root/.login
 file /root/.profile
 file /root/.rhosts
+file /root/.mkshrc
 
 #
 # Files: /etc
@@ -681,6 +682,7 @@ file /bin/kill
 file /bin/ln
 file /bin/ls
 file /bin/mkdir
+file /bin/mksh
 file /bin/mv
 file /bin/pax
 file /bin/ps
@@ -876,6 +878,7 @@ file /usr/bin/mail
 file /usr/bin/make
 file /usr/bin/man
 file /usr/bin/mesg
+file /usr/bin/mg
 file /usr/bin/mkdep
 file /usr/bin/mkfifo
 file /usr/bin/mklocale
@@ -1687,10 +1690,12 @@ file /usr/share/man/cat1/make.0
 file /usr/share/man/cat1/man.0
 file /usr/share/man/cat1/mcs.0
 file /usr/share/man/cat1/mesg.0
+file /usr/share/man/cat1/mg.0
 file /usr/share/man/cat1/mkdep.0
 file /usr/share/man/cat1/mkdir.0
 file /usr/share/man/cat1/mkfifo.0
 file /usr/share/man/cat1/mklocale.0
+file /usr/share/man/cat1/mksh.0
 file /usr/share/man/cat1/mkstr.0
 file /usr/share/man/cat1/more.0
 file /usr/share/man/cat1/msgs.0
