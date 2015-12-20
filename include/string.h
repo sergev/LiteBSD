@@ -87,6 +87,8 @@ void     strmode __P((int, char *));
 int      strncasecmp __P((const char *, const char *, size_t));
 char    *strsep __P((char **, const char *));
 void     swab __P((const void *, void *, size_t));
+size_t   strlcat(char *, const char *, size_t);
+size_t   strlcpy(char *, const char *, size_t);
 #endif
 __END_DECLS
 
