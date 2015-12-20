@@ -36,7 +36,7 @@
 #include "mips.h"
 #endif
 
-#define	LD_DEFAULT_ARCH		"amd64"
+#define	LD_DEFAULT_ARCH		"littlemips"
 
 static struct ld_arch *_get_arch_from_target(struct ld *ld, char *target);
 

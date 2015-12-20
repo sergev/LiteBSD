@@ -30,15 +30,17 @@ SRCS=	ld_arch.c		\
 
 ld_script_lexer.l: ld_script_parser.c
 
+ld_script_parser.c y.tab.h: ld_script_parser.y
+	$(YACC) -d ld_script_parser.y
+	mv y.tab.c ld_script_parser.c
+
 GENSRCS=	littlemips_script.c bigmips_script.c
 
-CLEANFILES+=	${GENSRCS} y.tab.h
+CLEANFILES+=	${GENSRCS} y.tab.h ld_script_parser.c ld_script_lexer.c
 
-DPADD=	${LIBELFTC} ${LIBELF} ${LIBDWARF}
 LDADD=	-lelftc -ldwarf -lelf
 
 CFLAGS+= -DARCH_MIPS
-YFLAGS=	-d
 
 NOMAN=
 
