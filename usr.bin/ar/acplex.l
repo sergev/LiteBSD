@@ -32,8 +32,6 @@
 
 #include "_elftc.h"
 
-ELFTC_VCSID("$Id$");
-
 #include "acpyacc.h"
 
 #define YY_NO_UNPUT

@@ -32,13 +32,11 @@
 #include <archive_entry.h>
 #include <assert.h>
 #include <errno.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "ar.h"
-
-ELFTC_VCSID("$Id$");
 
 /*
  * Handle read modes: 'x', 't' and 'p'.
@@ -102,9 +100,8 @@ ar_read_archive(struct bsdar *bsdar, int mode)
 				av = &bsdar->argv[i];
 				if (*av == NULL)
 					continue;
-				if ((bname = basename(*av)) == NULL)
-					bsdar_errc(bsdar, errno,
-					    "basename failed");
+                                bname = strrchr(*av, '/');
+                                bname = bname ? bname+1 : *av;
 				if (strcmp(bname, name) != 0)
 					continue;
 
@@ -123,9 +120,9 @@ ar_read_archive(struct bsdar *bsdar, int mode)
 				gid = archive_entry_gid(entry);
 				size = archive_entry_size(entry);
 				mtime = archive_entry_mtime(entry);
-				(void)fprintf(out, "%s %6d/%-6d %8ju ",
+				(void)fprintf(out, "%s %6d/%-6d %8u ",
 				    bsdar_strmode(md) + 1, uid, gid,
-				    (uintmax_t)size);
+				    size);
 				tp = localtime(&mtime);
 				(void)strftime(buf, sizeof(buf),
 				    "%b %e %H:%M %Y", tp);
@@ -195,5 +192,5 @@ ar_read_archive(struct bsdar *bsdar, int mode)
 		}
 	}
 	AC(archive_read_close(a));
-	ACV(archive_read_free(a));
+	//ACV(archive_read_free(a));
 }

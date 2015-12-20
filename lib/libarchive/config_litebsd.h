@@ -1,5 +1,6 @@
-/* config.h.  Generated from config.h.in by configure.  */
-/* config.h.in.  Generated from configure.ac by autoheader.  */
+/*
+ * This file was manually configured for LiteBSD.
+ */
 
 /* MD5 via ARCHIVE_HASH_MD5_LIBC supported. */
 //#define ARCHIVE_HASH_MD5_LIBC 1
@@ -236,25 +237,25 @@
 /* #undef HAVE_FUTIMENS */
 
 /* Define to 1 if you have the `futimes' function. */
-#define HAVE_FUTIMES 1
+//#define HAVE_FUTIMES 1
 
 /* Define to 1 if you have the `geteuid' function. */
 #define HAVE_GETEUID 1
 
 /* Define to 1 if you have the `getgrgid_r' function. */
-#define HAVE_GETGRGID_R 1
+//#define HAVE_GETGRGID_R 1
 
 /* Define to 1 if you have the `getgrnam_r' function. */
-#define HAVE_GETGRNAM_R 1
+//#define HAVE_GETGRNAM_R 1
 
 /* Define to 1 if you have the `getpid' function. */
 #define HAVE_GETPID 1
 
 /* Define to 1 if you have the `getpwnam_r' function. */
-#define HAVE_GETPWNAM_R 1
+//#define HAVE_GETPWNAM_R 1
 
 /* Define to 1 if you have the `getpwuid_r' function. */
-#define HAVE_GETPWUID_R 1
+//#define HAVE_GETPWUID_R 1
 
 /* Define to 1 if you have the `getxattr' function. */
 /* #undef HAVE_GETXATTR */
@@ -345,7 +346,7 @@
 /* #undef HAVE_LSTAT_EMPTY_STRING_BUG */
 
 /* Define to 1 if you have the `lutimes' function. */
-#define HAVE_LUTIMES 1
+//#define HAVE_LUTIMES 1
 
 /* Define to 1 if you have the <lzmadec.h> header file. */
 /* #undef HAVE_LZMADEC_H */

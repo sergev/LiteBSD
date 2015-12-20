@@ -28,7 +28,7 @@
 
 #include <libelf.h>
 
-#include "_elftc.h"
+//#include "_elftc.h"
 
 /*
  * ar(1) options.
@@ -122,8 +122,8 @@ struct bsdar {
 	/*
 	 * Fields for the archive symbol table.
 	 */
-	uint32_t	  s_cnt;	/* current number of symbols. */
-	uint32_t	 *s_so;		/* symbol offset table. */
+	u_int32_t	  s_cnt;	/* current number of symbols. */
+	u_int32_t	 *s_so;		/* symbol offset table. */
 	size_t		  s_so_cap;	/* capacity of so table buffer. */
 	char		 *s_sn;		/* symbol name table */
 	size_t		  s_sn_cap;	/* capacity of sn table buffer. */
@@ -134,7 +134,6 @@ struct bsdar {
 	TAILQ_HEAD(, ar_obj) v_obj;	/* object(member) list */
 };
 
-void	ar_mode_script(struct bsdar *ar);
 void	ar_read_archive(struct bsdar *_ar, int _mode);
 void	ar_write_archive(struct bsdar *_ar, int _mode);
 void	bsdar_errc(struct bsdar *, int _code, const char *fmt, ...);

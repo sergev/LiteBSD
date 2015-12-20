@@ -64,15 +64,13 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libelftc.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "ar.h"
-
-ELFTC_VCSID("$Id$");
 
 enum options
 {
@@ -94,11 +92,13 @@ static void	only_mode(struct bsdar *bsdar, const char *opt,
 		    const char *valid_modes);
 static void	bsdar_version(void);
 
+extern char *__progname;
+
 int
 main(int argc, char **argv)
 {
 	struct bsdar	*bsdar, bsdar_storage;
-	char		*arcmd, *argv1_saved;
+	char		*arcmd, *argv1_saved, *p;
 	size_t		 len;
 	int		 i, opt;
 
@@ -108,7 +108,7 @@ main(int argc, char **argv)
 	arcmd = argv1_saved = NULL;
 	bsdar->output = stdout;
 
-	if ((bsdar->progname = ELFTC_GETPROGNAME()) == NULL)
+	if ((bsdar->progname = __progname) == NULL)
 		bsdar->progname = "ar";
 
 	if (elf_version(EV_CURRENT) == EV_NONE)
@@ -172,7 +172,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	while ((opt = getopt_long(argc, argv, "abCcdDfF:ijlMmopqrSsTtUuVvxz",
+	while ((opt = getopt_long(argc, argv, "abCcdDfF:ijlmopqrSsTtUuVvxz",
 	    longopts, NULL)) != -1) {
 		switch(opt) {
 		case 'a':
@@ -212,9 +212,6 @@ main(int argc, char **argv)
 			break;
 		case 'l':
 			/* ignored, for GNU ar comptibility */
-			break;
-		case 'M':
-			set_mode(bsdar, opt);
 			break;
 		case 'm':
 			set_mode(bsdar, opt);
@@ -275,7 +272,7 @@ main(int argc, char **argv)
 	argv += optind;
 	argc -= optind;
 
-	if (*argv == NULL && bsdar->mode != 'M')
+	if (*argv == NULL)
 		bsdar_usage();
 
 	if (bsdar->options & AR_A && bsdar->options & AR_B)
@@ -294,9 +291,10 @@ main(int argc, char **argv)
 		if (*argv == NULL)
 			bsdar_errc(bsdar, 0,
 			    "no position operand specified");
-		if ((bsdar->posarg = basename(*argv)) == NULL)
-			bsdar_errc(bsdar, errno,
-			    "basename failed");
+                bsdar->posarg = *argv;
+                p = strrchr(bsdar->posarg, '/');
+                if (p)
+                    bsdar->posarg = p + 1;
 		argc--;
 		argv++;
 	}
@@ -317,11 +315,6 @@ main(int argc, char **argv)
 		only_mode(bsdar, "-S", "mqr");
 	if (bsdar->options & AR_U)
 		only_mode(bsdar, "-u", "qrx");
-
-	if (bsdar->mode == 'M') {
-		ar_mode_script(bsdar);
-		exit(EXIT_SUCCESS);
-	}
 
 	if ((bsdar->filename = *argv) == NULL)
 		bsdar_usage();
@@ -388,7 +381,6 @@ Usage: %s <command> [options] archive file...\n\
   -s            Add an archive symbol to an archive.\n\
   -t            List files in an archive.\n\
   -x            Extract members from an archive.\n\
-  -M            Execute MRI librarian commands.\n\
   -V            Print a version identifier and exit.\n\n\
   Options:\n\
   -a MEMBER     Add members after the specified member.\n\
@@ -412,7 +404,7 @@ Usage: %s <command> [options] archive file...\n\
 static void
 bsdar_usage(void)
 {
-	(void) fprintf(stderr, AR_USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, AR_USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
@@ -428,14 +420,14 @@ Usage: %s [options] archive...\n\
 static void
 ranlib_usage(void)
 {
-	(void)fprintf(stderr, RANLIB_USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void)fprintf(stderr, RANLIB_USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
 static void
 bsdar_version(void)
 {
-	(void)printf("%s (%s, %s)\n", ELFTC_GETPROGNAME(), archive_version_string(),
+	(void)printf("%s (%s, %s)\n", __progname, archive_version_string(),
 	    elftc_version());
 	exit(EXIT_SUCCESS);
 }

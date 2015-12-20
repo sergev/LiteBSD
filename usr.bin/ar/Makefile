@@ -3,24 +3,18 @@ SRCS=	ar.c read.c util.c write.c
 LSRC=	acplex.l
 YSRC=	acpyacc.y
 
-WARNS?=	5
+LDADD=	-larchive -lelftc -lelf
+DPADD=	ranlib
 
-DPADD=	${LIBARCHIVE} ${LIBELFTC} ${LIBELF} ${LIBZ}
-LDADD=	-larchive -lelftc -lelf -lz
-
-CFLAGS+=-I. -I${.CURDIR}
+CFLAGS+=-I.
 
 LINKS=	${BINDIR}/ar ${BINDIR}/ranlib
 
-EXTRA_TARGETS=	ranlib
+CLEANFILES+= ranlib
 
-CLEANFILES+= 	${EXTRA_TARGETS}
+MAN1=	ar.0 ranlib.0
 
-MAN=	ar.1 ranlib.1 ar.5
-
-all:	${EXTRA_TARGETS}
-
-${EXTRA_TARGETS}:	${PROG}
-	ln -s ${PROG} ${.TARGET}
+ranlib:
+	ln -s ${PROG} $@
 
 .include <bsd.prog.mk>

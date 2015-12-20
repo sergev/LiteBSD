@@ -37,8 +37,6 @@
 
 #include "ar.h"
 
-ELFTC_VCSID("$Id$");
-
 static void	bsdar_vwarnc(struct bsdar *, int code,
 		    const char *fmt, va_list ap);
 static void	bsdar_verrc(struct bsdar *bsdar, int code,

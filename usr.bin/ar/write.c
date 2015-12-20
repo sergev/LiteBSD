@@ -33,19 +33,17 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <gelf.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "ar.h"
 
-ELFTC_VCSID("$Id$");
-
 #define _ARMAG_LEN 8		/* length of the magic string */
 #define _ARHDR_LEN 60		/* length of the archive header */
 #define _INIT_AS_CAP 128	/* initial archive string table size */
-#define _INIT_SYMOFF_CAP (256*(sizeof(uint32_t))) /* initial so table size */
+#define _INIT_SYMOFF_CAP (256*(sizeof(u_int32_t))) /* initial so table size */
 #define _INIT_SYMNAME_CAP 1024			  /* initial sn table size */
 #define _MAXNAMELEN_SVR4 15	/* max member name length in svr4 variant */
 #define _MAXNAMELEN_BSD  16	/* max member name length in bsd variant */
@@ -97,8 +95,8 @@ create_obj_from_file(struct bsdar *bsdar, const char *name, time_t mtime)
 	}
 
 	tmpname = strdup(name);
-	if ((bname = basename(tmpname)) == NULL)
-		bsdar_errc(bsdar, errno, "basename failed");
+        bname = strrchr(tmpname, '/');
+        bname = bname ? bname+1 : tmpname;
 	if (bsdar->options & AR_TR && strlen(bname) > _TRUNCATE_LEN) {
 		if ((obj->name = malloc(_TRUNCATE_LEN + 1)) == NULL)
 			bsdar_errc(bsdar, errno, "malloc failed");
@@ -291,9 +289,8 @@ read_objs(struct bsdar *bsdar, const char *archive, int checkargv)
 				av = &bsdar->argv[i];
 				if (*av == NULL)
 					continue;
-				if ((bname = basename(*av)) == NULL)
-					bsdar_errc(bsdar, errno,
-					    "basename failed");
+                                bname = strrchr(*av, '/');
+                                bname = bname ? bname+1 : *av;
 				if (strcmp(bname, name) != 0)
 					continue;
 
@@ -347,7 +344,7 @@ read_objs(struct bsdar *bsdar, const char *archive, int checkargv)
 		TAILQ_INSERT_TAIL(&bsdar->v_obj, obj, objs);
 	}
 	AC(archive_read_close(a));
-	ACV(archive_read_free(a));
+	//ACV(archive_read_free(a));
 }
 
 /*
@@ -458,8 +455,8 @@ ar_write_archive(struct bsdar *bsdar, int mode)
 		av = &bsdar->argv[i];
 
 		TAILQ_FOREACH_SAFE(obj, &bsdar->v_obj, objs, obj_temp) {
-			if ((bname = basename(*av)) == NULL)
-				bsdar_errc(bsdar, errno, "basename failed");
+                        bname = strrchr(*av, '/');
+                        bname = bname ? bname+1 : *av;
 			if (bsdar->options & AR_TR) {
 				if (strncmp(bname, obj->name, _TRUNCATE_LEN))
 					continue;
@@ -580,7 +577,7 @@ bsdar_symtab_size(struct bsdar *bsdar)
 		 * that many 32-bit offsets, followed by a string
 		 * table.
 		 */
-		sz = sizeof(uint32_t) + bsdar->s_cnt * sizeof(uint32_t) +
+		sz = sizeof(u_int32_t) + bsdar->s_cnt * sizeof(u_int32_t) +
 		    bsdar->s_sn_sz;
 	}
 
@@ -591,15 +588,15 @@ static void
 write_svr4_symtab_entry(struct bsdar *bsdar, struct archive *a)
 {
 	int		nr;
-	uint32_t	i;
+	u_int32_t	i;
 
 	/* Translate offsets to big-endian form. */
 	for (i = 0; i < bsdar->s_cnt; i++)
-		bsdar->s_so[i] = htobe32(bsdar->s_so[i]);
+		bsdar->s_so[i] = htonl(bsdar->s_so[i]);
 
-	nr = htobe32(bsdar->s_cnt);
-	write_data(bsdar, a, &nr, sizeof(uint32_t));
-	write_data(bsdar, a, bsdar->s_so, sizeof(uint32_t) *
+	nr = htonl(bsdar->s_cnt);
+	write_data(bsdar, a, &nr, sizeof(u_int32_t));
+	write_data(bsdar, a, bsdar->s_so, sizeof(u_int32_t) *
 	    bsdar->s_cnt);
 	write_data(bsdar, a, bsdar->s_sn, bsdar->s_sn_sz);
 }
@@ -609,7 +606,7 @@ write_bsd_symtab_entry(struct bsdar *bsdar, struct archive *a)
 {
 	long br_sz, br_off, br_strx;
 	char *s;
-	uint32_t i;
+	u_int32_t i;
 
 	/*
 	 * Write out the size in the byte of the array of 'ranlib'
@@ -792,7 +789,7 @@ write_objs(struct bsdar *bsdar)
 	}
 
 	AC(archive_write_close(a));
-	ACV(archive_write_free(a));
+	//ACV(archive_write_free(a));
 }
 
 /*
@@ -949,7 +946,7 @@ add_to_ar_sym_table(struct bsdar *bsdar, const char *name)
 		bsdar->s_sn_sz = 0;
 	}
 
-	if (bsdar->s_cnt * sizeof(uint32_t) >= bsdar->s_so_cap) {
+	if (bsdar->s_cnt * sizeof(u_int32_t) >= bsdar->s_so_cap) {
 		bsdar->s_so_cap *= 2;
 		bsdar->s_so = realloc(bsdar->s_so, bsdar->s_so_cap);
 		if (bsdar->s_so == NULL)

@@ -44,9 +44,6 @@
 
 #include "ar.h"
 
-ELFTC_VCSID("$Id");
-
-
 #define TEMPLATE "arscp.XXXXXXXX"
 
 struct list {
@@ -314,7 +311,7 @@ arscp_create(char *in, char *out)
 		archive_write_set_format_ar_svr4(a);
 		AC(archive_write_open_fd(a, ofd));
 		AC(archive_write_close(a));
-		ACV(archive_write_free(a));
+		//ACV(archive_write_free(a));
 	}
 
 	/* Override the previous target, if any. */
