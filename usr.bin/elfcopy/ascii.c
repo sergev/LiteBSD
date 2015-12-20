@@ -36,8 +36,6 @@
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
-
 static void append_data(struct section *s, const void *buf, size_t sz);
 static char hex_digit(u_int8_t n);
 static int hex_value(int x);

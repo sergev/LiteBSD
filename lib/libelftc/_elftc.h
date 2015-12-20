@@ -329,7 +329,6 @@ extern const char *__progname;
 
 #include <libkern/OSByteOrder.h>
 #define	htobe32(x)	OSSwapHostToBigInt32(x)
-#define	roundup2	roundup
 
 #define	ELFTC_BYTE_ORDER			_BYTE_ORDER
 #define	ELFTC_BYTE_ORDER_LITTLE_ENDIAN		_LITTLE_ENDIAN
@@ -372,8 +371,6 @@ extern const char *__progname;
 
 /* Whether we need to supply {be,le}32dec. */
 #define ELFTC_NEED_BYTEORDER_EXTENSIONS		1
-
-#define	roundup2	roundup
 
 #endif	/* __GLIBC__ || __linux__ */
 
@@ -432,7 +429,6 @@ extern const char *__progname;
 #define	ELFTC_HAVE_STRMODE			1
 
 #define	ELFTC_NEED_BYTEORDER_EXTENSIONS		1
-#define	roundup2	roundup
 
 #endif	/* __OpenBSD__ */
 

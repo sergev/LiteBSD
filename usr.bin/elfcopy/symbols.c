@@ -33,8 +33,6 @@
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
-
 /* Symbol table buffer structure. */
 struct symbuf {
 	Elf32_Sym *l32;		/* 32bit local symbol */

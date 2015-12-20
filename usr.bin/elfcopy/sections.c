@@ -27,14 +27,11 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <err.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "elfcopy.h"
-
-ELFTC_VCSID("$Id$");
 
 static void	add_gnu_debuglink(struct elfcopy *ecp);
 static u_int32_t calc_crc32(const char *p, size_t len, u_int32_t crc);
@@ -1482,8 +1479,8 @@ add_gnu_debuglink(struct elfcopy *ecp)
 	free(buf);
 
 	/* Calculate section size and the offset to store crc checksum. */
-	if ((fnbase = basename(ecp->debuglink)) == NULL)
-		err(EXIT_FAILURE, "basename failed");
+	fnbase = strrchr(ecp->debuglink, '/');
+	fnbase = fnbase ? fnbase+1 : ecp->debuglink;
 	crc_off = roundup(strlen(fnbase) + 1, 4);
 	sa->size = crc_off + 4;
 

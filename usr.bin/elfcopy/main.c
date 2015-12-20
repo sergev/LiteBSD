@@ -39,7 +39,11 @@
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
+/*
+ * For LiteBSD, use only 32-bit arithmetics.
+ */
+#define strtointw   strtol
+#define strtouintw  strtoul
 
 enum options
 {
@@ -856,7 +860,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			add_section(ecp, optarg);
 			break;
 		case ECP_CHANGE_ADDR:
-			ecp->change_addr = (int64_t) strtoll(optarg, NULL, 0);
+			ecp->change_addr = strtointw(optarg, NULL, 0);
 			break;
 		case ECP_CHANGE_SEC_ADDR:
 			parse_sec_address_op(ecp, opt, "--change-section-addr",
@@ -871,7 +875,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			    optarg);
 			break;
 		case ECP_CHANGE_START:
-			ecp->change_start = (int64_t) strtoll(optarg, NULL, 0);
+			ecp->change_start = strtointw(optarg, NULL, 0);
 			break;
 		case ECP_CHANGE_WARN:
 			/* default */
@@ -908,7 +912,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			ecp->strip = STRIP_NONDWO;
 			break;
 		case ECP_PAD_TO:
-			ecp->pad_to = (u_int64_t) strtoull(optarg, NULL, 0);
+			ecp->pad_to = strtouintw(optarg, NULL, 0);
 			break;
 		case ECP_PREFIX_ALLOC:
 			ecp->prefix_alloc = optarg;
@@ -958,7 +962,7 @@ elfcopy_main(struct elfcopy *ecp, int argc, char **argv)
 			break;
 		case ECP_SET_START:
 			ecp->flags |= SET_START;
-			ecp->set_start = (u_int64_t) strtoull(optarg, NULL, 0);
+			ecp->set_start = strtouintw(optarg, NULL, 0);
 			break;
 		case ECP_SREC_FORCE_S3:
 			ecp->flags |= SREC_FORCE_S3;
@@ -1205,29 +1209,29 @@ parse_sec_address_op(struct elfcopy *ecp, int optnum, const char *optname,
 		if (optnum == ECP_CHANGE_SEC_LMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR) {
 			sac->setlma = 1;
-			sac->lma = (u_int64_t) strtoull(v, NULL, 0);
+			sac->lma = strtouintw(v, NULL, 0);
 		}
 		if (optnum == ECP_CHANGE_SEC_VMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR) {
 			sac->setvma = 1;
-			sac->vma = (u_int64_t) strtoull(v, NULL, 0);
+			sac->vma = strtouintw(v, NULL, 0);
 		}
 		break;
 	case '+':
 		if (optnum == ECP_CHANGE_SEC_LMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR)
-			sac->lma_adjust = (int64_t) strtoll(v, NULL, 0);
+			sac->lma_adjust = strtointw(v, NULL, 0);
 		if (optnum == ECP_CHANGE_SEC_VMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR)
-			sac->vma_adjust = (int64_t) strtoll(v, NULL, 0);
+			sac->vma_adjust = strtointw(v, NULL, 0);
 		break;
 	case '-':
 		if (optnum == ECP_CHANGE_SEC_LMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR)
-			sac->lma_adjust = (int64_t) -strtoll(v, NULL, 0);
+			sac->lma_adjust = -strtointw(v, NULL, 0);
 		if (optnum == ECP_CHANGE_SEC_VMA ||
 		    optnum == ECP_CHANGE_SEC_ADDR)
-			sac->vma_adjust = (int64_t) -strtoll(v, NULL, 0);
+			sac->vma_adjust = -strtointw(v, NULL, 0);
 		break;
 	default:
 		break;
@@ -1437,10 +1441,12 @@ Usage: %s [options] infile [outfile]\n\
   --srec-len=LEN               Set the maximum length of a S-Record line.\n\
   --strip-unneeded             Do not copy relocation information.\n"
 
+extern char *__progname;
+
 static void
 elfcopy_usage(void)
 {
-	(void) fprintf(stderr, ELFCOPY_USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, ELFCOPY_USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
@@ -1459,7 +1465,7 @@ Usage: %s [options] file...\n\
 static void
 mcs_usage(void)
 {
-	(void) fprintf(stderr, MCS_USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, MCS_USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
@@ -1487,14 +1493,14 @@ Usage: %s [options] file...\n\
 static void
 strip_usage(void)
 {
-	(void) fprintf(stderr, STRIP_USAGE_MESSAGE, ELFTC_GETPROGNAME());
+	(void) fprintf(stderr, STRIP_USAGE_MESSAGE, __progname);
 	exit(EXIT_FAILURE);
 }
 
 static void
 print_version(void)
 {
-	(void) printf("%s (%s)\n", ELFTC_GETPROGNAME(), elftc_version());
+	(void) printf("%s (%s)\n", __progname, elftc_version());
 	exit(EXIT_SUCCESS);
 }
 
@@ -1528,7 +1534,7 @@ main(int argc, char **argv)
 	STAILQ_INIT(&ecp->v_arobj);
 	TAILQ_INIT(&ecp->v_sec);
 
-	if ((ecp->progname = ELFTC_GETPROGNAME()) == NULL)
+	if ((ecp->progname = __progname) == NULL)
 		ecp->progname = "elfcopy";
 
 	if (strcmp(ecp->progname, "strip") == 0)

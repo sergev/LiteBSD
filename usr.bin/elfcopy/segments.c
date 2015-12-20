@@ -34,8 +34,6 @@
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
-
 static void	insert_to_inseg_list(struct segment *seg, struct section *sec);
 
 /*

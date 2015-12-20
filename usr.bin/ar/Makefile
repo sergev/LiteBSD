@@ -15,6 +15,6 @@ CLEANFILES+= ranlib
 MAN1=	ar.0 ranlib.0
 
 ranlib:
-	ln -s ${PROG} $@
+	ln -s -f ${PROG} $@
 
 .include <bsd.prog.mk>

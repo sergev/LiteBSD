@@ -4,14 +4,9 @@ SRCS=	archive.c ascii.c binary.c main.c sections.c segments.c symbols.c
 
 WARNS?=	5
 
-DPADD=	${LIBELF} ${LIBELFTC}
-LDADD=	-lelf -lelftc
+LDADD=	-lelf -lelftc -larchive
 
-.if !defined(LIBELF_AR)
-LDADD+= -larchive
-.endif
-
-MAN=	elfcopy.1 mcs.1 strip.1
+MAN1=	elfcopy.0 mcs.0 strip.0
 
 NO_SHARED?=	yes
 
@@ -19,14 +14,12 @@ LINKS=	${BINDIR}/elfcopy ${BINDIR}/strip 	\
 	${BINDIR}/elfcopy ${BINDIR}/mcs
 
 EXTRA_TARGETS=	strip mcs
+DPADD=	${EXTRA_TARGETS}
 
 CLEANFILES+=	${EXTRA_TARGETS}
 
 # Create in-place symbolic links to "elfcopy" at build time.
-
-all:	${EXTRA_TARGETS}
-
-${EXTRA_TARGETS}:	${PROG}
-	ln -s ${PROG} ${.TARGET}
+${EXTRA_TARGETS}:
+	ln -s -f ${PROG} $@
 
 .include <bsd.prog.mk>

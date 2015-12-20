@@ -35,8 +35,6 @@
 
 #include "elfcopy.h"
 
-ELFTC_VCSID("$Id$");
-
 /*
  * Convert ELF object to `binary'. Sections with SHF_ALLOC flag set
  * are copied to the result binary. The relative offsets for each section

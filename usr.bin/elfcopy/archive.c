@@ -31,10 +31,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifndef LIBELF_AR
-//#include <archive.h>
-//#include <archive_entry.h>
-#endif	/* ! LIBELF_AR */
+#include <archive.h>
+#include <archive_entry.h>
 
 #include "elfcopy.h"
 
@@ -218,7 +216,7 @@ sync_ar(struct elfcopy *ecp)
 		if (ecp->as != NULL)
 			pm_sz += _ARHDR_LEN + ecp->as_sz;
 		for (i = 0; (size_t)i < ecp->s_cnt; i++)
-			*(ecp->s_so + i) = htobe32(*(ecp->s_so + i) +
+			*(ecp->s_so + i) = htonl(*(ecp->s_so + i) +
 			    pm_sz);
 	}
 }
@@ -350,7 +348,7 @@ ac_detect_ar(int ifd)
 	if (archive_read_open_fd(a, ifd, 10240) == ARCHIVE_OK)
 		r = archive_read_next_header(a, &entry);
 	archive_read_close(a);
-	archive_read_free(a);
+	//archive_read_free(a);
 
 	return (r == ARCHIVE_OK);
 }
@@ -429,7 +427,7 @@ ac_read_objs(struct elfcopy *ecp, int ifd)
 		}
 	}
 	AC(archive_read_close(a));
-	ACV(archive_read_free(a));
+	//ACV(archive_read_free(a));
 }
 
 static void
@@ -452,7 +450,7 @@ ac_write_objs(struct elfcopy *ecp, int ofd)
 	archive_entry_set_size(entry, (ecp->s_cnt + 1) * sizeof(u_int32_t) +
 	    ecp->s_sn_sz);
 	AC(archive_write_header(a, entry));
-	nr = htobe32(ecp->s_cnt);
+	nr = htonl(ecp->s_cnt);
 	ac_write_data(a, &nr, sizeof(u_int32_t));
 	ac_write_data(a, ecp->s_so, sizeof(u_int32_t) * ecp->s_cnt);
 	ac_write_data(a, ecp->s_sn, ecp->s_sn_sz);
@@ -484,7 +482,7 @@ ac_write_objs(struct elfcopy *ecp, int ofd)
 	}
 
 	AC(archive_write_close(a));
-	ACV(archive_write_free(a));
+	//ACV(archive_write_free(a));
 }
 
 static void
