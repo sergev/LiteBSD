@@ -217,7 +217,8 @@ _calc_num(void)
 	if (base || mul > 1)
 		yytext[yyleng - 1] = '\0';
 
-	yylval.num = strtoimax(yytext, NULL, base);
+        /* It was strtoimax */
+	yylval.num = strtol(yytext, NULL, base);
 	yylval.num *= mul;
 }
 

@@ -76,12 +76,17 @@ int
 main(int argc, char **argv)
 {
 	struct ld_state *ls;
+	char *p;
 
 	_init();
 
 	ls = &ld->ld_state;
 
-	ld->ld_progname = basename(argv[0]);
+	/* Get a base name of the executable. */
+	ld->ld_progname = argv[0];
+	p = strrchr(ld->ld_progname, '/');
+	if (p)
+                ld->ld_progname = p + 1;
 
 	ld_arch_init(ld);
 

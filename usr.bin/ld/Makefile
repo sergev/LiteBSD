@@ -15,25 +15,24 @@ SRCS=	ld_arch.c		\
 	ld_path.c		\
 	ld_reloc.c		\
 	ld_script.c		\
-	ld_script_lexer.l	\
-	ld_script_parser.y	\
+	ld_script_lexer.c	\
+	ld_script_parser.c	\
 	ld_strtab.c		\
 	ld_symbols.c		\
 	ld_symver.c		\
 	mips.c			\
 	littlemips_script.c	\
-	bigmips_script.c	\
-	y.tab.h
+	bigmips_script.c
 
 .SUFFIXES:	.ld .c
 .ld.c:
 	awk -f ld_script.awk ${.ALLSRC} > ${.TARGET}
 
-ld_script_lexer.l: ld_script_parser.o
+ld_script_lexer.l: ld_script_parser.c
 
 GENSRCS=	littlemips_script.c bigmips_script.c
 
-CLEANFILES+=	${GENSRCS}
+CLEANFILES+=	${GENSRCS} y.tab.h
 
 DPADD=	${LIBELFTC} ${LIBELF} ${LIBDWARF}
 LDADD=	-lelftc -ldwarf -lelf

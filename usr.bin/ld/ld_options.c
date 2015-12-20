@@ -465,8 +465,9 @@ _process_options(struct ld *ld, int key, char *arg)
 static void
 _print_version(struct ld *ld)
 {
+        extern char *__progname;
 
-	(void) printf("%s (%s)\n", ELFTC_GETPROGNAME(), elftc_version());
+	(void) printf("%s (%s)\n", __progname, elftc_version());
 	ld->ld_print_version = 1;
 }
 

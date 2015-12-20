@@ -196,11 +196,13 @@ ld_exp_assign(struct ld *ld, struct ld_script_assign *assign)
 int64_t
 ld_exp_eval(struct ld* ld, struct ld_exp *le)
 {
+        int64_t val;
 
 	assert(le != NULL);
 	switch (le->le_op) {
 	case LEOP_ABS:
-		return (llabs(_EXP_EVAL(le->le_e1)));
+	        val = _EXP_EVAL(le->le_e1);
+		return val<0 ? -val : val;
 	case LEOP_ADD:
 		return (_EXP_EVAL(le->le_e1) + _EXP_EVAL(le->le_e2));
 	case LEOP_ADDR:

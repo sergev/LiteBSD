@@ -245,6 +245,17 @@ done:
 	}
 }
 
+static const char *
+basename(const char *path)
+{
+	const char *p = strrchr(path, '/');
+
+	if (p != NULL)
+                return p + 1;
+
+        return path;
+}
+
 void
 ld_path_search_dso_needed(struct ld *ld, struct ld_file *lf, const char *name)
 {
