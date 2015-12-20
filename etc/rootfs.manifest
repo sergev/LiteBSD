@@ -832,6 +832,7 @@ file /usr/bin/fstat
 mode 02555
 group 2                 kmem
 file /usr/bin/ftp
+file /usr/bin/fullsize
 file /usr/bin/gcore
 file /usr/bin/gprof
 file /usr/bin/groups
@@ -1651,6 +1652,7 @@ file /usr/share/man/cat1/from.0
 file /usr/share/man/cat1/fsplit.0
 file /usr/share/man/cat1/fstat.0
 file /usr/share/man/cat1/ftp.0
+file /usr/share/man/cat1/fullsize.0
 file /usr/share/man/cat1/gcore.0
 file /usr/share/man/cat1/gprof.0
 file /usr/share/man/cat1/grep.0
