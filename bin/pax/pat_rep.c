@@ -1,3 +1,6 @@
+/*	$OpenBSD: pat_rep.c,v 1.25 2003/06/02 23:32:08 millert Exp $	*/
+/*	$NetBSD: pat_rep.c,v 1.4 1995/03/21 09:07:33 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1992 Keith Muller.
  * Copyright (c) 1992, 1993
@@ -14,11 +17,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -36,7 +35,11 @@
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)pat_rep.c	8.2 (Berkeley) 4/18/94";
+#if 0
+static const char sccsid[] = "@(#)pat_rep.c	8.2 (Berkeley) 4/18/94";
+#else
+static const char rcsid[] = "$OpenBSD: pat_rep.c,v 1.25 2003/06/02 23:32:08 millert Exp $";
+#endif
 #endif /* not lint */
 
 #include <sys/types.h>
@@ -44,15 +47,11 @@ static char sccsid[] = "@(#)pat_rep.c	8.2 (Berkeley) 4/18/94";
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#ifdef NET2_REGEX
-#include <regexp.h>
-#else
+#include <errno.h>
 #include <regex.h>
-#endif
 #include "pax.h"
 #include "pat_rep.h"
 #include "extern.h"
@@ -70,23 +69,19 @@ static PATTERN *pattail = NULL;		/* file pattern match list tail */
 static REPLACE *rephead = NULL;		/* replacement string list head */
 static REPLACE *reptail = NULL;		/* replacement string list tail */
 
-static int rep_name __P((char *, int *, int));
-static int tty_rename __P((register ARCHD *));
-static int fix_path __P((char *, int *, char *, int));
-static int fn_match __P((register char *, register char *, char **));
-static char * range_match __P((register char *, register int));
-#ifdef NET2_REGEX
-static int resub __P((regexp *, char *, char *, register char *));
-#else
-static int resub __P((regex_t *, regmatch_t *, char *, char *, char *));
-#endif
+static int rep_name(char *, size_t, int *, int);
+static int tty_rename(ARCHD *);
+static int fix_path(char *, int *, char *, int);
+static int fn_match(char *, char *, char **);
+static char * range_match(char *, int);
+static int resub(regex_t *, regmatch_t *, char *, char *, char *, char *);
 
 /*
  * rep_add()
  *	parses the -s replacement string; compiles the regular expression
  *	and stores the compiled value and it's replacement string together in
  *	replacement string list. Input to this function is of the form:
- *		/old/new/pg 
+ *		/old/new/pg
  *	The first char in the string specifies the delimiter used by this
  *	replacement string. "Old" is a regular expression in "ed" format which
  *	is compiled by regcomp() and is applied to filenames. "new" is the
@@ -97,28 +92,20 @@ static int resub __P((regex_t *, regmatch_t *, char *, char *, char *));
  *	the list of replacement patterns; -1 otherwise.
  */
 
-#if __STDC__
 int
-rep_add(register char *str)
-#else
-int
-rep_add(str)
-	register char *str;
-#endif
+rep_add(char *str)
 {
-	register char *pt1;
-	register char *pt2;
-	register REPLACE *rep;
-#	ifndef NET2_REGEX
-	register int res;
+	char *pt1;
+	char *pt2;
+	REPLACE *rep;
+	int res;
 	char rebuf[BUFSIZ];
-#	endif
 
 	/*
 	 * throw out the bad parameters
 	 */
 	if ((str == NULL) || (*str == '\0')) {
-		warn(1, "Empty replacement string");
+		paxwarn(1, "Empty replacement string");
 		return(-1);
 	}
 
@@ -126,8 +113,16 @@ rep_add(str)
 	 * first character in the string specifies what the delimiter is for
 	 * this expression
 	 */
-	if ((pt1 = strchr(str+1, *str)) == NULL) {
-		warn(1, "Invalid replacement string %s", str);
+	for (pt1 = str+1; *pt1; pt1++) {
+		if (*pt1 == '\\') {
+			pt1++;
+			continue;
+		}
+		if (*pt1 == *str)
+			break;
+	}
+	if (pt1 == NULL) {
+		paxwarn(1, "Invalid replacement string %s", str);
 		return(-1);
 	}
 
@@ -136,18 +131,14 @@ rep_add(str)
 	 * and split out the regular expression and try to compile it
 	 */
 	if ((rep = (REPLACE *)malloc(sizeof(REPLACE))) == NULL) {
-		warn(1, "Unable to allocate memory for replacement string");
+		paxwarn(1, "Unable to allocate memory for replacement string");
 		return(-1);
 	}
 
 	*pt1 = '\0';
-#	ifdef NET2_REGEX
-	if ((rep->rcmp = regcomp(str+1)) == NULL) {
-#	else
 	if ((res = regcomp(&(rep->rcmp), str+1, 0)) != 0) {
 		regerror(res, &(rep->rcmp), rebuf, sizeof(rebuf));
-		warn(1, "%s while compiling regular expression %s", rebuf, str);
-#	endif
+		paxwarn(1, "%s while compiling regular expression %s", rebuf, str);
 		(void)free((char *)rep);
 		return(-1);
 	}
@@ -158,14 +149,18 @@ rep_add(str)
 	 * we then point the node at the new substitution string
 	 */
 	*pt1++ = *str;
-	if ((pt2 = strchr(pt1, *str)) == NULL) {
-#		ifdef NET2_REGEX
-		(void)free((char *)rep->rcmp);
-#		else
+	for (pt2 = pt1; *pt2; pt2++) {
+		if (*pt2 == '\\') {
+			pt2++;
+			continue;
+		}
+		if (*pt2 == *str)
+			break;
+	}
+	if (pt2 == NULL) {
 		regfree(&(rep->rcmp));
-#		endif
 		(void)free((char *)rep);
-		warn(1, "Invalid replacement string %s", str);
+		paxwarn(1, "Invalid replacement string %s", str);
 		return(-1);
 	}
 
@@ -188,14 +183,10 @@ rep_add(str)
 			rep->flgs  |= PRNT;
 			break;
 		default:
-#			ifdef NET2_REGEX
-			(void)free((char *)rep->rcmp);
-#			else
 			regfree(&(rep->rcmp));
-#			endif
 			(void)free((char *)rep);
 			*pt1 = *str;
-			warn(1, "Invalid replacement string option %s", str);
+			paxwarn(1, "Invalid replacement string option %s", str);
 			return(-1);
 		}
 		++pt2;
@@ -225,22 +216,16 @@ rep_add(str)
  *	0 if the pattern was added to the list, -1 otherwise
  */
 
-#if __STDC__
 int
-pat_add(char *str)
-#else
-int
-pat_add(str)
-	char *str;
-#endif
+pat_add(char *str, char *chdname)
 {
-	register PATTERN *pt;
+	PATTERN *pt;
 
 	/*
 	 * throw out the junk
 	 */
 	if ((str == NULL) || (*str == '\0')) {
-		warn(1, "Empty pattern string");
+		paxwarn(1, "Empty pattern string");
 		return(-1);
 	}
 
@@ -250,7 +235,7 @@ pat_add(str)
 	 * node to the end of the pattern list
 	 */
 	if ((pt = (PATTERN *)malloc(sizeof(PATTERN))) == NULL) {
-		warn(1, "Unable to allocate memory for pattern string");
+		paxwarn(1, "Unable to allocate memory for pattern string");
 		return(-1);
 	}
 
@@ -259,6 +244,8 @@ pat_add(str)
 	pt->plen = strlen(str);
 	pt->fow = NULL;
 	pt->flgs = 0;
+	pt->chdname = chdname;
+
 	if (pathead == NULL) {
 		pattail = pathead = pt;
 		return(0);
@@ -274,16 +261,11 @@ pat_add(str)
  *	a selected archive member.
  */
 
-#if __STDC__
 void
 pat_chk(void)
-#else
-void
-pat_chk()
-#endif
 {
-	register PATTERN *pt;
-	register int wban = 0;
+	PATTERN *pt;
+	int wban = 0;
 
 	/*
 	 * walk down the list checking the flags to make sure MTCH was set,
@@ -293,7 +275,7 @@ pat_chk()
 		if (pt->flgs & MTCH)
 			continue;
 		if (!wban) {
-			warn(1, "WARNING! These patterns were not matched:");
+			paxwarn(1, "WARNING! These patterns were not matched:");
 			++wban;
 		}
 		(void)fprintf(stderr, "%s\n", pt->pstr);
@@ -308,26 +290,20 @@ pat_chk()
  *
  *	NOTE: When the -c option is used, we are called when there was no match
  *	by pat_match() (that means we did match before the inverted sense of
- *	the logic). Now this seems really strange at first, but with -c  we
- *	need to keep track of those patterns that cause a archive member to NOT
+ *	the logic). Now this seems really strange at first, but with -c we
+ *	need to keep track of those patterns that cause an archive member to NOT
  *	be selected (it found an archive member with a specified pattern)
  * Return:
  *	0 if the pattern pointed at by arcn->pat was tagged as creating a
  *	match, -1 otherwise.
  */
 
-#if __STDC__
 int
-pat_sel(register ARCHD *arcn)
-#else
-int
-pat_sel(arcn)
-	register ARCHD *arcn;
-#endif
+pat_sel(ARCHD *arcn)
 {
-	register PATTERN *pt;
-	register PATTERN **ppt;
-	register int len;
+	PATTERN *pt;
+	PATTERN **ppt;
+	int len;
 
 	/*
 	 * if no patterns just return
@@ -346,7 +322,7 @@ pat_sel(arcn)
 
 	/*
 	 * we reach this point only when we allow a single selected match per
-	 * pattern, if the pattern matches a directory and we do not have -d 
+	 * pattern, if the pattern matches a directory and we do not have -d
 	 * (dflag) we are done with this pattern. We may also be handed a file
 	 * in the subtree of a directory. in that case when we are operating
 	 * with -d, this pattern was already selected and we are done
@@ -370,9 +346,9 @@ pat_sel(arcn)
 		 */
 		if (pt->pend != NULL)
 			*pt->pend = '\0';
-			
+
 		if ((pt->pstr = strdup(arcn->name)) == NULL) {
-			warn(1, "Pattern select out of memory");
+			paxwarn(1, "Pattern select out of memory");
 			if (pt->pend != NULL)
 				*pt->pend = '/';
 			pt->pend = NULL;
@@ -395,7 +371,7 @@ pat_sel(arcn)
 		if (*(pt->pstr + len) == '/') {
 			*(pt->pstr + len) = '\0';
 			pt->plen = len;
-		} 
+		}
 		pt->flgs = DIR_MTCH | MTCH;
 		arcn->pat = pt;
 		return(0);
@@ -405,7 +381,7 @@ pat_sel(arcn)
 	 * we are then done with this pattern, so we delete it from the list
 	 * because it can never be used for another match.
 	 * Seems kind of strange to do for a -c, but the pax spec is really
-	 * vague on the interaction of -c -n and -d. We assume that when -c
+	 * vague on the interaction of -c, -n and -d. We assume that when -c
 	 * and the pattern rejects a member (i.e. it matched it) it is done.
 	 * In effect we place the order of the flags as having -c last.
 	 */
@@ -420,7 +396,7 @@ pat_sel(arcn)
 		/*
 		 * should never happen....
 		 */
-		warn(1, "Pattern list inconsistant");
+		paxwarn(1, "Pattern list inconsistent");
 		return(-1);
 	}
 	*ppt = pt->fow;
@@ -436,21 +412,15 @@ pat_sel(arcn)
  *	this archive member is "selected" we process and mark the pattern as
  *	one which matched a selected archive member (see pat_sel())
  * Return:
- *	0 if this archive member should be processed, 1 if it should be 
+ *	0 if this archive member should be processed, 1 if it should be
  *	skipped and -1 if we are done with all patterns (and pax should quit
  *	looking for more members)
  */
 
-#if __STDC__
 int
-pat_match(register ARCHD *arcn)
-#else
-int
-pat_match(arcn)
-	register ARCHD *arcn;
-#endif
+pat_match(ARCHD *arcn)
 {
-	register PATTERN *pt;
+	PATTERN *pt;
 
 	arcn->pat = NULL;
 
@@ -513,24 +483,16 @@ pat_match(arcn)
 /*
  * fn_match()
  * Return:
- *	0 if this archive member should be processed, 1 if it should be 
+ *	0 if this archive member should be processed, 1 if it should be
  *	skipped and -1 if we are done with all patterns (and pax should quit
  *	looking for more members)
  *	Note: *pend may be changed to show where the prefix ends.
  */
 
-#if __STDC__
 static int
-fn_match(register char *pattern, register char *string, char **pend)
-#else
-static int
-fn_match(pattern, string, pend)
-	register char *pattern;
-	register char *string;
-	char **pend;
-#endif
+fn_match(char *pattern, char *string, char **pend)
 {
-	register char c;
+	char c;
 	char test;
 
 	*pend = NULL;
@@ -562,7 +524,7 @@ fn_match(pattern, string, pend)
 		case '*':
 			c = *pattern;
 			/*
-			 * Collapse multiple *'s. 
+			 * Collapse multiple *'s.
 			 */
 			while (c == '*')
 				c = *++pattern;
@@ -600,22 +562,15 @@ fn_match(pattern, string, pend)
 	/* NOTREACHED */
 }
 
-#ifdef __STDC__
 static char *
-range_match(register char *pattern, register int test)
-#else
-static char *
-range_match(pattern, test)
-	register char *pattern;
-	register int test;
-#endif
+range_match(char *pattern, int test)
 {
-	register char c;
-	register char c2;
+	char c;
+	char c2;
 	int negate;
 	int ok = 0;
 
-	if (negate = (*pattern == '!'))
+	if ((negate = (*pattern == '!')) != 0)
 		++pattern;
 
 	while ((c = *pattern++) != ']') {
@@ -647,19 +602,45 @@ range_match(pattern, test)
  *	if we spot any file links to the old file name in the future, we will
  *	know exactly how to fix the file link.
  * Return:
- *	0 continue to  process file, 1 skip this file, -1 pax is finished 
+ *	0 continue to  process file, 1 skip this file, -1 pax is finished
  */
 
-#if __STDC__
 int
-mod_name(register ARCHD *arcn)
-#else
-int
-mod_name(arcn)
-	register ARCHD *arcn;
-#endif
+mod_name(ARCHD *arcn)
 {
-	register int res = 0;
+	int res = 0;
+
+	/*
+	 * Strip off leading '/' if appropriate.
+	 * Currently, this option is only set for the tar format.
+	 */
+	if (rmleadslash && arcn->name[0] == '/') {
+		if (arcn->name[1] == '\0') {
+			arcn->name[0] = '.';
+		} else {
+			(void)memmove(arcn->name, &arcn->name[1],
+			    strlen(arcn->name));
+			arcn->nlen--;
+		}
+		if (rmleadslash < 2) {
+			rmleadslash = 2;
+			paxwarn(0, "Removing leading / from absolute path names in the archive");
+		}
+	}
+	if (rmleadslash && arcn->ln_name[0] == '/' &&
+	    (arcn->type == PAX_HLK || arcn->type == PAX_HRG)) {
+		if (arcn->ln_name[1] == '\0') {
+			arcn->ln_name[0] = '.';
+		} else {
+			(void)memmove(arcn->ln_name, &arcn->ln_name[1],
+			    strlen(arcn->ln_name));
+			arcn->ln_nlen--;
+		}
+		if (rmleadslash < 2) {
+			rmleadslash = 2;
+			paxwarn(0, "Removing leading / from absolute path names in the archive");
+		}
+	}
 
 	/*
 	 * IMPORTANT: We have a problem. what do we do with symlinks?
@@ -685,12 +666,12 @@ mod_name(arcn)
 		 * we have replacement strings, modify the name and the link
 		 * name if any.
 		 */
-		if ((res = rep_name(arcn->name, &(arcn->nlen), 1)) != 0)
+		if ((res = rep_name(arcn->name, sizeof(arcn->name), &(arcn->nlen), 1)) != 0)
 			return(res);
 
 		if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
 		    (arcn->type == PAX_HRG)) &&
-		    ((res = rep_name(arcn->ln_name, &(arcn->ln_nlen), 0)) != 0))
+		    ((res = rep_name(arcn->ln_name, sizeof(arcn->ln_name), &(arcn->ln_nlen), 0)) != 0))
 			return(res);
 	}
 
@@ -702,7 +683,7 @@ mod_name(arcn)
 			return(res);
 		if ((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
 		    (arcn->type == PAX_HRG))
-			sub_name(arcn->ln_name, &(arcn->ln_nlen));
+			sub_name(arcn->ln_name, &(arcn->ln_nlen), sizeof(arcn->ln_name));
 	}
 	return(res);
 }
@@ -717,14 +698,8 @@ mod_name(arcn)
  *	0 process this file, 1 skip this file, -1 we need to exit pax
  */
 
-#if __STDC__
 static int
-tty_rename(register ARCHD *arcn)
-#else
-static int
-tty_rename(arcn)
-	register ARCHD *arcn;
-#endif
+tty_rename(ARCHD *arcn)
 {
 	char tmpname[PAXPATHLEN+2];
 	int res;
@@ -774,7 +749,7 @@ tty_rename(arcn)
 	 */
 	tty_prnt("Processing continues, name changed to: %s\n", tmpname);
 	res = add_name(arcn->name, arcn->nlen, tmpname);
-	arcn->nlen = l_strncpy(arcn->name, tmpname, PAXPATHLEN+1);
+	arcn->nlen = strlcpy(arcn->name, tmpname, sizeof(arcn->name));
 	if (res < 0)
 		return(-1);
 	return(0);
@@ -788,16 +763,8 @@ tty_rename(arcn)
  *	0 if ok, -1 if failure (name too long)
  */
 
-#if __STDC__
 int
-set_dest(register ARCHD *arcn, char *dest_dir, int dir_len)
-#else
-int
-set_dest(arcn, dest_dir, dir_len)
-	register ARCHD *arcn;
-	char *dest_dir;
-	int dir_len;
-#endif
+set_dest(ARCHD *arcn, char *dest_dir, int dir_len)
 {
 	if (fix_path(arcn->name, &(arcn->nlen), dest_dir, dir_len) < 0)
 		return(-1);
@@ -823,21 +790,12 @@ set_dest(arcn, dest_dir, dir_len)
  *	0 if ok, -1 if the final name is too long
  */
 
-#if __STDC__
 static int
-fix_path( char *or_name, int *or_len, char *dir_name, int dir_len)
-#else
-static int
-fix_path(or_name, or_len, dir_name, dir_len)
-	char *or_name;
-	int *or_len;
-	char *dir_name;
-	int dir_len;
-#endif
+fix_path(char *or_name, int *or_len, char *dir_name, int dir_len)
 {
-	register char *src;
-	register char *dest;
-	register char *start;
+	char *src;
+	char *dest;
+	char *start;
 	int len;
 
 	/*
@@ -854,13 +812,13 @@ fix_path(or_name, or_len, dir_name, dir_len)
 		--dest;
 	}
 	if ((len = dest - or_name) > PAXPATHLEN) {
-		warn(1, "File name %s/%s, too long", dir_name, start);
+		paxwarn(1, "File name %s/%s, too long", dir_name, start);
 		return(-1);
 	}
 	*or_len = len;
 
 	/*
-	 * enough space, shift 
+	 * enough space, shift
 	 */
 	while (src >= start)
 		*dest-- = *src--;
@@ -887,6 +845,7 @@ fix_path(or_name, or_len, dir_name, dir_len)
  *	--Parameters--
  *	name is the file name we are going to apply the regular expressions to
  *	(and may be modified)
+ *	nsize is the size of the name buffer.
  *	nlen is the length of this name (and is modified to hold the length of
  *	the final string).
  *	prnt is a flag that says whether to print the final result.
@@ -895,27 +854,17 @@ fix_path(or_name, or_len, dir_name, dir_len)
  *	ended up empty)
  */
 
-#if __STDC__
 static int
-rep_name(char *name, int *nlen, int prnt)
-#else
-static int
-rep_name(name, nlen, prnt)
-	char *name;
-	int *nlen;
-	int prnt;
-#endif
+rep_name(char *name, size_t nsize, int *nlen, int prnt)
 {
-	register REPLACE *pt;
-	register char *inpt;
-	register char *outpt;
-	register char *endpt;
-	register char *rpt;
-	register int found = 0;
-	register int res;
-#	ifndef NET2_REGEX
+	REPLACE *pt;
+	char *inpt;
+	char *outpt;
+	char *endpt;
+	char *rpt;
+	int found = 0;
+	int res;
 	regmatch_t pm[MAXSUBEXP];
-#	endif
 	char nname[PAXPATHLEN+1];	/* final result of all replacements */
 	char buf1[PAXPATHLEN+1];	/* where we work on the name */
 
@@ -928,7 +877,7 @@ rep_name(name, nlen, prnt)
 	 * (the user already saw that substitution go by)
 	 */
 	pt = rephead;
-	(void)strcpy(buf1, name);
+	(void)strlcpy(buf1, name, sizeof(buf1));
 	inpt = buf1;
 	outpt = nname;
 	endpt = outpt + PAXPATHLEN;
@@ -942,11 +891,7 @@ rep_name(name, nlen, prnt)
 			 * check for a successful substitution, if not go to
 			 * the next pattern, or cleanup if we were global
 			 */
-#			ifdef NET2_REGEX
-			if (regexec(pt->rcmp, inpt) == 0)
-#			else
 			if (regexec(&(pt->rcmp), inpt, MAXSUBEXP, pm, 0) != 0)
-#			endif
 				break;
 
 			/*
@@ -957,11 +902,7 @@ rep_name(name, nlen, prnt)
 			 * do not create a string too long).
 			 */
 			found = 1;
-#			ifdef NET2_REGEX
-			rpt = pt->rcmp->startp[0];
-#			else
 			rpt = inpt + pm[0].rm_so;
-#			endif
 
 			while ((inpt < rpt) && (outpt < endpt))
 				*outpt++ = *inpt++;
@@ -974,14 +915,10 @@ rep_name(name, nlen, prnt)
 			 * replacement string and place it the prefix in the
 			 * final output. If we have problems, skip it.
 			 */
-#			ifdef NET2_REGEX
-			if ((res = resub(pt->rcmp,pt->nstr,outpt,endpt)) < 0) {
-#			else
-			if ((res = resub(&(pt->rcmp),pm,pt->nstr,outpt,endpt))
+			if ((res = resub(&(pt->rcmp),pm,pt->nstr,inpt,outpt,endpt))
 			    < 0) {
-#			endif
 				if (prnt)
-					warn(1, "Replacement name error %s",
+					paxwarn(1, "Replacement name error %s",
 					    name);
 				return(1);
 			}
@@ -997,11 +934,7 @@ rep_name(name, nlen, prnt)
 			 * the final result. Make sure we do not overrun the
 			 * output buffer
 			 */
-#			ifdef NET2_REGEX
-			inpt = pt->rcmp->endp[0];
-#			else
-			inpt += pm[0].rm_eo;
-#			endif
+			inpt += pm[0].rm_eo - pm[0].rm_so;
 
 			if ((outpt == endpt) || (*inpt == '\0'))
 				break;
@@ -1012,7 +945,7 @@ rep_name(name, nlen, prnt)
 			 */
 		} while (pt->flgs & GLOB);
 
-		if (found) 
+		if (found)
 			break;
 
 		/*
@@ -1032,10 +965,10 @@ rep_name(name, nlen, prnt)
 		*outpt = '\0';
 		if ((outpt == endpt) && (*inpt != '\0')) {
 			if (prnt)
-				warn(1,"Replacement name too long %s >> %s",
+				paxwarn(1,"Replacement name too long %s >> %s",
 				    name, nname);
 			return(1);
-		} 
+		}
 
 		/*
 		 * inform the user of the result if wanted
@@ -1044,7 +977,7 @@ rep_name(name, nlen, prnt)
 			if (*nname == '\0')
 				(void)fprintf(stderr,"%s >> <empty string>\n",
 				    name);
-			else 
+			else
 				(void)fprintf(stderr,"%s >> %s\n", name, nname);
 		}
 
@@ -1052,99 +985,30 @@ rep_name(name, nlen, prnt)
 		 * if empty inform the caller this file is to be skipped
 		 * otherwise copy the new name over the orig name and return
 		 */
-		if (*nname == '\0') 
+		if (*nname == '\0')
 			return(1);
-		*nlen = l_strncpy(name, nname, PAXPATHLEN + 1);
+		*nlen = strlcpy(name, nname, nsize);
 	}
 	return(0);
 }
 
-#ifdef NET2_REGEX
 /*
  * resub()
  *	apply the replacement to the matched expression. expand out the old
- * 	style ed(1) subexpression expansion.
+ *	style ed(1) subexpression expansion.
  * Return:
  *	-1 if error, or the number of characters added to the destination.
  */
 
-#if __STDC__
 static int
-resub(regexp *prog, char *src, char *dest, register char *destend)
-#else
-static int
-resub(prog, src, dest, destend)
-	regexp *prog;
-	char *src;
-	char *dest;
-	register char *destend;
-#endif
+resub(regex_t *rp, regmatch_t *pm, char *src, char *inpt, char *dest,
+	char *destend)
 {
-	register char *spt;
-	register char *dpt;
-	register char c;
-	register int no;
-	register int len;
-
-	spt = src;
-	dpt = dest;
-	while ((dpt < destend) && ((c = *spt++) != '\0')) {
-		if (c == '&')
-			no = 0;
-		else if ((c == '\\') && (*spt >= '0') && (*spt <= '9'))
-			no = *spt++ - '0';
-		else {
- 			if ((c == '\\') && ((*spt == '\\') || (*spt == '&')))
- 				c = *spt++;
- 			*dpt++ = c;
-			continue;
-		}
- 		if ((prog->startp[no] == NULL) || (prog->endp[no] == NULL) ||
-		    ((len = prog->endp[no] - prog->startp[no]) <= 0))
-			continue;
-
-		/*
-		 * copy the subexpression to the destination.
-		 * fail if we run out of space or the match string is damaged
-		 */
-		if (len > (destend - dpt))
-			len = destend - dpt;
-		if (l_strncpy(dpt, prog->startp[no], len) != len)
-			return(-1);
-		dpt += len;
-	}
-	return(dpt - dest);
-}
-
-#else
-
-/*
- * resub()
- *	apply the replacement to the matched expression. expand out the old
- * 	style ed(1) subexpression expansion.
- * Return:
- *	-1 if error, or the number of characters added to the destination.
- */
-
-#if __STDC__
-static int
-resub(regex_t *rp, register regmatch_t *pm, char *src, char *dest,
-	register char *destend)
-#else
-static int
-resub(rp, pm, src, dest, destend)
-	regex_t *rp;
-	register regmatch_t *pm;
-	char *src;
-	char *dest;
-	register char *destend;
-#endif
-{
-	register char *spt;
-	register char *dpt;
-	register char c;
-	register regmatch_t *pmpt;
-	register int len;
+	char *spt;
+	char *dpt;
+	char c;
+	regmatch_t *pmpt;
+	int len;
 	int subexcnt;
 
 	spt =  src;
@@ -1165,12 +1029,12 @@ resub(rp, pm, src, dest, destend)
 				return(-1);
 			pmpt = pm + len;
 		} else {
- 			/*
+			/*
 			 * Ordinary character, just copy it
 			 */
- 			if ((c == '\\') && ((*spt == '\\') || (*spt == '&')))
- 				c = *spt++;
- 			*dpt++ = c;
+			if ((c == '\\') && (*spt != '\0'))
+				c = *spt++;
+			*dpt++ = c;
 			continue;
 		}
 
@@ -1186,11 +1050,9 @@ resub(rp, pm, src, dest, destend)
 		 * fail if we run out of space or the match string is damaged
 		 */
 		if (len > (destend - dpt))
-			len = destend - dpt;
-		if (l_strncpy(dpt, src + pmpt->rm_so, len) != len)
-			return(-1);
+			return (-1);
+		strncpy(dpt, inpt + pmpt->rm_so, len);
 		dpt += len;
 	}
 	return(dpt - dest);
 }
-#endif

@@ -1174,6 +1174,8 @@ file /usr/include/unistd.h
 file /usr/include/utime.h
 file /usr/include/utmp.h
 file /usr/include/vis.h
+file /usr/include/zconf.h
+file /usr/include/zlib.h
 
 dir /usr/include/arpa
 file /usr/include/arpa/ftp.h
@@ -1449,6 +1451,7 @@ file /usr/lib/libtelnet.a
 file /usr/lib/libtermcap.a
 file /usr/lib/libutil.a
 file /usr/lib/liby.a
+file /usr/lib/libz.a
 
 link /usr/lib/libtermlib.a
 target /usr/lib/libtermcap.a

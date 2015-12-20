@@ -2,7 +2,7 @@
 
 SUBDIR=	libarchive libc libcurses libcompat libdwarf libedit \
         libelf libelftc libkvm libm libresolv librpc/rpc libtelnet \
-        libterm libutil liby
+        libterm libutil liby libz
 
 .if	${MACHINE} == "tahoe"
 SUBDIR+=csu/tahoe.pcc
