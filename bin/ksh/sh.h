@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <setjmp.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -54,11 +55,7 @@
 /* Table flag type - needs > 16 and < 32 bits */
 typedef INT32 Tflag;
 
-/* Don't have bool so these will have to do */
-typedef int bool;
-#define false 0
-#define true 1
-
+/* Compat stuff */
 typedef unsigned long long	rlim_t;
 
 /* These are in OpenBSD sys/time.h */
