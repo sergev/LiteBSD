@@ -1,3 +1,6 @@
+/*      $OpenBSD: ruserpass.c,v 1.3 1996/10/28 00:32:30 millert Exp $      */
+/*      $NetBSD: ruserpass.c,v 1.6 1995/09/08 01:06:43 tls Exp $      */
+
 /*
  * Copyright (c) 1985, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -87,7 +90,12 @@ ruserpass(host, aname, apass, aacct)
 	hdir = getenv("HOME");
 	if (hdir == NULL)
 		hdir = ".";
-	(void) sprintf(buf, "%s/.netrc", hdir);
+	if (strlen(hdir) + 7 < sizeof(buf)) {
+		(void) sprintf(buf, "%s/.netrc", hdir);
+	} else {
+		warnx("%s/.netrc: %s", hdir, strerror(ENAMETOOLONG));
+		return (0);
+	}
 	cfile = fopen(buf, "r");
 	if (cfile == NULL) {
 		if (errno != ENOENT)

@@ -1,3 +1,6 @@
+/*      $OpenBSD: ftp.c,v 1.9 1997/01/08 13:19:11 niklas Exp $      */
+/*      $NetBSD: ftp.c,v 1.13 1995/09/16 22:32:59 pk Exp $      */
+
 /*
  * Copyright (c) 1985, 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -32,7 +35,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)ftp.c	8.6 (Berkeley) 10/27/94";
+#else
+static char rcsid[] = "$OpenBSD: ftp.c,v 1.9 1997/01/08 13:19:11 niklas Exp $";
+#endif
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -56,11 +63,11 @@ static char sccsid[] = "@(#)ftp.c	8.6 (Berkeley) 10/27/94";
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdarg.h>
 
 #include "ftp_var.h"
 
@@ -76,7 +83,6 @@ int	ptflag = 0;
 struct	sockaddr_in myctladdr;
 off_t	restart_point = 0;
 
-int command(char *, ...);
 
 FILE	*cin, *cout;
 
@@ -90,8 +96,7 @@ hookup(host, port)
 	static char hostnamebuf[80];
 
 	memset((char *)&hisctladdr, 0, sizeof (hisctladdr));
-	hisctladdr.sin_addr.s_addr = inet_addr(host);
-	if (hisctladdr.sin_addr.s_addr != -1) {
+	if (inet_aton(host, &hisctladdr.sin_addr) != 0) {
 		hisctladdr.sin_family = AF_INET;
 		(void) strncpy(hostnamebuf, host, sizeof(hostnamebuf));
 	} else {
@@ -104,6 +109,7 @@ hookup(host, port)
 		hisctladdr.sin_family = hp->h_addrtype;
 		memmove((caddr_t)&hisctladdr.sin_addr,
 				hp->h_addr_list[0], hp->h_length);
+		memcpy(&hisctladdr.sin_addr, hp->h_addr, hp->h_length);
 		(void) strncpy(hostnamebuf, hp->h_name, sizeof(hostnamebuf));
 	}
 	hostname = hostnamebuf;
@@ -196,11 +202,21 @@ login(host)
 	char tmp[80];
 	char *user, *pass, *acct;
 	int n, aflag = 0;
+	char anonpass[64 + 1];
 
 	user = pass = acct = 0;
 	if (ruserpass(host, &user, &pass, &acct) < 0) {
 		code = -1;
 		return (0);
+	}
+	if (anonftp) {
+		user = getlogin();
+		strncpy(anonpass, user, sizeof anonpass - 1);
+		anonpass[sizeof anonpass - 1] = '\0';
+		strncat(anonpass, "@anon.litebsd.org",		/* XXX ugly */
+		    sizeof anonpass - strlen(anonpass) - 1);
+		pass = anonpass;
+		user = "anonymous";
 	}
 	while (user == NULL) {
 		char *myname = getlogin();
@@ -226,7 +242,6 @@ login(host)
 	if (n == CONTINUE) {
 		if (pass == NULL)
 			pass = getpass("Password:");
-printf("I got the password %s\n", pass);
 		n = command("PASS %s", pass);
 	}
 	if (n == CONTINUE) {
@@ -264,21 +279,21 @@ cmdabort()
 		longjmp(ptabort,1);
 }
 
-int command(char *fmt, ...)
+/*VARARGS*/
+int
+command(const char *fmt, ...)
 {
 	va_list ap;
 	int r;
 	sig_t oldintr;
 
-    va_start(ap, fmt);
-
 	abrtflag = 0;
 	if (debug) {
 		printf("---> ");
 		va_start(ap, fmt);
-//		if (strncmp("PASS ", fmt, 5) == 0)
-//			printf("PASS XXXX");
-//		else 
+		if (strncmp("PASS ", fmt, 5) == 0)
+			printf("PASS XXXX");
+		else
 			vfprintf(stdout, fmt, ap);
 		va_end(ap);
 		printf("\n");
@@ -292,8 +307,6 @@ int command(char *fmt, ...)
 	oldintr = signal(SIGINT, cmdabort);
 	va_start(ap, fmt);
 	vfprintf(cout, fmt, ap);
-	vfprintf(stdout, fmt, ap);
-    fprintf(stdout, "\n");
 	va_end(ap);
 	fprintf(cout, "\r\n");
 	(void) fflush(cout);
@@ -357,8 +370,11 @@ getreply(expecteof)
 				code = 421;
 				return (4);
 			}
-			if (c != '\r' && (verbose > 0 ||
-			    (verbose > -1 && n == '5' && dig > 4))) {
+			if (n == 0)
+				n = c;
+			if (c != '\r' && (n < '5' || !retry_connect) &&
+			    (verbose > 0 ||
+			      (verbose > -1 && n == '5' && dig > 4))) {
 				if (proxflag &&
 				   (dig == 1 || dig == 5 && verbose == 0))
 					printf("%s:",hostname);
@@ -383,12 +399,11 @@ getreply(expecteof)
 					code = 0;
 				continuation++;
 			}
-			if (n == 0)
-				n = c;
 			if (cp < &reply_string[sizeof(reply_string) - 1])
 				*cp++ = c;
 		}
-		if (verbose > 0 || verbose > -1 && n == '5') {
+		if ((verbose > 0 || (verbose > -1 && n == '5')) &&
+		    (n < '5' || !retry_connect)) {
 			(void) putchar(c);
 			(void) fflush (stdout);
 		}
@@ -434,8 +449,6 @@ abortsend()
 	longjmp(sendabort, 1);
 }
 
-#define HASHBYTES 1024
-
 void
 sendrequest(cmd, local, remote, printnames)
 	char *cmd, *local, *remote;
@@ -447,7 +460,7 @@ sendrequest(cmd, local, remote, printnames)
 	FILE *fin, *dout = 0, *popen();
 	int (*closefunc) __P((FILE *));
 	sig_t oldintr, oldintp;
-	long bytes = 0, hashbytes = HASHBYTES;
+	long bytes = 0, hashbytes = mark;
 	char *lmode, buf[BUFSIZ], *bufp;
 
 	if (verbose && printnames) {
@@ -591,13 +604,13 @@ sendrequest(cmd, local, remote, printnames)
 			if (hash) {
 				while (bytes >= hashbytes) {
 					(void) putchar('#');
-					hashbytes += HASHBYTES;
+					hashbytes += mark;
 				}
 				(void) fflush(stdout);
 			}
 		}
 		if (hash && bytes > 0) {
-			if (bytes < HASHBYTES)
+			if (bytes < mark)
 				(void) putchar('#');
 			(void) putchar('\n');
 			(void) fflush(stdout);
@@ -617,7 +630,7 @@ sendrequest(cmd, local, remote, printnames)
 				while (hash && (bytes >= hashbytes)) {
 					(void) putchar('#');
 					(void) fflush(stdout);
-					hashbytes += HASHBYTES;
+					hashbytes += mark;
 				}
 				if (ferror(dout))
 					break;
@@ -704,7 +717,7 @@ recvrequest(cmd, local, remote, lmode, printnames)
 	int c, d, is_retr, tcrflag, bare_lfs = 0;
 	static int bufsize;
 	static char *buf;
-	long bytes = 0, hashbytes = HASHBYTES;
+	long bytes = 0, hashbytes = mark;
 	struct timeval start, stop;
 	struct stat st;
 
@@ -859,13 +872,13 @@ recvrequest(cmd, local, remote, lmode, printnames)
 			if (hash) {
 				while (bytes >= hashbytes) {
 					(void) putchar('#');
-					hashbytes += HASHBYTES;
+					hashbytes += mark;
 				}
 				(void) fflush(stdout);
 			}
 		}
 		if (hash && bytes > 0) {
-			if (bytes < HASHBYTES)
+			if (bytes < mark)
 				(void) putchar('#');
 			(void) putchar('\n');
 			(void) fflush(stdout);
@@ -911,7 +924,7 @@ done:
 				while (hash && (bytes >= hashbytes)) {
 					(void) putchar('#');
 					(void) fflush(stdout);
-					hashbytes += HASHBYTES;
+					hashbytes += mark;
 				}
 				bytes++;
 				if ((c = getc(din)) != '\n' || tcrflag) {
@@ -1156,37 +1169,13 @@ ptransfer(direction, bytes, t0, t1)
 	long bs;
 
 	if (verbose) {
-		tvsub(&td, t1, t0);
+		timersub(t1, t0, &td);
 		s = td.tv_sec + (td.tv_usec / 1000000.);
 #define	nz(x)	((x) == 0 ? 1 : (x))
 		bs = bytes / nz(s);
 		printf("%ld bytes %s in %.3g seconds (%ld bytes/s)\n",
 		    bytes, direction, s, bs);
 	}
-}
-
-/*
-void
-tvadd(tsum, t0)
-	struct timeval *tsum, *t0;
-{
-
-	tsum->tv_sec += t0->tv_sec;
-	tsum->tv_usec += t0->tv_usec;
-	if (tsum->tv_usec > 1000000)
-		tsum->tv_sec++, tsum->tv_usec -= 1000000;
-}
-*/
-
-void
-tvsub(tdiff, t1, t0)
-	struct timeval *tdiff, *t1, *t0;
-{
-
-	tdiff->tv_sec = t1->tv_sec - t0->tv_sec;
-	tdiff->tv_usec = t1->tv_usec - t0->tv_usec;
-	if (tdiff->tv_usec < 0)
-		tdiff->tv_sec--, tdiff->tv_usec += 1000000;
 }
 
 void
