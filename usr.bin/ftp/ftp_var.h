@@ -1,3 +1,6 @@
+/*      $OpenBSD: ftp_var.h,v 1.5 1996/11/09 19:59:35 kstailey Exp $      */
+/*      $NetBSD: ftp_var.h,v 1.7 1995/09/15 00:32:35 pk Exp $      */
+
 /*
  * Copyright (c) 1985, 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -47,6 +50,7 @@
  */
 int	trace;			/* trace packets exchanged */
 int	hash;			/* print # for each buffer transferred */
+int	mark;			/* number of bytes between hashes */
 int	sendport;		/* use PORT cmd for each data connection */
 int	verbose;		/* print messages coming back from server */
 int	connected;		/* connected to server */
@@ -83,6 +87,8 @@ char	modename[32];		/* name of file transfer mode */
 int	mode;			/* file transfer mode */
 char	bytename[32];		/* local byte size in ascii */
 int	bytesize;		/* local byte size in binary */
+int	anonftp;		/* force an anonftp login */
+int	retry_connect;		/* retry connect if failed */
 
 char	*hostname;		/* name of host connected to */
 int	unix_server;		/* server is unix, can use binary for ascii */
@@ -97,7 +103,8 @@ char	*stringbase;		/* current scan point in line buffer */
 char	argbuf[200];		/* argument storage buffer */
 char	*argbase;		/* current storage point in arg buffer */
 int	margc;			/* count of arguments on input line */
-char	*margv[20];		/* args parsed from input line */
+char	**margv;		/* args parsed from input line */
+int	margvlen;		/* how large margv is currently */
 int     cpend;                  /* flag: if != 0, then pending server reply */
 int	mflag;			/* flag: if != 0, then active multi command */
 
@@ -114,7 +121,6 @@ struct cmd {
 	char	c_proxy;	/* proxy server may execute */
 	void	(*c_handler) __P((int, char **)); /* function to call */
 };
-extern struct	cmd cmdtab[];
 
 struct macel {
 	char mac_name[9];	/* macro name */
@@ -125,3 +131,14 @@ struct macel {
 int macnum;			/* number of defined macros */
 struct macel macros[16];
 char macbuf[4096];
+
+/* From OpenBSD sys/time.h */
+#define timersub(tvp, uvp, vvp)			\
+    do {					\
+        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;	\
+        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;	\
+        if ((vvp)->tv_usec < 1000000) {		\
+            (vvp)->tv_sec--;			\
+            (vvp)->tv_usec += 1000000;		\
+        }					\
+    } while (0)

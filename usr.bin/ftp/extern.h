@@ -1,3 +1,6 @@
+/*      $OpenBSD: extern.h,v 1.5 1997/01/25 21:42:30 deraadt Exp $      */
+/*      $NetBSD: extern.h,v 1.4 1995/09/08 01:06:19 tls Exp $      */
+
 /*-
  * Copyright (c) 1994 The Regents of the University of California.
  * All rights reserved.
@@ -44,11 +47,12 @@ void	account __P((int, char **));
 int	another __P((int *, char ***, char *));
 void	blkfree __P((char **));
 void	cd __P((int, char **));
+int	mcd __P((int, char **));
 void	cdup __P((int, char **));
 void	changetype __P((int, int));
 void	cmdabort __P(());
 void	cmdscanner __P((int));
-int	command (char *, ...);
+int	command __P((const char *, ...));
 int	confirm __P((char *, char *));
 FILE   *dataconn __P((char *));
 void	delete __P((int, char **));
@@ -139,6 +143,7 @@ void	status __P((int, char **));
 void	syst __P((int, char **));
 void    tvsub __P((struct timeval *, struct timeval *, struct timeval *));
 void	user __P((int, char **));
+int	http_fetch __P((char *));
 
 extern jmp_buf	abortprox;
 extern int	abrtflag;

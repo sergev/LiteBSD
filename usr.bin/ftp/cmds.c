@@ -1,3 +1,6 @@
+/*      $OpenBSD: cmds.c,v 1.12 1997/01/29 22:11:36 millert Exp $      */
+/*      $NetBSD: cmds.c,v 1.8 1995/09/08 01:06:05 tls Exp $      */
+
 /*
  * Copyright (c) 1985, 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -32,7 +35,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)cmds.c	8.6 (Berkeley) 10/9/94";
+#else
+static char rcsid[] = "$OpenBSD: cmds.c,v 1.12 1997/01/29 22:11:36 millert Exp $";
+#endif
 #endif /* not lint */
 
 /*
@@ -55,6 +62,7 @@ static char sccsid[] = "@(#)cmds.c	8.6 (Berkeley) 10/9/94";
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "ftp_var.h"
 #include "pathnames.h"
@@ -742,6 +750,7 @@ mget(argc, argv)
 			if (mcase) {
 				for (tp2 = tmpbuf; ch = *tp++;)
 					*tp2++ = isupper(ch) ? tolower(ch) : ch;
+				*tp2 = '\0';
 				tp = tmpbuf;
 			}
 			if (ntflag) {
@@ -774,6 +783,7 @@ remglob(argv,doswitch)
 	char temp[16];
 	static char buf[MAXPATHLEN];
 	static FILE *ftemp = NULL;
+	int fd;
 	static char **args;
 	int oldverbose, oldhash;
 	char *cp, *mode;
@@ -798,8 +808,13 @@ remglob(argv,doswitch)
 		return (cp);
 	}
 	if (ftemp == NULL) {
-		(void) strcpy(temp, _PATH_TMP);
-		(void) mktemp(temp);
+		(void) strcpy(temp, _PATH_TMPFILE);
+		fd = mkstemp(temp);
+		if (fd < 0) {
+			printf ("temporary file %s already exists\n", temp);
+			return NULL;
+		}
+		close (fd);
 		oldverbose = verbose, verbose = 0;
 		oldhash = hash, hash = 0;
 		if (doswitch) {
@@ -880,8 +895,8 @@ status(argc, argv)
 	else {
 		printf("Nmap: off\n");
 	}
-	printf("Hash mark printing: %s; Use of PORT cmds: %s\n",
-		onoff(hash), onoff(sendport));
+	printf("Hash mark printing: %s; Mark count: %d\n", onoff(hash), mark);
+	printf("Use of PORT cmds: %s\n", onoff(sendport));
 	if (macnum > 0) {
 		printf("Macros:\n");
 		for (i=0; i<macnum; i++) {
@@ -926,18 +941,42 @@ settrace(argc, argv)
  */
 /*VARARGS*/
 void
-sethash(argc, argv)
-	int argc;
-	char *argv[];
+togglehash()
 {
 
 	hash = !hash;
 	printf("Hash mark printing %s", onoff(hash));
 	code = hash;
 	if (hash)
-		printf(" (%d bytes/hash mark)", 1024);
+		printf(" (%d bytes/hash mark)", mark);
 	printf(".\n");
 }
+
+/*
+ * Set hash mark bytecount.
+ */
+/*VARARGS*/
+void
+sethash(argc, argv)
+	int argc;
+	char *argv[];
+{
+	if (argc == 1)
+		togglehash();
+	else if (argc != 2) {
+		printf("usage: %s [number of bytes].\n", argv[0]);
+	} else {
+		int nmark = atol(argv[1]);
+		if (nmark < 1) {
+			printf("A hash mark bytecount of %d %s",
+			       nmark, "is rather pointless...\n");
+		} else {
+			mark = nmark;
+			printf("Hash mark set to %d bytes/hash mark\n", mark);
+		}
+	}
+}
+
 
 /*
  * Turn on printing of server echo's.
@@ -1035,8 +1074,8 @@ setdebug(argc, argv)
  * Set current working directory
  * on remote machine.
  */
-void
-cd(argc, argv)
+int
+mcd(argc, argv)
 	int argc;
 	char *argv[];
 {
@@ -1044,13 +1083,27 @@ cd(argc, argv)
 	if (argc < 2 && !another(&argc, &argv, "remote-directory")) {
 		printf("usage: %s remote-directory\n", argv[0]);
 		code = -1;
-		return;
+		return (-1);
 	}
-	if (command("CWD %s", argv[1]) == ERROR && code == 500) {
-		if (verbose)
-			printf("CWD command not recognized, trying XCWD\n");
-		(void) command("XCWD %s", argv[1]);
+	if (command("CWD %s", argv[1]) == ERROR) {
+		if (code == 500) {
+			if (verbose)
+				printf("CWD command not recognized, "
+				       "trying XCWD\n");
+			return(command("XCWD %s", argv[1]));
+		}
+		else
+			return(-1);
 	}
+	return(0);
+}
+
+void
+cd(argc, argv)
+	int argc;
+	char *argv[];
+{
+	mcd(argc, argv);
 }
 
 /*
@@ -1080,10 +1133,10 @@ lcd(argc, argv)
 		code = -1;
 		return;
 	}
-	if (getwd(buf) != NULL)
+	if (getcwd(buf, sizeof(buf)) != NULL)
 		printf("Local directory now %s\n", buf);
 	else
-		warnx("getwd: %s", buf);
+		warnx("getcwd: %s", buf);
 	code = 0;
 }
 
@@ -1198,6 +1251,9 @@ ls(argc, argv)
 			return;
 	}
 	recvrequest(cmd, argv[2], argv[1], "w", 0);
+
+	/* flush results in case commands are coming from a pipe */
+	fflush(stdout);
 }
 
 /*
@@ -2016,7 +2072,8 @@ setpassive(argc, argv)
 {
 
 	passivemode = !passivemode;
-	printf("Passive mode %s.\n", onoff(passivemode));
+	if (verbose)
+		printf("Passive mode %s.\n", onoff(passivemode));
 	code = passivemode;
 }
 
