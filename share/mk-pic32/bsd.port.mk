@@ -19,9 +19,13 @@ build: all
 
 fake: build
 	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
+.if exists(${.CURDIR}/plist)
+	install -d ${FAKEDIR}${PLISTBASE}
+	install -c -m 444 plist ${FAKEDIR}${PLISTBASE}${PKGNAME}
+.endif
 
 plist: fake
-.if !exists(${FAKEDIR}${PLISTBASE}${PKGNAME})
+.if !exists(${.CURDIR}/plist)
 	@echo -n "Creating ${PKGNAME} plist... "
 	@echo "Put a one-line description of the package here." >${FAKEDIR}/${PKGNAME}-tempplist
 	@echo "Maintainer: Your Name <your@email.com>" >>${FAKEDIR}/${PKGNAME}-tempplist
