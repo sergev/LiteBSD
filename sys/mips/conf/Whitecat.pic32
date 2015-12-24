@@ -1,5 +1,5 @@
 #
-# PIC32MZ target: Whitecat board
+# PIC32MZ target: Whitecat board Model X1 rev 1.A
 #
 # To build the kernel, use:
 #   ../../../usr.sbin/config/config Whitecat.pic32
@@ -56,37 +56,49 @@ config          vmunix  root on sd0a
                         swap on sd0b
 
 # UART configuration
-device          uart1   flags 0x6465    # pins rx=RF4 ,tx=RF5  - tty1 console
-device          uart2   flags 0x2726    # pins rx=RB7 ,tx=RB6  - tty2
-device          uart3   flags 0x3d3e    # pins rx=RC13,tx=RC14 - tty3
-device          uart4   flags 0x4544    # pins rx=RD5 ,tx=RD4  - tty4
+device          uart1   flags 0x6465    # pins rx=RF4 , tx=RF5  - tty1 console
+device          uart2   flags 0x2726    # pins rx=RB7 , tx=RB6  - tty2
+device          uart3   flags 0x3d3e    # pins rx=RC13, tx=RC14 - tty3
+device          uart4   flags 0x4544    # pins rx=RD5 , tx=RD4  - tty4
 
 # Console options
 options         "CONS_MAJOR=17"         # UART device
-options         "CONS_MINOR=0"          # UART1 - EMC64 board
+options         "CONS_MINOR=0"          # UART1 - On board Silabs CP2104 to Serial TTL
 
 # SPI and disk
-controller      spi2    flags 0x7778    # pins sdi=RG7,sdo=RG8 - SD card
-disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9
-options         "SD_LED=0x24"                           # SD Led Act RB4
+controller      spi1    flags 0x4243    # pins sdi=RD2 , sdo=RD3 - sd card
+controller      spi2    flags 0x7778    # pins sdi=RG7 , sdo=RG8
+controller      spi3    flags 0x2a29    # pins sdi=RB10, sdo=RB9 - spi flash
+controller      spi4    flags 0x4b40    # pins sdi=RD11, sdo=RD0
 
-# Ethernet controller
-controller      en0
-options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN8740A daughter boards
+disk            sd0     at spi1 drive 0 flags 0x63  # select pin RF3  -- alwais CS low assign null pin?
+options         "SD_LED=0x63"                       # sd act led RF3
+
+disk            sd1     at spi3 drive 1 flags 0x2b  # select pin RB11 -- spi flash
+options         "SD_LED=0x63"                       # sd act led RF3
+
+# Ethernet controller disabled will go on spi
+# controller      en0
+# options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN8740A daughter boards
 
 # General purpose I/O ports
-device          gpio1   flags 0x7f3f    # port B, pins RB0-RB5, RB8-RB14
-device          gpio2   flags 0x8000    # port C, pin RC15
-device          gpio3   flags 0x0e0d    # port D, pins RD0, RD2-RD3, RD9-RD11
-device          gpio5   flags 0x000b    # port F, pins RF0-RF1, RF3
+device      gpio0   flags 0x0000 # port A
+device      gpio1   flags 0xb13f # port B
+device      gpio2   flags 0x0000 # port C
+device      gpio3   flags 0x0000 # port D
+device      gpio4   flags 0x00ff # port E
+device      gpio5   flags 0x0000 # port F
+device      gpio6   flags 0x0000 # port G
+device      gpio7   flags 0x0000 # port H
+device      gpio8   flags 0x0000 # port J
+device      gpio9   flags 0x0000 # port K
 
 # CANBus configuration todo
-# controller    can0    flags 0x2329    # pins canrx=RB3, cantx=RB9
-# controller    can1    flags 0x282e    # pins canrx=RB8, cantx=RB14
+# controller    can0    flags 0x6061    # pins canrx=RF0, cantx=RF1
 
 pseudo-device   pty             4       # pseudo ptys
-#pseudo-device   sl              1       # serial line IP interfaces (SLIP)
-#pseudo-device   bpfilter        1       # packet filter ports
+#pseudo-device  sl              1       # serial line IP interfaces (SLIP)
+#pseudo-device  bpfilter        1       # packet filter ports
 pseudo-device   loop                    # network loopback interface
 pseudo-device   ether                   # generic Ethernet protocol
 pseudo-device   vn                      # block/character interface to a vnode
