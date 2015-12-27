@@ -1,7 +1,7 @@
 #!/bin/ksh
 
 USAGE="usage: pkg [-h] [add|info|rm] [package]"
-VERSION="1.0"
+VERSION="1.1"
 LOCALBASE="/usr/local"
 
 # This is essentially the usage() function common in BSD.
@@ -41,6 +41,9 @@ addpackage() {
 		tar xzf "$1".tgz -C /
 	fi
 	echo "done!"
+
+	if [ "${LOCALBASE}/pkg/message/${1}" ] ; then
+		echo ${LOCALBASE}/pkg/message/${1}
 
 	return 0
 }
