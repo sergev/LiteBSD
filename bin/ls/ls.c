@@ -74,6 +74,7 @@ int termwidth = 80;		/* default terminal width */
 int f_accesstime;		/* use time of last access */
 int f_column;			/* columnated format */
 int f_flags;			/* show flags associated with a file */
+int f_humanize;			/* humanize the size field */
 int f_inode;			/* print inode */
 int f_listdir;			/* list actual directory, not contents */
 int f_listdot;			/* list files beginning with . */
@@ -120,7 +121,7 @@ main(argc, argv)
 		f_listdot = 1;
 
 	fts_options = FTS_PHYSICAL;
-	while ((ch = getopt(argc, argv, "1ACFLRTWacdfgiloqrstu")) != EOF) {
+	while ((ch = getopt(argc, argv, "1ACFLRTWacdfghiloqrstu")) != EOF) {
 		switch (ch) {
 		/*
 		 * The -1, -C and -l options all override each other so shell
@@ -172,6 +173,13 @@ main(argc, argv)
 			f_nosort = 1;
 			break;
 		case 'g':		/* Compatibility with 4.3BSD. */
+			break;
+		/*
+		 * The -h option forces all sizes to be measured in bytes.
+		 * It also makes -l supporess -s.
+		 */
+		case 'h':
+			f_humanize = 1;
 			break;
 		case 'i':
 			f_inode = 1;
@@ -351,7 +359,7 @@ display(p, list)
 	FTSENT *cur;
 	NAMES *np;
 	u_quad_t maxsize;
-	u_long btotal, maxblock, maxinode, maxlen, maxnlink;
+	u_long btotal, stotal, maxblock, maxinode, maxlen, maxnlink;
 	int bcfile, flen, glen, ulen, maxflags, maxgroup, maxuser;
 	int entries, needstats;
 	char *user, *group, *flags, buf[20];	/* 32 bits == 10 digits */
@@ -368,7 +376,7 @@ display(p, list)
 
 	needstats = f_inode || f_longform || f_size;
 	flen = 0;
-	btotal = maxblock = maxinode = maxlen = maxnlink = 0;
+	btotal = stotal = maxblock = maxinode = maxlen = maxnlink = 0;
 	bcfile = 0;
 	maxuser = maxgroup = maxflags = 0;
 	maxsize = 0;
@@ -413,6 +421,7 @@ display(p, list)
 				maxsize = sp->st_size;
 
 			btotal += sp->st_blocks;
+			stotal += sp->st_size;
 			if (f_longform) {
 				user = user_from_uid(sp->st_uid, 0);
 				if ((ulen = strlen(user)) > maxuser)
@@ -460,16 +469,24 @@ display(p, list)
 	if (needstats) {
 		d.bcfile = bcfile;
 		d.btotal = btotal;
-		(void)snprintf(buf, sizeof(buf), "%lu", maxblock);
-		d.s_block = strlen(buf);
+		d.stotal = stotal;
+		if (!f_humanize) {
+			(void)snprintf(buf, sizeof(buf), "%lu",
+				howmany(maxblock, blocksize));
+			d.s_block = strlen(buf);
+		}
 		d.s_flags = maxflags;
 		d.s_group = maxgroup;
 		(void)snprintf(buf, sizeof(buf), "%lu", maxinode);
 		d.s_inode = strlen(buf);
 		(void)snprintf(buf, sizeof(buf), "%lu", maxnlink);
 		d.s_nlink = strlen(buf);
-		(void)snprintf(buf, sizeof(buf), "%qu", maxsize);
-		d.s_size = strlen(buf);
+		if (f_humanize) {
+			d.s_size = 4; /* min buffer length for humanize_number */
+		} else {
+			(void)snprintf(buf, sizeof(buf), "%qu", maxsize);
+			d.s_size = strlen(buf);
+		}
 		d.s_user = maxuser;
 	}
 
