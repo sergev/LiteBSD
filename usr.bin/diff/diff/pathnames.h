@@ -1,6 +1,6 @@
 /*-
- * Copyright (c) 1992, 1993
- *      The Regents of the University of California.  All rights reserved.
+ * Copyright (c) 1989, 1993
+ *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,11 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -30,31 +26,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *      @(#)stdarg.h    8.1 (Berkeley) 6/10/93
+ *	@(#)pathnames.h	8.1 (Berkeley) 6/6/93
  */
 
-#ifndef _STDARG_H_
-#define _STDARG_H_
+#include <paths.h>
 
-typedef __builtin_va_list va_list;
-
-#define __va_promote(type) \
-    (((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
-
-#define va_start(ap, last) \
-    (ap = ((char *)&(last) + __va_promote(last)))
-
-#ifdef KERNEL
-#define va_arg(ap, type) \
-    ((type *)(ap += sizeof(type)))[-1]
-#else
-#define va_arg(ap, type) \
-    ((type *)(ap += sizeof(type) == sizeof(int) ? sizeof(type) : \
-        sizeof(type) > sizeof(int) ? \
-        (-(int)(ap) & (sizeof(type) - 1)) + sizeof(type) : \
-        (abort(), 0)))[-1]
-#endif
-
-#define va_end(ap)
-
-#endif /* !_STDARG_H_ */
+#define	_PATH_DIFF	"/usr/bin/diff"

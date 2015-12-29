@@ -1,58 +1,110 @@
+/*	$OpenBSD: diffdir.c,v 1.17 2003/07/04 17:50:24 millert Exp $	*/
+
+/*
+ * Copyright (C) Caldera International Inc.  2001-2002.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code and documentation must retain the above
+ *    copyright notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed or owned by Caldera
+ *	International, Inc.
+ * 4. Neither the name of Caldera International, Inc. nor the names of other
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * USE OF THE SOFTWARE PROVIDED FOR UNDER THIS LICENSE BY CALDERA
+ * INTERNATIONAL, INC. AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL CALDERA INTERNATIONAL, INC. BE LIABLE FOR ANY DIRECT,
+ * INDIRECT INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "diff.h"
+#include "pathnames.h"
+
+#if 0
+static const char sccsid[] = "@(#)diffdir.c	4.12 (Berkeley) 4/30/89";
+#endif
+
 /*
  * diff - directory comparison
  */
-#include "diff.h"
-
 #define	d_flags	d_ino
 
-#define	ONLY	1		/* Only in this directory */
-#define	SAME	2		/* Both places and same */
-#define	DIFFER	4		/* Both places and different */
-#define	DIRECT	8		/* Directory */
+#define	DIRECT	1		/* Directory */
 
 struct dir {
-	ino_t	d_ino;
-	short	d_reclen;
-	short	d_namlen;
-	char	*d_entry;
+	u_long d_ino;
+	short d_reclen;
+	short d_namlen;
+	char *d_entry;
 };
 
-struct	dir *setupdir();
-int	header;
-char	title[2*BUFSIZ], *etitle;
+static int dirstatus;		/* exit status from diffdir */
+static char title[2 * BUFSIZ];
 
-diffdir(argv)
-	char **argv;
+
+static struct dir *setupdir(char *);
+static int ascii(int);
+static void compare(struct dir *);
+static void calldiff(void);
+static void setfile(char **fpp, char **epp, char *file);
+static int useless(char *);
+static void only(struct dir *dp, int which);
+static int entcmp(const void *, const void *);
+
+void
+diffdir(char **argv)
 {
-	register struct dir *d1, *d2;
 	struct dir *dir1, *dir2;
-	register int i;
-	int cmp;
+	struct dir *d1, *d2;
+	int i, cmp;
 
-	if (opt == D_IFDEF) {
-		fprintf(stderr, "diff: can't specify -I with directories\n");
-		done(0);
-	}
-	if (opt == D_EDIT && (sflag || lflag))
-		fprintf(stderr,
-		    "diff: warning: shouldn't give -s or -l with -e\n");
-	title[0] = 0;
-	strcpy(title, "diff ");
-	for (i = 1; diffargv[i+2]; i++) {
+	if (opt == D_IFDEF)
+		warnx("can't specify -I with directories");
+	if (opt == D_EDIT && sflag)
+		warnx("warning: shouldn't give -s with -e");
+	strlcpy(title, "diff ", sizeof title);
+	for (i = 1; diffargv[i + 2]; i++) {
 		if (!strcmp(diffargv[i], "-"))
 			continue;	/* was -S, dont look silly */
-		strcat(title, diffargv[i]);
-		strcat(title, " ");
+		strlcat(title, diffargv[i], sizeof title);
+		strlcat(title, " ", sizeof title);
 	}
-	for (etitle = title; *etitle; etitle++)
-		;
 	setfile(&file1, &efile1, file1);
 	setfile(&file2, &efile2, file2);
 	argv[0] = file1;
 	argv[1] = file2;
 	dir1 = setupdir(file1);
 	dir2 = setupdir(file2);
-	d1 = dir1; d2 = dir2;
+	d1 = dir1;
+	d2 = dir2;
 	while (d1->d_entry != 0 || d2->d_entry != 0) {
 		if (d1->d_entry && useless(d1->d_entry)) {
 			d1++;
@@ -69,188 +121,129 @@ diffdir(argv)
 		else
 			cmp = strcmp(d1->d_entry, d2->d_entry);
 		if (cmp < 0) {
-			if (lflag)
-				d1->d_flags |= ONLY;
-			else if (opt == 0 || opt == 2)
+			if (opt == 0 || opt == 2)
 				only(d1, 1);
 			d1++;
+			dirstatus |= 1;
 		} else if (cmp == 0) {
 			compare(d1);
 			d1++;
 			d2++;
 		} else {
-			if (lflag)
-				d2->d_flags |= ONLY;
-			else if (opt == 0 || opt == 2)
+			if (opt == 0 || opt == 2)
 				only(d2, 2);
 			d2++;
+			dirstatus |= 1;
 		}
-	}
-	if (lflag) {
-		scanpr(dir1, ONLY, "Only in %.*s", file1, efile1, 0, 0);
-		scanpr(dir2, ONLY, "Only in %.*s", file2, efile2, 0, 0);
-		scanpr(dir1, SAME, "Common identical files in %.*s and %.*s",
-		    file1, efile1, file2, efile2);
-		scanpr(dir1, DIFFER, "Binary files which differ in %.*s and %.*s",
-		    file1, efile1, file2, efile2);
-		scanpr(dir1, DIRECT, "Common subdirectories of %.*s and %.*s",
-		    file1, efile1, file2, efile2);
 	}
 	if (rflag) {
-		if (header && lflag)
-			printf("\f");
-		for (d1 = dir1; d1->d_entry; d1++)  {
+		for (d1 = dir1; d1->d_entry; d1++) {
 			if ((d1->d_flags & DIRECT) == 0)
 				continue;
-			strcpy(efile1, d1->d_entry);
-			strcpy(efile2, d1->d_entry);
-			calldiff(0);
+			strlcpy(efile1, d1->d_entry,
+			    file1 + MAXPATHLEN - efile1);
+			strlcpy(efile2, d1->d_entry,
+			    file2 + MAXPATHLEN - efile2);
+			calldiff();
 		}
 	}
+	status = dirstatus;
 }
 
-setfile(fpp, epp, file)
-	char **fpp, **epp;
-	char *file;
+void
+setfile(char **fpp, char **epp, char *file)
 {
-	register char *cp;
+	char *cp;
+	size_t len;
 
-	*fpp = malloc(BUFSIZ);
-	if (*fpp == 0) {
-		fprintf(stderr, "diff: ran out of memory\n");
-		exit(1);
+	if (*file == '\0')
+		file = ".";
+	*fpp = emalloc(MAXPATHLEN);
+	len = strlcpy(*fpp, file, MAXPATHLEN);
+	if (len >= MAXPATHLEN - 1)
+		errorx("%s: %s", file, strerror(ENAMETOOLONG));
+	cp = *fpp + len - 1;
+	if (*cp == '/')
+		++cp;
+	else {
+		*++cp = '/';
+		*++cp = '\0';
 	}
-	strcpy(*fpp, file);
-	for (cp = *fpp; *cp; cp++)
-		continue;
-	*cp++ = '/';
 	*epp = cp;
 }
 
-scanpr(dp, test, title, file1, efile1, file2, efile2)
-	register struct dir *dp;
-	int test;
-	char *title, *file1, *efile1, *file2, *efile2;
-{
-	int titled = 0;
-
-	for (; dp->d_entry; dp++) {
-		if ((dp->d_flags & test) == 0)
-			continue;
-		if (titled == 0) {
-			if (header == 0)
-				header = 1;
-			else
-				printf("\n");
-			printf(title,
-			    efile1 - file1 - 1, file1,
-			    efile2 - file2 - 1, file2);
-			printf(":\n");
-			titled = 1;
-		}
-		printf("\t%s\n", dp->d_entry);
-	}
-}
-
-only(dp, which)
-	struct dir *dp;
-	int which;
+void
+only(struct dir *dp, int which)
 {
 	char *file = which == 1 ? file1 : file2;
 	char *efile = which == 1 ? efile1 : efile2;
 
-	printf("Only in %.*s: %s\n", efile - file - 1, file, dp->d_entry);
+	printf("Only in %.*s: %s\n", (int)(efile - file - 1), file, dp->d_entry);
 }
 
-int	entcmp();
-
 struct dir *
-setupdir(cp)
-	char *cp;
+setupdir(char *cp)
 {
-	register struct dir *dp = 0, *ep;
-	register struct dirent *rp;
-	register int nitems, n;
+	struct dir *dp, *ep;
+	struct dirent *rp;
+	int nitems;
 	DIR *dirp;
 
 	dirp = opendir(cp);
-	if (dirp == NULL) {
-		fprintf(stderr, "diff: ");
-		perror(cp);
-		done(0);
-	}
+	if (dirp == NULL)
+		error("%s", cp);
 	nitems = 0;
-#ifdef	pdp11
-	while (readdir(dirp))
-		nitems++;
-	rewinddir(dirp);
-	dp = (struct dir *)calloc(nitems+1, sizeof (struct dir));
-	nitems = 0;
-#else
-	dp = (struct dir *)malloc(sizeof (struct dir));
-#endif
-	if (dp == 0) {
-		fprintf(stderr, "diff: ran out of memory\n");
-		done(0);
-	}
-	while (rp = readdir(dirp)) {
+	dp = emalloc(sizeof(struct dir));
+	while ((rp = readdir(dirp))) {
 		ep = &dp[nitems++];
 		ep->d_reclen = rp->d_reclen;
 		ep->d_namlen = rp->d_namlen;
 		ep->d_entry = 0;
 		ep->d_flags = 0;
 		if (ep->d_namlen > 0) {
-			ep->d_entry = malloc(ep->d_namlen + 1);
-			if (ep->d_entry == 0) {
-				fprintf(stderr, "diff: out of memory\n");
-				done(0);
-			}
-			strcpy(ep->d_entry, rp->d_name);
+			ep->d_entry = emalloc(ep->d_namlen + 1);
+			strlcpy(ep->d_entry, rp->d_name, ep->d_namlen + 1);
 		}
-#ifndef	pdp11
-		dp = (struct dir *)realloc((char *)dp,
-			(nitems + 1) * sizeof (struct dir));
-		if (dp == 0) {
-			fprintf(stderr, "diff: ran out of memory\n");
-			done(0);
-		}
-#endif
+		dp = erealloc(dp, (nitems + 1) * sizeof(struct dir));
 	}
-	dp[nitems].d_entry = 0;		/* delimiter */
+	dp[nitems].d_entry = 0;	/* delimiter */
 	closedir(dirp);
-	qsort(dp, nitems, sizeof (struct dir), entcmp);
+	qsort(dp, nitems, sizeof(struct dir), entcmp);
 	return (dp);
 }
 
-entcmp(d1, d2)
-	struct dir *d1, *d2;
+static int
+entcmp(const void *v1, const void *v2)
 {
+	const struct dir *d1, *d2;
+
+	d1 = v1;
+	d2 = v2;
 	return (strcmp(d1->d_entry, d2->d_entry));
 }
 
-compare(dp)
-	register struct dir *dp;
+static void
+compare(struct dir *dp)
 {
-	register int i, j;
-	int f1, f2, fmt1, fmt2;
-	struct stat stb1, stb2;
-	int flag = 0;
 	char buf1[BUFSIZ], buf2[BUFSIZ];
+	int i, j, f1, f2, fmt1, fmt2;
+	struct stat stb1, stb2;
 
-	strcpy(efile1, dp->d_entry);
-	strcpy(efile2, dp->d_entry);
+	strlcpy(efile1, dp->d_entry, file1 + MAXPATHLEN - efile1);
+	strlcpy(efile2, dp->d_entry, file2 + MAXPATHLEN - efile2);
 	f1 = open(file1, 0);
 	if (f1 < 0) {
-		perror(file1);
+		warn("%s", file1);
 		return;
 	}
 	f2 = open(file2, 0);
 	if (f2 < 0) {
-		perror(file2);
+		warn("%s", file2);
 		close(f1);
 		return;
 	}
-	fstat(f1, &stb1); fstat(f2, &stb2);
+	fstat(f1, &stb1);
+	fstat(f2, &stb2);
 	fmt1 = stb1.st_mode & S_IFMT;
 	fmt2 = stb2.st_mode & S_IFMT;
 	if (fmt1 != S_IFREG || fmt2 != S_IFREG) {
@@ -259,7 +252,7 @@ compare(dp)
 				goto same;
 			if (fmt1 == S_IFDIR) {
 				dp->d_flags = DIRECT;
-				if (lflag || opt == D_EDIT)
+				if (opt == D_EDIT)
 					goto closem;
 				printf("Common subdirectories: %s and %s\n",
 				    file1, file2);
@@ -282,118 +275,69 @@ compare(dp)
 				goto notsame;
 	}
 same:
-	if (sflag == 0)
-		goto closem;
-	if (lflag)
-		dp->d_flags = SAME;
-	else
+	if (sflag != 0)
 		printf("Files %s and %s are identical\n", file1, file2);
 	goto closem;
 notsame:
+	dirstatus |= 1;
 	if (!ascii(f1) || !ascii(f2)) {
-		if (lflag)
-			dp->d_flags |= DIFFER;
-		else if (opt == D_NORMAL || opt == D_CONTEXT)
+		if (opt == D_NORMAL || opt == D_CONTEXT || opt == D_UNIFIED)
 			printf("Binary files %s and %s differ\n",
 			    file1, file2);
 		goto closem;
 	}
-	close(f1); close(f2);
+	close(f1);
+	close(f2);
 	anychange = 1;
-	if (lflag)
-		calldiff(title);
-	else {
-		if (opt == D_EDIT) {
-			printf("ed - %s << '-*-END-*-'\n", dp->d_entry);
-			calldiff(0);
-		} else {
-			printf("%s%s %s\n", title, file1, file2);
-			calldiff(0);
-		}
-		if (opt == D_EDIT)
-			printf("w\nq\n-*-END-*-\n");
+	if (opt == D_EDIT) {
+		printf("ed - %s << '-*-END-*-'\n", dp->d_entry);
+		calldiff();
+	} else {
+		printf("%s%s %s\n", title, file1, file2);
+		calldiff();
 	}
+	if (opt == D_EDIT)
+		printf("w\nq\n-*-END-*-\n");
 	return;
 closem:
-	close(f1); close(f2);
+	close(f1);
+	close(f2);
 }
 
-char	*prargs[] = { "pr", "-h", 0, "-f", 0, 0 };
-
-calldiff(wantpr)
-	char *wantpr;
+static void
+calldiff(void)
 {
-	int pid, status, status2, pv[2];
+	int lstatus;
+	pid_t pid;
 
-	prargs[2] = wantpr;
 	fflush(stdout);
-	if (wantpr) {
-		sprintf(etitle, "%s %s", file1, file2);
-		pipe(pv);
-		pid = fork();
-		if (pid == -1) {
-			fprintf(stderr, "No more processes");
-			done(0);
-		}
-		if (pid == 0) {
-			close(0);
-			dup(pv[0]);
-			close(pv[0]);
-			close(pv[1]);
-			execv(pr+4, prargs);
-			execv(pr, prargs);
-			perror(pr);
-			done(0);
-		}
-	}
 	pid = fork();
-	if (pid == -1) {
-		fprintf(stderr, "diff: No more processes\n");
-		done(0);
-	}
+	if (pid == -1)
+		errorx("No more processes");
 	if (pid == 0) {
-		if (wantpr) {
-			close(1);
-			dup(pv[1]);
-			close(pv[0]);
-			close(pv[1]);
-		}
-		execv(diff+4, diffargv);
-		execv(diff, diffargv);
-		perror(diff);
-		done(0);
+		execv(_PATH_DIFF, diffargv);
+		error("%s", _PATH_DIFF);
 	}
-	if (wantpr) {
-		close(pv[0]);
-		close(pv[1]);
-	}
-	while (wait(&status) != pid)
+	while (wait(&lstatus) != pid)
 		continue;
-	while (wait(&status2) != -1)
-		continue;
-/*
-	if ((status >> 8) >= 2)
-		done(0);
-*/
+	/*
+		if ((lstatus >> 8) >= 2)
+			done(0);
+	*/
+	dirstatus |= lstatus >> 8;
 }
 
-#include <a.out.h>
-
-ascii(f)
-	int f;
+int
+ascii(int f)
 {
-	char buf[BUFSIZ];
-	register int cnt;
-	register char *cp;
+	char buf[BUFSIZ], *cp;
+	int cnt;
 
-	lseek(f, (long)0, 0);
+	if (aflag)
+		return (1);
+
+	lseek(f, (off_t)0, SEEK_SET);
 	cnt = read(f, buf, BUFSIZ);
-	if (cnt >= sizeof (struct exec)) {
-		struct exec hdr;
-		hdr = *(struct exec *)buf;
-		if (!N_BADMAG(hdr))
-			return (0);
-	}
 	cp = buf;
 	while (--cnt >= 0)
 		if (*cp++ & 0200)
@@ -404,10 +348,9 @@ ascii(f)
 /*
  * THIS IS CRUDE.
  */
-useless(cp)
-register char *cp;
+int
+useless(char *cp)
 {
-
 	if (cp[0] == '.') {
 		if (cp[1] == '\0')
 			return (1);	/* directory "." */
