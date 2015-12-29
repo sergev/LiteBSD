@@ -7,3 +7,4 @@ CFLAGS+=-ffunction-sections -fdata-sections
 LDFLAGS+=-Wl,--gc-sections
 
 .include <bsd.prog.mk>
+.include "../../Makefile.inc"
