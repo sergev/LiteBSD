@@ -5,8 +5,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#define va_copy(dest, src)	__builtin_va_copy((dest), (src))
-
 int vasprintf(char **s, const char *fmt, va_list ap)
 {
 	va_list ap2;
