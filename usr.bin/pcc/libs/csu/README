@@ -1,0 +1,26 @@
+$Id: README,v 1.5 2014/08/28 20:29:04 ragge Exp $
+
+OS-dependent and target-dependent:
+
+To be provided by the target's libc:
+(the corresponding code included in this archive is mere incomplete
+examples, can be possibly useful to replace the platform-provided ones,
+but only on exceptionally broken platforms)
+
+crt0.o		startup code for programs (maybe compiled -static)
+crt1.o		a different flavour of startup code (iff the platform needs
+		this in certain platform-specific situations)
+gcrt[01].o	the corresponding profiling startup code for programs
+crti.o		beginning of _init() and _fini() functions (inside .init section)
+crtn.o		end of _init() and _fini() functions (inside .fini section)
+
+To be provided by the compiler, needed if constructors/destructors are
+desired, p++ is generated or library calls expects their existence.
+
+crtbegin.o	support for calling global ctors/dtors
+crtend.o	end of the ctor/dtor lists
+if a difference from crtbegin.o/crtend.o is enforced by the platform:
+crtbeginT.o	+ for static binary
+crtendT.o	+ for static binary
+crtbeginS.o	+ for shared library
+crtendS.o	+ for shared library
