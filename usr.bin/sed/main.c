@@ -357,10 +357,15 @@ mf_fgets(SPACE *sp, enum e_spflag spflag)
 				if (len > sizeof(oldfname))
 					error(FATAL, "%s: name too long", fname);
 			}
-			len = snprintf(tmpfname, sizeof(tmpfname), "%s/sedXXXXXXXXXX",
-			    dirname(fname));
-			if (len >= sizeof(tmpfname))
-				error(FATAL, "%s: name too long", fname);
+			strlcpy(tmpfname, fname, sizeof(tmpfname));
+			p = strrchr(tmpfname, '/');
+			if (p) {
+				strlcat(p, "/sedXXXXXXXXXX", tmpfname+sizeof(tmpfname)-p);
+			} else {
+				len = snprintf(tmpfname, sizeof(tmpfname), "sedXXXXXXXXXX");
+				if (len >= sizeof(tmpfname))
+					error(FATAL, "%s: name too long", fname);
+			}
 			if ((fd = mkstemp(tmpfname)) == -1)
 				error(FATAL, "%s", fname);
 			if ((outfile = fdopen(fd, "w")) == NULL) {
