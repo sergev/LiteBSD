@@ -1,0 +1,280 @@
+#
+# OpenSSL/crypto/rand/Makefile
+#
+
+DIR=	rand
+TOP=	../..
+CC=	cc
+INCLUDES=
+CFLAG=-g
+MAKEFILE=	Makefile
+AR=		ar r
+
+CFLAGS= $(INCLUDES) $(CFLAG)
+
+GENERAL=Makefile
+TEST= randtest.c
+APPS=
+
+LIB=$(TOP)/libcrypto.a
+LIBSRC=md_rand.c randfile.c rand_lib.c rand_err.c rand_egd.c \
+	rand_win.c rand_unix.c rand_os2.c rand_nw.c
+LIBOBJ=md_rand.o randfile.o rand_lib.o rand_err.o rand_egd.o \
+	rand_win.o rand_unix.o rand_os2.o rand_nw.o
+
+SRC= $(LIBSRC)
+
+EXHEADER= rand.h
+HEADER=	$(EXHEADER)
+
+ALL=    $(GENERAL) $(SRC) $(HEADER)
+
+top:
+	(cd ../..; $(MAKE) DIRS=crypto SDIRS=$(DIR) sub_all)
+
+all:	lib
+
+lib:	$(LIBOBJ)
+	$(AR) $(LIB) $(LIBOBJ)
+	$(RANLIB) $(LIB) || echo Never mind.
+	@touch lib
+
+files:
+	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO
+
+links:
+	@$(PERL) $(TOP)/util/mklink.pl ../../include/openssl $(EXHEADER)
+	@$(PERL) $(TOP)/util/mklink.pl ../../test $(TEST)
+	@$(PERL) $(TOP)/util/mklink.pl ../../apps $(APPS)
+
+install:
+	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
+	@headerlist="$(EXHEADER)"; for i in $$headerlist ; \
+	do  \
+	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
+	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
+	done;
+
+tags:
+	ctags $(SRC)
+
+tests:
+
+lint:
+	lint -DLINT $(INCLUDES) $(SRC)>fluff
+
+update: depend
+
+depend:
+	@[ -n "$(MAKEDEPEND)" ] # should be set by upper Makefile...
+	$(MAKEDEPEND) -- $(CFLAG) $(INCLUDES) $(DEPFLAG) -- $(PROGS) $(LIBSRC)
+
+dclean:
+	$(PERL) -pe 'if (/^# DO NOT DELETE THIS LINE/) {print; exit(0);}' $(MAKEFILE) >Makefile.new
+	mv -f Makefile.new $(MAKEFILE)
+
+clean:
+	rm -f *.o *.obj lib tags core .pure .nfs* *.old *.bak fluff
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+md_rand.o: md_rand.c \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/assert.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ ../../include/openssl/stack.h ../../include/openssl/safestack.h \
+ ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h \
+ ../../include/openssl/symhacks.h ../../include/openssl/rand.h rand_lcl.h \
+ ../../include/openssl/evp.h ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/objects.h ../../include/openssl/obj_mac.h \
+ ../../include/openssl/asn1.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ ../../include/openssl/sha.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ ../../include/openssl/err.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h
+randfile.o: randfile.c \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h ../../include/openssl/stack.h \
+ ../../include/openssl/safestack.h ../../include/openssl/opensslv.h \
+ ../../include/openssl/ossl_typ.h ../../include/openssl/symhacks.h \
+ ../../include/openssl/rand.h ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/stat.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/fcntl.h
+rand_lib.o: rand_lib.c \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ ../cryptlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h ../../include/openssl/stack.h \
+ ../../include/openssl/safestack.h ../../include/openssl/opensslv.h \
+ ../../include/openssl/ossl_typ.h ../../include/openssl/symhacks.h \
+ ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/err.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ ../../include/openssl/rand.h ../../include/openssl/engine.h \
+ ../../include/openssl/x509.h ../../include/openssl/evp.h \
+ ../../include/openssl/objects.h ../../include/openssl/obj_mac.h \
+ ../../include/openssl/asn1.h ../../include/openssl/ec.h \
+ ../../include/openssl/ecdsa.h ../../include/openssl/ecdh.h \
+ ../../include/openssl/sha.h ../../include/openssl/x509_vfy.h \
+ ../../include/openssl/pkcs7.h
+rand_err.o: rand_err.c \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ ../../include/openssl/err.h ../../include/openssl/e_os2.h \
+ ../../include/openssl/opensslconf.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ ../../include/openssl/ossl_typ.h ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/crypto.h ../../include/openssl/stack.h \
+ ../../include/openssl/safestack.h ../../include/openssl/opensslv.h \
+ ../../include/openssl/symhacks.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ ../../include/openssl/rand.h
+rand_egd.o: rand_egd.c ../../include/openssl/e_os2.h \
+ ../../include/openssl/opensslconf.h ../../include/openssl/rand.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ ../../include/openssl/ossl_typ.h ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/socket.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/un.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h
+rand_win.o: rand_win.c ../cryptlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ ../../include/openssl/stack.h ../../include/openssl/safestack.h \
+ ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h \
+ ../../include/openssl/symhacks.h ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/err.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ ../../include/openssl/rand.h rand_lcl.h ../../include/openssl/evp.h \
+ ../../include/openssl/objects.h ../../include/openssl/obj_mac.h \
+ ../../include/openssl/asn1.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ ../../include/openssl/sha.h
+rand_os2.o: rand_os2.c ../cryptlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ ../../include/openssl/stack.h ../../include/openssl/safestack.h \
+ ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h \
+ ../../include/openssl/symhacks.h ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/err.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ ../../include/openssl/rand.h rand_lcl.h ../../include/openssl/evp.h \
+ ../../include/openssl/objects.h ../../include/openssl/obj_mac.h \
+ ../../include/openssl/asn1.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ ../../include/openssl/sha.h
+rand_nw.o: rand_nw.c ../cryptlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdlib.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/ansi.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/cdefs.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/string.h \
+ ../../e_os.h ../../include/openssl/opensslconf.h \
+ ../../include/openssl/e_os2.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/unistd.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/types.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/endian.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/sys/unistd.h \
+ ../../include/openssl/crypto.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdio.h \
+ ../../include/openssl/stack.h ../../include/openssl/safestack.h \
+ ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h \
+ ../../include/openssl/symhacks.h ../../include/openssl/buffer.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stddef.h \
+ ../../include/openssl/bio.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/stdarg.h \
+ ../../include/openssl/err.h ../../include/openssl/lhash.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/errno.h \
+ ../../include/openssl/rand.h rand_lcl.h ../../include/openssl/evp.h \
+ ../../include/openssl/objects.h ../../include/openssl/obj_mac.h \
+ ../../include/openssl/asn1.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/time.h \
+ /home/retrobsd/newest-litebsd/litebsd/DESTDIR/usr/include/machine/limits.h \
+ ../../include/openssl/sha.h
