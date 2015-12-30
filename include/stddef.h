@@ -57,6 +57,6 @@ typedef _BSD_WCHAR_T_   wchar_t;
 #define NULL    0
 #endif
 
-#define offsetof(type, member)  ((size_t)(&((type *)0)->member))
+#define offsetof(type, member)  __builtin_offsetof(type, member)
 
 #endif /* _STDDEF_H_ */
