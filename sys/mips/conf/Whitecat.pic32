@@ -72,7 +72,7 @@ options         "SD_LED=0x24"                           # SD Led Act RB4
 
 # Ethernet controller
 controller      en0
-options         "ETHERNET_PHY_ID=0"     # PHY address is 0 on LAN8720A and LAN8740A daughter boards
+options         "ETHERNET_PHY_ADDR=0"   # PHY address is 0 on LAN8720A and LAN8740A daughter boards
 
 # General purpose I/O ports
 device          gpio1   flags 0x7f3f    # port B, pins RB0-RB5, RB8-RB14
