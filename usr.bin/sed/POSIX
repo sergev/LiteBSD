@@ -1,4 +1,5 @@
-#	@(#)POSIX	8.1 (Berkeley) 6/6/93
+#	$OpenBSD: POSIX,v 1.2 1996/06/26 05:39:04 deraadt Exp $
+#	from: @(#)POSIX	8.1 (Berkeley) 6/6/93
 
 Comments on the IEEE P1003.2 Draft 12
      Part 2: Shell and Utilities
