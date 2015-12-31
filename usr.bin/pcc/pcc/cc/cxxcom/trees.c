@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.19 2015/12/29 10:03:22 ragge Exp $	*/
+/*	$Id: trees.c,v 1.20 2015/12/31 16:21:02 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.

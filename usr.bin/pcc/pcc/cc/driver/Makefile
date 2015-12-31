@@ -6,7 +6,7 @@
 srcdir=.
 top_srcdir=../..
 top_builddir=../..
-prefix = /usr/local
+prefix = /usr
 exec_prefix = ${prefix}
 bindir = ${exec_prefix}/bin
 libdir = ${exec_prefix}/lib
@@ -33,7 +33,7 @@ CPPFLAGS =  -DLIBEXECDIR=\"$(libexecdir)/\" \
 LIBS = 
 LDFLAGS = 
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} -s
+INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 
 OBJS=driver.o platform.o strlist.o xalloc.o

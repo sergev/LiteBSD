@@ -33,6 +33,7 @@ CPPFLAGS =  -DLIBEXECDIR=\"$(libexecdir)/\" \
 	-DCPPROGNAME=\"$(BINPREFIX)pcpp$(EXEEXT)\" \
 	-I$(top_srcdir)/cc/driver -I$(top_builddir) \
 	-I$(top_srcdir)/os/$(TARGOS) -I$(MIPDIR) -I$(MDIR)
+LIBS =
 LDFLAGS += -Wl,--gc-sections
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}

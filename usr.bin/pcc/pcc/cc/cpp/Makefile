@@ -18,6 +18,7 @@ CFLAGS += -Wall -Wmissing-prototypes -Wshadow -Wsign-compare \
 	-ffunction-sections -fdata-sections
 CPPFLAGS =   -DGCC_COMPAT \
 	-I$(srcdir) -I$(top_builddir) -I$(builddir) -I$(MIPDIR) -I$(MDIR)
+LIBS =
 LDFLAGS += -Wl,--gc-sections
 YACC = bison -y
 YFLAGS = 
