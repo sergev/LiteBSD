@@ -1,6 +1,6 @@
 #	@(#)Makefile	8.3 (Berkeley) 1/7/94
 
-SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
+SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
 	comm compress ctags cut diff dirname du elfcopy \
 	env error expand false find finger fmt fold fpr from \

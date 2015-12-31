@@ -797,6 +797,7 @@ target /sbin/newfs
 file /usr/bin/apply
 file /usr/bin/apropos
 file /usr/bin/ar
+file /usr/bin/awk
 file /usr/bin/banner
 file /usr/bin/basename
 file /usr/bin/bdes
@@ -1635,6 +1636,7 @@ file /usr/share/man/cat1/amq.0
 file /usr/share/man/cat1/apply.0
 file /usr/share/man/cat1/apropos.0
 file /usr/share/man/cat1/ar.0
+file /usr/share/man/cat1/awk.0
 file /usr/share/man/cat1/basename.0
 file /usr/share/man/cat1/bdes.0
 file /usr/share/man/cat1/biff.0
