@@ -30,19 +30,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static const char copyright[] =
-"@(#) Copyright (c) 1988, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-#if 0
-static char sccsid[] = "@(#)size.c	8.2 (Berkeley) 12/9/93";
-#endif
-static const char rcsid[] = "$OpenBSD: size.c,v 1.20 2003/09/30 19:00:14 mickey Exp $";
-#endif /* not lint */
-
 #include <sys/param.h>
 #include <sys/file.h>
 #include <a.out.h>
@@ -396,6 +383,6 @@ show_file(int count, int warn_fmt, char *name, FILE *fp, off_t foff, union hdr *
 void
 usage(void)
 {
-	(void)fprintf(stderr, "usage: size [-tw] [file ...]\n");
+	(void)fprintf(stderr, "usage: fullsize [-tw] [file ...]\n");
 	exit(1);
 }
