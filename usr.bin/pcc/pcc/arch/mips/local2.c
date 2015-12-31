@@ -1,4 +1,4 @@
-/*	$Id: local2.c,v 1.29 2015/12/29 10:04:30 ragge Exp $	 */
+/*	$Id: local2.c,v 1.30 2015/12/31 16:21:02 ragge Exp $	 */
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -38,10 +38,6 @@
 
 #include "pass1.h"
 #include "pass2.h"
-
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 
 #ifdef TARGET_BIG_ENDIAN
 int bigendian = 1;

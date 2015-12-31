@@ -23,13 +23,13 @@ YFLAGS =
 TARGOS = litebsd
 TARGOSVER = 0
 TARGMACH = mips
-prefix = /usr/local
+prefix = /usr
 exec_prefix = ${prefix}
 libexecdir = ${exec_prefix}/libexec
 datarootdir = ${prefix}/share
 mandir = ${datarootdir}/man
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} -s
+INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)

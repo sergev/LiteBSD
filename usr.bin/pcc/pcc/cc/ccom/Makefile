@@ -16,6 +16,7 @@ CPPFLAGS =   -DGCC_COMPAT -D_ISOC99_SOURCE \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) -I$(MIPDIR) -I$(MDIR) \
 	-I$(top_srcdir)/os/$(TARGOS)
+LIBS =
 LDFLAGS += -Wl,--gc-sections
 LEX = flex
 LFLAGS =
