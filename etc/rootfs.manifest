@@ -25,6 +25,11 @@ dir /home
 dir /usr
 dir /usr/bin
 dir /usr/lib
+dir /usr/lib/pcc
+dir /usr/lib/pcc/mipsel-unknown-litebsd0.1
+dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL
+dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/include
+dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/lib
 dir /usr/libexec
 dir /usr/sbin
 dir /usr/src
@@ -796,9 +801,11 @@ file /usr/bin/banner
 file /usr/bin/basename
 file /usr/bin/bdes
 file /usr/bin/biff
+file /usr/bin/c++
 file /usr/bin/cal
 file /usr/bin/calendar
 file /usr/bin/cap_mkdb
+file /usr/bin/cc
 file /usr/bin/checknr
 file /usr/bin/chflags
 file /usr/bin/chpass
@@ -912,12 +919,15 @@ target nvi
 symlink /usr/bin/ex
 target nvi
 
+file /usr/bin/p++
 file /usr/bin/pagesize
 file /usr/bin/passwd
 mode 04555
 owner 0                 root
 file /usr/bin/paste
 file /usr/bin/patch
+file /usr/bin/pcc
+file /usr/bin/pcpp
 file /usr/bin/portio
 file /usr/bin/pr
 file /usr/bin/printenv
@@ -1476,9 +1486,12 @@ default
 filemode 0775
 dir /usr/libexec/lpr
 file /usr/libexec/bugfiler
+file /usr/libexec/ccom
 mode 0x4555
 owner 0                 root
 file /usr/libexec/comsat
+file /usr/libexec/cpp
+file /usr/libexec/cxxcom
 file /usr/libexec/diffh
 file /usr/libexec/fingerd
 file /usr/libexec/ftpd

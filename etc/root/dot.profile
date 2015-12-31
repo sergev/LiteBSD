@@ -1,4 +1,4 @@
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 export PATH
 
 BLOCKSIZE=1k

@@ -1,60 +1,36 @@
-/*-
- * Copyright (c) 1992, 1993
- *      The Regents of the University of California.  All rights reserved.
+/*	$OpenBSD: stdarg.h,v 1.8 2011/03/02 18:31:58 matthew Exp $ */
+/*
+ * Copyright (c) 2003, 2004  Marc espie <espie@openbsd.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by the University of
- *      California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- *      @(#)stdarg.h    8.1 (Berkeley) 6/10/93
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #ifndef _STDARG_H_
 #define _STDARG_H_
 
-typedef char *va_list;
+#include <sys/cdefs.h>
 
-#define __va_promote(type) \
-    (((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
+/* Note that the type used in va_arg is supposed to match the
+   actual type **after default promotions**.
+   Thus, va_arg (..., short) is not valid.  */
 
-#define va_start(ap, last) \
-    (ap = ((char *)&(last) + __va_promote(last)))
+/* We might have to #define around these for SmallerC  */
 
-#ifdef KERNEL
-#define va_arg(ap, type) \
-    ((type *)(ap += sizeof(type)))[-1]
-#else
-#define va_arg(ap, type) \
-    ((type *)(ap += sizeof(type) == sizeof(int) ? sizeof(type) : \
-        sizeof(type) > sizeof(int) ? \
-        (-(int)(ap) & (sizeof(type) - 1)) + sizeof(type) : \
-        (abort(), 0)))[-1]
-#endif
+#define va_start(ap, last)	__builtin_va_start((ap), last)
+#define va_end(ap)		__builtin_va_end((ap))
+#define va_arg(ap, type)	__builtin_va_arg((ap), type)
+#define va_copy(dst, src)	__builtin_va_copy((dst),(src))
 
-#define va_end(ap)
+typedef __builtin_va_list	va_list;
 
-#endif /* !_STDARG_H_ */
+#endif /* not _STDARG_H_ */
