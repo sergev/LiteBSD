@@ -1,5 +1,7 @@
-.\" Copyright (c) 1993
-.\"	The Regents of the University of California.  All rights reserved.
+.\"	$NetBSD: uname.1,v 1.12 2005/03/27 18:41:22 peter Exp $
+.\"
+.\" Copyright (c) 1990 The Regents of the University of California.
+.\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -9,11 +11,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
+.\" 3. Neither the name of the University nor the names of its contributors
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
@@ -29,69 +27,60 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\"	@(#)uname.1	8.3 (Berkeley) 4/8/94
+.\"     from: @(#)du.1	6.13 (Berkeley) 6/20/91
+.\"	$NetBSD: uname.1,v 1.12 2005/03/27 18:41:22 peter Exp $
 .\"
-.Dd "April 8, 1994"
+.Dd November 9, 1998
 .Dt UNAME 1
 .Os
 .Sh NAME
 .Nm uname
-.Nd display information about the system
+.Nd Print operating system name
 .Sh SYNOPSIS
-.Nm uname
-.Op Fl amnrsv
+.Nm
+.Op Fl amnprsv
 .Sh DESCRIPTION
 The
-.Nm uname
-command writes the name of the operating system implementation to
-standard output.
-When options are specified, strings representing one or more system
-characteristics are written to standard output.
+.Nm
+utility writes symbols representing one or more system characteristics
+to the standard output.
 .Pp
-The options are as follows:
-.Bl -tag -width Ds
+The following options are available:
+.Bl -tag -width indent
 .It Fl a
-Behave as though the options
-.Fl m ,
-.Fl n ,
-.Fl r ,
-.Fl s ,
-and
-.Fl v
+Behave as though all of the options
+.Fl mnrsv
 were specified.
 .It Fl m
-Write the type of the current hardware platform to standard output.
+print the machine hardware name.
 .It Fl n
-Write the name of the system to standard output.
+print the nodename (the nodename may be a name
+that the system is known by to a communications
+network).
+.It Fl p
+print the machine processor architecture name.
 .It Fl r
-Write the current release level of the operating system
-to standard output.
+print the operating system release.
 .It Fl s
-Write the name of the operating system implementation to standard output.
+print the operating system name.
 .It Fl v
-Write the version level of this release of the operating system
-to standard output.
+print the operating system version.
 .El
 .Pp
-If the
-.Fl a
-flag is specified, or multiple flags are specified, all
-output is written on a single line, separated by spaces.
-.Pp
-The
-.Nm uname
-utility exits 0 on success, and >0 if an error occurs.
+If no options are specified,
+.Nm
+prints the operating system name as if the
+.Fl s
+option had been specified.
 .Sh SEE ALSO
-.Xr sysctl 8 ,
-.Xr sysctl 3 ,
+.Xr hostname 1 ,
+.Xr machine 1 ,
 .Xr uname 3
-.Sh HISTORY
-The
-.Nm uname
-command appeared in 4.4BSD.
 .Sh STANDARDS
 The
-.Nm uname
-command is expected to conform to the
-.St -p1003.2
-specification.
+.Nm
+utility conforms to
+.St -p1003.2-92 .
+The
+.Fl p
+option is an extension to the standard.
