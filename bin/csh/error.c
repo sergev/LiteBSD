@@ -1,3 +1,6 @@
+/*	$OpenBSD: error.c,v 1.10 2009/11/11 16:15:06 deraadt Exp $	*/
+/*	$NetBSD: err.c,v 1.6 1995/03/21 09:02:47 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1980, 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -10,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,18 +30,10 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)err.c	8.1 (Berkeley) 5/31/93";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
-#if __STDC__
-# include <stdarg.h>
-#else
-# include <varargs.h>
-#endif
+#include <stdarg.h>
 
 #include "csh.h"
 #include "extern.h"
@@ -171,7 +162,7 @@ static char *errorlist[] =
 #define ERR_STRING	56
     "%s",
 #define ERR_JOBS	57
-    "Usage: jobs [ -l ]",
+    "usage: jobs [-l]",
 #define ERR_JOBARGS	58
     "Arguments should be jobs or process id's",
 #define ERR_JOBCUR	59
@@ -195,7 +186,7 @@ static char *errorlist[] =
 #define ERR_BADDIR	68
     "Bad directory",
 #define ERR_DIRUS	69
-    "Usage: %s [-lvn]%s",
+    "usage: %s [-lnv]%s",
 #define ERR_HFLAG	70
     "No operand for -h flag",
 #define ERR_NOTLOGIN	71
@@ -213,7 +204,7 @@ static char *errorlist[] =
 #define ERR_NOHOME	77
     "No $home variable set",
 #define ERR_HISTUS	78
-    "Usage: history [-rh] [# number of events]",
+    "usage: history [-hr] [n]",
 #define ERR_SPDOLLT	79
     "$, ! or < not allowed with $# or $?",
 #define ERR_NEWLINE	80
@@ -270,7 +261,7 @@ static char *errorlist[] =
     "Alias loop",
 #define ERR_HISTLOOP	106
     "!# History loop",
-#define ERR_ARCH        107
+#define ERR_ARCH	107
     "%s: %s. Wrong Architecture",
 #define ERR_FILEINQ	108
     "Malformed file inquiry",
@@ -286,26 +277,16 @@ static char *errorlist[] =
  * e.g. in process.
  */
 void
-#if __STDC__
 seterror(int id, ...)
-#else
-seterror(id, va_alist)
-     int id;
-     va_dcl
-#endif
 {
     if (seterr == 0) {
 	char    berr[BUFSIZ];
 	va_list va;
 
-#if __STDC__
 	va_start(va, id);
-#else
-	va_start(va);
-#endif
-	if (id < 0 || id > sizeof(errorlist) / sizeof(errorlist[0]))
+	if (id < 0 || id >= sizeof(errorlist) / sizeof(errorlist[0]))
 	    id = ERR_INVALID;
-	vsprintf(berr, errorlist[id], va);
+	vsnprintf(berr, sizeof(berr), errorlist[id], va);
 	va_end(va);
 
 	seterr = strsave(berr);
@@ -318,12 +299,12 @@ seterror(id, va_alist)
  * Special ids:
  *	ERR_SILENT: Print nothing.
  *	ERR_OLD: Print the previously set error if one was there.
- *	         otherwise return.
+ *		 otherwise return.
  *	ERR_NAME: If this bit is set, print the name of the function
  *		  in bname
  *
  * This routine always resets or exits.  The flag haderr
- * is set so the routine who catches the unwind can propogate
+ * is set so the routine who catches the unwind can propagate
  * it if they want.
  *
  * Note that any open files at the point of error will eventually
@@ -331,16 +312,10 @@ seterror(id, va_alist)
  * place error unwinds are ever caught.
  */
 void
-#if __STDC__
 stderror(int id, ...)
-#else
-stderror(id, va_alist)
-    int     id;
-    va_dcl
-#endif
 {
     va_list va;
-    register Char **v;
+    Char **v;
     int     flags = id & ERR_FLAGS;
 
     id &= ~ERR_FLAGS;
@@ -348,7 +323,7 @@ stderror(id, va_alist)
     if ((flags & ERR_OLD) && seterr == NULL)
 	return;
 
-    if (id < 0 || id > sizeof(errorlist) / sizeof(errorlist[0]))
+    if (id < 0 || id >= sizeof(errorlist) / sizeof(errorlist[0]))
 	id = ERR_INVALID;
 
     (void) fflush(cshout);
@@ -364,11 +339,7 @@ stderror(id, va_alist)
 	    /* Old error. */
 	    (void) fprintf(csherr, "%s.\n", seterr);
 	else {
-#if __STDC__
 	    va_start(va, id);
-#else
-	    va_start(va);
-#endif
 	    (void) vfprintf(csherr, errorlist[id], va);
 	    va_end(va);
 	    (void) fprintf(csherr, ".\n");
@@ -391,7 +362,7 @@ stderror(id, va_alist)
     /*
      * Go away if -e or we are a child shell
      */
-    if (exiterr || child)
+    if (!exitset || exiterr || child)
 	xexit(1);
 
     /*
