@@ -72,6 +72,7 @@
 
 /* the following is used externally (sysctl_hw) */
 char    machine[] = "MIPS";     /* cpu "architecture" */
+char    machine_arch[] = "mipsel";     /* used in "uname -p" */
 char    cpu_model[30];
 
 vm_map_t buffer_map;
