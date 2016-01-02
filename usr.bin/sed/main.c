@@ -367,7 +367,7 @@ mf_fgets(SPACE *sp, enum e_spflag spflag)
 					error(FATAL, "%s: name too long", fname);
 			}
 			if ((fd = mkstemp(tmpfname)) == -1)
-				error(FATAL, "%s", fname);
+				error(FATAL, "%s: %s", fname, strerror(errno));
 			if ((outfile = fdopen(fd, "w")) == NULL) {
 				unlink(tmpfname);
 				error(FATAL, "%s", fname);
