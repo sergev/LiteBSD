@@ -65,6 +65,7 @@
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>
 #include <nfs/nfs.h>
+#include "pty.h"
 
 /*
  * Names for intrcnt data.
@@ -135,13 +136,17 @@ static const struct {
     { "_niswdev",       (int) &niswdev      },
 #endif
     { "_nprocs",        (int) &nprocs       },
+#if NPTY > 0
     { "_npty",          (int) &npty         },
+#endif
     { "_nswap",         (int) &nswap        },
     { "_nswapmap",      (int) &nswapmap     },
     { "_nswdev",        (int) &nswdev       },
     { "_numvnodes",     (int) &numvnodes    },
     { "_profhz",        (int) &profhz       },
+#if NPTY > 0
     { "_pt_tty",        (int) &pt_tty       },
+#endif
     { "_rtstat",        (int) &rtstat       },
     { "_rt_tables",     (int) &rt_tables    },
     { "_conf_dinit",    (int) &conf_dinit   },

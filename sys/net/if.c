@@ -47,6 +47,7 @@
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #include <net/radix.h>
+#include "ether.h"
 
 int ifqmaxlen = IFQ_MAXLEN;
 void if_slowtimo __P((void *arg));
@@ -97,7 +98,7 @@ if_attach(ifp)
     struct ifnet *ifp;
 {
     unsigned socksize, ifasize;
-    int namelen, unitlen, masklen, ether_output();
+    int namelen, unitlen, masklen;
     char workbuf[12], *unitname;
     register struct ifnet **p = &ifnet;
     register struct sockaddr_dl *sdl;
@@ -157,9 +158,11 @@ if_attach(ifp)
         while (namelen != 0)
             sdl->sdl_data[--namelen] = 0xff;
     }
+#if NETHER > 0
     /* XXX -- Temporary fix before changing 10 ethernet drivers */
     if (ifp->if_output == ether_output)
         ether_ifattach(ifp);
+#endif
 }
 /*
  * Locate an interface based on a complete address.
