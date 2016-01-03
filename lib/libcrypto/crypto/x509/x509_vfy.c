@@ -862,7 +862,7 @@ static int check_cert(X509_STORE_CTX *ctx)
 {
     X509_CRL *crl = NULL, *dcrl = NULL;
     X509 *x;
-    int ok, cnum;
+    int ok = 0, cnum;
     unsigned int last_reasons;
     cnum = ctx->error_depth;
     x = sk_X509_value(ctx->chain, cnum);

@@ -61,10 +61,10 @@ OPENSSLDIR=/usr
 
 CFLAG= ${CFLAGS} -fomit-frame-pointer -Wall -Wno-error \
 -DOPENSSL_NO_APPS -DOPENSSL_NO_EC_NISTP_64_GCC_128 -DOPENSSL_NO_GMP -DOPENSSL_NO_JPAKE -DOPENSSL_NO_LIBUNBOUND -DOPENSSL_NO_MD2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SCTP -DOPENSSL_NO_SSL_TRACE -DOPENSSL_NO_STORE -DOPENSSL_NO_UNIT_TEST
-PEX_LIBS= 
-EX_LIBS= 
-EXE_EXT= 
-ARFLAGS= 
+PEX_LIBS=
+EX_LIBS=
+EXE_EXT=
+ARFLAGS=
 AR= $(GCC_PREFIX)ar $(ARFLAGS) r
 RANLIB= $(GCC_PREFIX)ranlib
 NM= nm
@@ -84,25 +84,25 @@ ASFLAG=$(CFLAG)
 
 # For x86 assembler: Set PROCESSOR to 386 if you want to support
 # the 80386.
-PROCESSOR= 
+PROCESSOR=
 
 # CPUID module collects small commonly used assembler snippets
 CPUID_OBJ= mem_clr.o
 BN_ASM= bn_asm.o
-EC_ASM= 
+EC_ASM=
 DES_ENC= des_enc.o fcrypt_b.o
 AES_ENC= aes_core.o aes_cbc.o
 BF_ENC= bf_enc.o
 CAST_ENC= c_enc.o
 RC4_ENC= rc4_enc.o rc4_skey.o
 RC5_ENC= rc5_enc.o
-MD5_ASM_OBJ= 
-SHA1_ASM_OBJ= 
-RMD160_ASM_OBJ= 
+MD5_ASM_OBJ=
+SHA1_ASM_OBJ=
+RMD160_ASM_OBJ=
 WP_ASM_OBJ= wp_block.o
 CMLL_ENC= camellia.o cmll_misc.o cmll_cbc.o
-MODES_ASM_OBJ= 
-ENGINES_ASM_OBJ= 
+MODES_ASM_OBJ=
+ENGINES_ASM_OBJ=
 PERLASM_SCHEME= void
 
 # KRB5 stuff
@@ -524,7 +524,7 @@ tar-snap: ../$(TARFILE).list
 	rm -f ../$(TARFILE).list
 	ls -l ../$(TARFILE)
 
-dist:   
+dist:
 	$(PERL) Configure dist
 	@$(MAKE) dist_pem_h
 	@$(MAKE) SDIRS='$(SDIRS)' clean
@@ -538,7 +538,7 @@ install: all install_sw
 install_sw:
 	@$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/bin \
 		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR) \
-		$(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl \
+		$(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl
 	@set -e; headerlist="$(EXHEADER)"; for i in $$headerlist;\
 	do \
 	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
