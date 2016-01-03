@@ -1,3 +1,6 @@
+/*	$OpenBSD: misc.c,v 1.12 2012/12/04 02:24:46 deraadt Exp $	*/
+/*	$NetBSD: misc.c,v 1.6 1995/03/21 09:03:09 cgd Exp $	*/
+
 /*-
  * Copyright (c) 1980, 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -10,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,28 +30,18 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 5/31/93";
-#endif /* not lint */
-
-#include <sys/param.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
-#if __STDC__
-# include <stdarg.h>
-#else
-# include <varargs.h>
-#endif
+#include <stdarg.h>
 
 #include "csh.h"
 #include "extern.h"
 
-static int	renum __P((int, int));
+static int	renum(int, int);
 
 int
-any(s, c)
-    register char *s;
-    register int c;
+any(char *s, int c)
 {
     if (!s)
 	return (0);		/* Check for nil pointer */
@@ -62,23 +51,11 @@ any(s, c)
     return (0);
 }
 
-void
-setzero(cp, i)
-    char   *cp;
-    int     i;
-{
-    if (i != 0)
-	do
-	    *cp++ = 0;
-	while (--i);
-}
-
 char   *
-strsave(s)
-    register char *s;
+strsave(char *s)
 {
     char   *n;
-    register char *p;
+    char *p;
 
     if (s == NULL)
 	s = "";
@@ -91,8 +68,7 @@ strsave(s)
 }
 
 Char  **
-blkend(up)
-    register Char **up;
+blkend(Char **up)
 {
 
     while (*up)
@@ -102,9 +78,7 @@ blkend(up)
 
 
 void
-blkpr(fp, av)
-    FILE *fp;
-    register Char **av;
+blkpr(FILE *fp, Char **av)
 {
 
     for (; *av; av++) {
@@ -115,10 +89,9 @@ blkpr(fp, av)
 }
 
 int
-blklen(av)
-    register Char **av;
+blklen(Char **av)
 {
-    register int i = 0;
+    int i = 0;
 
     while (*av++)
 	i++;
@@ -126,11 +99,9 @@ blklen(av)
 }
 
 Char  **
-blkcpy(oav, bv)
-    Char  **oav;
-    register Char **bv;
+blkcpy(Char **oav, Char **bv)
 {
-    register Char **av = oav;
+    Char **av = oav;
 
     while ((*av++ = *bv++) != NULL)
 	continue;
@@ -138,8 +109,7 @@ blkcpy(oav, bv)
 }
 
 Char  **
-blkcat(up, vp)
-    Char  **up, **vp;
+blkcat(Char **up, Char **vp)
 {
 
     (void) blkcpy(blkend(up), vp);
@@ -147,10 +117,9 @@ blkcat(up, vp)
 }
 
 void
-blkfree(av0)
-    Char  **av0;
+blkfree(Char **av0)
 {
-    register Char **av = av0;
+    Char **av = av0;
 
     if (!av0)
 	return;
@@ -160,10 +129,9 @@ blkfree(av0)
 }
 
 Char  **
-saveblk(v)
-    register Char **v;
+saveblk(Char **v)
 {
-    register Char **newv =
+    Char **newv =
     (Char **) xcalloc((size_t) (blklen(v) + 1), sizeof(Char **));
     Char  **onewv = newv;
 
@@ -174,12 +142,11 @@ saveblk(v)
 
 #ifdef NOTUSED
 char   *
-strstr(s, t)
-    register char *s, *t;
+strstr(char *s, char *t)
 {
     do {
-	register char *ss = s;
-	register char *tt = t;
+	char *ss = s;
+	char *tt = t;
 
 	do
 	    if (*tt == '\0')
@@ -193,11 +160,10 @@ strstr(s, t)
 
 #ifndef SHORT_STRINGS
 char   *
-strspl(cp, dp)
-    char   *cp, *dp;
+strspl(char *cp, char *dp)
 {
     char   *ep;
-    register char *p, *q;
+    char *p, *q;
 
     if (!cp)
 	cp = "";
@@ -218,10 +184,9 @@ strspl(cp, dp)
 #endif
 
 Char  **
-blkspl(up, vp)
-    register Char **up, **vp;
+blkspl(Char **up, Char **vp)
 {
-    register Char **wp =
+    Char **wp =
     (Char **) xcalloc((size_t) (blklen(up) + blklen(vp) + 1),
 		      sizeof(Char **));
 
@@ -230,8 +195,7 @@ blkspl(up, vp)
 }
 
 Char
-lastchr(cp)
-    register Char *cp;
+lastchr(Char *cp)
 {
 
     if (!cp)
@@ -248,18 +212,18 @@ lastchr(cp)
  * any units which may have been left open accidentally.
  */
 void
-closem()
+closem(void)
 {
-    register int f;
+    int f;
 
-    for (f = 0; f < NOFILE; f++)
+    for (f = 0; f < sysconf(_SC_OPEN_MAX); f++)
 	if (f != SHIN && f != SHOUT && f != SHERR && f != OLDSTD &&
 	    f != FSHTTY)
 	    (void) close(f);
 }
 
 void
-donefds()
+donefds(void)
 {
     (void) close(0);
     (void) close(1);
@@ -274,8 +238,7 @@ donefds()
  * i.e. to a unit > 2.  This also happens in dcopy.
  */
 int
-dmove(i, j)
-    register int i, j;
+dmove(int i, int j)
 {
 
     if (i == j || i < 0)
@@ -293,8 +256,7 @@ dmove(i, j)
 }
 
 int
-dcopy(i, j)
-    register int i, j;
+dcopy(int i, int j)
 {
 
     if (i == j || i < 0 || (j < 0 && i > 2))
@@ -308,10 +270,9 @@ dcopy(i, j)
 }
 
 static int
-renum(i, j)
-    register int i, j;
+renum(int i, int j)
 {
-    register int k = dup(i);
+    int k = dup(i);
 
     if (k < 0)
 	return (-1);
@@ -331,11 +292,9 @@ renum(i, j)
  * as well as by commands like "repeat".
  */
 void
-lshift(v, c)
-    register Char **v;
-    register int c;
+lshift(Char **v, int c)
 {
-    register Char **u;
+    Char **u;
 
     for (u = v; *u && --c >= 0; u++)
 	xfree((ptr_t) *u);
@@ -343,8 +302,7 @@ lshift(v, c)
 }
 
 int
-number(cp)
-    Char   *cp;
+number(Char *cp)
 {
     if (!cp)
 	return(0);
@@ -360,8 +318,7 @@ number(cp)
 }
 
 Char  **
-copyblk(v)
-    register Char **v;
+copyblk(Char **v)
 {
     Char  **nv = (Char **) xcalloc((size_t) (blklen(v) + 1), sizeof(Char **));
 
@@ -370,8 +327,7 @@ copyblk(v)
 
 #ifndef SHORT_STRINGS
 char   *
-strend(cp)
-    register char *cp;
+strend(char *cp)
 {
     if (!cp)
 	return (cp);
@@ -383,10 +339,9 @@ strend(cp)
 #endif /* SHORT_STRINGS */
 
 Char   *
-strip(cp)
-    Char   *cp;
+strip(Char *cp)
 {
-    register Char *dp = cp;
+    Char *dp = cp;
 
     if (!cp)
 	return (cp);
@@ -395,9 +350,20 @@ strip(cp)
     return (cp);
 }
 
+Char   *
+quote(Char *cp)
+{
+    Char *dp = cp;
+
+    if (!cp)
+	return (cp);
+    while (*dp != '\0')
+	*dp++ |= QUOTE;
+    return (cp);
+}
+
 void
-udvar(name)
-    Char   *name;
+udvar(Char *name)
 {
 
     setname(vis_str(name));
@@ -405,8 +371,7 @@ udvar(name)
 }
 
 int
-prefix(sub, str)
-    register Char *sub, *str;
+prefix(Char *sub, Char *str)
 {
 
     for (;;) {

@@ -7,6 +7,8 @@ CFLAGS+=	-DNO_BZIP2_SUPPORT -DNO_COMPRESS_SUPPORT -DNO_PACK_SUPPORT
 CFLAGS+=	-DNO_XZ_SUPPORT -DSMALL
 CFLAGS+=	-ffunction-sections -fdata-sections
 
+LDFLAGS+=	-Wl,--gc-sections
+
 DPADD=		${LIBZ}
 LDADD=		-lz
 

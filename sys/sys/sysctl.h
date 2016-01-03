@@ -215,9 +215,10 @@ struct kinfo_proc {
 #define HW_PHYSMEM       5      /* int: total memory */
 #define HW_USERMEM       6      /* int: non-kernel memory */
 #define HW_PAGESIZE      7      /* int: software page size */
-#define HW_DISKNAMES     8      /* strings: disk drive names */
-#define HW_DISKSTATS     9      /* struct: diskstats[] */
-#define HW_MAXID        10      /* number of valid hw ids */
+#define HW_MACHINE_ARCH  8      /* string: machine arch (not class) */
+#define HW_DISKNAMES     9      /* strings: disk drive names */
+#define HW_DISKSTATS    10      /* struct: diskstats[] */
+#define HW_MAXID        11      /* number of valid hw ids */
 
 #define CTL_HW_NAMES { \
     { 0, 0 }, \
@@ -228,6 +229,7 @@ struct kinfo_proc {
     { "physmem", CTLTYPE_INT }, \
     { "usermem", CTLTYPE_INT }, \
     { "pagesize", CTLTYPE_INT }, \
+    { "machine_arch", CTLTYPE_STRING }, \
     { "disknames", CTLTYPE_STRUCT }, \
     { "diskstats", CTLTYPE_STRUCT }, \
 }

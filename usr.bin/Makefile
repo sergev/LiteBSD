@@ -1,14 +1,14 @@
 #	@(#)Makefile	8.3 (Berkeley) 1/7/94
 
-SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
+SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
-	comm compress cpp ctags cut diff dirname du elfcopy \
+	comm compress ctags cut dc diff dirname du elfcopy \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep gzip head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
 	lock logger login logname lorder m4 mail make man mesg mkdep \
 	mkfifo mklocale mkstr more msgs mt netstat nfsstat nice nm nohup \
-	pagesize passwd paste patch pr printenv printf quota \
+	pagesize passwd paste patch pcc pkg pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size sl soelim split \
 	strings su talk tcopy tee telnet tftp time tip \
@@ -18,7 +18,7 @@ SUBDIR=	apply apropos ar banner basename bdes biff cal calendar \
 	xargs xinstall xstr yacc yes
 
 # Missing on 4.4bsd tape:
-# at bc compress dc deroff diction graph learn
+# at bc compress deroff diction graph learn
 # plot ptx spell spline struct units xsend
 
 # TODO: ex file sort uucp

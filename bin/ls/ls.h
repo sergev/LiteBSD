@@ -42,6 +42,7 @@ extern long blocksize;		/* block size units */
 
 extern int f_accesstime;	/* use time of last access */
 extern int f_flags;		/* show flags associated with a file */
+extern int f_humanize;		/* humanize size field */
 extern int f_inode;		/* print inode */
 extern int f_longform;		/* long listing format */
 extern int f_sectime;		/* print the real time for all files */
@@ -52,6 +53,7 @@ extern int f_type;		/* add type character for non-regular files */
 typedef struct {
 	FTSENT *list;
 	u_long btotal;
+	u_long stotal;
 	int bcfile;
 	int entries;
 	int maxlen;

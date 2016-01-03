@@ -82,7 +82,7 @@ ufs_disk_set_partition (ufs_t *disk, unsigned pindex)
         return -1;
     }
     disk->d_part_offset *= 512;
-printf ("Partition %u, type %02x, offset=%uk, length=%uk\n", pindex, disk->d_part_type, (unsigned)(disk->d_part_offset/1024), disk->d_part_nsectors/2);
+//printf ("Partition %u, type %02x, offset=%uk, length=%uk\n", pindex, disk->d_part_type, (unsigned)(disk->d_part_offset/1024), disk->d_part_nsectors/2);
     return 0;
 }
 

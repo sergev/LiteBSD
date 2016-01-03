@@ -514,12 +514,7 @@ putchar(c, flags, tp)
  * Scaled down version of sprintf(3).
  */
 int
-#ifdef __STDC__
 sprintf(char *buf, const char *cfmt, ...)
-#else
-sprintf(buf, cfmt, va_alist)
-    char *buf, *cfmt;
-#endif
 {
     register const char *fmt = cfmt;
     register char *p, *bp;

@@ -1,0 +1,26 @@
+/Makefile.in/1.23/Tue Sep 25 11:17:17 2012//
+/data.c/1.15/Sun May 11 15:28:03 2008//
+/defines.h/1.15/Sat May 10 07:53:41 2008//
+/defs.h/1.23/Mon Dec 12 09:18:25 2011//
+/equiv.c/1.11/Sun May 11 15:28:03 2008//
+/error.c/1.8/Sat May 10 07:53:41 2008//
+/exec.c/1.14/Sun May 11 15:28:03 2008//
+/expr.c/1.20/Sun May 11 15:28:03 2008//
+/ftypes.h/1.5/Fri Dec 19 08:08:48 2008//
+/gram.dcl/1.7/Sat May 10 08:44:17 2008//
+/gram.exec/1.4/Sat May 10 08:39:27 2008//
+/gram.expr/1.4/Sun May  4 09:51:57 2008//
+/gram.head/1.9/Sat May 10 07:53:41 2008//
+/gram.io/1.1/Sun Apr 17 13:54:38 2005//
+/init.c/1.16/Wed Dec 24 17:40:41 2008//
+/intr.c/1.13/Sun May 11 15:28:03 2008//
+/io.c/1.15/Fri Dec 19 08:08:48 2008//
+/lex.c/1.12/Sun May 11 15:28:03 2008//
+/main.c/1.17/Thu Mar 22 18:51:40 2012//
+/misc.c/1.17/Wed Feb 11 15:58:55 2009//
+/proc.c/1.14/Wed Dec 24 17:40:41 2008//
+/put.c/1.17/Sun May 11 15:28:03 2008//
+/putscj.c/1.18/Fri Dec 19 08:08:48 2008//
+/scjdefs.h/1.9/Sun Mar 23 09:17:44 2008//
+/tokens/1.2/Wed Mar  5 18:50:33 2008//
+D

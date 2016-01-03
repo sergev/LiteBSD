@@ -42,9 +42,7 @@ static char sccsid[] = "@(#)wwprintf.c	8.1 (Berkeley) 6/6/93";
 #include <stdarg.h>
 
 /*VARARGS2*/
-wwprintf(w, fmt, va_alist)
-struct ww *w;
-char *fmt;
+wwprintf(struct ww *w, char *fmt, ...)
 {
 	char buf[1024];
 	va_list ap;

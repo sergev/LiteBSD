@@ -1,3 +1,5 @@
+/*	$OpenBSD: main.c,v 1.16 1997/01/29 22:21:32 millert Exp $	*/
+
 /*
  * Copyright (c) 1985, 1989, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -38,7 +40,11 @@ static char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 10/9/94";
+#else
+static char rcsid[] = "$OpenBSD: main.c,v 1.16 1997/01/29 22:21:32 millert Exp $";
+#endif
 #endif /* not lint */
 
 /*
@@ -46,7 +52,9 @@ static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 10/9/94";
  */
 /*#include <sys/ioctl.h>*/
 #include <sys/types.h>
+#include <sys/file.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 
 #include <arpa/ftp.h>
 
@@ -62,6 +70,10 @@ static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 10/9/94";
 
 #include "ftp_var.h"
 
+extern struct	cmd cmdtab[];
+
+#define HASHBYTES 1024	/* default buffer size for drawing hash marks */
+
 int
 main(argc, argv)
 	int argc;
@@ -70,6 +82,7 @@ main(argc, argv)
 	int ch, top;
 	struct passwd *pw = NULL;
 	char *cp, homedir[MAXPATHLEN];
+	int force_port = 0;
 
 	sp = getservbyname("ftp", "tcp");
 	if (sp == 0)
@@ -77,37 +90,46 @@ main(argc, argv)
 	doglob = 1;
 	interactive = 1;
 	autologin = 1;
+	mark = HASHBYTES;
 
-	while ((ch = getopt(argc, argv, "dgintv")) != EOF) {
+	while ((ch = getopt(argc, argv, "p:r:dgintv")) != -1) {
 		switch (ch) {
 		case 'd':
 			options |= SO_DEBUG;
 			debug++;
 			break;
-
 		case 'g':
 			doglob = 0;
 			break;
-
 		case 'i':
 			interactive = 0;
 			break;
-
 		case 'n':
 			autologin = 0;
 			break;
-
+		case 'p':
+			force_port = atoi(optarg);
+			break;
+		case 'r':
+			if (isdigit(*optarg))
+				retry_connect = atoi(optarg);
+			else {
+				extern char *__progname;
+				(void)fprintf(stderr,
+					"%s: -r requires numeric argument\n",
+					__progname);
+				exit(1);
+			}
+			break;
 		case 't':
 			trace++;
 			break;
-
 		case 'v':
 			verbose++;
 			break;
-
 		default:
-			(void)fprintf(stderr,
-				"usage: ftp [-dgintv] [host [port]]\n");
+			(void)fprintf(stderr, "usage: "
+				"ftp [-dgintv] [-r<seconds>] [host [port]]\n");
 			exit(1);
 		}
 	}
@@ -135,6 +157,113 @@ main(argc, argv)
 		home = homedir;
 		(void) strcpy(home, pw->pw_dir);
 	}
+
+	if (argc > 0 && strchr(argv[0], ':')) {
+		int ret = 0;
+		anonftp = 1;
+
+		while (argc > 0 && strchr(argv[0], ':')) {
+			char *xargv[5];
+			extern char *__progname;
+			char portstr[20], *p, *bufp = NULL;
+			char *host = NULL, *dir = NULL, *file = NULL;
+			int xargc = 2, looping = 0, tmp;
+
+			if (setjmp(toplevel))
+				exit(0);
+			(void) signal(SIGINT, intr);
+			(void) signal(SIGPIPE, lostpeer);
+			xargv[0] = __progname;
+
+			host = strdup(argv[0]);
+			if (host == NULL) {
+				ret = 1;
+				goto bail;
+			}
+			if (!strncmp(host, "http://", sizeof("http://") - 1)) {
+				ret = http_fetch(host);
+				argc--;
+				argv++;
+				goto bail;
+			}
+			if (strncmp(host, "ftp://", sizeof("ftp://") - 1) ==
+			    0) {
+				host += sizeof("ftp://") - 1;
+				p = strchr(host, '/');
+			}
+			else
+				p = strchr(host, ':');
+			*p = '\0';
+
+			xargv[1] = host;
+			xargc = 2;
+			if (force_port) {
+				xargv[xargc++] = portstr;
+				snprintf(portstr, sizeof portstr, "%d",
+				    force_port);
+			}
+			xargv[xargc] = NULL;
+			setpeer(xargc, xargv);
+			if (!connected) {
+				printf("failed to connect to %s\n", host);
+				ret = 1;
+				argc--;
+				argv++;
+				goto bail;
+			}
+			*argv = p + 1;
+			do {
+				dir = *argv;
+				p = strrchr(dir, '/');
+				if (p != NULL) {
+					*p = '\0';
+					file = ++p;
+				} else {
+					file = dir;
+					dir = NULL;
+				}
+				if (dir != NULL && *dir != '\0') {
+					xargv[1] = dir;
+					xargv[2] = NULL;
+					xargc = 2;
+					cd(xargc, xargv);
+				}
+				xargv[1] = *file == '\0' ? "/" : file;
+				xargv[2] = NULL;
+				xargc = 2;
+				tmp = verbose;
+				verbose = -1;
+				if (mcd(xargc, xargv) == 0) {
+					verbose = tmp;
+					goto CLINE_CD;
+				}
+				verbose = tmp;
+				if (!looping) {
+					setbinary(NULL, 0);
+					looping = 1;
+				}
+				/* fetch file */
+				xargv[1] = file;
+				xargv[2] = NULL;
+				xargc = 2;
+				get(xargc, xargv);
+				if (code != 226)
+					ret = 1;
+				--argc;
+				argv++;
+			} while (argc > 0 && strchr(argv[0], ':') == NULL);
+
+			/* get ready for the next file */
+bail:
+			if (bufp) {
+				free(bufp);
+				bufp = NULL;
+			}
+			if (connected)
+				disconnect(1, xargv);
+		}
+		exit(ret);
+	}
 	if (argc > 0) {
 		char *xargv[5];
 		extern char *__progname;
@@ -148,8 +277,18 @@ main(argc, argv)
 		xargv[2] = argv[1];
 		xargv[3] = argv[2];
 		xargv[4] = NULL;
-		setpeer(argc+1, xargv);
+		do {
+			setpeer(argc+1, xargv);
+			if (!retry_connect)
+				break;
+			if (!connected) {
+				macnum = 0;
+				printf("Retrying...\n");
+				sleep(retry_connect);
+			}
+		} while (!connected);
 	}
+CLINE_CD:
 	top = setjmp(toplevel) == 0;
 	if (top) {
 		(void) signal(SIGINT, intr);
@@ -284,6 +423,9 @@ getcmd(name)
 	struct cmd *c, *found;
 	int nmatches, longest;
 
+	if (name == NULL)
+		return (0);
+
 	longest = 0;
 	nmatches = 0;
 	found = 0;
@@ -316,13 +458,27 @@ makeargv()
 {
 	char **argp;
 
-	margc = 0;
 	argp = margv;
 	stringbase = line;		/* scan from first of buffer */
 	argbase = argbuf;		/* store from first of buffer */
 	slrflag = 0;
-	while (*argp++ = slurpstring())
-		margc++;
+	for (margc = 0; ; margc++) {
+		/* Expand array if necessary */
+		if (margc == margvlen) {
+			margv = (margvlen == 0)
+				? (char **)malloc(20 * sizeof(char *))
+				: (char **)realloc(margv,
+					(margvlen + 20)*sizeof(char *));
+			if (margv == NULL)
+				errx(1, "cannot realloc argv array");
+			margvlen += 20;
+			argp = margv + margc;
+		}
+
+		if ((*argp++ = slurpstring()) == NULL)
+			break;
+	}
+
 }
 
 /*

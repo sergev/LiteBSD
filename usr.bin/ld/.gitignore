@@ -4,3 +4,5 @@ littlemips_script.c
 y.tab.c
 y.tab.h
 ld
+ld_script_lexer.c
+ld_script_parser.c
