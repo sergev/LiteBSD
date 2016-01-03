@@ -824,6 +824,7 @@ file /usr/bin/cpp
 file /usr/bin/ctags
 file /usr/bin/cut
 file /usr/bin/dc
+file /usr/bin/deroff
 file /usr/bin/diff
 file /usr/bin/diff3
 file /usr/bin/dirname
@@ -1744,6 +1745,7 @@ file /usr/share/man/cat1/cut.0
 file /usr/share/man/cat1/date.0
 file /usr/share/man/cat1/dc.0
 file /usr/share/man/cat1/dd.0
+file /usr/share/man/cat1/deroff.0
 file /usr/share/man/cat1/df.0
 file /usr/share/man/cat1/diff.0
 file /usr/share/man/cat1/diff3.0
