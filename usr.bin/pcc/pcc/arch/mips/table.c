@@ -1,4 +1,4 @@
-/*	$Id: table.c,v 1.16 2015/12/31 17:34:45 ragge Exp $	*/
+/*	$Id: table.c,v 1.17 2016/01/01 09:37:03 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -303,7 +303,7 @@ struct optab table[] = {
 
 /* (u)int/(u)short/char to uchar */
 { SCONV,	INAREG,
-	SAREG,	TSHORT|TINT,
+	SAREG,	TWORD|TSHORT|TUSHORT|TCHAR,
 	SAREG,	TUCHAR,
 		NAREG|NASL,	RESC1,
 		"	andi A1,AL,255\n", },
