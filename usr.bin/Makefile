@@ -2,7 +2,7 @@
 
 SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
-	comm compress ctags cut dc diff dirname du elfcopy \
+	comm compress ctags cut dc deroff diff dirname du elfcopy \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep gzip head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
@@ -18,8 +18,13 @@ SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 	xargs xinstall xstr yacc yes
 
 # Missing on 4.4bsd tape:
-# at bc compress deroff diction graph learn
+# at bc compress dc deroff diction graph learn
 # plot ptx spell spline struct units xsend
+
+# From the above missing list:
+# compress: ported from RetroBSD
+# dc: ported from FreeBSD
+# deroff: ported from OpenBSD
 
 # TODO: ex file sort uucp
 
