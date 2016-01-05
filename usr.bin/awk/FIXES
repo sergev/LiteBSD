@@ -1,3 +1,5 @@
+$NetBSD: FIXES,v 1.1 2006/07/14 14:23:06 jlam Exp $
+
 /****************************************************************
 Copyright (C) Lucent Technologies 1997
 All Rights Reserved
@@ -24,6 +26,329 @@ THIS SOFTWARE.
 
 This file lists all bug fixes, changes, etc., made since the AWK book
 was sent to the printers in August, 1987.
+
+Dec 20, 2012:
+	fiddled makefile to get correct yacc and bison flags.  pick yacc
+	(linux) or bison (mac) as necessary.
+
+	added  __attribute__((__noreturn__)) to a couple of lines in
+	proto.h, to silence someone's enthusiastic checker.
+
+	fixed obscure call by value bug in split(a[1],a) reported on
+	9fans.  the management of temporary values is just a mess; i
+	took a shortcut by making an extra string copy.  thanks
+	to paul patience and arnold robbins for passing it on and for
+	proposed patches.
+
+	tiny fiddle in setfval to eliminate -0 results in T.expr, which
+	has irritated me for 20+ years.
+
+Aug 10, 2011:
+	another fix to avoid core dump with delete(ARGV); again, many thanks
+	to ruslan ermilov.
+
+Aug 7, 2011:
+	split(s, a, //) now behaves the same as split(s, a, "")
+
+Jun 12, 2011:
+	/pat/, \n /pat/ {...} is now legal, though bad style to use.
+
+	added checks to new -v code that permits -vnospace; thanks to
+	ruslan ermilov for spotting this and providing the patch. 
+
+	removed fixed limit on number of open files; thanks to aleksey
+	cheusov and christos zoulos. 
+
+	fixed day 1 bug that resurrected deleted elements of ARGV when
+	used as filenames (in lib.c).
+
+	minor type fiddles to make gcc -Wall -pedantic happier (but not
+	totally so); turned on -fno-strict-aliasing in makefile.
+
+May 6, 2011:
+	added #ifdef for isblank.
+	now allows -ffoo as well as -f foo arguments.
+	(thanks, ruslan)
+
+May 1, 2011:
+	after advice from todd miller, kevin lo, ruslan ermilov,
+	and arnold robbins, changed srand() to return the previous
+	seed (which is 1 on the first call of srand).  the seed is
+	an Awkfloat internally though converted to unsigned int to
+	pass to the library srand().  thanks, everyone. 
+
+	fixed a subtle (and i hope low-probability) overflow error
+	in fldbld, by adding space for one extra \0.  thanks to 
+	robert bassett for spotting this one and providing a fix.
+
+	removed the files related to compilation on windows.  i no
+	longer have anything like a current windows environment, so
+	i can't test any of it.
+
+May 23, 2010:
+	fixed long-standing overflow bug in run.c; many thanks to
+	nelson beebe for spotting it and providing the fix.
+
+	fixed bug that didn't parse -vd=1 properly; thanks to santiago
+	vila for spotting it.
+
+Feb 8, 2010:
+	i give up.  replaced isblank with isspace in b.c; there are
+	no consistent header files.
+
+Nov 26, 2009:
+	fixed a long-standing issue with when FS takes effect.  a
+	change to FS is now noticed immediately for subsequent splits.
+
+	changed the name getline() to awkgetline() to avoid yet another
+	name conflict somewhere.
+
+Feb 11, 2009:
+	temporarily for now defined HAS_ISBLANK, since that seems to
+	be the best way through the thicket.  isblank arrived in C99,
+	but seems to be arriving at different systems at different
+	times.
+
+Oct 8, 2008:
+	fixed typo in b.c that set tmpvec wrongly.  no one had ever
+	run into the problem, apparently.  thanks to alistair crooks.
+
+Oct 23, 2007:
+	minor fix in lib.c: increase inputFS to 100, change malloc
+	for fields to n+1.  
+
+	fixed memory fault caused by out of order test in setsval.
+
+	thanks to david o'brien, freebsd, for both fixes.
+
+May 1, 2007:
+	fiddle in makefile to fix for BSD make; thanks to igor sobrado.
+
+Mar 31, 2007:
+	fixed some null pointer refs calling adjbuf.
+
+Feb 21, 2007:
+	fixed a bug in matching the null RE in sub and gsub.  thanks to al aho
+	who actually did the fix (in b.c), and to wolfgang seeberg for finding
+	it and providing a very compact test case.
+
+	fixed quotation in b.c; thanks to Hal Pratt and the Princeton Dante
+	Project.
+
+	removed some no-effect asserts in run.c.
+
+	fiddled maketab.c to not complain about bison-generated values.
+
+	removed the obsolete -V argument; fixed --version to print the
+	version and exit.
+
+	fixed wording and an outright error in the usage message; thanks to igor
+	sobrado and jason mcintyre.
+
+	fixed a bug in -d that caused core dump if no program followed.
+
+Jan 1, 2007:
+	dropped mac.code from makefile; there are few non-MacOSX
+	mac's these days.
+
+Jan 17, 2006:
+	system() not flagged as unsafe in the unadvertised -safe option.
+	found it while enhancing tests before shipping the ;login: article.
+	practice what you preach.
+
+	removed the 9-years-obsolete -mr and -mf flags.
+
+	added -version and --version options.
+
+	core dump on linux with BEGIN {nextfile}, now fixed.
+
+	removed some #ifdef's in run.c and lex.c that appear to no 
+	longer be necessary.
+
+Apr 24, 2005:
+	modified lib.c so that values of $0 et al are preserved in the END
+	block, apparently as required by posix.  thanks to havard eidnes
+	for the report and code.
+
+Jan 14, 2005:
+	fixed infinite loop in parsing, originally found by brian tsang.
+	thanks to arnold robbins for a suggestion that started me
+	rethinking it.
+
+Dec 31, 2004:
+	prevent overflow of -f array in main, head off potential error in 
+	call of SYNTAX(), test malloc return in lib.c, all with thanks to 
+	todd miller.
+
+Dec 22, 2004:
+	cranked up size of NCHARS; coverity thinks it can be overrun with
+	smaller size, and i think that's right.  added some assertions to b.c
+	to catch places where it might overrun.  the RE code is still fragile.
+
+Dec 5, 2004:
+	fixed a couple of overflow problems with ridiculous field numbers:
+	e.g., print $(2^32-1).  thanks to ruslan ermilov, giorgos keramidas
+	and david o'brien at freebsd.org for patches.  this really should
+	be re-done from scratch.
+
+Nov 21, 2004:
+	fixed another 25-year-old RE bug, in split.  it's another failure
+	to (re-)initialize.  thanks to steve fisher for spotting this and
+	providing a good test case.
+
+Nov 22, 2003:
+	fixed a bug in regular expressions that dates (so help me) from 1977;
+	it's been there from the beginning.  an anchored longest match that
+	was longer than the number of states triggered a failure to initialize
+	the machine properly.  many thanks to moinak ghosh for not only finding
+	this one but for providing a fix, in some of the most mysterious
+	code known to man.
+
+	fixed a storage leak in call() that appears to have been there since
+	1983 or so -- a function without an explicit return that assigns a 
+	string to a parameter leaked a Cell.  thanks to moinak ghosh for 
+	spotting this very subtle one.
+
+Jul 31, 2003:
+	fixed, thanks to andrey chernov and ruslan ermilov, a bug in lex.c
+	that mis-handled the character 255 in input.  (it was being compared
+	to EOF with a signed comparison.)
+
+Jul 29, 2003:
+	fixed (i think) the long-standing botch that included the beginning of
+	line state ^ for RE's in the set of valid characters; this led to a
+	variety of odd problems, including failure to properly match certain
+	regular expressions in non-US locales.  thanks to ruslan for keeping
+	at this one.
+
+Jul 28, 2003:
+	n-th try at getting internationalization right, with thanks to volker
+	kiefel, arnold robbins and ruslan ermilov for advice, though they
+	should not be blamed for the outcome.  according to posix, "."  is the
+	radix character in programs and command line arguments regardless of
+	the locale; otherwise, the locale should prevail for input and output
+	of numbers.  so it's intended to work that way.
+	
+	i have rescinded the attempt to use strcoll in expanding shorthands in
+	regular expressions (cclenter).  its properties are much too
+	surprising; for example [a-c] matches aAbBc in locale en_US but abBcC
+	in locale fr_CA.  i can see how this might arise by implementation
+	but i cannot explain it to a human user.  (this behavior can be seen
+	in gawk as well; we're leaning on the same library.)
+
+	the issue appears to be that strcoll is meant for sorting, where
+	merging upper and lower case may make sense (though note that unix
+	sort does not do this by default either).  it is not appropriate
+	for regular expressions, where the goal is to match specific
+	patterns of characters.  in any case, the notations [:lower:], etc.,
+	are available in awk, and they are more likely to work correctly in
+	most locales.
+
+	a moratorium is hereby declared on internationalization changes.
+	i apologize to friends and colleagues in other parts of the world.
+	i would truly like to get this "right", but i don't know what
+	that is, and i do not want to keep making changes until it's clear.
+
+Jul 4, 2003:
+	fixed bug that permitted non-terminated RE, as in "awk /x".
+
+Jun 1, 2003:
+	subtle change to split: if source is empty, number of elems
+	is always 0 and the array is not set.
+
+Mar 21, 2003:
+	added some parens to isblank, in another attempt to make things
+	internationally portable.
+
+Mar 14, 2003:
+	the internationalization changes, somewhat modified, are now
+	reinstated.  in theory awk will now do character comparisons
+	and case conversions in national language, but "." will always
+	be the decimal point separator on input and output regardless
+	of national language.  isblank(){} has an #ifndef.
+
+	this no longer compiles on windows: LC_MESSAGES isn't defined
+	in vc6++.
+
+	fixed subtle behavior in field and record splitting: if FS is
+	a single character and RS is not empty, \n is NOT a separator.
+	this tortuous reading is found in the awk book; behavior now
+	matches gawk and mawk.
+
+Dec 13, 2002:
+	for the moment, the internationalization changes of nov 29 are
+	rolled back -- programs like x = 1.2 don't work in some locales,
+	because the parser is expecting x = 1,2.  until i understand this
+	better, this will have to wait.
+
+Nov 29, 2002:
+	modified b.c (with tiny changes in main and run) to support
+	locales, using strcoll and iswhatever tests for posix character
+	classes.  thanks to ruslan ermilov (ru@freebsd.org) for code.
+	the function isblank doesn't seem to have propagated to any
+	header file near me, so it's there explicitly.  not properly
+	tested on non-ascii character sets by me.
+
+Jun 28, 2002:
+	modified run/format() and tran/getsval() to do a slightly better
+	job on using OFMT for output from print and CONVFMT for other
+	number->string conversions, as promised by posix and done by 
+	gawk and mawk.  there are still places where it doesn't work
+	right if CONVFMT is changed; by then the STR attribute of the
+	variable has been irrevocably set.  thanks to arnold robbins for
+	code and examples.
+
+	fixed subtle bug in format that could get core dump.  thanks to
+	Jaromir Dolecek <jdolecek@NetBSD.org> for finding and fixing.
+	minor cleanup in run.c / format() at the same time.
+
+	added some tests for null pointers to debugging printf's, which
+	were never intended for external consumption.  thanks to dave
+	kerns (dkerns@lucent.com) for pointing this out.
+
+	GNU compatibility: an empty regexp matches anything (thanks to
+	dag-erling smorgrav, des@ofug.org).  subject to reversion if
+	this does more harm than good.
+
+	pervasive small changes to make things more const-correct, as
+	reported by gcc's -Wwrite-strings.  as it says in the gcc manual,
+	this may be more nuisance than useful.  provoked by a suggestion
+	and code from arnaud desitter, arnaud@nimbus.geog.ox.ac.uk
+
+	minor documentation changes to note that this now compiles out
+	of the box on Mac OS X.
+
+Feb 10, 2002:
+	changed types in posix chars structure to quiet solaris cc.
+
+Jan 1, 2002:
+	fflush() or fflush("") flushes all files and pipes.
+
+	length(arrayname) returns number of elements; thanks to 
+	arnold robbins for suggestion.
+
+	added a makefile.win to make it easier to build on windows.
+	based on dan allen's buildwin.bat.
+
+Nov 16, 2001:
+	added support for posix character class names like [:digit:],
+	which are not exactly shorter than [0-9] and perhaps no more
+	portable.  thanks to dag-erling smorgrav for code.
+
+Feb 16, 2001:
+	removed -m option; no longer needed, and it was actually
+	broken (noted thanks to volker kiefel).
+
+Feb 10, 2001:
+	fixed an appalling bug in gettok: any sequence of digits, +,-, E, e,
+	and period was accepted as a valid number if it started with a period.
+	this would never have happened with the lex version.
+
+	other 1-character botches, now fixed, include a bare $ and a
+	bare " at the end of the input.
+
+Feb 7, 2001:
+	more (const char *) casts in b.c and tran.c to silence warnings.
 
 Nov 15, 2000:
 	fixed a bug introduced in august 1997 that caused expressions
@@ -68,7 +393,7 @@ Apr 21, 2000:
 	jon bentley for the test case that found it.
 
 	added test in envinit to catch environment "variables" with
-	names begining with '='; thanks to Berend Hasselman.
+	names beginning with '='; thanks to Berend Hasselman.
 
 Jul 28, 1999:
 	added test in defn() to catch function foo(foo), which
@@ -305,7 +630,7 @@ May 2, 1996:
 	some awful behaviors.)
 
 Apr 29, 1996:
-	replaced uchar by uschar everwhere; apparently some compilers
+	replaced uchar by uschar everywhere; apparently some compilers
 	usurp this name and this causes conflicts.
 
 	fixed call to time in run.c (bltin); arg is time_t *.
