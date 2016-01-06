@@ -1,7 +1,7 @@
 #	@(#)Makefile	8.1 (Berkeley) 6/4/93
 
 SUBDIR=	libarchive libc libcompat libcurses libcrypto libdwarf libedit \
-        libelf libelftc libkvm libm libresolv librpc/rpc libtelnet \
+        libelf libelftc libjson libkvm libm libresolv librpc/rpc libtelnet \
         libterm libutil liby libz
 
 .if	${MACHINE} == "tahoe"

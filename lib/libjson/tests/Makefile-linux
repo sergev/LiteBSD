@@ -1,0 +1,50 @@
+#CFLAGS  += -I/usr/include/json-c
+#LIBS    += -ljson-c
+
+CFLAGS  += -Os -Wall -Werror -I..
+LIBS    += ../libjson.a
+
+TESTS   = test1 test2 test4 testReplaceExisting \
+          test_cast test_charcase test_locale test_null \
+          test_parse test_parse_int64 test_printbuf test_set_serializer
+
+all:    $(TESTS)
+
+clean:
+	rm -f *.o $(TESTS)
+
+test1:  test1.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test2:  test2.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test4:  test4.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+testReplaceExisting: testReplaceExisting.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_cast: test_cast.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_charcase: test_charcase.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_locale: test_locale.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_null: test_null.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_parse: test_parse.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_parse_int64: test_parse_int64.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_printbuf: test_printbuf.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@
+
+test_set_serializer: test_set_serializer.o
+	$(CC) $(LDFLAGS) $< $(LIBS) -o $@

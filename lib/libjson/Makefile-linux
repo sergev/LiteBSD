@@ -1,0 +1,23 @@
+LIB     = libjson.a
+RANLIB  = ranlib
+CFLAGS  = -Os -Wall -Werror
+OBJS    = json_c_version.o \
+          json_object.o \
+          json_object_iterator.o \
+          json_tokener.o \
+          json_util.o \
+          arraylist.o \
+          debug.o \
+          linkhash.o \
+          printbuf.o \
+          random_seed.o
+
+all:    $(LIB)
+
+clean:
+	rm -f *.o *.a
+
+$(LIB): $(OBJS)
+	@rm -f $@
+	ar cr $@ $(OBJS)
+	$(RANLIB) $@
