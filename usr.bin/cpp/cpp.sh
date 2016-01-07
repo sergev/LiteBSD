@@ -1,7 +1,9 @@
 #!/bin/sh
+#	$OpenBSD: cpp.sh,v 1.7 2004/02/10 02:02:22 espie Exp $
+
 #
-# Copyright (c) 1990, 1993
-#	The Regents of the University of California.  All rights reserved.
+# Copyright (c) 1990 The Regents of the University of California.
+# All rights reserved.
 #
 # This code is derived from software contributed to Berkeley by
 # the Systems Programming Group of the University of Utah Computer
@@ -15,11 +17,7 @@
 # 2. Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 3. All advertising materials mentioning features or use of this software
-#    must display the following acknowledgement:
-#	This product includes software developed by the University of
-#	California, Berkeley and its contributors.
-# 4. Neither the name of the University nor the names of its contributors
+# 3. Neither the name of the University nor the names of its contributors
 #    may be used to endorse or promote products derived from this software
 #    without specific prior written permission.
 #
@@ -35,57 +33,46 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-#	@(#)cpp.sh	8.1 (Berkeley) 6/6/93
+#	@(#)usr.bin.cpp.sh	6.5 (Berkeley) 4/1/91
 #
 # Transitional front end to CCCP to make it behave like (Reiser) CCP:
 #	specifies -traditional
 #	doesn't search gcc-include
 #
 PATH=/usr/bin:/bin
-CPP=/usr/libexec/gcc2/cpp
-ALST="-traditional -D__GNUC__ -$ "
-NSI=no
+DGNUC="-D__GNUC__"
+STDINC="-I/usr/include"
 OPTS=""
-INCS="-nostdinc"
-FOUNDFILES=no
+FOUNDFILES=false
 
-for A
+CPP=/usr/libexec/cpp
+
+while [ $# -gt 0 ]
 do
+	A="$1"
+	shift
+
 	case $A in
-	-nostdinc)
-		NSI=yes
-		;;
-	-traditional)
-		;;
 	-I*)
 		INCS="$INCS $A"
 		;;
 	-U__GNUC__)
-		ALST=`echo $ALST | sed -e 's/-D__GNUC__//'`
+		DGNUC=
 		;;
 	-*)
 		OPTS="$OPTS '$A'"
 		;;
 	*)
-		FOUNDFILES=yes
-		if [ $NSI = "no" ]
-		then
-			INCS="$INCS -I/usr/include"
-			NSI=skip
-		fi
-		eval $CPP $ALST $INCS $LIBS $CSU $OPTS $A || exit $?
+		FOUNDFILES=true
+		eval $CPP $DGNUC $INCS $STDINC $OPTS $A || exit $?
 		;;
 	esac
 done
 
-if [ $FOUNDFILES = "no" ]
+if ! $FOUNDFILES
 then
 	# read standard input
-	if [ $NSI = "no" ]
-	then
-		INCS="$INCS -I/usr/include"
-	fi
-	eval exec $CPP $ALST $INCS $LIBS $CSU $OPTS
+	eval exec $CPP $DGNUC $INCS $STDINC $OPTS
 fi
 
 exit 0
