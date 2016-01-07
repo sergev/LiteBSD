@@ -13,7 +13,7 @@ RANLIB		?=	ranlib
 AS		?=	as
 AFLAGS		?=
 
-CC		?=	gcc
+CC		?=	cc
 
 .if ${MACHINE} == "sparc"
 CFLAGS		?=	-O4
