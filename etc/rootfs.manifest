@@ -31,6 +31,7 @@ dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL
 dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/include
 dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/lib
 dir /usr/libexec
+dir /usr/local
 dir /usr/sbin
 dir /usr/src
 dir /usr/src/sys
@@ -931,6 +932,7 @@ file /usr/bin/paste
 file /usr/bin/patch
 file /usr/bin/pcc
 file /usr/bin/pcpp
+file /usr/bin/pkg
 file /usr/bin/portio
 file /usr/bin/pr
 file /usr/bin/printenv
@@ -1595,6 +1597,16 @@ file /usr/libexec/rshd
 file /usr/libexec/telnetd
 file /usr/libexec/tftpd
 file /usr/libexec/uucpd
+
+#
+# Files: /usr/local
+#
+default
+filemode 0755
+dir /usr/local/pkg
+dir /usr/local/pkg/plists
+mode 0444
+file /usr/local/pkg/plists/*** pkg info ***
 
 #
 # Files: /usr/share
