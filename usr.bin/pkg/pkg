@@ -33,7 +33,8 @@ addpackage() {
 	# Remember to remove the tarball if downloaded
 	# from the Internet. We keep the tarball if
 	# installing from a local file.
-	echo -n "Installing ${1##*/}... "
+	echo -n "Installing ${1##*/}"
+	echo -n "... "
 	if [ $FETCHED -eq 1 ] ; then
 		tar xzf "${1##*/}".tgz -C /
 		rm -f ${LOCALBASE}/pkg/"${1##*/}".tgz
