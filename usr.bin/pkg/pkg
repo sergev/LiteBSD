@@ -1,7 +1,7 @@
 #!/bin/ksh
 
 USAGE="usage: pkg [-h] [add|info|rm] [package]"
-VERSION="1.1"
+VERSION="1.2"
 LOCALBASE="/usr/local"
 
 # This is essentially the usage() function common in BSD.
@@ -33,7 +33,7 @@ addpackage() {
 	# Remember to remove the tarball if downloaded
 	# from the Internet. We keep the tarball if
 	# installing from a local file.
-	echo -n "Installing ${1}... "
+	echo -n "Installing ${1##*/}... "
 	if [ $FETCHED -eq 1 ] ; then
 		tar xzf "${1##*/}".tgz -C /
 		rm -f ${LOCALBASE}/pkg/"${1##*/}".tgz
@@ -42,9 +42,8 @@ addpackage() {
 	fi
 	echo "done!"
 
-	if [ "${LOCALBASE}/pkg/message/${1}" ] ; then
-		echo ${LOCALBASE}/pkg/message/${1}
-	fi
+	# XXX: Did the package leave a message? Print it then.
+	cat "${LOCALBASE}/pkg/message/${1##*/}" 2>/dev/null
 
 	return 0
 }
@@ -54,7 +53,7 @@ infopackage() {
 	# XXX: This could be better, but works.
 	cd ${LOCALBASE}/pkg/plists
 	if [ "$1" ] ; then
-		head -3 "*** pkg info ***" "$1" | more
+		head -3 "*** pkg info ***" "$1" 2>/dev/null | more
 	else
 		head -3 * | more
 	fi
@@ -65,7 +64,7 @@ infopackage() {
 # Takes the literal package name without the .tgz ending.
 # Ask for confirmation (XXX: implement an -f flag to force remove)
 rmpackage() {
-	echo "Are you sure? [y/N]"
+	echo -n "Are you sure? [y/N] "
 	read ANSWER
 	case "$ANSWER" in
 		y|yes|Y|Yes|YES)
