@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.367 2015/12/29 09:54:25 ragge Exp $	*/
+/*	$Id: trees.c,v 1.368 2016/01/07 18:26:56 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -1521,9 +1521,16 @@ ptmatch(P1ND *p)
 			 * Check for void pointer types. They are allowed
 			 * to cast to/from any pointers.
 			 */
-			if (ISPTR(t1) && ISPTR(t2) &&
-			    (BTYPE(t1) == VOID || BTYPE(t2) == VOID))
-				break;
+			if (ISPTR(t1) && ISPTR(t2)) {
+				if (BTYPE(t1) == VOID) {
+					t = t1;
+					break;
+				}
+				if (BTYPE(t2) == VOID) {
+					t = t2;
+					break;
+				}
+			}
 			uerror("illegal types in :");
 		}
 		break;

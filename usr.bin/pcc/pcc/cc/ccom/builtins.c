@@ -1,4 +1,4 @@
-/*	$Id: builtins.c,v 1.64 2015/11/17 19:19:40 ragge Exp $	*/
+/*	$Id: builtins.c,v 1.65 2016/01/07 18:26:56 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -568,6 +568,38 @@ builtin_ce(const struct bitable *bt, P1ND *a)
 	
 }
 
+static P1ND *
+builtin_classify_type(const struct bitable *bt, P1ND *a)
+{
+	TWORD t = a->n_type;
+	int rv;
+
+	if (t == BOOL)
+		rv = 4;
+	else if (t == CHAR || t == UCHAR)
+		rv = 2;
+	else if (t <= ULONGLONG)
+		rv = 1;
+	else if (t == STRTY)
+		rv = 12;
+	else if (t == UNIONTY)
+		rv = 13;
+	else if (ISPTR(t))
+		rv = 5;
+	else if (ISFTY(t))
+		rv = 8;
+	else if (ISFTN(t))
+		rv = 10;
+	else if (ISCTY(t))
+		rv = 9;
+	else
+		rv = -1;
+
+	p1tfree(a);
+	return bcon(rv);
+}
+
+
 #ifndef TARGET_ISMATH
 /*
  * Handle the builtin macros for the math functions is*
@@ -866,6 +898,7 @@ static const struct bitable bitable[] = {
 	{ "__builtin_popcountl", builtin_unimp, 0, 1, bitlt, ULONG },
 	{ "__builtin_popcountll", builtin_unimp, 0, 1, bitllt, ULONGLONG },
 
+	{ "__builtin_classify_type", builtin_classify_type, 0, 1, 0, INT },
 	{ "__builtin_constant_p", builtin_constant_p, 0, 1, 0, INT },
 	{ "__builtin_copysignf", builtin_unimp, 0, 2, fmaxft, FLOAT },
 	{ "__builtin_copysign", builtin_unimp, 0, 2, fmaxt, DOUBLE },

@@ -1,5 +1,5 @@
 %{
-/*	$Id: scan.l,v 1.143 2015/11/24 17:35:12 ragge Exp $	*/
+/*	$Id: scan.l,v 1.144 2016/01/07 13:56:12 ragge Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Magnusson. All rights reserved.
@@ -377,7 +377,7 @@ endtyp(char *s)
 	if (*s == 'f' || *s == 'F')
 		tw--, s--;
 	else if (*s == 'l' || *s == 'L')
-		tw--, s--;
+		tw++, s--;
 	if ((*s == 'i' || *s == 'I') && ISFTY(tw))
 		tw += (FIMAG-FLOAT), s--;
 /* XXX complain */

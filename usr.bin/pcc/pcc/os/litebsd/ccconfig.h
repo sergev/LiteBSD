@@ -1,4 +1,4 @@
-/*	$Id: ccconfig.h,v 1.2 2015/12/31 16:21:57 ragge Exp $	*/
+/*	$Id: ccconfig.h,v 1.3 2016/01/06 16:14:54 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004 Anders Magnusson (ragge@ludd.luth.se).

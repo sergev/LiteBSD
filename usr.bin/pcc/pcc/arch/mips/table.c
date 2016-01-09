@@ -1150,8 +1150,6 @@ struct optab table[] = {
  *  Function arguments
  */
 
-#if 0
-
 /* intentionally write out the register for (u)short/(u)char */
 { FUNARG,       FOREFF,
         SAREG,  TWORD|TPOINT|TUSHORT|TSHORT|TUCHAR|TCHAR,
@@ -1185,8 +1183,6 @@ struct optab table[] = {
 		"	addi $sp,$sp,-8		# save function arg to stack\n"
 		"	s.d AL,($sp)\n"
 		"	#nop\n", },
-
-#endif
 
 { STARG,	FOREFF,
 	SAREG,		TANY,

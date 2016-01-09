@@ -1,4 +1,4 @@
-/*	$Id: pftn.c,v 1.419 2015/12/31 16:21:57 ragge Exp $	*/
+/*	$Id: pftn.c,v 1.420 2016/01/07 20:05:56 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -3386,6 +3386,31 @@ cxconj(NODE *p)
 	r = comop(r, buildtree(ASSIGN, structref(ccopy(q), DOT, imag),
 	    buildtree(UMINUS, structref(p, DOT, imag), NIL)));
 	return comop(r, q);
+}
+
+/*
+ * Prepare for return.
+ * There may be implicit casts to other types.
+ */
+NODE *
+imret(NODE *p, NODE *q)
+{
+	if (ISITY(q->n_type) && ISITY(p->n_type)) {
+		if (p->n_type != q->n_type) {
+			p->n_type -= (FIMAG-FLOAT);
+			p = cast(p, q->n_type - (FIMAG-FLOAT), 0);
+			p->n_type += (FIMAG-FLOAT);
+		}
+	} else {
+		p1tfree(p);
+		if (ISITY(q->n_type)) {
+			p = block(FCON, 0, 0, q->n_type, 0, 0);
+			p->n_dcon = FLOAT_ZERO;
+		} else
+			p = bcon(0);
+	}
+		
+	return p;
 }
 
 /*

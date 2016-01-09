@@ -1,4 +1,4 @@
-/*	$Id: token.c,v 1.156 2015/11/13 15:25:38 ragge Exp $	*/
+/*	$Id: token.c,v 1.157 2016/01/09 09:53:44 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2009 Anders Magnusson. All rights reserved.
@@ -111,7 +111,7 @@ usch spechr[256] = {
 	0,	0,	0,	0,	0,	0,	0,	0,
 
 	C_WSNL,	C_2,	C_SPEC,	0,	0,	0,	C_2,	C_SPEC,
-	0,	0,	0,	C_2,	0,	C_2,	0,	C_SPEC|C_2,
+	0,	0,	0,	C_2,	0,	C_2,	0,	C_SPEC,
 	C_DX,	C_DX,	C_DX,	C_DX,	C_DX,	C_DX,	C_DX,	C_DX,
 	C_DX,	C_DX,	0,	0,	C_2,	C_2,	C_2,	C_SPEC,
 
