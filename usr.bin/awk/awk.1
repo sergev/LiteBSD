@@ -1,3 +1,12 @@
+.\" $NetBSD: nawk.1,v 1.1 2006/07/14 14:23:06 jlam Exp $
+.\"
+.\" This file is copied from awk.1 but with the following modifications
+.\" for pkgsrc:
+.\"
+.\"    * awk is changed to nawk.
+.\"    * Awk is changed to Nawk.
+.\"    * AWK is changed to NAWK.
+.\"
 .de EX
 .nf
 .ft CW
@@ -7,13 +16,13 @@
 .fi
 .ft 1
 ..
-awk
-.TH AWK 1
+nawk
+.TH NAWK 1
 .CT 1 files prog_other
 .SH NAME
-awk \- pattern-directed scanning and processing language
+nawk \- pattern-directed scanning and processing language
 .SH SYNOPSIS
-.B awk
+.B nawk
 [
 .BI \-F
 .I fs
@@ -32,7 +41,7 @@ awk \- pattern-directed scanning and processing language
 .I file ...
 ]
 .SH DESCRIPTION
-.I Awk
+.I Nawk
 scans each input
 .I file
 for lines that match any of a set of patterns specified literally in

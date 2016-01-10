@@ -1,4 +1,4 @@
-/*	$Id: pass1.h,v 1.289 2015/11/17 19:19:40 ragge Exp $	*/
+/*	$Id: pass1.h,v 1.290 2016/01/07 20:05:55 ragge Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *
@@ -397,6 +397,7 @@ P1ND *cxelem(int op, P1ND *p);
 P1ND *cxconj(P1ND *p);
 P1ND *cxcast(P1ND *p1, P1ND *p2);
 P1ND *cxret(P1ND *p, P1ND *q);
+P1ND *imret(P1ND *p, P1ND *q);
 P1ND *cast(P1ND *p, TWORD t, TWORD q);
 P1ND *ccast(P1ND *p, TWORD t, TWORD u, union dimfun *df, struct attr *sue);
 int andable(P1ND *);

@@ -1,4 +1,4 @@
-/*	$Id: local2.c,v 1.30 2015/12/31 16:21:02 ragge Exp $	 */
+/*	$Id: local2.c,v 1.31 2016/01/06 16:11:24 ragge Exp $	 */
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -100,15 +100,17 @@ prologue(struct interpass_prolog * ipp)
 
 	addto = offcalc(ipp);
 
-	/* for the moment, just emit this PIC stuff - NetBSD does it */
+#if 0
 	printf("\t.frame %s,%d,%s\n", rnames[FP], ARGINIT/SZCHAR, rnames[RA]);
 	printf("\t.set noreorder\n");
 	printf("\t.cpload $25\t# pseudo-op to load GOT ptr into $25\n");
 	printf("\t.set reorder\n");
+#endif
 
 	printf("\tsubu %s,%s,%d\n", rnames[SP], rnames[SP], ARGINIT/SZCHAR);
-	/* for the moment, just emit PIC stuff - NetBSD does it */
+#if 0
 	printf("\t.cprestore 8\t# pseudo-op to store GOT ptr at 8(sp)\n");
+#endif
 
 	printf("\tsw %s,4(%s)\n", rnames[RA], rnames[SP]);
 	printf("\tsw %s,(%s)\n", rnames[FP], rnames[SP]);
@@ -1274,10 +1276,13 @@ int
 special(NODE *p, int shape)
 {
 	int o = p->n_op;
+
+	if (o != ICON || p->n_name[0] != 0)
+		return SRNOPE;
+
 	switch(shape) {
 	case SPCON:
-		if (o == ICON && p->n_name[0] == 0 &&
-		    (getlval(p) & ~0xffff) == 0)
+		if ((getlval(p) & ~0xffff) == 0)
 			return SRDIR;
 		break;
 	}

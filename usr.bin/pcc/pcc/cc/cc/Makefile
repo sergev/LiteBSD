@@ -43,7 +43,7 @@ MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 
 DEST=cc$(EXEEXT)
-DRIVERS=pcc pcpp p++ cc cpp c++
+DRIVERS=pcc pcpp p++ cc
 
 all: $(DEST)
 

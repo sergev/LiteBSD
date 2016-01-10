@@ -27,10 +27,10 @@ HOSTCC=	gcc
 LDADD=	-lm
 DPADD=	${LIBM}
 CLEANFILES+=proctab.c maketab.o maketab ytab.c ytab.h
-CFLAGS+=-I. -I${.CURDIR} -DHAS_ISBLANK -DNDEBUG -Os \
+CFLAGS+=-I. -I${.CURDIR} -DNDEBUG -Os \
 	 -ffunction-sections -fdata-sections
 LDFLAGS+=-Wl,--gc-sections
-HOSTCFLAGS+=-I. -DHAS_ISBLANK -DNDEBUG
+HOSTCFLAGS+=-I. -DNDEBUG
 
 SRCS=	ytab.c lex.c b.c main.c parse.c lib.c run.c tran.c proctab.c
 

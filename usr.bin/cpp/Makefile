@@ -1,17 +1,11 @@
-#	@(#)Makefile	8.1 (Berkeley) 7/9/93
+#	$OpenBSD: Makefile,v 1.12 2013/12/09 02:35:09 guenther Exp $
 
 NOMAN=noman
 NOOBJ=noobj
 
 all nologin clean cleandir depend lint tags:
 
-beforeinstall:
-.if ${MACHINE} == "sparc"
-	install -c -m ${BINMODE} \
-	    ${.CURDIR}/cpp.notraditional.sh ${DESTDIR}/usr/bin/cpp
-.else
-	install -c -m ${BINMODE} \
-	    ${.CURDIR}/cpp.sh ${DESTDIR}/usr/bin/cpp
-.endif
+install:
+	install -c -m ${BINMODE} ${.CURDIR}/cpp.sh ${DESTDIR}/usr/bin/cpp
 
 .include <bsd.prog.mk>

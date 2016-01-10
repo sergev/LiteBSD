@@ -1,0 +1,31 @@
+JSON-C - A JSON implementation in C
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Overview
+~~~~~~~~
+JSON-C implements a reference counting object model that allows you to easily
+construct JSON objects in C, output them as JSON formatted strings and parse
+JSON formatted strings back into the C representation of JSON objects.
+
+
+Documentation
+~~~~~~~~~~~~~
+For detailed information on using json-c, refer to the web page:
+
+    http://json-c.github.com/json-c/
+
+
+GIT Repository
+~~~~~~~~~~~~~~
+    git clone https://github.com/json-c/json-c.git
+
+
+Mailing List
+~~~~~~~~~~~~
+Send email to <json-c@googlegroups.com>.
+
+
+License
+~~~~~~~
+This program is free software; you can redistribute it and/or modify
+it under the terms of the MIT License.

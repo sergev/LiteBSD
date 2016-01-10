@@ -31,6 +31,7 @@ dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL
 dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/include
 dir /usr/lib/pcc/mipsel-unknown-litebsd0.1/1.2.0.DEVEL/lib
 dir /usr/libexec
+dir /usr/local
 dir /usr/sbin
 dir /usr/src
 dir /usr/src/sys
@@ -824,6 +825,7 @@ file /usr/bin/cpp
 file /usr/bin/ctags
 file /usr/bin/cut
 file /usr/bin/dc
+file /usr/bin/deroff
 file /usr/bin/diff
 file /usr/bin/diff3
 file /usr/bin/dirname
@@ -930,6 +932,7 @@ file /usr/bin/paste
 file /usr/bin/patch
 file /usr/bin/pcc
 file /usr/bin/pcpp
+file /usr/bin/pkg
 file /usr/bin/portio
 file /usr/bin/pr
 file /usr/bin/printenv
@@ -1596,6 +1599,16 @@ file /usr/libexec/tftpd
 file /usr/libexec/uucpd
 
 #
+# Files: /usr/local
+#
+default
+filemode 0755
+dir /usr/local/pkg
+dir /usr/local/pkg/plists
+mode 0444
+file /usr/local/pkg/plists/*** pkg info ***
+
+#
 # Files: /usr/share
 #
 default
@@ -1744,6 +1757,7 @@ file /usr/share/man/cat1/cut.0
 file /usr/share/man/cat1/date.0
 file /usr/share/man/cat1/dc.0
 file /usr/share/man/cat1/dd.0
+file /usr/share/man/cat1/deroff.0
 file /usr/share/man/cat1/df.0
 file /usr/share/man/cat1/diff.0
 file /usr/share/man/cat1/diff3.0

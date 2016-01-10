@@ -1,4 +1,4 @@
-/*	$Id: cpp.c,v 1.249 2015/11/27 01:51:44 ragge Exp $	*/
+/*	$Id: cpp.c,v 1.250 2016/01/08 13:21:50 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2010 Anders Magnusson (ragge@ludd.luth.se).
@@ -450,14 +450,31 @@ addidir(char *idir, struct incs **ww)
 void
 line(void)
 {
+	struct symtab *nl;
 	int c, n, ln;
+	usch *cp;
 
-	if (!ISDIGIT(c = skipws(0)))
-		goto bad;
+	cp = stringbuf;
+	c = skipws(0);
+	if (ISID0(c)) { /* expand macro */
+		heapid(c);
+		stringbuf = cp;
+		if ((nl = lookup(cp, FIND)) == 0 || kfind(nl) == 0)
+			goto bad;
+	} else {
+		do {
+			savch(c);
+		} while (ISDIGIT(c = cinput()));
+		cunput(c);
+		savch(0);
+	}
+
+	stringbuf = cp;
 	n = 0;
-	do {
-		n = n * 10 + c - '0';
-	} while (ISDIGIT(c = cinput()));
+	while (ISDIGIT(*cp))
+		n = n * 10 + *cp++ - '0';
+	if (*cp != 0)
+		goto bad;
 
 	/* Can only be decimal number here between 1-2147483647 */
 	if (n < 1 || n > 2147483647)
@@ -486,8 +503,8 @@ line(void)
 	if (c != '\n')
 		goto bad;
 
-	prtline(0);
 	ifiles->lineno = ln;
+	prtline(1);
 	cunput('\n');
 	return;
 

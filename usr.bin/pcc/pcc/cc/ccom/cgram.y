@@ -1,4 +1,4 @@
-/*	$Id: cgram.y,v 1.409 2015/11/17 19:19:40 ragge Exp $	*/
+/*	$Id: cgram.y,v 1.410 2016/01/07 20:05:55 ragge Exp $	*/
 
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -948,6 +948,13 @@ statement:	   e ';' { ecomp(eve($1)); symclear(blevel); }
 #ifndef NO_COMPLEX
 			if (ANYCX(q) || ANYCX(p))
 				q = cxret(q, p);
+			else if (ISITY(p->n_type) || ISITY(q->n_type)) {
+				q = imret(q, p);
+				if (ISITY(p->n_type))
+					p->n_type -= (FIMAG-FLOAT);
+				if (ISITY(q->n_type))
+					q->n_type -= (FIMAG-FLOAT);
+			}
 #endif
 			p = buildtree(RETURN, p, q);
 			if (p->n_type == VOID) {

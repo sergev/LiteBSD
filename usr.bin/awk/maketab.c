@@ -1,3 +1,5 @@
+/* $NetBSD: maketab.c,v 1.1 2006/07/14 14:23:06 jlam Exp $ */
+
 /****************************************************************
 Copyright (C) Lucent Technologies 1997
 All Rights Reserved
@@ -36,8 +38,8 @@ THIS SOFTWARE.
 
 struct xx
 {	int token;
-	char *name;
-	char *pname;
+	const char *name;
+	const char *pname;
 } proc[] = {
 	{ PROGRAM, "program", NULL },
 	{ BOR, "boolop", " || " },
@@ -102,17 +104,17 @@ struct xx
 	{ CALL, "call", "call" },
 	{ ARG, "arg", "arg" },
 	{ VARNF, "getnf", "NF" },
-	{ GETLINE, "getline", "getline" },
+	{ GETLINE, "awkgetline", "getline" },
 	{ 0, "", "" },
 };
 
 #define SIZE	(LASTTOKEN - FIRSTTOKEN + 1)
-char *table[SIZE];
+const char *table[SIZE];
 char *names[SIZE];
 
 int main(int argc, char *argv[])
 {
-	struct xx *p;
+	const struct xx *p;
 	int i, n, tok;
 	char c;
 	FILE *fp;
@@ -120,9 +122,7 @@ int main(int argc, char *argv[])
 
 	printf("#include <stdio.h>\n");
 	printf("#include \"awk.h\"\n");
-	printf("#include \"ytab.h\"\n");
-	printf("extern Cell *getline(Node **, int);\n\n");
-
+	printf("#include \"ytab.h\"\n\n");
 	for (i = SIZE; --i >= 0; )
 		names[i] = "";
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		if (c != '#' || (n != 4 && strcmp(def,"define") != 0))	/* not a valid #define */
 			continue;
 		if (tok < FIRSTTOKEN || tok > LASTTOKEN) {
-			fprintf(stderr, "maketab funny token %d %s ignored\n", tok, buf);
+			/* fprintf(stderr, "maketab funny token %d %s ignored\n", tok, buf); */
 			continue;
 		}
 		names[tok-FIRSTTOKEN] = (char *) malloc(strlen(name)+1);

@@ -1,4 +1,4 @@
-/*	$Id: code.c,v 1.26 2015/10/08 12:57:35 ragge Exp $	*/
+/*	$Id: code.c,v 1.27 2016/01/06 16:11:24 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -434,7 +434,9 @@ bjobcode(void)
 {
 	printf("\t.section .mdebug.abi32\n");
 	printf("\t.previous\n");
+#if 0
 	printf("\t.abicalls\n");
+#endif
 }
 
 #ifdef notdef

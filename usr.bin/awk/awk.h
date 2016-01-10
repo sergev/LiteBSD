@@ -1,3 +1,5 @@
+/* $NetBSD: awk.h,v 1.2 2008/08/26 14:46:21 joerg Exp $ */
+
 /****************************************************************
 Copyright (C) Lucent Technologies 1997
 All Rights Reserved
@@ -22,14 +24,18 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
+#include <assert.h>
+
 typedef double	Awkfloat;
 
 /* unsigned char is more trouble than it's worth */
 
 typedef	unsigned char uschar;
 
-#define	xfree(a)	{ if ((a) != NULL) { free((char *) a); a = NULL; } }
+#define	xfree(a)	{ if ((a) != NULL) { free((void *) (a)); (a) = NULL; } }
 
+#define	NN(p)	((p) ? (p) : "(null)")	/* guaranteed non-null for dprintf 
+*/
 #define	DEBUG
 #ifdef	DEBUG
 			/* uses have to be doubly parenthesized */
@@ -37,8 +43,6 @@ typedef	unsigned char uschar;
 #else
 #	define	dprintf(x)
 #endif
-
-extern	char	errbuf[];
 
 extern int	compile_time;	/* 1 if compiling, 0 if running */
 extern int	safe;		/* 0 => unsafe, 1 => safe */
@@ -64,7 +68,6 @@ extern int	lineno;		/* line number in awk program */
 extern int	errorflag;	/* 1 if error has occurred */
 extern int	donefld;	/* 1 if record broken into fields */
 extern int	donerec;	/* 1 if record is valid (no fld has changed */
-extern char	inputFS[];	/* FS at time of input, for field splitting */
 
 extern int	dbg;
 
@@ -199,7 +202,7 @@ extern	int	pairstack[], paircnt;
 
 /* structures used by regular expression matching machinery, mostly b.c: */
 
-#define NCHARS	(256+1)		/* 256 handles 8-bit chars; 128 does 7-bit */
+#define NCHARS	(256+3)		/* 256 handles 8-bit chars; 128 does 7-bit */
 				/* watch out in match(), etc. */
 #define NSTATES	32
 
