@@ -1,0 +1,3 @@
+Remove 'register' keyword.
+
+Remove space in function calls: func (xxx) -> func(xxx).

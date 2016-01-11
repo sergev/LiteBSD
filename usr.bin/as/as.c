@@ -24,7 +24,6 @@
  */
 #ifdef CROSS
 #   include <stdio.h>
-#   include <nlist.h>
 #else
 #   include <stdio.h>
 #endif
@@ -32,7 +31,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <a.out.h>
 
 #define WORDSZ          4               /* word size in bytes */
 
@@ -113,6 +111,42 @@ enum {
  * when -x or -X options are enabled.
  */
 #define newindex hashtab
+
+/*
+ * Symbol types, for internal use only.
+ */
+enum {
+    N_UNDF,             /* undefined */
+    N_ABS,              /* absolute address */
+    N_TEXT,             /* text segment */
+    N_DATA,             /* data segment */
+    N_STRNG,            /* constant strings */
+    N_BSS,              /* bss segment */
+    N_COMM,             /* common reference */
+    N_TYPE = 0x0f,      /* mask for all the type bits */
+    N_EXT  = 0x10,      /* external (global) bit, OR'ed in */
+};
+
+/*
+ * Relocation types, for internal use only.
+ */
+#define RSMASK  0x70            /* bitmask for segments */
+#define RABS        0
+#define RTEXT       0x20
+#define RDATA       0x30
+#define RBSS        0x40
+#define RSTRNG      0x60        /* for assembler */
+#define REXT        0x70        /* externals and bitmask */
+
+#define RGPREL  0x08            /* gp relative */
+
+#define RFMASK  0x07            /* bitmask for format */
+#define RBYTE16     0x00        /* low part of byte address: bits 15:0 */
+#define RBYTE32     0x01        /* 32-bit byte address */
+#define RHIGH16     0x02        /* upper part of byte address: bits 31:16 */
+#define RHIGH16S    0x03        /* upper part of address with signed offset */
+#define RWORD16     0x04        /* word address: bits 17:2 */
+#define RWORD26     0x05        /* word address: bits 27:2 */
 
 /*
  * Convert segment id to symbol type.
@@ -456,28 +490,44 @@ void fgetrel (f, r)
 }
 
 /*
-* Emit a relocation record: 1 to 6 bytes.
-* Return a written length.
-*/
-unsigned fputrel (r, f)
-    register struct reloc *r;
-    register FILE *f;
+ * Emit a relocation record: 8 or 12 bytes.
+ * Return a written length.
+ *
+ * Elf32 relocation entry:
+ *      |----|----|----|----|
+ *      |     r_offset      | section offset or virtual address
+ *      |-------------------|
+ *      |     r_info        | symbol table index and relocation type
+ *      |-------------------|
+ *      |     r_addend      | (optional) constant addend
+ *      |-------------------|
+ */
+unsigned fputrel(r, f)
+    struct reloc *r;
+    FILE *f;
 {
-    register unsigned nbytes = 1;
+    unsigned nbytes = 8;
 
-    putc (r->flags, f);
-    if ((r->flags & RSMASK) == REXT) {
-        putc (r->index, f);
-        putc (r->index >> 8, f);
-        putc (r->index >> 16, f);
-        nbytes += 3;
-    }
+    /* Write r_offset */
+    putc(r->vaddr, f);
+    putc(r->vaddr >> 8, f);
+    putc(r->vaddr >> 16, f);
+    putc(r->vaddr >> 24, f);
+
+    /* Write r_info */
+    putc (r->flags, f); // TODO
+    putc (r->index, f);
+    putc (r->index >> 8, f);
+    putc (r->index >> 16, f);
+
     if ((r->flags & RFMASK) == RHIGH16 ||
-        (r->flags & RFMASK) == RHIGH16S)
-    {
+        (r->flags & RFMASK) == RHIGH16S) {
+        /* Write r_addend */
         putc (r->offset, f);
         putc (r->offset >> 8, f);
-        nbytes += 2;
+        putc (r->offset >> 16, f);
+        putc (r->offset >> 24, f);
+        nbytes += 4;
     }
     return nbytes;
 }
@@ -510,7 +560,7 @@ void fputsym (s, file)
     register int i;
 
     putc (s->n_len, file);
-    putc (s->n_type & ~N_LOC, file);
+    putc (s->n_type & ~N_LOC, file);    // TODO: encode n_type for ELF
     fputword (s->n_value, file);
     for (i=0; i<s->n_len; i++)
         putc (s->n_name[i], file);
@@ -1225,8 +1275,9 @@ unsigned getexpr (s)
 void reorder_flush ()
 {
     if (reorder_full) {
+        reorder_rel.vaddr = ftell(sfile[STEXT]);
         fputword (reorder_word, sfile[STEXT]);
-        fputrel (&reorder_rel, rfile[STEXT]);
+        fputrel(&reorder_rel, rfile[STEXT]);
         reorder_full = 0;
     }
 }
@@ -1246,6 +1297,7 @@ void emitword (w, r, clobber_reg)
         reorder_full = 1;
         reorder_clobber = clobber_reg & 31;
     } else {
+        r->vaddr = ftell(sfile[segm]);
         fputword (w, sfile[segm]);
         fputrel (r, rfile[segm]);
     }
@@ -1729,6 +1781,7 @@ done:
             opcode &= ~0xffff;
             opcode |= (offset & 0xffff);
         }
+        relinfo.vaddr = ftell(sfile[segm]);
         fputword (opcode, sfile[segm]);
         fputrel (&relinfo, rfile[segm]);
         if (reorder_full) {
@@ -1737,7 +1790,6 @@ done:
         } else {
             /* Insert NOP in delay slot. */
             fputword (0, sfile[segm]);
-            fputrel (&relabs, rfile[segm]);
             count[segm] += WORDSZ;
         }
         count[segm] += WORDSZ;
@@ -1763,8 +1815,6 @@ void add_space (nbytes, fill_data)
             count[segm]++;
             if (fill_data)
                 fputc (0, sfile[segm]);
-            if (! (count[segm] & 3))
-                fputrel (&relabs, rfile[segm]);
         }
     } else
         count[segm] += nbytes;
@@ -1936,8 +1986,6 @@ void align (align_bits)
         for (c=0; c<nbytes; c++) {
             count[segm]++;
             fputc (0, sfile[segm]);
-            if (! (count[segm] & 3))
-                fputrel (&relabs, rfile[segm]);
         }
     } else
         count[segm] += nbytes;
@@ -2596,7 +2644,7 @@ void pass2 ()
             fgetrel (rfile[segm], &relinfo);
             word = makeword (word, &relinfo, h);
             fputword (word, stdout);
-            fputrel (&relinfo, rfd);
+            fputrel(&relinfo, rfd);
         }
         fclose (rfile [segm]);
         rfile [segm] = rfd;
@@ -2616,7 +2664,6 @@ int typerel (t)
     case N_STRNG:   return (RDATA);
     case N_UNDF:
     case N_COMM:
-    case N_FN:
     default:        return (0);
     }
 }
@@ -2645,7 +2692,7 @@ void relrel (relinfo)
                 relinfo->index = newindex [relinfo->index];
         } else {
             relinfo->flags &= ~RSMASK;
-            relinfo->flags |= typerel (type);
+            relinfo->flags |= typerel (type);   // TODO: delete
         }
         break;
     }
@@ -2669,7 +2716,7 @@ unsigned makereloc (s)
     for (i=0; i<count[s]; i+=WORDSZ) {
         fgetrel (rfile[s], &relinfo);
         relrel (&relinfo);
-        nbytes += fputrel (&relinfo, stdout);
+        nbytes += fputrel(&relinfo, stdout);
     }
     return nbytes;
 }
