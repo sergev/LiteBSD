@@ -79,16 +79,22 @@ extern char *xstrdup(const char *s)
 extern char *xstrndup(const char *s, int n)
 {
     char *t;
+    size_t len;
 
     if (s == NULL)
         return NULL;
 
-    t = strndup(s, n);
+    len = strlen (s);
+    if (n < len)
+        len = n;
 
+    t = (char*) malloc (len + 1);
     if (t == NULL) {
         opkg_perror(ERROR, "strdup");
         exit(EXIT_FAILURE);
     }
+    memcpy (t, s, len);
+    t[len] = '\0';
 
     return t;
 }

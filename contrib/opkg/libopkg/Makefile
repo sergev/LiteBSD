@@ -1,7 +1,6 @@
 
 CFLAGS  += -I.. -I. -DHOST_CPU_STR='"mipsel"' -DDATADIR='"/usr/lib"' \
-           -Duint32_t=u_int32_t \
-           $(LIBARCHIVE_CFLAGS) $(GPGME_CFLAGS) $(GPGERR_CFLAGS)
+           -Duint32_t=u_int32_t
 
 SRCS    = opkg_cmd.c opkg_configure.c opkg_download.c \
 	  opkg_install.c opkg_remove.c opkg_conf.c release.c \
@@ -12,17 +11,7 @@ SRCS    = opkg_cmd.c opkg_configure.c opkg_download.c \
 	  file_util.c opkg_message.c md5.c parse_util.c cksum_list.c \
 	  sprintf_alloc.c xregex.c xsystem.c xfuncs.c opkg_archive.c \
 	  opkg_verify.c string_util.c
-
 SRCS    += opkg_download_wget.c
-
-#if HAVE_GPGME
-#    opkg_sources += opkg_gpg.c
-#    opkg_headers += opkg_gpg.h
-#endif
-
 SRCS    += opkg_action.c opkg_upgrade.c opkg_solver_internal.c
 
-MKPROFILE = no
-MKPIC   = no
-COPTS   = -g
 .include <bsd.lib.mk>

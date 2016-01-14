@@ -534,7 +534,7 @@ static struct archive *open_inner(struct archive *outer)
     data->outer = outer;
 
     /* Inner package is in 'tar' format, gzip compressed. */
-    r = archive_read_support_filter_gzip(inner);
+    r = archive_read_support_compression_gzip(inner);
     if (r == ARCHIVE_WARN) {
         /* libarchive returns ARCHIVE_WARN if the filter is provided by
          * an external program.
@@ -639,7 +639,7 @@ static struct archive *open_compressed_file(const char *filename)
     }
 
     /* Support raw data in gzip compression format. */
-    r = archive_read_support_filter_gzip(ar);
+    r = archive_read_support_compression_gzip(ar);
     if (r == ARCHIVE_WARN) {
         /* libarchive returns ARCHIVE_WARN if the filter is provided by
          * an external program.

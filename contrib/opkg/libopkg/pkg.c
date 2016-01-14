@@ -254,16 +254,17 @@ int pkg_init_from_file(pkg_t * pkg, const char *filename)
 {
     int fd, err = 0;
     FILE *control_file;
-    char *control_path, *tmp;
+    char *control_path;
+    const char *base_name;
 
     pkg_init(pkg);
 
     pkg->local_filename = xstrdup(filename);
 
-    tmp = xstrdup(filename);
+    base_name = strrchr(filename, '/');
+    base_name = base_name ? base_name+1 : filename;
     sprintf_alloc(&control_path, "%s/%s.control.XXXXXX", opkg_config->tmp_dir,
-                  basename(tmp));
-    free(tmp);
+                  base_name);
     fd = mkstemp(control_path);
     if (fd == -1) {
         opkg_perror(ERROR, "Failed to make temp file %s", control_path);

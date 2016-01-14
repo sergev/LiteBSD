@@ -803,7 +803,7 @@ file /usr/bin/banner
 file /usr/bin/basename
 file /usr/bin/bdes
 file /usr/bin/biff
-file /usr/bin/c++
+#file /usr/bin/c++
 file /usr/bin/cal
 file /usr/bin/calendar
 file /usr/bin/cap_mkdb
