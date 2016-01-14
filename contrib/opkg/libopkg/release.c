@@ -16,9 +16,9 @@
 
 #include "config.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <malloc.h>
 #include <sys/stat.h>
 
 #include "opkg_message.h"

@@ -17,7 +17,7 @@
 #include "config.h"
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "opkg_message.h"
 #include "release.h"

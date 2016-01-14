@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -97,15 +96,36 @@ extern char *xstrndup(const char *s, int n)
 /* Sane dirname. */
 extern char *xdirname(const char *path)
 {
-    char *pathcopy, *parent, *tmp;
+    char *parent, *tmp;
 
-    /* dirname is unsafe, it may both modify the memory of the path argument
-     * and may return a pointer to static memory, which can then be modified
-     * by consequtive calls to dirname.
-     */
-    pathcopy = xstrdup(path);
-    tmp = dirname(pathcopy);
-    parent = xstrdup(tmp);
-    free(pathcopy);
+    /* Find and strip the base name */
+    parent = xstrdup(path);
+    tmp = strrchr(parent, '/');
+    if (tmp && tmp[1] == 0) {
+        /* Strip trailing slashes */
+        do {
+            *tmp-- = 0;
+            if (tmp < parent) {
+                /* Root directory */
+root:           parent[0] = '/';
+                parent[1] = 0;
+                return parent;
+            }
+        } while (*tmp == '/');
+        tmp = strrchr(parent, '/');
+    }
+    if (! tmp) {
+        /* No directory prefix */
+        parent[0] = '.';
+        parent[1] = 0;
+        return parent;
+    }
+
+    /* Strip base name */
+    do {
+        *tmp-- = 0;
+        if (tmp < parent)
+            goto root;
+    } while (*tmp == '/');
     return parent;
 }

@@ -19,16 +19,21 @@
 #include "config.h"
 
 #include <ctype.h>
-#include <sys/statvfs.h>
 #include <string.h>
-
+#ifdef HAVE_STATVFS
+#   include <sys/statvfs.h>
+#else
+#   include <sys/param.h>
+#   include <sys/mount.h>
+#endif
 #include "opkg_message.h"
 #include "xfuncs.h"
 
 unsigned long get_available_kbytes(char *filesystem)
 {
-    struct statvfs f;
     int r;
+#ifdef HAVE_STATVFS
+    struct statvfs f;
 
     r = statvfs(filesystem, &f);
     if (r == -1) {
@@ -41,7 +46,21 @@ unsigned long get_available_kbytes(char *filesystem)
         return (f.f_bavail * (f.f_frsize / 1024));
     else if (f.f_frsize > 0)
         return f.f_bavail / (1024 / f.f_frsize);
+#else
+    struct statfs f;
 
+    r = statfs(filesystem, &f);
+    if (r < 0) {
+        opkg_perror(ERROR, "Failed to statfs for %s", filesystem);
+        return 0;
+    }
+    // Actually ((sfs.f_bavail * sfs.f_bsize) / 1024)
+    // and here we try to avoid overflow.
+    if (f.f_bsize >= 1024)
+        return (f.f_bavail * (f.f_bsize / 1024));
+    else if (f.f_bsize > 0)
+        return f.f_bavail / (1024 / f.f_bsize);
+#endif
     opkg_msg(ERROR, "Unknown block size for target filesystem.\n");
 
     return 0;

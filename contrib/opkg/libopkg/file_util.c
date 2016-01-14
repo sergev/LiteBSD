@@ -20,13 +20,13 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <utime.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <string.h>
 
 #include "opkg_message.h"

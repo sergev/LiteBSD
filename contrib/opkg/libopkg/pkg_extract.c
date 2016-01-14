@@ -18,8 +18,8 @@
 
 #include "config.h"
 
-#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "opkg_message.h"
 #include "opkg_archive.h"

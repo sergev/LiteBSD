@@ -16,9 +16,9 @@
 
 #include "config.h"
 
-#include <malloc.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "file_util.h"
 #include "opkg_conf.h"

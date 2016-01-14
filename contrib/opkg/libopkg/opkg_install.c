@@ -23,7 +23,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <malloc.h>
 #include <stdlib.h>
 
 #include "pkg.h"
@@ -47,7 +46,7 @@
 #include "xfuncs.h"
 
 #ifdef HAVE_SOLVER_INTERNAL
-#include "solvers/internal/opkg_solver_internal.h"
+#include "opkg_solver_internal.h"
 
 static int satisfy_dependencies_for(pkg_t * pkg);
 static int check_conflicts_for(pkg_t * pkg);

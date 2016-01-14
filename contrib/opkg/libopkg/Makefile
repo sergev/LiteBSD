@@ -20,9 +20,7 @@ SRCS    += opkg_download_wget.c
 #    opkg_headers += opkg_gpg.h
 #endif
 
-SRCS    += solvers/internal/opkg_action.c \
-           solvers/internal/opkg_upgrade.c \
-           solvers/internal/opkg_solver_internal.c
+SRCS    += opkg_action.c opkg_upgrade.c opkg_solver_internal.c
 
 MKPROFILE = no
 MKPIC   = no

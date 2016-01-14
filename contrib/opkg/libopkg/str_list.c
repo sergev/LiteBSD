@@ -18,8 +18,8 @@
 
 #include "config.h"
 
-#include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "str_list.h"
 #include "xfuncs.h"

@@ -25,7 +25,6 @@
 #include <fcntl.h>
 #include <glob.h>
 #include <unistd.h>
-#include <malloc.h>
 #include <stdlib.h>
 
 #include "opkg_conf.h"
@@ -36,6 +35,18 @@
 #include "opkg_message.h"
 #include "file_util.h"
 #include "xfuncs.h"
+
+#ifndef GLOB_NOMATCH
+#define GLOB_NOMATCH (-3) /* from "Error values returned by glob(3)" */
+#endif
+
+#ifdef F_TLOCK
+#   define TRYLOCK_FILE(fd)  lockf(fd, F_TLOCK, (off_t) 0)
+#   define UNLOCK_FILE(fd)   lockf(fd, F_ULOCK, (off_t) 0)
+#else
+#   define TRYLOCK_FILE(fd)  flock(fd, LOCK_NB)
+#   define UNLOCK_FILE(fd)   flock(fd, LOCK_UN)
+#endif
 
 static int lock_fd;
 
@@ -554,7 +565,7 @@ static int opkg_lock()
         return -1;
     }
 
-    r = lockf(lock_fd, F_TLOCK, (off_t) 0);
+    r = TRYLOCK_FILE(lock_fd);
     if (r == -1) {
         opkg_perror(ERROR, "Could not lock %s", opkg_config->lock_file);
         r = close(lock_fd);
@@ -574,7 +585,7 @@ static int opkg_unlock()
     int err = 0;
 
     if (lock_fd != -1) {
-        r = lockf(lock_fd, F_ULOCK, (off_t) 0);
+        r = UNLOCK_FILE(lock_fd);
         if (r == -1) {
             opkg_perror(ERROR, "Couldn't unlock %s", opkg_config->lock_file);
             err = -1;

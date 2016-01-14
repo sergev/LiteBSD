@@ -24,7 +24,6 @@
 #include <fnmatch.h>
 #include <signal.h>
 #include <unistd.h>
-#include <malloc.h>
 #include <stdlib.h>
 
 #include "opkg_conf.h"
@@ -48,7 +47,7 @@
 
 /* Needed by opkg_list_upgradable */
 #ifdef HAVE_SOLVER_INTERNAL
-#include "solvers/internal/opkg_upgrade.h"
+#include "opkg_upgrade.h"
 #endif
 
 static void print_pkg(pkg_t * pkg)

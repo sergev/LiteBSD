@@ -18,7 +18,7 @@
 
 #include "config.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "pkg_src_list.h"
 #include "void_list.h"

@@ -18,9 +18,9 @@
 
 #include "config.h"
 
-#include <malloc.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "file_util.h"
 #include "opkg_conf.h"

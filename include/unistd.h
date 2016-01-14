@@ -133,6 +133,7 @@ int      iruserok __P((unsigned long, int, const char *, const char *));
 int      mknod __P((const char *, mode_t, dev_t));
 int      mkstemp __P((char *));
 char    *mktemp __P((char *));
+char    *mkdtemp __P((char *));
 int      nfssvc __P((int, void *));
 int      nice __P((int));
 void     psignal __P((unsigned int, const char *));

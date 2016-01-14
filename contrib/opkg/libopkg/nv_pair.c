@@ -18,7 +18,7 @@
 
 #include "config.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "nv_pair.h"
 #include "xfuncs.h"

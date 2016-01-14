@@ -24,7 +24,6 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#include <malloc.h>
 #include <stdlib.h>
 
 #include "opkg_conf.h"

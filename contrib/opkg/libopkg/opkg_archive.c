@@ -18,9 +18,9 @@
 
 #include <archive.h>
 #include <archive_entry.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "opkg_conf.h"
 #include "opkg_message.h"

@@ -19,7 +19,6 @@
 #include "config.h"
 
 #include <gpgme.h>
-#include <malloc.h>
 
 #include "opkg_conf.h"
 #include "opkg_message.h"

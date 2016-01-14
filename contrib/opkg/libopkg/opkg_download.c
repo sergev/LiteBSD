@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -157,7 +156,8 @@ char *get_cache_location(const char *src)
      * MAX_SHORT_FILE_NAME_LENGTH to ensure that the total cache file name
      * length is reasonable.
      */
-    short_file_name = basename(tmp);
+    short_file_name = strrchr(tmp, '/');
+    short_file_name = short_file_name ? short_file_name+1 : tmp;
     if (strlen(short_file_name) > MAX_SHORT_FILE_NAME_LENGTH)
         short_file_name[MAX_SHORT_FILE_NAME_LENGTH] = '\0';
 
