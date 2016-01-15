@@ -27,9 +27,9 @@ void sprintf_alloc(char **str, const char *fmt, ...)
 {
     va_list ap;
     int n;
-    unsigned int size = 0;
+    unsigned int size = 40;
 
-    *str = NULL;
+    *str = xmalloc(size);
 
     for (;;) {
         va_start(ap, fmt);

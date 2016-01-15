@@ -44,7 +44,7 @@
 #   define TRYLOCK_FILE(fd)  lockf(fd, F_TLOCK, (off_t) 0)
 #   define UNLOCK_FILE(fd)   lockf(fd, F_ULOCK, (off_t) 0)
 #else
-#   define TRYLOCK_FILE(fd)  flock(fd, LOCK_NB)
+#   define TRYLOCK_FILE(fd)  flock(fd, LOCK_EX | LOCK_NB)
 #   define UNLOCK_FILE(fd)   flock(fd, LOCK_UN)
 #endif
 

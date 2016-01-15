@@ -13,11 +13,11 @@
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 */
-#include <xfuncs.h>
 #include <stdlib.h>
 
 #include "opkg_message.h"
 #include "pkg.h"
+#include "xfuncs.h"
 
 /*
  * Returns number of the number of packages depending on the packages provided by this package.

@@ -83,8 +83,8 @@ void md5_init_ctx(struct md5_ctx *ctx)
 
 /* Copy the 4 byte value from v into the memory location pointed to by *cp,
    If your architecture allows unaligned access this is equivalent to
-   * (uint32_t *) cp = v  */
-static inline void set_uint32(char *cp, uint32_t v)
+   * (u_int32_t *) cp = v  */
+static inline void set_u_int32(char *cp, u_int32_t v)
 {
     memcpy(cp, &v, sizeof v);
 }
@@ -94,10 +94,10 @@ static inline void set_uint32(char *cp, uint32_t v)
 void *md5_read_ctx(const struct md5_ctx *ctx, void *resbuf)
 {
     char *r = resbuf;
-    set_uint32(r + 0 * sizeof ctx->A, SWAP(ctx->A));
-    set_uint32(r + 1 * sizeof ctx->B, SWAP(ctx->B));
-    set_uint32(r + 2 * sizeof ctx->C, SWAP(ctx->C));
-    set_uint32(r + 3 * sizeof ctx->D, SWAP(ctx->D));
+    set_u_int32(r + 0 * sizeof ctx->A, SWAP(ctx->A));
+    set_u_int32(r + 1 * sizeof ctx->B, SWAP(ctx->B));
+    set_u_int32(r + 2 * sizeof ctx->C, SWAP(ctx->C));
+    set_u_int32(r + 3 * sizeof ctx->D, SWAP(ctx->D));
 
     return resbuf;
 }
@@ -107,7 +107,7 @@ void *md5_read_ctx(const struct md5_ctx *ctx, void *resbuf)
 void *md5_finish_ctx(struct md5_ctx *ctx, void *resbuf)
 {
     /* Take yet unprocessed bytes into account.  */
-    uint32_t bytes = ctx->buflen;
+    u_int32_t bytes = ctx->buflen;
     size_t size = (bytes < 56) ? 64 / 4 : 64 * 2 / 4;
 
     /* Now count remaining bytes.  */
@@ -235,7 +235,7 @@ void md5_process_bytes(const void *buffer, size_t len, struct md5_ctx *ctx)
     if (len >= 64) {
 #if !_STRING_ARCH_unaligned
 #define alignof(type) offsetof (struct { char c; type x; }, x)
-#define UNALIGNED_P(p) (((size_t) p) % alignof (uint32_t) != 0)
+#define UNALIGNED_P(p) (((size_t) p) % alignof (u_int32_t) != 0)
         if (UNALIGNED_P(buffer))
             while (len > 64) {
                 md5_process_block(memcpy(ctx->buffer, buffer, 64), 64, ctx);
@@ -279,14 +279,14 @@ void md5_process_bytes(const void *buffer, size_t len, struct md5_ctx *ctx)
 
 void md5_process_block(const void *buffer, size_t len, struct md5_ctx *ctx)
 {
-    uint32_t correct_words[16];
-    const uint32_t *words = buffer;
-    size_t nwords = len / sizeof(uint32_t);
-    const uint32_t *endp = words + nwords;
-    uint32_t A = ctx->A;
-    uint32_t B = ctx->B;
-    uint32_t C = ctx->C;
-    uint32_t D = ctx->D;
+    u_int32_t correct_words[16];
+    const u_int32_t *words = buffer;
+    size_t nwords = len / sizeof(u_int32_t);
+    const u_int32_t *endp = words + nwords;
+    u_int32_t A = ctx->A;
+    u_int32_t B = ctx->B;
+    u_int32_t C = ctx->C;
+    u_int32_t D = ctx->D;
 
     /* First increment the byte count.  RFC 1321 specifies the possible
      * length of the file up to 2^64 bits.  Here we only compute the
@@ -298,11 +298,11 @@ void md5_process_block(const void *buffer, size_t len, struct md5_ctx *ctx)
     /* Process all bytes in the buffer with 64 bytes in each round of
      * the loop.  */
     while (words < endp) {
-        uint32_t *cwp = correct_words;
-        uint32_t A_save = A;
-        uint32_t B_save = B;
-        uint32_t C_save = C;
-        uint32_t D_save = D;
+        u_int32_t *cwp = correct_words;
+        u_int32_t A_save = A;
+        u_int32_t B_save = B;
+        u_int32_t C_save = C;
+        u_int32_t D_save = D;
 
         /* First round: using the given function, the context and a constant
          * the next context is computed.  Because the algorithms processing

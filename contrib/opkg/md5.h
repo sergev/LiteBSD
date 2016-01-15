@@ -61,14 +61,14 @@ extern "C" {
 
 /* Structure to save state of computation between the single steps.  */
     struct md5_ctx {
-        uint32_t A;
-        uint32_t B;
-        uint32_t C;
-        uint32_t D;
+        u_int32_t A;
+        u_int32_t B;
+        u_int32_t C;
+        u_int32_t D;
 
-        uint32_t total[2];
-        uint32_t buflen;
-        uint32_t buffer[32];
+        u_int32_t total[2];
+        u_int32_t buflen;
+        u_int32_t buffer[32];
     };
 
 /*

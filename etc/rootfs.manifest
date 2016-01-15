@@ -923,6 +923,7 @@ target nvi
 symlink /usr/bin/ex
 target nvi
 
+file /usr/bin/opkg
 file /usr/bin/p++
 file /usr/bin/pagesize
 file /usr/bin/passwd
@@ -1839,6 +1840,7 @@ file /usr/share/man/cat1/nm.0
 file /usr/share/man/cat1/nohup.0
 file /usr/share/man/cat1/nvi.0
 file /usr/share/man/cat1/od.0
+file /usr/share/man/cat1/opkg.0
 file /usr/share/man/cat1/pagesize.0
 file /usr/share/man/cat1/passwd.0
 file /usr/share/man/cat1/paste.0
