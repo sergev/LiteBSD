@@ -576,7 +576,7 @@ pkg_t *pkg_hash_fetch_best_installation_candidate_by_name(const char *name)
 pkg_t *pkg_hash_fetch_by_name_version(const char *pkg_name, const char *version)
 {
     pkg_vec_t *vec;
-    unsigned int i;
+    int i;
     char *version_str = NULL;
 
     vec = pkg_vec_fetch_by_name(pkg_name);

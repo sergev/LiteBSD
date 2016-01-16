@@ -270,7 +270,7 @@ const char *release_get_md5(release_t * release, const char *pathname)
         return cksum->value;
     }
 
-    return '\0';
+    return 0;
 }
 
 #ifdef HAVE_SHA256

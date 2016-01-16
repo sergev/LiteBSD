@@ -29,6 +29,9 @@
 #include "sprintf_alloc.h"
 #include "xfuncs.h"
 
+#define archive_read_free(x) /*empty*/
+#define archive_write_free(x) /*empty*/
+
 /*******************************************************************************
  * internal functions
  */
