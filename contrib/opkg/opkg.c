@@ -245,7 +245,7 @@ static int args_parse(int argc, char *argv[])
         return optind;
 }
 
-static void usage()
+static void usage(int full_help)
 {
     printf("usage: opkg [options...] sub-command [arguments...]\n");
     printf("where sub-command is one of:\n");
@@ -281,6 +281,12 @@ static void usage()
     printf("\twhatprovides [-A] [pkgname|glob]+\n");
     printf("\twhatconflicts [-A] [pkgname|glob]+\n");
     printf("\twhatreplaces [-A] [pkgname|glob]+\n");
+
+    if (!full_help) {
+        printf("\n");
+        printf("Use 'opkg help' to display all available options.\n");
+        exit(1);
+    }
 
     printf("\nOptions:\n");
     printf("\t-A                              Query all packages not just those installed\n");
@@ -361,10 +367,13 @@ int main(int argc, char *argv[])
     opts = args_parse(argc, argv);
     if (opts == argc || opts < 0) {
         fprintf(stderr, "opkg must have one sub-command argument\n");
-        usage();
+        usage(0);
     }
 
     cmd_name = argv[opts++];
+    if (!strcmp(cmd_name, "help")) {
+        usage(1);
+    }
 
     nocheckfordirorfile = !strcmp(cmd_name, "print-architecture")
         || !strcmp(cmd_name, "print_architecture")
@@ -387,7 +396,7 @@ int main(int argc, char *argv[])
     cmd = opkg_cmd_find(cmd_name);
     if (cmd == NULL) {
         fprintf(stderr, "%s: unknown sub-command %s\n", argv[0], cmd_name);
-        usage();
+        usage(0);
     }
 
     opkg_config->pfm = cmd->pfm;
@@ -408,7 +417,7 @@ int main(int argc, char *argv[])
     if (cmd->requires_args && opts == argc) {
         fprintf(stderr, "%s: the ``%s'' command requires at least one argument\n",
                 argv[0], cmd_name);
-        usage();
+        usage(0);
     }
 
     err = opkg_cmd_exec(cmd, argc - opts, (const char **)(argv + opts));
