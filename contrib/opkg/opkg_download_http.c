@@ -68,7 +68,7 @@ int opkg_download_backend(const char *url, const char *dest,
 
     he = gethostbyname(hostname);
     if (!he) {
-        opkg_msg(ERROR, "Failed to download %s, hostname not found.\n", url);
+        opkg_msg(ERROR, "Failed, hostname %s not found.\n", hostname);
         goto die;
     }
 
