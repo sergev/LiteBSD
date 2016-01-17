@@ -1402,8 +1402,10 @@ int pkg_verify(pkg_t * pkg)
 
     if (pkg->md5sum) {
         err = opkg_verify_md5sum(pkg->local_filename, pkg->md5sum);
-        if (err)
+        if (err) {
+            opkg_msg(DEBUG, "Incorrect MD5 checksum of file %s.\n", pkg->local_filename);
             goto fail;
+        }
     }
 
     if (pkg->sha256sum) {

@@ -87,9 +87,9 @@ int opkg_download_backend(const char *url, const char *dest,
         opkg_msg(ERROR, "Failed to download %s, cannot connect.\n", url);
         goto die;
     }
-    //printf("Connected to %s.\n", hostname);
+    opkg_msg(DEBUG, "Connected to %s.\n", hostname);
 
-    //printf("Retrieving using: %s", req);
+    opkg_msg(DEBUG, "Retrieving using: %s", req);
     for (bufp = req, c = strlen(bufp); c > 0; c -= d, bufp += d) {
         d = write(sock, bufp, c);
         if (d <= 0)
@@ -120,7 +120,7 @@ int opkg_download_backend(const char *url, const char *dest,
         perror("failed to receive correctly");
         goto die;
     }
-    //printf("Success, closing connection.\n");
+    opkg_msg(DEBUG, "Success, got %u bytes, closing connection.\n", bytes);
     ret = 0;
 die:
     if (sock >= 0)
