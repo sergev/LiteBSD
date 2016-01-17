@@ -19,4 +19,9 @@ SRCS    += opkg_cmd.c opkg_configure.c opkg_download.c \
 SRCS    += opkg_download_http.c
 SRCS    += opkg_action.c opkg_upgrade.c opkg_solver_internal.c
 
+afterinstall:
+	install -d ${DESTDIR}/etc/opkg
+	install -c options.conf ${DESTDIR}/etc/opkg/
+	install -c sources.conf ${DESTDIR}/etc/opkg/
+
 .include <bsd.prog.mk>

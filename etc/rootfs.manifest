@@ -664,6 +664,10 @@ file /etc/namedb/localhost.rev
 file /etc/namedb/named.boot
 file /etc/namedb/root.cache
 
+dir /etc/opkg
+file /etc/opkg/options.conf
+file /etc/opkg/sources.conf
+
 #
 # Files: /bin
 #

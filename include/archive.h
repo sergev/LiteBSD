@@ -441,8 +441,6 @@ void		 archive_read_finish(struct archive *);
 int		 archive_read_finish(struct archive *);
 #endif
 
-#define archive_read_free(a) 0
-
 /*-
  * To create an archive:
  *   1) Ask archive_write_new for a archive writer object.
@@ -546,8 +544,6 @@ void		 archive_write_finish(struct archive *);
  * archive_write_finish() will implicitly call archive_write_close(). */
 int		 archive_write_finish(struct archive *);
 #endif
-
-#define archive_write_free(a) 0
 
 /*
  * Set write options.
