@@ -19,9 +19,6 @@
 
    opkg command line frontend using libopkg
 */
-
-#include "config.h"
-
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>

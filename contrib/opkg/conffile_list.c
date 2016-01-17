@@ -15,9 +15,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
 */
-
-#include "config.h"
-
 #include "conffile_list.h"
 
 void conffile_list_init(conffile_list_t * list)

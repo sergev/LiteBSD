@@ -23,8 +23,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "config.h"
-
 #include <fcntl.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -46,7 +44,7 @@ int opkg_download_backend(const char *url, const char *dest,
     struct sockaddr_in addr;
     struct hostent *he;
     FILE *write_to;
-    const char *s, *p, *filename, *hostname;
+    const char *s, *p, *hostname;
     int bytes, c, d;
     int sock = -1, file = -1, ret = -1;
 
@@ -56,18 +54,17 @@ int opkg_download_backend(const char *url, const char *dest,
         opkg_msg(ERROR, "Failed to download %s, empty filename.\n", url);
         return -1;
     }
-    filename = p + 1;
 
     strncpy(buf, s, p-s);
     buf[p-s] = 0;
     hostname = buf;
 
-    req = (char *)malloc(sizeof("GET ") + strlen(filename) + 3);
+    req = (char *)malloc(sizeof("GET ") + strlen(url) + 3);
     if (!req) {
         opkg_msg(ERROR, "Failed to download %s, no memory.\n", url);
         return -1;
     }
-    sprintf(req, "GET /%s\n", filename);
+    sprintf(req, "GET %s\r\n", url);
 
     he = gethostbyname(hostname);
     if (!he) {
@@ -90,9 +87,9 @@ int opkg_download_backend(const char *url, const char *dest,
         opkg_msg(ERROR, "Failed to download %s, cannot connect.\n", url);
         goto die;
     }
-    printf("Connected to %s.\n", hostname);
+    //printf("Connected to %s.\n", hostname);
 
-    printf("Retrieving using: %s", req);
+    //printf("Retrieving using: %s", req);
     for (bufp = req, c = strlen(bufp); c > 0; c -= d, bufp += d) {
         d = write(sock, bufp, c);
         if (d <= 0)

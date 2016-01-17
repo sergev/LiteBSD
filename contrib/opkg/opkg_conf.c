@@ -16,9 +16,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
 */
-
-#include "config.h"
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

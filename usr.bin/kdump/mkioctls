@@ -65,4 +65,4 @@ END {
 	print "\n\treturn(NULL);"
 	print "}"
 }
-' $DESTDIR/usr/include/sys/ioctl.h 
+' $BSDSRC/DESTDIR/usr/include/sys/ioctl.h

@@ -1,5 +1,10 @@
 PROG    = opkg
-CFLAGS  += -DHOST_CPU_STR='"mipsel"' -DDATADIR='"/usr/lib"'
+CFLAGS  += -DHOST_CPU_STR='"mipsel"'
+CFLAGS  += -DDATADIR='"/usr/lib"'
+CFLAGS  += -DVERSION='"0.3.2-LiteBSD"'
+CFLAGS  += -DHAVE_SOLVER_INTERNAL
+#CFLAGS  += -DHAVE_STATVFS
+NOGCCERROR =
 LDADD   = -larchive
 SRCS    = opkg.c
 SRCS    += opkg_cmd.c opkg_configure.c opkg_download.c \
