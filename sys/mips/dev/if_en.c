@@ -911,7 +911,7 @@ en_recv(e)
     if (e->netif.if_bpf) {
         bpf_mtap(e->netif.if_bpf, m);
 
-        if (rxfc & PIC32_ETHRXFC_NOTMEEN) {
+        if (ETHRXFC & PIC32_ETHRXFC_NOTMEEN) {
             /* In promisc mode, use RXF_RSV field of descriptor
              * to filter broadcast/multicast/unicast packets.
              * Keep the packet if it's a broadcast or has our
