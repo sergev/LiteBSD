@@ -2,8 +2,9 @@
 
 PROG=	worm
 MAN6=	worm.0
-DPADD=	${LIBCURSES} ${LIBTERM} ${LIBCOMPAT}
-LDADD=	-lcurses -ltermcap -lcompat
+DPADD=	${LIBOCURSES} ${LIBTERM} ${LIBCOMPAT}
+LDADD=	-locurses -ltermcap -lcompat
 HIDEGAME=hidegame
+CFLAGS+=-DOLD_CURSES
 
 .include <bsd.prog.mk>

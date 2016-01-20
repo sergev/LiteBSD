@@ -1,8 +1,8 @@
 #	@(#)Makefile	8.1 (Berkeley) 6/4/93
 
-SUBDIR=	libarchive libc libcompat libcurses libcrypto libdwarf libedit \
-        libelf libelftc libjson libkvm libm libresolv librpc/rpc libtelnet \
-        libterm libutil liby libz
+SUBDIR=	libarchive libc libcompat libcrypto libdwarf libedit libelf \
+        libelftc libjson libkvm libm libncurses libocurses libresolv \
+        librpc/rpc libtelnet libterm libutil liby libz
 
 .if	${MACHINE} == "tahoe"
 SUBDIR+=csu/tahoe.pcc

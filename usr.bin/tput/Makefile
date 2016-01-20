@@ -4,6 +4,7 @@ PROG=	tput
 DPADD=	${LIBTERMCAP}
 LDADD=	-ltermcap
 MLINKS=	tput.1 clear.1
+CFLAGS+=-DOLD_CURSES
 
 beforeinstall:
 	install -c -m ${BINMODE} \
