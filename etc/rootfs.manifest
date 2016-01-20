@@ -606,7 +606,6 @@ file /root/.klogin
 file /root/.login
 file /root/.profile
 file /root/.rhosts
-file /root/.mkshrc
 
 #
 # Files: /etc
@@ -675,6 +674,7 @@ default
 owner 3                 bin
 group 7                 bin
 filemode 0555
+file /bin/ash
 file /bin/cat
 file /bin/chmod
 file /bin/cp
@@ -693,7 +693,6 @@ file /bin/ksh
 file /bin/ln
 file /bin/ls
 file /bin/mkdir
-file /bin/mksh
 file /bin/mv
 file /bin/pax
 file /bin/ps
@@ -706,7 +705,6 @@ owner 0                 root
 file /bin/rm
 file /bin/rmail
 file /bin/rmdir
-file /bin/sh
 file /bin/sleep
 file /bin/stty
 file /bin/sync
@@ -719,6 +717,9 @@ link /bin/tar
 target /bin/pax
 link /bin/cpio
 target /bin/pax
+
+symlink /bin/sh
+target ksh
 
 #
 # Files: /sbin
@@ -1734,6 +1735,7 @@ file /usr/share/man/cat1/amq.0
 file /usr/share/man/cat1/apply.0
 file /usr/share/man/cat1/apropos.0
 file /usr/share/man/cat1/ar.0
+file /usr/share/man/cat1/ash.0
 file /usr/share/man/cat1/awk.0
 file /usr/share/man/cat1/basename.0
 file /usr/share/man/cat1/bdes.0
@@ -1831,7 +1833,6 @@ file /usr/share/man/cat1/mkdep.0
 file /usr/share/man/cat1/mkdir.0
 file /usr/share/man/cat1/mkfifo.0
 file /usr/share/man/cat1/mklocale.0
-file /usr/share/man/cat1/mksh.0
 file /usr/share/man/cat1/mkstr.0
 file /usr/share/man/cat1/more.0
 file /usr/share/man/cat1/msgs.0
@@ -1874,7 +1875,6 @@ file /usr/share/man/cat1/sccs.0
 file /usr/share/man/cat1/script.0
 file /usr/share/man/cat1/sed.0
 file /usr/share/man/cat1/sendbug.0
-file /usr/share/man/cat1/sh.0
 file /usr/share/man/cat1/shar.0
 file /usr/share/man/cat1/showmount.0
 file /usr/share/man/cat1/size.0
@@ -1999,6 +1999,8 @@ link /usr/share/man/cat1/gunzip.0
 target /usr/share/man/cat1/gzip.0
 link /usr/share/man/cat1/gzcat.0
 target /usr/share/man/cat1/gzip.0
+link /usr/share/man/cat1/sh.0
+target /usr/share/man/cat1/ksh.0
 
 file /usr/share/man/cat2/accept.0
 file /usr/share/man/cat2/access.0

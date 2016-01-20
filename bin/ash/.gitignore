@@ -12,4 +12,4 @@ syntax.h
 token.def
 y.tab.h
 lex.yy.c
-sh
+ash

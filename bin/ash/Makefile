@@ -1,6 +1,6 @@
 #	@(#)Makefile	8.4 (Berkeley) 5/5/95
 
-PROG=	sh
+PROG=	ash
 SRCS=	alias.c builtins.c cd.c echo.c error.c eval.c exec.c expand.c \
 	input.c jobs.c mail.c main.c memalloc.c miscbltin.c \
 	mystring.c nodes.c options.c parser.c redir.c show.c syntax.c \
