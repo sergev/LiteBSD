@@ -1,7 +1,7 @@
 #	@(#)Makefile	8.1 (Berkeley) 5/31/93
 
-COPTS= -DBSD44 -DCK_CURSES -DDYNAMIC -DTCPSOCKET 
-LDADD= -lcurses -ltermcap
+COPTS= -DBSD44 -DCK_CURSES -DDYNAMIC -DTCPSOCKET -DOLD_CURSES
+LDADD= -locurses -ltermcap
 
 PROG=	kermit
 SRCS=   ckcmai.c ckucmd.c ckuusr.c ckuus2.c ckuus3.c \

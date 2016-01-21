@@ -2,10 +2,10 @@
 
 PROG=	canfield
 MAN6=	canfield.0
-DPADD=	${LIBCURSES} ${LIBTERM} ${LIBCOMPAT}
-LDADD=	-lcurses -ltermcap -lcompat
+DPADD=	${LIBOCURSES} ${LIBTERM} ${LIBCOMPAT}
+LDADD=	-locurses -ltermcap -lcompat
 HIDEGAME=hidegame
-
+CFLAGS+=-DOLD_CURSES
 
 .include "../../Makefile.inc"
 .include <bsd.prog.mk>

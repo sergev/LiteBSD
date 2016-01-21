@@ -3,8 +3,9 @@
 PROG=	gomoku
 SRCS=	bdinit.c bdisp.c main.c makemove.c pickmove.c stoc.c
 MAN6=	gomoku.0
-DPADD=	${LIBCURSES} ${LIBTERM}
-LDADD=	-lcurses -ltermlib
+DPADD=	${LIBOCURSES} ${LIBTERM}
+LDADD=	-locurses -ltermlib
 HIDEGAME=hidegame
+CFLAGS+=-DOLD_CURSES
 
 .include <bsd.prog.mk>
