@@ -482,7 +482,7 @@ uninstall.libs \
 uninstall.includes ::
 	-@ (cd ${INCLUDEDIR} && rm -f eti.h)
 	-@ (cd ${INCLUDEDIR} && rm -f menu.h)
-depend : ${AUTO_SRC}
-	makedepend -- ${CPPFLAGS} -- ${C_SRC}
+#depend : ${AUTO_SRC}
+#	makedepend -- ${CPPFLAGS} -- ${C_SRC}
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

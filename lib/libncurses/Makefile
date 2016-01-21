@@ -96,6 +96,8 @@ preinstall :
 distclean \
 realclean ::
 
+# Don't do anything for make depend
+depend ::
 
 # Put the common rules here so that we can easily construct the list of
 # directories to visit.
@@ -104,14 +106,13 @@ clean \
 distclean \
 mostlyclean \
 realclean \
-depend \
 sources \
 tags \
 uninstall \
 install ::
 	cd include && ${MAKE} ${TOP_MFLAGS} $@
 	cd ncurses && ${MAKE} ${TOP_MFLAGS} $@
-	cd progs && ${MAKE} ${TOP_MFLAGS} $@
+#	cd progs && ${MAKE} ${TOP_MFLAGS} $@
 	cd panel && ${MAKE} ${TOP_MFLAGS} $@
 	cd menu && ${MAKE} ${TOP_MFLAGS} $@
 	cd form && ${MAKE} ${TOP_MFLAGS} $@

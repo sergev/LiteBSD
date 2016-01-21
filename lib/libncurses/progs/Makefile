@@ -470,7 +470,7 @@ clean ::
 			transform.h
 	$(LIBTOOL_COMPILE) $(CC) $(CFLAGS_NORMAL) -c ../progs/transform.c -o ../objects/transform$o
 
-depend : ${AUTO_SRC}
-	makedepend -- ${CPPFLAGS} -- ${C_SRC}
+#depend : ${AUTO_SRC}
+#	makedepend -- ${CPPFLAGS} -- ${C_SRC}
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

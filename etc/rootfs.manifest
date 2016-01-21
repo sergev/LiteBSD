@@ -812,7 +812,6 @@ file /usr/bin/biff
 file /usr/bin/cal
 file /usr/bin/calendar
 file /usr/bin/cap_mkdb
-file /usr/bin/captoinfo
 file /usr/bin/cc
 file /usr/bin/checknr
 file /usr/bin/chflags
@@ -864,7 +863,6 @@ file /usr/bin/head
 file /usr/bin/hexdump
 file /usr/bin/id
 file /usr/bin/indent
-file /usr/bin/infotocap
 file /usr/bin/install
 file /usr/bin/join
 file /usr/bin/jot
@@ -982,20 +980,17 @@ owner 0                 root
 file /usr/bin/systat
 mode 02555
 group 2                 kmem
-file /usr/bin/tabs
 file /usr/bin/tail
 file /usr/bin/talk
 file /usr/bin/tcopy
 file /usr/bin/tee
 file /usr/bin/telnet
 file /usr/bin/tftp
-file /usr/bin/tic
 file /usr/bin/time
 file /usr/bin/tip
 mode 04510
 owner 66                uucp
 group 117               dialer
-file /usr/bin/toe
 file /usr/bin/touch
 file /usr/bin/tput
 file /usr/bin/tr

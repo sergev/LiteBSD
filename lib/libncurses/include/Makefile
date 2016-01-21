@@ -85,9 +85,10 @@ AUTO_SRC = \
 	term.h
 
 ################################################################################
+depend ::
+
 all \
 libs \
-depend \
 sources \
 install ::	$(AUTO_SRC)
 

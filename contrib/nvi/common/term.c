@@ -892,6 +892,7 @@ noterm:	if (row == 0)
 		row = 24;
 	if (col == 0)
 		col = 80;
+
 	/* POSIX 1003.2 requires the environment to override. */
 	if ((s = getenv("LINES")) != NULL)
 		row = strtol(s, NULL, 10);

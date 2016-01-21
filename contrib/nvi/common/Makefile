@@ -13,10 +13,11 @@ PROG=	nvi
 
 #CFLAGS=-g -DDEBUG #-DCOMLOG
 #CFLAGS+=-pg
-CFLAGS+=-I. -I${.CURDIR} -DSYSV_CURSES
+CFLAGS+=-I. -I${.CURDIR} -DOLD_CURSES -ffunction-sections -fdata-sections
+LDFLAGS+=-Wl,--gc-sections
 #LDADD+=-pg
-DPADD+= ${LIBNCURSES} ${LIBTERM} ${LIBUTIL}
-LDADD+=	-lncurses -ltermlib -lutil
+DPADD+= ${LIBOCURSES} ${LIBTERM} ${LIBUTIL}
+LDADD+=	-locurses -ltermlib -lutil
 
 .PATH:	${.CURDIR}/../common ${.CURDIR}/../ex ${.CURDIR}/../sex \
 	${.CURDIR}/../vi ${.CURDIR}/../svi ${.CURDIR}/../xaw

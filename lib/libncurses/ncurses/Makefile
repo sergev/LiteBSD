@@ -1520,7 +1520,7 @@ mostlyclean::
 			$(HEADER_DEPS)
 	$(LIBTOOL_COMPILE) $(CC) $(CFLAGS_NORMAL) -c ../ncurses/$(base)/version.c -o ../objects/version$o
 
-depend : ${AUTO_SRC}
-	makedepend -- ${CPPFLAGS} -- ${C_SRC}
+#depend : ${AUTO_SRC}
+#	makedepend -- ${CPPFLAGS} -- ${C_SRC}
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
