@@ -973,6 +973,7 @@ file /usr/bin/sl
 file /usr/bin/soelim
 file /usr/bin/sort
 file /usr/bin/split
+file /usr/bin/sqlite3
 file /usr/bin/strings
 file /usr/bin/su
 mode 04555
@@ -1198,6 +1199,8 @@ file /usr/include/runetype.h
 file /usr/include/setjmp.h
 file /usr/include/sgtty.h
 file /usr/include/signal.h
+file /usr/include/sqlite3.h
+file /usr/include/sqlite3ext.h
 file /usr/include/stab.h
 file /usr/include/stdbool.h
 file /usr/include/stddef.h
@@ -1574,6 +1577,7 @@ file /usr/lib/libocurses.a
 file /usr/lib/libpanel.a
 file /usr/lib/libresolv.a
 file /usr/lib/librpc.a
+file /usr/lib/libsqlite3.a
 file /usr/lib/libssl.a
 file /usr/lib/libtelnet.a
 file /usr/lib/libtermcap.a
@@ -1898,6 +1902,7 @@ file /usr/share/man/cat1/sleep.0
 file /usr/share/man/cat1/soelim.0
 file /usr/share/man/cat1/sort.0
 file /usr/share/man/cat1/split.0
+file /usr/share/man/cat1/sqlite3.0
 file /usr/share/man/cat1/strings.0
 file /usr/share/man/cat1/strip.0
 file /usr/share/man/cat1/stty.0
