@@ -806,6 +806,7 @@ file /usr/bin/ar
 file /usr/bin/awk
 file /usr/bin/banner
 file /usr/bin/basename
+file /usr/bin/bc
 file /usr/bin/bdes
 file /usr/bin/biff
 #file /usr/bin/c++
@@ -1662,6 +1663,7 @@ file /usr/share/doc/emg/emg.keys
 dir /usr/share/misc
 file /usr/share/misc/airport
 file /usr/share/misc/ascii
+file /usr/share/misc/bc.library
 file /usr/share/misc/birthtoken
 file /usr/share/misc/bugformat
 file /usr/share/misc/eqnchar
@@ -1753,6 +1755,7 @@ file /usr/share/man/cat1/ar.0
 file /usr/share/man/cat1/ash.0
 file /usr/share/man/cat1/awk.0
 file /usr/share/man/cat1/basename.0
+file /usr/share/man/cat1/bc.0
 file /usr/share/man/cat1/bdes.0
 file /usr/share/man/cat1/biff.0
 file /usr/share/man/cat1/cal.0

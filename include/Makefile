@@ -12,7 +12,7 @@ FILES=  a.out.h ar.h archive.h archive_entry.h assert.h \
         elfdefinitions.h err.h fnmatch.h fstab.h fts.h gelf.h getopt.h \
         glob.h grp.h kvm.h libdwarf.h libelf.h libelftc.h limits.h \
         locale.h math.h memory.h mpool.h ndbm.h netdb.h nlist.h paths.h \
-        pwd.h ranlib.h regex.h regexp.h resolv.h rune.h runetype.h \
+        pwd.h ranlib.h regex.h regexp.h resolv.h rune.h runetype.h search.h \
         setjmp.h sgtty.h signal.h stab.h stdbool.h stddef.h stdint.h \
         stdio.h stdlib.h string.h strings.h struct.h sysexits.h tar.h \
         time.h ttyent.h tzfile.h unistd.h utime.h utmp.h vis.h \
