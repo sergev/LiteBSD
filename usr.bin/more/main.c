@@ -1,5 +1,7 @@
+/*	$NetBSD: main.c,v 1.13 2013/07/10 08:00:29 joerg Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,17 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1988 Mark Nudleman.\n"
-"@(#) Copyright (c) 1988, 1993"
-"	Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/7/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Entry point, initialization, miscellaneous routines.
@@ -50,9 +38,13 @@ static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/7/93";
 #include <sys/types.h>
 #include <sys/file.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <less.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "less.h"
+#include "extern.h"
 
 int	ispipe;
 int	new_file;
@@ -60,34 +52,27 @@ int	is_tty;
 char	*current_file, *previous_file, *current_name, *next_name;
 off_t	prev_pos;
 int	any_display;
-int	scroll;
+int	scroll_lines;
 int	ac;
 char	**av;
 int	curr_ac;
 int	quitting;
 
-extern int	file;
-extern int	cbufs;
-extern int	errmsgs;
-
-extern char	*tagfile;
-extern int	tagoption;
-
+static void cat_file __P((void));
 /*
  * Edit a new file.
  * Filename "-" means standard input.
  * No filename means the "current" file, from the command line.
  */
+int
 edit(filename)
-	register char *filename;
+	char *filename;
 {
-	extern int errno;
-	register int f;
-	register char *m;
-	off_t initial_pos, position();
+	int f;
+	char *m;
+	off_t initial_pos;
 	static int didpipe;
 	char message[100], *p;
-	char *rindex(), *strerror(), *save(), *bad_file();
 
 	initial_pos = NULL_POSITION;
 	if (filename == NULL || *filename == '\0') {
@@ -121,7 +106,8 @@ edit(filename)
 		return(0);
 	}
 	else if ((f = open(filename, O_RDONLY, 0)) < 0) {
-		(void)sprintf(message, "%s: %s", filename, strerror(errno));
+		(void)snprintf(message, sizeof(message), "%s: %s", filename,
+		    strerror(errno));
 		error(message);
 		free(filename);
 		return(0);
@@ -193,12 +179,10 @@ edit(filename)
 /*
  * Edit the next file in the command line list.
  */
+void
 next_file(n)
 	int n;
 {
-	extern int quit_at_eof;
-	off_t position();
-
 	if (curr_ac + n >= ac) {
 		if (quit_at_eof || position(TOP) == NULL_POSITION)
 			quit();
@@ -211,6 +195,7 @@ next_file(n)
 /*
  * Edit the previous file in the command line list.
  */
+void
 prev_file(n)
 	int n;
 {
@@ -224,11 +209,10 @@ prev_file(n)
  * copy a file directly to standard output; used if stdout is not a tty.
  * the only processing is to squeeze multiple blank input lines.
  */
-static
+static void
 cat_file()
 {
-	extern int squeeze;
-	register int c, empty;
+	int c, empty;
 
 	if (squeeze) {
 		empty = 0;
@@ -247,18 +231,19 @@ cat_file()
 	flush();
 }
 
+int
 main(argc, argv)
 	int argc;
 	char **argv;
 {
 	int envargc, argcnt;
-	char *envargv[2], *getenv();
+	char *envargv[3];
 
 	/*
 	 * Process command line arguments and MORE environment arguments.
 	 * Command line arguments override environment arguments.
 	 */
-	if (envargv[1] = getenv("MORE")) {
+	if ((envargv[1] = getenv("MORE")) != NULL) {
 		envargc = 2;
 		envargv[0] = "more";
 		envargv[2] = NULL;
@@ -304,15 +289,7 @@ main(argc, argv)
 	init_signals(1);
 
 	/* select the first file to examine. */
-	if (tagoption) {
-		/*
-		 * A -t option was given; edit the file selected by the
-		 * "tags" search, and search for the proper line in the file.
-		 */
-		if (!tagfile || !edit(tagfile) || tagsearch())
-			quit();
-	}
-	else if (ac < 1)
+	if (ac < 1)
 		(void)edit("-");	/* Standard input */
 	else {
 		/*
@@ -328,7 +305,6 @@ main(argc, argv)
 	if (file >= 0)
 		commands();
 	quit();
-	/*NOTREACHED*/
 }
 
 /*
@@ -341,18 +317,19 @@ save(s)
 {
 	char *p;
 
-	p = malloc((u_int)strlen(s)+1);
+	p = strdup(s);
 	if (p == NULL)
 	{
 		error("cannot allocate memory");
 		quit();
 	}
-	return(strcpy(p, s));
+	return(p);
 }
 
 /*
  * Exit the program.
  */
+void
 quit()
 {
 	/*

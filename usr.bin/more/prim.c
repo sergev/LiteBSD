@@ -1,5 +1,7 @@
+/*	$NetBSD: prim.c,v 1.10 2009/01/24 13:58:21 tsutsui Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)prim.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Primitives for displaying the file on the screen.
@@ -43,7 +38,10 @@ static char sccsid[] = "@(#)prim.c	8.1 (Berkeley) 6/6/93";
 #include <sys/types.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <less.h>
+#include <string.h>
+
+#include "less.h"
+#include "extern.h"
 
 int back_scroll = -1;
 int hit_eof;		/* keeps track of how many times we hit end of file */
@@ -51,22 +49,16 @@ int screen_trashed;
 
 static int squished;
 
-extern int sigs;
-extern int top_scroll;
-extern int sc_width, sc_height;
-extern int caseless;
-extern int linenums;
-extern int tagoption;
-extern char *line;
-extern int retain_below;
 
-off_t position(), forw_line(), back_line(), forw_raw_line(), back_raw_line();
-off_t ch_length(), ch_tell();
+static int match(char *, char *);
+static int badmark __P((int));
 
 /*
  * Check to see if the end of file is currently "displayed".
  */
+void
 eof_check()
+/*###72 [cc] conflicting types for `eof_check'%%%*/
 {
 	off_t pos;
 
@@ -88,7 +80,9 @@ eof_check()
  * of the screen; this can happen when we display a short file
  * for the first time.
  */
+void
 squish_check()
+/*###95 [cc] conflicting types for `squish_check'%%%*/
 {
 	if (squished) {
 		squished = 0;
@@ -101,19 +95,20 @@ squish_check()
  * input file.  "only_last" means display only the last screenful if
  * n > screen size.
  */
+void
 forw(n, pos, only_last)
-	register int n;
+/*###109 [cc] conflicting types for `forw'%%%*/
+	int n;
 	off_t pos;
 	int only_last;
 {
-	extern int short_file;
 	static int first_time = 1;
 	int eof = 0, do_repaint;
 
 	squish_check();
 
 	/*
-	 * do_repaint tells us not to display anything till the end, 
+	 * do_repaint tells us not to display anything till the end,
 	 * then just repaint the entire screen.
 	 */
 	do_repaint = (only_last && n > sc_height-1);
@@ -178,11 +173,8 @@ forw(n, pos, only_last)
 		 * If this is the first screen displayed and we hit an early
 		 * EOF (i.e. before the requested number of lines), we
 		 * "squish" the display down at the bottom of the screen.
-		 * But don't do this if a -t option was given; it can cause
-		 * us to start the display after the beginning of the file,
-		 * and it is not appropriate to squish in that case.
 		 */
-		if (first_time && line == NULL && !top_scroll && !tagoption) {
+		if (first_time && line == NULL && !top_scroll) {
 			squished = 1;
 			continue;
 		}
@@ -202,8 +194,10 @@ forw(n, pos, only_last)
 /*
  * Display n lines, scrolling backward.
  */
+void
 back(n, pos, only_last)
-	register int n;
+/*###207 [cc] conflicting types for `back'%%%*/
+	int n;
 	off_t pos;
 	int only_last;
 {
@@ -248,7 +242,9 @@ back(n, pos, only_last)
  * Display n more lines, forward.
  * Start just after the line currently displayed at the bottom of the screen.
  */
+void
 forward(n, only_last)
+/*###254 [cc] conflicting types for `forward'%%%*/
 	int n;
 	int only_last;
 {
@@ -276,7 +272,9 @@ forward(n, only_last)
  * Display n more lines, backward.
  * Start just before the line currently displayed at the top of the screen.
  */
+void
 backward(n, only_last)
+/*###283 [cc] conflicting types for `backward'%%%*/
 	int n;
 	int only_last;
 {
@@ -288,14 +286,16 @@ backward(n, only_last)
 	 * never empty.
 	 */
 	if (pos == NULL_POSITION)
-		return;   
+		return;
 	back(n, pos, only_last);
 }
 
 /*
  * Repaint the screen, starting from a specified position.
  */
+void
 prepaint(pos)
+/*###303 [cc] conflicting types for `prepaint'%%%*/
 	off_t pos;
 {
 	hit_eof = 0;
@@ -306,7 +306,9 @@ prepaint(pos)
 /*
  * Repaint the screen.
  */
+void
 repaint()
+/*###315 [cc] conflicting types for `repaint'%%%*/
 {
 	/*
 	 * Start at the line currently at the top of the screen
@@ -320,7 +322,9 @@ repaint()
  * It is more convenient to paint the screen backward,
  * from the end of the file toward the beginning.
  */
+void
 jump_forw()
+/*###330 [cc] conflicting types for `jump_forw'%%%*/
 {
 	off_t pos;
 
@@ -340,10 +344,12 @@ jump_forw()
 /*
  * Jump to line n in the file.
  */
+void
 jump_back(n)
-	register int n;
+/*###351 [cc] conflicting types for `jump_back'%%%*/
+	int n;
 {
-	register int c, nlines;
+	int c, nlines;
 
 	/*
 	 * This is done the slow way, by starting at the beginning
@@ -354,9 +360,9 @@ jump_back(n)
 	 *    nearest known line rather than at the beginning. }}
 	 */
 	if (ch_seek((off_t)0)) {
-		/* 
-		 * Probably a pipe with beginning of file no longer buffered. 
-		 * If he wants to go to line 1, we do the best we can, 
+		/*
+		 * Probably a pipe with beginning of file no longer buffered.
+		 * If he wants to go to line 1, we do the best we can,
 		 * by going to the first line which is still buffered.
 		 */
 		if (n <= 1 && ch_beg_seek() == 0)
@@ -385,11 +391,13 @@ jump_back(n)
  * This is a poor compensation for not being able to
  * quickly jump to a specific line number.
  */
+void
 jump_percent(percent)
+/*###397 [cc] conflicting types for `jump_percent'%%%*/
 	int percent;
 {
-	off_t pos, len, ch_length();
-	register int c;
+	off_t pos, len;
+	int c;
 
 	/*
 	 * Determine the position in the file
@@ -419,15 +427,17 @@ jump_percent(percent)
 /*
  * Jump to a specified position in the file.
  */
+void
 jump_loc(pos)
+/*###432 [cc] conflicting types for `jump_loc'%%%*/
 	off_t pos;
 {
-	register int nline;
+	int nline;
 	off_t tpos;
 
 	if ((nline = onscreen(pos)) >= 0) {
 		/*
-		 * The line is currently displayed.  
+		 * The line is currently displayed.
 		 * Just scroll there.
 		 */
 		forw(nline, position(BOTTOM_PLUS_ONE), 0);
@@ -497,7 +507,9 @@ static off_t marks[NMARKS];
 /*
  * Initialize the mark table to show no marks are set.
  */
+void
 init_mark()
+/*###511 [cc] conflicting types for `init_mark'%%%*/
 {
 	int i;
 
@@ -508,7 +520,7 @@ init_mark()
 /*
  * See if a mark letter is valid (between a and z).
  */
-	static int
+static int
 badmark(c)
 	int c;
 {
@@ -523,7 +535,9 @@ badmark(c)
 /*
  * Set a mark.
  */
+void
 setmark(c)
+/*###538 [cc] conflicting types for `setmark'%%%*/
 	int c;
 {
 	if (badmark(c))
@@ -531,7 +545,9 @@ setmark(c)
 	marks[c-'a'] = position(TOP);
 }
 
+void
 lastmark()
+/*###547 [cc] conflicting types for `lastmark'%%%*/
 {
 	marks[LASTMARK] = position(TOP);
 }
@@ -539,7 +555,9 @@ lastmark()
 /*
  * Go to a previously set mark.
  */
+void
 gomark(c)
+/*###556 [cc] conflicting types for `gomark'%%%*/
 	int c;
 {
 	off_t pos;
@@ -567,6 +585,7 @@ gomark(c)
  * back_scroll, because the default case depends on sc_height and
  * top_scroll, as well as back_scroll.
  */
+int
 get_back_scroll()
 {
 	if (back_scroll >= 0)
@@ -577,18 +596,19 @@ get_back_scroll()
 }
 
 /*
- * Search for the n-th occurence of a specified pattern, 
+ * Search for the n-th occurence of a specified pattern,
  * either forward or backward.
  */
+int
 search(search_forward, pattern, n, wantmatch)
-	register int search_forward;
-	register char *pattern;
-	register int n;
+	int search_forward;
+	char *pattern;
+	int n;
 	int wantmatch;
 {
 	off_t pos, linepos;
-	register char *p;
-	register char *q;
+	char *p;
+	char *q;
 	int linenum;
 	int linematch;
 #ifdef RECOMP
@@ -601,7 +621,6 @@ search(search_forward, pattern, n, wantmatch)
 #else
 	static char lpbuf[100];
 	static char *last_pattern = NULL;
-	char *strcpy();
 #endif
 #endif
 
@@ -611,12 +630,12 @@ search(search_forward, pattern, n, wantmatch)
 	 */
 	if (caseless && pattern != NULL)
 		for (p = pattern;  *p;  p++)
-			if (isupper(*p))
-				*p = tolower(*p);
+			if (isupper((unsigned char)*p))
+				*p = tolower((unsigned char)*p);
 #ifdef RECOMP
 
 	/*
-	 * (re_comp handles a null pattern internally, 
+	 * (re_comp handles a null pattern internally,
 	 *  so there is no need to check for a null pattern here.)
 	 */
 	if ((errmsg = re_comp(pattern)) != NULL)
@@ -666,7 +685,7 @@ search(search_forward, pattern, n, wantmatch)
 		pattern = last_pattern;
 	} else
 	{
-		(void)strcpy(lpbuf, pattern);
+		(void)strlcpy(lpbuf, pattern, sizeof(lpbuf));
 		last_pattern = lpbuf;
 	}
 #endif
@@ -709,8 +728,8 @@ search(search_forward, pattern, n, wantmatch)
 	for (;;)
 	{
 		/*
-		 * Get lines until we find a matching one or 
-		 * until we hit end-of-file (or beginning-of-file 
+		 * Get lines until we find a matching one or
+		 * until we hit end-of-file (or beginning-of-file
 		 * if we're going backwards).
 		 */
 		if (sigs)
@@ -722,7 +741,7 @@ search(search_forward, pattern, n, wantmatch)
 		if (search_forward)
 		{
 			/*
-			 * Read the next line, and save the 
+			 * Read the next line, and save the
 			 * starting position of that line in linepos.
 			 */
 			linepos = pos;
@@ -764,16 +783,17 @@ search(search_forward, pattern, n, wantmatch)
 		 */
 		if (caseless)
 			for (p = q = line;  *p;  p++, q++)
-				*q = isupper(*p) ? tolower(*p) : *p;
+				*q = isupper((unsigned char)*p) ?
+				    tolower((unsigned char)*p) : *p;
 
 		/*
-		 * Remove any backspaces along with the preceeding char.
+		 * Remove any backspaces along with the preceding char.
 		 * This allows us to match text which is underlined or
 		 * overstruck.
 		 */
 		for (p = q = line;  *p;  p++, q++)
 			if (q > line && *p == '\b')
-				/* Delete BS and preceeding char. */
+				/* Delete BS and preceding char. */
 				q -= 2;
 			else
 				/* Otherwise, just copy. */
@@ -815,11 +835,11 @@ search(search_forward, pattern, n, wantmatch)
  * We use this function to do simple pattern matching.
  * It supports no metacharacters like *, etc.
  */
-static
+static int
 match(pattern, buf)
 	char *pattern, *buf;
 {
-	register char *pp, *lp;
+	char *pp, *lp;
 
 	for ( ;  *buf != '\0';  buf++)
 	{

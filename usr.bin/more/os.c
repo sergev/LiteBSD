@@ -1,5 +1,7 @@
+/*	$NetBSD: os.c,v 1.8 2009/01/24 13:58:21 tsutsui Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)os.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Operating system dependent routines.
@@ -54,14 +49,16 @@ static char sccsid[] = "@(#)os.c	8.1 (Berkeley) 6/6/93";
 #include <signal.h>
 #include <setjmp.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <less.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include "less.h"
+#include "extern.h"
 #include "pathnames.h"
 
 int reading;
-
-extern int screen_trashed;
 
 static jmp_buf read_label;
 
@@ -69,12 +66,13 @@ static jmp_buf read_label;
  * Pass the specified command to a shell to be executed.
  * Like plain "system()", but handles resetting terminal modes, etc.
  */
+void
 lsystem(cmd)
 	char *cmd;
 {
 	int inp;
 	char cmdbuf[256];
-	char *shell, *getenv();
+	char *shell;
 
 	/*
 	 * Print the command which is to be executed,
@@ -124,7 +122,8 @@ lsystem(cmd)
 			cmd = shell;
 		else
 		{
-			(void)sprintf(cmdbuf, "%s -c \"%s\"", shell, cmd);
+			(void)snprintf(cmdbuf, sizeof(cmdbuf), "%s -c \"%s\"",
+			    shell, cmd);
 			cmd = cmdbuf;
 		}
 	}
@@ -149,7 +148,7 @@ lsystem(cmd)
 	 * Since we were ignoring window change signals while we executed
 	 * the system command, we must assume the window changed.
 	 */
-	winch();
+	winch(SIGWINCH);
 #endif
 }
 
@@ -158,12 +157,13 @@ lsystem(cmd)
  * A call to intread() from a signal handler will interrupt
  * any pending iread().
  */
+int
 iread(fd, buf, len)
 	int fd;
 	char *buf;
 	int len;
 {
-	register int n;
+	int n;
 
 	if (setjmp(read_label))
 		/*
@@ -180,6 +180,7 @@ iread(fd, buf, len)
 	return (n);
 }
 
+void
 intread()
 {
 	(void)sigsetmask(0L);
@@ -191,8 +192,6 @@ intread()
  * The implementation of this is necessarily very operating system
  * dependent.  This implementation is unabashedly only for Unix systems.
  */
-FILE *popen();
-
 char *
 glob(filename)
 	char *filename;
@@ -216,26 +215,26 @@ glob(filename)
 		/*
 		 * Read the output of <echo filename>.
 		 */
-		cmd = malloc((u_int)(strlen(filename)+8));
-		if (cmd == NULL)
-			return (filename);
-		(void)sprintf(cmd, "echo \"%s\"", filename);
+                cmd = malloc((u_int)(strlen(filename)+8));
+                if (cmd == NULL)
+                        return (filename);
+                (void)sprintf(cmd, "echo \"%s\"", filename);
 	} else
 	{
 		/*
 		 * Read the output of <$SHELL -c "echo filename">.
 		 */
-		cmd = malloc((u_int)(strlen(p)+12));
-		if (cmd == NULL)
-			return (filename);
-		(void)sprintf(cmd, "%s -c \"echo %s\"", p, filename);
+                cmd = malloc((u_int)(strlen(p)+12));
+                if (cmd == NULL)
+                        return (filename);
+                (void)sprintf(cmd, "%s -c \"echo %s\"", p, filename);
 	}
 
 	if ((f = popen(cmd, "r")) == NULL)
 		return (filename);
 	free(cmd);
 
-	for (p = buffer;  p < &buffer[sizeof(buffer)-1];  p++)
+	for (p = buffer; p < &buffer[sizeof(buffer)-1];  p++)
 	{
 		if ((ch = getc(f)) == '\n' || ch == EOF)
 			break;
@@ -251,19 +250,18 @@ bad_file(filename, message, len)
 	char *filename, *message;
 	u_int len;
 {
-	extern int errno;
 	struct stat statbuf;
-	char *strcat(), *strerror();
 
 	if (stat(filename, &statbuf) < 0) {
-		(void)sprintf(message, "%s: %s", filename, strerror(errno));
+		(void)snprintf(message, len, "%s: %s", filename,
+		    strerror(errno));
 		return(message);
 	}
 	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) {
 		static char is_dir[] = " is a directory";
 
 		strtcpy(message, filename, (int)(len-sizeof(is_dir)-1));
-		(void)strcat(message, is_dir);
+		(void)strlcat(message, is_dir, len);
 		return(message);
 	}
 	return((char *)NULL);
@@ -273,12 +271,11 @@ bad_file(filename, message, len)
  * Copy a string, truncating to the specified length if necessary.
  * Unlike strncpy(), the resulting string is guaranteed to be null-terminated.
  */
+void
 strtcpy(to, from, len)
 	char *to, *from;
 	int len;
 {
-	char *strncpy();
-
 	(void)strncpy(to, from, (int)len);
 	to[len-1] = '\0';
 }

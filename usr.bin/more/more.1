@@ -1,3 +1,5 @@
+.\"	$NetBSD: more.1,v 1.10 2012/06/08 12:39:42 jdf Exp $
+.\"
 .\" Copyright (c) 1988, 1990, 1993
 .\"	The Regents of the University of California.  All rights reserved.
 .\" All rights reserved.
@@ -10,11 +12,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
+.\" 3. Neither the name of the University nor the names of its contributors
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
@@ -37,9 +35,9 @@
 .Os
 .Sh NAME
 .Nm more
-.Nd file perusal filter for crt viewing
+.Nd file perusal filter for CRT viewing
 .Sh SYNOPSIS
-.Nm more
+.Nm
 .Op Fl ceinus
 .Op Fl t Ar tag
 .Op Fl x Ar tabs
@@ -47,13 +45,15 @@
 .Op Fl #
 .Op Ar
 .Sh DESCRIPTION
-.Nm More
-is a filter for paging through text one screenful at a time.  It
-uses
-.Xr termcap  3
-so it can run on a variety of terminals.  There is even limited support
-for hardcopy terminals.  (On a hardcopy terminal, lines which should be
-printed at the top of the screen are prefixed with an up-arrow.)
+The
+.Nm
+command is a filter for paging through text one screenful at a time.
+It uses
+.Xr termcap 3
+so it can run on a variety of terminals.
+There is even limited support for hardcopy terminals.
+(On a hardcopy terminal, lines which should be printed at the top
+of the screen are prefixed with an up-arrow).
 .Ar File
 may be a single dash (``-''), implying stdin.
 .Sh OPTIONS
@@ -65,22 +65,22 @@ line options will override them.
 .Bl -tag -width flag
 .It Fl c
 Normally,
-.Nm more
+.Nm
 will repaint the screen by scrolling from the bottom of the screen.
 If the
 .Fl c
 option is set, when
-.Nm more
+.Nm
 needs to change the entire display, it will paint from the top line down.
 .It Fl e
 Normally, if displaying a single file,
-.Nm more
+.Nm
 exits as soon as it reaches end-of-file.  The
 .Fl e
 option tells more to
 exit if it reaches end-of-file twice without an intervening operation.
 If the file is shorter than a single screen
-.Nm more
+.Nm
 will exit at end-of-file regardless.
 .It Fl i
 The
@@ -92,7 +92,7 @@ The
 .Fl n
 flag suppresses line numbers.
 The default (to use line numbers) may cause
-.Nm more
+.Nm
 to run more slowly in some cases, especially with a very large input file.
 Suppressing line numbers with the
 .Fl n
@@ -112,11 +112,11 @@ The
 .Fl t
 option, followed immediately by a tag, will edit the file
 containing that tag.  For more information, see the
-.Xr ctags  1
+.Xr ctags 1
 command.
 .It Fl u
 By default,
-.Nm more
+.Nm
 treats backspaces and
 .Dv CR-LF
 sequences specially.  Backspaces which appear
@@ -144,11 +144,12 @@ The
 .Fl /
 option specifies a string that will be searched for before
 each file is displayed.
+.El
 .Sh COMMANDS
 Interactive commands for
-.Nm more
+.Nm
 are based on
-.Xr vi  1  .
+.Xr vi 1 .
 Some commands may be preceded by a decimal number, called N in the
 descriptions below.
 In the following descriptions, ^X means control-X.
@@ -190,7 +191,7 @@ Go to line N in the file, default the end of the file.
 .It Ic p No or Ic \&%
 Go to a position N percent into the file.  N should be between 0
 and 100.  (This works if standard input is being read, but only if
-.Nm more
+.Nm
 has already read to the end of the file.  It is always fast, but
 not always useful.)
 .It Ic r No or Ic \&^L
@@ -213,7 +214,7 @@ All marks are lost when a new file is examined.
 Search forward in the file for the N-th line containing the pattern.
 N defaults to 1.
 The pattern is a regular expression, as recognized by
-.Xr ed .
+.Xr ed 1 .
 The search starts at the second line displayed.
 .It Ic \&? Ns Ar pattern
 Search backward in the file for the N-th line containing the pattern.
@@ -250,13 +251,14 @@ Invokes an editor to edit the current file being viewed.
 The editor is taken from the environment variable
 .Ev EDITOR ,
 or defaults to
-.Xr vi  1  .
+.Xr vi 1 .
 .It Ic \&= No or Ic \&^G
 These options print out the number of the file currently being displayed
 relative to the total number of files there are to display, the current
 line number, the current byte number and the total bytes to display, and
-what percentage of the file has been displayed.  If
-.Nm more
+what percentage of the file has been displayed.
+If
+.Nm
 is reading from stdin, or the file is shorter than a single screen, some
 of these items may not be available.  Note, all of these items reference
 the first byte of the last line displayed on the screen.
@@ -268,15 +270,16 @@ the first byte of the last line displayed on the screen.
 .Ic ZZ
 .Xc
 Exits
-.Nm more .
+.Nm .
 .El
 .Sh ENVIRONMENT
-.Nm More
-utilizes the following environment variables, if they exist:
+The
+.Nm
+command uses the following environment variables, if they exist:
 .Bl -tag -width Fl
 .It Ev MORE
 This variable may be set with favored options to
-.Nm more .
+.Nm .
 .It Ev EDITOR
 Specify default editor.
 .It Ev SHELL
@@ -288,11 +291,11 @@ characteristics necessary to manipulate the screen.
 .Sh SEE ALSO
 .Xr ctags 1 ,
 .Xr vi 1
-.Sh AUTHOR
-This software is derived from software contributed to Berkeley
-by Mark Nudleman.
 .Sh HISTORY
 The
-.Nm more
+.Nm
 command appeared in
 .Bx 3.0 .
+.Sh AUTHORS
+This software is derived from software contributed to Berkeley
+by Mark Nudelman.

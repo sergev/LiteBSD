@@ -1,5 +1,7 @@
+/*	$NetBSD: position.c,v 1.5 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)position.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Routines dealing with the "position" table.
@@ -48,12 +43,12 @@ static char sccsid[] = "@(#)position.c	8.1 (Berkeley) 6/6/93";
 
 #include <sys/types.h>
 #include <stdlib.h>
-#include <less.h>
+
+#include "less.h"
+#include "extern.h"
 
 static off_t *table;		/* The position table */
 static int tablesize;
-
-extern int sc_height;
 
 /*
  * Return the starting file position of a line displayed on the screen.
@@ -85,10 +80,11 @@ position(where)
 /*
  * Add a new file position to the bottom of the position table.
  */
+void
 add_forw_pos(pos)
 	off_t pos;
 {
-	register int i;
+	int i;
 
 	/*
 	 * Scroll the position table up.
@@ -101,10 +97,11 @@ add_forw_pos(pos)
 /*
  * Add a new file position to the top of the position table.
  */
+void
 add_back_pos(pos)
 	off_t pos;
 {
-	register int i;
+	int i;
 
 	/*
 	 * Scroll the position table down.
@@ -114,9 +111,10 @@ add_back_pos(pos)
 	table[0] = pos;
 }
 
+void
 copytable()
 {
-	register int a, b;
+	int a, b;
 
 	for (a = 0; a < sc_height && table[a] == NULL_POSITION; a++);
 	for (b = 0; a < sc_height; a++, b++) {
@@ -128,9 +126,10 @@ copytable()
 /*
  * Initialize the position table, done whenever we clear the screen.
  */
+void
 pos_clear()
 {
-	register int i;
+	int i;
 
 	if (table == 0) {
 		tablesize = sc_height > 25 ? sc_height : 25;
@@ -149,10 +148,11 @@ pos_clear()
  * Check the position table to see if the position falls within its range.
  * Return the position table entry if found, -1 if not.
  */
+int
 onscreen(pos)
 	off_t pos;
 {
-	register int i;
+	int i;
 
 	if (pos < table[0])
 		return (-1);
