@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwflush.c,v 1.4 1997/02/25 00:04:52 downsj Exp $	*/
+/*	$NetBSD: wwflush.c,v 1.5 1995/12/21 10:46:08 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,13 +38,17 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwflush.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwflush.c,v 1.4 1997/02/25 00:04:52 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
 #include "tt.h"
 #include <sys/signal.h>
-#include <strings.h>
+#include <string.h>
 
 wwflush()
 {
@@ -65,7 +72,11 @@ wwflush()
 
 wwcheckpoint()
 {
-	int s = sigblock(sigmask(SIGALRM) | sigmask(SIGIO));
+	sigset_t sigset, osigset;
+
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGALRM);
+	sigprocmask(SIG_BLOCK, &sigset, &osigset);
 
 	tt.tt_ack = 0;
 	do {
@@ -75,7 +86,7 @@ wwcheckpoint()
 #endif
 		(void) alarm(3);
 		for (wwdocheckpoint = 0; !wwdocheckpoint && tt.tt_ack == 0;)
-			(void) sigpause(s);
+			sigsuspend(&osigset);
 	} while (tt.tt_ack == 0);
 	(void) alarm(0);
 	wwdocheckpoint = 0;
@@ -89,7 +100,8 @@ wwcheckpoint()
 		wwcopyscreen(wwos, wwcs);
 		(void) alarm(3);
 	}
-	(void) sigsetmask(s);
+
+	sigprocmask(SIG_SETMASK, &osigset, (sigset_t *)0);
 }
 
 wwcopyscreen(s1, s2)

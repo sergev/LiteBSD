@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwwrite.c,v 1.4 1997/02/25 00:05:14 downsj Exp $	*/
+/*	$NetBSD: wwwrite.c,v 1.5 1996/02/08 21:49:19 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwwrite.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwwrite.c,v 1.4 1997/02/25 00:05:14 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -43,8 +50,8 @@ static char sccsid[] = "@(#)wwwrite.c	8.1 (Berkeley) 6/6/93";
 #include "char.h"
 
 #define UPDATE() \
-	if (!w->ww_noupdate && w->ww_cur.r >= 0 && w->ww_cur.r < wwnrow && \
-	    wwtouched[w->ww_cur.r]) \
+	if (!ISSET(w->ww_wflags, WWW_NOUPDATE) && w->ww_cur.r >= 0 && \
+	    w->ww_cur.r < wwnrow && wwtouched[w->ww_cur.r]) \
 		wwupdate1(w->ww_cur.r, w->ww_cur.r + 1)
 
 /*
@@ -61,7 +68,7 @@ register struct ww *w;
 register char *p;
 int n;
 {
-	char hascursor;
+	int hascursor;
 	char *savep = p;
 	char *q = p + n;
 	char *r = 0;
@@ -70,9 +77,11 @@ int n;
 #ifdef lint
 	s = 0;			/* define it before possible use */
 #endif
-	if (hascursor = w->ww_hascursor)
+	hascursor = ISSET(w->ww_wflags, WWW_HASCURSOR);
+	if (hascursor)
 		wwcursor(w, 0);
-	while (p < q && !w->ww_stopped && (!wwinterrupt() || w->ww_nointr)) {
+	while (p < q && !ISSET(w->ww_pflags, WWP_STOPPED) &&
+	    (!wwinterrupt() || ISSET(w->ww_wflags, WWW_NOINTR))) {
 		if (r && !*p) {
 			p = r;
 			q = s;
@@ -80,12 +89,14 @@ int n;
 			continue;
 		}
 		if (w->ww_wstate == 0 &&
-		    (isprt(*p) || w->ww_unctrl && isunctrl(*p))) {
+		    (isprt(*p) || ISSET(w->ww_wflags, WWW_UNCTRL) &&
+		     isunctrl(*p))) {
 			register i;
 			register union ww_char *bp;
 			int col, col1;
 
-			if (w->ww_insert) {	/* this is very slow */
+			if (ISSET(w->ww_wflags, WWW_INSERT)) {
+				/* this is very slow */
 				if (*p == '\t') {
 					p++;
 					w->ww_cur.c += 8 -
@@ -119,7 +130,8 @@ int n;
 					bp++->c_w = *p++
 						| w->ww_modes << WWC_MSHIFT;
 					i++;
-				} else if (w->ww_unctrl && isunctrl(*p)) {
+				} else if (ISSET(w->ww_wflags, WWW_UNCTRL) &&
+					   isunctrl(*p)) {
 					r = p + 1;
 					s = q;
 					p = unctrl(*p);
@@ -132,7 +144,8 @@ int n;
 			if (w->ww_cur.r >= w->ww_i.t
 			    && w->ww_cur.r < w->ww_i.b) {
 				register union ww_char *ns = wwns[w->ww_cur.r];
-				register char *smap = &wwsmap[w->ww_cur.r][col];
+				register unsigned char *smap =
+				    &wwsmap[w->ww_cur.r][col];
 				register char *win = w->ww_win[w->ww_cur.r];
 				int nchanged = 0;
 
@@ -153,7 +166,7 @@ int n;
 		case 0:
 			switch (*p++) {
 			case '\n':
-				if (w->ww_mapnl)
+				if (ISSET(w->ww_wflags, WWW_MAPNL))
 		crlf:
 					w->ww_cur.c = w->ww_w.l;
 		lf:
@@ -191,7 +204,7 @@ int n;
 			w->ww_wstate = 0;
 			switch (*p++) {
 			case '@':
-				w->ww_insert = 1;
+				SET(w->ww_wflags, WWW_INSERT);
 				break;
 			case 'A':
 		up:
@@ -244,7 +257,7 @@ int n;
 				wwdelchar(w, w->ww_cur.r, w->ww_cur.c);
 				break;
 			case 'O':
-				w->ww_insert = 0;
+				CLR(w->ww_wflags, WWW_INSERT);
 				break;
 			case 'P':
 				wwinschar(w, w->ww_cur.r, w->ww_cur.c, ' ', 0);

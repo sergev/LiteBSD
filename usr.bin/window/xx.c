@@ -1,3 +1,6 @@
+/*	$OpenBSD: xx.c,v 1.3 1997/02/25 00:05:15 downsj Exp $	*/
+/*	$NetBSD: xx.c,v 1.3 1995/09/28 10:36:03 tls Exp $	*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,14 +38,18 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)xx.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: xx.c,v 1.3 1997/02/25 00:05:15 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
+#include <string.h>
 #include "ww.h"
 #include "xx.h"
 #include "tt.h"
-#include <stdlib.h>
-#include <strings.h>
 
 xxinit()
 {

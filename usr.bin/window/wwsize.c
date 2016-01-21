@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwsize.c,v 1.5 1997/02/25 00:05:08 downsj Exp $	*/
+/*	$NetBSD: wwsize.c,v 1.5 1996/02/08 20:45:11 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,11 +38,15 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwsize.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwsize.c,v 1.5 1997/02/25 00:05:08 downsj Exp $";
+#endif
 #endif /* not lint */
 
-#include "ww.h"
 #include <stdlib.h>
+#include "ww.h"
 
 /*
  * Resize a window.  Should be unattached.
@@ -169,14 +176,14 @@ register struct ww *w;
 	/*
 	 * Put cursor back.
 	 */
-	if (w->ww_hascursor) {
-		w->ww_hascursor = 0;
+	if (ISSET(w->ww_wflags, WWW_HASCURSOR)) {
+		CLR(w->ww_wflags, WWW_HASCURSOR);
 		wwcursor(w, 1);
 	}
 	/*
 	 * Fool with pty.
 	 */
-	if (w->ww_ispty && w->ww_pty >= 0)
+	if (w->ww_type == WWT_PTY && w->ww_pty >= 0)
 		(void) wwsetttysize(w->ww_pty, nrow, ncol);
 	return 0;
 bad:

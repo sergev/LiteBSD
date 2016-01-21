@@ -1,3 +1,6 @@
+/*	$OpenBSD: lcmd1.c,v 1.5 1997/02/25 00:04:07 downsj Exp $	*/
+/*	$NetBSD: lcmd1.c,v 1.6 1996/02/08 20:45:00 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)lcmd1.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: lcmd1.c,v 1.5 1997/02/25 00:04:07 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "defs.h"
@@ -43,8 +50,8 @@ static char sccsid[] = "@(#)lcmd1.c	8.1 (Berkeley) 6/6/93";
 #include "value.h"
 #include "lcmd.h"
 #include "var.h"
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 struct lcmd_arg arg_window[] = {
 	{ "row",	1,	ARG_NUM },
@@ -69,7 +76,7 @@ register struct value *a;
 	struct ww *w;
 	int col, row, ncol, nrow, id, nline;
 	char *label;
-	char haspty, hasframe, mapnl, keepopen, smooth;
+	int haspty, hasframe, mapnl, keepopen, smooth;
 	char *shf, **sh;
 	char *argv[sizeof default_shell / sizeof *default_shell];
 	register char **pp;
@@ -103,7 +110,7 @@ register struct value *a;
 			*pp = a->v_str;
 		*pp = 0;
 		shf = *(sh = argv);
-		if (*sh = rindex(shf, '/'))
+		if (*sh = strrchr(shf, '/'))
 			(*sh)++;
 		else
 			*sh = shf;
@@ -111,12 +118,22 @@ register struct value *a;
 		sh = default_shell;
 		shf = default_shellfile;
 	}
-	if ((w = openwin(id, row, col, nrow, ncol, nline, label, haspty,
-	    hasframe, shf, sh)) == 0)
+	if ((w = openwin(id, row, col, nrow, ncol, nline, label,
+	    haspty ? WWT_PTY : WWT_SOCKET, hasframe ? WWU_HASFRAME : 0, shf,
+	    sh)) == 0)
 		return;
-	w->ww_mapnl = mapnl;
-	w->ww_keepopen = keepopen;
-	w->ww_noupdate = !smooth;
+	if (mapnl)
+		SET(w->ww_wflags, WWW_MAPNL);
+	else
+		CLR(w->ww_wflags, WWW_MAPNL);
+	if (keepopen)
+		SET(w->ww_uflags, WWU_KEEPOPEN);
+	else
+		CLR(w->ww_uflags, WWU_KEEPOPEN);
+	if (!smooth)
+		SET(w->ww_wflags, WWW_NOUPDATE);
+	else
+		CLR(w->ww_wflags, WWW_NOUPDATE);
 	v->v_type = V_NUM;
 	v->v_num = id + 1;
 }
@@ -150,8 +167,11 @@ register struct value *v, *a;
 	v->v_num = 0;
 	if ((w = vtowin(a++, selwin)) == 0)
 		return;
-	v->v_num = !w->ww_noupdate;
-	w->ww_noupdate = !vtobool(a, v->v_num, v->v_num);
+	v->v_num = ISSET(w->ww_wflags, WWW_NOUPDATE) == 0;
+	if (!vtobool(a, v->v_num, v->v_num))
+		SET(w->ww_wflags, WWW_NOUPDATE);
+	else
+		CLR(w->ww_wflags, WWW_NOUPDATE);
 }
 
 struct lcmd_arg arg_def_smooth[] = {

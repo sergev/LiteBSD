@@ -1,3 +1,5 @@
+/*	$OpenBSD: wwterminfo.c,v 1.4 1997/02/25 00:05:10 downsj Exp $	*/
+
 /*
  * Copyright (c) 1982, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +37,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwterminfo.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwterminfo.c,v 1.4 1997/02/25 00:05:10 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #ifdef TERMINFO

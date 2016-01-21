@@ -1,3 +1,6 @@
+/*	$OpenBSD: xx.h,v 1.3 1997/02/25 00:05:16 downsj Exp $	*/
+/*	$NetBSD: xx.h,v 1.3 1995/09/28 10:36:04 tls Exp $	*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.

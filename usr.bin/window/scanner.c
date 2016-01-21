@@ -1,3 +1,6 @@
+/*	$OpenBSD: scanner.c,v 1.3 1997/02/25 00:04:16 downsj Exp $	*/
+/*	$NetBSD: scanner.c,v 1.3 1995/09/28 10:34:36 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,14 +38,18 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)scanner.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: scanner.c,v 1.3 1997/02/25 00:04:16 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
 #include "value.h"
 #include "token.h"
 #include "context.h"
 #include "string.h"
-#include <stdlib.h>
 
 s_getc()
 {

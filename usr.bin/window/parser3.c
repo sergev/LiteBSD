@@ -1,3 +1,6 @@
+/*	$OpenBSD: parser3.c,v 1.3 1997/02/25 00:04:13 downsj Exp $	*/
+/*	$NetBSD: parser3.c,v 1.3 1995/09/28 10:34:33 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)parser3.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: parser3.c,v 1.3 1997/02/25 00:04:13 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "parser.h"

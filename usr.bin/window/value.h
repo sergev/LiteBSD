@@ -1,3 +1,6 @@
+/*	$OpenBSD: value.h,v 1.3 1997/02/25 00:04:30 downsj Exp $	*/
+/*	$NetBSD: value.h,v 1.3 1995/09/28 10:35:00 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.

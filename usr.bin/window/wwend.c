@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwend.c,v 1.3 1997/02/25 00:04:49 downsj Exp $	*/
+/*	$NetBSD: wwend.c,v 1.3 1995/09/28 10:35:26 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,12 +38,16 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwend.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwend.c,v 1.3 1997/02/25 00:04:49 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
 #include "ww.h"
 #include "tt.h"
-#include <stdlib.h>
 
 /*ARGSUSED*/
 wwend(exit)

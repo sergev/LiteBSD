@@ -1,3 +1,6 @@
+/*	$OpenBSD: tttermcap.c,v 1.3 1997/02/25 00:04:25 downsj Exp $	*/
+/*	$NetBSD: tttermcap.c,v 1.3 1995/09/28 10:34:52 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,20 +38,24 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)tttermcap.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: tttermcap.c,v 1.3 1997/02/25 00:04:25 downsj Exp $";
+#endif
 #endif /* not lint */
 
-#include "tt.h"
 #include <stdlib.h>
-#include <curses.h>
+#include "tt.h"
 
-void
+char *tgetstr();
+char *tgoto();
+
 tttputc(c)
 {
 	ttputc(c);
 }
 
-void
 ttxputc(c)
 {
 	*tt_strp++ = c;

@@ -1,3 +1,6 @@
+/*	$OpenBSD: startup.c,v 1.4 1997/02/25 00:04:17 downsj Exp $	*/
+/*	$NetBSD: startup.c,v 1.4 1996/02/08 20:45:04 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,16 +38,20 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)startup.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: startup.c,v 1.4 1997/02/25 00:04:17 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "defs.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "value.h"
 #include "var.h"
 #include "char.h"
 #include "local.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 doconfig()
 {
@@ -69,10 +76,12 @@ dodefault()
 	register r = wwnrow / 2 - 1;
 
 	if (openwin(1, r + 2, 0, wwnrow - r - 2, wwncol, default_nline,
-		(char *) 0, 1, 1, default_shellfile, default_shell) == 0)
+	    (char *) 0, WWT_PTY, WWU_HASFRAME, default_shellfile,
+	    default_shell) == 0)
 		return;
 	if ((w = openwin(0, 1, 0, r, wwncol, default_nline,
-		(char *) 0, 1, 1, default_shellfile, default_shell)) == 0)
+	    (char *) 0, WWT_PTY, WWU_HASFRAME, default_shellfile,
+	    default_shell)) == 0)
 		return;
 	wwprintf(w, "Escape character is %s.\r\n", unctrl(escapec));
 }

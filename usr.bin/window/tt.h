@@ -1,3 +1,6 @@
+/*	$OpenBSD: tt.h,v 1.3 1997/02/25 00:04:20 downsj Exp $	*/
+/*	$NetBSD: tt.h,v 1.3 1995/09/28 10:34:42 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -130,7 +133,7 @@ struct tt_str {
 struct tt_str *tttgetstr();
 struct tt_str *ttxgetstr();	/* tgetstr() and expand delays */
 
-void tttputc(int);
+int tttputc();
 #define tttputs(s, n)	tputs((s)->ts_str, (n), tttputc)
 #define ttxputs(s)	ttwrite((s)->ts_str, (s)->ts_n)
 

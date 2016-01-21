@@ -1,3 +1,6 @@
+/*	$OpenBSD: char.h,v 1.3 1997/02/25 00:03:53 downsj Exp $	*/
+/*	$NetBSD: char.h,v 1.3 1995/09/28 10:34:01 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -52,7 +55,6 @@
 extern char *_unctrl[];
 extern char _cmap[];
 #define ctrl(c)		(c & 0x1f)
-#undef unctrl
 #define unctrl(c)	(_unctrl[(unsigned char) (c)])
 #define _C		0x01
 #define _P		0x02

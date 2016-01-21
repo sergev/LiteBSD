@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwclose.c,v 1.3 1997/02/25 00:04:42 downsj Exp $	*/
+/*	$NetBSD: wwclose.c,v 1.3 1995/09/28 10:35:14 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,11 +38,15 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwclose.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwclose.c,v 1.3 1997/02/25 00:04:42 downsj Exp $";
+#endif
 #endif /* not lint */
 
-#include "ww.h"
 #include <stdlib.h>
+#include "ww.h"
 
 wwclose(w)
 register struct ww *w;

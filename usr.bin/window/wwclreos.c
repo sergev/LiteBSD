@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwclreos.c,v 1.4 1997/02/25 00:04:43 downsj Exp $	*/
+/*	$NetBSD: wwclreos.c,v 1.4 1996/02/08 20:45:07 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwclreos.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwclreos.c,v 1.4 1997/02/25 00:04:43 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -50,6 +57,6 @@ register struct ww *w;
 	for (i = row + 1; i < w->ww_b.b; i++)
 		wwclreol(w, i, w->ww_b.l);
 	/* XXX */
-	if (!w->ww_noupdate)
+	if (!ISSET(w->ww_wflags, WWW_NOUPDATE))
 		wwupdate1(w->ww_i.t, w->ww_i.b);
 }

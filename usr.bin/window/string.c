@@ -1,3 +1,6 @@
+/*	$OpenBSD: string.c,v 1.3 1997/02/25 00:04:18 downsj Exp $	*/
+/*	$NetBSD: string.c,v 1.5 1995/09/29 00:44:06 cgd Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,13 +38,17 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)string.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: string.c,v 1.3 1997/02/25 00:04:18 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "string.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 char *
 str_cpy(s)
