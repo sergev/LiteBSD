@@ -108,7 +108,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(WHITECAT) || defined(SNADPIC)
+#if defined(MEBII) || defined(SNADPIC)
 /*
  * Chip configuration.
  */
@@ -157,7 +157,7 @@ PIC32_DEVCFG (
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
 #endif
 
-#if defined(MEBII) || defined(WHITECAT) || defined(HMZ144) || defined(SNADPIC)
+#if defined(MEBII) || defined(HMZ144) || defined(SNADPIC)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -225,13 +225,6 @@ mach_init()
      * Map signals rx=RA14, tx=RA15 to pins 4,6 at PICtail connector. */
     U1RXR = 13;             /* Group 1: 1101 = RA14 */
     RPA15R = 1;             /* Group 2: 0001 = U1TX */
-#endif
-
-#if defined(WHITECAT)
-    /* ECMB Board: use UART1 for console.
-     * Map signals rx=RF4, tx=RF5. */
-    U1RXR = 2;              /* Group 1: 0010 = RF4  */
-    RPF5R = 1;              /* Group 2: 0001 = U1TX */
 #endif
 
 #if defined(HMZ144) || defined(SNADPIC)
