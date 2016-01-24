@@ -131,14 +131,3 @@ struct macel {
 int macnum;			/* number of defined macros */
 struct macel macros[16];
 char macbuf[4096];
-
-/* From OpenBSD sys/time.h */
-#define timersub(tvp, uvp, vvp)			\
-    do {					\
-        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;	\
-        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;	\
-        if ((vvp)->tv_usec < 1000000) {		\
-            (vvp)->tv_sec--;			\
-            (vvp)->tv_usec += 1000000;		\
-        }					\
-    } while (0)

@@ -462,7 +462,7 @@ struct elf_nhdr {
 //#include <machine/elf_machdep.h>
 
 
-#ifdef _KERNEL
+#ifdef _KERNEL_		/* Remove training _ when this code is ready */
 
 #define ELF_AUX_ENTRIES 8       /* Size of aux array passed to loader */
 

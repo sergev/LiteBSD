@@ -56,16 +56,6 @@ static char rcsid[] = "$OpenBSD: lcmd2.c,v 1.4 1997/02/25 00:04:08 downsj Exp $"
 #include <stdio.h>
 #include <string.h>
 
-#define timersub(tvp, uvp, vvp)                 \
-    do {                                        \
-        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;  \
-        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;       \
-        if ((vvp)->tv_usec < 1000000) {         \
-            (vvp)->tv_sec--;                    \
-            (vvp)->tv_usec += 1000000;          \
-        }                                       \
-    } while (0)
-
 /*ARGSUSED*/
 l_iostat(v, a)
 struct value *v, *a;

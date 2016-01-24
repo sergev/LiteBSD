@@ -33,6 +33,7 @@
 #include <sys/signal.h>
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#include <sys/poll.h>
 
 ; Reserved/unimplemented system calls in the range 0-150 inclusive
 ; are reserved for use in future Berkeley releases.
@@ -353,3 +354,6 @@
 230	UNIMPL		shmdt
 231	UNIMPL		shmget
 #endif
+; This is syscall 252 on OpenBSD
+232	STD		{ int poll(struct pollfd *fds, unsigned int nfds, \
+			    int timeout); }

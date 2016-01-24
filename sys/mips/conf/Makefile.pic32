@@ -44,7 +44,7 @@ LDFLAGS+= -Wl,--oformat=elf32-littlemips
 S=	../..
 A=	$S/mips
 
-COPTS=	-I. -I$S ${IDENT} -DKERNEL
+COPTS=	-I. -I$S ${IDENT} -DKERNEL -D_KERNEL
 CFLAGS=	-O ${COPTS}
 
 # compile rules: rules are named ${TYPE}_${SUFFIX}${CONFIG_DEP}

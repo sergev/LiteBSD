@@ -2088,6 +2088,7 @@ file /usr/share/man/cat2/nfssvc.0
 file /usr/share/man/cat2/open.0
 file /usr/share/man/cat2/pathconf.0
 file /usr/share/man/cat2/pipe.0
+file /usr/share/man/cat2/poll.0
 file /usr/share/man/cat2/profil.0
 file /usr/share/man/cat2/ptrace.0
 file /usr/share/man/cat2/quotactl.0
