@@ -96,7 +96,7 @@ extern struct sysent {          /* system call table */
     int     (*sy_call)();       /* implementing function */
 } sysent[];
 extern int nsysent;
-#define SCARG(p,k)  ((p)->k.value)  /* get arg from args pointer */
+#define SCARG(p,k)  ((p)->k.datum)  /* get arg from args pointer */
 
 extern int boothowto;           /* reboot flags, from console subsystem */
 

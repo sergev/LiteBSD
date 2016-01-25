@@ -58,26 +58,6 @@ typedef INT32 Tflag;
 /* Compat stuff */
 typedef unsigned long long	rlim_t;
 
-/* These are in OpenBSD sys/time.h */
-#define timeradd(tvp, uvp, vvp)			\
-    do {					\
-        (vvp)->tv_sec = (tvp)->tv_sec + (uvp)->tv_sec;	\
-        (vvp)->tv_usec = (tvp)->tv_usec + (uvp)->tv_usec;	\
-        if ((vvp)->tv_usec >= 1000000) {	\
-            (vvp)->tv_sec++;			\
-            (vvp)->tv_usec -= 1000000;		\
-        }					\
-    } while (0)
-#define timersub(tvp, uvp, vvp)			\
-    do {					\
-        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;	\
-        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;	\
-        if ((vvp)->tv_usec < 1000000) {		\
-            (vvp)->tv_sec--;			\
-            (vvp)->tv_usec += 1000000;		\
-        }					\
-    } while (0)
-
 #define	NUFILE	32		/* Number of user-accessible files */
 #define	FDBASE	10		/* First file usable by Shell */
 
