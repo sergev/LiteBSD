@@ -103,6 +103,7 @@ depend ::
 # directories to visit.
 all \
 clean \
+cleandir \
 distclean \
 mostlyclean \
 realclean \

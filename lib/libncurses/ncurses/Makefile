@@ -269,6 +269,8 @@ clean :: mostlyclean
 	-rm -f make_hash$(BUILD_EXEEXT)
 	-rm -rf .libs *.dSYM *.map
 
+cleandir :: clean
+
 distclean :: clean
 	-rm -f Makefile
 
