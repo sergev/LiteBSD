@@ -1,5 +1,7 @@
+/*	$NetBSD: signal.c,v 1.6 2004/09/01 01:46:56 chs Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)signal.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Routines dealing with signals.
@@ -46,8 +41,11 @@ static char sccsid[] = "@(#)signal.c	8.1 (Berkeley) 6/6/93";
  * the signal is received, we call intread to interrupt the iread.
  */
 
-#include <less.h>
 #include <signal.h>
+#include <unistd.h>
+
+#include "less.h"
+#include "extern.h"
 
 /*
  * "sigs" contains bits indicating signals which need to be processed.
@@ -61,19 +59,17 @@ int sigs;
 #define S_WINCH		04
 #endif
 
-extern int sc_width, sc_height;
-extern int screen_trashed;
-extern int lnloop;
-extern int linenums;
-extern int scroll;
-extern int reading;
+
+static void purgeandquit __P((int));
 
 #ifdef SIGTSTP
+static void stop __P((int));
 /*
  * "Stop" (^Z) signal handler.
  */
 static void
-stop()
+stop(n)
+	int n;
 {
 	(void)signal(SIGTSTP, stop);
 	sigs |= S_STOP;
@@ -87,7 +83,8 @@ stop()
  * "Window" change handler
  */
 void
-winch()
+winch(n)
+	int n;
 {
 	(void)signal(SIGWINCH, winch);
 	sigs |= S_WINCH;
@@ -110,7 +107,8 @@ winch()
 #endif
 
 static void
-purgeandquit()
+purgeandquit(n)
+	int n;
 {
 
 	purge();	/* purge buffered output */
@@ -120,6 +118,7 @@ purgeandquit()
 /*
  * Set up the signal handlers.
  */
+void
 init_signals(on)
 	int on;
 {
@@ -161,9 +160,10 @@ init_signals(on)
  * Process any signals we have received.
  * A received signal cause a bit to be set in "sigs".
  */
+void
 psignals()
 {
-	register int tsignals;
+	int tsignals;
 
 	if ((tsignals = sigs) == 0)
 		return;
@@ -181,7 +181,7 @@ psignals()
 		get_term();
 		if (sc_width != old_width || sc_height != old_height)
 		{
-			scroll = (sc_height + 1) / 2;
+			scroll_lines = (sc_height + 1) / 2;
 			screen_trashed = 1;
 		}
 	}

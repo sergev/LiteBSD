@@ -1,5 +1,7 @@
+/*	$NetBSD: option.c,v 1.7 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,14 +29,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)option.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <less.h>
+#include <unistd.h>
+
+#include "less.h"
+#include "extern.h"
 
 int top_scroll;			/* Repaint screen from top */
 int bs_mode;			/* How to process backspaces */
@@ -48,17 +46,14 @@ int linenums = 1;		/* Use line numbers */
 int quit_at_eof;
 int squeeze;			/* Squeeze multiple blank lines into one */
 int tabstop = 8;		/* Tab settings */
-int tagoption;
 
 char *firstsearch;
-extern int sc_height;
 
+int
 option(argc, argv)
 	int argc;
 	char **argv;
 {
-	extern char *optarg;
-	extern int optind;
 	static int sc_window_set = 0;
 	int ch;
 	char *p;
@@ -70,7 +65,7 @@ option(argc, argv)
 			(*a)[0] = '-';
 
 	optind = 1;		/* called twice, re-init getopt. */
-	while ((ch = getopt(argc, argv, "0123456789/:ceinst:ux:f")) != EOF)
+	while ((ch = getopt(argc, argv, "0123456789/:ceinst:ux:f")) != -1)
 		switch((char)ch) {
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
@@ -105,10 +100,6 @@ option(argc, argv)
 		case 's':
 			squeeze = 1;
 			break;
-		case 't':
-			tagoption = 1;
-			findtag(optarg);
-			break;
 		case 'u':
 			bs_mode = 1;
 			break;
@@ -117,12 +108,12 @@ option(argc, argv)
 			if (tabstop <= 0)
 				tabstop = 8;
 			break;
-		case 'f':	/* ignore -f, compatability with old more */
+		case 'f':	/* ignore -f, compatibility with old more */
 			break;
 		case '?':
 		default:
 			fprintf(stderr,
-			    "usage: more [-ceinus] [-t tag] [-x tabs] [-/ pattern] [-#] [file ...]\n");
+			    "usage: more [-ceinus] [-x tabs] [-/ pattern] [-#] [file ...]\n");
 			exit(1);
 		}
 	return(optind);

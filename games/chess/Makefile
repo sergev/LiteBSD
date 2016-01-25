@@ -2,10 +2,10 @@
 
 PROG=	chess
 SRCS=	gnuchess.c uxdsp.c move.c
-CFLAGS+=-DNEWMOVE=12
+CFLAGS+=-DNEWMOVE=12 -DOLD_CURSES
 MAN6=	chess.0
-DPADD=	${LIBCURSES} ${LIBTERM} ${LIBCOMPAT}
-LDADD=	-lcurses -ltermlib -lcompat
+DPADD=	${LIBOCURSES} ${LIBTERM} ${LIBCOMPAT}
+LDADD=	-locurses -ltermlib -lcompat
 HIDEGAME=hidegame
 
 beforeinstall: 

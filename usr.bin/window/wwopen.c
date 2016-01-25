@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwopen.c,v 1.5 1997/02/25 00:05:00 downsj Exp $	*/
+/*	$NetBSD: wwopen.c,v 1.6 1996/02/08 21:08:04 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,17 +38,21 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwopen.c	8.2 (Berkeley) 4/28/95";
+#else
+static char rcsid[] = "$OpenBSD: wwopen.c,v 1.5 1997/02/25 00:05:00 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
 #include "ww.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#include <stdlib.h>
 
 struct ww *
-wwopen(flags, nrow, ncol, row, col, nline)
+wwopen(type, oflags, nrow, ncol, row, col, nline)
 {
 	register struct ww *w;
 	register i, j;
@@ -95,11 +102,14 @@ wwopen(flags, nrow, ncol, row, col, nline)
 	w->ww_cur.r = w->ww_w.t;
 	w->ww_cur.c = w->ww_w.l;
 
-	if (flags & WWO_PTY) {
+	w->ww_type = type;
+	switch (type) {
+	case WWT_PTY:
 		if (wwgetpty(w) < 0)
 			goto bad;
-		w->ww_ispty = 1;
-	} else if (flags & WWO_SOCKET) {
+		break;
+	case WWT_SOCKET:
+	    {
 		int d[2];
 		if (socketpair(AF_UNIX, SOCK_STREAM, PF_UNSPEC, d) < 0) {
 			wwerrno = WWE_SYS;
@@ -109,8 +119,10 @@ wwopen(flags, nrow, ncol, row, col, nline)
 		(void) fcntl(d[1], F_SETFD, 1);
 		w->ww_pty = d[0];
 		w->ww_socket = d[1];
+		break;
+	    }
 	}
-	if (flags & (WWO_PTY|WWO_SOCKET)) {
+	if (type != WWT_INTERNAL) {
 		if ((w->ww_ob = malloc(512)) == 0) {
 			wwerrno = WWE_NOMEM;
 			goto bad;
@@ -126,18 +138,18 @@ wwopen(flags, nrow, ncol, row, col, nline)
 	if (w->ww_win == 0)
 		goto bad;
 	m = 0;
-	if (flags & WWO_GLASS)
+	if (oflags & WWO_GLASS)
 		m |= WWM_GLS;
-	if (flags & WWO_REVERSE)
+	if (oflags & WWO_REVERSE)
 		if (wwavailmodes & WWM_REV)
 			m |= WWM_REV;
 		else
-			flags &= ~WWO_REVERSE;
+			oflags &= ~WWO_REVERSE;
 	for (i = w->ww_w.t; i < w->ww_w.b; i++)
 		for (j = w->ww_w.l; j < w->ww_w.r; j++)
 			w->ww_win[i][j] = m;
 
-	if (flags & WWO_FRAME) {
+	if (oflags & WWO_FRAME) {
 		w->ww_fmap = wwalloc(w->ww_w.t, w->ww_w.l,
 			w->ww_w.nr, w->ww_w.nc, sizeof (char));
 		if (w->ww_fmap == 0)
@@ -167,7 +179,8 @@ wwopen(flags, nrow, ncol, row, col, nline)
 		w->ww_nvis[i] = nvis;
 
 	w->ww_state = WWS_INITIAL;
-	w->ww_oflags = flags;
+	CLR(w->ww_oflags, WWO_ALLFLAGS);
+	SET(w->ww_oflags, oflags);
 	return wwindex[w->ww_index] = w;
 bad:
 	if (w != 0) {

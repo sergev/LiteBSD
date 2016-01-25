@@ -1,5 +1,7 @@
+/*	$NetBSD: line.c,v 1.5 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)line.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Routines to manipulate the "line buffer".
@@ -45,7 +40,9 @@ static char sccsid[] = "@(#)line.c	8.1 (Berkeley) 6/6/93";
 
 #include <sys/types.h>
 #include <ctype.h>
-#include <less.h>
+
+#include "less.h"
+#include "extern.h"
 
 static char linebuf[1024];	/* Buffer which holds the current output line */
 static char *curr;		/* Pointer into linebuf */
@@ -67,9 +64,9 @@ static int column;		/* Printable length, accounting for
  *		else to end boldface mode.
  *	LN_UL_X means we are one character after LN_UNDERLINE
  *		(we have gotten the '_' in "_\bX" or the 'X' in "X\b_").
- *	LN_UL_XB means we are one character after LN_UL_X 
+ *	LN_UL_XB means we are one character after LN_UL_X
  *		(we have gotten the backspace in "_\bX" or "X\b_";
- *		we expect one more ordinary character, 
+ *		we expect one more ordinary character,
  *		which will put us back in state LN_UNDERLINE).
  *	LN_BO_X means we are one character after LN_BOLDFACE
  *		(we have gotten the 'X' in "X\bX").
@@ -89,16 +86,10 @@ static int ln_state;		/* Currently in normal/underline/bold/etc mode? */
 
 char *line;			/* Pointer to the current line.
 				   Usually points to linebuf. */
-
-extern int bs_mode;
-extern int tabstop;
-extern int bo_width, be_width;
-extern int ul_width, ue_width;
-extern int sc_width, sc_height;
-
 /*
  * Rewind the line buffer.
  */
+void
 prewind()
 {
 	line = curr = linebuf;
@@ -117,6 +108,7 @@ prewind()
 	else \
 		column += addon
 
+int
 pappend(c)
 	int c;
 {
@@ -155,7 +147,7 @@ pappend(c)
 		 * Almost out of room in the line buffer.
 		 * Don't take any chances.
 		 * {{ Linebuf is supposed to be big enough that this
-		 *    will never happen, but may need to be made 
+		 *    will never happen, but may need to be made
 		 *    bigger for wide screens or lots of backspaces. }}
 		 */
 		return(1);
@@ -185,7 +177,7 @@ enter_boldface:
 			column--;
 			if (column + bo_width + be_width + 1 >= sc_width)
 				/*
-				 * Not enough room left on the screen to 
+				 * Not enough room left on the screen to
 				 * enter and exit boldface mode.
 				 */
 				return (1);
@@ -194,7 +186,7 @@ enter_boldface:
 			    && curr[-3] == ' ') {
 				/*
 				 * Special case for magic cookie terminals:
-				 * if the previous char was a space, replace 
+				 * if the previous char was a space, replace
 				 * it with the "enter boldface" sequence.
 				 */
 				curr[-3] = BO_CHAR;
@@ -215,17 +207,17 @@ enter_underline:
 			column--;
 			if (column + ul_width + ue_width + 1 >= sc_width)
 				/*
-				 * Not enough room left on the screen to 
+				 * Not enough room left on the screen to
 				 * enter and exit underline mode.
 				 */
 				return (1);
 
-			if (ul_width > 0 && 
+			if (ul_width > 0 &&
 			    curr > linebuf + 2 && curr[-3] == ' ')
 			{
 				/*
 				 * Special case for magic cookie terminals:
-				 * if the previous char was a space, replace 
+				 * if the previous char was a space, replace
 				 * it with the "enter underline" sequence.
 				 */
 				curr[-3] = UL_CHAR;
@@ -288,7 +280,7 @@ ln_bo_xb_case:
 		case LN_UNDERLINE:
 			if (column + ue_width + bo_width + 1 + be_width >= sc_width)
 				/*
-				 * We have just barely enough room to 
+				 * We have just barely enough room to
 				 * exit underline mode and handle a possible
 				 * underline/boldface run on mixup.
 				 */
@@ -303,7 +295,7 @@ ln_bo_xb_case:
 			}
 			if (column + be_width + ul_width + 1 + ue_width >= sc_width)
 				/*
-				 * We have just barely enough room to 
+				 * We have just barely enough room to
 				 * exit underline mode and handle a possible
 				 * underline/boldface run on mixup.
 				 */
@@ -334,7 +326,7 @@ ln_bo_xb_case:
 				else
 					curr++;
 				ln_state = LN_NORMAL;
-			} 
+			}
 			break;
 		case LN_BO_X:
 			if (c == '\b')
@@ -360,7 +352,7 @@ ln_bo_xb_case:
 				else
 					curr++;
 				ln_state = LN_NORMAL;
-			} 
+			}
 			break;
 		}
 	}
@@ -383,7 +375,7 @@ ln_bo_xb_case:
 			column--;
 		*curr++ = ('H' | 0200);
 		return(0);
-	} 
+	}
 
 	if (CONTROL_CHAR(c)) {
 		/*
@@ -415,9 +407,9 @@ off_t
 forw_raw_line(curr_pos)
 	off_t curr_pos;
 {
-	register char *p;
-	register int c;
-	off_t new_pos, ch_tell();
+	char *p;
+	int c;
+	off_t new_pos;
 
 	if (curr_pos == NULL_POSITION || ch_seek(curr_pos) ||
 		(c = ch_forw_get()) == EOI)
@@ -459,9 +451,9 @@ off_t
 back_raw_line(curr_pos)
 	off_t curr_pos;
 {
-	register char *p;
-	register int c;
-	off_t new_pos, ch_tell();
+	char *p;
+	int c;
+	off_t new_pos;
 
 	if (curr_pos == NULL_POSITION || curr_pos <= (off_t)0 ||
 		ch_seek(curr_pos-1))

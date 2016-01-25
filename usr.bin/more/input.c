@@ -1,5 +1,7 @@
+/*	$NetBSD: input.c,v 1.6 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,13 +29,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)input.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
- * High level routines dealing with getting lines of input 
+ * High level routines dealing with getting lines of input
  * from the file being viewed.
  *
  * When we speak of "lines" here, we mean PRINTABLE lines;
@@ -47,13 +42,9 @@ static char sccsid[] = "@(#)input.c	8.1 (Berkeley) 6/6/93";
  */
 
 #include <sys/types.h>
-#include <less.h>
 
-extern int squeeze;
-extern int sigs;
-extern char *line;
-
-off_t ch_tell();
+#include "less.h"
+#include "extern.h"
 
 /*
  * Get the next line.
@@ -67,7 +58,7 @@ forw_line(curr_pos)
 	off_t curr_pos;
 {
 	off_t new_pos;
-	register int c;
+	int c;
 
 	if (curr_pos == NULL_POSITION || ch_seek(curr_pos))
 		return (NULL_POSITION);
@@ -157,7 +148,7 @@ back_line(curr_pos)
 		{
 			/*
 			 * The "current" line was blank.
-			 * Skip over any preceeding blank lines,
+			 * Skip over any preceding blank lines,
 			 * since we skipped them in forw_line().
 			 */
 			while ((c = ch_back_get()) == '\n')
@@ -204,7 +195,7 @@ back_line(curr_pos)
 	 * until we reach the curr_pos.
 	 *
 	 * {{ This algorithm is pretty inefficient if the lines
-	 *    are much longer than the screen width, 
+	 *    are much longer than the screen width,
 	 *    but I don't know of any better way. }}
 	 */
 	if (ch_seek(new_pos))

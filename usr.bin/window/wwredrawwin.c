@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwredrawwin.c,v 1.4 1997/02/25 00:05:05 downsj Exp $	*/
+/*	$NetBSD: wwredrawwin.c,v 1.4 1996/02/08 21:49:15 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwredrawwin.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwredrawwin.c,v 1.4 1997/02/25 00:05:05 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -46,7 +53,7 @@ int row1, row2, offset;
 {
 	int row;
 	register col;
-	register char *smap;
+	register unsigned char *smap;
 	register union ww_char *buf;
 	register char *win;
 	register union ww_char *ns;

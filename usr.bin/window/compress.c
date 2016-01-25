@@ -1,3 +1,6 @@
+/*	$OpenBSD: compress.c,v 1.3 1997/02/25 00:04:01 downsj Exp $	*/
+/*	$NetBSD: compress.c,v 1.3 1995/09/28 10:34:13 tls Exp $	*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,18 +38,21 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)compress.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: compress.c,v 1.3 1997/02/25 00:04:01 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
+#include <string.h>
 #include "ww.h"
 #include "tt.h"
 
 	/* special */
 #include <stdio.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <strings.h>
-
 int cc_trace = 0;
 FILE *cc_trace_fp;
 

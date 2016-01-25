@@ -1,5 +1,7 @@
+/*	$NetBSD: ch.c,v 1.6 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)ch.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Low level character input from the input file.
@@ -45,9 +40,12 @@ static char sccsid[] = "@(#)ch.c	8.1 (Berkeley) 6/6/93";
 #include <sys/types.h>
 #include <sys/file.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <less.h>
+#include <stdio.h>
+#include <err.h>
+
+#include "less.h"
+#include "extern.h"
 
 int file = -1;		/* File descriptor of the input file */
 
@@ -74,8 +72,6 @@ static struct {
 	struct buf *next, *prev;
 } buf_anchor = { END_OF_CHAIN, END_OF_CHAIN };
 
-extern int ispipe, cbufs, sigs;
-
 /*
  * Current position in file.
  * Stored as a block number and an offset into the block.
@@ -99,13 +95,15 @@ static off_t last_piped_pos;
 	    ch_offset < buf_head->datasize) ? \
 	    buf_head->data[ch_offset] : fch_get())
 
-static
+static int fch_get __P((void));
+static int buffered __P((long));
+
+static int
 fch_get()
 {
-	extern int bs_mode;
-	register struct buf *bp;
-	register int n, ch;
-	register char *p, *t;
+	struct buf *bp;
+	int n, ch;
+	char *p, *t;
 	off_t pos;
 
 	/* look for a buffer holding the desired block. */
@@ -240,11 +238,11 @@ found:
 /*
  * Determine if a specific block is currently in one of the buffers.
  */
-static
+static int
 buffered(block)
 	long block;
 {
-	register struct buf *bp;
+	struct buf *bp;
 
 	for (bp = buf_head; bp != END_OF_CHAIN; bp = bp->next)
 		if (bp->block == block)
@@ -256,8 +254,9 @@ buffered(block)
  * Seek to a specified position in the file.
  * Return 0 if successful, non-zero if can't seek there.
  */
+int
 ch_seek(pos)
-	register off_t pos;
+	off_t pos;
 {
 	long new_block;
 
@@ -276,10 +275,9 @@ ch_seek(pos)
 /*
  * Seek to the end of the file.
  */
+int
 ch_end_seek()
 {
-	off_t ch_length();
-
 	if (!ispipe)
 		return(ch_seek(ch_length()));
 
@@ -297,9 +295,10 @@ ch_end_seek()
  * We may not be able to seek there if input is a pipe and the
  * beginning of the pipe is no longer buffered.
  */
+int
 ch_beg_seek()
 {
-	register struct buf *bp, *firstbp;
+	struct buf *bp, *firstbp;
 
 	/*
 	 * Try a plain ch_seek first.
@@ -345,9 +344,10 @@ ch_tell()
 /*
  * Get the current char and post-increment the read pointer.
  */
+int
 ch_forw_get()
 {
-	register int c;
+	int c;
 
 	c = ch_get();
 	if (c != EOI && ++ch_offset >= BUFSIZ) {
@@ -360,6 +360,7 @@ ch_forw_get()
 /*
  * Pre-decrement the read pointer and get the new current char.
  */
+int
 ch_back_get()
 {
 	if (--ch_offset < 0) {
@@ -379,11 +380,12 @@ ch_back_get()
  * keep==1 means keep the data in the current buffers;
  * otherwise discard the old data.
  */
+void
 ch_init(want_nbufs, keep)
 	int want_nbufs;
 	int keep;
 {
-	register struct buf *bp;
+	struct buf *bp;
 	char message[80];
 
 	cbufs = nbufs;
@@ -393,8 +395,8 @@ ch_init(want_nbufs, keep)
 		 * If we don't have ANY, then quit.
 		 * Otherwise, just report the error and return.
 		 */
-		(void)sprintf(message, "cannot allocate %d buffers",
-		    want_nbufs - nbufs);
+		(void)snprintf(message, sizeof(message),
+		    "cannot allocate %d buffers", want_nbufs - nbufs);
 		error(message);
 		if (nbufs == 0)
 			quit();
@@ -419,11 +421,12 @@ ch_init(want_nbufs, keep)
  * Allocate some new buffers.
  * The buffers are added to the tail of the buffer chain.
  */
+int
 ch_addbuf(nnew)
 	int nnew;
 {
-	register struct buf *bp;
-	register struct buf *newbufs;
+	struct buf *bp;
+	struct buf *newbufs;
 
 	/*
 	 * We don't have enough buffers.

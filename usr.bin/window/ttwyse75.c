@@ -1,3 +1,6 @@
+/*	$OpenBSD: ttwyse75.c,v 1.3 1997/02/25 00:04:28 downsj Exp $	*/
+/*	$NetBSD: ttwyse75.c,v 1.3 1995/09/28 10:34:56 tls Exp $	*/
+
 /*
  * Copyright 1987 by David C. Elliott, MIPS Computer Systems.
  *
@@ -42,7 +45,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)ttwyse75.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: ttwyse75.c,v 1.3 1997/02/25 00:04:28 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"

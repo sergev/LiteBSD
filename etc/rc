@@ -140,7 +140,7 @@ echo -n ' update';              update
 # If $routedflags == NO, routed isn't run.
 if [ X${gated} = X"YES" -a -r /etc/gated.conf ]; then
     echo -n ' gated';           gated $gatedflags
-elif [ X${routedflags} != X"NO" ]; then
+#elif [ X${routedflags} != X"NO" ]; then
 #    echo -n ' routed';          routed $routedflags
 fi
 
@@ -148,9 +148,9 @@ fi
 
 # $rwhod is imported from /etc/netstart;
 # if $rwhod is set to something other than NO, rwhod is run.
-if [ ${rwhod-NO} != "NO" ]; then
+#if [ ${rwhod-NO} != "NO" ]; then
 #   echo -n ' rwhod';            rwhod
-fi
+#fi
 
 #echo -n ' printer';             lpd
 

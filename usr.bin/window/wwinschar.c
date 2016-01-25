@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwinschar.c,v 1.4 1997/02/25 00:04:55 downsj Exp $	*/
+/*	$NetBSD: wwinschar.c,v 1.4 1996/02/08 21:49:09 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwinschar.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwinschar.c,v 1.4 1997/02/25 00:04:55 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -79,7 +86,7 @@ char c, m;
 		register union ww_char *buf;
 		register char *win;
 		register union ww_char *ns;
-		register char *smap;
+		register unsigned char *smap;
 		char touched;
 
 		nvis = 0;

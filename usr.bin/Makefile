@@ -1,6 +1,6 @@
 #	@(#)Makefile	8.3 (Berkeley) 1/7/94
 
-SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
+SUBDIR=	apply apropos ar awk banner basename bc bdes biff cal calendar \
 	cap_mkdb checknr chflags chpass cksum col colcrt colrm column \
 	comm compress cpp ctags cut dc deroff diff dirname du elfcopy \
 	env error expand false find finger fmt fold fpr from \
@@ -10,7 +10,7 @@ SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 	mkfifo mklocale mkstr more msgs mt netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pcc pkg pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
-	script sed shar showmount size sl soelim split \
+	script sed shar showmount size sl soelim split sqlite3 \
 	strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \
@@ -22,6 +22,7 @@ SUBDIR=	apply apropos ar awk banner basename bdes biff cal calendar \
 # plot ptx spell spline struct units xsend
 
 # From the above missing list:
+# bc: ported from FreeBSD
 # compress: ported from RetroBSD
 # dc: ported from FreeBSD
 # deroff: ported from OpenBSD

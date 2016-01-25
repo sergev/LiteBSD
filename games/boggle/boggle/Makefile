@@ -2,10 +2,11 @@
 
 PROG=	boggle
 SRCS=	bog.c help.c mach.c prtable.c timer.c word.c
-DPADD=	${LIBCURSES} ${LIBTERM}
-LDADD=	-lcurses -ltermlib
+DPADD=	${LIBOCURSES} ${LIBTERM}
+LDADD=	-locurses -ltermlib
 HIDEGAME=hidegame
 MAN6=	boggle.0
+CFLAGS+=-DOLD_CURSES
 
 beforeinstall:
 	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${.CURDIR}/helpfile \

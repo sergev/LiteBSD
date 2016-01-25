@@ -3,10 +3,10 @@
 PROG=	more
 CFLAGS+=-I${.CURDIR}
 SRCS=	ch.c command.c decode.c help.c input.c line.c linenum.c main.c \
-	option.c os.c output.c position.c prim.c screen.c signal.c tags.c \
+	option.c os.c output.c position.c prim.c screen.c signal.c \
 	ttyin.c
-DPADD=	${LIBTERM} ${LIBCOMPAT}
-LDADD=	-ltermcap -lcompat
+DPADD=	${LIBTERM}
+LDADD=	-ltermcap
 
 beforeinstall:
 	install -c -m 444 ${.CURDIR}/more.help \

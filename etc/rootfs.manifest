@@ -606,7 +606,6 @@ file /root/.klogin
 file /root/.login
 file /root/.profile
 file /root/.rhosts
-file /root/.mkshrc
 
 #
 # Files: /etc
@@ -664,6 +663,10 @@ file /etc/namedb/localhost.rev
 file /etc/namedb/named.boot
 file /etc/namedb/root.cache
 
+dir /etc/opkg
+file /etc/opkg/options.conf
+file /etc/opkg/sources.conf
+
 #
 # Files: /bin
 #
@@ -671,6 +674,7 @@ default
 owner 3                 bin
 group 7                 bin
 filemode 0555
+file /bin/ash
 file /bin/cat
 file /bin/chmod
 file /bin/cp
@@ -689,7 +693,6 @@ file /bin/ksh
 file /bin/ln
 file /bin/ls
 file /bin/mkdir
-file /bin/mksh
 file /bin/mv
 file /bin/pax
 file /bin/ps
@@ -702,7 +705,6 @@ owner 0                 root
 file /bin/rm
 file /bin/rmail
 file /bin/rmdir
-file /bin/sh
 file /bin/sleep
 file /bin/stty
 file /bin/sync
@@ -715,6 +717,9 @@ link /bin/tar
 target /bin/pax
 link /bin/cpio
 target /bin/pax
+
+symlink /bin/sh
+target ksh
 
 #
 # Files: /sbin
@@ -801,9 +806,10 @@ file /usr/bin/ar
 file /usr/bin/awk
 file /usr/bin/banner
 file /usr/bin/basename
+file /usr/bin/bc
 file /usr/bin/bdes
 file /usr/bin/biff
-file /usr/bin/c++
+#file /usr/bin/c++
 file /usr/bin/cal
 file /usr/bin/calendar
 file /usr/bin/cap_mkdb
@@ -905,6 +911,7 @@ file /usr/bin/mkstr
 file /usr/bin/more
 file /usr/bin/msgs
 file /usr/bin/mt
+file /usr/bin/ncurses6-config
 file /usr/bin/netstat
 mode 02555
 group 2                 kmem
@@ -923,6 +930,7 @@ target nvi
 symlink /usr/bin/ex
 target nvi
 
+file /usr/bin/opkg
 file /usr/bin/p++
 file /usr/bin/pagesize
 file /usr/bin/passwd
@@ -966,6 +974,7 @@ file /usr/bin/sl
 file /usr/bin/soelim
 file /usr/bin/sort
 file /usr/bin/split
+file /usr/bin/sqlite3
 file /usr/bin/strings
 file /usr/bin/su
 mode 04555
@@ -1153,7 +1162,9 @@ file /usr/include/disktab.h
 file /usr/include/dwarf.h
 file /usr/include/elfdefinitions.h
 file /usr/include/err.h
+file /usr/include/eti.h
 file /usr/include/fnmatch.h
+file /usr/include/form.h
 file /usr/include/fstab.h
 file /usr/include/fts.h
 file /usr/include/gelf.h
@@ -1169,10 +1180,15 @@ file /usr/include/limits.h
 file /usr/include/locale.h
 file /usr/include/math.h
 file /usr/include/memory.h
+file /usr/include/menu.h
 file /usr/include/mpool.h
+file /usr/include/ncurses.h
+file /usr/include/ncurses_dll.h
 file /usr/include/ndbm.h
 file /usr/include/netdb.h
 file /usr/include/nlist.h
+file /usr/include/ocurses.h
+file /usr/include/panel.h
 file /usr/include/paths.h
 file /usr/include/pwd.h
 file /usr/include/ranlib.h
@@ -1184,6 +1200,8 @@ file /usr/include/runetype.h
 file /usr/include/setjmp.h
 file /usr/include/sgtty.h
 file /usr/include/signal.h
+file /usr/include/sqlite3.h
+file /usr/include/sqlite3ext.h
 file /usr/include/stab.h
 file /usr/include/stdbool.h
 file /usr/include/stddef.h
@@ -1195,9 +1213,12 @@ file /usr/include/strings.h
 file /usr/include/struct.h
 file /usr/include/sysexits.h
 file /usr/include/tar.h
+file /usr/include/term.h
+file /usr/include/termcap.h
 file /usr/include/time.h
 file /usr/include/ttyent.h
 file /usr/include/tzfile.h
+file /usr/include/unctrl.h
 file /usr/include/unistd.h
 file /usr/include/utime.h
 file /usr/include/utmp.h
@@ -1543,16 +1564,21 @@ file /usr/lib/libarchive.a
 file /usr/lib/libc.a
 file /usr/lib/libcompat.a
 file /usr/lib/libcrypto.a
-file /usr/lib/libcurses.a
 file /usr/lib/libdwarf.a
 file /usr/lib/libedit.a
 file /usr/lib/libelf.a
 file /usr/lib/libelftc.a
+file /usr/lib/libform.a
 file /usr/lib/libgcc.a
 file /usr/lib/libkvm.a
 file /usr/lib/libm.a
+file /usr/lib/libmenu.a
+file /usr/lib/libncurses.a
+file /usr/lib/libocurses.a
+file /usr/lib/libpanel.a
 file /usr/lib/libresolv.a
 file /usr/lib/librpc.a
+file /usr/lib/libsqlite3.a
 file /usr/lib/libssl.a
 file /usr/lib/libtelnet.a
 file /usr/lib/libtermcap.a
@@ -1641,6 +1667,7 @@ file /usr/share/doc/emg/emg.keys
 dir /usr/share/misc
 file /usr/share/misc/airport
 file /usr/share/misc/ascii
+file /usr/share/misc/bc.library
 file /usr/share/misc/birthtoken
 file /usr/share/misc/bugformat
 file /usr/share/misc/eqnchar
@@ -1729,8 +1756,10 @@ file /usr/share/man/cat1/amq.0
 file /usr/share/man/cat1/apply.0
 file /usr/share/man/cat1/apropos.0
 file /usr/share/man/cat1/ar.0
+file /usr/share/man/cat1/ash.0
 file /usr/share/man/cat1/awk.0
 file /usr/share/man/cat1/basename.0
+file /usr/share/man/cat1/bc.0
 file /usr/share/man/cat1/bdes.0
 file /usr/share/man/cat1/biff.0
 file /usr/share/man/cat1/cal.0
@@ -1826,7 +1855,6 @@ file /usr/share/man/cat1/mkdep.0
 file /usr/share/man/cat1/mkdir.0
 file /usr/share/man/cat1/mkfifo.0
 file /usr/share/man/cat1/mklocale.0
-file /usr/share/man/cat1/mksh.0
 file /usr/share/man/cat1/mkstr.0
 file /usr/share/man/cat1/more.0
 file /usr/share/man/cat1/msgs.0
@@ -1839,6 +1867,7 @@ file /usr/share/man/cat1/nm.0
 file /usr/share/man/cat1/nohup.0
 file /usr/share/man/cat1/nvi.0
 file /usr/share/man/cat1/od.0
+file /usr/share/man/cat1/opkg.0
 file /usr/share/man/cat1/pagesize.0
 file /usr/share/man/cat1/passwd.0
 file /usr/share/man/cat1/paste.0
@@ -1868,7 +1897,6 @@ file /usr/share/man/cat1/sccs.0
 file /usr/share/man/cat1/script.0
 file /usr/share/man/cat1/sed.0
 file /usr/share/man/cat1/sendbug.0
-file /usr/share/man/cat1/sh.0
 file /usr/share/man/cat1/shar.0
 file /usr/share/man/cat1/showmount.0
 file /usr/share/man/cat1/size.0
@@ -1877,6 +1905,7 @@ file /usr/share/man/cat1/sleep.0
 file /usr/share/man/cat1/soelim.0
 file /usr/share/man/cat1/sort.0
 file /usr/share/man/cat1/split.0
+file /usr/share/man/cat1/sqlite3.0
 file /usr/share/man/cat1/strings.0
 file /usr/share/man/cat1/strip.0
 file /usr/share/man/cat1/stty.0
@@ -1993,6 +2022,8 @@ link /usr/share/man/cat1/gunzip.0
 target /usr/share/man/cat1/gzip.0
 link /usr/share/man/cat1/gzcat.0
 target /usr/share/man/cat1/gzip.0
+link /usr/share/man/cat1/sh.0
+target /usr/share/man/cat1/ksh.0
 
 file /usr/share/man/cat2/accept.0
 file /usr/share/man/cat2/access.0
@@ -2224,7 +2255,6 @@ file /usr/share/man/cat3/crypt.0
 file /usr/share/man/cat3/ctermid.0
 file /usr/share/man/cat3/ctime.0
 file /usr/share/man/cat3/ctype.0
-file /usr/share/man/cat3/curses.0
 file /usr/share/man/cat3/daemon.0
 file /usr/share/man/cat3/dbopen.0
 file /usr/share/man/cat3/devname.0
@@ -2520,6 +2550,7 @@ file /usr/share/man/cat3/multibyte.0
 file /usr/share/man/cat3/nice.0
 file /usr/share/man/cat3/nlist.0
 file /usr/share/man/cat3/ns.0
+file /usr/share/man/cat3/ocurses.0
 file /usr/share/man/cat3/pause.0
 file /usr/share/man/cat3/popen.0
 file /usr/share/man/cat3/printf.0
@@ -4192,6 +4223,24 @@ link /usr/share/man/cat8/rrestore.0
 target /usr/share/man/cat8/restore.0
 link /usr/share/man/cat8/slip.0
 target /usr/share/man/cat8/slattach.0
+
+#
+# Files: /usr/share/terminfo
+#
+dir /usr/share/terminfo
+dir /usr/share/terminfo/s
+file /usr/share/terminfo/s/screen
+dir /usr/share/terminfo/v
+file /usr/share/terminfo/v/vt100
+file /usr/share/terminfo/v/vt220
+file /usr/share/terminfo/v/vt300
+dir /usr/share/terminfo/x
+file /usr/share/terminfo/x/xterm
+file /usr/share/terminfo/x/xterm-256color
+file /usr/share/terminfo/x/xterm-color
+file /usr/share/terminfo/x/xterm-new
+file /usr/share/terminfo/x/xterm-old
+file /usr/share/terminfo/x/xterm-vt220
 
 #
 # Files: /usr/share/zoneinfo

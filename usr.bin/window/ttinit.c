@@ -1,3 +1,6 @@
+/*	$OpenBSD: ttinit.c,v 1.3 1997/02/25 00:04:24 downsj Exp $	*/
+/*	$NetBSD: ttinit.c,v 1.3 1995/09/28 10:34:50 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,12 +38,16 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)ttinit.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: ttinit.c,v 1.3 1997/02/25 00:04:24 downsj Exp $";
+#endif
 #endif /* not lint */
 
+#include <stdlib.h>
 #include "ww.h"
 #include "tt.h"
-#include <stdlib.h>
 
 int tt_h19();
 int tt_h29();

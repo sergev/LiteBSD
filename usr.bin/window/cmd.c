@@ -1,3 +1,6 @@
+/*	$OpenBSD: cmd.c,v 1.4 1997/02/25 00:03:54 downsj Exp $	*/
+/*	$NetBSD: cmd.c,v 1.4 1996/02/08 20:44:57 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)cmd.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: cmd.c,v 1.4 1997/02/25 00:03:54 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "defs.h"
@@ -43,7 +50,7 @@ static char sccsid[] = "@(#)cmd.c	8.1 (Berkeley) 6/6/93";
 
 docmd()
 {
-	register char c;
+	register int c;
 	register struct ww *w;
 	char out = 0;
 

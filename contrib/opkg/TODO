@@ -1,0 +1,49 @@
+BUGS
+====
+
+See issue list: http://code.google.com/p/opkg/issues/list
+
+ * Resolve 'XXX', 'FIXME' and 'TODO' comments in the code.
+
+ * Remove dead and duplicate code. Refactor duplicated functionality.
+
+ * Remove pkg_info_preinstall_check().
+
+ * Reduce memory used per pkg_t and peak memory use in general.
+
+ * Refactor opkg_install_pkg() into more precise functions.
+
+ * pkg_hash_fetch_best_installation_candidate() is linear search O(P*PN)
+   and is slow (frequently called).
+      P provider
+      PN pkgs in a provider
+   It can be O(P) if a hash table is used.
+
+Solver bugs:
+
+ * opkg_list_upgradable_cmd() does not work with an external solver enabled.
+
+ * Fix hacky way libsolv's arch comparisons are bypassed when
+   prefer_arch_to_version is not set in libsolv_solver_set_arch_policy().
+   See openSUSE/libsolv issue #98 on github.
+
+ * libsolv's upgrade will not automatically remove orphaned packages.
+   This causes failures of tests core/18_upgrade_recommends.py
+   and misc/update_loses_autoinstalled_flag.py.
+
+ * The different order in which libsolv visits packages can cause
+   some file ownership problems causing regress/issue50.py to fail
+   because of the same problem as issue 156.
+
+ * libsolv supports dist-upgrade. The functionality to use it is implemented
+   in opkg_solver.c and opkg_solver_libsolv.c. Add an option in opkg_cmd to
+   use this.
+
+ * for libsolv get correct package during a reinstall when there are two
+   packages with the same name and version, and revert hack in pkg_hash.c
+
+FEATURES
+========
+
+ * Improve dpkg compatibility, according to the Debian Policy Manual.
+   http://www.debian.org/doc/debian-policy/ch-controlfields.html

@@ -1,5 +1,7 @@
+/*	$NetBSD: output.c,v 1.8 2009/01/24 13:58:21 tsutsui Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)output.c	8.2 (Berkeley) 4/27/95";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * High level routines dealing with the output to the screen.
@@ -42,27 +37,21 @@ static char sccsid[] = "@(#)output.c	8.2 (Berkeley) 4/27/95";
 
 #include <stdio.h>
 #include <string.h>
-#include <less.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+#include "less.h"
+#include "extern.h"
 
 int errmsgs;	/* Count of messages displayed by error() */
 
-extern int sigs;
-extern int sc_width, sc_height;
-extern int ul_width, ue_width;
-extern int so_width, se_width;
-extern int bo_width, be_width;
-extern int tabstop;
-extern int screen_trashed;
-extern int any_display;
-extern char *line;
-
 /* display the line which is in the line buffer. */
+void
 put_line()
 {
-	register char *p;
-	register int c;
-	register int column;
-	extern int auto_wrap, ignaw;
+	char *p;
+	int c;
+	int column;
 
 	if (sigs)
 	{
@@ -136,9 +125,10 @@ static char *ob = obuf;
 /*
  * Flush buffered output.
  */
+void
 flush()
 {
-	register int n;
+	int n;
 
 	n = ob - obuf;
 	if (n == 0)
@@ -151,6 +141,7 @@ flush()
 /*
  * Purge any pending output.
  */
+void
 purge()
 {
 
@@ -160,19 +151,22 @@ purge()
 /*
  * Output a character.
  */
+int
 putchr(c)
 	int c;
 {
 	if (ob >= &obuf[sizeof(obuf)])
 		flush();
 	*ob++ = c;
+	return c;
 }
 
 /*
  * Output a string.
  */
+void
 putstr(s)
-	register char *s;
+	char *s;
 {
 	while (*s != '\0')
 		putchr(*s++);
@@ -185,6 +179,7 @@ static char return_to_continue[] = "(press RETURN)";
  * Output a message in the lower left corner of the screen
  * and wait for carriage return.
  */
+void
 error(s)
 	char *s;
 {
@@ -242,6 +237,7 @@ error(s)
 
 static char intr_to_abort[] = "... (interrupt to abort)";
 
+void
 ierror(s)
 	char *s;
 {

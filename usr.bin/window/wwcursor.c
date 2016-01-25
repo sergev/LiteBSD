@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwcursor.c,v 1.4 1997/02/25 00:04:44 downsj Exp $	*/
+/*	$NetBSD: wwcursor.c,v 1.4 1996/02/08 20:45:08 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwcursor.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwcursor.c,v 1.4 1997/02/25 00:04:44 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -46,13 +53,13 @@ register struct ww *w;
 	register char *win;
 
 	if (on) {
-		if (w->ww_hascursor)
+		if (ISSET(w->ww_wflags, WWW_HASCURSOR))
 			return;
-		w->ww_hascursor = 1;
+		SET(w->ww_wflags, WWW_HASCURSOR);
 	} else {
-		if (!w->ww_hascursor)
+		if (!ISSET(w->ww_wflags, WWW_HASCURSOR))
 			return;
-		w->ww_hascursor = 0;
+		CLR(w->ww_wflags, WWW_HASCURSOR);
 	}
 	if (wwcursormodes != 0) {
 		win = &w->ww_win[w->ww_cur.r][w->ww_cur.c];
@@ -82,7 +89,8 @@ register new;
 	if (new == wwcursormodes)
 		return;
 	for (i = 0; i < NWW; i++)
-		if (wwindex[i] != 0 && (w = wwindex[i])->ww_hascursor) {
+		if (wwindex[i] != 0 &&
+		    ISSET((w = wwindex[i])->ww_wflags, WWW_HASCURSOR)) {
 			wwcursor(w, 0);
 			wwcursormodes = new;
 			wwcursor(w, 1);

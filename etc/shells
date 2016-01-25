@@ -3,5 +3,6 @@
 # one of these shells.
 
 /bin/sh
+/bin/ash
 /bin/csh
 /bin/ksh

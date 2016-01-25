@@ -402,10 +402,10 @@ openssl.pc: Makefile
 	    echo 'Version: '$(VERSION); \
 	    echo 'Requires: libssl libcrypto' ) > openssl.pc
 
-Makefile: Makefile.org Configure config
-	@echo "Makefile is older than Makefile.org, Configure or config."
-	@echo "Reconfigure the source tree (via './config' or 'perl Configure'), please."
-	@false
+#Makefile: Makefile.org Configure config
+#	@echo "Makefile is older than Makefile.org, Configure or config."
+#	@echo "Reconfigure the source tree (via './config' or 'perl Configure'), please."
+#	@false
 
 libclean:
 	rm -f *.map *.so *.so.* *.dylib *.dll engines/*.so engines/*.dll engines/*.dylib *.a engines/*.a */lib */*/lib

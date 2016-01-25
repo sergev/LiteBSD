@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwunframe.c,v 1.4 1997/02/25 00:05:12 downsj Exp $	*/
+/*	$NetBSD: wwunframe.c,v 1.4 1996/02/08 21:49:17 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwunframe.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwunframe.c,v 1.4 1997/02/25 00:05:12 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -49,7 +56,7 @@ register struct ww *w;
 		register j;
 		register char *win = w->ww_win[i];
 		register char *fmap = w->ww_fmap ? w->ww_fmap[i] : 0;
-		register char *smap = wwsmap[i];
+		register unsigned char *smap = wwsmap[i];
 		register union ww_char *ns = wwns[i];
 		int nchanged = 0;
 

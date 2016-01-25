@@ -1,3 +1,6 @@
+/*	$OpenBSD: lcmd2.c,v 1.4 1997/02/25 00:04:08 downsj Exp $	*/
+/*	$NetBSD: lcmd2.c,v 1.7 1995/09/29 00:44:04 cgd Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)lcmd2.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: lcmd2.c,v 1.4 1997/02/25 00:04:08 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "defs.h"
@@ -46,8 +53,18 @@ static char sccsid[] = "@(#)lcmd2.c	8.1 (Berkeley) 6/6/93";
 #include "alias.h"
 #include <sys/types.h>
 #include <sys/resource.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#define timersub(tvp, uvp, vvp)                 \
+    do {                                        \
+        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;  \
+        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;       \
+        if ((vvp)->tv_usec < 1000000) {         \
+            (vvp)->tv_sec--;                    \
+            (vvp)->tv_usec += 1000000;          \
+        }                                       \
+    } while (0)
 
 /*ARGSUSED*/
 l_iostat(v, a)
@@ -118,11 +135,7 @@ register struct value *a;
 	}
 
 	(void) gettimeofday(&timeval, (struct timezone *)0);
-	timeval.tv_sec -= starttime.tv_sec;
-	if ((timeval.tv_usec -= starttime.tv_usec) < 0) {
-		timeval.tv_sec--;
-		timeval.tv_usec += 1000000;
-	}
+        timersub(&timeval, &starttime, &timeval);
 	(void) getrusage(a->v_type == V_STR
 			&& str_match(a->v_str, "children", 1)
 		? RUSAGE_CHILDREN : RUSAGE_SELF, &rusage);
@@ -223,7 +236,7 @@ struct value *v, *a;
 		error("Can't open variable window: %s.", wwerror());
 		return;
 	}
-	if (var_walk(printvar, (int)w) >= 0)
+	if (var_walk(printvar, (long)w) >= 0)
 		waitnl(w);
 	closeiwin(w);
 }
@@ -283,7 +296,7 @@ l_def_shell(v, a)
 			break;
 		}
 	if (default_shellfile = *default_shell)
-		if (*default_shell = rindex(default_shellfile, '/'))
+		if (*default_shell = strrchr(default_shellfile, '/'))
 			(*default_shell)++;
 		else
 			*default_shell = default_shellfile;
@@ -306,7 +319,7 @@ l_alias(v, a)
 			error("Can't open alias window: %s.", wwerror());
 			return;
 		}
-		if (alias_walk(printalias, (int)w) >= 0)
+		if (alias_walk(printalias, (long)w) >= 0)
 			waitnl(w);
 		closeiwin(w);
 	} else {

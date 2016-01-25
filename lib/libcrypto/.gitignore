@@ -57,3 +57,4 @@ libcrypto.pc
 libssl.pc
 openssl.pc
 ssl/lib
+*.save

@@ -27,21 +27,22 @@ Transfer the Unix kernel on to the board
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For boards, which use a virtual serial port for bootloader
-(chipKIT WiFire and Majenko SDZL) you need to know the exact
-device name to specify for pic32prog. Connect the board via
-microUSB cable to your computer. To enter a bootloader mode,
-press the PRG key first, hold it, then press the RESET key. The
-LED will now flash and your board is ready to accept new code.
-Use pic32prog utility to program the flash code. The bootloader
-can appear as a HID device, or as a virtual serial port (COM
-port) on your computer (typically /dev/ttyUSB0 on Linux, something
-like COM12 on Windows, /dev/tty.usbmodemfa131 on Mac OS X).
+(chipKIT WiFire, Majenko SDZL and Whitecat) you need to know
+the exact device name to specify for pic32prog. Connect the board
+via microUSB cable to your computer. To enter a bootloader
+mode, press the PRG key first, hold it, then press the RESET
+key. The LED will now flash and your board is ready to accept
+new code. Use pic32prog utility to program the flash code.
+The bootloader can appear as a HID device, or as a virtual serial
+port (COM port) on your computer. Typically, this virtual port
+has a name /dev/ttyUSB0 on Linux, something like COM12 on
+Windows, or /dev/tty.usbmodemfa131 on Mac OS X. Some boards
+use special names, like /dev/tty.SLAB_USBtoUART on Whitecat.
 
 For boards which don't have bootloader (Microchip MEB-II,
-Olimex HMZ144 and Whitecat) you need to use an external
-programmer like PICkit2 or one of it's clones (like iCP02).
-For these boards you do not need to specify the -d option
-and device name.
+Olimex HMZ144) you need to use an external programmer like
+PICkit2 or one of it's clones (like iCP02). For these boards
+you do not need to specify the -d option and device name.
 
 Use proper pic32prog binary for your operating system:
 

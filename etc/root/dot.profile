@@ -1,8 +1,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
-export PATH
-
 BLOCKSIZE=1k
-export BLOCKSIZE
+MORE="-ce"
+export PATH BLOCKSIZE MORE
 
 # Export TERM for single user shells.
 export TERM
@@ -12,4 +11,4 @@ stty erase '^H' kill '^U' intr '^C' status '^T' crt
 
 umask 022
 
-echo "Don't login as root, use the su command."
+#echo "Don't login as root, use the su command."

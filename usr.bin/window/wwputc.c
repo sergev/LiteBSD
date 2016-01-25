@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwputc.c,v 1.3 1997/02/25 00:05:03 downsj Exp $	*/
+/*	$NetBSD: wwputc.c,v 1.3 1995/09/28 10:35:47 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwputc.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwputc.c,v 1.3 1997/02/25 00:05:03 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"

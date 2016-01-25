@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwlabel.c,v 1.4 1997/02/25 00:04:58 downsj Exp $	*/
+/*	$NetBSD: wwlabel.c,v 1.4 1996/02/08 21:49:11 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwlabel.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwlabel.c,v 1.4 1997/02/25 00:04:58 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
@@ -58,7 +65,7 @@ char *l;
 	register union ww_char *buf;
 	register union ww_char *ns;
 	register char *fmap;
-	register char *smap;
+	register unsigned char *smap;
 	char touched;
 	char *p;
 

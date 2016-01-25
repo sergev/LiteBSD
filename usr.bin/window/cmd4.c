@@ -1,3 +1,6 @@
+/*	$OpenBSD: cmd4.c,v 1.3 1997/02/25 00:03:58 downsj Exp $	*/
+/*	$NetBSD: cmd4.c,v 1.3 1995/09/28 10:34:08 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,7 +38,11 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)cmd4.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: cmd4.c,v 1.3 1997/02/25 00:03:58 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "defs.h"

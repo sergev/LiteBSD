@@ -1,3 +1,6 @@
+/*	$OpenBSD: wwrint.c,v 1.4 1997/02/25 00:05:06 downsj Exp $	*/
+/*	$NetBSD: wwrint.c,v 1.4 1995/12/21 10:46:24 mycroft Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -35,14 +38,15 @@
  */
 
 #ifndef lint
+#if 0
 static char sccsid[] = "@(#)wwrint.c	8.1 (Berkeley) 6/6/93";
+#else
+static char rcsid[] = "$OpenBSD: wwrint.c,v 1.4 1997/02/25 00:05:06 downsj Exp $";
+#endif
 #endif /* not lint */
 
 #include "ww.h"
 #include "tt.h"
-#if defined(OLD_TTY) || defined(VMIN_BUG)
-#include <fcntl.h>
-#endif
 
 /*
  * Tty input interrupt handler.
@@ -59,17 +63,8 @@ wwrint()
 {
 	register n;
 
-	if (wwibp == wwibq)
-		wwibp = wwibq = wwib;
 	wwnread++;
-#if defined(OLD_TTY) || defined(VMIN_BUG)
-	/* we have set c_cc[VMIN] to 0 */
-	(void) fcntl(0, F_SETFL, O_NONBLOCK|wwnewtty.ww_fflags);
-#endif
 	n = read(0, wwibq, wwibe - wwibq);
-#if defined(OLD_TTY) || defined(VMIN_BUG)
-	(void) fcntl(0, F_SETFL, wwnewtty.ww_fflags);
-#endif
 	if (n > 0) {
 		if (tt.tt_rint)
 			n = (*tt.tt_rint)(wwibq, n);

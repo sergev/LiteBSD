@@ -14,6 +14,7 @@ PKGBASE=${LOCALBASE}/pkg
 PLISTBASE=${PKGBASE}/plists/
 PKGNAME=${PROG}-${V}
 TRUEDESTDIR=${DESTDIR}
+ARCH?=mipsel
 
 build: all
 
@@ -41,6 +42,53 @@ plist: fake
 package: plist
 	@echo -n "Creating ${PKGNAME} package... "
 	@(cd ${FAKEDIR} && tar -cz -f "${PKGNAME}".tgz usr/)
+	@echo "done!"
+
+fakeroot: build
+	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
+
+control: fakeroot
+.if !exists(${.CURDIR}/control)
+	@echo -n "Creating ${PKGNAME} control file... "
+	@echo "Package: ${PROG}" >control
+	@echo "Version: ${V}" >>control
+	@echo "Description: Put a description of the package here." >>control
+	@echo "    Multiple lines allowed." >>control
+	@echo "Maintainer: Your Name <your@email.com>" >>control
+	@echo "License: BSD, MIT, ISC, GPLv2, GPLv2+, GPLv3, GPLv3+, LGPLv2.1+, etc." >>control
+	@echo "Architecture: ${ARCH}" >>control
+	@echo "Installed-Size: nbytes" >>control
+	@echo "Depends: list of dependencies" >>control
+	@echo "done!"
+.endif
+
+CONTROLFILES=control
+.if exists(${.CURDIR}/conffiles)
+    CONTROLFILES+=conffiles
+.endif
+.if exists(${.CURDIR}/preinst)
+    CONTROLFILES+=preinst
+.endif
+.if exists(${.CURDIR}/postinst)
+    CONTROLFILES+=postinst
+.endif
+.if exists(${.CURDIR}/prerm)
+    CONTROLFILES+=prerm
+.endif
+.if exists(${.CURDIR}/postrm)
+    CONTROLFILES+=postrm
+.endif
+
+#
+# Build a package in Debian format, compatible with opkg utility
+#
+pkg:    control
+	@echo -n "Creating ${PKGNAME}_${ARCH} package... "
+	@(cd ${FAKEDIR} && tar -cz -f data.tar.gz usr/)
+	@tar -cz -f ${FAKEDIR}/control.tar.gz ${CONTROLFILES}
+	@echo 2.0 > ${FAKEDIR}/debian-binary
+	@(cd ${FAKEDIR} && ar cr ${PKGNAME}_${ARCH}.ar debian-binary control.tar.gz data.tar.gz)
+	@rm -f ${FAKEDIR}/debian-binary ${FAKEDIR}/control.tar.gz ${FAKEDIR}/data.tar.gz
 	@echo "done!"
 
 install: package

@@ -1,5 +1,7 @@
+/*	$NetBSD: less.h,v 1.6 2009/01/24 13:58:21 tsutsui Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,8 +32,6 @@
  *	@(#)less.h	8.1 (Berkeley) 6/6/93
  */
 
-#define	RECOMP
-
 #define	NULL_POSITION	((off_t)(-1))
 
 #define	EOI		(0)
@@ -47,7 +43,7 @@
 #define	BO_CHAR		'\203'		/* Enter boldface mode */
 #define	BE_CHAR		'\204'		/* Exit boldface mode */
 
-#define	CONTROL_CHAR(c)		(iscntrl(c))
+#define	CONTROL_CHAR(c)		(iscntrl((unsigned char)c))
 #define	CARAT_CHAR(c)		((c == '\177') ? '?' : (c | 0100))
 
 #define	TOP		(0)

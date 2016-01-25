@@ -1,5 +1,7 @@
+/*	$NetBSD: ttyin.c,v 1.5 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,16 +29,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)ttyin.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Routines dealing with getting input from the keyboard (i.e. from the user).
  */
 
-#include <less.h>
+#include <sys/types.h>
+
+#include "less.h"
+#include "extern.h"
 
 static int tty;
 
@@ -48,6 +46,7 @@ static int tty;
  * Open keyboard for input.
  * (Just use file descriptor 2.)
  */
+void
 open_getchr()
 {
 	tty = 2;
@@ -56,6 +55,7 @@ open_getchr()
 /*
  * Get a character from the keyboard.
  */
+int
 getchr()
 {
 	char c;

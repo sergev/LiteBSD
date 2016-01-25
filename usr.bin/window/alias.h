@@ -1,3 +1,6 @@
+/*	$OpenBSD: alias.h,v 1.3 1997/02/25 00:03:52 downsj Exp $	*/
+/*	$NetBSD: alias.h,v 1.3 1995/09/28 10:33:59 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.

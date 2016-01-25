@@ -1,5 +1,7 @@
+/*	$NetBSD: decode.c,v 1.5 2003/10/13 14:34:25 agc Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,10 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)decode.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 /*
  * Routines to decode user commands.
@@ -55,7 +50,9 @@ static char sccsid[] = "@(#)decode.c	8.1 (Berkeley) 6/6/93";
 #include <sys/param.h>
 #include <sys/file.h>
 #include <stdio.h>
-#include <less.h>
+
+#include "less.h"
+#include "extern.h"
 
 /*
  * Command table is ordered roughly according to expected
@@ -128,6 +125,7 @@ static char *kp = kbuf;
  * Indicate that we're not in a prefix command
  * by resetting the command buffer pointer.
  */
+void
 noprefix()
 {
 	kp = kbuf;
@@ -136,10 +134,11 @@ noprefix()
 /*
  * Decode a command character and return the associated action.
  */
+int
 cmd_decode(c)
 	int c;
 {
-	register int action = A_INVALID;
+	int action = A_INVALID;
 
 	/*
 	 * Append the new command character to the command string in kbuf.
@@ -158,11 +157,12 @@ cmd_decode(c)
 /*
  * Search a command table for the current command string (in kbuf).
  */
+int
 cmd_search(table, endtable)
 	char *table;
 	char *endtable;
 {
-	register char *p, *q;
+	char *p, *q;
 
 	for (p = table, q = kbuf;  p < endtable;  p++, q++) {
 		if (*p == *q) {

@@ -1,5 +1,7 @@
+/*	$NetBSD: command.c,v 1.12 2009/01/24 13:58:21 tsutsui Exp $	*/
+
 /*
- * Copyright (c) 1988 Mark Nudleman
+ * Copyright (c) 1988 Mark Nudelman
  * Copyright (c) 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -11,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,35 +29,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)command.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
+#include <sys/cdefs.h>
 
 #include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <less.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "less.h"
 #include "pathnames.h"
+#include "extern.h"
 
 #define	NO_MCA		0
 #define	MCA_DONE	1
 #define	MCA_MORE	2
-
-extern int erase_char, kill_char, werase_char;
-extern int ispipe;
-extern int sigs;
-extern int quit_at_eof;
-extern int hit_eof;
-extern int sc_width;
-extern int sc_height;
-extern int sc_window;
-extern int curr_ac;
-extern int ac;
-extern int quitting;
-extern int scroll;
-extern int screen_trashed;	/* The screen has been overwritten */
 
 static char cmdbuf[120];	/* Buffer for holding a multi-char command */
 static char *cp;		/* Pointer into cmdbuf */
@@ -73,8 +58,14 @@ static int wsearch;		/* Search for matches (1) or non-matches (0) */
 #define	CMD_RESET	cp = cmdbuf	/* reset command buffer to empty */
 #define	CMD_EXEC	lower_left(); flush()
 
+static int cmd_erase __P((void));
+static int cmd_char __P((int));
+static int getcc __P((void));
+static void exec_mca __P((void));
+static int mca_char __P((int));
+
 /* backspace in command buffer. */
-static
+static int
 cmd_erase()
 {
 	/*
@@ -96,6 +87,7 @@ cmd_erase()
 }
 
 /* set up the display to start a new multi-character command. */
+void
 start_mca(action, prompt)
 	int action;
 	char *prompt;
@@ -111,7 +103,7 @@ start_mca(action, prompt)
  * process a single character of a multi-character command, such as
  * a number, or the pattern of a search command.
  */
-static
+static int
 cmd_char(c)
 	int c;
 {
@@ -120,9 +112,9 @@ cmd_char(c)
 	/* in this order, in case werase == erase_char */
 	if (c == werase_char) {
 		if (cp > cmdbuf) {
-			while (isspace(cp[-1]) && !cmd_erase());
-			while (!isspace(cp[-1]) && !cmd_erase());
-			while (isspace(cp[-1]) && !cmd_erase());
+			while (isspace((unsigned char)cp[-1]) && !cmd_erase());
+			while (!isspace((unsigned char)cp[-1]) && !cmd_erase());
+			while (isspace((unsigned char)cp[-1]) && !cmd_erase());
 		}
 		return(cp == cmdbuf);
 	}
@@ -150,11 +142,10 @@ cmd_char(c)
 	return(0);
 }
 
+int
 prompt()
 {
-	extern int linenums, short_file;
-	extern char *current_name, *firstsearch, *next_name;
-	off_t len, pos, ch_length(), position(), forw_line();
+	off_t len, pos;
 	char pbuf[40];
 
 	/*
@@ -182,19 +173,23 @@ prompt()
 		putstr(current_name);
 		putstr(":");
 		if (!ispipe) {
-			(void)sprintf(pbuf, " file %d/%d", curr_ac + 1, ac);
+			(void)snprintf(pbuf, sizeof(pbuf), " file %d/%d",
+			    curr_ac + 1, ac);
 			putstr(pbuf);
 		}
 		if (linenums) {
-			(void)sprintf(pbuf, " line %d", currline(BOTTOM));
+			(void)snprintf(pbuf, sizeof(pbuf), " line %d",
+			    currline(BOTTOM));
 			putstr(pbuf);
 		}
 		if ((pos = position(BOTTOM)) != NULL_POSITION) {
-			(void)sprintf(pbuf, " byte %qd", pos);
+			(void)snprintf(pbuf, sizeof(pbuf), " byte %lld",
+			    (long long)pos);
 			putstr(pbuf);
 			if (!ispipe && (len = ch_length())) {
-				(void)sprintf(pbuf, "/%qd pct %qd%%",
-				    len, ((100 * pos) / len));
+				(void)snprintf(pbuf, sizeof(pbuf),
+				    "/%lld pct %lld%%", (long long)len,
+				    (long long)((100 * pos) / len));
 				putstr(pbuf);
 			}
 		}
@@ -215,7 +210,8 @@ prompt()
 		else if (!ispipe &&
 		    (pos = position(BOTTOM)) != NULL_POSITION &&
 		    (len = ch_length())) {
-			(void)sprintf(pbuf, " (%qd%%)", ((100 * pos) / len));
+			(void)snprintf(pbuf, sizeof(pbuf), " (%lld%%)",
+			    (long long)((100 * pos) / len));
 			putstr(pbuf);
 		}
 		so_exit();
@@ -224,17 +220,15 @@ prompt()
 }
 
 /* get command character. */
-static
+static int
 getcc()
 {
-	extern int cmdstack;
 	int ch;
-	off_t position();
 
 	/* left over from error() routine. */
 	if (cmdstack) {
 		ch = cmdstack;
-		cmdstack = NULL;
+		cmdstack = 0;
 		return(ch);
 	}
 	if (cp > cmdbuf && position(TOP) == NULL_POSITION) {
@@ -256,13 +250,10 @@ getcc()
 }
 
 /* execute a multicharacter command. */
-static
+static void
 exec_mca()
 {
-	extern int file;
-	extern char *tagfile;
-	register char *p;
-	char *glob();
+	char *p;
 
 	*cp = '\0';
 	CMD_EXEC;
@@ -274,22 +265,14 @@ exec_mca()
 		(void)search(0, cmdbuf, number, wsearch);
 		break;
 	case A_EXAMINE:
-		for (p = cmdbuf; isspace(*p); ++p);
+		for (p = cmdbuf; isspace((unsigned char)*p); ++p);
 		(void)edit(glob(p));
-		break;
-	case A_TAGFILE:
-		for (p = cmdbuf; isspace(*p); ++p);
-		findtag(p);
-		if (tagfile == NULL)
-			break;
-		if (edit(tagfile))
-			(void)tagsearch();
 		break;
 	}
 }
 
 /* add a character to a multi-character command. */
-static
+static int
 mca_char(c)
 	int c;
 {
@@ -302,8 +285,8 @@ mca_char(c)
 		 * Entering digits of a number.
 		 * Terminated by a non-digit.
 		 */
-		if (!isascii(c) || !isdigit(c) &&
-		    c != erase_char && c != kill_char && c != werase_char) {
+		if (!isascii(c) || (!isdigit(c) &&
+		    c != erase_char && c != kill_char && c != werase_char)) {
 			/*
 			 * Not part of the number.
 			 * Treat as a normal command character.
@@ -337,13 +320,14 @@ mca_char(c)
  * Main command processor.
  * Accept and execute commands until a quit command, then return.
  */
+void
 commands()
 {
-	register int c;
-	register int action;
+	int c;
+	int action;
 
 	last_mca = 0;
-	scroll = (sc_height + 1) / 2;
+	scroll_lines = (sc_height + 1) / 2;
 
 	for (;;) {
 		mca = 0;
@@ -426,14 +410,14 @@ again:		if (sigs)
 		case A_F_SCROLL:	/* forward N lines */
 			CMD_EXEC;
 			if (number > 0)
-				scroll = number;
-			forward(scroll, 0);
+				scroll_lines = number;
+			forward(scroll_lines, 0);
 			break;
 		case A_B_SCROLL:	/* backward N lines */
 			CMD_EXEC;
 			if (number > 0)
-				scroll = number;
-			backward(scroll, 0);
+				scroll_lines = number;
+			backward(scroll_lines, 0);
 			break;
 		case A_FREPAINT:	/* flush buffers and repaint */
 			if (!ispipe) {
@@ -501,7 +485,7 @@ again:		if (sigs)
 				start_mca(last_mca,
 				    (last_mca == A_F_SEARCH) ? "!/" : "!?");
 			CMD_EXEC;
-			(void)search(mca == A_F_SEARCH, (char *)NULL,
+			(void)search(mca == A_F_SEARCH, NULL,
 			    number, wsearch);
 			break;
 		case A_HELP:			/* help */
@@ -511,11 +495,6 @@ again:		if (sigs)
 			CMD_EXEC;
 			help();
 			break;
-		case A_TAGFILE:			/* tag a new file */
-			CMD_RESET;
-			start_mca(A_TAGFILE, "Tag: ");
-			c = getcc();
-			goto again;
 		case A_FILE_LIST:		/* show list of file names */
 			CMD_EXEC;
 			showlist();
@@ -586,13 +565,13 @@ again:		if (sigs)
 	}
 }
 
+void
 editfile()
 {
-	extern char *current_file;
 	static int dolinenumber;
 	static char *editor;
 	int c;
-	char buf[MAXPATHLEN * 2 + 20], *getenv();
+	char buf[MAXPATHLEN * 2 + 20];
 
 	if (editor == NULL) {
 		editor = getenv("EDITOR");
@@ -605,17 +584,17 @@ editfile()
 			dolinenumber = 0;
 	}
 	if (dolinenumber && (c = currline(MIDDLE)))
-		(void)sprintf(buf, "%s +%d %s", editor, c, current_file);
+		(void)snprintf(buf, sizeof(buf), "%s +%d %s", editor, c,
+		    current_file);
 	else
-		(void)sprintf(buf, "%s %s", editor, current_file);
+		(void)snprintf(buf, sizeof(buf), "%s %s", editor, current_file);
 	lsystem(buf);
 }
 
+void
 showlist()
 {
-	extern int sc_width;
-	extern char **av;
-	register int indx, width;
+	int indx, width;
 	int len;
 	char *p;
 
@@ -652,5 +631,5 @@ showlist()
 		++indx;
 	}
 	putchr('\n');
-	error((char *)NULL);
+	error(NULL);
 }

@@ -1,0 +1,15 @@
+builtins.c
+builtins.h
+init.c
+mkinit
+mknodes
+mksyntax
+nodes.c
+nodes.h
+printf.o
+syntax.c
+syntax.h
+token.def
+y.tab.h
+lex.yy.c
+ash

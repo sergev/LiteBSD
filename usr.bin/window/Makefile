@@ -1,8 +1,6 @@
-#	@(#)Makefile	8.1 (Berkeley) 6/6/93
+#	$OpenBSD: Makefile,v 1.5 1997/09/21 11:52:06 deraadt Exp $
 
 PROG=	window
-CFLAGS+=-R -DVMIN_BUG -ffunction-sections -fdata-sections
-LDFLAGS+=-Wl,--gc-sections
 SRCS=	char.c cmd.c cmd1.c cmd2.c cmd3.c cmd4.c cmd5.c cmd6.c cmd7.c \
 	context.c error.c lcmd.c lcmd1.c lcmd2.c main.c mloop.c parser1.c \
 	parser2.c parser3.c parser4.c parser5.c scanner.c startup.c string.c \
@@ -16,7 +14,8 @@ SRCS=	char.c cmd.c cmd1.c cmd2.c cmd3.c cmd4.c cmd5.c cmd6.c cmd7.c \
 	wwredrawwin.c wwrint.c wwscroll.c wwsize.c wwspawn.c wwsuspend.c \
 	wwterminfo.c wwtty.c wwunframe.c wwupdate.c wwwrite.c xx.c xxflush.c \
 	compress.c
-MAN=	window.0
+CFLAGS+=-ffunction-sections -fdata-sections
+LDFLAGS+=-Wl,--gc-sections
 DPADD=	${LIBTERMCAP}
 LDADD=	-ltermcap
 

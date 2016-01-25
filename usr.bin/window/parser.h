@@ -1,3 +1,6 @@
+/*	$OpenBSD: parser.h,v 1.3 1997/02/25 00:04:11 downsj Exp $	*/
+/*	$NetBSD: parser.h,v 1.3 1995/09/28 10:34:29 tls Exp $	*/
+
 /*
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
