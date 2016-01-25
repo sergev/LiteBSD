@@ -38,6 +38,13 @@
  * Per RFC 790, September 1981, and numerous additions.
  */
 
+#ifndef _NETINET_IN_H_
+#define _NETINET_IN_H_
+
+#ifndef _KERNEL
+#include <sys/types.h>
+#endif
+
 /*
  * Protocols
  */
@@ -236,3 +243,5 @@ int     in_localaddr __P((struct in_addr));
 u_long  in_netof __P((struct in_addr));
 void    in_socktrim __P((struct sockaddr_in *));
 #endif
+
+#endif /* _NETINET_IN_H_ */

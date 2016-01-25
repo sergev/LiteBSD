@@ -75,8 +75,8 @@
 #define MAXDFLSRCH          3   /* # default domain levels to try */
 #define MAXDNSRCH           6   /* max # domains in search path */
 #define LOCALDOMAINPARTS    2   /* min levels in name that is "local" */
-
 #define RES_TIMEOUT         5   /* min. seconds between retries */
+#define MAXRESOLVSORT      10   /*%< number of net to sort on */
 
 struct __res_state {
     int     retrans;                /* retransmition time interval */
@@ -89,6 +89,12 @@ struct __res_state {
     char    *dnsrch[MAXDNSRCH+1];   /* components of domain to search */
     char    defdname[MAXDNAME];     /* default domain */
     long    pfcode;                 /* RES_PRF_ flags - see below. */
+    unsigned ndots:4;               /*%< threshold for initial abs. query */
+    unsigned nsort:4;               /*%< number of elements in sort_list[] */
+    struct {
+	struct in_addr	addr;
+	u_int32_t	mask;
+    } sort_list[MAXRESOLVSORT];
 };
 
 /*

@@ -3,19 +3,20 @@
 # machine-independent net sources
 .PATH: ${.CURDIR}/${MACHINE}/net ${.CURDIR}/net
 
-SRCS+=	gethostnamadr.c getnetbyaddr.c getnetbyname.c getnetent.c \
-	getproto.c getprotoent.c getprotoname.c getservbyname.c \
-	getservbyport.c getservent.c herror.c inet_addr.c inet_lnaof.c \
-	inet_makeaddr.c inet_netof.c inet_network.c inet_ntoa.c \
-	linkaddr.c rcmd.c recv.c res_comp.c \
+SRCS+=	getaddrinfo.c gethostnamadr.c getnameinfo.c getnetbyaddr.c \
+	getnetbyname.c getnetent.c getproto.c getprotoent.c getprotoname.c \
+	getservbyname.c getservbyport.c getservent.c herror.c inet_addr.c \
+	inet_lnaof.c inet_makeaddr.c inet_netof.c inet_network.c \
+	inet_ntoa.c linkaddr.c name6.c rcmd.c recv.c res_comp.c \
 	res_debug.c res_init.c res_mkquery.c res_query.c res_send.c \
 	send.c sethostent.c #iso_addr.c ns_addr.c ns_ntoa.c
 
 # machine-dependent net sources
 .include "${.CURDIR}/${MACHINE}/net/Makefile.inc"
 
-MAN3+=	byteorder.0 gethostbyname.0 getnetent.0 getprotoent.0 getservent.0 \
-	inet.0 linkaddr.0 ns.0 rcmd.0 resolver.0 \
+MAN3+=	byteorder.0 getaddrinfo.0 gethostbyname.0 getipnodebyname.0 \
+	getnameinfo.0 getnetent.0 getprotoent.0 getservent.0 inet.0 \
+	linkaddr.0 ns.0 rcmd.0 resolver.0
 
 MLINKS+=byteorder.3 htonl.3 byteorder.3 htons.3 byteorder.3 ntohl.3 \
 	byteorder.3 ntohs.3
