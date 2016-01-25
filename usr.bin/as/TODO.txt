@@ -1,3 +1,9 @@
-Remove 'register' keyword.
-
 Remove space in function calls: func (xxx) -> func(xxx).
+
+Emit ELF headers.
+
+Emit relocation in ELF format.
+
+Emit symbol table in ELF format.
+
+Emit string table in ELF format.
