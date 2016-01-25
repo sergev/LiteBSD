@@ -1,5 +1,3 @@
-Emit ELF headers.
-
 Emit relocation in ELF format.
 
 Emit symbol table in ELF format.
