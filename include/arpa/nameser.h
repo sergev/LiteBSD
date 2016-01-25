@@ -71,6 +71,12 @@
 #define RRFIXEDSZ   10
 
 /*
+ * FreeBSD (others?) prepend NS_ to the above list.
+ * Anyhow, we only need this one for now.
+ */
+#define NS_INADDRSZ  4       /*%< IPv4 T_A */
+
+/*
  * Internet nameserver port number
  */
 #define NAMESERVER_PORT 53

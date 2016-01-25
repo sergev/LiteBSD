@@ -7,7 +7,7 @@ SRCS+=	getaddrinfo.c gethostnamadr.c getnameinfo.c getnetbyaddr.c \
 	getnetbyname.c getnetent.c getproto.c getprotoent.c getprotoname.c \
 	getservbyname.c getservbyport.c getservent.c herror.c inet_addr.c \
 	inet_lnaof.c inet_makeaddr.c inet_netof.c inet_network.c \
-	inet_ntoa.c linkaddr.c name6.c rcmd.c recv.c res_comp.c \
+	inet_ntoa.c inet_pton.c linkaddr.c name6.c rcmd.c recv.c res_comp.c \
 	res_debug.c res_init.c res_mkquery.c res_query.c res_send.c \
 	send.c sethostent.c #iso_addr.c ns_addr.c ns_ntoa.c
 
