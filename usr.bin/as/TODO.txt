@@ -1,5 +1,3 @@
-Remove space in function calls: func (xxx) -> func(xxx).
-
 Emit ELF headers.
 
 Emit relocation in ELF format.

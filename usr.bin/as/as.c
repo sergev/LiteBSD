@@ -209,7 +209,7 @@ struct optable {
     unsigned opcode;                    /* instruction code */
     const char *name;                   /* instruction name */
     unsigned type;                      /* flags */
-    void (*func) (unsigned, struct reloc*); /* handler for pseudo-instructions */
+    void (*func)(unsigned, struct reloc*); /* handler for pseudo-instructions */
 };
 
 /*
@@ -253,8 +253,8 @@ struct nlist {
  * Implement pseudo-instructions.
  * TODO: bge, bgeu, bgt, bgtu, ble, bleu, blt, bltu
  */
-void emit_li (unsigned, struct reloc*);
-void emit_la (unsigned, struct reloc*);
+void emit_li(unsigned, struct reloc*);
+void emit_la(unsigned, struct reloc*);
 
 const struct optable optable [] = {
     { 0x00000020,   "add",      FRD1 | FRS2 | FRT3 | FMOD },
@@ -439,37 +439,37 @@ int expr_flags;                         /* flags set by getexpr */
 #define EXPR_LO     4                   /* %lo function */
 
 /* Forward declarations. */
-unsigned getexpr (int *s);
+unsigned getexpr(int *s);
 
 /*
  * Fatal error message.
  */
-void uerror (char *fmt, ...)
+void uerror(char *fmt, ...)
 {
     va_list ap;
 
-    va_start (ap, fmt);
-    fprintf (stderr, "as: ");
+    va_start(ap, fmt);
+    fprintf(stderr, "as: ");
     if (infile)
-        fprintf (stderr, "%s, ", infile);
+        fprintf(stderr, "%s, ", infile);
     if (line)
-        fprintf (stderr, "%d: ", line);
-    vfprintf (stderr, fmt, ap);
-    va_end (ap);
-    fprintf (stderr, "\n");
-    exit (1);
+        fprintf(stderr, "%d: ", line);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+    exit(1);
 }
 
 /*
  * Read a 4-byte word from the file.
  * Little-endian.
  */
-unsigned fgetword (f)
+unsigned fgetword(f)
     FILE *f;
 {
     unsigned int w;
 
-    if (fread (&w, sizeof(w), 1, f) != 1)
+    if (fread(&w, sizeof(w), 1, f) != 1)
         return 0;
     return w;
 }
@@ -478,31 +478,31 @@ unsigned fgetword (f)
  * Write a 4-byte word to the file.
  * Little-endian.
  */
-void fputword (w, f)
+void fputword(w, f)
     unsigned int w;
     FILE *f;
 {
-    fwrite (&w, sizeof(w), 1, f);
+    fwrite(&w, sizeof(w), 1, f);
 }
 
 /*
 * Read a relocation record: 8 bytes.
 */
-void fgetrel (f, r)
+void fgetrel(f, r)
     FILE *f;
     struct reloc *r;
 {
     /* Read r_offset */
-    r->offset = getc (f);
-    r->offset |= getc (f) << 8;
-    r->offset |= getc (f) << 16;
-    r->offset |= getc (f) << 24;
+    r->offset = getc(f);
+    r->offset |= getc(f) << 8;
+    r->offset |= getc(f) << 16;
+    r->offset |= getc(f) << 24;
 
     /* Read r_info */
-    r->type = getc (f);
-    r->sym = getc (f);
-    r->sym |= getc (f) << 8;
-    r->sym |= getc (f) << 16;
+    r->type = getc(f);
+    r->sym = getc(f);
+    r->sym |= getc(f) << 8;
+    r->sym |= getc(f) << 16;
 }
 
 /*
@@ -529,10 +529,10 @@ unsigned fputrel(r, f)
     putc(r->offset >> 24, f);
 
     /* Write r_info */
-    putc (r->type, f); // TODO
-    putc (r->sym, f);
-    putc (r->sym >> 8, f);
-    putc (r->sym >> 16, f);
+    putc(r->type, f); // TODO
+    putc(r->sym, f);
+    putc(r->sym >> 8, f);
+    putc(r->sym >> 16, f);
 
     return nbytes;
 }
@@ -540,25 +540,25 @@ unsigned fputrel(r, f)
 /*
  * Create temporary files for STEXT, SDATA and SSTRNG segments.
  */
-void startup ()
+void startup()
 {
     int i;
 
-    int fd = mkstemp (tfilename);
+    int fd = mkstemp(tfilename);
     if (fd == -1) {
-        uerror ("cannot create temporary file %s", tfilename);
+        uerror("cannot create temporary file %s", tfilename);
     } else {
         close(fd);
     }
     for (i=STEXT; i<SBSS; i++) {
-        sfile [i] = fopen (tfilename, "w+");
+        sfile [i] = fopen(tfilename, "w+");
         if (! sfile [i])
-            uerror ("cannot open %s", tfilename);
-        unlink (tfilename);
-        rfile [i] = fopen (tfilename, "w+");
+            uerror("cannot open %s", tfilename);
+        unlink(tfilename);
+        rfile [i] = fopen(tfilename, "w+");
         if (! rfile [i])
-            uerror ("cannot open %s", tfilename);
-        unlink (tfilename);
+            uerror("cannot open %s", tfilename);
+        unlink(tfilename);
     }
     line = 1;
 }
@@ -567,7 +567,7 @@ void startup ()
  * Suboptimal 32-bit hash function.
  * Copyright (C) 2006 Serge Vakulenko.
  */
-unsigned hash_rot13 (s)
+unsigned hash_rot13(s)
     const char *s;
 {
     unsigned hash, c;
@@ -580,7 +580,7 @@ unsigned hash_rot13 (s)
     return hash;
 }
 
-void hashinit ()
+void hashinit()
 {
     int i, h;
     const struct optable *p;
@@ -588,7 +588,7 @@ void hashinit ()
     for (i=0; i<HCMDSZ; i++)
         hashctab[i] = -1;
     for (p=optable; p->name; p++) {
-        h = hash_rot13 (p->name) & (HCMDSZ-1);
+        h = hash_rot13(p->name) & (HCMDSZ-1);
         while (hashctab[h] != -1)
             if (--h < 0)
                 h += HCMDSZ;
@@ -598,29 +598,29 @@ void hashinit ()
         hashtab[i] = -1;
 }
 
-int hexdig (c)
+int hexdig(c)
     int c;
 {
     if (c <= '9')
-        return (c - '0');
+        return c - '0';
     else if (c <= 'F')
-        return (c - 'A' + 10);
+        return c - 'A' + 10;
     else
-        return (c - 'a' + 10);
+        return c - 'a' + 10;
 }
 
 /*
  * Get hexadecimal number 0xZZZ
  */
-void gethnum ()
+void gethnum()
 {
     int c;
     char *cp;
 
-    c = getchar ();
+    c = getchar();
     for (cp=name; ISHEX(c); c=getchar())
-        *cp++ = hexdig (c);
-    ungetc (c, stdin);
+        *cp++ = hexdig(c);
+    ungetc(c, stdin);
     intval = 0;
     for (c=0; c<32; c+=4) {
         if (--cp < name)
@@ -634,7 +634,7 @@ void gethnum ()
  * 1234 - decimal
  * 01234 - octal
  */
-void getnum (c)
+void getnum(c)
     int c;
 {
     char *cp;
@@ -642,8 +642,8 @@ void getnum (c)
 
     leadingzero = (c=='0');
     for (cp=name; ISDIGIT(c); c=getchar())
-        *cp++ = hexdig (c);
-    ungetc (c, stdin);
+        *cp++ = hexdig(c);
+    ungetc(c, stdin);
     intval = 0;
     if (leadingzero) {
         /* Octal. */
@@ -665,128 +665,128 @@ void getnum (c)
     }
 }
 
-void getname (c)
+void getname(c)
     int c;
 {
     char *cp;
 
-    for (cp=name; ISLETTER (c) || ISDIGIT (c); c=getchar())
+    for (cp=name; ISLETTER(c) || ISDIGIT(c); c=getchar())
         *cp++ = c;
     *cp = 0;
-    ungetc (c, stdin);
+    ungetc(c, stdin);
 }
 
-int looktype ()
+int looktype()
 {
     switch (name [1]) {
     case 'c':
-        if (! strcmp ("@common", name)) return (LSYMTYPE);
+        if (! strcmp("@common", name)) return LSYMTYPE;
         break;
     case 'f':
-        if (! strcmp ("@fini_array", name)) return (LSECTYPE);
-        if (! strcmp ("@function", name)) return (LSYMTYPE);
+        if (! strcmp("@fini_array", name)) return LSECTYPE;
+        if (! strcmp("@function", name)) return LSYMTYPE;
         break;
     case 'g':
-        if (! strcmp ("@gnu_indirect_function", name)) return (LSYMTYPE);
-        if (! strcmp ("@gnu_unique_object", name)) return (LSYMTYPE);
+        if (! strcmp("@gnu_indirect_function", name)) return LSYMTYPE;
+        if (! strcmp("@gnu_unique_object", name)) return LSYMTYPE;
         break;
     case 'i':
-        if (! strcmp ("@init_array", name)) return (LSECTYPE);
+        if (! strcmp("@init_array", name)) return LSECTYPE;
         break;
     case 'n':
-        if (! strcmp ("@nobits", name)) return (LSECTYPE);
-        if (! strcmp ("@note", name)) return (LSECTYPE);
-        if (! strcmp ("@notype", name)) return (LSYMTYPE);
+        if (! strcmp("@nobits", name)) return LSECTYPE;
+        if (! strcmp("@note", name)) return LSECTYPE;
+        if (! strcmp("@notype", name)) return LSYMTYPE;
         break;
     case 'o':
-        if (! strcmp ("@object", name)) return (LSYMTYPE);
+        if (! strcmp("@object", name)) return LSYMTYPE;
         break;
     case 'p':
-        if (! strcmp ("@progbits", name)) return (LSECTYPE);
-        if (! strcmp ("@preinit_array", name)) return (LSECTYPE);
+        if (! strcmp("@progbits", name)) return LSECTYPE;
+        if (! strcmp("@preinit_array", name)) return LSECTYPE;
         break;
     case 't':
-        if (! strcmp ("@tls_object", name)) return (LSYMTYPE);
+        if (! strcmp("@tls_object", name)) return LSYMTYPE;
         break;
     }
-    return (-1);
+    return -1;
 }
 
-int lookacmd ()
+int lookacmd()
 {
     switch (name [1]) {
     case 'a':
-        if (! strcmp (".ascii", name)) return (LASCII);
-        if (! strcmp (".align", name)) return (LALIGN);
+        if (! strcmp(".ascii", name)) return LASCII;
+        if (! strcmp(".align", name)) return LALIGN;
         break;
     case 'b':
-        if (! strcmp (".bss", name)) return (LBSS);
-        if (! strcmp (".byte", name)) return (LBYTE);
+        if (! strcmp(".bss", name)) return LBSS;
+        if (! strcmp(".byte", name)) return LBYTE;
         break;
     case 'c':
-        if (! strcmp (".comm", name)) return (LCOMM);
+        if (! strcmp(".comm", name)) return LCOMM;
         break;
     case 'd':
-        if (! strcmp (".data", name)) return (LDATA);
+        if (! strcmp(".data", name)) return LDATA;
         break;
     case 'e':
-        if (! strcmp (".equ", name)) return (LEQU);
-        if (! strcmp (".end", name)) return (LEND);
-        if (! strcmp (".ent", name)) return (LENT);
+        if (! strcmp(".equ", name)) return LEQU;
+        if (! strcmp(".end", name)) return LEND;
+        if (! strcmp(".ent", name)) return LENT;
         break;
     case 'f':
-        if (! strcmp (".file", name)) return (LFILE);
-        if (! strcmp (".fmask", name)) return (LFMASK);
-        if (! strcmp (".frame", name)) return (LFRAME);
+        if (! strcmp(".file", name)) return LFILE;
+        if (! strcmp(".fmask", name)) return LFMASK;
+        if (! strcmp(".frame", name)) return LFRAME;
         break;
     case 'g':
-        if (! strcmp (".globl", name)) return (LGLOBL);
-        if (! strcmp (".gnu_attribute", name)) return (LGNUATTR);
+        if (! strcmp(".globl", name)) return LGLOBL;
+        if (! strcmp(".gnu_attribute", name)) return LGNUATTR;
         break;
     case 'h':
-        if (! strcmp (".half", name)) return (LHALF);
+        if (! strcmp(".half", name)) return LHALF;
         break;
     case 'i':
-        if (! strcmp (".ident", name)) return (LIDENT);
+        if (! strcmp(".ident", name)) return LIDENT;
         break;
     case 'l':
-        if (! strcmp (".local", name)) return (LLOCAL);
+        if (! strcmp(".local", name)) return LLOCAL;
         break;
     case 'm':
-        if (! strcmp (".mask", name)) return (LMASK);
+        if (! strcmp(".mask", name)) return LMASK;
         break;
     case 'n':
-        if (! strcmp (".nan", name)) return (LNAN);
+        if (! strcmp(".nan", name)) return LNAN;
         break;
     case 'p':
-        if (! strcmp (".previous", name)) return (LPREVIOUS);
+        if (! strcmp(".previous", name)) return LPREVIOUS;
         break;
     case 'r':
-        if (! strcmp (".rdata", name)) return (LRDATA);
+        if (! strcmp(".rdata", name)) return LRDATA;
         break;
     case 's':
-        if (! strcmp (".section", name)) return (LSECTION);
-        if (! strcmp (".set", name)) return (LSET);
-        if (! strcmp (".size", name)) return (LSIZE);
-        if (! strcmp (".space", name)) return (LSPACE);
-        if (! strcmp (".strng", name)) return (LSTRNG);
+        if (! strcmp(".section", name)) return LSECTION;
+        if (! strcmp(".set", name)) return LSET;
+        if (! strcmp(".size", name)) return LSIZE;
+        if (! strcmp(".space", name)) return LSPACE;
+        if (! strcmp(".strng", name)) return LSTRNG;
         break;
     case 't':
-        if (! strcmp (".text", name)) return (LTEXT);
-        if (! strcmp (".type", name)) return (LTYPE);
+        if (! strcmp(".text", name)) return LTEXT;
+        if (! strcmp(".type", name)) return LTYPE;
         break;
     case 'w':
-        if (! strcmp (".word", name)) return (LWORD);
-        if (! strcmp (".weak", name)) return (LWEAK);
+        if (! strcmp(".word", name)) return LWORD;
+        if (! strcmp(".weak", name)) return LWEAK;
         break;
     }
-    return (-1);
+    return -1;
 }
 
 /*
  * Change a segment based on a section name.
  */
-void setsection ()
+void setsection()
 {
     struct {
         const char *name;
@@ -804,7 +804,7 @@ void setsection ()
     };
 
     for (p=map; p->name; p++) {
-        if (strncmp (name, p->name, p->len) == 0 &&
+        if (strncmp(name, p->name, p->len) == 0 &&
             (p->name [p->len] == 0 ||
              p->name [p->len] == '.'))
         {
@@ -812,10 +812,10 @@ void setsection ()
             return;
         }
     }
-    uerror ("bad .section name");
+    uerror("bad .section name");
 }
 
-int lookreg ()
+int lookreg()
 {
     int val;
     char *cp;
@@ -824,7 +824,7 @@ int lookreg ()
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
         val = 0;
-        for (cp=name+1; ISDIGIT (*cp); cp++) {
+        for (cp=name+1; ISDIGIT(*cp); cp++) {
             val *= 10;
             val += *cp - '0';
         }
@@ -903,61 +903,61 @@ int lookreg ()
         }
         break;
     case 'z':
-        if (! strcmp (name+2, "ero"))
+        if (! strcmp(name+2, "ero"))
             return 0;                   /* $zero */
         break;
     }
     return -1;
 }
 
-int lookcmd ()
+int lookcmd()
 {
     int i, h;
 
-    h = hash_rot13 (name) & (HCMDSZ-1);
+    h = hash_rot13(name) & (HCMDSZ-1);
     while ((i = hashctab[h]) != -1) {
-        if (! strcmp (optable[i].name, name))
-            return (i);
+        if (! strcmp(optable[i].name, name))
+            return i;
         if (--h < 0)
             h += HCMDSZ;
     }
-    return (-1);
+    return -1;
 }
 
-char *alloc (len)
+char *alloc(len)
 {
     int r;
 
     r = lastfree;
     lastfree += len;
     if (lastfree > sizeof(space))
-        uerror ("out of memory");
-    return (space + r);
+        uerror("out of memory");
+    return space + r;
 }
 
-int lookname ()
+int lookname()
 {
     int i, h;
 
     /* Search for symbol name. */
-    h = hash_rot13 (name) & (HASHSZ-1);
+    h = hash_rot13(name) & (HASHSZ-1);
     while ((i = hashtab[h]) != -1) {
-        if (! strcmp (stab[i].n_name, name))
-            return (i);
+        if (! strcmp(stab[i].n_name, name))
+            return i;
         if (--h < 0)
             h += HASHSZ;
     }
 
     /* Add a new symbol to table. */
     if ((i = stabfree++) >= STSIZE)
-        uerror ("symbol table overflow");
-    stab[i].n_len = strlen (name);
-    stab[i].n_name = alloc (1 + stab[i].n_len);
-    strcpy (stab[i].n_name, name);
+        uerror("symbol table overflow");
+    stab[i].n_len = strlen(name);
+    stab[i].n_name = alloc(1 + stab[i].n_len);
+    strcpy(stab[i].n_name, name);
     stab[i].n_value = 0;
     stab[i].n_type = N_UNDF;
     hashtab[h] = i;
-    return (i);
+    return i;
 }
 
 /*
@@ -983,7 +983,7 @@ int lookname ()
  * LFILE   - .file assembler instruction.
  * LSECTION - .section assembler instruction.
  */
-int getlex (pval)
+int getlex(pval)
     int *pval;
 {
     int c;
@@ -991,145 +991,145 @@ int getlex (pval)
     if (blexflag) {
         blexflag = 0;
         *pval = blextype;
-        return (backlex);
+        return backlex;
     }
     for (;;) {
         switch (c = getchar()) {
         case '#':
 skiptoeol:  while ((c = getchar()) != '\n')
                 if (c == EOF)
-                    return (LEOF);
+                    return LEOF;
         case '\n':
             ++line;
-            c = getchar ();
+            c = getchar();
             if (c == '#')
                 goto skiptoeol;
-            ungetc (c, stdin);
+            ungetc(c, stdin);
         case ';':
             *pval = line;
-            return (LEOL);
+            return LEOL;
         case ' ':
         case '\t':
             continue;
         case EOF:
-            return (LEOF);
+            return LEOF;
         case '\\':
-            c = getchar ();
-            if (c=='<')
-                return (LLSHIFT);
-            if (c=='>')
-                return (LRSHIFT);
-            ungetc (c, stdin);
-            return ('\\');
+            c = getchar();
+            if (c == '<')
+                return LLSHIFT;
+            if (c == '>')
+                return LRSHIFT;
+            ungetc(c, stdin);
+            return '\\';
         case '\'':      case '%':
         case '^':       case '&':       case '|':       case '~':
         case '+':       case '-':       case '*':       case '/':
         case '"':       case ',':       case '[':       case ']':
         case '(':       case ')':       case '{':       case '}':
         case '<':       case '>':       case '=':       case ':':
-            return (c);
+            return c;
         case '0':
-            if ((c = getchar ()) == 'x' || c=='X') {
-                gethnum ();
-                return (LNUM);
+            if ((c = getchar()) == 'x' || c=='X') {
+                gethnum();
+                return LNUM;
             }
-            ungetc (c, stdin);
+            ungetc(c, stdin);
             c = '0';
         case '1':       case '2':       case '3':
         case '4':       case '5':       case '6':       case '7':
         case '8':       case '9':
-            getnum (c);
-            return (LNUM);
+            getnum(c);
+            return LNUM;
         default:
-            if (! ISLETTER (c))
-                uerror ("bad character: \\%o", c & 0377);
-            getname (c);
+            if (! ISLETTER(c))
+                uerror("bad character: \\%o", c & 0377);
+            getname(c);
             if (name[0] == '.') {
                 if (name[1] == 0)
-                    return ('.');
+                    return '.';
                 *pval = lookacmd();
                 if (*pval != -1)
-                    return (*pval);
+                    return *pval;
             }
             if (name[0] == '$') {
                 *pval = lookreg();
                 if (*pval != -1)
-                    return (LREG);
+                    return LREG;
             }
             if (name[0] == '@') {
                 *pval = looktype();
                 if (*pval != -1)
-                    return (*pval);
+                    return *pval;
             }
-            return (LNAME);
+            return LNAME;
         }
     }
 }
 
-void ungetlex (val, type)
+void ungetlex(val, type)
 {
     blexflag = 1;
     backlex = val;
     blextype = type;
 }
 
-int getterm ()
+int getterm()
 {
     int ty;
     int cval, s;
 
-    switch (getlex (&cval)) {
+    switch (getlex(&cval)) {
     default:
-        uerror ("operand missed");
+        uerror("operand missed");
     case LNUM:
-        cval = getchar ();
+        cval = getchar();
         if (cval == 'b' || cval == 'B')
             extref = RLAB_OFFSET - intval;
         else if (cval == 'f' || cval == 'F')
             extref = RLAB_OFFSET + intval;
         else {
             /* Integer literal. */
-            ungetc (cval, stdin);
-            return (SABS);
+            ungetc(cval, stdin);
+            return SABS;
         }
         /* Local label. */
         if (intval >= RLAB_MAXVAL)
-            uerror ("too large relative label");
+            uerror("too large relative label");
         intval = 0;
-        return (SEXT);
+        return SEXT;
     case LNAME:
         intval = 0;
         cval = lookname();
         ty = stab[cval].n_type & N_TYPE;
         if (ty==N_UNDF || ty==N_COMM) {
             extref = cval;
-            return (SEXT);
+            return SEXT;
         }
         intval = stab[cval].n_value;
-        return (typesegm [ty]);
+        return typesegm [ty];
     case '.':
         intval = count[segm];
-        return (segm);
+        return segm;
     case '%':
-        if (getlex (&cval) != LNAME)
-            uerror ("bad %function name");
-        if (strcmp (name, "gp_rel") == 0) {
+        if (getlex(&cval) != LNAME)
+            uerror("bad %function name");
+        if (strcmp(name, "gp_rel") == 0) {
             /* GP relative reverence. */
             expr_flags |= EXPR_GPREL;
-        } else if (strcmp (name, "hi") == 0) {
+        } else if (strcmp(name, "hi") == 0) {
             expr_flags |= EXPR_HI;
-        } else if (strcmp (name, "lo") == 0) {
+        } else if (strcmp(name, "lo") == 0) {
             expr_flags |= EXPR_LO;
         } else
-            uerror ("unknown function %s", name);
-        if (getlex (&cval) != '(')
-            uerror ("bad %s syntax", name);
+            uerror("unknown function %s", name);
+        if (getlex(&cval) != '(')
+            uerror("bad %s syntax", name);
         /* fall through */
     case '(':
-        getexpr (&s);
-        if (getlex (&cval) != ')')
-            uerror ("bad () syntax");
-        return (s);
+        getexpr(&s);
+        if (getlex(&cval) != ')')
+            uerror("bad () syntax");
+        return s;
     }
 }
 
@@ -1142,7 +1142,7 @@ int getterm ()
  * term       = LNAME | LNUM | "." | "(" expression ")"
  * op         = "+" | "-" | "&" | "|" | "^" | "~" | "<<" | ">>" | "/" | "*"
  */
-unsigned getexpr (s)
+unsigned getexpr(s)
     int *s;
 {
     int clex;
@@ -1150,9 +1150,10 @@ unsigned getexpr (s)
     unsigned rez;
 
     /* look a first lexeme */
-    switch (clex = getlex (&cval)) {
+    clex = getlex(&cval);
+    switch (clex) {
     default:
-        ungetlex (clex, cval);
+        ungetlex(clex, cval);
         rez = 0;
         *s = SABS;
         break;
@@ -1161,93 +1162,94 @@ unsigned getexpr (s)
     case '.':
     case '(':
     case '%':
-        ungetlex (clex, cval);
-        *s = getterm ();
+        ungetlex(clex, cval);
+        *s = getterm();
         rez = intval;
         break;
     }
     for (;;) {
-        switch (clex = getlex (&cval)) {
+        clex = getlex (&cval);
+        switch (clex) {
         case '+':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s == SABS)
                 *s = s2;
             else if (s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez += intval;
             break;
         case '-':
-            s2 = getterm ();
+            s2 = getterm();
             if (s2 == *s && s2 != SEXT)
                 *s = SABS;
             else if (s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez -= intval;
             break;
         case '&':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez &= intval;
             break;
         case '|':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez |= intval;
             break;
         case '^':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez ^= intval;
             break;
         case '~':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez ^= ~intval;
             break;
         case LLSHIFT:           /* сдвиг влево */
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez <<= intval & 037;
             break;
         case LRSHIFT:           /* сдвиг вправо */
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez >>= intval & 037;
             break;
         case '*':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             rez *= intval;
             break;
         case '/':
-            s2 = getterm ();
+            s2 = getterm();
             if (*s != SABS || s2 != SABS)
-                uerror ("too complex expression");
+                uerror("too complex expression");
             if (intval == 0)
-                uerror ("division by zero");
+                uerror("division by zero");
             rez /= intval;
             break;
         default:
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
             intval = rez;
-            return (rez);
+            return rez;
         }
     }
     /* NOTREACHED */
 }
 
-void reorder_flush ()
+void reorder_flush()
 {
     if (reorder_full) {
         reorder_rel.offset = ftell(sfile[STEXT]);
-        fputword (reorder_word, sfile[STEXT]);
+        fputword(reorder_word, sfile[STEXT]);
         fputrel(&reorder_rel, rfile[STEXT]);
         reorder_full = 0;
     }
@@ -1256,7 +1258,7 @@ void reorder_flush ()
 /*
  * Default emit function.
  */
-void emitword (w, r, clobber_reg)
+void emitword(w, r, clobber_reg)
     unsigned w;
     struct reloc *r;
     int clobber_reg;
@@ -1269,8 +1271,8 @@ void emitword (w, r, clobber_reg)
         reorder_clobber = clobber_reg & 31;
     } else {
         r->offset = ftell(sfile[segm]);
-        fputword (w, sfile[segm]);
-        fputrel (r, rfile[segm]);
+        fputword(w, sfile[segm]);
+        fputrel(r, rfile[segm]);
     }
     count[segm] += WORDSZ;
 }
@@ -1278,19 +1280,19 @@ void emitword (w, r, clobber_reg)
 /*
  * LI pseudo instruction.
  */
-void emit_li (opcode, relinfo)
+void emit_li(opcode, relinfo)
     unsigned opcode;
     struct reloc *relinfo;
 {
     unsigned value;
     int cval, segment, reg;
 
-    if (getlex (&cval) != ',')
-        uerror ("comma expected");
-    value = getexpr (&segment);
+    if (getlex(&cval) != ',')
+        uerror("comma expected");
+    value = getexpr(&segment);
     reg = opcode >> 16;
     if (segment != SABS)
-        uerror ("absolute value required");
+        uerror("absolute value required");
     if (value <= 0xffff) {
         /* ori d, $zero, value */
         opcode |= 0x34000000 | value;
@@ -1303,28 +1305,28 @@ void emit_li (opcode, relinfo)
     } else {
         /* lui d, value[31:16]
          * ori d, d, value[15:0]) */
-        emitword (opcode | 0x3c000000 | (value >> 16), &relabs, reg);
+        emitword(opcode | 0x3c000000 | (value >> 16), &relabs, reg);
         opcode |= 0x34000000 | (opcode & 0x1f0000) << 5 | (value & 0xffff);
     }
-    emitword (opcode, relinfo, reg);
+    emitword(opcode, relinfo, reg);
 }
 
 /*
  * LA pseudo instruction.
  */
-void emit_la (opcode, relinfo)
+void emit_la(opcode, relinfo)
     unsigned opcode;
     struct reloc *relinfo;
 {
     unsigned value, hi;
     int cval, segment;
 
-    if (getlex (&cval) != ',')
-        uerror ("comma expected");
+    if (getlex(&cval) != ',')
+        uerror("comma expected");
     expr_flags = 0;
-    value = getexpr (&segment);
+    value = getexpr(&segment);
     if (segment == SABS)
-	uerror ("relocatable value required");
+	uerror("relocatable value required");
     relinfo->type = segmrel [segment];
     if (relinfo->type == REXT)
 	relinfo->sym = extref;
@@ -1335,19 +1337,19 @@ void emit_la (opcode, relinfo)
      * addiu d, d, %lo(value) */
     relinfo->type |= RHIGH16S;
     hi = (value + 0x8000) >> 16;
-    emitword (opcode | 0x3c000000 | hi, relinfo, hi);
+    emitword(opcode | 0x3c000000 | hi, relinfo, hi);
 
     relinfo->type &= ~RHIGH16S;
     opcode |= 0x24000000 | (opcode & 0x1f0000) << 5 | (value & 0xffff);
-    emitword (opcode, relinfo, value >> 16);
+    emitword(opcode, relinfo, value >> 16);
 }
 
 /*
  * Build and emit a machine instruction code.
  */
-void makecmd (opcode, type, emitfunc)
+void makecmd(opcode, type, emitfunc)
     unsigned opcode;
-    void (*emitfunc) (unsigned, struct reloc*);
+    void (*emitfunc)(unsigned, struct reloc*);
 {
     unsigned offset, orig_opcode = 0;
     struct reloc relinfo;
@@ -1362,8 +1364,8 @@ void makecmd (opcode, type, emitfunc)
      * Need to detect it early.
      */
     if (type == (FAOFF28 | FDSLOT)) {
-        clex = getlex (&cval);
-        ungetlex (clex, cval);
+        clex = getlex(&cval);
+        ungetlex(clex, cval);
         if (clex == LREG) {
             if (opcode == 0x08000000) { /* j - replace by jr */
                 opcode = 0x00000008;
@@ -1382,27 +1384,27 @@ void makecmd (opcode, type, emitfunc)
     cval = 0;
     clobber_reg = 0;
     if (type & FRD1) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rd register");
+            uerror("bad rd register");
         opcode |= cval << 11;           /* rd, ... */
     }
     if (type & FRT1) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rt register");
+            uerror("bad rt register");
         opcode |= cval << 16;           /* rt, ... */
     }
     if (type & FRS1) {
-frs1:   clex = getlex (&cval);
+frs1:   clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rs register");
+            uerror("bad rs register");
         if (cval == 0 && (opcode == 0x0000001a ||   /* div */
                           opcode == 0x0000001b)) {  /* divu */
             /* Div instruction with three args.
              * Treat it as a 2-arg variant. */
-            if (getlex (&cval) != ',')
-                uerror ("comma expected");
+            if (getlex(&cval) != ',')
+                uerror("comma expected");
             goto frs1;
         }
         opcode |= cval << 21;           /* rs, ... */
@@ -1417,55 +1419,55 @@ frs1:   clex = getlex (&cval);
      * Second register.
      */
     if (type & FRD2) {
-        if (getlex (&cval) != ',')
-            uerror ("comma expected");
-        clex = getlex (&cval);
+        if (getlex(&cval) != ',')
+            uerror("comma expected");
+        clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rd register");
+            uerror("bad rd register");
         opcode |= cval << 11;           /* .., rd, ... */
     }
     if (type & FRT2) {
-        if (getlex (&cval) != ',')
-            uerror ("comma expected");
-        clex = getlex (&cval);
+        if (getlex(&cval) != ',')
+            uerror("comma expected");
+        clex = getlex(&cval);
         if (clex != LREG) {
             if ((type & FRD1) && (type & FSA)) {
                 /* Second register operand omitted.
                  * Need to restore the missing operand. */
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 cval = (opcode >> 11) & 31; /* get 1-st register */
                 opcode |= cval << 16;       /* use 1-st reg as 2-nd */
                 goto fsa;
             }
-            uerror ("bad rt register");
+            uerror("bad rt register");
         }
         opcode |= cval << 16;           /* .., rt, ... */
     }
     if (type & FRS2) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != ',') {
             if ((opcode & 0xfc00003f) != 0x00000009)
-                uerror ("comma expected");
+                uerror("comma expected");
             /* Jalr with one argument.
              * Treat as if the first argument is $31. */
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
             cval = (opcode >> 11) & 31; /* get 1-st register */
             opcode |= cval << 21;       /* use 1-st reg as 2-nd */
             opcode |= 31 << 11;         /* set 1-st reg to 31 */
             clobber_reg = 31;
             goto done3;
         }
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != LREG) {
             if ((type & FRT1) && (type & FOFF16)) {
                 /* Second register operand omitted.
                  * Need to restore the missing operand. */
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 cval = (opcode >> 16) & 31; /* get 1-st register */
                 opcode |= cval << 21;       /* use 1-st reg as 2-nd */
                 goto foff16;
             }
-            uerror ("bad rs register");
+            uerror("bad rs register");
         }
         opcode |= cval << 21;           /* .., rs, ... */
     }
@@ -1474,18 +1476,18 @@ frs1:   clex = getlex (&cval);
      * Third register.
      */
     if (type & FRT3) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != ',') {
             /* Three-operand instruction used with two operands.
              * Need to restore the missing operand. */
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
             cval = (opcode >> 21) & 31;
             opcode &= ~(31 << 21);                  /* clear 2-nd register */
             opcode |= ((opcode >> 11) & 31) << 21;  /* use 1-st reg as 2-nd */
             opcode |= cval << 16;                   /* add 3-rd register */
             goto done3;
         }
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != LREG) {
             if ((type & FRD1) && (type & FRS2)) {
                 /* Three-operand instruction used with literal operand.
@@ -1504,10 +1506,10 @@ frs1:   clex = getlex (&cval);
                                  negate_literal = 1; break;
                 case 0x00000026: newop = 0x38000000; break; // xor -> xori
                 default:
-                    uerror ("bad rt register");
+                    uerror("bad rt register");
                     return;
                 }
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 cval = (opcode >> 11) & 31;         /* get 1-st register */
                 newop |= cval << 16;                /* set 1-st register */
                 newop |= opcode & (31 << 21);       /* set 2-nd register */
@@ -1516,25 +1518,25 @@ frs1:   clex = getlex (&cval);
                 type = FRT1 | FRS2 | FOFF16 | FMOD;
                 goto foff16;
             }
-            uerror ("bad rt register");
+            uerror("bad rt register");
         }
         opcode |= cval << 16;           /* .., .., rt */
     }
     if (type & FRS3) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != ',') {
             /* Three-operand instruction used with two operands.
              * Need to restore the missing operand. */
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
             cval = (opcode >> 16) & 31;
             opcode &= ~(31 << 16);                  /* clear 2-nd register */
             opcode |= ((opcode >> 11) & 31) << 16;  /* use 1-st reg as 2-nd */
             opcode |= cval << 21;                   /* add 3-rd register */
             goto done3;
         }
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rs register");
+            uerror("bad rs register");
         opcode |= cval << 21;           /* .., .., rs */
     }
 done3:
@@ -1544,21 +1546,21 @@ done3:
      */
     if (type & FSEL) {
         /* optional COP0 register select */
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex == ',') {
-            offset = getexpr (&segment);
+            offset = getexpr(&segment);
             if (segment != SABS)
-                uerror ("absolute value required");
+                uerror("absolute value required");
             opcode |= offset & 7;
         } else
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
 
     } else if (type & (FCODE | FCODE16 | FSA)) {
         /* Non-relocatable offset */
         if (type & FSA) {
-            if (getlex (&cval) != ',')
-                uerror ("comma expected");
-            clex = getlex (&cval);
+            if (getlex(&cval) != ',')
+                uerror("comma expected");
+            clex = getlex(&cval);
             if (clex == LREG && type == (FRD1 | FRT2 | FSA | FMOD)) {
                 /* Literal-operand shift instruction used with register operand.
                  * Convert it to 3-register type. */
@@ -1569,7 +1571,7 @@ done3:
                 case 0x00000003: newop = 0x00000007; break; // sra -> srav
                 case 0x00000002: newop = 0x00000006; break; // srl -> srlv
                 default:
-                    uerror ("bad shift amount");
+                    uerror("bad shift amount");
                     return;
                 }
                 newop |= opcode & (0x3ff << 11);    /* set 1-st and 2-nd regs */
@@ -1578,19 +1580,19 @@ done3:
                 type = FRD1 | FRT2 | FRS3 | FMOD;
                 goto done3;
             }
-            ungetlex (clex, cval);
+            ungetlex(clex, cval);
         }
         if ((type & FCODE) && (type & FRT2)) {
             /* Optional code for trap instruction. */
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 goto done;
             }
         }
-fsa:    offset = getexpr (&segment);
+fsa:    offset = getexpr(&segment);
         if (segment != SABS)
-            uerror ("absolute value required");
+            uerror("absolute value required");
         switch (type & (FCODE | FCODE16 | FSA)) {
         case FCODE:                     /* immediate shifted <<6 */
             opcode |= offset << 6;
@@ -1606,10 +1608,10 @@ fsa:    offset = getexpr (&segment);
         /* Relocatable offset */
         int valid_range;
 
-        if ((type & (FOFF16 | FOFF18 | FHIGH16)) && getlex (&cval) != ',')
-            uerror ("comma expected");
+        if ((type & (FOFF16 | FOFF18 | FHIGH16)) && getlex(&cval) != ',')
+            uerror("comma expected");
 foff16: expr_flags = 0;
-        offset = getexpr (&segment);
+        offset = getexpr(&segment);
         relinfo.type = segmrel [segment];
         if (relinfo.type == REXT)
             relinfo.sym = extref;
@@ -1623,7 +1625,7 @@ foff16: expr_flags = 0;
                 // Negate literal arg for sub and subu
                 offset = -offset;
                 if (relinfo.type != RABS)
-                    uerror ("cannot negate relocatable literal");
+                    uerror("cannot negate relocatable literal");
             }
             switch (opcode & 0xfc000000) {
             default:                    /* addi, addiu, slti, sltiu, lw, sw */
@@ -1640,29 +1642,29 @@ foff16: expr_flags = 0;
             if (valid_range) {
                 opcode |= offset & 0xffff;
             } else if (orig_opcode == 0 || ! mode_at) {
-                uerror ("value out of range");
+                uerror("value out of range");
             } else {
                 /* Convert back to 3-reg opcode.
                  * Insert an extra LI instruction. */
                 if (segment != SABS)
-                    uerror ("absolute value required");
+                    uerror("absolute value required");
                 if (negate_literal)
                     offset = -offset;
 
                 if (offset <= 0xffff) {
                     /* ori $1, $zero, value */
-                    emitword (0x34010000 | offset, &relabs, 1);
+                    emitword(0x34010000 | offset, &relabs, 1);
                 } else if (offset >= -0x8000) {
                     /* addiu $1, $zero, value */
-                    emitword (0x24010000 | (offset & 0xffff), &relabs, 1);
+                    emitword(0x24010000 | (offset & 0xffff), &relabs, 1);
                 } else if ((offset & 0xffff) == 0) {
                     /* lui $1, value[31:16] */
-                    emitword (0x3c010000 | (offset >> 16), &relabs, 1);
+                    emitword(0x3c010000 | (offset >> 16), &relabs, 1);
                 } else {
                     /* lui $1, value[31:16]
                      * ori $1, $1, value[15:0]) */
-                    emitword (0x3c010000 | (offset >> 16), &relabs, 1);
-                    emitword (0x34210000 | (offset & 0xffff), &relabs, 1);
+                    emitword(0x3c010000 | (offset >> 16), &relabs, 1);
+                    emitword(0x34210000 | (offset & 0xffff), &relabs, 1);
                 }
                 opcode = orig_opcode | 0x10000;
             }
@@ -1685,7 +1687,7 @@ foff16: expr_flags = 0;
             } else if (segment == SEXT) {
                 relinfo.type |= RWORD16;
             } else
-                uerror ("invalid segment %d", segment);
+                uerror("invalid segment %d", segment);
             opcode |= (offset >> 2) & 0xffff;
             break;
         case FAOFF28:                   /* 28-bit word address */
@@ -1699,29 +1701,29 @@ foff16: expr_flags = 0;
      * Last argument.
      */
     if (type & FRSB) {
-        if (getlex (&cval) != '(')
-            uerror ("left par expected");
-        clex = getlex (&cval);
+        if (getlex(&cval) != '(')
+            uerror("left par expected");
+        clex = getlex(&cval);
         if (clex != LREG)
-            uerror ("bad rs register");
-        if (getlex (&cval) != ')')
-            uerror ("right par expected");
+            uerror("bad rs register");
+        if (getlex(&cval) != ')')
+            uerror("right par expected");
         opcode |= cval << 21;           /* ... (rs) */
     }
     if (type & FSIZE) {
-        if (getlex (&cval) != ',')
-            uerror ("comma expected");
-        offset = getexpr (&segment);
+        if (getlex(&cval) != ',')
+            uerror("comma expected");
+        offset = getexpr(&segment);
         if (segment != SABS)
-            uerror ("absolute value required");
+            uerror("absolute value required");
         opcode |= ((offset - 1) & 0x1f) << 11; /* bit field size */
     }
     if (type & FMSB) {
-        if (getlex (&cval) != ',')
-            uerror ("comma expected");
-        offset += getexpr (&segment);
+        if (getlex(&cval) != ',')
+            uerror("comma expected");
+        offset += getexpr(&segment);
         if (segment != SABS)
-            uerror ("absolute value required");
+            uerror("absolute value required");
         if (offset > 32)
             offset = 32;
         opcode |= ((offset - 1) & 0x1f) << 11; /* msb */
@@ -1730,7 +1732,7 @@ done:
 
     /* Output resulting values. */
     if (emitfunc) {
-        emitfunc (opcode, &relinfo);
+        emitfunc(opcode, &relinfo);
     } else if (mode_reorder && (type & FDSLOT) && segm == STEXT) {
         /* Need a delay slot. */
         if (reorder_full && reorder_clobber != 0) {
@@ -1751,19 +1753,19 @@ done:
             opcode |= (offset & 0xffff);
         }
         relinfo.offset = ftell(sfile[segm]);
-        fputword (opcode, sfile[segm]);
-        fputrel (&relinfo, rfile[segm]);
+        fputword(opcode, sfile[segm]);
+        fputrel(&relinfo, rfile[segm]);
         if (reorder_full) {
             /* Delay slot: insert a previous instruction. */
             reorder_flush();
         } else {
             /* Insert NOP in delay slot. */
-            fputword (0, sfile[segm]);
+            fputword(0, sfile[segm]);
             count[segm] += WORDSZ;
         }
         count[segm] += WORDSZ;
     } else {
-        emitword (opcode, &relinfo, clobber_reg);
+        emitword(opcode, &relinfo, clobber_reg);
     }
 }
 
@@ -1773,7 +1775,7 @@ done:
  * Part of data have already been sent to rfile;
  * length specified by 'done' argument.
  */
-void add_space (nbytes, fill_data)
+void add_space(nbytes, fill_data)
     unsigned nbytes, fill_data;
 {
     unsigned c;
@@ -1783,48 +1785,48 @@ void add_space (nbytes, fill_data)
         for (c=0; c<nbytes; c++) {
             count[segm]++;
             if (fill_data)
-                fputc (0, sfile[segm]);
+                fputc(0, sfile[segm]);
         }
     } else
         count[segm] += nbytes;
 }
 
-void makeascii ()
+void makeascii()
 {
     int c, nbytes;
     int cval;
 
-    c = getlex (&cval);
+    c = getlex(&cval);
     if (c != '"')
-        uerror ("no .ascii parameter");
+        uerror("no .ascii parameter");
     nbytes = 0;
     for (;;) {
-        c = getchar ();
+        c = getchar();
         switch (c) {
         case EOF:
-            uerror ("EOF in text string");
+            uerror("EOF in text string");
         case '"':
             break;
         case '\\':
-            c = getchar ();
+            c = getchar();
             switch (c) {
             case EOF:
-                uerror ("EOF in text string");
+                uerror("EOF in text string");
             case '\n':
                 continue;
             case '0': case '1': case '2': case '3':
             case '4': case '5': case '6': case '7':
                 cval = c & 07;
-                c = getchar ();
+                c = getchar();
                 if (c>='0' && c<='7') {
                     cval = (cval << 3) | (c & 7);
-                    c = getchar ();
+                    c = getchar();
                     if (c>='0' && c<='7') {
                         cval = (cval << 3) | (c & 7);
                     } else
-                        ungetc (c, stdin);
+                        ungetc(c, stdin);
                 } else
-                    ungetc (c, stdin);
+                    ungetc(c, stdin);
                 c = cval;
                 break;
             case 't':
@@ -1844,49 +1846,50 @@ void makeascii ()
                 break;
             }
         default:
-            fputc (c, sfile[segm]);
+            fputc(c, sfile[segm]);
             nbytes++;
             continue;
         }
         break;
     }
-    add_space (nbytes, 0);
+    add_space(nbytes, 0);
 }
 
 /*
  * Skip a string from the input file.
  */
-void skipstring ()
+void skipstring()
 {
     int c, cval;
 
-    c = getlex (&cval);
+    c = getlex(&cval);
     if (c != '"')
-        uerror ("no string parameter");
+        uerror("no string parameter");
     for (;;) {
-        c = getchar ();
+        c = getchar();
         switch (c) {
         case EOF:
-            uerror ("EOF in text string");
+            uerror("EOF in text string");
         case '"':
             break;
         case '\\':
-            c = getchar ();
+            c = getchar();
             switch (c) {
             case EOF:
-                uerror ("EOF in text string");
+                uerror("EOF in text string");
             case '\n':
                 continue;
             case '0': case '1': case '2': case '3':
             case '4': case '5': case '6': case '7':
-                c = getchar ();
+                c = getchar();
                 if (c>='0' && c<='7') {
-                    c = getchar ();
+                    c = getchar();
                     if (c>='0' && c<='7') {
+                        /* Skip. */
                     } else
-                        ungetc (c, stdin);
+                        ungetc(c, stdin);
                 } else
-                    ungetc (c, stdin);
+                    ungetc(c, stdin);
                 break;
             }
         default:
@@ -1899,7 +1902,7 @@ void skipstring ()
 /*
  * Set assembler option.
  */
-void setoption ()
+void setoption()
 {
     const char *option = name;
     int enable = 1;
@@ -1908,40 +1911,40 @@ void setoption ()
         enable = 0;
         option += 2;
     }
-    if (! strcmp ("reorder", option)) {
+    if (! strcmp("reorder", option)) {
         /* reorder mode */
         mode_reorder = enable;
         if (! mode_reorder)
             reorder_flush();
         return;
     }
-    if (! strcmp ("macro", option)) {
+    if (! strcmp("macro", option)) {
         /* macro mode */
         mode_macro = enable;
         return;
     }
-    if (! strcmp ("mips16", option)) {
+    if (! strcmp("mips16", option)) {
         /* mips16 mode */
         mode_mips16 = enable;
         return;
     }
-    if (! strcmp ("micromips", option)) {
+    if (! strcmp("micromips", option)) {
         /* micromips mode */
         mode_micromips = enable;
         return;
     }
-    if (! strcmp ("at", option)) {
+    if (! strcmp("at", option)) {
         /* at mode */
         mode_at = enable;
         return;
     }
-    uerror ("unknown option %s", option);
+    uerror("unknown option %s", option);
 }
 
 /*
  * Align the current segment.
  */
-void align (align_bits)
+void align(align_bits)
 {
     unsigned nbytes, align_mask, c;
 
@@ -1954,13 +1957,13 @@ void align (align_bits)
         /* Emit data and relocation. */
         for (c=0; c<nbytes; c++) {
             count[segm]++;
-            fputc (0, sfile[segm]);
+            fputc(0, sfile[segm]);
         }
     } else
         count[segm] += nbytes;
 }
 
-void pass1 ()
+void pass1()
 {
     int clex;
     int cval, tval, csegm, nbytes;
@@ -1968,43 +1971,43 @@ void pass1 ()
 
     segm = STEXT;
     for (;;) {
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         switch (clex) {
         case LEOF:
 done:       reorder_flush();
             segm = STEXT;
-            align (2);
+            align(2);
             segm = SDATA;
-            align (2);
+            align(2);
             segm = SSTRNG;
-            align (2);
+            align(2);
             segm = SBSS;
-            align (2);
+            align(2);
             return;
         case LEOL:
             continue;
         case ':':
             continue;
         case '.':
-            if (getlex (&cval) != '=')
-                uerror ("bad instruction");
-            addr = getexpr (&csegm);
+            if (getlex(&cval) != '=')
+                uerror("bad instruction");
+            addr = getexpr(&csegm);
             if (csegm != segm)
-                uerror ("bad count assignment");
+                uerror("bad count assignment");
             if (addr < count[segm])
-                uerror ("negative count increment");
+                uerror("negative count increment");
             reorder_flush();
             if (segm == SBSS)
                 count [segm] = addr;
             else {
                 while (count[segm] < addr) {
-                    emitword (0, &relabs, 0);
+                    emitword(0, &relabs, 0);
                 }
             }
             break;
         case LNAME:
             cval = lookcmd();
-            clex = getlex (&tval);
+            clex = getlex(&tval);
             if (clex == ':') {
                 /* Label. */
                 reorder_flush();
@@ -2016,32 +2019,32 @@ done:       reorder_flush();
             } else if (clex=='=') {
                 /* Symbol definition. */
                 cval = lookname();
-                stab[cval].n_value = getexpr (&csegm);
+                stab[cval].n_value = getexpr(&csegm);
                 if (csegm == SEXT)
-                    uerror ("indirect equivalence");
+                    uerror("indirect equivalence");
                 stab[cval].n_type &= N_EXT;
                 stab[cval].n_type |= segmtype [csegm];
                 break;
             }
             /* Machine instruction. */
             if (cval < 0)
-                uerror ("bad instruction");
-            ungetlex (clex, tval);
-            align (2);
-            makecmd (optable[cval].opcode, optable[cval].type,
+                uerror("bad instruction");
+            ungetlex(clex, tval);
+            align(2);
+            makecmd(optable[cval].opcode, optable[cval].type,
                 optable[cval].func);
             break;
         case LNUM:
             /* Local label. */
             if (nlabels >= MAXRLAB)
-                uerror ("too many digital labels");
+                uerror("too many digital labels");
             reorder_flush();
             labeltab[nlabels].num = intval;
             labeltab[nlabels].value = count[segm];
             ++nlabels;
-            clex = getlex (&tval);
+            clex = getlex(&tval);
             if (clex != ':')
-                uerror ("bad digital label");
+                uerror("bad digital label");
             continue;
         case LTEXT:
             segm = STEXT;
@@ -2059,20 +2062,20 @@ done:       reorder_flush();
             break;
         case LWORD:
             reorder_flush();
-            align (2);
+            align(2);
             for (;;) {
                 struct reloc relinfo;
                 expr_flags = 0;
-                getexpr (&cval);
+                getexpr(&cval);
                 relinfo.type = RBYTE32 | segmrel [cval];
                 if (cval == SEXT)
                     relinfo.sym = extref;
                 if (expr_flags & EXPR_GPREL)
                     relinfo.type |= RGPREL;
-                emitword (intval, &relinfo, 0);
-                clex = getlex (&cval);
+                emitword(intval, &relinfo, 0);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
@@ -2081,64 +2084,64 @@ done:       reorder_flush();
             reorder_flush();
 	    nbytes = 0;
             for (;;) {
-                getexpr (&cval);
-		fputc (intval, sfile[segm]);
+                getexpr(&cval);
+		fputc(intval, sfile[segm]);
 		nbytes++;
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
-            add_space (nbytes, 0);
+            add_space(nbytes, 0);
             break;
         case LHALF:
             reorder_flush();
-            align (1);
+            align(1);
 	    nbytes = 0;
             for (;;) {
-                getexpr (&cval);
-		fputc (intval, sfile[segm]);
-		fputc (intval >> 8, sfile[segm]);
+                getexpr(&cval);
+		fputc(intval, sfile[segm]);
+		fputc(intval >> 8, sfile[segm]);
 		nbytes += 2;
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
-            add_space (nbytes, 0);
+            add_space(nbytes, 0);
             break;
         case LSPACE:
             /* .space num */
-            getexpr (&cval);
+            getexpr(&cval);
             reorder_flush();
-            add_space (intval, 1);
+            add_space(intval, 1);
             break;
         case LALIGN:
             /* .align num */
-            if (getlex (&cval) != LNUM)
-                uerror ("bad parameter of .align");
+            if (getlex(&cval) != LNUM)
+                uerror("bad parameter of .align");
             reorder_flush();
-            align (intval);
+            align(intval);
             break;
         case LASCII:
             reorder_flush();
-            makeascii ();
+            makeascii();
             break;
         case LGLOBL:
             /* .globl name, ... */
             for (;;) {
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != LNAME)
-                    uerror ("bad parameter of .globl");
+                    uerror("bad parameter of .globl");
                 cval = lookname();
                 if (stab[cval].n_type & N_LOC)
-                    uerror ("local name redefined as global");
+                    uerror("local name redefined as global");
                 stab[cval].n_type |= N_EXT;
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
@@ -2146,16 +2149,16 @@ done:       reorder_flush();
         case LLOCAL:
             /* .local name, ... */
             for (;;) {
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != LNAME)
-                    uerror ("bad parameter of .local");
+                    uerror("bad parameter of .local");
                 cval = lookname();
                 if (stab[cval].n_type & N_EXT)
-                    uerror ("global name redefined as local");
+                    uerror("global name redefined as local");
                 stab[cval].n_type |= N_LOC;
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
@@ -2163,72 +2166,72 @@ done:       reorder_flush();
         case LWEAK:
             /* .weak name */
             for (;;) {
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != LNAME)
-                    uerror ("bad parameter of .weak");
+                    uerror("bad parameter of .weak");
                 cval = lookname();
                 stab[cval].n_type |= N_WEAK;
-                clex = getlex (&cval);
+                clex = getlex(&cval);
                 if (clex != ',') {
-                    ungetlex (clex, cval);
+                    ungetlex(clex, cval);
                     break;
                 }
             }
             break;
         case LEQU:
             /* .equ name,value */
-            if (getlex (&cval) != LNAME)
-                uerror ("bad parameter of .equ");
+            if (getlex(&cval) != LNAME)
+                uerror("bad parameter of .equ");
             cval = lookname();
             if (stab[cval].n_type != N_UNDF &&
                 stab[cval].n_type != N_LOC &&
                 (stab[cval].n_type & N_TYPE) != N_COMM)
-                uerror ("name already defined");
-            clex = getlex (&tval);
+                uerror("name already defined");
+            clex = getlex(&tval);
             if (clex != ',')
-                uerror ("bad value of .equ");
-            stab[cval].n_value = getexpr (&csegm);
+                uerror("bad value of .equ");
+            stab[cval].n_value = getexpr(&csegm);
             if (csegm == SEXT)
-                uerror ("indirect equivalence");
+                uerror("indirect equivalence");
             stab[cval].n_type &= N_EXT;
             stab[cval].n_type |= segmtype [csegm];
             break;
         case LCOMM:
             /* .comm name,len[,alignment] */
-            if (getlex (&cval) != LNAME)
-                uerror ("bad parameter of .comm");
+            if (getlex(&cval) != LNAME)
+                uerror("bad parameter of .comm");
             cval = lookname();
             if (stab[cval].n_type != N_UNDF &&
                 stab[cval].n_type != N_LOC &&
                 (stab[cval].n_type & N_TYPE) != N_COMM)
-                uerror ("name already defined");
+                uerror("name already defined");
             if (stab[cval].n_type & N_LOC)
                 stab[cval].n_type = N_COMM;
             else
                 stab[cval].n_type = N_EXT | N_COMM;
-            clex = getlex (&tval);
+            clex = getlex(&tval);
             if (clex == ',') {
-                getexpr (&tval);
+                getexpr(&tval);
                 if (tval != SABS)
-                    uerror ("bad length of .comm");
+                    uerror("bad length of .comm");
             } else {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 intval = 1;
             }
             stab[cval].n_value = intval;
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            getexpr (&tval);
+            getexpr(&tval);
             if (tval != SABS)
-                uerror ("bad .comm alignment");
+                uerror("bad .comm alignment");
             break;
         case LFILE:
             /* .file line filename */
-            if (getlex (&cval) != LNUM)
-                uerror ("bad parameter of .file");
+            if (getlex(&cval) != LNUM)
+                uerror("bad parameter of .file");
             skipstring();
             break;
         case LIDENT:
@@ -2237,139 +2240,139 @@ done:       reorder_flush();
             break;
         case LSECTION:
             /* .section name[,"flags"[,type[,entsize]]] */
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != LNAME && clex != LBSS && clex != LTEXT && clex != LDATA)
-                uerror ("bad name of .section");
+                uerror("bad name of .section");
             setsection();
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex == '"') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 skipstring();
             } else if (clex != LNAME)
-                uerror ("bad type of .section");
-            clex = getlex (&cval);
+                uerror("bad type of .section");
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            if (getlex (&cval) != LSECTYPE)
-                uerror ("bad type of .section");
-            clex = getlex (&cval);
+            if (getlex(&cval) != LSECTYPE)
+                uerror("bad type of .section");
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            if (getlex (&cval) != LNUM)
-                uerror ("bad entry size of .section");
+            if (getlex(&cval) != LNUM)
+                uerror("bad entry size of .section");
             break;
         case LPREVIOUS:
             /* .previous - ignore */
             break;
         case LGNUATTR:
             /* .gnu_attribute num[,num] */
-            if (getlex (&cval) != LNUM)
-                uerror ("bad parameter of .gnu_attribute");
-            clex = getlex (&cval);
-            if (clex != ',' || getlex (&cval) != LNUM)
-                uerror ("bad parameter of .gnu_attribute");
+            if (getlex(&cval) != LNUM)
+                uerror("bad parameter of .gnu_attribute");
+            clex = getlex(&cval);
+            if (clex != ',' || getlex(&cval) != LNUM)
+                uerror("bad parameter of .gnu_attribute");
             break;
         case LSET:
             /* .set option */
-            if (getlex (&cval) != LNAME)
-                uerror ("bad parameter of .set");
+            if (getlex(&cval) != LNAME)
+                uerror("bad parameter of .set");
             setoption();
             break;
         case LENT:
             /* .ent name */
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != LNAME)
-                uerror ("bad parameter of .ent");
+                uerror("bad parameter of .ent");
             cval = lookname();
             break;
         case LEND:
             /* .end name */
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != LNAME)
-                uerror ("bad parameter of .end");
+                uerror("bad parameter of .end");
             cval = lookname();
             break;
         case LNAN:
             /* .nan name */
-            clex = getlex (&cval);
+            clex = getlex(&cval);
             if (clex != LNAME)
-                uerror ("bad parameter of .nan");
+                uerror("bad parameter of .nan");
             break;
         case LTYPE:
             /* .type name,type */
-            if (getlex (&cval) != LNAME)
-                uerror ("bad name of .type");
-            clex = getlex (&cval);
+            if (getlex(&cval) != LNAME)
+                uerror("bad name of .type");
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            if (getlex (&cval) != LSYMTYPE)
-                uerror ("bad type of .type");
+            if (getlex(&cval) != LSYMTYPE)
+                uerror("bad type of .type");
             break;
         case LFRAME:
             /* .frame reg,num,reg */
-            if (getlex (&cval) != LREG)
-                uerror ("bad register of .frame");
-            clex = getlex (&cval);
-            if (clex != ',' || getlex (&cval) != LNUM)
-                uerror ("bad parameter of .frame");
-            clex = getlex (&cval);
-            if (clex != ',' || getlex (&cval) != LREG)
-                uerror ("bad register of .frame");
+            if (getlex(&cval) != LREG)
+                uerror("bad register of .frame");
+            clex = getlex(&cval);
+            if (clex != ',' || getlex(&cval) != LNUM)
+                uerror("bad parameter of .frame");
+            clex = getlex(&cval);
+            if (clex != ',' || getlex(&cval) != LREG)
+                uerror("bad register of .frame");
             break;
         case LMASK:
             /* .mask mask,expr */
-            if (getlex (&cval) != LNUM)
-                uerror ("bad mask of .mask");
-            clex = getlex (&cval);
+            if (getlex(&cval) != LNUM)
+                uerror("bad mask of .mask");
+            clex = getlex(&cval);
             if (clex != ',')
-                uerror ("bad parameter of .mask");
-            getexpr (&cval);
+                uerror("bad parameter of .mask");
+            getexpr(&cval);
             if (cval != SABS)
-                uerror ("bad expression of .mask");
+                uerror("bad expression of .mask");
             break;
         case LFMASK:
             /* .fmask mask,expr */
-            if (getlex (&cval) != LNUM)
-                uerror ("bad mask of .fmask");
-            clex = getlex (&cval);
+            if (getlex(&cval) != LNUM)
+                uerror("bad mask of .fmask");
+            clex = getlex(&cval);
             if (clex != ',')
-                uerror ("bad parameter of .fmask");
-            getexpr (&cval);
+                uerror("bad parameter of .fmask");
+            getexpr(&cval);
             if (cval != SABS)
-                uerror ("bad expression of .fmask");
+                uerror("bad expression of .fmask");
             break;
         case LSIZE:
             /* .size name,expr */
-            if (getlex (&cval) != LNAME)
-                uerror ("bad name of .size");
-            clex = getlex (&cval);
+            if (getlex(&cval) != LNAME)
+                uerror("bad name of .size");
+            clex = getlex(&cval);
             if (clex != ',') {
-                ungetlex (clex, cval);
+                ungetlex(clex, cval);
                 break;
             }
-            nbytes = getexpr (&csegm);
+            nbytes = getexpr(&csegm);
             if (csegm != SABS)
-                uerror ("bad value of .size");
+                uerror("bad value of .size");
             break;
         default:
-            uerror ("bad syntax");
+            uerror("bad syntax");
         }
-        clex = getlex (&cval);
+        clex = getlex(&cval);
         if (clex == LEOF)
             goto done;
         if (clex != LEOL)
-            uerror ("bad instruction arguments");
+            uerror("bad instruction arguments");
     }
 }
 
@@ -2378,7 +2381,7 @@ done:       reorder_flush();
  * by the reference address and the label number.
  * Backward references have negative label numbers.
  */
-int findlabel (int addr, int sym)
+int findlabel(int addr, int sym)
 {
     struct labeltab *p;
 
@@ -2389,7 +2392,7 @@ int findlabel (int addr, int sym)
                 return p->value;
             }
         }
-        uerror ("undefined label %db at address %d", -sym, addr);
+        uerror("undefined label %db at address %d", -sym, addr);
     } else {
         /* Forward reference. */
         for (p=labeltab; p<labeltab+nlabels; ++p) {
@@ -2397,12 +2400,12 @@ int findlabel (int addr, int sym)
                 return p->value;
             }
         }
-        uerror ("undefined label %df at address %d", sym, addr);
+        uerror("undefined label %df at address %d", sym, addr);
     }
     return 0;
 }
 
-void middle ()
+void middle()
 {
     int i, snum, nbytes;
 
@@ -2412,7 +2415,7 @@ void middle ()
         case N_UNDF:
             /* Without -u option, undefined symbol is considered external */
             if (uflag)
-                uerror ("name undefined", stab[i].n_name);
+                uerror("name undefined", stab[i].n_name);
             stab[i].n_type |= N_EXT;
             break;
         case N_COMM:
@@ -2444,23 +2447,23 @@ void middle ()
  * Write the a.out header to the file.
  * Little-endian.
  */
-void makeheader (rtsize, rdsize)
+void makeheader(rtsize, rdsize)
 {
     /* Align BSS size. */
     count[SBSS] = (count[SBSS] + WORDSZ-1) & ~(WORDSZ-1);
 
-    fseek (stdout, 0, 0);
-    fputword (0x406, stdout);
-    fputword (count [STEXT], stdout);
-    fputword (count [SDATA] + count [SSTRNG], stdout);
-    fputword (count [SBSS], stdout);
-    fputword (rtsize, stdout);
-    fputword (rdsize, stdout);
-    fputword (stlength, stdout);
-    fputword (0, stdout);
+    fseek(stdout, 0, 0);
+    fputword(0x406, stdout);
+    fputword(count [STEXT], stdout);
+    fputword(count [SDATA] + count [SSTRNG], stdout);
+    fputword(count [SBSS], stdout);
+    fputword(rtsize, stdout);
+    fputword(rdsize, stdout);
+    fputword(stlength, stdout);
+    fputword(0, stdout);
 }
 
-unsigned relocate (opcode, offset, relinfo)
+unsigned relocate(opcode, offset, relinfo)
     unsigned opcode, offset;
     struct reloc *relinfo;
 {
@@ -2488,7 +2491,7 @@ unsigned relocate (opcode, offset, relinfo)
         opcode |= ((offset + 0x8000) >> 16) & 0xffff;
         break;
     case RWORD16:                       /* 16 bits of relative word address */
-        uerror ("bad relative relocation: opcode %08x, relinfo %02x",
+        uerror("bad relative relocation: opcode %08x, relinfo %02x",
             opcode, relinfo->type);
         break;
     case RWORD26:                       /* 26 bits of word address */
@@ -2497,10 +2500,10 @@ unsigned relocate (opcode, offset, relinfo)
         opcode |= (offset >> 2) & 0x3ffffff;
         break;
     }
-    return (opcode);
+    return opcode;
 }
 
-unsigned makeword (opcode, relinfo, offset)
+unsigned makeword(opcode, relinfo, offset)
     unsigned opcode, offset;
     struct reloc *relinfo;
 {
@@ -2511,23 +2514,23 @@ unsigned makeword (opcode, relinfo, offset)
     case RABS:
         break;
     case RTEXT:
-        opcode = relocate (opcode, tbase, relinfo);
+        opcode = relocate(opcode, tbase, relinfo);
         break;
     case RDATA:
-        opcode = relocate (opcode, dbase, relinfo);
+        opcode = relocate(opcode, dbase, relinfo);
         break;
     case RSTRNG:
-        opcode = relocate (opcode, adbase, relinfo);
+        opcode = relocate(opcode, adbase, relinfo);
         break;
     case RBSS:
-        opcode = relocate (opcode, bbase, relinfo);
+        opcode = relocate(opcode, bbase, relinfo);
         break;
     case REXT:
         if (relinfo->sym >= RLAB_OFFSET - RLAB_MAXVAL) {
             /* Relative label.
              * Change relocation to segment type. */
             sym = 0;
-            value = findlabel (offset, relinfo->sym - RLAB_OFFSET);
+            value = findlabel(offset, relinfo->sym - RLAB_OFFSET);
             relinfo->type &= RGPREL | RFMASK;
             relinfo->type |= segmrel[segm];
         } else {
@@ -2543,7 +2546,7 @@ unsigned makeword (opcode, relinfo, offset)
             /* Relative word address.
              * Change relocation to absolute. */
             if (sym && (sym->n_type & N_TYPE) != segmtype[segm])
-                uerror ("%s: bad segment for relative relocation, offset %u",
+                uerror("%s: bad segment for relative relocation, offset %u",
                     sym->n_name, offset);
             offset = value - offset - 4;
             if (segm == SDATA)
@@ -2564,13 +2567,13 @@ unsigned makeword (opcode, relinfo, offset)
             //value += (signed short) relinfo->lowbits;
             break;
         }
-        opcode = relocate (opcode, value, relinfo);
+        opcode = relocate(opcode, value, relinfo);
         break;
     }
     return opcode;
 }
 
-void pass2 ()
+void pass2()
 {
     int i;
     unsigned h;
@@ -2601,25 +2604,25 @@ void pass2 ()
             break;
         }
     }
-    fseek (stdout, 4*8, 0); //TODO: offset past headers
+    fseek(stdout, 4*8, 0); //TODO: offset past headers
     for (segm=STEXT; segm<SBSS; segm++) {
         /* Need to rewrite a relocation file. */
-        FILE *rfd = fopen (tfilename, "w+");
+        FILE *rfd = fopen(tfilename, "w+");
         if (! rfd)
-            uerror ("cannot open %s", tfilename);
-        unlink (tfilename);
+            uerror("cannot open %s", tfilename);
+        unlink(tfilename);
 
-        rewind (sfile [segm]);
-        rewind (rfile [segm]);
+        rewind(sfile [segm]);
+        rewind(rfile [segm]);
         for (h=0; h<count[segm]; h+=WORDSZ) {
             struct reloc relinfo;
-            unsigned word = fgetword (sfile[segm]);
-            fgetrel (rfile[segm], &relinfo);
-            word = makeword (word, &relinfo, h);
-            fputword (word, stdout);
+            unsigned word = fgetword(sfile[segm]);
+            fgetrel(rfile[segm], &relinfo);
+            word = makeword(word, &relinfo, h);
+            fputword(word, stdout);
             fputrel(&relinfo, rfd);
         }
-        fclose (rfile [segm]);
+        fclose(rfile [segm]);
         rfile [segm] = rfd;
     }
 }
@@ -2627,17 +2630,17 @@ void pass2 ()
 /*
  * Convert symbol type to relocation type.
  */
-int typerel (t)
+int typerel(t)
 {
     switch (t & N_TYPE) {
-    case N_ABS:     return (RABS);
-    case N_TEXT:    return (RTEXT);
-    case N_DATA:    return (RDATA);
-    case N_BSS:     return (RBSS);
-    case N_STRNG:   return (RDATA);
+    case N_ABS:     return RABS;
+    case N_TEXT:    return RTEXT;
+    case N_DATA:    return RDATA;
+    case N_BSS:     return RBSS;
+    case N_STRNG:   return RDATA;
     case N_UNDF:
     case N_COMM:
-    default:        return (0);
+    default:        return 0;
     }
 }
 
@@ -2646,7 +2649,7 @@ int typerel (t)
  * Remap symbol indexes.
  * Put string pseudo-section to data section.
  */
-void relrel (relinfo)
+void relrel(relinfo)
     struct reloc *relinfo;
 {
     unsigned type;
@@ -2665,7 +2668,7 @@ void relrel (relinfo)
                 relinfo->sym = newindex [relinfo->sym];
         } else {
             relinfo->type &= ~RSMASK;
-            relinfo->type |= typerel (type);   // TODO: delete
+            relinfo->type |= typerel(type); // TODO: delete
         }
         break;
     }
@@ -2676,7 +2679,7 @@ void relrel (relinfo)
  * Copy it from scratch file to output.
  * Return a size of relocation data in bytes.
  */
-unsigned makereloc (s)
+unsigned makereloc(s)
     int s;
 {
     unsigned i, nbytes;
@@ -2684,11 +2687,11 @@ unsigned makereloc (s)
 
     if (count [s] <= 0)
         return 0;
-    rewind (rfile [s]);
+    rewind(rfile [s]);
     nbytes = 0;
     for (i=0; i<count[s]; i+=WORDSZ) {
-        fgetrel (rfile[s], &relinfo);
-        relrel (&relinfo);
+        fgetrel(rfile[s], &relinfo);
+        relrel(&relinfo);
         nbytes += fputrel(&relinfo, stdout);
     }
     return nbytes;
@@ -2697,11 +2700,11 @@ unsigned makereloc (s)
 /*
  * Align the relocation section to an integral number of words.
  */
-unsigned alignreloc (nbytes)
+unsigned alignreloc(nbytes)
     unsigned nbytes;
 {
     while (nbytes % WORDSZ) {
-        putchar (0);
+        putchar(0);
         nbytes++;
     }
     return nbytes;
@@ -2710,20 +2713,20 @@ unsigned alignreloc (nbytes)
 /*
  * Emit the nlist record for the symbol.
  */
-void fputsym (s, file)
+void fputsym(s, file)
     struct nlist *s;
     FILE *file;
 {
     int i;
 
-    putc (s->n_len, file);
-    putc (s->n_type & ~N_LOC, file);    // TODO: encode n_type for ELF
-    fputword (s->n_value, file);
+    putc(s->n_len, file);
+    putc(s->n_type & ~N_LOC, file);    // TODO: encode n_type for ELF
+    fputword(s->n_value, file);
     for (i=0; i<s->n_len; i++)
-        putc (s->n_name[i], file);
+        putc(s->n_name[i], file);
 }
 
-void makesymtab ()
+void makesymtab()
 {
     int i;
 
@@ -2731,26 +2734,26 @@ void makesymtab ()
         if (! xflags || (stab[i].n_type & N_EXT) ||
             (Xflag && stab[i].n_name[0] != 'L'))
         {
-            fputsym (&stab[i], stdout);
+            fputsym(&stab[i], stdout);
         }
     }
     while (stalign--)
-        putchar (0);
+        putchar(0);
 }
 
-void usage ()
+void usage()
 {
-    fprintf (stderr, "Usage:\n");
-    fprintf (stderr, "  as [-uxX] [-o outfile] [infile]\n");
-    fprintf (stderr, "Options:\n");
-    fprintf (stderr, "  -o filename     Set output file name, default stdout\n");
-    fprintf (stderr, "  -u              Treat undefined names as error\n");
-    fprintf (stderr, "  -x              Discard local symbols\n");
-    fprintf (stderr, "  -X              Discard locals starting with 'L' or '.'\n");
-    exit (1);
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "  as [-uxX] [-o outfile] [infile]\n");
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "  -o filename     Set output file name, default stdout\n");
+    fprintf(stderr, "  -u              Treat undefined names as error\n");
+    fprintf(stderr, "  -x              Discard local symbols\n");
+    fprintf(stderr, "  -X              Discard locals starting with 'L' or '.'\n");
+    exit(1);
 }
 
-int main (argc, argv)
+int main(argc, argv)
     char *argv[];
 {
     int i;
@@ -2776,7 +2779,7 @@ int main (argc, argv)
                     break;
                 case 'o':       /* output file name */
                     if (ofile)
-                        uerror ("too many -o flags");
+                        uerror("too many -o flags");
                     ofile = 1;
                     if (cp [1]) {
                         /* -ofile */
@@ -2821,19 +2824,19 @@ int main (argc, argv)
                     break;
                 case 'E':       /* -EL, -EB - endianness */
                     if (cp[1] != 'L')
-                        uerror ("only little endian is supported");
+                        uerror("only little endian is supported");
                     while (*++cp);
                     --cp;
                     break;
                 default:
-                    fprintf (stderr, "Unknown option: %s\n", cp);
+                    fprintf(stderr, "Unknown option: %s\n", cp);
                     usage();
                 }
             }
             break;
         default:
             if (infile)
-                uerror ("too many input files");
+                uerror("too many input files");
             infile = argv[i];
             break;
         }
@@ -2844,22 +2847,22 @@ int main (argc, argv)
     /*
      * Setup input-output.
      */
-    if (infile && ! freopen (infile, "r", stdin))
-        uerror ("cannot open %s", infile);
-    if (! freopen (outfile, "w", stdout))
-        uerror ("cannot open %s", outfile);
+    if (infile && ! freopen(infile, "r", stdin))
+        uerror("cannot open %s", infile);
+    if (! freopen(outfile, "w", stdout))
+        uerror("cannot open %s", outfile);
 
-    startup ();                         /* Open temporary files */
-    hashinit ();                        /* Initialize hash tables */
-    pass1 ();                           /* First pass */
-    middle ();                          /* Prepare symbol table */
-    pass2 ();                           /* Second pass */
-    rtsize = makereloc (STEXT);         /* Emit relocation info: text */
-    rtsize = alignreloc (rtsize);
-    rdsize = makereloc (SDATA);         /* data */
-    rdsize += makereloc (SSTRNG);       /* rodata */
-    rdsize = alignreloc (rdsize);
-    makesymtab ();                      /* Emit symbol table */
-    makeheader (rtsize, rdsize);        /* Write a.out header */
+    startup();                          /* Open temporary files */
+    hashinit();                         /* Initialize hash tables */
+    pass1();                            /* First pass */
+    middle();                           /* Prepare symbol table */
+    pass2();                            /* Second pass */
+    rtsize = makereloc(STEXT);          /* Emit relocation info: text */
+    rtsize = alignreloc(rtsize);
+    rdsize = makereloc(SDATA);          /* data */
+    rdsize += makereloc(SSTRNG);        /* rodata */
+    rdsize = alignreloc(rdsize);
+    makesymtab();                       /* Emit symbol table */
+    makeheader(rtsize, rdsize);         /* Write a.out header */
     return 0;
 }
