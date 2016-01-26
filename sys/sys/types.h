@@ -96,6 +96,9 @@ __END_DECLS
 
 #include <machine/endian.h>
 
+typedef u_int32_t	in_addr_t;	/* base type for Internet address */
+typedef u_int16_t	in_port_t;	/* IP port type */
+
 #ifdef  _BSD_CLOCK_T_
 typedef _BSD_CLOCK_T_   clock_t;
 #undef  _BSD_CLOCK_T_
