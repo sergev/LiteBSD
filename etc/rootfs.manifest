@@ -911,6 +911,7 @@ file /usr/bin/mkstr
 file /usr/bin/more
 file /usr/bin/msgs
 file /usr/bin/mt
+file /usr/bin/nc
 file /usr/bin/ncurses6-config
 file /usr/bin/netstat
 mode 02555
@@ -1860,6 +1861,7 @@ file /usr/share/man/cat1/more.0
 file /usr/share/man/cat1/msgs.0
 file /usr/share/man/cat1/mt.0
 file /usr/share/man/cat1/mv.0
+file /usr/share/man/cat1/nc.0
 file /usr/share/man/cat1/netstat.0
 file /usr/share/man/cat1/nfsstat.0
 file /usr/share/man/cat1/nice.0
