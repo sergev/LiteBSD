@@ -36,6 +36,11 @@
 #ifndef _SYS_SOCKET_H_
 #define _SYS_SOCKET_H_
 
+#ifndef _SOCKLEN_T_DEFINED_
+#define _SOCKLEN_T_DEFINED_
+typedef unsigned int socklen_t;
+#endif
+
 /*
  * Definitions related to sockets: types, address families, options.
  */
@@ -133,6 +138,27 @@ struct sockaddr {
 };
 
 /*
+ * Sockaddr type which can hold any sockaddr type available
+ * in the system.
+ *
+ * Note: __ss_{len,family} is defined in RFC2553.  During RFC2553 discussion
+ * the field name went back and forth between ss_len and __ss_len,
+ * and RFC2553 specifies it to be __ss_len.  openbsd picked ss_len.
+ * For maximum portability, userland programmer would need to
+ * (1) make the code never touch ss_len portion (cast it into sockaddr and
+ * touch sa_len), or (2) add "-Dss_len=__ss_len" into CFLAGS to unify all
+ * occurrences (including header file) to __ss_len.
+ */
+struct sockaddr_storage {
+	u_char		ss_len;		/* total length */
+	u_char		ss_family;	/* address family */
+	unsigned char	__ss_pad1[6];	/* align to quad */
+	u_int64_t	__ss_pad2;	/* force alignment for stupid compilers */
+	unsigned char	__ss_pad3[240];	/* pad to a total of 256 bytes */
+};
+
+#ifdef _KERNEL
+/*
  * Structure used by kernel to pass protocol
  * information in raw sockets.
  */
@@ -140,6 +166,7 @@ struct sockproto {
     u_short sp_family;          /* address family */
     u_short sp_protocol;        /* protocol */
 };
+#endif /* _KERNEL */
 
 /*
  * Protocol families, same as address families for now.

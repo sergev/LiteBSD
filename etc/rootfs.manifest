@@ -2088,6 +2088,7 @@ file /usr/share/man/cat2/nfssvc.0
 file /usr/share/man/cat2/open.0
 file /usr/share/man/cat2/pathconf.0
 file /usr/share/man/cat2/pipe.0
+file /usr/share/man/cat2/poll.0
 file /usr/share/man/cat2/profil.0
 file /usr/share/man/cat2/ptrace.0
 file /usr/share/man/cat2/quotactl.0
@@ -2468,6 +2469,7 @@ file /usr/share/man/cat3/gelf_update_ehdr.0
 file /usr/share/man/cat3/gelf_xlatetof.0
 file /usr/share/man/cat3/getbsize.0
 file /usr/share/man/cat3/getc.0
+file /usr/share/man/cat3/getaddrinfo.0
 file /usr/share/man/cat3/getcap.0
 file /usr/share/man/cat3/getcwd.0
 file /usr/share/man/cat3/getdiskbyname.0
@@ -2477,8 +2479,10 @@ file /usr/share/man/cat3/getgrent.0
 file /usr/share/man/cat3/getgrouplist.0
 file /usr/share/man/cat3/gethostbyname.0
 file /usr/share/man/cat3/gethostname.0
+file /usr/share/man/cat3/getipnodebyname.0
 file /usr/share/man/cat3/getloadavg.0
 file /usr/share/man/cat3/getmntinfo.0
+file /usr/share/man/cat3/getnameinfo.0
 file /usr/share/man/cat3/getnetent.0
 file /usr/share/man/cat3/getnetgrent.0
 file /usr/share/man/cat3/getopt.0

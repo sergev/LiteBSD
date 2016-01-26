@@ -120,4 +120,6 @@
 #define __pure
 #endif
 
+#define __BSD_VISIBLE 1
+
 #endif /* !_CDEFS_H_ */
