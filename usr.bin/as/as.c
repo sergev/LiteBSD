@@ -521,11 +521,11 @@ void fgetrel(f, r)
  * Return a written length.
  *
  * Elf32 relocation entry:
- *      |----|----|----|----|
- *      |     r_offset      | section offset or virtual address
- *      |-------------------|
- *      |     r_info        | symbol table index and relocation type
- *      |-------------------|
+ *      |----'----'----'----|
+ *      |      offset       | section offset or virtual address
+ *      |--------------,----|
+ *      |     sym      |type| symbol table index and relocation type
+ *      |--------------'----|
  */
 unsigned fputrel(r, f)
     struct reloc *r;
@@ -544,7 +544,14 @@ unsigned fputrel(r, f)
     putc(r->sym, f);
     putc(r->sym >> 8, f);
     putc(r->sym >> 16, f);
-
+#if 0
+fprintf(stderr, "--- %s(%s) offset=%#x, type=%#x, sym=%#x \n", __func__,
+f == rfile[STEXT] ? "REL_TEXT" :
+f == rfile[SDATA] ? "REL_DATA" :
+f == stdout ? "OUTPUT" :
+"???",
+r->offset, r->type, r->sym);
+#endif
     return nbytes;
 }
 
@@ -2463,10 +2470,10 @@ void makeheader(rtsize, rdsize)
     enum {
         S_NULL,
         S_TEXT,
-        S_REL_TEXT,
         S_DATA,
-        S_REL_DATA,
         S_BSS,
+        S_REL_TEXT,
+        S_REL_DATA,
         S_STRTAB,
         S_SYMTAB,
         S_SHSTRTAB,
@@ -2479,14 +2486,14 @@ void makeheader(rtsize, rdsize)
         { 0 },
         { 5,  SHT_PROGBITS, SHF_ALLOC|SHF_EXECINSTR, 0, 0, 0, 0,        0,
                             WORDSZ, 0 },
-        { 1,  SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_TEXT,
-                            WORDSZ, sizeof(Elf32_Rel) },
         { 15, SHT_PROGBITS, SHF_ALLOC|SHF_WRITE,     0, 0, 0, 0,        0,
                             WORDSZ, 0 },
-        { 11, SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_DATA,
-                            WORDSZ, sizeof(Elf32_Rel) },
         { 21, SHT_NOBITS,   SHF_ALLOC|SHF_WRITE,     0, 0, 0, 0,        0,
                             1,      0 },
+        { 1,  SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_TEXT,
+                            WORDSZ, sizeof(Elf32_Rel) },
+        { 11, SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_DATA,
+                            WORDSZ, sizeof(Elf32_Rel) },
         { 26, SHT_STRTAB,   0,                       0, 0, 0, 0,        0,
                             1,      0 },
         { 34, SHT_SYMTAB,   0,                       0, 0, 0, S_STRTAB, 0,
@@ -2512,22 +2519,22 @@ void makeheader(rtsize, rdsize)
     section[S_TEXT].sh_size   = count[STEXT];
     offset += count[STEXT];
 
-    section[S_REL_TEXT].sh_offset = offset;
-    section[S_REL_TEXT].sh_size   = rtsize;
-    offset += rtsize;
-
     section[S_DATA].sh_offset = offset;
     section[S_DATA].sh_size   = count[SDATA] + count[SSTRNG];
     offset += count[SDATA] + count[SSTRNG];
-
-    section[S_REL_DATA].sh_offset = offset;
-    section[S_REL_DATA].sh_size   = rdsize;
-    offset += rdsize;
 
     /* Align BSS size. */
     count[SBSS] = (count[SBSS] + WORDSZ-1) & ~(WORDSZ-1);
     section[S_BSS].sh_offset = offset;
     section[S_BSS].sh_size   = count[SBSS];
+
+    section[S_REL_TEXT].sh_offset = offset;
+    section[S_REL_TEXT].sh_size   = rtsize;
+    offset += rtsize;
+
+    section[S_REL_DATA].sh_offset = offset;
+    section[S_REL_DATA].sh_size   = rdsize;
+    offset += rdsize;
 
     section[S_STRTAB].sh_offset = offset;
     section[S_STRTAB].sh_size   = strtabsize;
