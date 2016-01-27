@@ -112,6 +112,13 @@ enum {
 #define MAXRLAB 200             /* max relative (digit) labels */
 
 /*
+ * Predefined local symbols.
+ */
+#define DOT_TEXT    1   /* .text */
+#define DOT_DATA    2   /* .data */
+#define DOT_BSS     3   /* .bss */
+
+/*
  * Symbol types, for internal use only.
  */
 enum {
@@ -144,7 +151,6 @@ enum {
 #define RFMASK  0x07            /* bitmask for format */
 #define RBYTE16     0x00        /* low part of byte address: bits 15:0 */
 #define RBYTE32     0x01        /* 32-bit byte address */
-#define RHIGH16     0x02        /* upper part of byte address: bits 31:16 */
 #define RHIGH16S    0x03        /* upper part of address with signed offset */
 #define RWORD16     0x04        /* word address: bits 17:2 */
 #define RWORD26     0x05        /* word address: bits 27:2 */
@@ -526,32 +532,7 @@ void fputrel(r, f)
     putc(r->r_sym, f);
     putc(r->r_sym >> 8, f);
     putc(r->r_sym >> 16, f);
-#if 1
-fprintf(stderr, "--- %s(%s) offset=%#x, type=%#x, sym=%#x \n", __func__,
-f == rfile[STEXT] ? "REL_TEXT" :
-f == rfile[SDATA] ? "REL_DATA" :
-"???",
-r->r_offset, r->r_type, r->r_sym);
-#endif
 }
-
-#if 0
-    switch (relinfo->r_type & RFMASK) {
-    case RBYTE32:                       /* 32 bits of byte address */
-    case RBYTE16:                       /* low 16 bits of byte address */
-    case RHIGH16:                       /* high 16 bits of byte address */
-    case RHIGH16S:                      /* high 16 bits of byte address */
-    case RWORD16:                       /* 16 bits of relative word address */
-    case RWORD26:                       /* 26 bits of word address */
-    }
-    switch (relinfo->r_type & RSMASK) {
-    case RABS:
-    case RTEXT:
-    case RDATA:
-    case RBSS:
-    case REXT:
-    }
-#endif
 
 /*
  * Emit relocation record Elf32_Rel:
@@ -565,12 +546,52 @@ void emitrel(r)
     struct reloc *r;
 {
     Elf32_Rel rel;
+    int symref, reltype;
+
+    /* Compute symbol reference. */
+    switch (r->r_type & RSMASK) {
+    default:
+    case RABS:
+        symref = 0;
+        break;
+    case RTEXT:
+        symref = DOT_TEXT;
+        break;
+    case RDATA:
+        symref = DOT_DATA;
+        break;
+    case RBSS:
+        symref = DOT_BSS;
+        break;
+    case REXT:
+        symref = stab[r->r_sym].n_index;
+        break;
+    }
+
+    /* Compute relocation type. */
+    switch (r->r_type & RFMASK) {
+    default:
+        reltype = R_MIPS_NONE;
+        break;
+    case RBYTE32:                       /* 32 bits of byte address */
+        reltype = R_MIPS_32;
+        break;
+    case RBYTE16:                       /* low 16 bits of byte address */
+        reltype = R_MIPS_LO16;
+        break;
+    case RHIGH16S:                      /* high 16 bits of byte address */
+        reltype = R_MIPS_HI16;
+        break;
+    case RWORD16:                       /* 16 bits of relative word address */
+        reltype = R_MIPS_PC16;
+        break;
+    case RWORD26:                       /* 26 bits of word address */
+        reltype = R_MIPS_26;
+        break;
+    }
 
     rel.r_offset = r->r_offset;
-    rel.r_info = ELF32_R_INFO(r->r_sym, r->r_type);
-#if 1
-fprintf(stderr, "--- %s() offset=%#x, type=%#x, sym=%#x \n", __func__, r->r_offset, r->r_type, r->r_sym);
-#endif
+    rel.r_info = ELF32_R_INFO(symref, reltype);
     fwrite(&rel, sizeof(rel), 1, stdout);
 }
 
@@ -2453,10 +2474,9 @@ void middle()
 {
     int i, snum, nbytes;
 
-    /* First symbol is always NUL. */
-    stlength = sizeof(Elf32_Sym);
-
-    for (snum=1, i=0; i<stabfree; i++) {
+    /* We have four predefined symbols: NUL, .text, .data, .bss. */
+    stlength = 4 * sizeof(Elf32_Sym);
+    for (snum=4, i=0; i<stabfree; i++) {
         switch (stab[i].n_type) {
         case N_UNDF:
             /* Without -u option, undefined symbol is considered external */
@@ -2669,13 +2689,6 @@ unsigned relocate(opcode, offset, relinfo)
         opcode &= ~0xffff;
         opcode |= offset & 0xffff;
         break;
-    case RHIGH16:                       /* high 16 bits of byte address */
-        offset += (opcode & 0xffff) << 16;
-        // TODO: use low bits of offset from the next word
-        //offset += relinfo->lowbits;
-        opcode &= ~0xffff;
-        opcode |= (offset >> 16) & 0xffff;
-        break;
     case RHIGH16S:                      /* high 16 bits of byte address */
         offset += (opcode & 0xffff) << 16;
         // TODO: use low bits of offset from the next word
@@ -2751,10 +2764,6 @@ unsigned makeword(opcode, relinfo, offset)
             opcode |= (offset >> 2) & 0xffff;
             relinfo->r_type = RABS;
             return opcode;
-        case RHIGH16:
-            // TODO: use low bits of offset from the next word
-            //value += relinfo->lowbits;
-            break;
         case RHIGH16S:
             // TODO: use low bits of offset from the next word
             //value += (signed short) relinfo->lowbits;
@@ -2907,14 +2916,13 @@ unsigned alignreloc(nbytes)
  * Emit the Elf32_Sym record for the symbol.
  * Little endian.
  */
-void fputsym(s, file)
-    struct nlist *s;
+void fputsym(type, value, nameidx, file)
     FILE *file;
 {
     Elf32_Sym sym;
     int bind;
 
-    switch (s->n_type & N_TYPE) {
+    switch (type & N_TYPE) {
     case N_UNDF:    sym.st_shndx = SHN_UNDEF;   break;
     case N_COMM:    sym.st_shndx = SHN_COMMON;  break;
     case N_ABS:     sym.st_shndx = SHN_ABS;     break;
@@ -2922,17 +2930,17 @@ void fputsym(s, file)
     case N_DATA:    sym.st_shndx = S_DATA;      break;
     case N_BSS:     sym.st_shndx = S_BSS;       break;
     default:
-        uerror("unknown symbol type %#x", s->n_type);
+        uerror("unknown symbol type %#x", type);
     }
-    if (s->n_type & N_WEAK)
+    if (type & N_WEAK)
         bind = STB_WEAK;
-    else if (s->n_type & N_EXT)
+    else if (type & N_EXT)
         bind = STB_GLOBAL;
     else
         bind = STB_LOCAL;
 
-    sym.st_name = s->n_nameidx;
-    sym.st_value = s->n_value;
+    sym.st_name = nameidx;
+    sym.st_value = value;
     sym.st_size = 0;
     sym.st_other = STV_DEFAULT;
     sym.st_info = ELF32_ST_INFO(bind, STT_NOTYPE);
@@ -2947,12 +2955,11 @@ void fputsym(s, file)
 void makesymtab()
 {
     int i;
-    struct nlist nul = {0};
 
     /* Write symbol names.
      * Compute symbol name indexes. */
-    putchar(0);
-    strtabsize = 1;
+    strtabsize = 18;
+    fwrite("\0.text\0.data\0.bss", strtabsize, 1, stdout);
     for (i=0; i<stabfree; i++) {
         if (! xflags || (stab[i].n_type & N_EXT) ||
             (Xflag && stab[i].n_name[0] != 'L'))
@@ -2970,12 +2977,15 @@ void makesymtab()
     }
 
     /* Write symbols. */
-    fputsym(&nul, stdout);
+    fputsym(N_LOC | N_ABS,  0, 0, stdout);
+    fputsym(N_LOC | N_TEXT, 0, 1, stdout);  /* .text */
+    fputsym(N_LOC | N_DATA, 0, 7, stdout);  /* .data */
+    fputsym(N_LOC | N_BSS,  0, 13, stdout); /* .bss */
     for (i=0; i<stabfree; i++) {
         if (! xflags || (stab[i].n_type & N_EXT) ||
             (Xflag && stab[i].n_name[0] != 'L'))
         {
-            fputsym(&stab[i], stdout);
+            fputsym(stab[i].n_type, stab[i].n_value, stab[i].n_nameidx, stdout);
         }
     }
 }
