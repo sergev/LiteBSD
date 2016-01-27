@@ -2,7 +2,7 @@
  * Assembler for MIPS32.
  * The syntax is compatible with GCC output.
  *
- * Copyright (C) 2011-2012 Serge Vakulenko, <serge@vak.ru>
+ * Copyright (C) 2011-2015 Serge Vakulenko, <serge@vak.ru>
  *
  * Permission to use, copy, modify, and distribute this software
  * and its documentation for any purpose and without fee is hereby
@@ -110,13 +110,6 @@ enum {
 #define HCMDSZ  256             /* instruction hash table size */
 #define STSIZE  (HASHSZ*9/10)   /* symbol name table size */
 #define MAXRLAB 200             /* max relative (digit) labels */
-
-/*
- * On second pass, hashtab[] is not needed.
- * We use it under name newindex[] to reindex symbol references
- * when -x or -X options are enabled.
- */
-#define newindex hashtab
 
 /*
  * Symbol types, for internal use only.
@@ -230,6 +223,8 @@ struct nlist {
     uint16_t n_len;                     /* Length of name in bytes */
     uint16_t n_type;                    /* Type of symbol  */
     uint32_t n_value;                   /* Symbol value */
+    uint16_t n_index;                   /* Index in output ELF symbol table */
+    uint16_t n_nameidx;                 /* Name index in output ELF string table */
 };
 
 /*
@@ -419,8 +414,7 @@ char tfilename[] = "/tmp/asXXXXXX";
 int line;                               /* Source line number */
 int xflags, Xflag, uflag;
 int stlength;                           /* Symbol table size in bytes */
-int strtabsize;                         /* String table size in bytes TODO */
-int stalign;                            /* Symbol table alignment */
+int strtabsize;                         /* String table size in bytes */
 unsigned tbase, dbase, adbase, bbase;
 struct nlist stab[STSIZE];
 int stabfree;
@@ -2423,12 +2417,20 @@ int findlabel(int addr, int sym)
     return 0;
 }
 
+/*
+ * Process the symbol table.
+ * Turn undefined symbols into externals.
+ * Allocate local common blocks.
+ * Compute the size of output ELF symbol table (stlength).
+ */
 void middle()
 {
     int i, snum, nbytes;
 
-    stlength = 0;
-    for (snum=0, i=0; i<stabfree; i++) {
+    /* First symbol is always NUL. */
+    stlength = sizeof(Elf32_Sym);
+
+    for (snum=1, i=0; i<stabfree; i++) {
         switch (stab[i].n_type) {
         case N_UNDF:
             /* Without -u option, undefined symbol is considered external */
@@ -2446,39 +2448,57 @@ void middle()
             count[SBSS] += nbytes;
             break;
         }
-        if (xflags)
-            newindex[i] = snum;
+        stab[i].n_index = snum;
 
         if (! xflags || (stab[i].n_type & N_EXT) ||
             (Xflag && ! IS_LOCAL(&stab[i])))
         {
-            stlength += 2 + WORDSZ + stab[i].n_len;
+            stlength += sizeof(Elf32_Sym);
             snum++;
         }
     }
-    stalign = WORDSZ - stlength % WORDSZ;
-    stlength += stalign;
     line = 0;
 }
 
 /*
- * Write the ELF header to the file.
+ * Write the ELF header and table of sections to the file.
  * Little-endian.
+ * Generated ELF file consists of nine parts:
+ *  |-----------------------|
+ *  |      ELF header       | 52 bytes
+ *  |-----------------------|
+ *  |     .text segment     | 4*N bytes
+ *  |-----------------------|
+ *  |     .data segment     | 4*N bytes
+ *  |-----------------------|
+ *  | .text relocation info | 8*N bytes
+ *  |-----------------------|
+ *  | .data relocation info | 8*N bytes
+ *  |-----------------------|
+ *  |     Symbol names      |
+ *  |-----------------------|
+ *  |     Symbol table      | 8*N bytes
+ *  |-----------------------|
+ *  |     Section names     |
+ *  |-----------------------|
+ *  |     Section table     | 40*N bytes
+ *  |-----------------------|
  */
+enum {
+    S_NULL,
+    S_TEXT,
+    S_DATA,
+    S_BSS,
+    S_REL_TEXT,
+    S_REL_DATA,
+    S_STRTAB,
+    S_SYMTAB,
+    S_SHSTRTAB,
+    NSECTIONS,
+};
+
 void makeheader(rtsize, rdsize)
 {
-    enum {
-        S_NULL,
-        S_TEXT,
-        S_DATA,
-        S_BSS,
-        S_REL_TEXT,
-        S_REL_DATA,
-        S_STRTAB,
-        S_SYMTAB,
-        S_SHSTRTAB,
-        NSECTIONS,
-    };
     static const char shstr[] = "\0.rel.text\0.rel.data\0.bss"
                                 "\0.strtab\0.symtab\0.shstrtab";
     Elf32_Ehdr header;
@@ -2497,7 +2517,7 @@ void makeheader(rtsize, rdsize)
         { 26, SHT_STRTAB,   0,                       0, 0, 0, 0,        0,
                             1,      0 },
         { 34, SHT_SYMTAB,   0,                       0, 0, 0, S_STRTAB, 0,
-                            WORDSZ, sizeof(Elf32_Shdr) },
+                            WORDSZ, sizeof(Elf32_Sym) },
         { 42, SHT_STRTAB,   0,                       0, 0, 0, 0,        0,
                             1,      0 },
     };
@@ -2811,8 +2831,7 @@ void relrel(relinfo)
         if (type == N_EXT+N_UNDF || type == N_EXT+N_COMM)
         {
             /* Reindexing */
-            if (xflags)
-                relinfo->sym = newindex[relinfo->sym];
+            relinfo->sym = stab[relinfo->sym].n_index;
         } else {
             relinfo->type &= ~RSMASK;
             relinfo->type |= typerel(type); // TODO: delete
@@ -2858,25 +2877,73 @@ unsigned alignreloc(nbytes)
 }
 
 /*
- * Emit the nlist record for the symbol.
+ * Emit the Elf32_Sym record for the symbol.
+ * Little endian.
  */
 void fputsym(s, file)
     struct nlist *s;
     FILE *file;
 {
-    int i;
+    Elf32_Sym sym;
+    int bind;
 
-    putc(s->n_len, file);
-    putc(s->n_type & ~N_LOC, file);    // TODO: encode n_type for ELF
-    fputword(s->n_value, file);
-    for (i=0; i<s->n_len; i++)
-        putc(s->n_name[i], file);
+    switch (s->n_type & N_TYPE) {
+    case N_UNDF:    sym.st_shndx = SHN_UNDEF;   break;
+    case N_COMM:    sym.st_shndx = SHN_COMMON;  break;
+    case N_ABS:     sym.st_shndx = SHN_ABS;     break;
+    case N_TEXT:    sym.st_shndx = S_TEXT;      break;
+    case N_DATA:    sym.st_shndx = S_DATA;      break;
+    case N_BSS:     sym.st_shndx = S_BSS;       break;
+    default:
+        uerror("unknown symbol type %#x", s->n_type);
+    }
+    if (s->n_type & N_WEAK)
+        bind = STB_WEAK;
+    else if (s->n_type & N_EXT)
+        bind = STB_GLOBAL;
+    else
+        bind = STB_LOCAL;
+
+    sym.st_name = s->n_nameidx;
+    sym.st_value = s->n_value;
+    sym.st_size = 0;
+    sym.st_other = STV_DEFAULT;
+    sym.st_info = ELF32_ST_INFO(bind, STT_NOTYPE);
+
+    fwrite(&sym, sizeof(sym), 1, file);
 }
 
+/*
+ * Emit ELF sections with symbol strings (names) and symbol table.
+ * Set strtabsize to the size of symbol string section, aligned.
+ */
 void makesymtab()
 {
     int i;
+    struct nlist nul = {0};
 
+    /* Write symbol names.
+     * Compute symbol name indexes. */
+    putchar(0);
+    strtabsize = 1;
+    for (i=0; i<stabfree; i++) {
+        if (! xflags || (stab[i].n_type & N_EXT) ||
+            (Xflag && stab[i].n_name[0] != 'L'))
+        {
+            fputs(stab[i].n_name, stdout);
+            putchar(0);
+            stab[i].n_nameidx = strtabsize;
+            strtabsize += stab[i].n_len + 1;
+        }
+    }
+    /* Align to 16 bytes. */
+    while (strtabsize & 15) {
+        putchar(0);
+        strtabsize++;
+    }
+
+    /* Write symbols. */
+    fputsym(&nul, stdout);
     for (i=0; i<stabfree; i++) {
         if (! xflags || (stab[i].n_type & N_EXT) ||
             (Xflag && stab[i].n_name[0] != 'L'))
@@ -2884,8 +2951,6 @@ void makesymtab()
             fputsym(&stab[i], stdout);
         }
     }
-    while (stalign--)
-        putchar(0);
 }
 
 void usage()
