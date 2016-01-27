@@ -1,0 +1,188 @@
+.\"     $OpenBSD: nc.1,v 1.19 2001/09/02 18:45:41 jakob Exp $
+.\"
+.\" Copyright (c) 1996 David Sacerdote
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. The name of the author may not be used to endorse or promote products
+.\"    derived from this software without specific prior written permission
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 25, 2001
+.Dt NC 1
+.Os
+.Sh NAME
+.Nm nc
+.Nd "arbitrary TCP and UDP connections and listens"
+.Sh SYNOPSIS
+.Nm nc
+.Op Fl 46hklnrtuvz
+.Op Fl i Ar interval
+.Op Fl p Ar source port
+.Op Fl s Ar source ip address
+.Op Fl x Ar proxy address Op :port
+.Op Fl w Ar timeout
+.Op Ar hostname
+.Op Ar port[s]
+.Sh DESCRIPTION
+The
+.Nm
+(or
+.Nm netcat )
+utility is used for just about anything under the sun involving TCP
+or UDP.
+It can open TCP connections, send UDP packets, listen on arbitrary
+TCP and UDP ports, do port scanning, and deal with both IPv4 and
+IPv6.
+Unlike
+.Xr telnet 1 ,
+.Nm
+scripts nicely, and separates error messages onto standard error instead
+of sending them to standard output, as
+.Xr telnet 1 ,
+does with some.
+.Pp
+Destination ports can be single integers or ranges.
+Ranges are in the form nn-mm.
+.Pp
+Common uses include:
+.Pp
+.Bl -bullet -offset indent -compact
+.It
+simple TCP proxies
+.It
+shell\-script based HTTP clients and servers
+.It
+network daemon testing
+.It
+and much, much more
+.El
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl 4
+Forces
+.Nm
+to use IPv4 addresses only.
+.It Fl 6
+Forces
+.Nm
+to use IPv6 addresses only.
+.It Fl h
+Prints out
+.Nm
+help.
+.It Fl i Ar interval
+Specifies a delay time interval between lines of text sent and received.
+Also causes a delay time between connections to multiple ports.
+.It Fl k
+Forces
+.Nm
+to stay listening for another connection after it's current connection
+is completed.
+.It Fl l
+Used to specify that
+.Nm
+should listen for an incoming connection rather than initiate a
+connection to a remote host.
+.It Fl n
+Do not do any DNS or service lookups on any specified addresses or
+hostnames, or ports.
+.It Fl p Ar port
+Specifies the source port
+.Nm
+should use, subject to privilege restrictions and availability.
+.It Fl r
+Specifies that source and/or destination ports should be chosen randomly
+instead of sequentially within a range or in the order that the system
+assigns.
+.It Fl s Ar hostname/ip address
+Specifies the IP of the interface which is used to send the packets.
+.It Fl t
+Causes
+.Nm
+to send RFC854 DON'T and WON'T responses to RFC854 DO and WILL requests.
+This makes it possible to use
+.Nm
+to script telnet sessions.
+.It Fl u
+Use UDP instead of the default option of TCP.
+.It Fl v
+Have
+.Nm
+give more verbose output.
+.It Fl x Ar proxy address Op :port
+Requests that
+.Nm
+should connect to
+.Ar hostname
+using a socks5 proxy at address and port.
+If port is not specified, port 1080 is used.
+.It Fl z
+Specifies that
+.Nm
+should just scan for listening daemons, without sending any data to them.
+.El
+.Sh EXAMPLES
+.Bl -tag -width x
+.It Li "nc hostname 42"
+Open a TCP connection to port 42 of hostname.
+.It Li "nc -p 31337 hostname 42"
+Open a TCP connection to port 42 of hostname, and use port 31337 as
+the source port.
+.It Li "nc -w 5 hostname 42"
+Open a TCP connection to port 42 of hostname, and timeout after
+five seconds while attempting to connect.
+.It Li "nc -u hostname 53"
+Open a UDP connection to port 53 of hostname.
+.It Li "nc -s 10.1.2.3 example.host 42"
+Open a TCP connection to port 42 of example.host using 10.1.2.3 as the
+IP for the local end of the connection.
+.It Li "nc -v hostname 42"
+Open a TCP connection to port 42 of hostname, displaying some
+diagnostic messages on stderr.
+.It Li "nc -v -v hostname 42"
+Open a TCP connection to port 42 of hostname, displaying all
+diagnostic messages on stderr.
+.It Li "nc -v -z hostname 20-30"
+Attempt to open TCP connections to ports 20 through 30 of
+hostname, and report which ones
+.Nm
+was able to connect to.
+.It Li "nc -v -u -z -w 3 hostname 20-30"
+Send UDP packets to ports 20-30 of example.host, and report which ones
+did not respond with an ICMP packet after three seconds.
+.It Li "nc -l 3000"
+Listen on TCP port 3000, and once there is a connection, send stdin to
+the remote host, and send data from the remote host to stdout.
+.It Li "echo foobar | nc hostname 1000"
+Connect to port 1000 of hostname, send the string "foobar"
+followed by a newline, and move data from port 1000 of hostname to
+stdout until hostname closes the connection.
+.El
+.Sh SEE ALSO
+.Xr cat 1 ,
+.Xr telnet 1
+.Sh AUTHORS
+Original implementation by *Hobbit*
+.Aq hobbit@avian.org .
+.Pp
+Rewritten with IPv6 support by Eric Jackson
+.Aq ericj@monkey.org .
