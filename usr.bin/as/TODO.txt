@@ -1,1 +1,0 @@
-Emit relocation in ELF format.
