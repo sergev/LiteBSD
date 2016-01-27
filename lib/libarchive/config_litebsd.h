@@ -385,10 +385,10 @@
 #define HAVE_PIPE 1
 
 /* Define to 1 if you have the `poll' function. */
-//#define HAVE_POLL 1
+#define HAVE_POLL 1
 
 /* Define to 1 if you have the <poll.h> header file. */
-//#define HAVE_POLL_H 1
+#define HAVE_POLL_H 1
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #define HAVE_PWD_H 1
@@ -443,7 +443,7 @@
 #define HAVE_STRFTIME 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-//#define HAVE_STRINGS_H 1
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
@@ -511,10 +511,10 @@
 #define HAVE_SYS_PARAM_H 1
 
 /* Define to 1 if you have the <sys/poll.h> header file. */
-//#define HAVE_SYS_POLL_H 1
+#define HAVE_SYS_POLL_H 1
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-//#define HAVE_SYS_SELECT_H 1
+#define HAVE_SYS_SELECT_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
