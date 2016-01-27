@@ -158,6 +158,8 @@ mostlyclean :
 
 clean :: mostlyclean
 
+cleandir :: clean
+
 distclean : clean
 #	-rm -f gen-pkgconfig
 	-rm -f Makefile run_tic.sh ncurses-config

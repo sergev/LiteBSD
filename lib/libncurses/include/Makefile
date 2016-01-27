@@ -131,6 +131,8 @@ clean :: mostlyclean
 	-rm -f $(AUTO_SRC)
 	-rm -rf *.dSYM
 
+cleandir :: clean
+
 distclean :: clean
 	-rm -f Makefile $(CONFIG_SRC) config.h
 

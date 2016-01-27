@@ -160,6 +160,8 @@ mostlyclean ::
 clean :: mostlyclean
 	-rm -f $(AUTO_SRC)
 
+cleandir :: clean
+
 distclean :: clean
 	-rm -f Makefile
 	-rm -rf .libs *.dSYM

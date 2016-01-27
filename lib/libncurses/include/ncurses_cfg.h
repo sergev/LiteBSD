@@ -111,8 +111,10 @@
 #define HAVE_LIMITS_H 1
 #define HAVE_LOCALE_H 1
 #define HAVE_MATH_H 1
+#define HAVE_POLL_H 1
 #define HAVE_SYS_IOCTL_H 1
 #define HAVE_SYS_PARAM_H 1
+#define HAVE_SYS_POLL_H 1
 #define HAVE_SYS_SELECT_H 1
 #define HAVE_SYS_TIME_H 1
 #define HAVE_TTYENT_H 1
@@ -121,11 +123,13 @@
 #define HAVE_GETOPT_HEADER 1
 #define HAVE_SYS_TIME_SELECT 1
 #define SIG_ATOMIC_T volatile sig_atomic_t
+#define HAVE_ERRNO 1
 #define HAVE_GETCWD 1
 #define HAVE_GETEGID 1
 #define HAVE_GETEUID 1
 #define HAVE_GETOPT 1
 #define HAVE_GETTTYNAM 1
+#define HAVE_POLL 1
 #define HAVE_PUTENV 1
 #define HAVE_REMOVE 1
 #define HAVE_SELECT 1
@@ -145,6 +149,7 @@
 #define HAVE_VSSCANF 1
 #define HAVE_MKSTEMP 1
 #define HAVE_SIZECHANGE 1
+#define HAVE_WORKING_POLL 1
 #define HAVE_VA_COPY 1
 #define HAVE___VA_COPY 1
 #define HAVE_FORK 1
