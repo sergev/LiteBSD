@@ -36,7 +36,7 @@ start:
         lui     $a0, %hi(_end + 4)          # R_MIPS_HI16 forward
         addiu   $a0, %lo(_end + 4)          # R_MIPS_LO16 forward
 
-        .type   _data, @object
-_data:
+        .type   _val, @object
+_val:
         .word   start - 4           # R_MIPS_32 backward
         .word   _end + 4            # R_MIPS_32 forward

@@ -149,11 +149,11 @@ enum {
 #define RGPREL  0x08            /* gp relative */
 
 #define RFMASK  0x07            /* bitmask for format */
-#define RBYTE16     0x00        /* low part of byte address: bits 15:0 */
+#define RLOW16      0x00        /* low part of byte address: bits 15:0 */
 #define RBYTE32     0x01        /* 32-bit byte address */
-#define RHIGH16S    0x03        /* upper part of address with signed offset */
-#define RWORD16     0x04        /* word address: bits 17:2 */
-#define RWORD26     0x05        /* word address: bits 27:2 */
+#define RHIGH16     0x02        /* upper part of address with signed offset */
+#define RWORD16     0x03        /* word address: bits 17:2 */
+#define RWORD26     0x04        /* word address: bits 27:2 */
 
 /*
  * Convert segment id to symbol type.
@@ -542,44 +542,26 @@ void fputrel(r, f)
  *      |     sym      |type| symbol table index and relocation type
  *      |--------------'----|
  */
-void emitrel(r)
+int emitrel(r)
     struct reloc *r;
 {
     Elf32_Rel rel;
     int symref, reltype;
 
-    /* Compute symbol reference. */
-    switch (r->r_type & RSMASK) {
-    default:
-    case RABS:
-        symref = 0;
-        break;
-    case RTEXT:
-        symref = DOT_TEXT;
-        break;
-    case RDATA:
-        symref = DOT_DATA;
-        break;
-    case RBSS:
-        symref = DOT_BSS;
-        break;
-    case REXT:
-        symref = stab[r->r_sym].n_index;
-        break;
-    }
-
     /* Compute relocation type. */
     switch (r->r_type & RFMASK) {
     default:
-        reltype = R_MIPS_NONE;
-        break;
+        return 0;
     case RBYTE32:                       /* 32 bits of byte address */
         reltype = R_MIPS_32;
         break;
-    case RBYTE16:                       /* low 16 bits of byte address */
-        reltype = R_MIPS_LO16;
+    case RLOW16:                        /* low 16 bits of byte address */
+        if (r->r_type & RGPREL)
+            reltype = R_MIPS_GPREL16;
+        else
+            reltype = R_MIPS_LO16;
         break;
-    case RHIGH16S:                      /* high 16 bits of byte address */
+    case RHIGH16:                       /* high 16 bits of byte address */
         reltype = R_MIPS_HI16;
         break;
     case RWORD16:                       /* 16 bits of relative word address */
@@ -590,9 +572,29 @@ void emitrel(r)
         break;
     }
 
+    /* Compute symbol reference. */
+    switch (r->r_type & RSMASK) {
+    default:
+    case RABS:
+        return 0;
+    case RTEXT:
+        symref = DOT_TEXT;
+        break;
+    case RDATA:
+        symref = DOT_DATA;
+        break;
+    case RBSS:
+        symref = DOT_BSS;
+        break;
+    case REXT:
+        symref = r->r_sym;
+        break;
+    }
+
     rel.r_offset = r->r_offset;
     rel.r_info = ELF32_R_INFO(symref, reltype);
     fwrite(&rel, sizeof(rel), 1, stdout);
+    return 1;
 }
 
 /*
@@ -1393,11 +1395,12 @@ void emit_la(opcode, relinfo)
 
     /* lui d, %hi(value)
      * addiu d, d, %lo(value) */
-    relinfo->r_type |= RHIGH16S;
+    relinfo->r_type |= RHIGH16;
     hi = (value + 0x8000) >> 16;
     emitword(opcode | 0x3c000000 | hi, relinfo, hi);
 
-    relinfo->r_type &= ~RHIGH16S;
+    relinfo->r_type &= ~RFMASK;
+    relinfo->r_type |= RLOW16;
     opcode |= 0x24000000 | (opcode & 0x1f0000) << 5 | (value & 0xffff);
     emitword(opcode, relinfo, value >> 16);
 }
@@ -1730,7 +1733,7 @@ foff16: expr_flags = 0;
         case FHIGH16:                   /* high 16-bit byte address */
             if (expr_flags & EXPR_HI) {
                 /* %hi function - assume signed offset */
-                relinfo.r_type |= RHIGH16S;
+                relinfo.r_type |= RHIGH16;
                 offset += 0x8000;
                 opcode |= offset >> 16;
             } else {
@@ -2125,7 +2128,9 @@ done:       reorder_flush();
                 struct reloc relinfo;
                 expr_flags = 0;
                 getexpr(&cval);
-                relinfo.r_type = RBYTE32 | segmrel[cval];
+                relinfo.r_type = segmrel[cval];
+                if (relinfo.r_type != RABS)
+                    relinfo.r_type |= RBYTE32;
                 relinfo.r_sym = 0;
                 if (cval == SEXT)
                     relinfo.r_sym = extref;
@@ -2556,9 +2561,9 @@ void makeheader(rtsize, rdsize)
                             WORDSZ, 0 },
         { 21, SHT_NOBITS,   SHF_ALLOC|SHF_WRITE,     0, 0, 0, 0,        0,
                             1,      0 },
-        { 1,  SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_TEXT,
+        { 1,  SHT_REL,      SHF_INFO_LINK,           0, 0, 0, S_SYMTAB, S_TEXT,
                             WORDSZ, sizeof(Elf32_Rel) },
-        { 11, SHT_REL,      0,                       0, 0, 0, S_SYMTAB, S_DATA,
+        { 11, SHT_REL,      SHF_INFO_LINK,           0, 0, 0, S_SYMTAB, S_DATA,
                             WORDSZ, sizeof(Elf32_Rel) },
         { 26, SHT_STRTAB,   0,                       0, 0, 0, 0,        0,
                             1,      0 },
@@ -2684,12 +2689,12 @@ unsigned relocate(opcode, offset, relinfo)
     case RBYTE32:                       /* 32 bits of byte address */
         opcode += offset;
         break;
-    case RBYTE16:                       /* low 16 bits of byte address */
+    case RLOW16:                        /* low 16 bits of byte address */
         offset += opcode & 0xffff;
         opcode &= ~0xffff;
         opcode |= offset & 0xffff;
         break;
-    case RHIGH16S:                      /* high 16 bits of byte address */
+    case RHIGH16:                       /* high 16 bits of byte address */
         offset += (opcode & 0xffff) << 16;
         // TODO: use low bits of offset from the next word
         //offset += (signed short) relinfo->addend;
@@ -2764,7 +2769,7 @@ unsigned makeword(opcode, relinfo, offset)
             opcode |= (offset >> 2) & 0xffff;
             relinfo->r_type = RABS;
             return opcode;
-        case RHIGH16S:
+        case RHIGH16:
             // TODO: use low bits of offset from the next word
             //value += (signed short) relinfo->lowbits;
             break;
@@ -2785,24 +2790,18 @@ void pass2()
     adbase = dbase + count[SDATA];
     bbase = adbase + count[SSTRNG];
 
-    /* Adjust indexes in symbol name */
+    /* Adjust symbol addresses */
     for (i=0; i<stabfree; i++) {
         switch (stab[i].n_type & N_TYPE) {
         case N_UNDF:
         case N_ABS:
-            break;
         case N_TEXT:
-            stab[i].n_value += tbase;
-            break;
         case N_DATA:
-            stab[i].n_value += dbase;
+        case N_BSS:
             break;
         case N_STRNG:
-            stab[i].n_value += adbase;
+            stab[i].n_value += adbase - dbase;
             stab[i].n_type += N_DATA - N_STRNG;
-            break;
-        case N_BSS:
-            stab[i].n_value += bbase;
             break;
         }
     }
@@ -2830,23 +2829,6 @@ void pass2()
 }
 
 /*
- * Convert symbol type to relocation type.
- */
-int typerel(t)
-{
-    switch (t & N_TYPE) {
-    case N_ABS:     return RABS;
-    case N_TEXT:    return RTEXT;
-    case N_DATA:    return RDATA;
-    case N_BSS:     return RBSS;
-    case N_STRNG:   return RDATA;
-    case N_UNDF:
-    case N_COMM:
-    default:        return 0;
-    }
-}
-
-/*
  * Relocate a relocation info word.
  * Remap symbol indexes.
  * Put string pseudo-section to data section.
@@ -2869,7 +2851,15 @@ void relrel(relinfo)
             relinfo->r_sym = stab[relinfo->r_sym].n_index;
         } else {
             relinfo->r_type &= ~RSMASK;
-            relinfo->r_type |= typerel(type); // TODO: delete
+
+            /* Convert symbol type to relocation type. */
+            switch (type & N_TYPE) {
+            case N_ABS:     relinfo->r_type |= RABS;
+            case N_TEXT:    relinfo->r_type |= RTEXT;
+            case N_DATA:    relinfo->r_type |= RDATA;
+            case N_BSS:     relinfo->r_type |= RBSS;
+            case N_STRNG:   relinfo->r_type |= RDATA;
+            }
         }
         break;
     }
@@ -2893,8 +2883,8 @@ unsigned makereloc(s)
     for (i=0; i<count[s]; i+=WORDSZ) {
         fgetrel(rfile[s], &relinfo);
         relrel(&relinfo);
-        emitrel(&relinfo);
-        nbytes += sizeof(Elf32_Rel);
+        if (emitrel(&relinfo))
+            nbytes += sizeof(Elf32_Rel);
     }
     return nbytes;
 }
