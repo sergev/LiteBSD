@@ -200,9 +200,9 @@ struct labeltab {
  * Relocation record.
  */
 struct reloc {
-    unsigned offset;                    /* location to apply relocation to */
-    unsigned type;                      /* type of relocation */
-    unsigned sym;                       /* symbol index */
+    unsigned r_offset;                  /* location to apply relocation to */
+    unsigned r_type;                    /* type of relocation */
+    unsigned r_sym;                     /* symbol index */
 };
 
 /*
@@ -491,62 +491,87 @@ void fputword(w, f)
 }
 
 /*
-* Read a relocation record: 8 bytes.
-*/
+ * Read a relocation record: 8 bytes.
+ */
 void fgetrel(f, r)
     FILE *f;
     struct reloc *r;
 {
-    /* Read r_offset */
-    r->offset = getc(f);
-    r->offset |= getc(f) << 8;
-    r->offset |= getc(f) << 16;
-    r->offset |= getc(f) << 24;
+    r->r_offset = getc(f);
+    r->r_offset |= getc(f) << 8;
+    r->r_offset |= getc(f) << 16;
+    r->r_offset |= getc(f) << 24;
 
-    /* Read r_info */
-    r->type = getc(f);
-    r->sym = getc(f);
-    r->sym |= getc(f) << 8;
-    r->sym |= getc(f) << 16;
+    r->r_type = getc(f);
+
+    r->r_sym = getc(f);
+    r->r_sym |= getc(f) << 8;
+    r->r_sym |= getc(f) << 16;
 }
 
 /*
- * Emit a relocation record: 8 bytes.
- * Return a written length.
- *
- * Elf32 relocation entry:
+ * Write a relocation record: 8 bytes.
+ */
+void fputrel(r, f)
+    struct reloc *r;
+    FILE *f;
+{
+    putc(r->r_offset, f);
+    putc(r->r_offset >> 8, f);
+    putc(r->r_offset >> 16, f);
+    putc(r->r_offset >> 24, f);
+
+    putc(r->r_type, f);
+
+    putc(r->r_sym, f);
+    putc(r->r_sym >> 8, f);
+    putc(r->r_sym >> 16, f);
+#if 1
+fprintf(stderr, "--- %s(%s) offset=%#x, type=%#x, sym=%#x \n", __func__,
+f == rfile[STEXT] ? "REL_TEXT" :
+f == rfile[SDATA] ? "REL_DATA" :
+"???",
+r->r_offset, r->r_type, r->r_sym);
+#endif
+}
+
+#if 0
+    switch (relinfo->r_type & RFMASK) {
+    case RBYTE32:                       /* 32 bits of byte address */
+    case RBYTE16:                       /* low 16 bits of byte address */
+    case RHIGH16:                       /* high 16 bits of byte address */
+    case RHIGH16S:                      /* high 16 bits of byte address */
+    case RWORD16:                       /* 16 bits of relative word address */
+    case RWORD26:                       /* 26 bits of word address */
+    }
+    switch (relinfo->r_type & RSMASK) {
+    case RABS:
+    case RTEXT:
+    case RDATA:
+    case RBSS:
+    case REXT:
+    }
+#endif
+
+/*
+ * Emit relocation record Elf32_Rel:
  *      |----'----'----'----|
  *      |      offset       | section offset or virtual address
  *      |--------------,----|
  *      |     sym      |type| symbol table index and relocation type
  *      |--------------'----|
  */
-unsigned fputrel(r, f)
+void emitrel(r)
     struct reloc *r;
-    FILE *f;
 {
-    unsigned nbytes = 8;
+    Elf32_Rel rel;
 
-    /* Write r_offset */
-    putc(r->offset, f);
-    putc(r->offset >> 8, f);
-    putc(r->offset >> 16, f);
-    putc(r->offset >> 24, f);
-
-    /* Write r_info */
-    putc(r->type, f); // TODO
-    putc(r->sym, f);
-    putc(r->sym >> 8, f);
-    putc(r->sym >> 16, f);
-#if 0
-fprintf(stderr, "--- %s(%s) offset=%#x, type=%#x, sym=%#x \n", __func__,
-f == rfile[STEXT] ? "REL_TEXT" :
-f == rfile[SDATA] ? "REL_DATA" :
-f == stdout ? "OUTPUT" :
-"???",
-r->offset, r->type, r->sym);
+    rel.r_offset = r->r_offset;
+    rel.r_info = ELF32_R_INFO(r->r_sym, r->r_type);
+#if 1
+fprintf(stderr, "--- %s() offset=%#x, type=%#x, sym=%#x \n", __func__, r->r_offset, r->r_type, r->r_sym);
 #endif
-    return nbytes;
+    fwrite(&rel, sizeof(rel), 1, stdout);
 }
 
 /*
@@ -1260,7 +1285,7 @@ unsigned getexpr(s)
 void reorder_flush()
 {
     if (reorder_full) {
-        reorder_rel.offset = ftell(sfile[STEXT]);
+        reorder_rel.r_offset = ftell(sfile[STEXT]);
         fputword(reorder_word, sfile[STEXT]);
         fputrel(&reorder_rel, rfile[STEXT]);
         reorder_full = 0;
@@ -1282,7 +1307,7 @@ void emitword(w, r, clobber_reg)
         reorder_full = 1;
         reorder_clobber = clobber_reg & 31;
     } else {
-        r->offset = ftell(sfile[segm]);
+        r->r_offset = ftell(sfile[segm]);
         fputword(w, sfile[segm]);
         fputrel(r, rfile[segm]);
     }
@@ -1339,19 +1364,19 @@ void emit_la(opcode, relinfo)
     value = getexpr(&segment);
     if (segment == SABS)
 	uerror("relocatable value required");
-    relinfo->type = segmrel[segment];
-    if (relinfo->type == REXT)
-	relinfo->sym = extref;
+    relinfo->r_type = segmrel[segment];
+    if (relinfo->r_type == REXT)
+	relinfo->r_sym = extref;
     if (expr_flags & EXPR_GPREL)
-	relinfo->type |= RGPREL;
+	relinfo->r_type |= RGPREL;
 
     /* lui d, %hi(value)
      * addiu d, d, %lo(value) */
-    relinfo->type |= RHIGH16S;
+    relinfo->r_type |= RHIGH16S;
     hi = (value + 0x8000) >> 16;
     emitword(opcode | 0x3c000000 | hi, relinfo, hi);
 
-    relinfo->type &= ~RHIGH16S;
+    relinfo->r_type &= ~RHIGH16S;
     opcode |= 0x24000000 | (opcode & 0x1f0000) << 5 | (value & 0xffff);
     emitword(opcode, relinfo, value >> 16);
 }
@@ -1368,7 +1393,7 @@ void makecmd(opcode, type, emitfunc)
     int clex, cval, segment, clobber_reg, negate_literal;
 
     offset = 0;
-    relinfo.type = RABS;
+    relinfo.r_type = RABS;
     negate_literal = 0;
 
     /*
@@ -1624,11 +1649,11 @@ fsa:    offset = getexpr(&segment);
             uerror("comma expected");
 foff16: expr_flags = 0;
         offset = getexpr(&segment);
-        relinfo.type = segmrel[segment];
-        if (relinfo.type == REXT)
-            relinfo.sym = extref;
+        relinfo.r_type = segmrel[segment];
+        if (relinfo.r_type == REXT)
+            relinfo.r_sym = extref;
         if (expr_flags & EXPR_GPREL)
-            relinfo.type |= RGPREL;
+            relinfo.r_type |= RGPREL;
         switch (type & (FOFF16 | FOFF18 | FAOFF18 | FAOFF28 | FHIGH16)) {
         case FOFF16:                    /* low 16-bit byte address */
             /* Test whether the immediate is in valid range
@@ -1636,7 +1661,7 @@ foff16: expr_flags = 0;
             if (negate_literal) {
                 // Negate literal arg for sub and subu
                 offset = -offset;
-                if (relinfo.type != RABS)
+                if (relinfo.r_type != RABS)
                     uerror("cannot negate relocatable literal");
             }
             switch (opcode & 0xfc000000) {
@@ -1684,7 +1709,7 @@ foff16: expr_flags = 0;
         case FHIGH16:                   /* high 16-bit byte address */
             if (expr_flags & EXPR_HI) {
                 /* %hi function - assume signed offset */
-                relinfo.type |= RHIGH16S;
+                relinfo.r_type |= RHIGH16S;
                 offset += 0x8000;
                 opcode |= offset >> 16;
             } else {
@@ -1695,16 +1720,16 @@ foff16: expr_flags = 0;
         case FAOFF18:
             if (segment == segm) {
                 offset -= count[segm] + 4;
-                relinfo.type = RABS;
+                relinfo.r_type = RABS;
             } else if (segment == SEXT) {
-                relinfo.type |= RWORD16;
+                relinfo.r_type |= RWORD16;
             } else
                 uerror("invalid segment %d", segment);
             opcode |= (offset >> 2) & 0xffff;
             break;
         case FAOFF28:                   /* 28-bit word address */
             opcode |= (offset >> 2) & 0x3ffffff;
-            relinfo.type |= RWORD26;
+            relinfo.r_type |= RWORD26;
             break;
         }
     }
@@ -1757,14 +1782,14 @@ done:
                 reorder_flush();
         }
         if (reorder_full && (type & (FOFF18 | FAOFF18)) &&
-            relinfo.type == RABS && (opcode & 0x8000)) {
+            relinfo.r_type == RABS && (opcode & 0x8000)) {
             /* Branch instruction with negative offset is being displaced
              * by one word.  Need to update the offset field. */
             offset = opcode + 1;
             opcode &= ~0xffff;
             opcode |= (offset & 0xffff);
         }
-        relinfo.offset = ftell(sfile[segm]);
+        relinfo.r_offset = ftell(sfile[segm]);
         fputword(opcode, sfile[segm]);
         fputrel(&relinfo, rfile[segm]);
         if (reorder_full) {
@@ -2079,11 +2104,12 @@ done:       reorder_flush();
                 struct reloc relinfo;
                 expr_flags = 0;
                 getexpr(&cval);
-                relinfo.type = RBYTE32 | segmrel[cval];
+                relinfo.r_type = RBYTE32 | segmrel[cval];
+                relinfo.r_sym = 0;
                 if (cval == SEXT)
-                    relinfo.sym = extref;
+                    relinfo.r_sym = extref;
                 if (expr_flags & EXPR_GPREL)
-                    relinfo.type |= RGPREL;
+                    relinfo.r_type |= RGPREL;
                 emitword(intval, &relinfo, 0);
                 clex = getlex(&cval);
                 if (clex != ',') {
@@ -2634,7 +2660,7 @@ unsigned relocate(opcode, offset, relinfo)
     unsigned opcode, offset;
     struct reloc *relinfo;
 {
-    switch (relinfo->type & RFMASK) {
+    switch (relinfo->r_type & RFMASK) {
     case RBYTE32:                       /* 32 bits of byte address */
         opcode += offset;
         break;
@@ -2659,7 +2685,7 @@ unsigned relocate(opcode, offset, relinfo)
         break;
     case RWORD16:                       /* 16 bits of relative word address */
         uerror("bad relative relocation: opcode %08x, relinfo %02x",
-            opcode, relinfo->type);
+            opcode, relinfo->r_type);
         break;
     case RWORD26:                       /* 26 bits of word address */
         offset += (opcode & 0x3ffffff) << 2;
@@ -2677,7 +2703,7 @@ unsigned makeword(opcode, relinfo, offset)
     struct nlist *sym;
     unsigned value;
 
-    switch (relinfo->type & RSMASK) {
+    switch (relinfo->r_type & RSMASK) {
     case RABS:
         break;
     case RTEXT:
@@ -2693,22 +2719,22 @@ unsigned makeword(opcode, relinfo, offset)
         opcode = relocate(opcode, bbase, relinfo);
         break;
     case REXT:
-        if (relinfo->sym >= RLAB_OFFSET - RLAB_MAXVAL) {
+        if (relinfo->r_sym >= RLAB_OFFSET - RLAB_MAXVAL) {
             /* Relative label.
              * Change relocation to segment type. */
             sym = 0;
-            value = findlabel(offset, relinfo->sym - RLAB_OFFSET);
-            relinfo->type &= RGPREL | RFMASK;
-            relinfo->type |= segmrel[segm];
+            value = findlabel(offset, relinfo->r_sym - RLAB_OFFSET);
+            relinfo->r_type &= RGPREL | RFMASK;
+            relinfo->r_type |= segmrel[segm];
         } else {
             /* Symbol name. */
-            sym = &stab[relinfo->sym];
+            sym = &stab[relinfo->r_sym];
             if (sym->n_type == N_EXT+N_UNDF || sym->n_type == N_EXT+N_COMM)
                 return opcode;
             value = sym->n_value;
         }
 
-        switch (relinfo->type & RFMASK) {
+        switch (relinfo->r_type & RFMASK) {
         case RWORD16:
             /* Relative word address.
              * Change relocation to absolute. */
@@ -2723,7 +2749,7 @@ unsigned makeword(opcode, relinfo, offset)
             offset += (opcode & 0xffff) << 2;
             opcode &= ~0xffff;
             opcode |= (offset >> 2) & 0xffff;
-            relinfo->type = RABS;
+            relinfo->r_type = RABS;
             return opcode;
         case RHIGH16:
             // TODO: use low bits of offset from the next word
@@ -2821,20 +2847,20 @@ void relrel(relinfo)
 {
     unsigned type;
 
-    switch ((int) relinfo->type & REXT) {
+    switch ((int) relinfo->r_type & REXT) {
     case RSTRNG:
-        relinfo->type &= ~RSMASK;
-        relinfo->type |= RDATA;
+        relinfo->r_type &= ~RSMASK;
+        relinfo->r_type |= RDATA;
         break;
     case REXT:
-        type = stab[relinfo->sym].n_type;
+        type = stab[relinfo->r_sym].n_type;
         if (type == N_EXT+N_UNDF || type == N_EXT+N_COMM)
         {
             /* Reindexing */
-            relinfo->sym = stab[relinfo->sym].n_index;
+            relinfo->r_sym = stab[relinfo->r_sym].n_index;
         } else {
-            relinfo->type &= ~RSMASK;
-            relinfo->type |= typerel(type); // TODO: delete
+            relinfo->r_type &= ~RSMASK;
+            relinfo->r_type |= typerel(type); // TODO: delete
         }
         break;
     }
@@ -2858,7 +2884,8 @@ unsigned makereloc(s)
     for (i=0; i<count[s]; i+=WORDSZ) {
         fgetrel(rfile[s], &relinfo);
         relrel(&relinfo);
-        nbytes += fputrel(&relinfo, stdout);
+        emitrel(&relinfo);
+        nbytes += sizeof(Elf32_Rel);
     }
     return nbytes;
 }
