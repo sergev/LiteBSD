@@ -131,7 +131,7 @@ echo clearing /tmp
 
 echo -n standard daemons:
 echo -n ' update';              update
-#echo -n ' cron';               cron
+echo -n ' cron';                cron
 
 #echo -n starting network daemons:
 

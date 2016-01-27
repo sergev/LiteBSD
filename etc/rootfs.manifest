@@ -828,6 +828,7 @@ file /usr/bin/colrm
 file /usr/bin/column
 file /usr/bin/comm
 file /usr/bin/cpp
+file /usr/bin/crontab
 file /usr/bin/ctags
 file /usr/bin/cut
 file /usr/bin/dc
@@ -1089,6 +1090,7 @@ file /usr/sbin/amq
 file /usr/sbin/arp
 file /usr/sbin/chown
 file /usr/sbin/chroot
+file /usr/sbin/cron
 file /usr/sbin/dev_mkdb
 file /usr/sbin/edquota
 file /usr/sbin/fsinfo
@@ -1781,6 +1783,7 @@ file /usr/share/man/cat1/colrm.0
 file /usr/share/man/cat1/column.0
 file /usr/share/man/cat1/comm.0
 file /usr/share/man/cat1/cp.0
+file /usr/share/man/cat1/crontab.0
 file /usr/share/man/cat1/csh.0
 file /usr/share/man/cat1/ctags.0
 file /usr/share/man/cat1/cut.0
@@ -4020,6 +4023,7 @@ file /usr/share/man/cat5/a.out.0
 file /usr/share/man/cat5/ar.0
 file /usr/share/man/cat5/core.0
 file /usr/share/man/cat5/cpio.0
+file /usr/share/man/cat5/crontab.0
 file /usr/share/man/cat5/dir.0
 file /usr/share/man/cat5/disktab.0
 file /usr/share/man/cat5/dump.0
@@ -4103,6 +4107,7 @@ file /usr/share/man/cat8/chroot.0
 file /usr/share/man/cat8/clri.0
 file /usr/share/man/cat8/comsat.0
 file /usr/share/man/cat8/config.0
+file /usr/share/man/cat8/cron.0
 file /usr/share/man/cat8/dev_mkdb.0
 file /usr/share/man/cat8/dmesg.0
 file /usr/share/man/cat8/dump.0

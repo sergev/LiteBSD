@@ -1,11 +1,13 @@
 #	@(#)Makefile	5.20 (Berkeley) 6/12/93
 
-SUBDIR=	accton amd arp chown chroot dev_mkdb edquota \
+SUBDIR=	accton amd arp chown chroot cron dev_mkdb edquota \
 	inetd kgmon lpr mtree portmap pstat pwd_mkdb \
 	quotaon repquota rmt rwhod sliplogin sysctl \
 	syslogd traceroute trpt update vipw
 
 # Missing on 4.4bsd tape: cron mkproto sa
+# From the above list:
+# cron: from NetBSD with tweaks from FreeBSD
 
 # TODO: ac quot sendmail trsp
 
