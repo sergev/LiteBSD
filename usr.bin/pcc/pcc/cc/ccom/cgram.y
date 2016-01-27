@@ -1,4 +1,4 @@
-/*	$Id: cgram.y,v 1.410 2016/01/07 20:05:55 ragge Exp $	*/
+/*	$Id: cgram.y,v 1.411 2016/01/10 18:08:13 ragge Exp $	*/
 
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -165,6 +165,12 @@ static int attrwarn = 1;
 
 #define	NORETYP	SNOCREAT /* no return type, save in unused field in symtab */
 
+struct genlist {
+	struct genlist *next;
+	P1ND *p;
+	TWORD t;
+};
+
        P1ND *bdty(int op, ...);
 static void fend(void);
 static void fundef(P1ND *tp, P1ND *p);
@@ -202,7 +208,10 @@ static void dainit(P1ND *d, P1ND *a);
 static P1ND *tymfix(P1ND *p);
 static P1ND *namekill(P1ND *p, int clr);
 static P1ND *aryfix(P1ND *p);
-static P1ND *dogen(P1ND *e, P1ND *t);
+static P1ND *dogen(struct genlist *g, P1ND *e);
+static struct genlist *newgen(P1ND *p, P1ND *q);
+static struct genlist *addgen(struct genlist *g, struct genlist *h);
+
 static void savlab(int);
 static void xcbranch(P1ND *, int);
 extern int *mkclabs(void);
@@ -248,6 +257,7 @@ struct savbc {
 	char *strp;
 	struct bks *bkp;
 	union flt *flt;
+	struct genlist *g;
 }
 
 	/* define types */
@@ -258,13 +268,15 @@ struct savbc {
 %type <nodep> e .e term enum_dcl struct_dcl cast_type declarator
 		elist type_sq cf_spec merge_attribs e2 ecq
 		parameter_declaration abstract_declarator initializer
-		parameter_type_list parameter_list gen_ass_list
-		declaration_specifiers designation gen_assoc
+		parameter_type_list parameter_list
+		declaration_specifiers designation
 		specifier_qualifier_list merge_specifiers
 		identifier_list arg_param_list type_qualifier_list
 		designator_list designator xasm oplist oper cnstr funtype
 		typeof attribute attribute_specifier /* COMPAT_GCC */
 		attribute_list attr_spec_list attr_var /* COMPAT_GCC */
+
+%type <g>	gen_ass_list gen_assoc
 %type <strp>	string C_STRING GCC_DESIG svstr
 %type <rp>	str_head
 %type <symp>	xnfdeclarator clbrace enum_head
@@ -1242,17 +1254,15 @@ term:		   term C_INCOP {  $$ = biop($2, $1, bcon(1)); }
 			savlab(s->soffset);
 			$$ = biop(ADDROF, bdty(GOTO, $2), NULL);
 		}
-		| C_GENERIC '(' e ',' gen_ass_list ')' { $$ = dogen($3, $5); }
+		| C_GENERIC '(' e ',' gen_ass_list ')' { $$ = dogen($5, $3); }
 		;
 
 gen_ass_list:	  gen_assoc { $$ = $1; }
-		| gen_ass_list ',' gen_assoc { $$ = biop(CM, $1, $3); }
+		| gen_ass_list ',' gen_assoc { $$ = addgen($1, $3); }
 		;
 
-gen_assoc:	  cast_type ':' e { TYMFIX($1); $$ = biop(COMOP, $1, $3); }
-		| C_DEFAULT ':' e {
-			$$ = bcon(0); $$->n_type = 0; $$ = biop(COMOP, $$, $3); 
-		}
+gen_assoc:	  cast_type ':' e { TYMFIX($1); $$ = newgen($1, $3); }
+		| C_DEFAULT ':' e { $$ = newgen(0, $3); }
 		;
 
 xa:		  { $<intval>$ = inattr; inattr = 0; }
@@ -2537,38 +2547,82 @@ xcbranch(P1ND *p, int lab)
 	cbranch(buildtree(NOT, p, NULL), bcon(lab));
 }
 
-static P1ND *
-dogen(P1ND *e, P1ND *t)
+/*
+ * New a case entry to genlist.
+ * tn is type, e is expression.
+ */
+static struct genlist *
+newgen(P1ND *tn, P1ND *e)
 {
+	struct genlist *ng;
+	TWORD t;
+
+	if (tn) {
+		t = tn->n_type;
+		p1tfree(tn);
+	} else
+		t = 0;
+
+	/* add new entry */
+	ng = malloc(sizeof(struct genlist));
+	ng->next = NULL;
+	ng->t = t;
+	ng->p = e;
+	return ng;
+}
+
+/*
+ * Add a case entry to genlist.
+ * g is list, ng is new entry.
+ */
+static struct genlist *
+addgen(struct genlist *g, struct genlist *ng)
+{
+	struct genlist *w;
+
+	/* search for duplicate type */
+	for (w = g; w; w = w->next) {
+		if (w->t == ng->t)
+			uerror("duplicate type in _Generic");
+	}
+	ng->next = g;
+	return ng;
+}
+
+static P1ND *
+dogen(struct genlist *g, P1ND *e)
+{
+	struct genlist *ng;
 	P1ND *w, *p;
 
 	e = eve(e);
 
 	/* search for direct match */
-	for (w = t; w->n_op == CM; w = w->n_left) {
-		if (w->n_right->n_left->n_type == e->n_type) {
-t2:			p = w->n_right->n_right;
-			w->n_right->n_op = UMUL;
-tf:			p1tfree(e);
-			p1tfree(t);
-			return p;
-		}
-	}
-	if (w->n_op == COMOP) {
-		if (w->n_left->n_type == e->n_type) {
-t3:			p = w->n_right;
-			w->n_op = UMUL;
-			goto tf;
-		}
+	for (ng = g, w = p = NULL; ng; ng = ng->next) {
+		if (ng->t == 0)
+			p = ng->p; /* save default */
+		if (e->n_type == ng->t)
+			w = ng->p;
 	}
 
-	/* nope, search for default */
-	for (w = t; w->n_op == CM; w = w->n_left)
-		if (w->n_right->n_left->n_type == 0)
-			goto t2;
-	if (w->n_op == COMOP)
-		if (w->n_left->n_type == 0)
-			goto t3;
-	uerror("_Generic: no default found");
-	return t;
+	/* if no match, use generic */
+	if (w == NULL) {
+		if (p == NULL) {
+			uerror("_Generic: no default found");
+			p = bcon(0);
+		}
+		w = p;
+	}
+
+	/* free tree */
+	while (g) {
+		if (g->p != w)
+			p1tfree(g->p);
+		ng = g->next;
+		free(g);
+		g = ng;
+	}
+
+	p1tfree(e);
+	return w;
 }

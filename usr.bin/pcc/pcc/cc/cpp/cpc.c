@@ -1,4 +1,4 @@
-/*      $Id: cpc.c,v 1.6 2015/06/25 08:17:37 ragge Exp $      */
+/*      $Id: cpc.c,v 1.7 2016/01/10 16:17:45 ragge Exp $      */
 
 /*
  * Copyright (c) 2014 Anders Magnusson (ragge@ludd.luth.se).
@@ -252,7 +252,18 @@ eval(int op, ND *n1, ND *n2)
 		case '!': n1->nd_val = !n1->nd_val; n1->op = NUMBER; break;
 		}
 		return;
-	} else if (n2->op == 0) {
+	} 
+
+	if (op == OROR && n1->nd_val) {
+		n1->nd_val = 1, n1->op = NUMBER;
+		return;
+	}
+	if (op == ANDAND && n1->nd_val == 0) {
+		n1->op = NUMBER;
+		return;
+	}
+
+	if (n2->op == 0) {
 		n1->op = 0;
 		return;
 	}
@@ -267,7 +278,7 @@ eval(int op, ND *n1, ND *n2)
 		n1->op = NUMBER;
 		break;
 	case ANDAND:
-		n1->nd_val = (n1->nd_val && n2->nd_val);
+		n1->nd_val = n2->nd_val != 0;
 		n1->op = NUMBER;
 		break;
 	case '+': n1->nd_val += n2->nd_val; break;
