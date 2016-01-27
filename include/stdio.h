@@ -218,6 +218,7 @@ __END_DECLS
  * Functions defined in ANSI C standard.
  */
 __BEGIN_DECLS
+int      asprintf __P((char **, const char *, ...));
 void     clearerr __P((FILE *));
 int      fclose __P((FILE *));
 int      feof __P((FILE *));
@@ -260,6 +261,7 @@ int      sscanf __P((const char *, const char *, ...));
 FILE    *tmpfile __P((void));
 char    *tmpnam __P((char *));
 int      ungetc __P((int, FILE *));
+int      vasprintf __P((char **, const char *, _BSD_VA_LIST_));
 int      vfprintf __P((FILE *, const char *, _BSD_VA_LIST_));
 int      vprintf __P((const char *, _BSD_VA_LIST_));
 int      vsprintf __P((char *, const char *, _BSD_VA_LIST_));
