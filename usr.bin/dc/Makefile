@@ -2,7 +2,7 @@
 #	$OpenBSD: Makefile,v 1.2 2006/11/26 11:31:09 deraadt Exp $
 
 PROG=	dc
-SRCS=	dc.c bcode.c inout.c mem.c stack.c vasprintf.c asprintf.c
+SRCS=	dc.c bcode.c inout.c mem.c stack.c
 
 CFLAGS+=-ffunction-sections -fdata-sections
 LDFLAGS+=-Wl,--gc-sections

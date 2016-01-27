@@ -2,7 +2,7 @@
 #	$OpenBSD: Makefile,v 1.4 2006/06/30 19:02:28 otto Exp $
 
 PROG=	bc
-SRCS=	bc.y scan.l asprintf.c vasprintf.c
+SRCS=	bc.y scan.l
 CFLAGS+= -I. -I${.CURDIR} -ffunction-sections -fdata-sections
 LDFLAGS+=-Wl,--gc-sections
 CLEANFILES+= y.tab.c y.tab.h

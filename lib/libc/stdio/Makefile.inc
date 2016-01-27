@@ -10,9 +10,9 @@ SRCS+=	clrerr.c fclose.c fdopen.c feof.c ferror.c fflush.c fgetc.c \
 	getc.c getchar.c gets.c getw.c makebuf.c mktemp.c perror.c \
 	printf.c putc.c putchar.c puts.c putw.c refill.c remove.c rewind.c \
 	rget.c scanf.c setbuf.c setbuffer.c setvbuf.c snprintf.c sprintf.c \
-	sscanf.c stdio.c tempnam.c tmpfile.c tmpnam.c ungetc.c vfprintf.c \
-	vfscanf.c vprintf.c vscanf.c vsnprintf.c vsprintf.c vsscanf.c \
-	wbuf.c wsetup.c
+	sscanf.c stdio.c tempnam.c tmpfile.c tmpnam.c ungetc.c vasprintf.c \
+	vfprintf.c vfscanf.c vprintf.c vscanf.c vsnprintf.c vsprintf.c \
+	vsscanf.c wbuf.c wsetup.c
 
 MAN3+=	fclose.0 ferror.0 fflush.0 fgetln.0 fgets.0 fopen.0 fputs.0 \
 	fread.0 fseek.0 funopen.0 getc.0 mktemp.0 printf.0 putc.0 remove.0 \
