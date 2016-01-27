@@ -1,4 +1,4 @@
-/*	$Id: cpp.c,v 1.250 2016/01/08 13:21:50 ragge Exp $	*/
+/*	$Id: cpp.c,v 1.251 2016/01/24 10:02:23 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2010 Anders Magnusson (ragge@ludd.luth.se).
@@ -505,6 +505,7 @@ line(void)
 
 	ifiles->lineno = ln;
 	prtline(1);
+	ifiles->lineno--;
 	cunput('\n');
 	return;
 
