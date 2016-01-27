@@ -6,8 +6,8 @@ SUBDIR=	accton amd arp chown chroot cron dev_mkdb edquota \
 	syslogd traceroute trpt update vipw
 
 # Missing on 4.4bsd tape: cron mkproto sa
-# From the above list:
-# cron: from NetBSD with tweaks from FreeBSD
+# From the above missing list:
+# cron: ported from NetBSD (with tweaks from FreeBSD)
 
 # TODO: ac quot sendmail trsp
 
