@@ -1,3 +1,6 @@
+.\"     $OpenBSD: apropos.1,v 1.16 2012/01/22 13:45:22 schwarze Exp $
+.\"     $NetBSD: apropos.1,v 1.4 1995/09/04 20:46:17 tls Exp $
+.\"
 .\" Copyright (c) 1989, 1990, 1993
 .\"	The Regents of the University of California.  All rights reserved.
 .\"
@@ -9,11 +12,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
+.\" 3. Neither the name of the University nor the names of its contributors
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
@@ -31,7 +30,7 @@
 .\"
 .\"	@(#)apropos.1	8.1 (Berkeley) 6/29/93
 .\"
-.Dd June 29, 1993
+.Dd $Mdocdate: January 22 2012 $
 .Dt APROPOS 1
 .Os
 .Sh NAME
@@ -39,52 +38,61 @@
 .Nd locate commands by keyword lookup
 .Sh SYNOPSIS
 .Nm apropos
+.Op Fl C Ar file
 .Op Fl M Ar path
 .Op Fl m Ar path
+.Op Fl S Ar subsection
+.Op Fl s Ar section
 .Ar keyword ...
 .Sh DESCRIPTION
-.Nm Apropos
+.Nm
 shows which manual pages contain instances of any of the given
 .Ar keyword(s)
 in their title line.
 Each word is considered separately and case of letters is ignored.
 Words which are part of other words are considered; when looking for
 .Dq compile ,
-.Nm apropos
+.Nm
 will also list all instances of
 .Dq compiler .
 .Pp
 If the line output by
-.Nm apropos
+.Nm
 starts
-.Dq Li name(section) ...
+.Dq Li name (section) ... ,
 you can enter
 .Dq Li man section name
 to get
 its documentation.
 .Pp
 The options are as follows:
-.Bl -tag -width flag
-.It Fl M
+.Bl -tag -width "-C file"
+.It Fl C Ar file
+Specify an alternative configuration
+.Ar file
+in
+.Xr man.conf 5
+format.
+.It Fl M Ar path
 Override the list of standard directories
-.Nm apropos
+.Nm
 searches for a database named
 .Pa whatis.db .
 The supplied
 .Ar path
 must be a colon
-.Dq \&:
+.Pq Sq \&:
 separated list of directories.
 This search path may also be set using the environment variable
 .Ev MANPATH .
-.It Fl m
+.It Fl m Ar path
 Augment the list of standard directories
-.Nm apropos
+.Nm
 searches for its database.
 The supplied
 .Ar path
 must be a colon
-.Dq \&:
+.Pq Sq \&:
 separated list of directories.
 These directories will be searched before the standard directories,
 or the directories supplied with the
@@ -92,6 +100,13 @@ or the directories supplied with the
 option or the
 .Ev MANPATH
 environment variable.
+.It Fl S Ar subsection
+Restrict the search to pages for the specified machine architecture.
+By default, pages for all architectures are shown.
+.It Fl s Ar section
+Restrict the search to the specified section of the manual.
+By default, pages from all sections are shown.
+.El
 .Sh ENVIRONMENT
 .Bl -tag -width MANPATH
 .It Ev MANPATH
@@ -101,20 +116,51 @@ may be overridden by specifying a path in the
 .Ev MANPATH
 environment variable.
 The format of the path is a colon
-.Dq \&:
+.Pq Sq \&:
 separated list of directories.
 .El
 .Sh FILES
-.Bl -tag -width whatis.db -compact
+.Bl -tag -width /etc/man.conf -compact
 .It Pa whatis.db
 name of the apropos database
+.It Pa /etc/man.conf
+default
+.Xr man 1
+configuration file
 .El
 .Sh SEE ALSO
 .Xr man 1 ,
 .Xr whatis 1 ,
-.Xr whereis 1
+.Xr whereis 1 ,
+.Xr man.conf 5 ,
+.Xr makewhatis 8
 .Sh HISTORY
 The
-.Nm apropos
-command appeared in
-.Bx 3.0 .
+.Nm
+command first appeared in
+.Bx 2 .
+.Pp
+The
+.Fl M
+option and the
+.Ev MANPATH
+variable first appeared in
+.Bx 4.3 ;
+.Fl m
+in
+.Bx 4.3 Reno ;
+.Fl C
+in
+.Bx 4.4 Lite1 ;
+and
+.Fl s
+and
+.Fl S
+in
+.Ox 4.5 .
+.Sh AUTHORS
+.An Bill Joy
+wrote the original
+.Bx
+.Nm
+in February 1979.

@@ -1,3 +1,6 @@
+/*      $OpenBSD: apropos.c,v 1.16 2013/11/25 18:02:49 deraadt Exp $      */
+/*      $NetBSD: apropos.c,v 1.5 1995/09/04 20:46:20 tls Exp $      */
+
 /*
  * Copyright (c) 1987, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -10,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -30,16 +29,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1987, 1993, 1994\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)apropos.c	8.8 (Berkeley) 5/4/95";
-#endif /* not lint */
 
 #include <sys/param.h>
 #include <sys/queue.h>
@@ -57,24 +46,25 @@ static char sccsid[] = "@(#)apropos.c	8.8 (Berkeley) 5/4/95";
 
 static int *found, foundman;
 
-void apropos __P((char **, char *, int));
-void lowstr __P((char *, char *));
-int match __P((char *, char *));
-void usage __P((void));
+#define	MAXLINELEN	8192		/* max line handled */
+
+void apropos(char **, char *, int, char *, char *);
+void lowstr(char *, char *);
+int match(char *, char *);
+void usage(void);
 
 int
-main(argc, argv)
-	int argc;
-	char *argv[];
+main(int argc, char *argv[])
 {
 	ENTRY *ep;
 	TAG *tp;
 	int ch, rv;
-	char *conffile, **p, *p_augment, *p_path;
+	char *conffile, *machine, **p, *p_augment, *p_path, *sflag;
 
 	conffile = NULL;
 	p_augment = p_path = NULL;
-	while ((ch = getopt(argc, argv, "C:M:m:P:")) != EOF)
+	machine = sflag = NULL;
+	while ((ch = getopt(argc, argv, "C:M:m:P:S:s:")) != -1)
 		switch (ch) {
 		case 'C':
 			conffile = optarg;
@@ -86,6 +76,14 @@ main(argc, argv)
 		case 'm':
 			p_augment = optarg;
 			break;
+		case 'S':
+			machine = optarg;
+			lowstr(machine, machine);
+			break;
+		case 's':
+			sflag = optarg;
+			lowstr(sflag, sflag);
+			break;
 		case '?':
 		default:
 			usage();
@@ -96,23 +94,22 @@ main(argc, argv)
 	if (argc < 1)
 		usage();
 
-	if ((found = malloc((u_int)argc * sizeof(int))) == NULL)
+	if ((found = calloc(argc, sizeof(int))) == NULL)
 		err(1, NULL);
-	memset(found, 0, argc * sizeof(int));
 
 	for (p = argv; *p; ++p)			/* convert to lower-case */
 		lowstr(*p, *p);
 
 	if (p_augment)
-		apropos(argv, p_augment, 1);
+		apropos(argv, p_augment, 1, sflag, machine);
 	if (p_path || (p_path = getenv("MANPATH")))
-		apropos(argv, p_path, 1);
+		apropos(argv, p_path, 1, sflag, machine);
 	else {
 		config(conffile);
 		ep = (tp = getlist("_whatdb")) == NULL ?
-		    NULL : tp->list.tqh_first;
-		for (; ep != NULL; ep = ep->q.tqe_next)
-			apropos(argv, ep->s, 0);
+		    NULL : TAILQ_FIRST(&tp->list);
+		for (; ep != NULL; ep = TAILQ_NEXT(ep, q))
+			apropos(argv, ep->s, 0, sflag, machine);
 	}
 
 	if (!foundman)
@@ -128,21 +125,25 @@ main(argc, argv)
 }
 
 void
-apropos(argv, path, buildpath)
-	char **argv, *path;
-	int buildpath;
+apropos(char **argv, char *path, int buildpath, char *sflag, char *machine)
 {
 	char *end, *name, **p;
-	char buf[LINE_MAX + 1], wbuf[LINE_MAX + 1];
+	char buf[MAXLINELEN + 1], wbuf[MAXLINELEN + 1];
+	char hold[MAXPATHLEN];
+	size_t slen = 0, mlen = 0;
+
+	if (sflag)
+		slen = strlen(sflag);
+	if (machine)
+		mlen = strlen(machine);
 
 	for (name = path; name; name = end) {	/* through name list */
-		if (end = strchr(name, ':'))
+		if ((end = strchr(name, ':')))
 			*end++ = '\0';
 
 		if (buildpath) {
-			char hold[MAXPATHLEN + 1];
-
-			(void)sprintf(hold, "%s/%s", name, _PATH_WHATIS);
+			(void)snprintf(hold, sizeof(hold), "%s/%s", name,
+			    _PATH_WHATIS);
 			name = hold;
 		}
 
@@ -158,6 +159,21 @@ apropos(argv, path, buildpath)
 				continue;
 			}
 			lowstr(buf, wbuf);
+			if (sflag || machine) {
+				char *s = strstr(wbuf, ") - ");
+				if (!s)
+					continue;
+				while (s > wbuf && *s != '/' && *s != '(')
+					s--;
+				if (machine && *s == '/' &&
+				    strncmp(s+1, machine, mlen))
+					continue;
+				while (s > wbuf && *s != '(')
+					s--;
+				if (sflag && *s == '(' &&
+				    strncmp(s+1, sflag, slen))
+					continue;
+			}
 			for (p = argv; *p; ++p)
 				if (match(wbuf, *p)) {
 					(void)printf("%s", buf);
@@ -178,8 +194,7 @@ apropos(argv, path, buildpath)
  *	match anywhere the string appears
  */
 int
-match(bp, str)
-	char *bp, *str;
+match(char *bp, char *str)
 {
 	int len;
 	char test;
@@ -200,10 +215,9 @@ match(bp, str)
  *	convert a string to lower case
  */
 void
-lowstr(from, to)
-	char *from, *to;
+lowstr(char *from, char *to)
 {
-	char ch;
+	unsigned char ch;
 
 	while ((ch = *from++) && ch != '\n')
 		*to++ = isupper(ch) ? tolower(ch) : ch;
@@ -215,10 +229,12 @@ lowstr(from, to)
  *	print usage message and die
  */
 void
-usage()
+usage(void)
 {
 
 	(void)fprintf(stderr,
-	    "usage: apropos [-C file] [-M path] [-m path] keyword ...\n");
+	    "usage: apropos [-C file] [-M path] [-m path] "
+	    "[-S subsection] [-s section]\n"
+	    "       keyword ...\n");
 	exit(1);
 }
