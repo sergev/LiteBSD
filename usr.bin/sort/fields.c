@@ -1,3 +1,5 @@
+/*	$OpenBSD: fields.c,v 1.15 2011/01/01 12:11:37 kettenis Exp $	*/
+
 /*-
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,14 +32,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)fields.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 /* Subroutines to generate sort keys. */
 
 #include "sort.h"
-#include <string.h>
 
 #define blancmange(ptr) {					\
 	if (BLANK & d_mask[*(ptr)])				\
@@ -50,15 +43,15 @@ static char sccsid[] = "@(#)fields.c	8.1 (Berkeley) 6/6/93";
 
 #define NEXTCOL(pos) {						\
 	if (!SEP_FLAG)						\
-		while (BLANK & l_d_mask[*(++pos)]);		\
-	while (!((FLD_D | REC_D_F) & l_d_mask[*++pos]));	\
+		while (pos < lineend && BLANK & l_d_mask[*(++pos)]);		\
+	while (pos < lineend && !((FLD_D | REC_D_F) & l_d_mask[*++pos]));	\
 }
+		
+extern u_char *enterfield(u_char *, u_char *, struct field *, int);
 
-extern u_char *enterfield __P((u_char *, u_char *, struct field *, int));
+extern u_char *number(u_char *, u_char *, u_char *, u_char *, int);
 
-extern u_char *number __P((u_char *, u_char *, u_char *, u_char *, int));
-
-extern struct coldesc clist[(ND+1)*2];
+extern struct coldesc *clist;
 extern int ncols;
 
 #define DECIMAL '.'
@@ -74,18 +67,15 @@ u_char fnum[NBINS], rnum[NBINS];
  * followed by the original line.
  */
 length_t
-enterkey(keybuf, line, size, fieldtable)
-	struct recheader *keybuf;	/* pointer to start of key */
-	DBT *line;
-	int size;
-	struct field fieldtable[];
+enterkey(RECHEADER *keybuf,	/* pointer to start of key */
+    DBT *line, int size, struct field fieldtable[])
 {
 	int i;
-	register u_char *l_d_mask;
-	register u_char *lineend, *pos;
+	u_char *l_d_mask;
+	u_char *lineend, *pos;
 	u_char *endkey, *keypos;
-	register struct coldesc *clpos;
-	register int col = 1;
+	struct coldesc *clpos;
+	int col = 1;
 	struct field *ftpos;
 	l_d_mask = d_mask;
 	pos = (u_char *) line->data - 1;
@@ -95,8 +85,9 @@ enterkey(keybuf, line, size, fieldtable)
 
 	for (i = 0; i < ncols; i++) {
 		clpos = clist + i;
-		for (; (col < clpos->num) && (pos < lineend); col++)
-			{ NEXTCOL(pos); }
+		for (; (col < clpos->num) && (pos < lineend); col++) {
+			NEXTCOL(pos);
+		}
 		if (pos >= lineend)
 			break;
 		clpos->start = SEP_FLAG ? pos + 1 : pos;
@@ -105,21 +96,21 @@ enterkey(keybuf, line, size, fieldtable)
 		col++;
 		if (pos >= lineend) {
 			clpos->end = lineend;
-			++i;
+			i++;
 			break;
 		}
 	}
 	for (; i <= ncols; i++)
 		clist[i].start = clist[i].end = lineend;
 	if (clist[0].start < (u_char *) line->data)
-		++clist[0].start;
+		clist[0].start++;
 	endkey = (u_char *) keybuf + size - line->size;
 	for (ftpos = fieldtable + 1; ftpos->icol.num; ftpos++)
 		if ((keypos = enterfield(keypos, endkey, ftpos,
 		    fieldtable->flags)) == NULL)
 			return (1);
 
-	if (UNIQUE)
+	if (UNIQUE || STABLE)
 		*(keypos-1) = REC_D;
 	keybuf->offset = keypos - keybuf->data;
 	keybuf->length = keybuf->offset + line->size;
@@ -133,15 +124,13 @@ enterkey(keybuf, line, size, fieldtable)
  * constructs a field (as defined by -k) within a key
  */
 u_char *
-enterfield(tablepos, endkey, cur_fld, gflags)
-	struct field *cur_fld;
-	register u_char *tablepos, *endkey;
-	int gflags;
+enterfield(u_char *tablepos, u_char *endkey, struct field *cur_fld, int gflags)
 {
-	register u_char *start, *end, *lineend, *mask, *lweight;
+	u_char *start, *end, *lineend, *mask, *lweight;
 	struct column icol, tcol;
-	register u_int flags;
+	u_int flags;
 	u_int Rflag;
+
 	icol = cur_fld->icol;
 	tcol = cur_fld->tcol;
 	flags = cur_fld->flags;
@@ -151,12 +140,14 @@ enterfield(tablepos, endkey, cur_fld, gflags)
 		blancmange(start);
 	start += icol.indent;
 	start = min(start, lineend);
+
 	if (!tcol.num)
 		end = lineend;
 	else {
 		if (tcol.indent) {
 			end = tcol.p->start;
-			if (flags & BT) blancmange(end);
+			if (flags & BT)
+				blancmange(end);
 			end += tcol.indent;
 			end = min(end, lineend);
 		} else
@@ -169,18 +160,18 @@ enterfield(tablepos, endkey, cur_fld, gflags)
 	}
 	mask = alltable;
 	mask = cur_fld->mask;
-	lweight = cur_fld->weights;
+	lweight = cur_fld->weights;	
 	for (; start < end; start++)
 		if (mask[*start]) {
 			if (*start <= 1) {
-				if (tablepos+2 >= endkey)
+				if (tablepos + 2 >= endkey)
 					return (NULL);
 				*tablepos++ = lweight[1];
 				*tablepos++ = lweight[*start ? 2 : 1];
 			} else {
+				if (tablepos + 1 >= endkey)
+					return (NULL);
 				*tablepos++ = lweight[*start];
-				if (tablepos == endkey)
-				return (NULL);
 			}
 		}
 	*tablepos++ = lweight[0];
@@ -197,18 +188,16 @@ enterfield(tablepos, endkey, cur_fld, gflags)
  * To avoid confusing the exponent and the mantissa, use a field delimiter
  * if the exponent is exactly 61, 61+252, etc--this is ok, since it's the
  * only time a field delimiter can come in that position.
- * Reverse order is done analagously.
-*/
+ * Reverse order is done analogously.
+ */
 
 u_char *
-number(pos, bufend, line, lineend, Rflag)
-	register u_char *line, *pos, *bufend, *lineend;
-	int Rflag;
+number(u_char *pos, u_char *bufend, u_char *line, u_char *lineend, int Rflag)
 {
-	register int or_sign, parity = 0;
-	register int expincr = 1, exponent = -1;
-	int bite, expsign = 1, sign = 1;
-	register u_char lastvalue, *nonzero, *tline, *C_TENS;
+	int or_sign, parity = 0;
+	int expincr = 1, exponent = -1;
+	int bite, expsign = 1, sign = 1, zeroskip = 0;
+	u_char lastvalue, *tline, *C_TENS;
 	u_char *nweights;
 
 	if (Rflag)
@@ -217,8 +206,10 @@ number(pos, bufend, line, lineend, Rflag)
 		nweights = fnum;
 	if (pos > bufend - 8)
 		return (NULL);
-	/* or_sign sets the sort direction:
-	 *	(-r: +/-)(sign: +/-)(expsign: +/-) */
+	/*
+	 * or_sign sets the sort direction:
+	 *	(-r: +/-)(sign: +/-)(expsign: +/-)
+	 */
 	or_sign = sign ^ expsign ^ Rflag;
 	blancmange(line);
 	if (*line == '-') {	/* set the sign */
@@ -227,7 +218,8 @@ number(pos, bufend, line, lineend, Rflag)
 		line++;
 	}
 	/* eat initial zeroes */
-	for (; *line == '0' && line < lineend; line++);
+	for (; *line == '0' && line < lineend; line++)
+		zeroskip = 1;
 	/* calculate exponents < 0 */
 	if (*line == DECIMAL) {
 		exponent = 1;
@@ -238,11 +230,13 @@ number(pos, bufend, line, lineend, Rflag)
 	}
 	/* next character better be a digit */
 	if (*line < '1' || *line > '9' || line >= lineend) {
-		*pos++ = nweights[127];
-		return (pos);
+		if (!zeroskip) {
+			*pos++ = nweights[127];
+			return (pos);
+		}
 	}
 	if (expincr) {
-		for (tline = line-1; *++tline >= '0' &&
+		for (tline = line-1; *++tline >= '0' && 
 		    *tline <= '9' && tline < lineend;)
 			exponent++;
 	}
@@ -270,8 +264,6 @@ number(pos, bufend, line, lineend, Rflag)
 						: *line);
 				if (pos == bufend)
 					return (NULL);
-				if (*line != '0' || lastvalue != '0')
-					nonzero = pos;
 			} else
 				lastvalue = *line;
 			parity ^= 1;
@@ -282,11 +274,10 @@ number(pos, bufend, line, lineend, Rflag)
 		} else
 			break;
 	}
-	if (parity && lastvalue != '0') {
+	if (parity) {
 		*pos++ = or_sign ? OFF_NTENS[lastvalue] - '0' :
 					OFF_TENS[lastvalue] + '0';
-	} else
-		pos = nonzero;
+	}
 	if (pos > bufend-1)
 		return (NULL);
 	*pos++ = or_sign ? nweights[254] : nweights[0];
@@ -294,11 +285,11 @@ number(pos, bufend, line, lineend, Rflag)
 }
 
 /* This forces a gap around the record delimiter
- * Thus fnum has vaues over (0,254) -> ((0,REC_D-1),(REC_D+1,255));
+ * Thus fnum has values over (0,254) -> ((0,REC_D-1),(REC_D+1,255));
  * rnum over (0,254) -> (255,REC_D+1),(REC_D-1,0))
-*/
+ */
 void
-num_init()
+num_init(void)
 {
 	int i;
 	TENS[0] = REC_D <=128 ? 130 - '0' : 2 - '0';
@@ -306,15 +297,15 @@ num_init()
 	OFF_TENS = TENS - '0';
 	OFF_NTENS = NEGTENS - '0';
 	for (i = 1; i < 10; i++) {
-		TENS[i] = TENS[i-1] + 10;
-		NEGTENS[i] = NEGTENS[i-1] - 10;
+		TENS[i] = TENS[i - 1] + 10;
+		NEGTENS[i] = NEGTENS[i - 1] - 10;
 	}
 	for (i = 0; i < REC_D; i++) {
 		fnum[i] = i;
-		rnum[255-i] = i;
+		rnum[255 - i] = i;
 	}
 	for (i = REC_D; i <255; i++) {
-		fnum[i] = i+1;
-		rnum[255-i] = i-1;
+		fnum[i] = i + 1;
+		rnum[255 - i] = i - 1;
 	}
 }

@@ -1,3 +1,5 @@
+/*	$OpenBSD: sort.h,v 1.7 2007/08/21 20:29:25 millert Exp $	*/
+
 /*-
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -45,6 +43,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define NBINS 256
 #define MAXMERGE 16
@@ -63,25 +62,23 @@
 #define FLD_D 2		/* ' ', '\t' default; from -t otherwise */
 #define REC_D_F 4	/* '\n' default; from -T otherwise */
 
-#define ND 10	/* limit on number of -k options. */
-
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 #define	FCLOSE(file) {							\
 	if (EOF == fclose(file))					\
-		err(2, "%s", file);					\
+		err(2, "fclose");					\
 }
 
 #define	EWRITE(ptr, size, n, f) {					\
 	if (!fwrite(ptr, size, n, f))					\
-		 err(2, NULL);						\
+		 err(2, "fwrite");					\
 }
 
-/* length of record is currently limited to 2^16 - 1 */
-typedef u_short length_t;
+/* length of record is currently limited to maximum string length (size_t) */
+typedef size_t length_t;
 
-#define SALIGN(n) ((n+1) & ~1)
+#define SALIGN(n) ((n+(sizeof(length_t)-1)) & ~(sizeof(length_t)-1))
 
 /* a record is a key/line pair starting at rec.data. It has a total length
  * and an offset to the start of the line half of the pair.
@@ -136,7 +133,9 @@ extern int PANIC;	/* maximum depth of fsort before fmerge is called */
 extern u_char ascii[NBINS], Rascii[NBINS], Ftable[NBINS], RFtable[NBINS];
 extern u_char alltable[NBINS], dtable[NBINS], itable[NBINS];
 extern u_char d_mask[NBINS];
-extern int SINGL_FLD, SEP_FLAG, UNIQUE;
+extern int SINGL_FLD, SEP_FLAG, UNIQUE, STABLE;
 extern int REC_D;
+extern char *tmpdir;
+extern int ND;		/* limit on number of -k options. */
 
 #include "extern.h"

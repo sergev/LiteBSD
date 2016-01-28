@@ -10,7 +10,7 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 	mkfifo mklocale mkstr more msgs mt nc netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pcc pkg pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
-	script sed shar showmount size sl soelim split sqlite3 \
+	script sed shar showmount size sl soelim sort split sqlite3 \
 	strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation \
@@ -29,6 +29,7 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 # deroff: ported from OpenBSD
 
 # TODO: ex file sort uucp
+# sort: ported from last OpenBSD sort(1) (2015-03-16)
 
 # Cmp, look and tail all use mmap, so new-VM only.
 .if	${MACHINE} == "hp300"

@@ -1,3 +1,5 @@
+/*	$OpenBSD: append.c,v 1.10 2009/10/27 23:59:43 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,10 +32,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)append.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 #include "sort.h"
 
 #include <stdlib.h>
@@ -48,33 +42,29 @@ static char sccsid[] = "@(#)append.c	8.1 (Berkeley) 6/6/93";
 		for (; ppos < cpos; ++ppos)				\
 			*ppos -= odepth;				\
 		ppos -= n;						\
-		radixsort((const unsigned char**)ppos, n, wts1, REC_D);	\
+		radixsort((const u_char **)ppos, n, wts1, REC_D);	\
 		for (; ppos < cpos; ppos++) {				\
 			prec = (RECHEADER *) (*ppos - sizeof(TRECHEADER));\
-			put(prec, fd);					\
+			put(prec, fp);					\
 		}							\
-	} else put(prec, fd);						\
+	} else 								\
+		put(prec, fp);						\
 }
 
 /*
  * copy sorted lines to output; check for uniqueness
  */
 void
-append(keylist, nelem, depth, fd, put, ftbl)
-	u_char **keylist;
-	int nelem;
-	register int depth;
-	FILE *fd;
-	void (*put)(RECHEADER *, FILE *);
-	struct field *ftbl;
+append(u_char **keylist, int nelem, int depth, FILE *fp,
+    void (*put)(RECHEADER *, FILE *), struct field *ftbl)
 {
-	register u_char *wts, *wts1;
-	register n, odepth;
-	register u_char **cpos, **ppos, **lastkey;
-	register u_char *cend, *pend, *start;
-	register struct recheader *crec, *prec;
+	u_char *wts, *wts1;
+	int n, odepth;
+	u_char **cpos, **ppos, **lastkey;
+	u_char *cend, *pend, *start;
+	RECHEADER *crec, *prec;
 
-	if (*keylist == '\0' && UNIQUE)
+	if (*keylist == NULL)
 		return;
 	wts1 = wts = ftbl[0].weights;
 	if ((!UNIQUE) && SINGL_FLD) {
@@ -90,44 +80,53 @@ append(keylist, nelem, depth, fd, put, ftbl)
 		ppos = keylist;
 		prec = (RECHEADER *) (*ppos - depth);
 		if (UNIQUE)
-			put(prec, fd);
-		for (cpos = keylist+1; cpos < lastkey; cpos++) {
+			put(prec, fp);
+		for (cpos = &keylist[1]; cpos < lastkey; cpos++) {
 			crec = (RECHEADER *) (*cpos - depth);
 			if (crec->length  == prec->length) {
-				pend = (u_char *) &prec->offset + prec->length;
-				cend = (u_char *) &crec->offset + crec->length;
+				/* 
+				 * Set pend and cend so that trailing NUL and
+				 * record separator is ignored.
+				 */
+				pend = (u_char *)&prec->data + prec->length - 2;
+				cend = (u_char *)&crec->data + crec->length - 2;
 				for (start = *cpos; cend >= start; cend--) {
 					if (wts[*cend] != wts[*pend])
 						break;
 					pend--;
 				}
 				if (pend + 1 != *ppos) {
-					if (!UNIQUE) {
-						OUTPUT;
-					} else
-						put(crec, fd);
+					if (!UNIQUE)
+						OUTPUT
+					else
+						put(crec, fp);
 					ppos = cpos;
 					prec = crec;
 				}
 			} else {
-				if (!UNIQUE) {
-					OUTPUT;
-				} else
-					put(crec, fd);
+				if (!UNIQUE)
+					OUTPUT
+				else
+					put(crec, fp);
 				ppos = cpos;
 				prec = crec;
 			}
 		}
-		if (!UNIQUE)  { OUTPUT; }
+		if (!UNIQUE)
+			OUTPUT
 	} else if (UNIQUE) {
 		ppos = keylist;
 		prec = (RECHEADER *) (*ppos - depth);
-		put(prec, fd);
-		for (cpos = keylist+1; cpos < lastkey; cpos++) {
+		put(prec, fp);
+		for (cpos = &keylist[1]; cpos < lastkey; cpos++) {
 			crec = (RECHEADER *) (*cpos - depth);
 			if (crec->offset == prec->offset) {
-				pend = (u_char *) &prec->offset + prec->offset;
-				cend = (u_char *) &crec->offset + crec->offset;
+				/* 
+				 * Set pend and cend so that trailing NUL and
+				 * record separator is ignored.
+				 */
+				pend = (u_char *)&prec->data + prec->offset - 2;
+				cend = (u_char *)&crec->data + crec->offset - 2;
 				for (start = *cpos; cend >= start; cend--) {
 					if (wts[*cend] != wts[*pend])
 						break;
@@ -136,17 +135,17 @@ append(keylist, nelem, depth, fd, put, ftbl)
 				if (pend + 1 != *ppos) {
 					ppos = cpos;
 					prec = crec;
-					put(prec, fd);
+					put(prec, fp);
 				}
 			} else {
 				ppos = cpos;
 				prec = crec;
-				put(prec, fd);
+				put(prec, fp);
 			}
 		}
 	} else for (cpos = keylist; cpos < lastkey; cpos++) {
 		crec = (RECHEADER *) (*cpos - depth);
-		put(crec, fd);
+		put(crec, fp);
 	}
 }
 
@@ -154,20 +153,18 @@ append(keylist, nelem, depth, fd, put, ftbl)
  * output the already sorted eol bin.
  */
 void
-rd_append(binno, infl0, nfiles, outfd, buffer, bufend)
-	u_char *buffer, *bufend;
-	int binno, nfiles;
-	union f_handle infl0;
-	FILE *outfd;
+rd_append(int binno, union f_handle infl0, int nfiles, FILE *outfp,
+    u_char *buffer, u_char *bufend)
 {
-	struct recheader *rec;
+	RECHEADER *rec;
+
 	rec = (RECHEADER *) buffer;
 	if (!getnext(binno, infl0, nfiles, (RECHEADER *) buffer, bufend, 0)) {
-		putline(rec, outfd);
+		putline(rec, outfp);
 		while (getnext(binno, infl0, nfiles, (RECHEADER *) buffer,
 			bufend, 0) == 0) {
 			if (!UNIQUE)
-				putline(rec, outfd);
+				putline(rec, outfp);
 		}
 	}
 }
@@ -176,8 +173,7 @@ rd_append(binno, infl0, nfiles, outfd, buffer, bufend)
  * append plain text--used after sorting the biggest bin.
  */
 void
-concat(a, b)
-	FILE *a, *b;
+concat(FILE *a, FILE *b)
 {
         int nread;
         char buffer[4096];

@@ -1,3 +1,5 @@
+/*	$OpenBSD: init.c,v 1.13 2013/11/28 18:24:55 deraadt Exp $	*/
+
 /*-
  * Copyright (c) 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,18 +32,17 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)init.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 #include "sort.h"
 
 #include <ctype.h>
 #include <string.h>
 
-extern struct coldesc clist[(ND+1)*2];
+extern struct coldesc *clist;
 extern int ncols;
 u_char gweights[NBINS];
+
+static void insertcol(struct field *);
+char *setcolumn(char *, struct field *, int);
 
 /*
  * clist (list of columns which correspond to one or more icol or tcol)
@@ -57,8 +54,7 @@ u_char gweights[NBINS];
  * keep clist in order--inserts a column in a sorted array
  */
 static void
-insertcol(field)
-	struct field *field;
+insertcol(struct field *field)
 {
 	int i;
 	for (i = 0; i < ncols; i++)
@@ -85,17 +81,18 @@ insertcol(field)
  * matches fields with the appropriate columns--n^2 but who cares?
  */
 void
-fldreset(fldtab)
-	struct field *fldtab;
+fldreset(struct field *fldtab)
 {
 	int i;
 	fldtab[0].tcol.p = clist+ncols-1;
 	for (++fldtab; fldtab->icol.num; ++fldtab) {
-		for (i = 0; fldtab->icol.num != clist[i].num; i++);
+		for (i = 0; fldtab->icol.num != clist[i].num; i++)
+			;
 		fldtab->icol.p = clist + i;
 		if (!fldtab->tcol.num)
 			continue;
-		for (i = 0; fldtab->tcol.num != clist[i].num; i++);
+		for (i = 0; fldtab->tcol.num != clist[i].num; i++)
+			;
 		fldtab->tcol.p = clist + i;
 	}
 }
@@ -104,24 +101,27 @@ fldreset(fldtab)
  * interprets a column in a -k field
  */
 char *
-setcolumn(pos, cur_fld, gflag)
-	char *pos;
-	struct field *cur_fld;
-	int gflag;
+setcolumn(char *pos, struct field *cur_fld, int gflag)
 {
 	struct column *col;
 	int tmp;
+
 	col = cur_fld->icol.num ? (&(*cur_fld).tcol) : (&(*cur_fld).icol);
-	pos += sscanf(pos, "%d", &(col->num));
-	while (isdigit(*pos))
+	if (sscanf(pos, "%d", &(col->num)) != 1)
+		errx(2, "missing field number");
+	pos++;
+	while (isdigit((u_char)*pos))
 		pos++;
 	if (col->num <= 0 && !(col->num == 0 && col == &(cur_fld->tcol)))
 		errx(2, "field numbers must be positive");
 	if (*pos == '.') {
 		if (!col->num)
 			errx(2, "cannot indent end of line");
-		pos += sscanf(++pos, "%d", &(col->indent));
-		while (isdigit(*pos))
+		pos++;
+		if (sscanf(pos, "%d", &(col->indent)) != 1)
+			errx(2, "missing offset");
+		pos++;
+		while (isdigit((u_char)*pos))
 			pos++;
 		if (&cur_fld->icol == col)
 			col->indent--;
@@ -129,7 +129,7 @@ setcolumn(pos, cur_fld, gflag)
 			errx(2, "illegal offset");
 	}
 	if (optval(*pos, cur_fld->tcol.num))	
-		while (tmp = optval(*pos, cur_fld->tcol.num)) {
+		while ((tmp = optval(*pos, cur_fld->tcol.num))) {
 			cur_fld->flags |= tmp;
 			pos++;
 	}
@@ -139,16 +139,9 @@ setcolumn(pos, cur_fld, gflag)
 }
 
 int
-setfield(pos, cur_fld, gflag)
-	char *pos;
-	struct field *cur_fld;
-	int gflag;
+setfield(char *pos, struct field *cur_fld, int gflag)
 {
-	static int nfields = 0;
 	int tmp;
-	char *setcolumn();
-	if (++nfields == ND)
-		errx(2, "too many sort keys. (Limit is %d)", ND-1);
 	cur_fld->weights = ascii;
 	cur_fld->mask = alltable;
 	pos = setcolumn(pos, cur_fld, gflag);
@@ -190,72 +183,94 @@ setfield(pos, cur_fld, gflag)
 }
 
 int
-optval(desc, tcolflag)
-	int desc, tcolflag;
+optval(int desc, int tcolflag)
 {
 	switch(desc) {
 		case 'b':
 			if (!tcolflag)
-				return(BI);
+				return (BI);
 			else
-				return(BT);
-		case 'd': return(D);
-		case 'f': return(F);
-		case 'i': return(I);
-		case 'n': return(N);
-		case 'r': return(R);
-		default:  return(0);
+				return (BT);
+		case 'd': return (D);
+		case 'f': return (F);
+		case 'i': return (I);
+		case 'n': return (N);
+		case 'r': return (R);
+		default:  return (0);
 	}
 }
 
+/*
+ * Convert obsolescent "+pos1 [-pos2]" format to POSIX -k form.
+ * Note that the conversion is tricky, see the manual for details.
+ */
 void
-fixit(argc, argv)
-	int *argc;
-	char **argv;
+fixit(int *argc, char **argv)
 {
-	int i, j, v, w, x;
-	static char vbuf[ND*20], *vpos, *tpos;
-	vpos = vbuf;
+	int i, j, n;
+	long v, w, x;
+	char *p, *ep;
+	char buf[128], *bufp, *bufend;
 
+	bufend = buf + sizeof(buf);
 	for (i = 1; i < *argc; i++) {
 		if (argv[i][0] == '+') {
-			tpos = argv[i]+1;
-			argv[i] = vpos;
-			vpos += sprintf(vpos, "-k");
-			tpos += sscanf(tpos, "%d", &v);
-			while (isdigit(*tpos))
-				tpos++;
-			vpos += sprintf(vpos, "%d", v+1);
-			if (*tpos == '.') {
-				tpos += sscanf(++tpos, "%d", &x);
-				vpos += sprintf(vpos, ".%d", x+1);
+			bufp = buf;
+			p = argv[i] + 1;
+			v = strtol(p, &ep, 10);
+			if (ep == p || v < 0 ||
+			    (v == LONG_MAX && errno == ERANGE))
+				errx(2, "invalid field number");
+			p = ep;
+			if (*p == '.') {
+				x = strtol(++p, &ep, 10);
+				if (ep == p || x < 0 ||
+				    (x == LONG_MAX && errno == ERANGE))
+					errx(2, "invalid field number");
+				p = ep;
+				n = snprintf(bufp, bufend - bufp, "-k%ld.%ld%s",
+				    v+1, x+1, p);
+			} else {
+				n = snprintf(bufp, bufend - bufp, "-k%ld%s",
+				    v+1, p);
 			}
-			while (*tpos)
-				*vpos++ = *tpos++;
-			vpos += sprintf(vpos, ",");
-			if (argv[i+1] &&
-			    argv[i+1][0] == '-' && isdigit(argv[i+1][1])) {
-				tpos = argv[i+1] + 1;
-				tpos += sscanf(tpos, "%d", &w);
-				while (isdigit(*tpos))
-					tpos++;
+			if (n == -1 || n >= bufend - bufp)
+				errx(2, "bad field specification");
+			bufp += n;
+
+			if (argv[i+1] && argv[i+1][0] == '-' &&
+			    isdigit((u_char)argv[i+1][1])) {
+				p = argv[i+1] + 1;
+				w = strtol(p, &ep, 10);
+				if (ep == p || w < 0 ||
+				    (w == LONG_MAX && errno == ERANGE))
+					errx(2, "invalid field number");
+				p = ep;
 				x = 0;
-				if (*tpos == '.') {
-					tpos += sscanf(++tpos, "%d", &x);
-					while (isdigit(*tpos))
-						*tpos++;
+				if (*p == '.') {
+					x = strtol(++p, &ep, 10);
+					if (ep == p || x < 0 ||
+					    (x == LONG_MAX && errno == ERANGE))
+						errx(2, "invalid field number");
+					p = ep;
 				}
-				if (x) {
-					vpos += sprintf(vpos, "%d", w+1);
-					vpos += sprintf(vpos, ".%d", x);
-				} else
-					vpos += sprintf(vpos, "%d", w);
-				while (*tpos)
-					*vpos++ = *tpos++;
-				for (j= i+1; j < *argc; j++)
+				if (x == 0) {
+					n = snprintf(bufp, bufend - bufp,
+					    ",%ld%s", w, p);
+				} else {
+					n = snprintf(bufp, bufend - bufp,
+					    ",%ld.%ld%s", w+1, x, p);
+				}
+				if (n == -1 || n >= bufend - bufp)
+					errx(2, "bad field specification");
+
+				/* shift over argv */
+				for (j = i+1; j < *argc; j++)
 					argv[j] = argv[j+1];
 				*argc -= 1;
 			}
+			if ((argv[i] = strdup(buf)) == NULL)
+				err(2, NULL);
 		}
 	}
 }
@@ -271,8 +286,7 @@ fixit(argc, argv)
  * all bets are off.  See also num_init in number.c
  */
 void
-settables(gflags)
-	int gflags;
+settables(int gflags)
 {
 	u_char *wts;
 	int i, incr;
@@ -282,7 +296,7 @@ settables(gflags)
 			Rascii[i] = 255 - i + 1;
 		else
 			Rascii[i] = 255 - i;
-		if (islower(i)) {
+		if (islower((u_char)i)) {
 			Ftable[i] = Ftable[i- ('a' -'A')];
 			RFtable[i] = RFtable[i - ('a' - 'A')];
 		} else if (REC_D>= 'A' && REC_D < 'Z' && i < 'a' && i > REC_D) {
@@ -293,16 +307,16 @@ settables(gflags)
 			RFtable[i] = Rascii[i];
 		}
 		alltable[i] = 1;
-		if (i == '\n' || isprint(i))
+		if (i == '\n' || isprint((u_char)i))
 			itable[i] = 1;
 		else itable[i] = 0;
-		if (i == '\n' || i == '\t' || i == ' ' || isalnum(i))
+		if (i == '\n' || i == '\t' || i == ' ' || isalnum((u_char)i))
 			dtable[i] = 1;
 		else dtable[i] = 0;
 	}
 	Rascii[REC_D] = RFtable[REC_D] = REC_D;
 	if (REC_D >= 'A' && REC_D < 'Z')
-		++Ftable[REC_D + ('a' - 'A')];
+		Ftable[REC_D + ('a' - 'A')]++;
 	if (gflags & R && (!(gflags & F) || !SINGL_FLD))
 		wts = Rascii;
 	else if (!(gflags & F) || !SINGL_FLD)
