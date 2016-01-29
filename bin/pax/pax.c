@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.c,v 1.23 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: pax.c,v 1.30 2009/10/28 20:30:41 guenther Exp $	*/
 /*	$NetBSD: pax.c,v 1.5 1996/03/26 23:54:20 mrg Exp $	*/
 
 /*-
@@ -33,20 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static const char copyright[] =
-"@(#) Copyright (c) 1992, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)pax.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: pax.c,v 1.23 2003/06/02 23:32:09 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -89,8 +75,9 @@ int	Dflag;			/* same as uflag except inode change time */
 int	Hflag;			/* follow command line symlinks (write only) */
 int	Lflag;			/* follow symlinks when writing */
 int	Xflag;			/* archive files with same device id only */
-int	Yflag;			/* same as Dflg except after name mode */
-int	Zflag;			/* same as uflg except after name mode */
+int	Yflag;			/* same as Dflag except after name mode */
+int	Zflag;			/* same as uflag except after name mode */
+int	zeroflag;		/* use \0 as pathname terminator */
 int	vfpart;			/* is partial verbose output in progress */
 int	patime = 1;		/* preserve file access time */
 int	pmtime = 1;		/* preserve file modification times */
@@ -159,7 +146,7 @@ char	*tempbase;		/* basename of tempfile to use for mkstemp(3) */
  * 2.1	Write operation will stop instead of allowing a user to create a flawed
  *	flawed archive (due to any problem).
  * 2.2	Archives written by pax are forced to strictly conform to both the
- *	archive and pax the spceific format specifications.
+ *	archive and pax the specific format specifications.
  * 2.3	Blocking size and format is rigidly enforced on writes.
  * 2.4	Formats which may exhibit header overflow problems (they have fields
  *	too small for large file systems, such as inode number storage), use
@@ -239,7 +226,7 @@ main(int argc, char **argv)
 	 */
 	cwdfd = open(".", O_RDONLY);
 	if (cwdfd < 0) {
-		syswarn(0, errno, "Can't open current working directory.");
+		syswarn(1, errno, "Can't open current working directory.");
 		return(exit_val);
 	}
 
@@ -249,7 +236,7 @@ main(int argc, char **argv)
 	if ((tmpdir = getenv("TMPDIR")) == NULL || *tmpdir == '\0')
 		tmpdir = _PATH_TMP;
 	tdlen = strlen(tmpdir);
-	while(tdlen > 0 && tmpdir[tdlen - 1] == '/')
+	while (tdlen > 0 && tmpdir[tdlen - 1] == '/')
 		tdlen--;
 	tempfile = malloc(tdlen + 1 + sizeof(_TFILE_BASE));
 	if (tempfile == NULL) {
@@ -271,7 +258,7 @@ main(int argc, char **argv)
 	/*
 	 * select a primary operation mode
 	 */
-	switch(act) {
+	switch (act) {
 	case EXTRACT:
 		extract();
 		break;
@@ -280,7 +267,7 @@ main(int argc, char **argv)
 		break;
 	case APPND:
 		if (gzip_program != NULL)
-			err(1, "can not gzip while appending");
+			errx(1, "can not gzip while appending");
 		append();
 		break;
 	case COPY:
@@ -383,7 +370,7 @@ gen_init(void)
 	/*
 	 * signal handling to reset stored directory times and modes. Since
 	 * we deal with broken pipes via failed writes we ignore it. We also
-	 * deal with any file size limit thorugh failed writes. Cpu time
+	 * deal with any file size limit through failed writes. Cpu time
 	 * limits are caught and a cleanup is forced.
 	 */
 	if ((sigemptyset(&s_mask) < 0) || (sigaddset(&s_mask, SIGTERM) < 0) ||
@@ -398,27 +385,27 @@ gen_init(void)
 	n_hand.sa_flags = 0;
 	n_hand.sa_handler = sig_cleanup;
 
-	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGHUP, &n_hand, &o_hand) < 0) ||
 	    (o_hand.sa_handler == SIG_IGN) &&
 	    (sigaction(SIGHUP, &o_hand, &o_hand) < 0))
 		goto out;
 
-	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGTERM, &n_hand, &o_hand) < 0) ||
 	    (o_hand.sa_handler == SIG_IGN) &&
 	    (sigaction(SIGTERM, &o_hand, &o_hand) < 0))
 		goto out;
 
-	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGINT, &n_hand, &o_hand) < 0) ||
 	    (o_hand.sa_handler == SIG_IGN) &&
 	    (sigaction(SIGINT, &o_hand, &o_hand) < 0))
 		goto out;
 
-	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGQUIT, &n_hand, &o_hand) < 0) ||
 	    (o_hand.sa_handler == SIG_IGN) &&
 	    (sigaction(SIGQUIT, &o_hand, &o_hand) < 0))
 		goto out;
 
-	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) &&
+	if ((sigaction(SIGXCPU, &n_hand, &o_hand) < 0) ||
 	    (o_hand.sa_handler == SIG_IGN) &&
 	    (sigaction(SIGXCPU, &o_hand, &o_hand) < 0))
 		goto out;

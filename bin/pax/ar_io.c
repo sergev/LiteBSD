@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_io.c,v 1.33 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: ar_io.c,v 1.39 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_io.c,v 1.5 1996/03/26 23:54:13 mrg Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)ar_io.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: ar_io.c,v 1.33 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -122,7 +114,7 @@ ar_open(const char *name)
 			arfd = STDIN_FILENO;
 			arcname = STDN;
 		} else if ((arfd = open(name, EXT_MODE, DMOD)) < 0)
-			syswarn(0, errno, "Failed open to read on %s", name);
+			syswarn(1, errno, "Failed open to read on %s", name);
 		if (arfd != -1 && gzip_program != NULL)
 			ar_start_gzip(arfd, gzip_program, 0);
 		break;
@@ -131,7 +123,7 @@ ar_open(const char *name)
 			arfd = STDOUT_FILENO;
 			arcname = STDO;
 		} else if ((arfd = open(name, AR_MODE, DMOD)) < 0)
-			syswarn(0, errno, "Failed open to write on %s", name);
+			syswarn(1, errno, "Failed open to write on %s", name);
 		else
 			can_unlnk = 1;
 		if (arfd != -1 && gzip_program != NULL)
@@ -142,7 +134,7 @@ ar_open(const char *name)
 			arfd = STDOUT_FILENO;
 			arcname = STDO;
 		} else if ((arfd = open(name, APP_MODE, DMOD)) < 0)
-			syswarn(0, errno, "Failed open to read/write on %s",
+			syswarn(1, errno, "Failed open to read/write on %s",
 				name);
 		break;
 	case COPY:
@@ -157,13 +149,15 @@ ar_open(const char *name)
 		return(-1);
 
 	if (chdname != NULL)
-		if (chdir(chdname) != 0)
+		if (chdir(chdname) != 0) {
 			syswarn(1, errno, "Failed chdir to %s", chdname);
+			return(-1);
+		}
 	/*
 	 * set up is based on device type
 	 */
 	if (fstat(arfd, &arsb) < 0) {
-		syswarn(0, errno, "Failed stat on %s", arcname);
+		syswarn(1, errno, "Failed stat on %s", arcname);
 		(void)close(arfd);
 		arfd = -1;
 		can_unlnk = 0;
@@ -209,7 +203,7 @@ ar_open(const char *name)
 	 * must set blocksize based on what kind of device the archive is
 	 * stored.
 	 */
-	switch(artyp) {
+	switch (artyp) {
 	case ISTAPE:
 		/*
 		 * Tape drives come in at least two flavors. Those that support
@@ -302,6 +296,7 @@ ar_open(const char *name)
 void
 ar_close(void)
 {
+	int status;
 
 	if (arfd < 0) {
 		did_io = io_ok = flcnt = 0;
@@ -337,13 +332,14 @@ ar_close(void)
 	 * for a quick extract/list, pax frequently exits before the child
 	 * process is done
 	 */
-	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0) {
-		int status;
+	if ((act == LIST || act == EXTRACT) && nflag && zpid > 0)
 		kill(zpid, SIGINT);
-		waitpid(zpid, &status, 0);
-	}
 
 	(void)close(arfd);
+
+	/* Do not exit before child to ensure data integrity */
+	if (zpid > 0)
+		waitpid(zpid, &status, 0);
 
 	if (vflag && (artyp == ISTAPE)) {
 		(void)fputs("done.\n", listf);
@@ -734,7 +730,7 @@ ar_rdsync(void)
 	if (io_ok)
 		did_io = 1;
 
-	switch(artyp) {
+	switch (artyp) {
 	case ISTAPE:
 		/*
 		 * if the last i/o was a successful data transfer, we assume
@@ -869,7 +865,7 @@ ar_rev(off_t sksz)
 	if (lstrval < 0)
 		return(lstrval);
 
-	switch(artyp) {
+	switch (artyp) {
 	case ISPIPE:
 		if (sksz <= 0)
 			break;
@@ -1145,7 +1141,7 @@ ar_next(void)
 		else
 			tty_prnt("\n");
 
-		for(;;) {
+		for (;;) {
 			tty_prnt("Type \"y\" to continue, \".\" to quit %s,",
 				argv0);
 			tty_prnt(" or \"s\" to switch to new device.\nIf you");
@@ -1280,7 +1276,7 @@ ar_start_gzip(int fd, const char *gzip_program, int wr)
 		close(fds[0]);
 		close(fds[1]);
 		if (execlp(gzip_program, gzip_program, gzip_flags, (char *)NULL) < 0)
-			err(1, "could not exec");
+			err(1, "could not exec %s", gzip_program);
 		/* NOTREACHED */
 	}
 }

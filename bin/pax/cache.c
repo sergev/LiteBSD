@@ -1,4 +1,4 @@
-/*	$OpenBSD: cache.c,v 1.14 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: cache.c,v 1.18 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: cache.c,v 1.4 1995/03/21 09:07:10 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)cache.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: cache.c,v 1.14 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -204,12 +196,12 @@ name_uid(uid_t uid, int frc)
 		++pwopn;
 	}
 	if (ptr == NULL)
-		ptr = (UIDC *)malloc(sizeof(UIDC));
+		ptr = uidtb[uid % UID_SZ] = malloc(sizeof(UIDC));
 
 	if ((pw = getpwuid(uid)) == NULL) {
 		/*
 		 * no match for this uid in the local password file
-		 * a string that is the uid in numberic format
+		 * a string that is the uid in numeric format
 		 */
 		if (ptr == NULL)
 			return("");
@@ -226,7 +218,7 @@ name_uid(uid_t uid, int frc)
 		if (ptr == NULL)
 			return(pw->pw_name);
 		ptr->uid = uid;
-		(void)strlcpy(ptr->name, pw->pw_name, UNMLEN);
+		(void)strlcpy(ptr->name, pw->pw_name, sizeof(ptr->name));
 		ptr->valid = VALID;
 	}
 	return(ptr->name);
@@ -270,7 +262,7 @@ name_gid(gid_t gid, int frc)
 		++gropn;
 	}
 	if (ptr == NULL)
-		ptr = (GIDC *)malloc(sizeof(GIDC));
+		ptr = gidtb[gid % GID_SZ] = malloc(sizeof(GIDC));
 
 	if ((gr = getgrgid(gid)) == NULL) {
 		/*
@@ -292,7 +284,7 @@ name_gid(gid_t gid, int frc)
 		if (ptr == NULL)
 			return(gr->gr_name);
 		ptr->gid = gid;
-		(void)strlcpy(ptr->name, gr->gr_name, GNMLEN);
+		(void)strlcpy(ptr->name, gr->gr_name, sizeof(ptr->name));
 		ptr->valid = VALID;
 	}
 	return(ptr->name);
@@ -351,7 +343,7 @@ uid_name(char *name, uid_t *uid)
 		*uid = pw->pw_uid;
 		return(0);
 	}
-	(void)strlcpy(ptr->name, name, UNMLEN);
+	(void)strlcpy(ptr->name, name, sizeof(ptr->name));
 	if ((pw = getpwnam(name)) == NULL) {
 		ptr->valid = INVALID;
 		return(-1);
@@ -414,7 +406,7 @@ gid_name(char *name, gid_t *gid)
 		return(0);
 	}
 
-	(void)strlcpy(ptr->name, name, GNMLEN);
+	(void)strlcpy(ptr->name, name, sizeof(ptr->name));
 	if ((gr = getgrnam(name)) == NULL) {
 		ptr->valid = INVALID;
 		return(-1);

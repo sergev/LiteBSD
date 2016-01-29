@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar_subs.c,v 1.24 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: ar_subs.c,v 1.33 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ar_subs.c,v 1.5 1995/03/21 09:07:06 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)ar_subs.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: ar_subs.c,v 1.24 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -109,7 +101,8 @@ list(void)
 			 * we need to read, to get the real filename
 			 */
 			off_t cnt;
-			if (!(*frmt->rd_data)(arcn, -1, &cnt));
+			if (!(*frmt->rd_data)(arcn, arcn->type == PAX_GLF
+			    ? -1 : -2, &cnt))
 				(void)rd_skip(cnt + arcn->pad);
 			continue;
 		}
@@ -201,7 +194,8 @@ extract(void)
 			/*
 			 * we need to read, to get the real filename
 			 */
-			if (!(*frmt->rd_data)(arcn, -1, &cnt));
+			if (!(*frmt->rd_data)(arcn, arcn->type == PAX_GLF
+			    ? -1 : -2, &cnt))
 				(void)rd_skip(cnt + arcn->pad);
 			continue;
 		}
@@ -325,7 +319,7 @@ extract(void)
 				(void)putc('\n', listf);
 				vfpart = 0;
 			}
-			continue;
+			goto popd;
 		}
 		/*
 		 * we have a file with data here. If we can not create it, skip
@@ -334,7 +328,7 @@ extract(void)
 		if ((fd = file_creat(arcn)) < 0) {
 			(void)rd_skip(arcn->skip + arcn->pad);
 			purg_lnk(arcn);
-			continue;
+			goto popd;
 		}
 		/*
 		 * extract the file from the archive and skip over padding and
@@ -349,6 +343,7 @@ extract(void)
 		if (!res)
 			(void)rd_skip(cnt + arcn->pad);
 
+popd:
 		/*
 		 * if required, chdir around.
 		 */
@@ -383,7 +378,7 @@ wr_archive(ARCHD *arcn, int is_app)
 	int hlk;
 	int wr_one;
 	off_t cnt;
-	int (*wrf)();
+	int (*wrf)(ARCHD *);
 	int fd = -1;
 	time_t now;
 
@@ -395,10 +390,21 @@ wr_archive(ARCHD *arcn, int is_app)
 		return;
 
 	/*
+	 * if this is not append, and there are no files, we do not write a 
+	 * trailer
+	 */
+	wr_one = is_app;
+
+	/*
 	 * start up the file traversal code and format specific write
 	 */
-	if ((ftree_start() < 0) || ((*frmt->st_wr)() < 0))
+	if (ftree_start() < 0) {
+		if (is_app)
+			goto trailer;
 		return;
+	} else if (((*frmt->st_wr)() < 0))
+		return;
+
 	wrf = frmt->wr;
 
 	/*
@@ -407,12 +413,6 @@ wr_archive(ARCHD *arcn, int is_app)
 	 */
 	if (iflag && (name_start() < 0))
 		return;
-
-	/*
-	 * if this is not append, and there are no files, we do not write a 
-	 * trailer
-	 */
-	wr_one = is_app;
 
 	now = time(NULL);
 
@@ -433,8 +433,10 @@ wr_archive(ARCHD *arcn, int is_app)
 			 */
 			if ((res = chk_ftime(arcn)) < 0)
 				break;
-			if (res > 0)
+			if (res > 0) {
+				ftree_skipped_newer(arcn);
 				continue;
+			}
 		}
 
 		/*
@@ -541,6 +543,7 @@ wr_archive(ARCHD *arcn, int is_app)
 			break;
 	}
 
+trailer:
 	/*
 	 * tell format to write trailer; pad to block boundary; reset directory
 	 * mode/access times, and check if all patterns supplied by the user
@@ -844,6 +847,7 @@ copy(void)
 			*dest_pt = '\0';
 
 			if (res == 0) {
+				ftree_skipped_newer(arcn);
 				if (uflag && Dflag) {
 					if ((arcn->sb.st_mtime<=sb.st_mtime) &&
 					    (arcn->sb.st_ctime<=sb.st_ctime))
@@ -1008,7 +1012,7 @@ next_head(ARCHD *arcn)
 	res = hsz = frmt->hsz;
 	hdend = hdbuf;
 	shftsz = hsz - 1;
-	for(;;) {
+	for (;;) {
 		/*
 		 * keep looping until we get a contiguous FULL buffer
 		 * (frmt->hsz is the proper size)
@@ -1072,7 +1076,7 @@ next_head(ARCHD *arcn)
 			/*
 			 * this format has trailers outside of valid headers
 			 */
-			if ((ret = (*frmt->trail)(hdbuf,in_resync,&cnt)) == 0){
+			if ((ret = (*frmt->trail)(arcn,hdbuf,in_resync,&cnt)) == 0){
 				/*
 				 * valid trailer found, drain input as required
 				 */
@@ -1119,7 +1123,7 @@ next_head(ARCHD *arcn)
 	 * the header. NOTE: the parameters are different than trailer routines
 	 * which encode trailers outside of the header!
 	 */
-	if (frmt->inhead && ((*frmt->trail)(arcn) == 0)) {
+	if (frmt->inhead && ((*frmt->trail)(arcn,NULL,0,NULL) == 0)) {
 		/*
 		 * valid trailer found, drain input as required
 		 */
@@ -1164,7 +1168,7 @@ get_arc(void)
 	res = BLKMULT;
 	hdsz = 0;
 	hdend = hdbuf;
-	for(;;) {
+	for (;;) {
 		for (;;) {
 			/*
 			 * fill the buffer with at least the smallest header

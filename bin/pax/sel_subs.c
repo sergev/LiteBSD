@@ -1,4 +1,4 @@
-/*	$OpenBSD: sel_subs.c,v 1.16 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: sel_subs.c,v 1.19 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: sel_subs.c,v 1.5 1995/03/21 09:07:42 cgd Exp $	*/
 
 /*-
@@ -34,14 +34,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)sel_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: sel_subs.c,v 1.16 2003/06/02 23:32:09 millert Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -74,7 +66,7 @@ static GRPT **grptb = NULL;		/* group selection table */
 
 /*
  * sel_chk()
- *	check if this file matches a specfied uid, gid or time range
+ *	check if this file matches a specified uid, gid or time range
  * Return:
  *	0 if this archive member should be processed, 1 if it should be skipped
  */
@@ -381,7 +373,7 @@ trng_add(char *str)
 	else {
 		pt->flgs = 0;
 		while (*flgpt != '\0') {
-			switch(*flgpt) {
+			switch (*flgpt) {
 			case 'M':
 			case 'm':
 				pt->flgs |= CMPMTME;
@@ -471,7 +463,7 @@ trng_match(ARCHD *arcn)
 	 */
 	pt = trhead;
 	while (pt != NULL) {
-		switch(pt->flgs & CMPBOTH) {
+		switch (pt->flgs & CMPBOTH) {
 		case CMPBOTH:
 			/*
 			 * user wants both mtime and ctime checked for this

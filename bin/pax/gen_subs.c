@@ -1,4 +1,4 @@
-/*	$OpenBSD: gen_subs.c,v 1.16 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: gen_subs.c,v 1.20 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: gen_subs.c,v 1.5 1995/03/21 09:07:26 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)gen_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: gen_subs.c,v 1.16 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -82,13 +74,19 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	char f_mode[MODELEN];
 	char f_date[DATELEN];
 	const char *timefrmt;
+	int term;
+
+	term = zeroflag ? '\0' : '\n';	/* path termination character */
 
 	/*
 	 * if not verbose, just print the file name
 	 */
 	if (!vflag) {
-		safe_print(arcn->name, fp);
-		(void)putc('\n', fp);
+		if (zeroflag)
+			(void)fputs(arcn->name, fp);
+		else
+			safe_print(arcn->name, fp);
+		(void)putc(term, fp);
 		(void)fflush(fp);
 		return;
 	}
@@ -148,10 +146,10 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 		fputs(" == ", fp);
 		safe_print(arcn->ln_name, fp);
 	} else if (arcn->type == PAX_SLK) {
-		fputs(" => ", fp);
+		fputs(" -> ", fp);
 		safe_print(arcn->ln_name, fp);
 	}
-	(void)putc('\n', fp);
+	(void)putc(term, fp);
 	(void)fflush(fp);
 	return;
 }
@@ -402,3 +400,25 @@ uqd_asc(u_quad_t val, char *str, int len, int base)
 	return(0);
 }
 #endif
+
+/*
+ * Copy at max min(bufz, fieldsz) chars from field to buf, stopping
+ * at the first NUL char. NUL terminate buf if there is room left.
+ */
+size_t
+fieldcpy(char *buf, size_t bufsz, const char *field, size_t fieldsz)
+{
+	char *p = buf;
+	const char *q = field;
+	size_t i = 0;
+
+	if (fieldsz > bufsz)
+		fieldsz = bufsz;
+	while (i < fieldsz && *q != '\0') {
+		*p++ = *q++;
+		i++;
+	}
+	if (i < bufsz)
+		*p = '\0';
+	return(i);
+}

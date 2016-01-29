@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpio.c,v 1.15 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: cpio.c,v 1.19 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: cpio.c,v 1.5 1995/03/21 09:07:13 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)cpio.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: cpio.c,v 1.15 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -92,7 +84,7 @@ cpio_strd(void)
  */
 
 int
-cpio_trail(ARCHD *arcn)
+cpio_trail(ARCHD *arcn, char *notused, int notused2, int *notused3)
 {
 	/*
 	 * look for trailer id in file we are about to process
@@ -115,7 +107,7 @@ com_rd(ARCHD *arcn)
 	arcn->skip = 0;
 	arcn->pat = NULL;
 	arcn->org_name = arcn->name;
-	switch(arcn->sb.st_mode & C_IFMT) {
+	switch (arcn->sb.st_mode & C_IFMT) {
 	case C_ISFIFO:
 		arcn->type = PAX_FIF;
 		break;
@@ -152,7 +144,7 @@ com_rd(ARCHD *arcn)
 }
 
 /*
- * cpio_end_wr()
+ * cpio_endwr()
  *	write the special file with the name trailer in the proper format
  * Return:
  *	result of the write of the trailer from the cpio specific write func
@@ -402,7 +394,7 @@ cpio_wr(ARCHD *arcn)
 	if ((arcn->type != PAX_BLK) && (arcn->type != PAX_CHR))
 		arcn->sb.st_rdev = 0;
 
-	switch(arcn->type) {
+	switch (arcn->type) {
 	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:
@@ -725,7 +717,7 @@ vcpio_wr(ARCHD *arcn)
 			goto out;
 	}
 
-	switch(arcn->type) {
+	switch (arcn->type) {
 	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:
@@ -1011,7 +1003,7 @@ bcpio_wr(ARCHD *arcn)
 		arcn->sb.st_rdev = 0;
 	hd = (HD_BCPIO *)hdblk;
 
-	switch(arcn->type) {
+	switch (arcn->type) {
 	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:

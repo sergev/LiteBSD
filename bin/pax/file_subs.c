@@ -1,4 +1,4 @@
-/*	$OpenBSD: file_subs.c,v 1.23 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: file_subs.c,v 1.31 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: file_subs.c,v 1.4 1995/03/21 09:07:18 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)file_subs.c	8.1 (Berkeley) 5/31/93";
-#else
-static const char rcsid[] = "$OpenBSD: file_subs.c,v 1.23 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/param.h>
 #include <sys/time.h>
@@ -211,7 +203,7 @@ int
 cross_lnk(ARCHD *arcn)
 {
 	/*
-	 * try to make a link to orginal file (-l flag in copy mode). make
+	 * try to make a link to original file (-l flag in copy mode). make
 	 * sure we do not try to link to directories in case we are running as
 	 * root (and it might succeed).
 	 */
@@ -287,7 +279,7 @@ mk_link(char *to, struct stat *to_sb, char *from, int ign)
 		 */
 		if ((to_sb->st_dev==sb.st_dev)&&(to_sb->st_ino == sb.st_ino)) {
 			paxwarn(1, "Unable to link file %s to itself", to);
-			return(-1);;
+			return(-1);
 		}
 
 		/*
@@ -362,7 +354,7 @@ node_creat(ARCHD *arcn)
 	file_mode = arcn->sb.st_mode & FILEBITS;
 
 	for (;;) {
-		switch(arcn->type) {
+		switch (arcn->type) {
 		case PAX_DIR:
 			/*
 			 * If -h (or -L) was given in tar-mode, follow the
@@ -508,9 +500,9 @@ badlink:
 			 * we have to force the mode to what was set here,
 			 * since we changed it from the default as created.
 			 */
-			add_dir(nm, strlen(nm), &(arcn->sb), 1);
+			add_dir(nm, &(arcn->sb), 1);
 		} else if (pmode || patime || pmtime)
-			add_dir(nm, strlen(nm), &(arcn->sb), 0);
+			add_dir(nm, &(arcn->sb), 0);
 	}
 
 	if (patime || pmtime)
@@ -594,7 +586,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 	if (*spt == '/')
 		++spt;
 
-	for(;;) {
+	for (;;) {
 		/*
 		 * work forward from the first / and check each part of the path
 		 */
@@ -645,7 +637,7 @@ chk_path(char *name, uid_t st_uid, gid_t st_gid)
 		if ((access(name, R_OK | W_OK | X_OK) < 0) &&
 		    (lstat(name, &sb) == 0)) {
 			set_pmode(name, ((sb.st_mode & FILEBITS) | S_IRWXU));
-			add_dir(name, spt - name, &sb, 1);
+			add_dir(name, &sb, 1);
 		}
 		*(spt++) = '/';
 		continue;
@@ -696,6 +688,38 @@ set_ftime(char *fnm, time_t mtime, time_t atime, int frc)
 	return;
 }
 
+#if 0
+void
+fset_ftime(char *fnm, int fd, time_t mtime, time_t atime, int frc)
+{
+	static struct timeval tv[2] = {{0L, 0L}, {0L, 0L}};
+	struct stat sb;
+
+	tv[0].tv_sec = (long)atime;
+	tv[1].tv_sec = (long)mtime;
+	if (!frc && (!patime || !pmtime)) {
+		/*
+		 * if we are not forcing, only set those times the user wants
+		 * set. We get the current values of the times if we need them.
+		 */
+		if (fstat(fd, &sb) == 0) {
+			if (!patime)
+				tv[0].tv_sec = (long)sb.st_atime;
+			if (!pmtime)
+				tv[1].tv_sec = (long)sb.st_mtime;
+		} else
+			syswarn(0,errno,"Unable to obtain file stats %s", fnm);
+	}
+	/*
+	 * set the times
+	 */
+	if (futimes(fd, tv) < 0)
+		syswarn(1, errno, "Access/modification time set failed on: %s",
+		    fnm);
+	return;
+}
+#endif
+
 /*
  * set_ids()
  *	set the uid and gid of a file system node
@@ -720,13 +744,29 @@ set_ids(char *fnm, uid_t uid, gid_t gid)
 	return(0);
 }
 
+int
+fset_ids(char *fnm, int fd, uid_t uid, gid_t gid)
+{
+	if (fchown(fd, uid, gid) < 0) {
+		/*
+		 * ignore EPERM unless in verbose mode or being run by root.
+		 * if running as pax, POSIX requires a warning.
+		 */
+		if (strcmp(NM_PAX, argv0) == 0 || errno != EPERM || vflag ||
+		    geteuid() == 0)
+			syswarn(1, errno, "Unable to set file uid/gid of %s",
+			    fnm);
+		return(-1);
+	}
+	return(0);
+}
+
 /*
  * set_lids()
  *	set the uid and gid of a file system node
  * Return:
  *	0 when set, -1 on failure
  */
-
 int
 set_lids(char *fnm, uid_t uid, gid_t gid)
 {
@@ -754,6 +794,15 @@ set_pmode(char *fnm, mode_t mode)
 {
 	mode &= ABITS;
 	if (chmod(fnm, mode) < 0)
+		syswarn(1, errno, "Could not set permissions on %s", fnm);
+	return;
+}
+
+void
+fset_pmode(char *fnm, int fd, mode_t mode)
+{
+	mode &= ABITS;
+	if (fchmod(fd, mode) < 0)
 		syswarn(1, errno, "Could not set permissions on %s", fnm);
 	return;
 }
@@ -814,6 +863,7 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 	char *end;
 	int wcnt;
 	char *st = str;
+	char **strp;
 
 	/*
 	 * while we have data to process
@@ -872,17 +922,28 @@ file_write(int fd, char *str, int cnt, int *rem, int *isempt, int sz,
 		/*
 		 * have non-zero data in this file system block, have to write
 		 */
-		if (fd == -1) {
-			/* GNU hack */
-			if (gnu_hack_string)
+		switch (fd) {
+		case -1:
+			strp = &gnu_name_string;
+			break;
+		case -2:
+			strp = &gnu_link_string;
+			break;
+		default:
+			strp = NULL;
+			break;
+		}
+		if (strp) {
+			if (*strp)
 				err(1, "WARNING! Major Internal Error! GNU hack Failing!");
-			gnu_hack_string = malloc(wcnt + 1);
-			if (gnu_hack_string == NULL) {
+			*strp = malloc(wcnt + 1);
+			if (*strp == NULL) {
 				paxwarn(1, "Out of memory");
 				return(-1);
 			}
-			memcpy(gnu_hack_string, st, wcnt);
-			gnu_hack_string[wcnt] = '\0';
+			memcpy(*strp, st, wcnt);
+			(*strp)[wcnt] = '\0';
+			break;
 		} else if (write(fd, st, wcnt) != wcnt) {
 			syswarn(1, errno, "Failed write to file %s", name);
 			return(-1);
@@ -967,7 +1028,7 @@ set_crc(ARCHD *arcn, int fd)
 	int res;
 	off_t cpcnt = 0L;
 	u_long size;
-	unsigned long crc = 0L;
+	u_int32_t crc = 0;
 	char tbuf[FILEBLK];
 	struct stat sb;
 
@@ -986,7 +1047,7 @@ set_crc(ARCHD *arcn, int fd)
 	 * read all the bytes we think that there are in the file. If the user
 	 * is trying to archive an active file, forget this file.
 	 */
-	for(;;) {
+	for (;;) {
 		if ((res = read(fd, tbuf, size)) <= 0)
 			break;
 		cpcnt += res;
@@ -996,7 +1057,7 @@ set_crc(ARCHD *arcn, int fd)
 
 	/*
 	 * safety check. we want to avoid archiving files that are active as
-	 * they can create inconsistant archive copies.
+	 * they can create inconsistent archive copies.
 	 */
 	if (cpcnt != arcn->sb.st_size)
 		paxwarn(1, "File changed size %s", arcn->org_name);

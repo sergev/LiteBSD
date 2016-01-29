@@ -1,4 +1,4 @@
-/*	$OpenBSD: extern.h,v 1.25 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: extern.h,v 1.33 2008/05/06 06:54:28 henning Exp $	*/
 /*	$NetBSD: extern.h,v 1.5 1996/03/26 23:54:16 mrg Exp $	*/
 
 /*-
@@ -113,7 +113,7 @@ int gid_name(char *, gid_t *);
  * cpio.c
  */
 int cpio_strd(void);
-int cpio_trail(ARCHD *);
+int cpio_trail(ARCHD *, char *, int, int *);
 int cpio_endwr(void);
 int cpio_id(char *, int);
 int cpio_rd(ARCHD *, char *);
@@ -135,6 +135,7 @@ int bcpio_wr(ARCHD *);
 /*
  * file_subs.c
  */
+extern char *gnu_name_string, *gnu_link_string;
 int file_creat(ARCHD *);
 void file_close(ARCHD *, int);
 int lnk_creat(ARCHD *);
@@ -144,9 +145,12 @@ int node_creat(ARCHD *);
 int unlnk_exist(char *, int);
 int chk_path(char *, uid_t, gid_t);
 void set_ftime(char *fnm, time_t mtime, time_t atime, int frc);
+void fset_ftime(char *fnm, int, time_t mtime, time_t atime, int frc);
 int set_ids(char *, uid_t, gid_t);
+int fset_ids(char *, int, uid_t, gid_t);
 int set_lids(char *, uid_t, gid_t);
 void set_pmode(char *, mode_t);
+void fset_pmode(char *, int, mode_t);
 int file_write(int, char *, int, int *, int *, int, char *);
 void file_flush(int, char *, int);
 void rdfile_close(ARCHD *, int *);
@@ -158,6 +162,7 @@ int set_crc(ARCHD *, int);
 int ftree_start(void);
 int ftree_add(char *, int);
 void ftree_sel(ARCHD *);
+void ftree_skipped_newer(ARCHD *);
 void ftree_chk(void);
 int next_file(ARCHD *);
 
@@ -173,6 +178,7 @@ int ul_asc(u_long, char *, int, int);
 u_quad_t asc_uqd(char *, int, int);
 int uqd_asc(u_quad_t, char *, int, int);
 #endif
+size_t fieldcpy(char *, size_t, const char *, size_t);
 
 /*
  * getoldopt.c
@@ -222,6 +228,7 @@ extern int Lflag;
 extern int Xflag;
 extern int Yflag;
 extern int Zflag;
+extern int zeroflag;
 extern int vfpart;
 extern int patime;
 extern int pmtime;
@@ -237,6 +244,7 @@ extern char *argv0;
 extern FILE *listf;
 extern char *tempfile;
 extern char *tempbase;
+extern int havechd;
 
 int main(int, char **);
 void sig_cleanup(int);
@@ -269,7 +277,7 @@ void atdir_end(void);
 void add_atdir(char *, dev_t, ino_t, time_t, time_t);
 int get_atdir(dev_t, ino_t, time_t *, time_t *);
 int dir_start(void);
-void add_dir(char *, int, struct stat *, int);
+void add_dir(char *, struct stat *, int);
 void proc_dir(void);
 u_int st_hash(char *, int, int);
 
@@ -279,7 +287,7 @@ u_int st_hash(char *, int, int);
 extern char *gnu_hack_string;
 int tar_endwr(void);
 off_t tar_endrd(void);
-int tar_trail(char *, int, int *);
+int tar_trail(ARCHD *, char *, int, int *);
 int tar_id(char *, int);
 int tar_opt(void);
 int tar_rd(ARCHD *, char *);

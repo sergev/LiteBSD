@@ -1,4 +1,4 @@
-/*	$OpenBSD: getoldopt.c,v 1.7 2002/10/16 19:20:02 millert Exp $	*/
+/*	$OpenBSD: getoldopt.c,v 1.9 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: getoldopt.c,v 1.3 1995/03/21 09:07:28 cgd Exp $	*/
 
 /*
@@ -10,13 +10,13 @@
  * in the Public Domain for your edification and enjoyment.
  */
 
-#ifndef lint
-static const char rcsid[] = "$OpenBSD: getoldopt.c,v 1.7 2002/10/16 19:20:02 millert Exp $";
-#endif /* not lint */
-
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "pax.h"
+#include "extern.h"
 
 int
 getoldopt(int argc, char **argv, const char *optstring)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: ftree.c,v 1.22 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: ftree.c,v 1.29 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: ftree.c,v 1.4 1995/03/21 09:07:21 cgd Exp $	*/
 
 /*-
@@ -34,14 +34,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)ftree.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: ftree.c,v 1.22 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -70,7 +62,7 @@ static const char rcsid[] = "$OpenBSD: ftree.c,v 1.22 2003/06/02 23:32:08 miller
  * pax, they are read from stdin
  */
 
-static FTS *ftsp = NULL;		/* curent FTS handle */
+static FTS *ftsp = NULL;		/* current FTS handle */
 static int ftsopts;			/* options to be used on fts_open */
 static char *farray[2];			/* array for passing each arg to fts */
 static FTREE *fthead = NULL;		/* head of linked list of file args */
@@ -80,6 +72,7 @@ static FTSENT *ftent = NULL;		/* current file tree entry */
 static int ftree_skip;			/* when set skip to next file arg */
 
 static int ftree_arg(void);
+static char *getpathname(char *, int);
 
 /*
  * ftree_start()
@@ -169,6 +162,7 @@ ftree_add(char *str, int chflg)
 		str[len] = '\0';
 	ft->fname = str;
 	ft->refcnt = 0;
+	ft->newercnt = 0;
 	ft->chflg = chflg;
 	ft->fow = NULL;
 	if (fthead == NULL) {
@@ -214,6 +208,19 @@ ftree_sel(ARCHD *arcn)
 }
 
 /*
+ * ftree_skipped_newer()
+ *	file has been skipped because a newer file exists and -u/-D given
+ */
+
+void
+ftree_skipped_newer(ARCHD *arcn)
+{
+	/* skipped due to -u/-D, mark accordingly */
+	if (ftcur != NULL)
+		ftcur->newercnt = 1;
+}
+
+/*
  * ftree_chk()
  *	called at end on pax execution. Prints all those file args that did not
  *	have a selected member (reference count still 0)
@@ -236,7 +243,7 @@ ftree_chk(void)
 	 * that never had a match
 	 */
 	for (ft = fthead; ft != NULL; ft = ft->fow) {
-		if ((ft->refcnt > 0) || ft->chflg)
+		if ((ft->refcnt > 0) || ft->newercnt > 0 || ft->chflg)
 			continue;
 		if (wban == 0) {
 			paxwarn(1,"WARNING! These file names were not selected:");
@@ -259,7 +266,6 @@ ftree_chk(void)
 static int
 ftree_arg(void)
 {
-	char *pt;
 
 	/*
 	 * close off the current file tree
@@ -273,16 +279,14 @@ ftree_arg(void)
 	 * keep looping until we get a valid file tree to process. Stop when we
 	 * reach the end of the list (or get an eof on stdin)
 	 */
-	for(;;) {
+	for (;;) {
 		if (fthead == NULL) {
 			/*
 			 * the user didn't supply any args, get the file trees
 			 * to process from stdin;
 			 */
-			if (fgets(farray[0], PAXPATHLEN+1, stdin) == NULL)
+			if (getpathname(farray[0], PAXPATHLEN+1) == NULL)
 				return(-1);
-			if ((pt = strchr(farray[0], '\n')) != NULL)
-				*pt = '\0';
 		} else {
 			/*
 			 * the user supplied the file args as arguments to pax
@@ -355,8 +359,10 @@ next_file(ARCHD *arcn)
 	/*
 	 * loop until we get a valid file to process
 	 */
-	for(;;) {
+	for (;;) {
 		if ((ftent = fts_read(ftsp)) == NULL) {
+			if (errno)
+				syswarn(1, errno, "next_file");
 			/*
 			 * out of files in this tree, go to next arg, if none
 			 * we are done
@@ -369,7 +375,7 @@ next_file(ARCHD *arcn)
 		/*
 		 * handle each type of fts_read() flag
 		 */
-		switch(ftent->fts_info) {
+		switch (ftent->fts_info) {
 		case FTS_D:
 		case FTS_DEFAULT:
 		case FTS_F:
@@ -434,7 +440,7 @@ next_file(ARCHD *arcn)
 		 * end in case we cut short a file tree traversal). However
 		 * there is no way to reset access times on symlinks.
 		 */
-		switch(S_IFMT & arcn->sb.st_mode) {
+		switch (S_IFMT & arcn->sb.st_mode) {
 		case S_IFDIR:
 			arcn->type = PAX_DIR;
 			if (!tflag)
@@ -496,6 +502,56 @@ next_file(ARCHD *arcn)
 	 * copy file name, set file name length
 	 */
 	arcn->nlen = strlcpy(arcn->name, ftent->fts_path, sizeof(arcn->name));
+	if (arcn->nlen >= sizeof(arcn->name))
+		arcn->nlen = sizeof(arcn->name) - 1; /* XXX truncate? */
 	arcn->org_name = ftent->fts_path;
 	return(0);
+}
+
+/*
+ * getpathname()
+ *	Reads a pathname from stdin, handling NUL- or newline-termination.
+ * Return:
+ *	NULL at end of file, otherwise the NUL-terminated buffer.
+ */
+
+static char *
+getpathname(char *buf, int buflen)
+{
+	char *bp, *ep;
+	int ch, term;
+
+	if (zeroflag) {
+		/*
+		 * Read a NUL-terminated pathname, being especially
+		 * paranoid about proper termination and pathname length.
+		 */
+		for (bp = buf, ep = buf + buflen; bp < ep; bp++) {
+			if ((ch = getchar()) == EOF) {
+				if (bp != buf)
+					paxwarn(1, "Ignoring unterminated "
+					    "pathname at EOF");
+				return(NULL);
+			}
+			if ((*bp = ch) == '\0')
+				return(buf);
+		}
+		/* Too long - skip this path */
+		*--bp = '\0';
+		term = '\0';
+	} else {
+		if (fgets(buf, buflen, stdin) == NULL)
+			return(NULL);
+		if ((bp = strchr(buf, '\n')) != NULL || feof(stdin)) {
+			if (bp != NULL)
+				*bp = '\0';
+			return(buf);
+		}
+		/* Too long - skip this path */
+		term = '\n';
+	}
+	while ((ch = getchar()) != term && ch != EOF)
+		;
+	paxwarn(1, "Ignoring too-long pathname: %s", buf);
+	return(NULL);
 }

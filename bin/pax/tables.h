@@ -1,4 +1,4 @@
-/*	$OpenBSD: tables.h,v 1.5 2003/06/02 23:32:09 millert Exp $	*/
+/*	$OpenBSD: tables.h,v 1.8 2006/08/05 23:05:13 ray Exp $	*/
 /*	$NetBSD: tables.h,v 1.3 1995/03/21 09:07:47 cgd Exp $	*/
 
 /*-
@@ -51,6 +51,7 @@
 #define D_TAB_SZ	317		/* unique device mapping table */
 #define A_TAB_SZ	317		/* ftree dir access time reset table */
 #define MAXKEYLEN	64		/* max number of chars for hash */
+#define DIRP_SIZE	64		/* initial size of created dir table */
 
 /*
  * file hard link structure (hashed by dev/ino and chained) used to find the
@@ -78,7 +79,7 @@ typedef struct hrdlnk {
 typedef struct ftm {
 	int		namelen;	/* file name length */
 	time_t		mtime;		/* files last modification time */
-	off_t		seek;		/* loacation in scratch file */
+	off_t		seek;		/* location in scratch file */
 	struct ftm	*fow;
 } FTM;
 
@@ -134,7 +135,7 @@ typedef struct dlist {
 } DLIST;
 
 /*
- * ftree directory access time reset table. When we are done with with a
+ * ftree directory access time reset table. When we are done with a
  * subtree we reset the access and mod time of the directory when the tflag is
  * set. Not really explicitly specified in the pax spec, but easy and fast to
  * do (and this may have even been intended in the spec, it is not clear).
@@ -157,15 +158,13 @@ typedef struct atdir {
  * times and/or modes). We must reset time in the reverse order of creation,
  * because entries are added  from the top of the file tree to the bottom.
  * We MUST reset times from leaf to root (it will not work the other
- * direction).  Entries are recorded into a spool file to make reverse
- * reading faster.
+ * direction).
  */
 
 typedef struct dirdata {
-	int nlen;	/* length of the directory name (includes \0) */
-	off_t npos;	/* position in file where this dir name starts */
-	mode_t mode;	/* file mode to restore */
+	char *name;	/* file name */
 	time_t mtime;	/* mtime to set */
 	time_t atime;	/* atime to set */
-	int frc_mode;	/* do we force mode settings? */
+	u_int16_t mode;	/* file mode to restore */
+	u_int16_t frc_mode;	/* do we force mode settings? */
 } DIRDATA;

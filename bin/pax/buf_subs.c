@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf_subs.c,v 1.17 2003/06/02 23:32:08 millert Exp $	*/
+/*	$OpenBSD: buf_subs.c,v 1.22 2009/10/27 23:59:22 deraadt Exp $	*/
 /*	$NetBSD: buf_subs.c,v 1.5 1995/03/21 09:07:08 cgd Exp $	*/
 
 /*-
@@ -33,14 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-#if 0
-static const char sccsid[] = "@(#)buf_subs.c	8.2 (Berkeley) 4/18/94";
-#else
-static const char rcsid[] = "$OpenBSD: buf_subs.c,v 1.17 2003/06/02 23:32:08 millert Exp $";
-#endif
-#endif /* not lint */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -204,7 +196,7 @@ cp_start(void)
  *	on disk files, this is trivial. However, many devices are really picky
  *	about the conditions under which they will allow a write to occur.
  *	Often devices restrict the conditions where writes can be made,
- *	so it may not be feasable to append archives stored on all types of
+ *	so it may not be feasible to append archives stored on all types of
  *	devices.
  * Return:
  *	0 for success, -1 for failure
@@ -458,7 +450,7 @@ rd_skip(off_t skcnt)
  * wr_fin()
  *	flush out any data (and pad if required) the last block. We always pad
  *	with zero (even though we do not have to). Padding with 0 makes it a
- *	lot easier to recover if the archive is damaged. zero paddding SHOULD
+ *	lot easier to recover if the archive is damaged. zero padding SHOULD
  *	BE a requirement....
  */
 
@@ -677,13 +669,13 @@ rd_wrfile(ARCHD *arcn, int ofd, off_t *left)
 	int rem;
 	int sz = MINFBSZ;
 	struct stat sb;
-	u_long crc = 0L;
+	u_int32_t crc = 0;
 
 	/*
 	 * pass the blocksize of the file being written to the write routine,
 	 * if the size is zero, use the default MINFBSZ
 	 */
-	if (ofd == -1)
+	if (ofd < 0)
 		sz = PAXPATHLEN + 1;		/* GNU tar long link/file */
 	else if (fstat(ofd, &sb) == 0) {
 		if (sb.st_blksize > 0)
@@ -790,7 +782,7 @@ cp_file(ARCHD *arcn, int fd1, int fd2)
 	/*
 	 * read the source file and copy to destination file until EOF
 	 */
-	for(;;) {
+	for (;;) {
 		if ((cnt = read(fd1, buf, blksz)) <= 0)
 			break;
 		if (no_hole)
@@ -846,7 +838,7 @@ buf_fill(void)
 	if (fini)
 		return(0);
 
-	for(;;) {
+	for (;;) {
 		/*
 		 * try to fill the buffer. on error the next archive volume is
 		 * opened and we try again.
