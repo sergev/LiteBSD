@@ -2264,6 +2264,7 @@ file /usr/share/man/cat3/atexit.0
 file /usr/share/man/cat3/atof.0
 file /usr/share/man/cat3/atoi.0
 file /usr/share/man/cat3/atol.0
+file /usr/share/man/cat3/basename.0
 file /usr/share/man/cat3/bcmp.0
 file /usr/share/man/cat3/bcopy.0
 file /usr/share/man/cat3/bitstring.0
@@ -2286,6 +2287,7 @@ file /usr/share/man/cat3/daemon.0
 file /usr/share/man/cat3/dbopen.0
 file /usr/share/man/cat3/devname.0
 file /usr/share/man/cat3/directory.0
+file /usr/share/man/cat3/dirname.0
 file /usr/share/man/cat3/div.0
 file /usr/share/man/cat3/dwarf.0
 file /usr/share/man/cat3/dwarf_add_AT_comp_dir.0

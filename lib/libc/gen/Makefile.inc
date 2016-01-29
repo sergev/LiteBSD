@@ -3,15 +3,15 @@
 # machine-independent gen sources
 .PATH: ${.CURDIR}/${MACHINE}/gen ${.CURDIR}/gen
 
-SRCS+=	alarm.c assert.c clock.c closedir.c confstr.c crypt.c ctermid.c \
-	ctime.c daemon.c devname.c difftime.c err.c errlst.c \
-	exec.c fnmatch.c frexp.c fstab.c fts.c getbsize.c getcap.c getcwd.c \
-	getgrent.c getgrouplist.c gethostname.c getloadavg.c getlogin.c \
-	getmntinfo.c getnetgrent.c getpagesize.c getpass.c getpwent.c \
-	getttyent.c getusershell.c getvfsbyname.c glob.c initgroups.c isatty.c \
-	nice.c nlist.c opendir.c pause.c popen.c psignal.c pwcache.c raise.c \
-	readdir.c rewinddir.c scandir.c seekdir.c sethostname.c setjmperr.c \
-	setmode.c siginterrupt.c siglist.c signal.c \
+SRCS+=	alarm.c assert.c basename.c clock.c closedir.c confstr.c crypt.c \
+	ctermid.c ctime.c daemon.c devname.c difftime.c dirname.c err.c \
+	errlst.c exec.c fnmatch.c frexp.c fstab.c fts.c getbsize.c getcap.c \
+	getcwd.c getgrent.c getgrouplist.c gethostname.c getloadavg.c \
+	getlogin.c getmntinfo.c getnetgrent.c getpagesize.c getpass.c \
+	getpwent.c getttyent.c getusershell.c getvfsbyname.c glob.c \
+	initgroups.c isatty.c nice.c nlist.c opendir.c pause.c popen.c \
+	psignal.c pwcache.c raise.c readdir.c rewinddir.c scandir.c seekdir.c \
+	sethostname.c setjmperr.c setmode.c siginterrupt.c siglist.c signal.c \
 	sigsetops.c sleep.c sysconf.c sysctl.c syslog.c telldir.c \
 	termios.c time.c times.c timezone.c ttyname.c ttyslot.c ualarm.c \
 	uname.c unvis.c usleep.c utime.c valloc.c vis.c wait.c wait3.c \
@@ -28,10 +28,10 @@ errlst.o errlst.po:
 	rm -f errlst.s
 .endif
 
-MAN3+=	alarm.0 clock.0 confstr.0 crypt.0 ctermid.0 ctime.0 daemon.0 \
-	devname.0 directory.0 err.0 exec.0 fnmatch.0 frexp.0 fts.0 \
-	getbsize.0 getcap.0 getcwd.0 getdiskbyname.0 getfsent.0 \
-	getgrent.0 getgrouplist.0 gethostname.0 getloadavg.0 \
+MAN3+=	alarm.0 basename.0 clock.0 confstr.0 crypt.0 ctermid.0 ctime.0 \
+	daemon.0 devname.0 directory.0 dirname.0 err.0 exec.0 fnmatch.0 \
+	frexp.0 fts.0 getbsize.0 getcap.0 getcwd.0 getdiskbyname.0 \
+	getfsent.0 getgrent.0 getgrouplist.0 gethostname.0 getloadavg.0 \
 	getmntinfo.0 getnetgrent.0 getpagesize.0 getpass.0 getpwent.0 \
 	getttyent.0 getusershell.0 getvfsbyname.0 glob.0 initgroups.0 isinf.0 \
 	ldexp.0 modf.0 nice.0 nlist.0 pause.0 popen.0 psignal.0 pwcache.0 \

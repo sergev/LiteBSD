@@ -6,6 +6,7 @@
 
 #include "sh.h"
 #include <ctype.h>
+#include <libgen.h>
 #include <time.h>
 
 

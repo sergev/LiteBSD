@@ -30,8 +30,6 @@ struct source {
 	Source *next;		/* stacked source */
 };
 
-char *basename(char *);
-
 /* Source.type values */
 #define	SEOF		0	/* input EOF */
 #define	SFILE		1	/* file input */
