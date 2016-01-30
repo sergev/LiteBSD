@@ -513,15 +513,21 @@ void fgetrel(f, r)
     r->r_sym = getc(f);
     r->r_sym |= getc(f) << 8;
     r->r_sym |= getc(f) << 16;
+    if (feof(f))
+        uerror("fgetrel failed");
 }
 
 /*
  * Write a relocation record: 8 bytes.
  */
 void fputrel(r, f)
-    struct reloc *r;
+    const struct reloc *r;
     FILE *f;
 {
+    static const struct reloc zero;
+
+    if (! r)
+        r = &zero;
     putc(r->r_offset, f);
     putc(r->r_offset >> 8, f);
     putc(r->r_offset >> 16, f);
@@ -1847,9 +1853,12 @@ void add_space(nbytes, fill_data)
             count[segm]++;
             if (fill_data)
                 fputc(0, sfile[segm]);
+            if (count[segm] % WORDSZ == 0)
+                fputrel(0, rfile[segm]);
         }
-    } else
+    } else {
         count[segm] += nbytes;
+    }
 }
 
 void makeascii()
@@ -2020,8 +2029,9 @@ void align(align_bits)
             count[segm]++;
             fputc(0, sfile[segm]);
         }
-    } else
+    } else {
         count[segm] += nbytes;
+    }
 }
 
 void pass1()
