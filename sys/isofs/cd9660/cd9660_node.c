@@ -397,8 +397,8 @@ cd9660_tstamp_conv7(pi,pu)
     tz = pi[6];
     
     if (y < 1970) {
-        pu->ts_sec  = 0;
-        pu->ts_nsec = 0;
+        pu->tv_sec  = 0;
+        pu->tv_nsec = 0;
         return 0;
     } else {
 #ifdef  ORIGINAL
@@ -418,8 +418,8 @@ cd9660_tstamp_conv7(pi,pu)
         if (-48 <= tz && tz <= 52)
             crtime -= tz * 15 * 60;
     }
-    pu->ts_sec  = crtime;
-    pu->ts_nsec = 0;
+    pu->tv_sec  = crtime;
+    pu->tv_nsec = 0;
     return 1;
 }
 

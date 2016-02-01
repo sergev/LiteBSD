@@ -55,27 +55,27 @@
 #define txdr_unsigned(v)    (htonl((long)(v)))
 
 #define fxdr_nfsv2time(f, t) { \
-    (t)->ts_sec = ntohl(((struct nfsv2_time *)(f))->nfsv2_sec); \
+    (t)->tv_sec = ntohl(((struct nfsv2_time *)(f))->nfsv2_sec); \
     if (((struct nfsv2_time *)(f))->nfsv2_usec != 0xffffffff) \
-        (t)->ts_nsec = 1000 * ntohl(((struct nfsv2_time *)(f))->nfsv2_usec); \
+        (t)->tv_nsec = 1000 * ntohl(((struct nfsv2_time *)(f))->nfsv2_usec); \
     else \
-        (t)->ts_nsec = 0; \
+        (t)->tv_nsec = 0; \
 }
 #define txdr_nfsv2time(f, t) { \
-    ((struct nfsv2_time *)(t))->nfsv2_sec = htonl((f)->ts_sec); \
-    if ((f)->ts_nsec != -1) \
-        ((struct nfsv2_time *)(t))->nfsv2_usec = htonl((f)->ts_nsec / 1000); \
+    ((struct nfsv2_time *)(t))->nfsv2_sec = htonl((f)->tv_sec); \
+    if ((f)->tv_nsec != -1) \
+        ((struct nfsv2_time *)(t))->nfsv2_usec = htonl((f)->tv_nsec / 1000); \
     else \
         ((struct nfsv2_time *)(t))->nfsv2_usec = 0xffffffff; \
 }
 
 #define fxdr_nfsv3time(f, t) { \
-    (t)->ts_sec = ntohl(((struct nfsv3_time *)(f))->nfsv3_sec); \
-    (t)->ts_nsec = ntohl(((struct nfsv3_time *)(f))->nfsv3_nsec); \
+    (t)->tv_sec = ntohl(((struct nfsv3_time *)(f))->nfsv3_sec); \
+    (t)->tv_nsec = ntohl(((struct nfsv3_time *)(f))->nfsv3_nsec); \
 }
 #define txdr_nfsv3time(f, t) { \
-    ((struct nfsv3_time *)(t))->nfsv3_sec = htonl((f)->ts_sec); \
-    ((struct nfsv3_time *)(t))->nfsv3_nsec = htonl((f)->ts_nsec); \
+    ((struct nfsv3_time *)(t))->nfsv3_sec = htonl((f)->tv_sec); \
+    ((struct nfsv3_time *)(t))->nfsv3_nsec = htonl((f)->tv_nsec); \
 }
 
 #define fxdr_hyper(f, t) { \

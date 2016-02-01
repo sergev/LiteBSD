@@ -431,12 +431,12 @@ lfs_getattr(ap)
     vap->va_gid = ip->i_gid;
     vap->va_rdev = (dev_t)ip->i_rdev;
     vap->va_size = ip->i_din.di_size;
-    vap->va_atime.ts_sec = ip->i_atime;
-    vap->va_atime.ts_nsec = ip->i_atimensec;
-    vap->va_mtime.ts_sec = ip->i_mtime;
-    vap->va_mtime.ts_nsec = ip->i_mtimensec;
-    vap->va_ctime.ts_sec = ip->i_ctime;
-    vap->va_ctime.ts_nsec = ip->i_ctimensec;
+    vap->va_atime.tv_sec = ip->i_atime;
+    vap->va_atime.tv_nsec = ip->i_atimensec;
+    vap->va_mtime.tv_sec = ip->i_mtime;
+    vap->va_mtime.tv_nsec = ip->i_mtimensec;
+    vap->va_ctime.tv_sec = ip->i_ctime;
+    vap->va_ctime.tv_nsec = ip->i_ctimensec;
     vap->va_flags = ip->i_flags;
     vap->va_gen = ip->i_gen;
     /* this doesn't belong here */

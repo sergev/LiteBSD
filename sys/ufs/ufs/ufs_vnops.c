@@ -313,12 +313,12 @@ ufs_getattr(ap)
     vap->va_gid = ip->i_gid;
     vap->va_rdev = (dev_t)ip->i_rdev;
     vap->va_size = ip->i_din.di_size;
-    vap->va_atime.ts_sec = ip->i_atime;
-    vap->va_atime.ts_nsec = ip->i_atimensec;
-    vap->va_mtime.ts_sec = ip->i_mtime;
-    vap->va_mtime.ts_nsec = ip->i_mtimensec;
-    vap->va_ctime.ts_sec = ip->i_ctime;
-    vap->va_ctime.ts_nsec = ip->i_ctimensec;
+    vap->va_atime.tv_sec = ip->i_atime;
+    vap->va_atime.tv_nsec = ip->i_atimensec;
+    vap->va_mtime.tv_sec = ip->i_mtime;
+    vap->va_mtime.tv_nsec = ip->i_mtimensec;
+    vap->va_ctime.tv_sec = ip->i_ctime;
+    vap->va_ctime.tv_nsec = ip->i_ctimensec;
     vap->va_flags = ip->i_flags;
     vap->va_gen = ip->i_gen;
     /* this doesn't belong here */
@@ -425,7 +425,7 @@ ufs_setattr(ap)
             return (error);
     }
     ip = VTOI(vp);
-    if (vap->va_atime.ts_sec != VNOVAL || vap->va_mtime.ts_sec != VNOVAL) {
+    if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
         if (vp->v_mount->mnt_flag & MNT_RDONLY)
             return (EROFS);
         if (cred->cr_uid != ip->i_uid &&
@@ -433,14 +433,14 @@ ufs_setattr(ap)
             ((vap->va_vaflags & VA_UTIMES_NULL) == 0 ||
             (error = VOP_ACCESS(vp, VWRITE, cred, p))))
             return (error);
-        if (vap->va_atime.ts_sec != VNOVAL)
+        if (vap->va_atime.tv_sec != VNOVAL)
             ip->i_flag |= IN_ACCESS;
-        if (vap->va_mtime.ts_sec != VNOVAL)
+        if (vap->va_mtime.tv_sec != VNOVAL)
             ip->i_flag |= IN_CHANGE | IN_UPDATE;
-        atimeval.tv_sec = vap->va_atime.ts_sec;
-        atimeval.tv_usec = vap->va_atime.ts_nsec / 1000;
-        mtimeval.tv_sec = vap->va_mtime.ts_sec;
-        mtimeval.tv_usec = vap->va_mtime.ts_nsec / 1000;
+        atimeval.tv_sec = vap->va_atime.tv_sec;
+        atimeval.tv_usec = vap->va_atime.tv_nsec / 1000;
+        mtimeval.tv_sec = vap->va_mtime.tv_sec;
+        mtimeval.tv_usec = vap->va_mtime.tv_nsec / 1000;
         error = VOP_UPDATE(vp, &atimeval, &mtimeval, 1);
         if (error)
             return (error);

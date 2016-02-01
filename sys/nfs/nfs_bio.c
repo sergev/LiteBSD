@@ -126,18 +126,18 @@ nfs_bioread(vp, uio, ioflag, cred)
             error = VOP_GETATTR(vp, &vattr, cred, p);
             if (error)
                 return (error);
-            np->n_mtime = vattr.va_mtime.ts_sec;
+            np->n_mtime = vattr.va_mtime.tv_sec;
         } else {
             error = VOP_GETATTR(vp, &vattr, cred, p);
             if (error)
                 return (error);
-            if (np->n_mtime != vattr.va_mtime.ts_sec) {
+            if (np->n_mtime != vattr.va_mtime.tv_sec) {
                 if (vp->v_type == VDIR)
                     nfs_invaldir(vp);
                 error = nfs_vinvalbuf(vp, V_SAVE, cred, p, 1);
                 if (error)
                     return (error);
-                np->n_mtime = vattr.va_mtime.ts_sec;
+                np->n_mtime = vattr.va_mtime.tv_sec;
             }
         }
     }
@@ -810,7 +810,7 @@ nfs_doio(bp, cr, p)
               NQNFS_CKINVALID(vp, np, ND_READ) &&
               np->n_lrev != np->n_brev) ||
              (!(nmp->nm_flag & NFSMNT_NQNFS) &&
-              np->n_mtime != np->n_vattr.va_mtime.ts_sec))) {
+              np->n_mtime != np->n_vattr.va_mtime.tv_sec))) {
             uprintf("Process killed due to text file modification\n");
             psignal(p, SIGKILL);
             p->p_flag |= P_NOSWAP;

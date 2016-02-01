@@ -269,9 +269,9 @@ nfsrv_setattr(nfsd, slp, procp, mrq)
 #ifdef notyet
             fxdr_nfsv2time(&sp->sa_atime, &vap->va_atime);
 #else
-            vap->va_atime.ts_sec =
+            vap->va_atime.tv_sec =
                 fxdr_unsigned(long, sp->sa_atime.nfsv2_sec);
-            vap->va_atime.ts_nsec = 0;
+            vap->va_atime.tv_nsec = 0;
 #endif
         }
         if (sp->sa_mtime.nfsv2_sec != nfs_xdrneg1)
@@ -293,8 +293,8 @@ nfsrv_setattr(nfsd, slp, procp, mrq)
     if (v3) {
         error = preat_ret = VOP_GETATTR(vp, &preat, cred, procp);
         if (!error && gcheck &&
-            (preat.va_ctime.ts_sec != guard.ts_sec ||
-             preat.va_ctime.ts_nsec != guard.ts_nsec))
+            (preat.va_ctime.tv_sec != guard.tv_sec ||
+             preat.va_ctime.tv_nsec != guard.tv_nsec))
             error = NFSERR_NOT_SYNC;
         if (error) {
             vput(vp);

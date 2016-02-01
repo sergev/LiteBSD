@@ -1605,10 +1605,10 @@ utimes(p, uap, retval)
     vp = nd.ni_vp;
     VOP_LEASE(vp, p, p->p_ucred, LEASE_WRITE);
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-    vattr.va_atime.ts_sec = tv[0].tv_sec;
-    vattr.va_atime.ts_nsec = tv[0].tv_usec * 1000;
-    vattr.va_mtime.ts_sec = tv[1].tv_sec;
-    vattr.va_mtime.ts_nsec = tv[1].tv_usec * 1000;
+    vattr.va_atime.tv_sec = tv[0].tv_sec;
+    vattr.va_atime.tv_nsec = tv[0].tv_usec * 1000;
+    vattr.va_mtime.tv_sec = tv[1].tv_sec;
+    vattr.va_mtime.tv_nsec = tv[1].tv_usec * 1000;
     error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
     vput(vp);
     return (error);

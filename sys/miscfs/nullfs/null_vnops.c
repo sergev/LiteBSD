@@ -393,8 +393,8 @@ null_setattr(ap)
     struct vattr *vap = ap->a_vap;
 
     if ((vap->va_flags != VNOVAL || vap->va_uid != (uid_t)VNOVAL ||
-        vap->va_gid != (gid_t)VNOVAL || vap->va_atime.ts_sec != VNOVAL ||
-        vap->va_mtime.ts_sec != VNOVAL || vap->va_mode != (mode_t)VNOVAL) &&
+        vap->va_gid != (gid_t)VNOVAL || vap->va_atime.tv_sec != VNOVAL ||
+        vap->va_mtime.tv_sec != VNOVAL || vap->va_mode != (mode_t)VNOVAL) &&
         (vp->v_mount->mnt_flag & MNT_RDONLY))
         return (EROFS);
     if (vap->va_size != VNOVAL) {

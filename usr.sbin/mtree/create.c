@@ -152,8 +152,8 @@ statf(p)
 		output(&indent, "size=%qd", p->fts_statp->st_size);
 	if (keys & F_TIME)
 		output(&indent, "time=%ld.%ld",
-		    p->fts_statp->st_mtimespec.ts_sec,
-		    p->fts_statp->st_mtimespec.ts_nsec);
+		    p->fts_statp->st_mtimespec.tv_sec,
+		    p->fts_statp->st_mtimespec.tv_nsec);
 	if (keys & F_CKSUM && S_ISREG(p->fts_statp->st_mode)) {
 		if ((fd = open(p->fts_accpath, O_RDONLY, 0)) < 0 ||
 		    crc(fd, &val, &len))

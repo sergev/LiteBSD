@@ -132,10 +132,10 @@ main(int argc, char *argv[]) {
 static void
 get_time(const struct stat *st, struct timespec *ts)
 {
-	ts[0].ts_sec = st->st_atime;
-	ts[0].ts_nsec = st->st_atimensec;
-	ts[1].ts_sec = st->st_mtime;
-	ts[1].ts_nsec = st->st_mtimensec;
+	ts[0].tv_sec = st->st_atime;
+	ts[0].tv_nsec = st->st_atimensec;
+	ts[1].tv_sec = st->st_mtime;
+	ts[1].tv_nsec = st->st_mtimensec;
 }
 
 static int
@@ -150,8 +150,8 @@ change_time(const char *name, const struct timespec *ts)
 	return utimes(name, tv);
 #else
 	struct utimbuf ut;
-	ut.actime = ts[0].ts_sec;
-	ut.modtime = ts[1].ts_sec;
+	ut.actime = ts[0].tv_sec;
+	ut.modtime = ts[1].tv_sec;
 	return utime(name, &ut);
 #endif
 }
@@ -162,11 +162,11 @@ compare_time(const struct stat *st, const struct timespec *ts2)
 	struct timespec ts1[2];
 	get_time(st, ts1);
 
-	return ts1[1].ts_sec == ts2[1].ts_sec
+	return ts1[1].tv_sec == ts2[1].tv_sec
 #if defined(HAVE_UTIMENSAT)
-	    && ts1[1].ts_nsec == ts2[1].ts_nsec
+	    && ts1[1].tv_nsec == ts2[1].tv_nsec
 #elif defined(HAVE_UTIMES)
-	    && ts1[1].ts_nsec / 1000 == ts2[1].ts_nsec / 1000
+	    && ts1[1].tv_nsec / 1000 == ts2[1].tv_nsec / 1000
 #endif
 	;
 }

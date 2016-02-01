@@ -72,9 +72,9 @@ struct stat {
     int64_t   st_qspare[2];
 };
 #ifndef _POSIX_SOURCE
-#define st_atime st_atimespec.ts_sec
-#define st_mtime st_mtimespec.ts_sec
-#define st_ctime st_ctimespec.ts_sec
+#define st_atime st_atimespec.tv_sec
+#define st_mtime st_mtimespec.tv_sec
+#define st_ctime st_ctimespec.tv_sec
 #endif
 
 #define S_ISUID 0004000         /* set user id on execution */
