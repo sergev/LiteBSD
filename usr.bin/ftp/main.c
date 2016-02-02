@@ -1,4 +1,34 @@
-/*	$OpenBSD: main.c,v 1.16 1997/01/29 22:21:32 millert Exp $	*/
+/*	$OpenBSD: main.c,v 1.89 2014/07/11 18:19:45 halex Exp $	*/
+/*	$NetBSD: main.c,v 1.24 1997/08/18 10:20:26 lukem Exp $	*/
+
+/*
+ * Copyright (C) 1997 and 1998 WIDE Project.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the project nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 /*
  * Copyright (c) 1985, 1989, 1993, 1994
@@ -12,11 +42,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -33,115 +59,337 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1985, 1989, 1993, 1994\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-#if 0
-static char sccsid[] = "@(#)main.c	8.6 (Berkeley) 10/9/94";
-#else
-static char rcsid[] = "$OpenBSD: main.c,v 1.16 1997/01/29 22:21:32 millert Exp $";
-#endif
-#endif /* not lint */
-
 /*
  * FTP User Program -- Command Interface.
  */
-/*#include <sys/ioctl.h>*/
 #include <sys/types.h>
-#include <sys/file.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <arpa/ftp.h>
 
 #include <ctype.h>
 #include <err.h>
+#include <limits.h>
 #include <netdb.h>
 #include <pwd.h>
-#include <signal.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "ftp_var.h"
+#include "cmds.h"
 
-extern struct	cmd cmdtab[];
+#define SHUT_RDWR 2
 
-#define HASHBYTES 1024	/* default buffer size for drawing hash marks */
+#ifndef SMALL
+char * const ssl_verify_opts[] = {
+#define SSL_CAFILE	0
+	"cafile",
+#define SSL_CAPATH	1
+	"capath",
+#define SSL_CIPHERS	2
+	"ciphers",
+#define SSL_DONTVERIFY	3
+	"dont",
+#define SSL_DOVERIFY	4
+	"do",
+#define SSL_VERIFYDEPTH	5
+	"depth",
+	NULL
+};
+char	*ssl_ciphers;
+int	 ssl_verify = 1;
+int	 ssl_verify_depth = -1;
+char	*ssl_ca_file;
+char	*ssl_ca_path;
+#endif /* !SMALL */
+
+int family = PF_UNSPEC;
+int pipeout;
 
 int
-main(argc, argv)
-	int argc;
-	char *argv[];
+main(volatile int argc, char *argv[])
 {
-	int ch, top;
+	int ch, top, rval;
 	struct passwd *pw = NULL;
 	char *cp, homedir[MAXPATHLEN];
-	int force_port = 0;
+	char *outfile = NULL;
+	int dumb_terminal = 0;
 
-	sp = getservbyname("ftp", "tcp");
-	if (sp == 0)
-		errx(1, "ftp/tcp: unknown service");
+	ftpport = "ftp";
+	httpport = "http";
+#ifndef SMALL
+	httpsport = "https";
+#endif /* !SMALL */
+	gateport = getenv("FTPSERVERPORT");
+	if (gateport == NULL || *gateport == '\0')
+		gateport = "ftpgate";
 	doglob = 1;
 	interactive = 1;
 	autologin = 1;
+	passivemode = 1;
+	activefallback = 1;
+	preserve = 1;
+	verbose = 0;
+	progress = 0;
+	gatemode = 0;
+#ifndef SMALL
+#if 0
+	editing = 0;
+	el = NULL;
+	hist = NULL;
+#endif
+	cookiefile = NULL;
+	resume = 0;
+	srcaddr = NULL;
+	marg_sl = sl_init();
+#endif /* !SMALL */
 	mark = HASHBYTES;
+#ifdef INET6
+	epsv4 = 1;
+#else
+	epsv4 = 0;
+#endif
+	epsv4bad = 0;
 
-	while ((ch = getopt(argc, argv, "p:r:dgintv")) != -1) {
+	/* Set default operation mode based on FTPMODE environment variable */
+	if ((cp = getenv("FTPMODE")) != NULL && *cp != '\0') {
+		if (strcmp(cp, "passive") == 0) {
+			passivemode = 1;
+			activefallback = 0;
+		} else if (strcmp(cp, "active") == 0) {
+			passivemode = 0;
+			activefallback = 0;
+		} else if (strcmp(cp, "gate") == 0) {
+			gatemode = 1;
+		} else if (strcmp(cp, "auto") == 0) {
+			passivemode = 1;
+			activefallback = 1;
+		} else
+			warnx("unknown FTPMODE: %s.  Using defaults", cp);
+	}
+
+	if (strcmp(__progname, "gate-ftp") == 0)
+		gatemode = 1;
+	gateserver = getenv("FTPSERVER");
+	if (gateserver == NULL || *gateserver == '\0')
+		gateserver = GATE_SERVER;
+	if (gatemode) {
+		if (*gateserver == '\0') {
+			warnx(
+"Neither $FTPSERVER nor $GATE_SERVER is defined; disabling gate-ftp");
+			gatemode = 0;
+		}
+	}
+
+	cp = getenv("TERM");
+	dumb_terminal = (cp == NULL || *cp == '\0' || !strcmp(cp, "dumb") ||
+	    !strcmp(cp, "emacs") || !strcmp(cp, "su"));
+	fromatty = isatty(fileno(stdin));
+	if (fromatty) {
+		verbose = 1;		/* verbose if from a tty */
+#ifndef SMALL
+#if 0
+		if (!dumb_terminal)
+			editing = 1;	/* editing mode on if tty is usable */
+#endif
+#endif /* !SMALL */
+	}
+
+	ttyout = stdout;
+	if (isatty(fileno(ttyout)) && !dumb_terminal && foregroundproc())
+		progress = 1;		/* progress bar on if tty is usable */
+
+#ifndef SMALL
+	cookiefile = getenv("http_cookies");
+#endif /* !SMALL */
+	httpuseragent = NULL;
+
+	while ((ch = getopt(argc, argv,
+		    "46AaCc:dD:Eegik:mno:pP:r:S:s:tU:vV")) != -1) {
 		switch (ch) {
+		case '4':
+			family = PF_INET;
+			break;
+		case '6':
+#ifdef INET6
+			family = PF_INET6;
+#endif
+			break;
+		case 'A':
+			activefallback = 0;
+			passivemode = 0;
+			break;
+
+		case 'a':
+			anonftp = 1;
+			break;
+
+		case 'C':
+#ifndef SMALL
+			resume = 1;
+#endif /* !SMALL */
+			break;
+
+		case 'c':
+#ifndef SMALL
+			cookiefile = optarg;
+#endif /* !SMALL */
+			break;
+
+		case 'D':
+			action = optarg;
+			break;
 		case 'd':
+#ifndef SMALL
 			options |= SO_DEBUG;
 			debug++;
+#endif /* !SMALL */
 			break;
+
+		case 'E':
+			epsv4 = 0;
+			break;
+
+		case 'e':
+#ifndef SMALL
+#if 0
+			editing = 0;
+#endif
+#endif /* !SMALL */
+			break;
+
 		case 'g':
 			doglob = 0;
 			break;
+
 		case 'i':
 			interactive = 0;
 			break;
+
+		case 'k':
+			keep_alive_timeout = atoi(optarg);
+			break;
+		case 'm':
+			progress = -1;
+			break;
+
 		case 'n':
 			autologin = 0;
 			break;
-		case 'p':
-			force_port = atoi(optarg);
-			break;
-		case 'r':
-			if (isdigit(*optarg))
-				retry_connect = atoi(optarg);
-			else {
-				extern char *__progname;
-				(void)fprintf(stderr,
-					"%s: -r requires numeric argument\n",
-					__progname);
-				exit(1);
+
+		case 'o':
+			outfile = optarg;
+			if (*outfile == '\0') {
+				pipeout = 0;
+				outfile = NULL;
+				ttyout = stdout;
+			} else {
+				pipeout = strcmp(outfile, "-") == 0;
+				ttyout = pipeout ? stderr : stdout;
 			}
 			break;
+
+		case 'p':
+			passivemode = 1;
+			activefallback = 0;
+			break;
+
+		case 'P':
+			ftpport = optarg;
+			break;
+
+		case 'r':
+			retry_connect = atoi(optarg);
+			break;
+
+		case 'S':
+#ifndef SMALL
+			cp = optarg;
+			while (*cp) {
+				char	*str;
+				switch (getsubopt(&cp, ssl_verify_opts, &str)) {
+				case SSL_CAFILE:
+					if (str == NULL)
+						errx(1, "missing CA file");
+					ssl_ca_file = str;
+					break;
+				case SSL_CAPATH:
+					if (str == NULL)
+						errx(1, "missing CA directory"
+						    " path");
+					ssl_ca_path = str;
+					break;
+				case SSL_CIPHERS:
+					if (str == NULL)
+						errx(1, "missing cipher list");
+					ssl_ciphers = str;
+					break;
+				case SSL_DONTVERIFY:
+					ssl_verify = 0;
+					break;
+				case SSL_DOVERIFY:
+					ssl_verify = 1;
+					break;
+				case SSL_VERIFYDEPTH:
+					if (str == NULL)
+						errx(1, "missing depth");
+					ssl_verify_depth = atoi(str);
+					break;
+				default:
+					errx(1, "unknown -S suboption `%s'",
+					    suboptarg ? suboptarg : "");
+					/* NOTREACHED */
+				}
+			}
+#endif
+			break;
+
+		case 's':
+#ifndef SMALL
+			srcaddr = optarg;
+#endif /* !SMALL */
+			break;
+
 		case 't':
-			trace++;
+			trace = 1;
 			break;
+
+#ifndef SMALL
+		case 'U':
+			free (httpuseragent);
+			if (strcspn(optarg, "\r\n") != strlen(optarg))
+				errx(1, "Invalid User-Agent: %s.", optarg);
+			if (asprintf(&httpuseragent, "User-Agent: %s",
+			    optarg) == -1)
+				errx(1, "Can't allocate memory for HTTP(S) "
+				    "User-Agent");
+			break;
+#endif /* !SMALL */
+
 		case 'v':
-			verbose++;
+			verbose = 1;
 			break;
+
+		case 'V':
+			verbose = 0;
+			break;
+
 		default:
-			(void)fprintf(stderr, "usage: "
-				"ftp [-dgintv] [-r<seconds>] [host [port]]\n");
-			exit(1);
+			usage();
 		}
 	}
 	argc -= optind;
 	argv += optind;
 
-	fromatty = isatty(fileno(stdin));
-	if (fromatty)
-		verbose++;
+#ifndef SMALL
+	cookie_load();
+#endif /* !SMALL */
+	if (httpuseragent == NULL)
+		httpuseragent = HTTP_USER_AGENT;
+
 	cpend = 0;	/* no pending replies */
 	proxy = 0;	/* proxy not active */
-	passivemode = 0; /* passive mode not active */
 	crflag = 1;	/* strip c.r. on ascii gets */
 	sendport = -1;	/* not using ports */
 	/*
@@ -154,172 +402,86 @@ main(argc, argv)
 	if (pw == NULL)
 		pw = getpwuid(getuid());
 	if (pw != NULL) {
+		(void)strlcpy(homedir, pw->pw_dir, sizeof homedir);
 		home = homedir;
-		(void) strcpy(home, pw->pw_dir);
 	}
 
-	if (argc > 0 && strchr(argv[0], ':')) {
-		int ret = 0;
-		anonftp = 1;
+	setttywidth(0);
+	(void)signal(SIGWINCH, setttywidth);
 
-		while (argc > 0 && strchr(argv[0], ':')) {
+	if (argc > 0) {
+		if (isurl(argv[0])) {
+			rval = auto_fetch(argc, argv, outfile);
+			if (rval >= 0)		/* -1 == connected and cd-ed */
+				exit(rval);
+		} else {
+#ifndef SMALL
 			char *xargv[5];
-			extern char *__progname;
-			char portstr[20], *p, *bufp = NULL;
-			char *host = NULL, *dir = NULL, *file = NULL;
-			int xargc = 2, looping = 0, tmp;
 
 			if (setjmp(toplevel))
 				exit(0);
-			(void) signal(SIGINT, intr);
-			(void) signal(SIGPIPE, lostpeer);
+			(void)signal(SIGINT, (sig_t)intr);
+			(void)signal(SIGPIPE, (sig_t)lostpeer);
 			xargv[0] = __progname;
-
-			host = strdup(argv[0]);
-			if (host == NULL) {
-				ret = 1;
-				goto bail;
-			}
-			if (!strncmp(host, "http://", sizeof("http://") - 1)) {
-				ret = http_fetch(host);
-				argc--;
-				argv++;
-				goto bail;
-			}
-			if (strncmp(host, "ftp://", sizeof("ftp://") - 1) ==
-			    0) {
-				host += sizeof("ftp://") - 1;
-				p = strchr(host, '/');
-			}
-			else
-				p = strchr(host, ':');
-			*p = '\0';
-
-			xargv[1] = host;
-			xargc = 2;
-			if (force_port) {
-				xargv[xargc++] = portstr;
-				snprintf(portstr, sizeof portstr, "%d",
-				    force_port);
-			}
-			xargv[xargc] = NULL;
-			setpeer(xargc, xargv);
-			if (!connected) {
-				printf("failed to connect to %s\n", host);
-				ret = 1;
-				argc--;
-				argv++;
-				goto bail;
-			}
-			*argv = p + 1;
+			xargv[1] = argv[0];
+			xargv[2] = argv[1];
+			xargv[3] = argv[2];
+			xargv[4] = NULL;
 			do {
-				dir = *argv;
-				p = strrchr(dir, '/');
-				if (p != NULL) {
-					*p = '\0';
-					file = ++p;
-				} else {
-					file = dir;
-					dir = NULL;
+				setpeer(argc+1, xargv);
+				if (!retry_connect)
+					break;
+				if (!connected) {
+					macnum = 0;
+					fputs("Retrying...\n", ttyout);
+					sleep(retry_connect);
 				}
-				if (dir != NULL && *dir != '\0') {
-					xargv[1] = dir;
-					xargv[2] = NULL;
-					xargc = 2;
-					cd(xargc, xargv);
-				}
-				xargv[1] = *file == '\0' ? "/" : file;
-				xargv[2] = NULL;
-				xargc = 2;
-				tmp = verbose;
-				verbose = -1;
-				if (mcd(xargc, xargv) == 0) {
-					verbose = tmp;
-					goto CLINE_CD;
-				}
-				verbose = tmp;
-				if (!looping) {
-					setbinary(NULL, 0);
-					looping = 1;
-				}
-				/* fetch file */
-				xargv[1] = file;
-				xargv[2] = NULL;
-				xargc = 2;
-				get(xargc, xargv);
-				if (code != 226)
-					ret = 1;
-				--argc;
-				argv++;
-			} while (argc > 0 && strchr(argv[0], ':') == NULL);
-
-			/* get ready for the next file */
-bail:
-			if (bufp) {
-				free(bufp);
-				bufp = NULL;
-			}
-			if (connected)
-				disconnect(1, xargv);
+			} while (!connected);
+			retry_connect = 0; /* connected, stop hiding msgs */
+#endif /* !SMALL */
 		}
-		exit(ret);
 	}
-	if (argc > 0) {
-		char *xargv[5];
-		extern char *__progname;
-
-		if (setjmp(toplevel))
-			exit(0);
-		(void) signal(SIGINT, intr);
-		(void) signal(SIGPIPE, lostpeer);
-		xargv[0] = __progname;
-		xargv[1] = argv[0];
-		xargv[2] = argv[1];
-		xargv[3] = argv[2];
-		xargv[4] = NULL;
-		do {
-			setpeer(argc+1, xargv);
-			if (!retry_connect)
-				break;
-			if (!connected) {
-				macnum = 0;
-				printf("Retrying...\n");
-				sleep(retry_connect);
-			}
-		} while (!connected);
-	}
-CLINE_CD:
+#ifndef SMALL
+#if 0
+	controlediting();
+#endif
 	top = setjmp(toplevel) == 0;
 	if (top) {
-		(void) signal(SIGINT, intr);
-		(void) signal(SIGPIPE, lostpeer);
+		(void)signal(SIGINT, (sig_t)intr);
+		(void)signal(SIGPIPE, (sig_t)lostpeer);
 	}
 	for (;;) {
 		cmdscanner(top);
 		top = 1;
 	}
+#else /* !SMALL */
+	usage();
+#endif /* !SMALL */
 }
 
 void
-intr()
+intr(void)
 {
 
+	alarmtimer(0);
 	longjmp(toplevel, 1);
 }
 
 void
-lostpeer()
+lostpeer(void)
 {
+	int save_errno = errno;
 
+	alarmtimer(0);
 	if (connected) {
 		if (cout != NULL) {
-			(void) shutdown(fileno(cout), 1+1);
-			(void) fclose(cout);
+			(void)shutdown(fileno(cout), SHUT_RDWR);
+			(void)fclose(cout);
 			cout = NULL;
 		}
 		if (data >= 0) {
-			(void) shutdown(data, 1+1);
-			(void) close(data);
+			(void)shutdown(data, SHUT_RDWR);
+			(void)close(data);
 			data = -1;
 		}
 		connected = 0;
@@ -327,99 +489,125 @@ lostpeer()
 	pswitch(1);
 	if (connected) {
 		if (cout != NULL) {
-			(void) shutdown(fileno(cout), 1+1);
-			(void) fclose(cout);
+			(void)shutdown(fileno(cout), SHUT_RDWR);
+			(void)fclose(cout);
 			cout = NULL;
 		}
 		connected = 0;
 	}
 	proxflag = 0;
 	pswitch(0);
+	errno = save_errno;
 }
 
+#ifndef SMALL
 /*
+ * Generate a prompt
+ */
 char *
-tail(filename)
-	char *filename;
+prompt(void)
 {
-	char *s;
-
-	while (*filename) {
-		s = strrchr(filename, '/');
-		if (s == NULL)
-			break;
-		if (s[1])
-			return (s + 1);
-		*s = '\0';
-	}
-	return (filename);
+	return ("ftp> ");
 }
-*/
 
 /*
  * Command parser.
  */
 void
-cmdscanner(top)
-	int top;
+cmdscanner(int top)
 {
 	struct cmd *c;
-	int l;
+	int num;
+#if 0
+	HistEvent hev;
 
-	if (!top)
-		(void) putchar('\n');
+	if (!top && !editing)
+		(void)putc('\n', ttyout);
+#endif
 	for (;;) {
-		if (fromatty) {
-			printf("ftp> ");
-			(void) fflush(stdout);
-		}
-		if (fgets(line, sizeof line, stdin) == NULL)
-			quit(0, 0);
-		l = strlen(line);
-		if (l == 0)
-			break;
-		if (line[--l] == '\n') {
-			if (l == 0)
+#if 0
+		if (!editing) {
+#endif
+			if (fromatty) {
+				fputs(prompt(), ttyout);
+				(void)fflush(ttyout);
+			}
+			if (fgets(line, sizeof(line), stdin) == NULL)
+				quit(0, 0);
+			num = strlen(line);
+			if (num == 0)
 				break;
-			line[l] = '\0';
-		} else if (l == sizeof(line) - 2) {
-			printf("sorry, input line too long\n");
-			while ((l = getchar()) != '\n' && l != EOF)
-				/* void */;
-			break;
-		} /* else it was a line without a newline */
-		makeargv();
-		if (margc == 0) {
-			continue;
+			if (line[--num] == '\n') {
+				if (num == 0)
+					break;
+				line[num] = '\0';
+			} else if (num == sizeof(line) - 2) {
+				fputs("sorry, input line too long.\n", ttyout);
+				while ((num = getchar()) != '\n' && num != EOF)
+					/* void */;
+				break;
+			} /* else it was a line without a newline */
+#if 0
+		} else {
+			const char *buf;
+			cursor_pos = NULL;
+
+			if ((buf = el_gets(el, &num)) == NULL || num == 0)
+				quit(0, 0);
+			if (buf[--num] == '\n') {
+				if (num == 0)
+					break;
+			}
+			if (num >= sizeof(line)) {
+				fputs("sorry, input line too long.\n", ttyout);
+				break;
+			}
+			memcpy(line, buf, (size_t)num);
+			line[num] = '\0';
+			history(hist, &hev, H_ENTER, buf);
 		}
+#endif
+
+		makeargv();
+		if (margc == 0)
+			continue;
 		c = getcmd(margv[0]);
 		if (c == (struct cmd *)-1) {
-			printf("?Ambiguous command\n");
+			fputs("?Ambiguous command.\n", ttyout);
 			continue;
 		}
 		if (c == 0) {
-			printf("?Invalid command\n");
+#if 0
+			/*
+			 * Give editline(3) a shot at unknown commands.
+			 * XXX - bogus commands with a colon in
+			 *       them will not elicit an error.
+			 */
+			if (editing &&
+			    el_parse(el, margc, (const char **)margv) != 0)
+#endif
+				fputs("?Invalid command.\n", ttyout);
 			continue;
 		}
 		if (c->c_conn && !connected) {
-			printf("Not connected.\n");
+			fputs("Not connected.\n", ttyout);
 			continue;
 		}
+		confirmrest = 0;
 		(*c->c_handler)(margc, margv);
 		if (bell && c->c_bell)
-			(void) putchar('\007');
+			(void)putc('\007', ttyout);
 		if (c->c_handler != help)
 			break;
 	}
-	(void) signal(SIGINT, intr);
-	(void) signal(SIGPIPE, lostpeer);
+	(void)signal(SIGINT, (sig_t)intr);
+	(void)signal(SIGPIPE, (sig_t)lostpeer);
 }
 
 struct cmd *
-getcmd(name)
-	char *name;
+getcmd(const char *name)
 {
-	char *p, *q;
+	const char *p, *q;
 	struct cmd *c, *found;
 	int nmatches, longest;
 
@@ -429,7 +617,7 @@ getcmd(name)
 	longest = 0;
 	nmatches = 0;
 	found = 0;
-	for (c = cmdtab; p = c->c_name; c++) {
+	for (c = cmdtab; (p = c->c_name) != NULL; c++) {
 		for (q = name; *q == *p++; q++)
 			if (*q == 0)		/* exact match? */
 				return (c);
@@ -454,32 +642,41 @@ getcmd(name)
 int slrflag;
 
 void
-makeargv()
+makeargv(void)
 {
-	char **argp;
+	char *argp;
 
-	argp = margv;
 	stringbase = line;		/* scan from first of buffer */
 	argbase = argbuf;		/* store from first of buffer */
 	slrflag = 0;
+	marg_sl->sl_cur = 0;		/* reset to start of marg_sl */
 	for (margc = 0; ; margc++) {
-		/* Expand array if necessary */
-		if (margc == margvlen) {
-			margv = (margvlen == 0)
-				? (char **)malloc(20 * sizeof(char *))
-				: (char **)realloc(margv,
-					(margvlen + 20)*sizeof(char *));
-			if (margv == NULL)
-				errx(1, "cannot realloc argv array");
-			margvlen += 20;
-			argp = margv + margc;
-		}
-
-		if ((*argp++ = slurpstring()) == NULL)
+		argp = slurpstring();
+		sl_add(marg_sl, argp);
+		if (argp == NULL)
 			break;
 	}
-
+#if 0
+	if (cursor_pos == line) {
+		cursor_argc = 0;
+		cursor_argo = 0;
+	} else if (cursor_pos != NULL) {
+		cursor_argc = margc;
+		cursor_argo = strlen(margv[margc-1]);
+	}
+#endif
 }
+
+#if 0
+#define INC_CHKCURSOR(x)	{ (x)++ ; \
+				if (x == cursor_pos) { \
+					cursor_argc = margc; \
+					cursor_argo = ap-argbase; \
+					cursor_pos = NULL; \
+				} }
+#else
+#define INC_CHKCURSOR(x)	(x)++
+#endif
 
 /*
  * Parse string into argbuf;
@@ -487,7 +684,7 @@ makeargv()
  * handle quoting and strings
  */
 char *
-slurpstring()
+slurpstring(void)
 {
 	int got_one = 0;
 	char *sb = stringbase;
@@ -498,7 +695,7 @@ slurpstring()
 		switch (slrflag) {	/* and $ as token for macro invoke */
 			case 0:
 				slrflag++;
-				stringbase++;
+				INC_CHKCURSOR(stringbase);
 				return ((*sb == '!') ? "!" : "$");
 				/* NOTREACHED */
 			case 1:
@@ -518,7 +715,8 @@ S0:
 
 	case ' ':
 	case '\t':
-		sb++; goto S0;
+		INC_CHKCURSOR(sb);
+		goto S0;
 
 	default:
 		switch (slrflag) {
@@ -544,13 +742,17 @@ S1:
 		goto OUT;	/* end of token */
 
 	case '\\':
-		sb++; goto S2;	/* slurp next character */
+		INC_CHKCURSOR(sb);
+		goto S2;	/* slurp next character */
 
 	case '"':
-		sb++; goto S3;	/* slurp quoted string */
+		INC_CHKCURSOR(sb);
+		goto S3;	/* slurp quoted string */
 
 	default:
-		*ap++ = *sb++;	/* add character to token */
+		*ap = *sb;	/* add character to token */
+		ap++;
+		INC_CHKCURSOR(sb);
 		got_one = 1;
 		goto S1;
 	}
@@ -562,7 +764,9 @@ S2:
 		goto OUT;
 
 	default:
-		*ap++ = *sb++;
+		*ap = *sb;
+		ap++;
+		INC_CHKCURSOR(sb);
 		got_one = 1;
 		goto S1;
 	}
@@ -574,10 +778,13 @@ S3:
 		goto OUT;
 
 	case '"':
-		sb++; goto S1;
+		INC_CHKCURSOR(sb);
+		goto S1;
 
 	default:
-		*ap++ = *sb++;
+		*ap = *sb;
+		ap++;
+		INC_CHKCURSOR(sb);
 		got_one = 1;
 		goto S3;
 	}
@@ -604,69 +811,105 @@ OUT:
 	return ((char *)0);
 }
 
-#define HELPINDENT ((int) sizeof ("directory"))
-
 /*
  * Help command.
  * Call each command handler with argc == 0 and argv[0] == name.
  */
 void
-help(argc, argv)
-	int argc;
-	char *argv[];
+help(int argc, char *argv[])
 {
 	struct cmd *c;
 
 	if (argc == 1) {
-		int i, j, w, k;
-		int columns, width = 0, lines;
+		StringList *buf;
 
-		printf("Commands may be abbreviated.  Commands are:\n\n");
-		for (c = cmdtab; c < &cmdtab[NCMDS]; c++) {
-			int len = strlen(c->c_name);
-
-			if (len > width)
-				width = len;
-		}
-		width = (width + 8) &~ 7;
-		columns = 80 / width;
-		if (columns == 0)
-			columns = 1;
-		lines = (NCMDS + columns - 1) / columns;
-		for (i = 0; i < lines; i++) {
-			for (j = 0; j < columns; j++) {
-				c = cmdtab + j * lines + i;
-				if (c->c_name && (!proxy || c->c_proxy)) {
-					printf("%s", c->c_name);
-				}
-				else if (c->c_name) {
-					for (k=0; k < strlen(c->c_name); k++) {
-						(void) putchar(' ');
-					}
-				}
-				if (c + lines >= &cmdtab[NCMDS]) {
-					printf("\n");
-					break;
-				}
-				w = strlen(c->c_name);
-				while (w < width) {
-					w = (w + 8) &~ 7;
-					(void) putchar('\t');
-				}
-			}
-		}
+		buf = sl_init();
+		fprintf(ttyout, "%sommands may be abbreviated.  Commands are:\n\n",
+		    proxy ? "Proxy c" : "C");
+		for (c = cmdtab; c < &cmdtab[NCMDS]; c++)
+			if (c->c_name && (!proxy || c->c_proxy))
+				sl_add(buf, c->c_name);
+		list_vertical(buf);
+		sl_free(buf, 0);
 		return;
 	}
+
+#define HELPINDENT ((int) sizeof("disconnect"))
+
 	while (--argc > 0) {
 		char *arg;
+
 		arg = *++argv;
 		c = getcmd(arg);
 		if (c == (struct cmd *)-1)
-			printf("?Ambiguous help command %s\n", arg);
+			fprintf(ttyout, "?Ambiguous help command %s\n", arg);
 		else if (c == (struct cmd *)0)
-			printf("?Invalid help command %s\n", arg);
+			fprintf(ttyout, "?Invalid help command %s\n", arg);
 		else
-			printf("%-*s\t%s\n", HELPINDENT,
+			fprintf(ttyout, "%-*s\t%s\n", HELPINDENT,
 				c->c_name, c->c_help);
 	}
 }
+#endif /* !SMALL */
+
+void
+usage(void)
+{
+	(void)fprintf(stderr, "usage: %s "
+#ifndef SMALL
+	    "[-46AadEegimnptVv] [-D title] [-k seconds] [-P port] "
+	    "[-r seconds]\n"
+	    "           [-s srcaddr] [host [port]]\n"
+	    "       %s [-C] "
+#endif /* !SMALL */
+	    "[-o output] "
+#ifndef SMALL
+	    "[-s srcaddr]\n"
+	    "           "
+#endif /* !SMALL */
+	    "ftp://[user:password@]host[:port]/file[/] ...\n"
+	    "       %s "
+#ifndef SMALL
+	    "[-C] [-c cookie] "
+#endif /* !SMALL */
+	    "[-o output] "
+#ifndef SMALL
+	    "[-S ssl_options] "
+	    "[-s srcaddr]\n"
+	    "           [-U useragent] "
+#endif /* !SMALL */
+	    "http"
+#ifndef SMALL
+	    "[s]"
+#endif
+	    "://"
+#ifndef SMALL
+	    "[user:password@]"
+#endif
+	    "host[:port]/file ...\n"
+	    "       %s "
+#ifndef SMALL
+	    "[-C] "
+#endif /* !SMALL */
+	    "[-o output] "
+#ifndef SMALL
+	    "[-s srcaddr] "
+#endif /* !SMALL */
+	    "file:file ...\n"
+	    "       %s "
+#ifndef SMALL
+	    "[-C] "
+#endif /* !SMALL */
+	    "[-o output] "
+#ifndef SMALL
+	    "[-s srcaddr] "
+#endif /* !SMALL */
+	    "host:/file[/] ...\n",
+#ifndef SMALL
+	    __progname, __progname, __progname, __progname, __progname);
+#else /* !SMALL */
+	    __progname, __progname, __progname, __progname);
+#endif /* !SMALL */
+	exit(1);
+}
+

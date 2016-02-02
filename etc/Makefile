@@ -26,6 +26,7 @@ install:
 	-mkdir -p ${DESTDIR}/etc/namedb ${DESTDIR}/dev ${DESTDIR}/tmp
 	-mkdir -p ${DESTDIR}/usr/lib ${DESTDIR}/usr/src/sys ${DESTDIR}/root
 	-mkdir -p ${DESTDIR}/var/log ${DESTDIR}/var/run ${DESTDIR}/var/spool/uucp
+	-mkdir -p ${DESTDIR}/etc/ssl
 	cp master.passwd ${DESTDIR}/etc/master.passwd
 	cp group ${DESTDIR}/etc/group
 	# install devices
@@ -53,6 +54,7 @@ install:
 		install -c -m 444 4.4BSD.dist ${DESTDIR}/etc/mtree)
 	(cd namedb; install -c -m 644 ${NAMEDB} \
 	    ${DESTDIR}/etc/namedb)
+	(cd ssl; install -c -m 600 cert.pem ${DESTDIR}/etc/ssl)
 	install -c -m 664 /dev/null ${DESTDIR}/etc/dumpdates
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/lastlog
 	install -c -m 644 /dev/null ${DESTDIR}/var/log/messages

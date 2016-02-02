@@ -667,6 +667,9 @@ dir /etc/opkg
 file /etc/opkg/options.conf
 file /etc/opkg/sources.conf
 
+dir /etc/ssl
+file /etc/ssl/cert.pem
+
 #
 # Files: /bin
 #

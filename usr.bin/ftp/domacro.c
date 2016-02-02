@@ -1,5 +1,5 @@
-/*      $OpenBSD: domacro.c,v 1.2 1996/06/26 05:33:34 deraadt Exp $      */
-/*      $NetBSD: domacro.c,v 1.5 1995/09/08 01:06:14 tls Exp $      */
+/*	$OpenBSD: domacro.c,v 1.17 2009/05/05 19:35:30 martynas Exp $	*/
+/*	$NetBSD: domacro.c,v 1.10 1997/07/20 09:45:45 lukem Exp $	*/
 
 /*
  * Copyright (c) 1985, 1993, 1994
@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -34,32 +30,24 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-#if 0
-static char sccsid[] = "@(#)domacro.c	8.3 (Berkeley) 4/2/94";
-#else
-static char rcsid[] = "$OpenBSD: domacro.c,v 1.2 1996/06/26 05:33:34 deraadt Exp $";
-#endif
-#endif /* not lint */
+#ifndef SMALL
 
 #include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 
 #include "ftp_var.h"
 
 void
-domacro(argc, argv)
-	int argc;
-	char *argv[];
+domacro(int argc, char *argv[])
 {
 	int i, j, count = 2, loopflg = 0;
-	char *cp1, *cp2, line2[200];
+	char *cp1, *cp2, line2[FTPBUFLEN];
 	struct cmd *c;
 
 	if (argc < 2 && !another(&argc, &argv, "macro name")) {
-		printf("Usage: %s macro_name.\n", argv[0]);
+		fprintf(ttyout, "usage: %s macro-name\n", argv[0]);
 		code = -1;
 		return;
 	}
@@ -69,11 +57,11 @@ domacro(argc, argv)
 		}
 	}
 	if (i == macnum) {
-		printf("'%s' macro not found.\n", argv[1]);
+		fprintf(ttyout, "'%s' macro not found.\n", argv[1]);
 		code = -1;
 		return;
 	}
-	(void) strcpy(line2, line);
+	(void)strlcpy(line2, line, sizeof(line2));
 TOP:
 	cp1 = macros[i].mac_start;
 	while (cp1 != macros[i].mac_end) {
@@ -94,7 +82,8 @@ TOP:
 				    }
 				    cp1--;
 				    if (argc - 2 >= j) {
-					(void) strcpy(cp2, argv[j+1]);
+					(void)strlcpy(cp2, argv[j+1],
+					    sizeof(line) - (cp2 - line));
 					cp2 += strlen(argv[j+1]);
 				    }
 				    break;
@@ -103,12 +92,13 @@ TOP:
 					loopflg = 1;
 					cp1++;
 					if (count < argc) {
-					   (void) strcpy(cp2, argv[count]);
+					   (void)strlcpy(cp2, argv[count],
+					       sizeof(line) - (cp2 - line));
 					   cp2 += strlen(argv[count]);
 					}
 					break;
 				}
-				/* intentional drop through */
+				/* FALLTHROUGH */
 			    default:
 				*cp2++ = *cp1;
 				break;
@@ -121,26 +111,27 @@ TOP:
 		makeargv();
 		c = getcmd(margv[0]);
 		if (c == (struct cmd *)-1) {
-			printf("?Ambiguous command\n");
+			fputs("?Ambiguous command.\n", ttyout);
 			code = -1;
 		}
 		else if (c == 0) {
-			printf("?Invalid command\n");
+			fputs("?Invalid command.\n", ttyout);
 			code = -1;
 		}
 		else if (c->c_conn && !connected) {
-			printf("Not connected.\n");
+			fputs("Not connected.\n", ttyout);
 			code = -1;
 		}
 		else {
 			if (verbose) {
-				printf("%s\n",line);
+				fputs(line, ttyout);
+				fputc('\n', ttyout);
 			}
 			(*c->c_handler)(margc, margv);
 			if (bell && c->c_bell) {
-				(void) putchar('\007');
+				(void)putc('\007', ttyout);
 			}
-			(void) strcpy(line, line2);
+			(void)strlcpy(line, line2, sizeof(line));
 			makeargv();
 			argc = margc;
 			argv = margv;
@@ -153,3 +144,6 @@ TOP:
 		goto TOP;
 	}
 }
+
+#endif /* !SMALL */
+
