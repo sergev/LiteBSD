@@ -44,6 +44,7 @@ install:
 		install -c -m 644 dot.cshrc ${DESTDIR}/root/.cshrc; \
 		install -c -m 600 dot.klogin ${DESTDIR}/root/.klogin; \
 		install -c -m 644 dot.login ${DESTDIR}/root/.login; \
+		install -c -m 644 dot.mg ${DESTDIR}/root/.mg; \
 		install -c -m 644 dot.profile ${DESTDIR}/root/.profile; \
 		install -c -m 600 dot.rhosts ${DESTDIR}/root/.rhosts; \
 		rm -f ${DESTDIR}/.cshrc ${DESTDIR}/.profile; \

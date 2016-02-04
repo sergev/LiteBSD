@@ -1,6 +1,6 @@
 #	@(#)Makefile	8.1 (Berkeley) 6/8/93
 
-FILES=	dot.cshrc dot.login dot.mailrc dot.profile dot.rhosts
+FILES=	dot.cshrc dot.login dot.mailrc dot.mg dot.profile dot.rhosts
 NOOBJ=	noobj
 
 all clean cleandir depend lint tags:

@@ -604,6 +604,7 @@ mode 0775
 file /root/.cshrc
 file /root/.klogin
 file /root/.login
+file /root/.mg
 file /root/.profile
 file /root/.rhosts
 
@@ -848,7 +849,6 @@ file /usr/bin/diskspeed
 file /usr/bin/du
 file /usr/bin/egrep
 file /usr/bin/elfcopy
-file /usr/bin/emg
 file /usr/bin/env
 file /usr/bin/error
 file /usr/bin/expand
@@ -1681,8 +1681,8 @@ file /usr/share/dict/web2a
 file /usr/share/dict/words
 
 dir /usr/share/doc
-dir /usr/share/doc/emg
-file /usr/share/doc/emg/emg.keys
+dir /usr/share/doc/mg
+file /usr/share/doc/mg/tutorial
 
 dir /usr/share/misc
 file /usr/share/misc/airport
@@ -1719,6 +1719,7 @@ dir /usr/share/skel
 file /usr/share/skel/dot.cshrc
 file /usr/share/skel/dot.login
 file /usr/share/skel/dot.mailrc
+file /usr/share/skel/dot.mg
 file /usr/share/skel/dot.profile
 file /usr/share/skel/dot.rhosts
 
@@ -1816,7 +1817,6 @@ file /usr/share/man/cat1/du.0
 file /usr/share/man/cat1/echo.0
 file /usr/share/man/cat1/ed.0
 file /usr/share/man/cat1/elfcopy.0
-file /usr/share/man/cat1/emg.0
 file /usr/share/man/cat1/error.0
 file /usr/share/man/cat1/expand.0
 file /usr/share/man/cat1/expr.0

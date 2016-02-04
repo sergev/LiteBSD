@@ -6,14 +6,14 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep gzip head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
-	lock logger login logname lorder m4 mail make man mesg mkdep \
+	lock logger login logname lorder m4 mail make man mesg mg mkdep \
 	mkfifo mklocale mkstr more msgs mt nc netstat nfsstat nice nm nohup \
 	pagesize passwd paste patch pcc pkg pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size sl soelim sort split sqlite3 \
 	strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
-	unifdef uniq unvis users uudecode uuencode vacation \
+	unifdef uniq unvis users uudecode uuencode vacation vi \
 	vis w wall wc what whatis whereis who whois window write \
 	xargs xinstall xstr yacc yes
 

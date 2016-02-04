@@ -1,9 +1,0 @@
-#!/bin/sh
-
-printf "checking for strtonum... "
-if grep strtonum /usr/inclue/stdlib.h > /dev/null 2>&1 && echo "yes" ; then
-	sed 's,OBJS +=	strtonum\.o,,g' Makefile.in > Makefile
-else
-	echo "no"
-	sed 's,CFLAGS +=	-DHAVE_STRTONUM,,g' Makefile.in > Makefile
-fi
