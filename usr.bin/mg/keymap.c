@@ -45,47 +45,6 @@ struct KEYMAPE (2) helpmap = {
 	}
 };
 
-static PF cCsc[] = {
-	rescan,			/* g */
-	rescan,			/* h */
-	rescan,			/* j */
-	rescan,			/* k */
-	rescan,			/* l */
-	rescan,			/* m */
-	rescan,			/* o */
-	rescan,			/* q */
-	rescan, 		/* r */
-};
-
-static struct KEYMAPE (1) cCsmap = {
-	1,
-	1,
-	rescan,
-	{
-		{
-			'c', 't', cCsc, NULL
-		}
-	}
-};
-
-static PF cCs[] = {
-	NULL			/* s */
-};
-
-struct KEYMAPE (2) ccmap = {
-	2,
-	2,
-	rescan,
-	{
-		{
-			CCHR('@'), CCHR('@'), (PF[]){ rescan }, NULL
-		},
-		{
-			's', 's', cCs, (KEYMAP *) & cCsmap
-		}
-	}
-};
-
 static PF cX4cF[] = {
 	poptofile,		/* ^f */
 	ctrlg			/* ^g */
@@ -388,14 +347,11 @@ static PF fund_cb[] = {
 	showmatch		/* ) ] }  */
 };
 
-static struct KEYMAPE (8) fundmap = {
-	8,
-	8,
+static struct KEYMAPE (7) fundmap = {
+	7,
+	7,
 	selfinsert,
 	{
-		{
-			CCHR('@'), CCHR('G'), fund_at, (KEYMAP *) & ccmap
-		},
 		{
 			CCHR('H'), CCHR('H'), fund_h, (KEYMAP *) & helpmap
 		},
