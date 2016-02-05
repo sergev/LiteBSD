@@ -1,7 +1,7 @@
 #!/bin/ksh
 
 USAGE="usage: pkg [-h] [add|info|rm] [package]"
-VERSION="1.2"
+VERSION="1.3"
 LOCALBASE="/usr/local"
 
 # This is essentially the usage() function common in BSD.
@@ -13,35 +13,26 @@ errorexit() {
 # Install a package. Accepts a local or ftp/http path to a package name.
 # Do not add the .tgz at the end! ftp is the name of the fetching program.
 # You might want to replace that with curl or wget on your machine.
-# XXX: You could also add ftps and https support if using curl or wget.
 addpackage() {
-	# Fetch.
-	# Check if we are fetching locally or from the Internet.
-	# ftp and http only (add ftps and https if using curl or wget)
-	case "$1" in
-		ftp://*|http://*)
-			FETCHED=1
-			cd ${LOCALBASE}/pkg
-			ftp "$1".tgz
-			;;
-		*)
-			FETCHED=0
-			;;
-	esac
-
 	# Install.
-	# Remember to remove the tarball if downloaded
-	# from the Internet. We keep the tarball if
-	# installing from a local file.
 	echo -n "Installing ${1##*/}"
 	echo -n "... "
-	if [ $FETCHED -eq 1 ] ; then
-		tar xzf "${1##*/}".tgz -C /
-		rm -f ${LOCALBASE}/pkg/"${1##*/}".tgz
+	tar xzf "$1".tgz -C / 2>/dev/null
+	if [ $? -ne 0 ] ; then
+		if [ ! "$PKG_PATH" ] ; then
+			PKG_PATH=http://devio.us/~bcallah/pub/LiteBSD/packages/
+		fi
+		ftp -V -o - "${PKG_PATH}${1##*/}".tgz 2>/dev/null | tar xzf - -C / 2>/dev/null
+		if [ $? -ne 0 ] ; then
+			echo -n "Error: Could not find "
+			echo -n "${1##*/} "
+			echo "package"
+		else
+			echo "done!"
+		fi
 	else
-		tar xzf "$1".tgz -C /
+		echo "done!"
 	fi
-	echo "done!"
 
 	# XXX: Did the package leave a message? Print it then.
 	cat "${LOCALBASE}/pkg/message/${1##*/}" 2>/dev/null
