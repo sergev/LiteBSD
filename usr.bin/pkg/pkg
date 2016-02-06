@@ -1,7 +1,7 @@
 #!/bin/ksh
 
 USAGE="usage: pkg [-h] [add|info|rm] [package]"
-VERSION="1.3"
+VERSION="1.4"
 LOCALBASE="/usr/local"
 
 # This is essentially the usage() function common in BSD.
@@ -42,12 +42,15 @@ addpackage() {
 
 # Output a list of all installed packages with a description of each.
 infopackage() {
+	if [ ! "$PAGER" ] ; then
+		PAGER=more
+	fi
 	# XXX: This could be better, but works.
 	cd ${LOCALBASE}/pkg/plists
 	if [ "$1" ] ; then
-		head -3 "*** pkg info ***" "$1" 2>/dev/null | more
+		head -3 "*** pkg info ***" "$1" 2>/dev/null | $PAGER
 	else
-		head -3 * | more
+		head -3 * 2>/dev/null | $PAGER
 	fi
 	return 0
 }
@@ -84,7 +87,7 @@ if [ "$1" = "-h" ] ; then
 	echo $USAGE
 	echo -n "pkg "
 	echo $VERSION
-	echo "Copyright (c) 2015 Brian Callahan <bcallah@devio.us>"
+	echo "Copyright (c) 2015-2016 Brian Callahan <bcallah@devio.us>"
 	echo "MIT License"
 	exit 1
 fi
@@ -97,7 +100,7 @@ fi
 
 if [ "$1" = "add" ] ; then
 	if [ $(id -u) -ne 0 ] ; then
-		echo "pkg: must be run as root"
+		echo "pkg: add requires root"
 		errorexit
 	fi
 	if [ "$2" ] ; then
@@ -113,7 +116,7 @@ elif [ "$1" = "info" ] ; then
 	fi
 elif [ "$1" = "rm" ] ; then
 	if [ $(id -u) -ne 0 ] ; then
-		echo "pkg: must be run as root"
+		echo "pkg: rm requires root"
 		errorexit
 	fi
 	if [ "$2" ] ; then
