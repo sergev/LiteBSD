@@ -12,7 +12,7 @@ LOCALBASE=${PREFIX}
 MANDIR=${PREFIX}/man/man
 PKGBASE=${LOCALBASE}/pkg
 PLISTBASE=${PKGBASE}/plists/
-PKGNAME=${PROG}-${V}
+PKGNAME=${PORT}-${V}
 TRUEDESTDIR=${DESTDIR}
 ARCH?=mipsel
 
@@ -50,7 +50,7 @@ fakeroot: build
 control: fakeroot
 .if !exists(${.CURDIR}/control)
 	@echo -n "Creating ${PKGNAME} control file... "
-	@echo "Package: ${PROG}" >control
+	@echo "Package: ${PORT}" >control
 	@echo "Version: ${V}" >>control
 	@echo "Description: Put a description of the package here." >>control
 	@echo "    Multiple lines allowed." >>control
