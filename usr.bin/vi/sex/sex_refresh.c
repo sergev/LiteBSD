@@ -56,8 +56,12 @@ static char sccsid[] = "@(#)sex_refresh.c	9.2 (Berkeley) 11/13/94";
 #include "sex_screen.h"
 
 #ifndef SYSV_CURSES
+#ifndef A_NORMAL
 #define	A_NORMAL	1
+#endif
+#ifndef A_STANDOUT
 #define	A_STANDOUT	2
+#endif
 #define	vidattr(attr)	Xvidattr(sp, attr)
 
 static int	Xvidattr __P((SCR *, int));

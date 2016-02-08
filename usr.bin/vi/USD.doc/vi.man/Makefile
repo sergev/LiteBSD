@@ -16,3 +16,5 @@ clean:
 cleandir: clean
 
 install:
+
+depend:
