@@ -6,7 +6,7 @@ SRCS=	alloc.c c_ksh.c c_sh.c c_test.c c_ulimit.c edit.c \
 	mail.c main.c misc.c path.c shf.c syn.c table.c trap.c \
 	tree.c tty.c var.c version.c vi.c
 
-DEFS=	-Wall -Wno-error=maybe-uninitialized -Wno-error=unused-but-set-variable
+DEFS=	-Wall
 CFLAGS+=${DEFS} -I. -I${.CURDIR} -ffunction-sections -fdata-sections
 LDFLAGS+=-Wl,--gc-sections
 MAN1=	ksh.0

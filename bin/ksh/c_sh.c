@@ -466,18 +466,18 @@ c_trap(char **wp)
 				shprintf(" %s\n", p->name);
 			}
 		}
-#if 0 /* this is ugly and not clear POSIX needs it */
 		/* POSIX may need this so output of trap can be saved and
 		 * used to restore trap conditions
 		 */
 		if (anydfl) {
+#if 0 /* this is ugly and not clear POSIX needs it */
 			shprintf("trap -- -");
 			for (p = sigtraps, i = NSIG+1; --i >= 0; p++)
 				if (p->trap == NULL && p->name)
 					shprintf(" %s", p->name);
 			shprintf(newline);
-		}
 #endif
+		}
 		return 0;
 	}
 

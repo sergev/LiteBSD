@@ -19,7 +19,7 @@ c_cd(char **wp)
 	int rval;
 	struct tbl *pwd_s, *oldpwd_s;
 	XString xs;
-	char *xp;
+	char *xp __attribute__((unused));
 	char *dir, *try, *pwd;
 	int phys_path;
 	char *cdpath;
