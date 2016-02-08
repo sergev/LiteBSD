@@ -38,6 +38,7 @@ install:
 	install -c -m 600 master.passwd ${DESTDIR}/etc
 	install -c -m 600 hosts.equiv ${DESTDIR}/etc
 	install -c -m 744 netstart ${DESTDIR}/etc
+	install -c -m 644 resolv.conf ${DESTDIR}/etc
 	install -c -m 644 ${BIN1} ${DESTDIR}/etc
 	install -c -m 666 ${BIN2} ${DESTDIR}/etc
 	(cd root; \

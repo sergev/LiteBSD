@@ -33,8 +33,8 @@ ${DESTDIR}:
 	${MAKE} -Cinclude install
 	${MAKE} cleandir
 	${MAKE} -Clib depend
-	${MAKE} depend
 	${MAKE} -Clib all install
+	${MAKE} depend
 
 #
 # Build all the binaries.

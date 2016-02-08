@@ -20,7 +20,8 @@ hostname $hostname
 #ifconfig  we0 inet $hostname netmask my-netmask
 
 if ifconfig en0 >/dev/null 2>&1; then
-    ifconfig en0 inet 20.2.2.1
+    ifconfig en0 inet 10.0.2.15
+    gateway=10.0.2.2
 fi
 
 # set the address for the loopback interface
@@ -28,3 +29,8 @@ ifconfig lo0 inet 127.0.0.1
 
 # use loopback, not the wire
 #route add $hostname localhost
+
+# default route
+if [ -n "$gateway" ]; then
+    route add -net 0 $gateway
+fi

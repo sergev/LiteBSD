@@ -652,6 +652,7 @@ file /etc/protocols
 file /etc/rc
 file /etc/rc.local
 file /etc/remote
+file /etc/resolv.conf
 file /etc/security
 file /etc/services
 file /etc/shells
