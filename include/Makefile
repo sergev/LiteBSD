@@ -20,7 +20,7 @@ FILES=  a.out.h ar.h archive.h archive_entry.h assert.h \
 MFILES=	float.h frame.h stdarg.h
 LFILES=	errno.h fcntl.h syslog.h termios.h
 
-DIRS=arpa protocols
+DIRS=arpa protocols openssl
 LDIRS=	net netinet nfs sys ufs vm
 
 NOOBJ=	noobj

@@ -18,4 +18,6 @@ FILESDIR=${DESTDIR}/usr/share/misc
 beforeinstall:
 	install -m 444 ${FILES} ${FILESDIR}
 
+depend:
+
 .include <bsd.prog.mk>

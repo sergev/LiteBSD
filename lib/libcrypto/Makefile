@@ -431,9 +431,8 @@ files:
 	@set -e; target=files; $(RECURSIVE_BUILD_CMD)
 
 links:
-	@$(PERL) $(TOP)/util/mkdir-p.pl include/openssl
-	@$(PERL) $(TOP)/util/mklink.pl include/openssl $(EXHEADER)
-	@set -e; target=links; $(RECURSIVE_BUILD_CMD)
+	@$(PERL) $(TOP)/util/mkdir-p.pl include
+	@ln -s -f ../../../include/openssl include/openssl
 
 gentests:
 	@(cd test && echo "generating dummy tests (if needed)..." && \
@@ -537,13 +536,7 @@ install: all install_sw
 
 install_sw:
 	@$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/bin \
-		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR) \
-		$(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl
-	@set -e; headerlist="$(EXHEADER)"; for i in $$headerlist;\
-	do \
-	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
-	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
-	done;
+		$(INSTALL_PREFIX)$(INSTALLTOP)/$(LIBDIR)
 	@set -e; target=install; $(RECURSIVE_BUILD_CMD)
 	@set -e; liblist="$(LIBS)"; for i in $$liblist ;\
 	do \
