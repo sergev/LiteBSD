@@ -3,6 +3,9 @@ BLOCKSIZE=1k
 MORE="-ce"
 export PATH BLOCKSIZE MORE
 
+# Fancy colored prompt with current directory name in it.
+PS1='[0;31m${PWD#?*/}[1;32m #[m '
+
 # Export TERM for single user shells.
 export TERM
 

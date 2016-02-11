@@ -4,7 +4,7 @@
 /*
  * Copyright (C) 1997 and 1998 WIDE Project.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -16,7 +16,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -83,9 +83,6 @@
 #include <utime.h>
 
 #include "ftp_var.h"
-
-#define IP_PORTRANGE_HIGH 1
-#define IP_PORTRANGE 19
 
 union sockunion {
 	struct sockinet {
@@ -187,7 +184,7 @@ hookup(char *host, char *port)
 		}
 	}
 #endif /* !SMALL */
-	
+
 	s = -1;
 	for (res = res0; res; res = res->ai_next) {
 #if 0	/*old behavior*/
@@ -405,7 +402,7 @@ may_reset_noop_timeout(void)
 		last_timestamp = time(NULL);
 }
 
-static void 
+static void
 may_receive_noop_ack(void)
 {
 	int i;
@@ -434,7 +431,7 @@ may_receive_noop_ack(void)
 	full_noops_sent = 0;
 }
 
-static void 
+static void
 may_send_noop_char(void)
 {
 	if (keep_alive_timeout != 0) {
@@ -444,7 +441,7 @@ may_send_noop_char(void)
 			if (t - last_timestamp >= keep_alive_timeout) {
 				last_timestamp = t;
 				send_noop_char();
-			} 
+			}
 		} else {
 			last_timestamp = time(NULL);
 		}
@@ -1347,7 +1344,7 @@ reinit:
 				ov = verbose;
 				verbose = -1;
 				result = command(pasvcmd = "EPSV");
-				/* 
+				/*
 				 * now back to whatever verbosity we had before
 				 * and we can try PASV
 				 */
@@ -1581,10 +1578,12 @@ noport:
 		}
 	switch (data_addr.su_family) {
 	case AF_INET:
+#ifdef IP_PORTRANGE
 		on = IP_PORTRANGE_HIGH;
 		if (setsockopt(data, IPPROTO_IP, IP_PORTRANGE,
 		    (char *)&on, sizeof(on)) < 0)
 			warn("setsockopt IP_PORTRANGE (ignored)");
+#endif
 		break;
 #ifdef INET6
 	case AF_INET6:
@@ -1686,7 +1685,7 @@ noport:
 			result = COMPLETE + 1; /* xxx */
 		}
 	skip_port:
-		
+
 		if (result == ERROR && sendport == -1) {
 			sendport = 0;
 			tmpno = 1;
@@ -2052,7 +2051,7 @@ gunique(const char *local)
 }
 
 jmp_buf forceabort;
- 
+
 /* ARGSUSED */
 static void
 abortforce(int signo)
