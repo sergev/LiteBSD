@@ -34,7 +34,7 @@
 #include "opkg_download.h"
 #include "opkg_message.h"
 
-#define HTTP_GET            "GET %s HTTP/1.0\r\n\r\n"
+#define HTTP_GET            "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n"
 
 /*
  * Read one line from file descriptor.
@@ -70,19 +70,19 @@ int opkg_download_backend(const char *url, const char *dest,
     struct sockaddr_in addr;
     struct hostent *he;
     FILE *fd;
-    const char *s, *p, *hostname;
+    const char *hostp, *filepath, *hostname;
     int bytes, c, d, status;
     int sock = -1, file = -1, ret = -1;
 
-    s = url + strlen("http://");
-    p = strchr(s, '/');
-    if (! p) {
+    hostp = url + strlen("http://");
+    filepath = strchr(hostp, '/');
+    if (! filepath) {
         opkg_msg(ERROR, "Failed to download %s, empty filename.\n", url);
         return -1;
     }
 
-    strncpy(buf, s, p-s);
-    buf[p-s] = 0;
+    strncpy(buf, hostp, filepath - hostp);
+    buf[filepath - hostp] = 0;
     hostname = buf;
 
     req = alloca(sizeof(HTTP_GET) + strlen(url));
@@ -90,7 +90,7 @@ int opkg_download_backend(const char *url, const char *dest,
         opkg_msg(ERROR, "Failed to download %s, no memory.\n", url);
         return -1;
     }
-    sprintf(req, HTTP_GET, url);
+    sprintf(req, HTTP_GET, filepath, hostname);
 
     he = gethostbyname(hostname);
     if (!he) {
@@ -110,7 +110,7 @@ int opkg_download_backend(const char *url, const char *dest,
     memcpy(&addr.sin_addr, he->h_addr, he->h_length);
 
     if (connect(sock, (struct sockaddr *)&addr, sizeof addr) < 0) {
-        opkg_msg(ERROR, "Failed to download %s, cannot connect.\n", url);
+        opkg_msg(ERROR, "%s: Cannot connect.\n", hostname);
         goto die;
     }
     opkg_msg(DEBUG, "Connected to %s.\n", hostname);
@@ -122,20 +122,20 @@ int opkg_download_backend(const char *url, const char *dest,
             break;
     }
     if (d < 0) {
-        opkg_msg(ERROR, "Failed to download %s, cannot send command.\n", url);
+        opkg_msg(ERROR, "%s: Cannot send command.\n", hostname);
         goto die;
     }
 
     file = open(dest, O_CREAT|O_WRONLY|O_TRUNC, 0666);
     if (!file) {
-        opkg_msg(ERROR, "Failed to download %s, cannot create file %s\n", url, dest);
+        opkg_msg(ERROR, "Cannot create file %s\n", dest);
         goto die;
     }
 
     /* Get response status line. */
     fd = fdopen(sock, "r");
     if (get_line(fd, buf, sizeof buf) < 0) {
-fail:   opkg_msg(ERROR, "Failed to download %s, cannot receive data.\n", url);
+fail:   opkg_msg(ERROR, "Cannot receive data from %s.\n", hostname);
         unlink(dest);
         goto die;
     }
@@ -165,8 +165,7 @@ fail:   opkg_msg(ERROR, "Failed to download %s, cannot receive data.\n", url);
     }
     if (status != 200) {
         /* Bad response status code. */
-        opkg_msg(ERROR, "Failed to download %s, bad HTTP response code %d.\n",
-            url, status);
+        opkg_msg(ERROR, "%s: Bad HTTP response code %d.\n", hostname, status);
         unlink(dest);
         goto die;
     }
