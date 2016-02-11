@@ -34,9 +34,8 @@ void sprintf_alloc(char **str, const char *fmt, ...)
         va_end(ap);
 
         if (n < 0) {
-            fprintf(stderr,
-                    "%s: encountered an output or encoding"
-                    " error during vsnprintf.\n", __FUNCTION__);
+            const char message[] = "sprintf_alloc: fatal error.\n";
+            write(2, message, sizeof(message)-1);
             exit(EXIT_FAILURE);
         }
 

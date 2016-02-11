@@ -30,7 +30,7 @@ extern void *xmalloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL && size != 0) {
-        opkg_perror(ERROR, "malloc");
+        write(2, "xmalloc: Out of memory.\n", 24);
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -40,7 +40,7 @@ extern void *xrealloc(void *ptr, size_t size)
 {
     ptr = realloc(ptr, size);
     if (ptr == NULL && size != 0) {
-        opkg_perror(ERROR, "realloc");
+        write(2, "xrealloc: Out of memory.\n", 25);
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -50,7 +50,7 @@ extern void *xcalloc(size_t nmemb, size_t size)
 {
     void *ptr = calloc(nmemb, size);
     if (ptr == NULL && nmemb != 0 && size != 0) {
-        opkg_perror(ERROR, "calloc");
+        write(2, "xcalloc: Out of memory.\n", 24);
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -66,7 +66,7 @@ extern char *xstrdup(const char *s)
     t = strdup(s);
 
     if (t == NULL) {
-        opkg_perror(ERROR, "strdup");
+        write(2, "xstrdup: Out of memory.\n", 24);
         exit(EXIT_FAILURE);
     }
 
@@ -87,7 +87,7 @@ extern char *xstrndup(const char *s, int n)
 
     t = (char*) malloc (len + 1);
     if (t == NULL) {
-        opkg_perror(ERROR, "strdup");
+        write(2, "xstrndup: Out of memory.\n", 25);
         exit(EXIT_FAILURE);
     }
     memcpy (t, s, len);

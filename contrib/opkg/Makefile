@@ -5,7 +5,7 @@ CFLAGS  += -DVERSION='"0.3.2-LiteBSD"'
 CFLAGS  += -DHAVE_SOLVER_INTERNAL
 #CFLAGS  += -DHAVE_STATVFS
 NOGCCERROR =
-LDADD   = -larchive
+LDADD   = -larchive -lz
 SRCS    = opkg.c
 SRCS    += opkg_cmd.c opkg_configure.c opkg_download.c \
 	   opkg_install.c opkg_remove.c opkg_conf.c release.c \

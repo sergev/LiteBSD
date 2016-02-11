@@ -69,7 +69,7 @@ int opkg_download_backend(const char *url, const char *dest,
     char buf[4096], *bufp, *req = NULL;
     struct sockaddr_in addr;
     struct hostent *he;
-    FILE *fd;
+    FILE *fd = 0;
     const char *hostp, *filepath, *hostname;
     int bytes, c, d, status;
     int sock = -1, file = -1, ret = -1;
@@ -176,6 +176,8 @@ die:
         close(sock);
     if (file >= 0)
         close(file);
+    if (fd)
+        fclose(fd);
     return ret;
 }
 

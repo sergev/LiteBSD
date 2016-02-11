@@ -1034,6 +1034,42 @@ char *pkg_version_str_alloc(pkg_t * pkg)
     return version;
 }
 
+static void append_installed_file(pkg_t * pkg, char *file_name)
+{
+    char *installed_file_name;
+
+    /*
+     * For installed packages, look at the package.list file in the database.
+     * For uninstalled packages, get the file list directly from the package.
+     */
+    if (pkg->state_status == SS_NOT_INSTALLED || pkg->dest == NULL) {
+        if (*file_name == '.') {
+            file_name++;
+        }
+        if (*file_name == '/') {
+            file_name++;
+        }
+        installed_file_name = alloca(strlen(pkg->dest->root_dir) +
+                              strlen(file_name) + 1);
+        strcpy(installed_file_name, pkg->dest->root_dir);
+        strcat(installed_file_name, file_name);
+        str_list_append(pkg->installed_files, installed_file_name);
+    } else {
+        int unmatched_offline_root = opkg_config->offline_root
+                && !str_starts_with(file_name, opkg_config->offline_root);
+        if (unmatched_offline_root) {
+            installed_file_name = alloca(strlen(opkg_config->offline_root) +
+                                  strlen(file_name) + 1);
+            strcpy(installed_file_name, opkg_config->offline_root);
+            strcat(installed_file_name, file_name);
+            str_list_append(pkg->installed_files, installed_file_name);
+        } else {
+            // already contains root_dir as header -> ABSOLUTE
+            str_list_append(pkg->installed_files, file_name);
+        }
+    }
+}
+
 /*
  * XXX: this should be broken into two functions
  */
@@ -1042,8 +1078,6 @@ str_list_t *pkg_get_installed_files(pkg_t * pkg)
     int err, fd;
     char *list_file_name = NULL;
     FILE *list_file = NULL;
-    char *line;
-    char *installed_file_name;
     int list_from_package;
 
     pkg->installed_files_ref_cnt++;
@@ -1113,36 +1147,11 @@ str_list_t *pkg_get_installed_files(pkg_t * pkg)
     }
 
     while (1) {
-        char *file_name;
-
-        line = file_read_line_alloc(list_file);
+        char *line = file_read_line_alloc(list_file);
         if (line == NULL) {
             break;
         }
-        file_name = line;
-
-        if (list_from_package) {
-            if (*file_name == '.') {
-                file_name++;
-            }
-            if (*file_name == '/') {
-                file_name++;
-            }
-            sprintf_alloc(&installed_file_name, "%s%s", pkg->dest->root_dir,
-                          file_name);
-        } else {
-            int unmatched_offline_root = opkg_config->offline_root
-                    && !str_starts_with(file_name, opkg_config->offline_root);
-            if (unmatched_offline_root) {
-                sprintf_alloc(&installed_file_name, "%s%s",
-                              opkg_config->offline_root, file_name);
-            } else {
-                // already contains root_dir as header -> ABSOLUTE
-                sprintf_alloc(&installed_file_name, "%s", file_name);
-            }
-        }
-        str_list_append(pkg->installed_files, installed_file_name);
-        free(installed_file_name);
+        append_installed_file(pkg, line);
         free(line);
     }
 
@@ -1231,15 +1240,25 @@ int pkg_run_script(pkg_t * pkg, const char *script, const char *args)
             opkg_msg(ERROR, "Internal error: %s has a NULL dest.\n", pkg->name);
             return -1;
         }
-        sprintf_alloc(&path, "%s/%s.%s", pkg->dest->info_dir, pkg->name,
-                      script);
+        /* infodir/pkgname.script */
+        path = alloca(strlen(pkg->dest->info_dir) + strlen(pkg->name) +
+                      strlen(script) + 3);
+        strcpy(path, pkg->dest->info_dir);
+        strcat(path, "/");
+        strcat(path, pkg->name);
+        strcat(path, ".");
+        strcat(path, script);
     } else {
         if (pkg->tmp_unpack_dir == NULL) {
             opkg_msg(ERROR, "Internal error: %s has a NULL tmp_unpack_dir.\n",
                      pkg->name);
             return -1;
         }
-        sprintf_alloc(&path, "%s/%s", pkg->tmp_unpack_dir, script);
+        /* tmpdir/script */
+        path = alloca(strlen(pkg->tmp_unpack_dir) + strlen(script) + 2);
+        strcpy(path, pkg->tmp_unpack_dir);
+        strcat(path, "/");
+        strcat(path, script);
     }
 
     opkg_msg(INFO, "Running script %s.\n", path);
@@ -1249,17 +1268,17 @@ int pkg_run_script(pkg_t * pkg, const char *script, const char *args)
            1);
 
     if (!file_exists(path)) {
-        free(path);
         return 0;
     }
 
-    sprintf_alloc(&cmd, "%s %s", path, args);
-    free(path);
+    cmd = alloca(strlen(path) + strlen(args) + 2);
+    strcpy(cmd, path);
+    strcat(cmd, " ");
+    strcat(cmd, args);
     {
         const char *argv[] = { "sh", "-c", cmd, NULL };
         err = xsystem(argv);
     }
-    free(cmd);
 
     if (err) {
         if (!opkg_config->offline_root)
