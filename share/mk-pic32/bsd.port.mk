@@ -39,7 +39,7 @@ plist: fake
 	@echo "done!"
 .endif
 
-package: plist
+pkg: plist
 	@echo -n "Creating ${PKGNAME} package... "
 	@(cd ${FAKEDIR} && tar -cz -f "${PKGNAME}".tgz usr/)
 	@echo "done!"
@@ -82,21 +82,26 @@ CONTROLFILES=control
 #
 # Build a package in Debian format, compatible with opkg utility
 #
-pkg:    control
+package: control
 	@echo -n "Creating ${PKGNAME}_${ARCH} package... "
+	@${MAKE} update-control INSTALLED_SIZE="`du -b -s ${FAKEDIR}/usr | (read b x; echo $$b)`"
 	@(cd ${FAKEDIR} && tar -cz -f data.tar.gz usr/)
 	@tar -cz -f ${FAKEDIR}/control.tar.gz ${CONTROLFILES}
 	@echo 2.0 > ${FAKEDIR}/debian-binary
 	@(cd ${FAKEDIR} && ar cr ${PKGNAME}_${ARCH}.ar debian-binary control.tar.gz data.tar.gz)
-	@rm -f ${FAKEDIR}/debian-binary ${FAKEDIR}/control.tar.gz ${FAKEDIR}/data.tar.gz
+	@rm -f ${FAKEDIR}/debian-binary ${FAKEDIR}/control.tar.gz
 	@echo "done!"
+
+# Update Installed-Size field in control file
+update-control: control
+	sed "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" -i control
 
 install: package
 	@echo -n "Installing ${PKGNAME}... "
-	@tar xzf ${FAKEDIR}/${PKGNAME}.tgz -C "${TRUEDESTDIR}"
+	@tar xzf ${FAKEDIR}/data.tar.gz -C "${TRUEDESTDIR}"
 	@echo "done!"
-	@echo "Remember to edit etc/rootfs.manifest to include the port's files."
-	@echo "Use ${TRUEDESTDIR}${PLISTBASE}${PKGNAME} as a guide."
+#	@echo "Remember to edit etc/rootfs.manifest to include the port's files."
+#	@echo "Use ${TRUEDESTDIR}${PLISTBASE}${PKGNAME} as a guide."
 
 uninstall:
 	@echo -n "Deleting ${PKGNAME}... "
