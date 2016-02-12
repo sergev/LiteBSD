@@ -908,6 +908,8 @@ file /usr/bin/lprm
 mode 06555
 owner 0                 root
 group 1                 daemon
+file /usr/bin/lua
+file /usr/bin/luac
 file /usr/bin/m4
 file /usr/bin/mail
 file /usr/bin/make
@@ -1194,11 +1196,16 @@ file /usr/include/glob.h
 file /usr/include/grp.h
 file /usr/include/histedit.h
 file /usr/include/kvm.h
+file /usr/include/lauxlib.h
 file /usr/include/libdwarf.h
 file /usr/include/libelf.h
 file /usr/include/libelftc.h
 file /usr/include/limits.h
 file /usr/include/locale.h
+file /usr/include/lua.h
+file /usr/include/lua.hpp
+file /usr/include/luaconf.h
+file /usr/include/lualib.h
 file /usr/include/math.h
 file /usr/include/memory.h
 file /usr/include/menu.h
@@ -1592,6 +1599,7 @@ file /usr/lib/libelftc.a
 file /usr/lib/libform.a
 file /usr/lib/libgcc.a
 file /usr/lib/libkvm.a
+file /usr/lib/liblua.a
 file /usr/lib/libm.a
 file /usr/lib/libmenu.a
 file /usr/lib/libncurses.a
@@ -1867,6 +1875,8 @@ file /usr/share/man/cat1/lpr.0
 file /usr/share/man/cat1/lprm.0
 file /usr/share/man/cat1/lptest.0
 file /usr/share/man/cat1/ls.0
+file /usr/share/man/cat1/lua.0
+file /usr/share/man/cat1/luac.0
 file /usr/share/man/cat1/m4.0
 file /usr/share/man/cat1/mail.0
 file /usr/share/man/cat1/make.0
