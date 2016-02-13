@@ -66,6 +66,7 @@ SRCS=		archive_check_magic.c \
 		filter_fork.c
 
 INCS=		archive.h archive_entry.h
+CFLAGS+=	-I../libz
 
 MAN3=		archive_entry.0 \
 		archive_read.0 \
