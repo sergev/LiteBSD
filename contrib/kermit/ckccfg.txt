@@ -1,0 +1,1738 @@
+
+   [1]The Columbia Crown The Kermit Project | Columbia University
+   612 West 115th Street, New York NY 10025 USA o [2]kermit@columbia.edu
+   ...since 1981
+   [3]Home [4]Kermit 95 [5]C-Kermit [6]Scripts [7]Current [8]New [9]FAQ
+   [10]Support
+
+C-Kermit Configuration Options
+
+   As of: C-Kermit 9.0.300, 30 June 2011
+   This page last updated: Fri Jul 1 15:48:21 2011 (New York USA Time)
+
+     IF YOU ARE READING A PLAIN-TEXT version of this document, note that
+     this file is a plain-text dump of a Web page. You can visit the
+     original (and possibly more up-to-date) Web page here:
+
+  [11]http://www.columbia.edu/kermit/ckccfg.html
+
+   [ [12]C-Kermit Home ] [ [13]Kermit Home ]
+
+  CONTENTS
+
+  1. [14]FILE TRANSFER
+  2. [15]SERIAL COMMUNICATION SPEEDS
+  3. [16]FULLSCREEN FILE TRANSFER DISPLAY
+  4. [17]CHARACTER SETS
+  5. [18]APC EXECUTION
+  6. [19]PROGRAM SIZE
+  7. [20]MODEM DIALING
+  8. [21]NETWORK SUPPORT
+  9. [22]EXCEPTION HANDLING
+ 10. [23]SECURITY FEATURES
+ 11. [24]ENABLING SELECT()
+ 12. [25]I/O REDIRECTION
+ 13. [26]FLOATING-POINT NUMBERS, TIMERS, AND ARITHMETIC
+ 14. [27]SPECIAL CONFIGURATIONS
+  I. [28]SUMMARY OF COMPILE-TIME OPTIONS
+
+  OVERVIEW
+
+   This document describes configuration options for C-Kermit (5A and
+   later). The major topics covered include program size (and how to
+   reduce it), how to include or exclude particular features, notes on
+   serial-port, modem, and network support, and a list of C-Kermit's
+   compile-time options.
+
+   For details about your particular operating system, also see the
+   system-specific installation instructions file, such as the
+   [29]C-Kermit Installation Instructions for Unix.
+
+   [ [30]C-Kermit Home ] [ [31]Kermit Home ]
+
+  1. FILE TRANSFER
+
+   [ [32]Top ] [ [33]Contents ] [ [34]Next ] [ [35]Previous ]
+
+   Prior to version 7.0, C-Kermit was always built with the most
+   conservative Kermit file-transfer protocol defaults on every platform:
+   no control-character prefixing, 94-byte packets, and a window size of
+   1.
+
+   Starting in version 7.0, fast settings are the default. To override
+   these at compile time, include:
+
+  -DNOFAST
+
+   in the C compiler CFLAGS. Even with the fast defaults, C-Kermit
+   automatically drops down to whatever window and packet sizes requested
+   by the other Kermit, if these are smaller, when sending files (except
+   for control-character unprefixing, which is not negotiated, and which
+   is now set to CAUTIOUS rather than NONE at startup). C-Kermit's
+   settings prevail when it is receiving.
+
+   [ [36]C-Kermit Home ] [ [37]Kermit Home ]
+
+  2. SERIAL COMMUNICATION SPEEDS
+
+   [ [38]Top ] [ [39]Contents ] [ [40]Next ] [ [41]Previous ]
+
+   As of 6 September 1997, a new simplified mechanism for obtaining the
+   list of legal serial interface speeds is in place:
+
+     * If the symbol TTSPDLIST is defined, the system-dependent routine
+       ttspdlist() is called at program initialization to obtain the list.
+     * This symbol should be defined only for C-Kermit implementations
+       that have implemented the ttspdlist() function, typically in the
+       ck?tio.c module. See [42]ckutio.c for an example.
+     * TTSPDLIST is automatically defined in [43]ckcdeb.h for UNIX. Add
+       the appropriate #ifdefs for other platforms when the corresponding
+       ttspdlist() functions are filled in.
+     * If TTSPDLIST is (or normally would be) defined, the old code
+       (described below) can still be selected by defining NOTTSPDLIST.
+
+   The ttspdlist() function can obtain the speeds in any way that works.
+   For example, based simply on #ifdef Bnnnn..#endif (in UNIX). Although
+   it might be better to actually check each speed against the currently
+   selected hardware interface before allowing it in the array, there is
+   usually no passive and/or reliable and safe way to do this, and so it's
+   better to let some speeds into the array that might not work, than it
+   is to erroneously exclude others. Speeds that don't work are caught
+   when the SET SPEED command is actually given.
+
+   Note that this scheme does not necessarily rule out split speed
+   operation, but effectively it does in C-Kermit as presently constituted
+   since there are no commands to set input and output speed separately
+   (except the special case "set speed 75/1200").
+
+   Note that some platforms, notably AIX 4.2 and 4.3, implement high
+   serial speeds transparently to the application, e.g. by mapping 50 bps
+   to 57600 bps, and so on.
+
+   That's the whole deal. When TTSPDLIST is not defined, the following
+   applies:
+
+   Speeds are defined in two places: the SET SPEED keyword list in the
+   command parser (as of this writing, in the [44]ckuus3.c source file),
+   and in the system- dependent communications i/o module, ck?tio.c,
+   functions ttsspd() (set speed) and ttgspd() (get speed). The following
+   speeds are assumed to be available in all versions:
+
+  0, 110, 300, 600, 1200, 2400, 4800, 9600
+
+   If one or more of these speeds is not supported by your system, you'll
+   need to change the source code (this has never happened so far). Other
+   speeds that are not common to all systems have Kermit-specific symbols:
+
+               Symbol       Symbol
+  Speed (bps)  to enable    to disable
+       50       BPS_50       NOB_50
+       75       BPS_75       NOB_75
+       75/1200  BPS_7512     NOB_7512
+      134.5     BPS_134      NOB_134
+      150       BPS_150      NOB_150
+      200       BPS_200      NOB_200
+     1800       BPS_1800     NOB_1800
+     3600       BPS_3600     NOB_3600
+     7200       BPS_7200     NOB_7200
+    14400       BPS_14K      NOB_14K
+    19200       BPS_19K      NOB_19K
+    28800       BPS_28K      NOB_28K
+    38400       BPS_38K      NOB_38K
+    57600       BPS_57K      NOB_57K
+    76800       BPS_76K      NOB_76K
+   115200       BPS_115K     NOB_155K
+   230400       BPS_230K     NOB_230K
+   460800       BPS_460K     NOB_460K
+   921600       BPS_921K     NOB_921K
+
+   The [45]ckcdeb.h header file contains default speed configurations for
+   the many systems that C-Kermit supports. You can override these
+   defaults by (a) editing ckcdeb.h, or (b) defining the appropriate
+   enabling and/or disabling symbols on the CC command line, for example:
+
+  -DBPS_14400 -DNOB_115200
+
+   or the "make" command line, e.g.:
+
+  make blah "KFLAGS=-DBPS_14400 -DNOB_115200"
+
+   Note: some speeds have no symbols defined for them, because they have
+   never been needed: 12.5bps, 45.5bps, 20000bps, etc. These can easily be
+   added if required (but they will work only if the OS supports them).
+
+   IMPORTANT: Adding one of these flags at compile time does not
+   necessarily mean that you will be able to use that speed. A particular
+   speed is usable only if your underlying operating system supports it.
+   In particular, it needs to be defined in the appropriate system header
+   file (e.g. in UNIX, cd to /usr/include and grep for B9600 in *.h and
+   sys/*.h to find the header file that contains the definitions for the
+   supported speeds), and supported by the serial device driver, and of
+   course by the physical device itself.
+
+   ALSO IMPORTANT: The list of available speeds is independent of how they
+   are set. The many UNIXes, for example, offer a wide variety of APIs
+   that are BSD-based, SYSV-based, POSIX-based, and purely made up. See
+   the ttsspd(), ttgspd(), and ttspdlist() routines in [46]ckutio.c for
+   illustrations.
+
+   The latest entries in this horserace are the tcgetspeed() and
+   ttsetspeed() routines found in UnixWare 7. Unlike other methods, they
+   accept the entire range of integers (longs really) as speed values,
+   rather than certain codes, and return an error if the number is not, in
+   fact, a legal speed for the device/driver in question. In this case,
+   there is no way to build a list of legal speeds at compile time, since
+   no Bnnnn symbols are defined (except for "deprecated, legacy"
+   interfaces like ioctl()) and so the legal speed list must be enumerated
+   in the code -- see ttspdlist() in [47]ckutio.c.
+
+   [ [48]C-Kermit Home ] [ [49]Kermit Home ]
+
+  3. FULLSCREEN FILE TRANSFER DISPLAY
+
+   [ [50]Top ] [ [51]Contents ] [ [52]Next ] [ [53]Previous ]
+
+   New to edit 180 is support for an MS-DOS-Kermit-like local-mode full
+   screen file transfer display, accomplished using the curses library, or
+   something equivalent (for example, the Screen Manager on DEC VMS). To
+   enable this feature, include the following in your CFLAGS:
+
+  -DCK_CURSES
+
+   and then change your build procedure (if necessary) to include the
+   necessary libraries. For example, in Unix these are usually "curses" or
+   "ncurses" (and more recently, "ncursesw" and "slang"), perhaps also
+   "termcap", "termlib", or "tinfo":
+
+  "LIBS= -lcurses -ltermcap"
+  "LIBS= -lcurses -ltermlib"
+  "LIBS= -lncurses"
+  "LIBS= -ltermlib"
+  "LIBS= -ltinfo"
+
+   "man curses" for further information, and search through the Unix
+   [54]makefile for "CK_CURSES" to see many examples, and also see the
+   relevant sections of the [55]Unix C-Kermit Installation Instructions,
+   particularly Sections [56]4 and [57]9.2.
+
+   There might still be a complication. Some implementations of curses
+   reserve the right to alter the buffering on the output file without
+   restoring it afterwards, which can leave Kermit's command processing in
+   a mess when the prompt comes back after a fullscreen file transfer
+   display. The typical symptom is that characters you type at the prompt
+   after a local-mode file transfer (i.e. after seeing the curses
+   file-transfer display) do not echo until you press the Return (Enter)
+   key. If this happens to you, try adding
+
+  -DCK_NEWTERM
+
+   to your makefile target (see comments in screenc() in [58]ckuusx.c for
+   an explanation).
+
+   If that doesn't fix the problem, then use a bigger hammer and replace
+   -DCK_NEWTERM with:
+
+  -DNONOSETBUF
+
+   which tells Kermit to force stdout to be unbuffered so CBREAK mode can
+   work.
+
+   In SCO Xenix and SCO UNIX, there are two separate curses libraries, one
+   based on termcap and the other based on terminfo. The default library,
+   usually terminfo, is established when the development system is
+   installed. To manually select terminfo (at compile time):
+
+  compile -DM_TERMINFO and link -ltinfo
+
+   and to manually select termcap:
+
+  compile -DM_TERMCAP and link -ltcap -ltermlib
+
+   <curses.h> looks at M_TERMINFO and M_TERMCAP to decide which header
+   files to use. /usr/lib/libcurses.a is a link to either libtinfo.a or
+   libtcap.a. The C-Kermit compilation options must agree with the version
+   of the curses library that is actually installed.
+
+   NOTE: If you are doing an ANSI-C compilation and you get compile time
+   warnings like the following:
+
+  Warning: function not declared in ckuusx.c: wmove, printw, wclrtoeol,
+  wclear, wrefresh, endwin, etc...
+
+   it means that your <curses.h> file does not contain prototypes for
+   these functions. The warnings should be harmless.
+
+   New to edit 190 is the ability to refresh a messed-up full-screen
+   display, e.g. after receiving a broadcast message. This depends on the
+   curses package including the wrefresh() and clearok() functions and the
+   curscr variable. If your version has these, or has code to simulate
+   them, then add:
+
+  -DCK_WREFRESH
+
+   The curses and termcap libraries add considerable size to the program
+   image (e.g. about 20K on a SUN-4, 40K on a 386). On some small systems,
+   such as the AT&T 6300 PLUS, curses can push Kermit over the edge...
+   even though it compiles, loads, and runs correctly, its increased size
+   apparently makes it swap constantly, slowing it down to a crawl, even
+   when the curses display is not in use. Some new makefile targets have
+   been added to take care of this (e.g. sys3upcshcc), but similar tricks
+   might be necessary in other cases too.
+
+   On the curses file-transfer display, just below the "thermometer", is a
+   running display of the transfer rate, as a flat quotient of file
+   characters per elapsed seconds so far. You can change this to an
+   average that gives greater weight to recent history (0.25 *
+   instantaneous cps + 0.75 * historical cps) by adding -DCPS_WEIGHTED to
+   your CFLAGS (sorry folks, this one is not worth a SET command). You can
+   choose a second type of weighted average in which the weighting smooths
+   out progressively as the transfer progresses by adding -DCPS_VINCE to
+   -DCPS_WEIGHTED.
+
+   An alternative to curses is also available at compile time, but should
+   be selected if your version of Kermit is to be run in local mode only
+   in an ANSI terminal environment, for example on a desktop workstation
+   that has an ANSI console driver. To select this option in place of
+   curses, define the symbol MYCURSES:
+
+  -DMYCURSES
+
+   instead of CK_CURSES. The MYCURSES option uses built-in ANSI (VT100)
+   escape sequences, and depends upon your terminal or console driver to
+   interpret them correctly.
+
+   In some C-Kermit builds, we replace printf() via #define printf...
+   However, this can cause conflicts with the [n]curses header files.
+   Various hacks are required to get around this -- see [59]ckutio.c,
+   [60]ckufio.c, [61]ckuusx.c, [62]ckucmd.c, etc.
+
+   [ [63]C-Kermit Home ] [ [64]Kermit Home ]
+
+  4. CHARACTER SETS
+
+   [ [65]Top ] [ [66]Contents ] [ [67]Next ] [ [68]Previous ]
+
+   Since version 5A, C-Kermit has included support for conversion of
+   character sets for Western European languages (i.e. languages that
+   originated in Western Europe, but are now also spoken in the Western
+   Hemisphere and other parts of the world), via ISO 8859-1 Latin Alphabet
+   1, for Eastern European languages (ISO Latin-2), Hebrew (and Yiddish),
+   Greek, and Cyrillic-alphabet languages (ISO Latin/Cyrillic). Many file
+   (local) character sets are supported: ISO 646 7-bit national sets, IBM
+   code pages, Apple, DEC, DG, NeXT, etc.
+
+   To build Kermit with no character-set translation at all, include
+   -DNOCSETS in the CFLAGS. To build with no Latin-2, add -DNOLATIN2. To
+   build with no Cyrillic, add -DNOCYRIL. To omit Hebrew, add -DNOHEBREW.
+   If -DNOCSETS is *not* included, you'll always get LATIN1. To build with
+   no KANJI include -DNOKANJI. There is presently no way to include
+   Latin-2, Cyrillic, Hebrew, or Kanji without also including Latin-1.
+
+   [69]Unicode support was added in C-Kermit 7.0, and it adds a fair
+   amount of tables and code (and this is only a "Level 1" implementation
+   -- a higher level would also require building in the entire Unicode
+   database). On a PC with RH 5.2 Linux, building C-Kermit 7.0, we get the
+   following sizes:
+
+  NOCSETS NOUNICODE NOKANJI   Before    After
+   [   ]    [   ]    [   ]    1329014   (Full)
+   [   ]    [   ]    [ X ]    1325686   (Unicode but no Kanji)
+   [   ]    [ X ]    [   ]    1158837   (All charsets except Unicode)
+   [ X ]    [ x ]    [ x ]    1090845   (NOCSETS implies the other two)
+
+   Note, by the way, that NOKANJI without NOUNICODE only removes the
+   non-Unicode Kanji sets (Shift-JIS, EUC-JP, JIS-7, etc). Kanji is still
+   representable in UCS-2 and UTF-8.
+
+   [ [70]C-Kermit Home ] [ [71]Kermit Home ]
+
+  5. APC EXECUTION
+
+   [ [72]Top ] [ [73]Contents ] [ [74]Next ] [ [75]Previous ]
+
+   The Kermit CONNECT and INPUT commands are coded to execute Application
+   Program Command escape sequences from the host:
+
+  <ESC>_<text><ESC>\
+
+   where <text> is a C-Kermit command, or a list of C-Kermit commands
+   separated by commas, up to about 1K in length.
+
+   To date, this feature has been included in the OS/2, Windows, VMS,
+   OS-9, and Unix versions, for which the symbol:
+
+  CK_APC
+
+   is defined automatically in [76]ckuusr.h. For OS/2, APC is enabled at
+   runtime by default, for UNIX it is disabled. It is controlled by the
+   SET TERMINAL APC command. Configuring APC capability into a version
+   that gets it by default (because CK_APC is defined in [77]ckuusr.h) can
+   be overridden by including:
+
+  -DNOAPC
+
+   on the CC command line.
+
+   C-Kermit's autodownload feature depends on the APC feature, so
+   deconfiguring APC also disables autodownload (it doesn't use APC escape
+   sequences, but uses the APC switching mechanism internally).
+
+   [ [78]C-Kermit Home ] [ [79]Kermit Home ]
+
+  6. PROGRAM SIZE
+
+   [ [80]Top ] [ [81]Contents ] [ [82]Next ] [ [83]Previous ]
+
+   SECTION CONTENTS
+
+  6.1. [84]Feature Selection
+  6.2. [85]Changing Buffer Sizes
+  6.3. [86]Other Size-Related Items
+  6.4. [87]Space/Time Tradeoffs
+
+   (Also see [88]Section 4)
+
+   Each release of C-Kermit is larger than the last. On some computers
+   (usually old ones) the size of the program prevents it from being
+   successfully linked and loaded. On some others (also usually old ones),
+   it occupies so much memory that it is constantly swapping or paging. In
+   such cases, you can reduce C-Kermit's size in various ways, outlined in
+   this section. The following options can cut down on the program's size
+   at compile time by removing features or changing the size of storage
+   areas.
+
+   If you are reading this section because all you want is a small, fast,
+   quick-to-load Kermit file-transfer application for the remote end of
+   your connection, and the remote end is Unix based, take a look at
+   G-Kermit:
+
+  [89]http://www.columbia.edu/kermit/gkermit.html
+
+  6.1. Feature Selection
+
+   Features can be added or removed by defining symbols on the CC (C
+   compiler) command line. "-D" is the normal CC directive to define a
+   symbol so, for example, "-DNODEBUG" defines the symbol NODEBUG. Some C
+   compilers might use different syntax, e.g. "-d NODEBUG" or
+   "/DEFINE=NODEBUG". For C compilers that do not accept command-line
+   definitions, you can put the corresponding #define statements in the
+   file ckcsym.h, for example:
+
+  #define NODEBUG
+
+   The following table shows the savings achieved when building C-Kermit
+   8.0 (Beta.04) with selected feature-deselection switches on an
+   Intel-based PC with Red Hat Linux 7.0 and gcc 2.96. The sizes are for
+   non-security builds. The fully configured non-security build is 2127408
+   bytes.
+
+   Option      Size    Savings Effect
+   NOICP        545330   74.4% No Interactive Command Parser (command-line only)
+   NOLOCAL     1539994   27.6% No making connections.
+   NOXFER      1551108   27.1% No file transfer.
+   IKSDONLY    1566608   26.4% Internet Kermit Server only.
+   NOCSETS     1750097   17.7% No character-set conversion.
+   NOSPL       1800293   15.4% No Script Programming Language.
+   NONET       1808575   15.0% No making network connections.
+   NOUNICODE   1834426   13.8% No Unicode character-set conversion.
+   NOHELP      1837877   13.6% No built-in help text.
+   NODEBUG     1891669   11.1% No debug log.
+   NOFRILLS    1918966    9.8% No "frills".
+   NOFTP       1972496    7.3% No FTP client.
+   NODIAL      1984488    6.7% No automatic modem dialing.
+   NOPUSH      2070184    2.7% No shell access, running external programs, etc.
+   NOIKSD      2074129    2.5% No Internet Kermit Server capability.
+   NOHTTP      2082610    2.1% No HTTP client.
+   NOFLOAT     2091332    1.7% No floating-point arithmetic.
+   NOCHANNELIO 2095978    1.5% No FOPEN/FREAD/FWRITE/FCLOSE, etc.
+   MINIDIAL    2098035    1.4% No built-in support for many kinds of modems.
+   NOSERVER    2098987    1.3% No server mode.
+   NOSEXP      2105898    1.0% No S-Expressions.
+   NOPTY       2117743    0.5% No pseudoterminal support.
+   NORLOGIN    2121089    0.3% No RLOGIN connections.
+   NOOLDMODEMS 2124038    0.2% No built-in support for old kinds of modems.
+   NOSSH       2125696    0.1% No SSH command.
+
+   And here are a few combinations
+
+   Options Size Savings Effect
+   NODEBUG NOICP NOCSETS NOLOCAL 281641 86.7% No debug log, parser,
+   character sets, or making connections.
+   NOICP NOCSETS NOLOCAL 376468 82.3% No parser, character sets, or making
+   connections.
+   NOICP NOCSETS NONET 427510 79.9% No parser, character sets, or network
+   connections.
+   NOSPL NOCSETS 1423784 33.1% No script language, or character sets.
+
+   -DNOFRILLS removes various command synonyms; the following top-level
+   commands: CLEAR, DELETE, DISABLE, ENABLE, GETOK, MAIL, RENAME, TYPE,
+   WHO; and the following REMOTE commands: KERMIT, LOGIN, LOGOUT, PRINT,
+   TYPE, WHO.
+
+  6.2. Changing Buffer Sizes
+
+   Most modern computers have so much memory that (a) there is no need to
+   scrimp and save, and (b) C-Kermit, even when fully configured, is
+   relatively small by today's standards.
+
+   Two major factors affect Kermit's size: feature selection and buffer
+   sizes. Buffer sizes affect such things as the maximum length for a
+   Kermit packet, the maximum length for a command, for a macro, for the
+   name of a macro, etc. Big buffer sizes are used when the following
+   symbol is defined:
+
+  BIGBUFOK
+
+   as it is by default for most modern platforms (Linux, AIX 4 and 5,
+   HP-UX 10 and 11, Solaris, etc) in [90]ckuusr.h. If your build does not
+   get big buffers automatically (SHOW FEATURES tells you), you can
+   include them by rebuilding with BIGBUFOK defined; e.g. in Unix:
+
+  make xxxx KFLAGS=-DBIGBUFOK
+
+   where xxxx is the makefile target. On the other hand, if you want to
+   build without big buffers when they normally would be selected, use:
+
+  make xxxx KFLAGS=-DNOBIGBUF
+
+   There are options to control Kermit's packet buffer allocations. The
+   following symbols are defined in [91]ckcker.h in such a way that you
+   can override them by redefining them in CFLAGS:
+
+  -DMAXSP=xxxx - Maximum send-packet length.
+  -DMAXRP=xxxx - Maximum receive-packet length.
+  -DSBSIZ=xxxx - Total allocation for send-packet buffers.
+  -DRBSIZ=xxxx - Total allocation for receive-packet buffers.
+
+   The defaults depend on the platform.
+
+   Using dynamic allocation (-DDYNAMIC) reduces storage requirements for
+   the executable program on disk, and allows more and bigger packets at
+   runtime. This has proven safe over the years, and now most builds (e.g.
+   all Unix, VMS, Windows, and OS/2 ones) use dynamic memory allocation by
+   default. If it causes trouble, however, then omit the -DDYNAMIC option
+   from CFLAGS, or add -DNODYNAMIC.
+
+  6.3. Other Size-Related Items
+
+   To make Kermit compile and load successfully, you might have to change
+   your build procedure to:
+
+    a. Request a larger ("large" or "huge") compilation / code-generation
+       model. This is needed for 16-bit PC-based UNIX versions (most or
+       all of which fail to build C-Kermit 7.0 and later anyway). This is
+       typically done with a -M and/or -F switch (see your cc manual or
+       man page for details).
+    b. Some development systems support overlays. If the program is too
+       big to be built as is, check your loader manual ("man ld") to see
+       if an overlay feature is available. See the 2.10/2.11 BSD example
+       in the UNIX makefile. (Actually, as of version 7.0, C-Kermit is too
+       big to build, period, even with overlays, on 2.xx BSD).
+    c. Similarly, some small and/or segment-based architectures support
+       "code mapping", which is similar to overlays (PDP11-based VENIX
+       1.0, circa 1984, was an example). See the linker documentation on
+       the affected platform.
+
+   It is also possible to reduce the size of the executable program file
+   in several other ways:
+
+    a. Include the -O (optimize) compiler switch if it isn't already
+       included in your "make" entry (and if it works!). If your compiler
+       supports higher levels of optimization (e.g. -O2 or higher number,
+       -Onolimit (HP-UX), etc), try them; the greater the level of
+       optimization, the longer the compilation and more likely the
+       compiler will run out of memory. The latter eventuality, some
+       compilers also provide command-line options to allocate more memory
+       for the optimizer, like "-Olimit number" in Ultrix.
+    b. If your platform supports shared libraries, change the make entry
+       to take advantage of this feature. The way to do this is, of
+       course, platform dependent; see the NeXT makefile target for an
+       example. some platforms (like Solaris) do it automatically and give
+       you no choice. But watch out: executables linked with shared
+       libraries are less portable than statically linked executables.
+    c. Strip the program image after building ("man strip" for further
+       info), or add -s to the LNKFLAGS (UNIX only). This strips the
+       program of its symbol table and relocation information.
+    d. Move character strings into a separate file. See the 2.11 BSD
+       target for an example.
+
+  6.4. Space/Time Tradeoffs
+
+   There are more than 6000 debug() statements in the program. If you want
+   to save both space (program size) and time (program execution time),
+   include -DNODEBUG in the compilation. If you want to include debugging
+   for tracking down problems, omit -DNODEBUG from the make entry. But
+   when you include debugging, you have two choices for how it's done. One
+   definition defines debug() to be a function call; this is cheap in
+   space but expensive in execution. The other defines debug as "if
+   (deblog)" and then the function call, to omit the function call
+   overhead when the debug log is not active. But this adds a lot of space
+   to the program. Both methods work, take your choice; IFDEBUG is
+   preferred if memory is not a constraint but the computer is likely to
+   be slow. The first method is the default, i.e. if nothing is done to
+   the CFLAGS or in [92]ckcdeb.h (but in some cases, e.g. VMS, it is). To
+   select the second method, include -DIFDEBUG in the compilation (and
+   don't include -DNODEBUG).
+
+   [ [93]C-Kermit Home ] [ [94]Kermit Home ]
+
+  7. MODEM DIALING
+
+   [ [95]Top ] [ [96]Contents ] [ [97]Next ] [ [98]Previous ]
+
+   -DNODIAL removes automatic modem dialing completely, including the
+   entire [99]ckudia.c module, plus all commands that refer to dialing in
+   the various ckuus*.c modules.
+
+   -DMINIDIAL leaves the DIAL and related commands (SET/SHOW MODEM,
+   SET/SHOW DIAL) intact, but removes support for all types of modems
+   except CCITT, Hayes, Unknown, User-defined, Generic-high-speed, and
+   None (= Direct). The MINIDIAL option cuts the size of the dial module
+   approximately in half. Use this option if you have only Hayes or CCITT
+   modems and don't want to carry the baggage for the other types.
+
+   A compromise between full dialer support and MINIDIAL is obtained by
+   removing support for "old" modems -- all the strange non-Hayes
+   compatible 1200 and 2400 bps modems that C-Kermit has been carrying
+   around since 1985 or so. To remove support for these modems, add
+   -DNOOLDMODEMS to CFLAGS at compilation time.
+
+   Finally, if you keep support for old modems, you will notice that their
+   names appear on the "set modem ?" menu. That's because their names are,
+   by default, "visible". But the list is confusing to the younger
+   generation, who have only heard of modems from the V.32bis-and-later
+   era. If you want to be able to use old modems, but don't want their
+   names cluttering up menus, add this to CFLAGS:
+
+  -DM_OLD=1
+
+   [ [100]C-Kermit Home ] [ [101]Kermit Home ]
+
+  8. NETWORK SUPPORT
+
+   [ [102]Top ] [ [103]Contents ] [ [104]Next ] [ [105]Previous ]
+
+   SECTION CONTENTS
+
+  8.1. [106]TCP/IP
+  8.2. [107]X.25
+  8.3. [108]Other Networks
+
+   C-Kermit supports not only serial-port and modem connections, but also
+   TCP/IP and X.25 network connections. Some versions support other
+   network types too like DECnet, LAT, NETBIOS, etc. If you define the
+   following symbol:
+
+  NONET
+
+   then all network support is compiled away.
+
+  8.1. TCP/IP
+
+   SUBSECTION CONTENTS
+
+  8.1.1. [109]Firewalls
+  8.1.2. [110]Compilation and Linking Problems
+  8.1.3. [111]Enabling Host Address Lists
+  8.1.4. [112]Enabling Telnet NAWS
+  8.1.5. [113]Enabling Incoming TCP/IP Connections
+  8.1.6. [114]Disabling SET TCP Options
+
+   C-Kermit's TCP/IP features require the Berkeley sockets library or
+   equivalent, generally available on any Unix system, as well as in
+   Windows 9x/NT, OS/2, VMS, AOS/VS, VOS, etc. The TCP/IP support includes
+   built-in TELNET, FTP, and HTTP protocol. To select TCP/IP support,
+   include -DTCPSOCKET in your makefile target's CFLAGS, or (in VMS) the
+   appropriate variant (e.g. -DWOLLONGONG, -DMULTINET, -DEXCELAN,
+   -DWINTCP, etc).
+
+   The VMS and/or early Unix third-party TCP/IP products are often
+   incompatible with each other, and sometimes with different versions of
+   themselves. For example, Wollongong reportedly put header files in
+   different directories for different UNIX versions:
+
+     * in.h can be in either /usr/include/sys or /user/include/netinet.
+     * telnet.h can be in either /usr/include/arpa or
+       /user/include/netinet.
+     * inet.h can be in either /usr/include/arpa or /user/include/sys.
+
+   In cases like this, use the -I cc command-line option when possible;
+   otherwise it's better to make links in the file system than it is to
+   hack up the C-Kermit source code. Suppose, for example, Kermit is
+   looking for telnet.h in /usr/include/arpa, but on your computer it is
+   in /usr/include/netinet. Do this (as root, or get the system
+   administrator to do it):
+
+  cd /usr/include/arpa
+  ln /usr/include/netinet/telnet.h telnet.h
+
+   ("man ln" for details about links.)
+
+   The network support for TCP/IP and X.25 is in the source files
+   [115]ckcnet.h, [116]ckctel.c, [117]ckctel.c, [118]ckctel.h,
+   [119]ckcftp.c, with miscellaneous SHOW commands, etc, in the various
+   ckuus*.c modules, plus code in the ck*con.c or ckucns.c (CONNECT
+   command) and several other modules to detect TELNET negotiations, etc.
+
+   Within the TCPSOCKET code, some socket-level controls are included if
+   TCPSOCKET is defined in the C-Kermit CFLAGS and SOL_SOCKET is defined
+   in in the system's TCP-related header files, such as <sys/socket.h>.
+   These are:
+
+  SET TCP KEEPALIVE
+  SET TCP LINGER
+  SET TCP RECVBUF
+  SET TCP SENDBUF
+
+   In addition, if TCP_NODELAY is defined, the following command is also
+   enabled:
+
+  SET TCP NODELAY (Nagle algorithm)
+
+   See the [120]C-Kermit user documentation for descriptions of these
+   commands.
+
+  8.1.1. Firewalls
+
+   There exist various types of firewalls, set up to separate users of an
+   internal TCP/IP network ("Intranet") from the great wide Internet, but
+   then to let selected users or services get through after all.
+
+   One firewall method is called SOCKS, in which a proxy server allows
+   users inside a firewall to access the outside world, based on a
+   permission list generally stored in a file. SOCKS is enabled in one of
+   two ways. First, the standard sockets library is modified to handle the
+   firewall, and then all the client applications are relinked (if
+   necessary, i.e. if the libraries are not dynamically loaded) with the
+   modified sockets library. The APIs are all the same, so the
+   applications do not need to be recoded or recompiled.
+
+   In the other method, the applications must be modified to call
+   replacement routines, such as Raccept() instead of accept(), Rbind()
+   instead of bind(), etc, and then linked with a separate SOCKS library.
+   This second method is accomplished (for SOCKS4) in C-Kermit by
+   including -DCK_SOCKS in your CFLAGS, and also adding:
+
+  -lsocks
+
+   to LIBS, or replacing -lsockets with -lsocks (depending on whether the
+   socks library also includes all the sockets entry points).
+
+   For SOCKS5, use -DCK_SOCKS5.
+
+   Explicit firewall support can, in general, not be a standard feature or
+   a feature that is selected at runtime, because the SOCKS library tends
+   to be different at each site -- local modifications abound.
+
+   The ideal situation occurs when firewalls are supported by the first
+   method, using dynamically linked sockets-replacement libraries; in this
+   case, all your TCP/IP client applications negotiate the firewall
+   transparently.
+
+  8.1.2. Compilation and Linking Problems
+
+   If you get a compilation error in [121]ckcnet.c, with a complaint like
+   "incompatible types in assignment", it probably has something to do
+   with the data type your system uses for the inet_addr() function, which
+   is declared (usually) in <arpa/inet.h>. Kermit uses "unsigned long"
+   unless the symbol INADDRX is defined, in which case "struct inaddr" is
+   used instead. Try adding -DINADDRX to CFLAGS in your make entry, and if
+   that fixes the problem, please send a report to kermit@columbia.edu.
+
+   Compilation errors might also have to do with the data type used for
+   getsockopt() and setsockopt() option-length field. This is normally an
+   int, but sometimes it's a short, a long, or an unsigned any of those,
+   or a size_t. To fix the compilation problem, add -DSOCKOPT_T=xxx to the
+   CFLAGS in your makefile target, where xxx is the appropriate type (use
+   "man getsockopt" or grep through your system/network header files to
+   find the needed type).
+
+  8.1.3. Enabling Host Address Lists
+
+   When you give Kermit an IP host name, it calls the socket routine
+   gethostbyname() to resolve it. gethostbyname() returns a hostent
+   struct, which might or might not not include a list of addresses; if it
+   does, then if the first one fails, Kermit can try the second one, and
+   so on. However, this will only work if the symbol "h_addr" is a macro
+   defined as "h_addr_list[0]", usually in netdb.h. If it is, then you can
+   activate this feature by defining the following symbol in CFLAGS:
+
+  HADDRLIST
+
+  8.1.4. Enabling Telnet NAWS
+
+   The Telnet Negotiation About Window Size (NAWS) option requires the
+   ability to find out the terminal screen's dimensions. E.g. in Unix, we
+   need something like ioctl(0, TIOCGWINSZ, ...). If your version of
+   Kermit was built with NAWS capability, SHOW VERSIONS includes CK_NAWS
+   among the compiler options. If it doesn't, you can add it by defining
+   CK_NAWS at compile time. Then, if the compiler or linker complain about
+   undefined or missing symbols, or there is no complaint but SHOW
+   TERMINAL fails to show reasonable "Rows =, Columns =" values, then take
+   a look at (or write) the appropriate ttgwsiz() routine. On the other
+   hand, if CK_NAWS is defined by default for your system (in
+   [122]ckcnet.h), but causes trouble, you can override this definition by
+   including the -DNONAWS switch on your CC command line, thus disabling
+   the NAWS feature.
+
+   This appears to be needed at least on the AT&T 3B2, where in
+   [123]ckutio.c, the routine ttgwsiz() finds that the TIOCGWINSZ symbol
+   is defined but lacks definitions for the corresponding winsize struct
+   and its members ws_col and ws_row.
+
+   The UNIX version of C-Kermit also traps SIGWINCH, so it can send a NAWS
+   to the Telnet server any time the local console terminal window size
+   changes, e.g. when you stretch it with a mouse. The SIGWINCH-trapping
+   code is enabled if SIGWINCH is defined (i.e. in signal.h). If this code
+   should cause problems, you can disable it without disabling the NAWS
+   feature altogether, by defining NOSIGWINCH at compile time.
+
+  8.1.5. Enabling Incoming TCP/IP Connections
+
+   This feature lets you "set host * port" and wait for an incoming
+   connection on the given port. This feature is enabled automatically at
+   compile if TCPSOCKET is defined and SELECT is also defined. But watch
+   out, simply defining SELECT on the cc command line does not guarantee
+   successful compilation or linking (see [124]Section 11).
+
+   If you want to disable incoming TCP/IP connections, then build C-Kermit
+   with:
+
+  -DNOLISTEN
+
+  8.1.6. Disabling SET TCP Options
+
+   The main reason for this is because of header file / prototype
+   conflicts at compile time regarding get- / setsockopt(). If you can't
+   fix them (without breaking other builds), add the following in CFLAGS:
+
+  -DNOTCPOPTS
+
+  8.2. X.25
+
+   X.25 support requires (a) a Sun, (b) the SunLink product (libraries and
+   header files), and (c) an X.25 connection into your Sun. Similarly (in
+   C-Kermit 7.0 or later) Stratus VOS and IBM AIX.
+
+   In UNIX, special makefile targets sunos4x25 and sunos41x25 (for SUNOS
+   4.0 and 4.1, respectively), or aix41x25, are provided to build in this
+   feature, but they only work if conditions (a)-(c) are met. To request
+   this feature, include -DSUNX25 (or -DIBMX25) in CFLAGS.
+
+   SUNX25 (or -DIBMX25) and TCPSOCKET can be freely mixed and matched, and
+   selected by the user at runtime with the SET NETWORK TYPE command or
+   SET HOST switches.
+
+  8.3. Other Networks
+
+   Support for other networking methods -- NETBIOS, LAT, Named Pipes, etc
+   -- is included in ck*net.h and ck*net.c for implementations (such as
+   Windows or OS/2) where these methods are supported.
+
+   Provision is made in the organization of the modules, header files,
+   commands, etc, for addition of new network types such as DECnet, X.25
+   for other systems (HP-UX, VMS, etc), and so on. Send email to
+   [125]kermit@columbia.edu if you are willing and able to work on such a
+   project.
+
+   [ [126]C-Kermit Home ] [ [127]Kermit Home ]
+
+  9. EXCEPTION HANDLING
+
+   [ [128]Top ] [ [129]Contents ] [ [130]Next ] [ [131]Previous ]
+
+   The C language setjmp/longjmp mechanism is used for handling
+   exceptions. The jump buffer is of type jmp_buf, which almost everywhere
+   is typedef'd as an array, in which case you should have no trouble
+   compiling the exception-handling code. However, if you are building
+   C-Kermit in/for an environment where jmp_buf is something other than an
+   array (e.g. a struct), then you'll have to define the following symbol:
+
+  JBNOTARRAY
+
+   [ [132]C-Kermit Home ] [ [133]Kermit Home ]
+
+  10. SECURITY FEATURES
+
+   [ [134]Top ] [ [135]Contents ] [ [136]Next ] [ [137]Previous ]
+
+   Security, in the sense of secure authentication and strong encryption,
+   can be built into versionf of C-Kermit for which the appropriate
+   libraries and header files are available (Kerberos IV, Kerberos V,
+   OpenSSL, SRP), as explained in great detail in the Kermit Security
+   Reference
+   . The following symbols govern C-Kermit's security features at build
+   time:
+
+   NO_AUTHENTICATION
+          Means do not configure any TELNET AUTHENTICATION support. It
+          implies NO_ENCRYPTION and undefines any of the auth and encrypt
+          types. It does not undefine CK_SSL even though builds with
+          CK_SSL cannot succeed without CK_AUTHENTICATION. (This will be
+          supported in a future release. It will be needed to allow
+          C-Kermit to be built only as an FTP client.)
+
+   NO_KERBEROS
+          Means do not compile in any KERBEROS support when
+          CK_AUTHENTICATION has been defined.
+
+   NO_SRP
+          Do not compile in any SRP support when CK_AUTHENTICATION has
+          been defined.
+
+   NO_SSL
+          Do not compile in any SSL/TLS support
+
+   NO_ENCRYPTION
+          Do not compile in any Telnet encryption support. It does not
+          affect the use of SSL/TLS
+
+   NOSSH
+          Do not compile in any SSH support whether internal or external
+
+   CK_AUTHENTICATION
+          Telnet AUTHENTICATION support. (Also, required if SSL/TLS
+          support is desired.) On most platforms this does not autodefine
+          any authentication mechanisms such as Kerberos V, Kerberos IV,
+          SRP, ... Those need to be defined separately.
+
+   CK_KERBEROS
+          Defined automatically when KRB4, KRB5, or KRB524 are defined.
+          Implies that some version of Kerberos is in use.
+
+   KRB4
+          Should be defined when Kerberos IV support is desired.
+
+   KRB5
+          Should be defined when Kerberos V support is desired.
+
+   KRB524
+          Should be defined if both Kerberos V and Kerberos IV are used
+          and the Kerberos IV support is provided by the MIT Kerberos IV
+          compatibility library in the current Kerberos 5 distribution.
+
+   KRB5_U2U
+          Should be defined if KRB5 is defined and Kerberos 5 User to User
+          mode is desired.
+
+   HEIMDAL
+          Should be defined if Kerberos V support is provided by HEIMDAL.
+          Support for this option is not complete in C-Kermit 8.0. Anyone
+          interested in working on this should contact kermit-support.
+
+   CK_SRP
+          Should be defined if SRP support is desired.
+
+   CK_ENCRYPTION
+          Should be defined if TELNET ENCRYPTION option support is
+          desired. This option does not define any particular encryption
+          types. That should be done by defining CK_DES or CK_CAST.
+
+   CK_DES
+          Should be defined if either DES or 3DES Telnet Encryption option
+          support is desired.
+
+   LIBDES
+          If CK_DES is defined and DES support is being provided by either
+          Eric Young's libdes.a or OpenSSL 0.9.6x or earlier, this option
+          must be defined. If it is not defined, it will be assumed that
+          DES support is provided by the MIT Kerberos IV libraries.
+
+   CK_CAST
+          Should be defined if CAST Telnet Encryption option support is
+          desired
+
+   CK_SSL
+          Should be defined if SSL/TLS support (OpenSSL) is desired.
+
+   SSL_KRB5
+          If KRB5 is defined, and OpenSSL is built to support the Kerberos
+          5 ciphers, then you should define SSL_KRB5
+
+   NOSSLKRB5
+          If you are using OpenSSL 0.9.7 or higher and do not wish to
+          build with support for Kerberos 5 TLS ciphers, this option must
+          be defined.
+
+   ZLIB
+          If you are using OpenSSL 0.9.6 or higher and it has been
+          compiled with support for ZLIB compression, this option should
+          be defined to enable Kermit to properly enable the use of
+          compression.
+
+   SSHCMD
+          Defined for C-Kermit to enable the use of external SSH clients
+          from the Kermit command language
+
+   SSHBUILTIN
+          Defined for Kermit implementations that have integrated SSH
+          support. Currently only Windows.
+
+   ANYSSH
+          Defined if either SSHCMD or SSHBUILTIN are defined.
+
+   CK_SNDLOC
+          Telnet Send Location support.
+
+   NOSNDLOC
+          Do not include Telnet Send Location support.
+
+   CK_XDISPLOC
+          Telnet X-Display Location support. Determines if the X-Display
+          location information is sent to the Telnet server either via
+          Telnet XDISPLOC or NEW-ENV options.
+
+   NOXDISPLOC
+          Do not include Telnet X-Display Location support.
+
+   CK_FORWARD_X
+          Telnet Forward X Windows Session Data option. Used to protect
+          the privacy and integrity of X Windows Sessions when secure
+          telnet sessions are in use.
+
+   NOFORWARDX
+          Do not include Telnet Forward X Windows Session Data option.
+
+   Besides the strong forms of security listed above, C-Kermit also
+   embodies various internal security features, including:
+
+   NOPUSH
+          Compiling with the NOPUSH symbol defined removes all the "shell
+          escape" features from the program, including the PUSH, RUN, and
+          SPAWN commands, the "!" and "@" command prefixes, OPEN !READ,
+          OPEN !WRITE, job control (including the SUSPEND command), the
+          REDIRECT command, shell/DCL escape from CONNECT mode, as well as
+          the server's execution of REMOTE HOST commands (and, of course,
+          the ENABLE HOST command). Add NODISPO to also prevent acceptance
+          of incoming MAIL or REMOTE PRINT files. For UNIX, also be sure
+          to read [138]Section 11 of the [139]Unix C-Kermit Installation
+          Instructions. about set[ug]id configuration. Additional
+          restrictions can be enforced when in server mode; read about the
+          DISABLE command in the user manual.
+
+   NOCCTRAP
+          Compiling with NOCCTRAP prevents the trapping of SIGINT by
+          Kermit. Thus if the user generates a SIGINT signal (e.g. by
+          typing the system's interrupt character), Kermit will exit
+          immediately, rather than returning to its prompt.
+
+   NOPUSH and NOCCTRAP together allow Kermit to be run from restricted
+   shells, preventing access to system functions.
+
+   [ [140]C-Kermit Home ] [ [141]Kermit Home ]
+
+  11. ENABLING SELECT()
+
+   [ [142]Top ] [ [143]Contents ] [ [144]Next ] [ [145]Previous ]
+
+   Kermit works best if it can do nonblocking reads, nondestructive input
+   buffer checking, and millisecond sleeps. All of these functions can be
+   accomplished by the select() function, which, unfortunately, is not
+   universally available. Furthermore, select() is required if incoming
+   TCP/IP connections are to be supported.
+
+   select() was introduced with Berkeley UNIX, rejected by AT&T for System
+   V, but is gradually creeping in to all UNIX versions (and other
+   operating systems too) by virtue of its presence in the sockets
+   library, which is needed for TCP/IP. AT&T SVID for System V R4 includes
+   select(), but that does not mean that all SVR4 implementations have it.
+
+   Furthermore, even when select() is available, it might work only on
+   socket file descriptors, but not on others like serial ports, pipes,
+   etc. For example, in AOS/VS and BeOS, it works only with file
+   descriptors that were created by socket() and opened by connect() or
+   accept().
+
+   Other alternatives include poll() and rdchk(). Only one of these three
+   functions should be included. The following symbols govern this:
+
+     SELECT  Use select() (BSD, or systems with sockets libraries)
+     CK_POLL Use poll()   (System V)
+     RDCHK   Use rdchk()  (SCO XENIX and UNIX)
+
+   If your system supports the select() function, but your version of
+   C-Kermit does not, try adding:
+
+  -DSELECT
+
+   to the CFLAGS, and removing -DRDCHK or -DCK_POLL if it is there. If you
+   get compilation errors, some adjustments to ck*tio.c and/or ck*net.c
+   might be needed; search for SELECT (uppercase) in these files (note
+   that there are several variations on the calling conventions for
+   select()).
+
+   Various macros and data types need to be defined in order to use
+   select(). Usually these are picked up from <types.h> or <sys/types.h>.
+   But on some systems, they are in <sys/select.h>. In that case, add the
+   following:
+
+  -DSELECT_H
+
+   to the CFLAGS to tell C-Kermit to #include <sys/select.h>. A good
+   indication that you need to do this would be if you get compile-time
+   complaints about "fd_set" or "FD_SET" not being declared or defined.
+
+   In UNIX, the use of select() vs fork() in the CONNECT command is
+   independent of the above considerations, and is governed by choosing a
+   particular makefile target.
+
+   As of C-Kermit 7.0, select() is also the preferred control mechanism
+   for the CONNECT command. Unfortunately, the structures used by the
+   original UNIX CONNECT command, based on fork(), and those used by
+   select(), are so different, it was not practical to implement them both
+   in one module. So the select()-based CONNECT command module for UNIX is
+   [146]ckucns.c, and the fork-based one remains [147]ckucon.c. To choose
+   the fork-based one, which is more portable (but slower and more
+   fragile), use "wermit" as the make target. To choose the select-based
+   one, use "xermit". Only do this if you can verify that the CONNECT
+   command works on serial connections and PIPE connections as well as TCP
+   connections.
+
+     The select()-based Unix CONNECT module, ckucns.c, must be used if
+     encryption is to be done, since the fork() version (ckucon.c) loses
+     its ability to share vital state information between the two forks.
+     Also note that the select() version is superior in many other ways
+     too. For example, it recovers better from exterior killing, forced
+     disconnections, etc, plus it goes faster.
+
+   SHOW VERSIONS tells whether the CONNECT module uses fork() or select().
+
+   C-Kermit 8.0 adds learned script capability, which depends on select().
+   All the "wermit" based targets (as opposed to "xermit") had NOLEARN
+   added to them. Whenever changing a target over from wermit to xermit,
+   also remember to remove NOLEARN.
+
+   [ [148]C-Kermit Home ] [ [149]Kermit Home ]
+
+  12. I/O REDIRECTION
+
+   [ [150]Top ] [ [151]Contents ] [ [152]Next ] [ [153]Previous ]
+
+   The REDIRECT command allows a local program to be run with its i/o
+   redirected over the communications connection. Your version of C-Kermit
+   has a REDIRECT command if it was built with the following CFLAG:
+
+  -DCK_REDIR
+
+   This, in turn, is possible only if the underlying API is there. In the
+   case of UNIX this is just the wait() system call, so all UNIX versions
+   get this feature as of 6.0.192 (earlier versions needed a <sys/wait.h>
+   header file defining the symbols WIFEXITED and WEXITSTATUS).
+
+   As of version 7.0, file transfer can be done using pipes and filters.
+   To enable this feature, #define PIPESEND (and fill in the code). To
+   disable on systems where it is normally enabled, define NOPIPESEND.
+   This feature is, of course, also disabled by building with NOPUSH (or
+   giving the "nopush" command at runtime).
+
+   C-Kermit 7.0 also adds the PIPE and SET HOST /COMMAND commands, which
+   provide another form of redirection. This feature is selected with
+   -DNETCMD. CK_RDIR must also be defined, since the same mechanisms are
+   used internally.
+
+   [ [154]C-Kermit Home ] [ [155]Kermit Home ]
+
+  13. FLOATING-POINT NUMBERS, TIMERS, AND ARITHMETIC
+
+   [ [156]Top ] [ [157]Contents ] [ [158]Next ] [ [159]Previous ]
+
+   Floating-point support was added in C-Kermit 7.0.
+
+   Floating-point numbers are enabled internally, at least for use in
+   high-precision file-transfer timers and statistics, unless the
+   following symbol is defined at compile time:
+
+  -DNOFLOAT
+
+   This might be necessary on old PCs that do not have built-in
+   floating-point hardware.
+
+   When NOFLOAT is not defined, the following symbol tells which
+   floating-point type to use:
+
+  -DCKFLOAT=xxxx
+
+   The value is either "double" (normal for 32- and 16-bit architectures)
+   or "float" (normal for 64-bit architectures).
+
+   C-Kermit can be configured to use high-precision file-transfer timers
+   for more accurate statistics. This feature is enabled with:
+
+  -DGFTIMER
+
+   and disabled with:
+
+  -DNOGFTIMER
+
+   If you try to build with -DGFTIMER but you get compilation errors,
+   either fix them (and send email to kermit@columbia.edu telling what you
+   did), or else give up and use -DNOGFTIMER (or -DNOFLOAT) instead. Hint:
+   depending on your machine architecture, you might have better luck
+   using double than float as the data type for floating-point numbers, or
+   vice versa. Look in [160]ckcdeb.h for the CKFLOAT definition.
+
+   Floating-point arithmetic is also supported in the script programming
+   language. First via the \fpp...() functions, such as \fppadd(), which
+   adds two floating-point numbers, second in S-Expressions. Addition,
+   subtraction, multiplication, and division are always available. But
+   other functions such as logs, raising to powers, sines and cosines,
+   etc, require the C Math library. To include user-level floating-point
+   math you must put:
+
+  -DFNFLOAT
+
+   and in Unix you must link with the Math library:
+
+  LIBS=".... -lm"
+
+   In K95 and VMS, FNFLOAT is defined automatically if CKFLOAT is defined.
+   In Unix, however, FNFLOAT must be added to each makefile target
+   individually, because of the special linking instructions that must
+   also be added to each target.
+
+   Note: S-Expressions require FNFLOAT.
+
+   [ [161]C-Kermit Home ] [ [162]Kermit Home ]
+
+  14. SPECIAL CONFIGURATIONS
+
+   [ [163]Top ] [ [164]Contents ] [ [165]Previous ]
+
+   As of C-Kermit 7.0, if you build C-Kermit normally, but with -DNOICP
+   (No Interactive Command Parser), you get a program capable of making
+   serial connections (but not dialing) and network connections (if
+   TCPSOCKET or other network option included), and can also transfer
+   files using Kermit protocol, but only via autodownload/upload.
+   Furthermore, if you call the executable "telnet", it will act like
+   Telnet -- using the command-line options. However, in this case there
+   is nothing to escape back to, so if you type Ctrl-\c, it just prints a
+   message to this effect.
+
+   You can also build C-Kermit with -DNOXFER, meaning omit all the
+   file-transfer features. This leaves you with a scriptable
+   communications program that is considerably smaller than the full
+   C-Kermit.
+
+   [ [166]C-Kermit Home ] [ [167]Kermit Home ]
+
+  APPENDIX I: SUMMARY OF COMPILE-TIME OPTIONS
+
+   [ [168]Top ] [ [169]Contents ]
+
+   These are the symbols that can be specified on the cc command line,
+   listed alphabetically. Others are used internally, including those
+   taken from header files, those defined by the compiler itself, and
+   those inferred from the ones given below. Kermit's SHOW VERSIONS
+   command attempts to display most of these. See [170]ckcdeb.h and
+   [171]ckcnet.h for inference rules. For example SVR3 implies ATTSV,
+   MULTINET implies TCPSOCKET, and so on.
+
+   Here is the complete list of the Kermit-specific compile-time switches:
+
+   ACUCNTRL Select BSD 4.3-style acucntrl() bidirectional tty control.
+   aegis Build for Apollo Aegis (predefined on Apollo systems).
+   AIX370 Build for IBM AIX/370 for IBM mainframes.
+   AIXESA Build for IBM AIX/ESA for IBM mainframes.
+   AIXPS2 Build for IBM AIX 3.0 for PS/2 series (never formally released).
+   AIXRS Build for IBM AIX 3.x on RS/6000.
+   AIX41 Build for IBM AIX 4.x on RS/6000.
+   AMIGA Build for Commodore Amiga with Intuition OS.
+   ATT6300 Build for AT&T 6300 PLUS.
+   ATT7300 Build for AT&T 7300 UNIX PC (3B1).
+   ATTSV Build for AT&T System III or V UNIX.
+   AUX Build for Apple A/UX for the Macintosh.
+   BIGBUFOK OK to use big buffers - "memory is not a problem"
+   BPS_xxxx Enable SET SPEED xxxx
+   BSD29 Build for BSD 2.9 or 2.10.
+   BSD4 Build for BSD 4.2.
+   BSD41 Build for BSD 4.1.
+   BSD43 Build for BSD 4.3.
+   BSD44 Build for BSD 4.4.
+   C70 Build for BBN C/70.
+   CIE Build for CIE Systems 680/20.
+   CKCONINTB4CB Work around prompt-disappears after escape back from
+   CONNECT.
+   CKLEARN Build with support for learned scripts.
+   CKLOGDIAL Enable connection log.
+   CKMAXPATH Maximum length for a fully qualified filename.
+   CKREGEX (misnomer) Include [...] or {xxx,xxx,xxx} matching in
+   ckmatch().
+   CKSYSLOG Enable syslogging.
+   CK_ANSIC Enable ANSI C constructs - prototypes, etc.
+   CK_ANSILIBS Use header files for ANSI C libraries.
+   CK_APC Enable APC execution by CONNECT module.
+   CK_CURSES Enable fullscreen file transfer display.
+   CK_DSYSINI Use system-wide init file, with name supplied by Kermit.
+   CK_DTRCD DTR/CD flow control is available.
+   CK_FAST Build with fast Kermit protocol defaults.
+   CK_FORK_SIG UNIX only: signal() number for CONNECT module forks.
+   CK_IFRO IF REMOTE command is available (and can run in remote mode).
+   CK_INI_A System-wide init file takes precedence over user's.
+   CK_INI_B User's init file takes precedence over the system-wide one.
+   CK_LABELED Include support for SET FILE TYPE LABELED.
+   CK_LBRK This version can send Long BREAK.
+   CK_LINGER Add code to turn of TCP socket "linger" parameter.
+   CK_MKDIR This version has a zmkdir() command to create directories.
+   CK_NAWS Include TELNET Negotiate About Window Size support.
+   CK_NEWTERM Use newterm() rather than initscr() to initialize curses.
+   CK_PAM Include PAM authentication (might also require -lpam).
+   CK_PCT_BAR Fullscreen file transfer display should include
+   "thermometer".
+   CK_POLL System-V or POSIX based UNIX has poll() function.
+   CK_POSIX_SIG Use POSIX signal handing: sigjmp_buf, sigsetjmp,
+   siglongjmp.
+   CK_READ0 read(fd,&x,0) can be used to test TCP/IP connections.
+   CK_REDIR Enable the REDIRECT command.
+   CK_RESEND Include the RESEND command (needs zfseek() + append).
+   CK_RTSCTS RTS/CTS flow control is available.
+   CK_SHADOW Include support for shadow passwords (e.g. for IKSD
+   authentication).
+   CK_SOCKBUF Enable TCP socket-buffer-size-increasing code.
+   CK_SOCKS UNIX only: Build with socks library rather than regular
+   sockets
+   CK_SOCKS5 UNIX only: Build with socks 5 lib rather than regular sockets
+   CK_SPEED Enable control-character unprefixing.
+   CK_SYSINI="xxxxx" Quoted string to be used as system-wide init file
+   name.
+   CK_TIMERS Build with support for dynamically calculated packet
+   timeouts.
+   CK_TMPDIR This version of Kermit has an isdir() function.
+   CK_TTYFD Defined on systems where the communications connection file
+   descriptor (ttyfd) can be passed to other processes as a command-line
+   argument via \v(ttyfd).
+   CK_URL Parse URLs as well as hostnames, etc.
+   CK_XONXOFF Xon/Xoff flow control available.
+   CK_XYZ Include support for XYZMODEM protocols.
+   CK_WREFRESH Curses package includes wrefresh(),clearok() for screen
+   refresh.
+   CKFLOAT=type Floating-point data type, "double" or "float".
+   CKTYP_H=xxx Force include of xxx as <types.h> file.
+   CLSOPN When hanging up a tty device, also close and reopen it.
+   CMDDEP Maximum recursion depth for self-referential user-defined fn's.
+   COHERENT Build for Mark Williams Coherent UNIX
+   CONGSPD Define if this version has congspd() routine in ck?tio.c
+   datageneral Build for Data General AOS/VS or AOS/VS II
+   DCLPOPEN popen() is available but needs to be declared
+   DEC_TCPIP Build with support for DEC TCP/IP (UCX) for (Open)VMS
+   DGUX430 Build for DG/UX 4.30
+   DGUX540 Build for DG/UX 5.40
+   DEFPAR=x Default parity, 0, 'e', 'o', 'm', or 's'.
+   DFTTY=xxx Default communications device name.
+   DIRENT UNIX directory structure to be taken from <dirent.h>.
+   DIRPWDRP Prompt for password in REMOTE CWD command.
+   DTILDE Include UNIX ~ notation for username/home-directory
+   DYNAMIC Allocate file transfer packet buffers dynamically with malloc.
+   ENCORE Build for Encore Multimax computers.
+   EXCELAN Build with excelan TCP/IP.
+   FNFLOAT Include floating-point math functions (logs, sin, cos, exp,
+   etc)
+   FT18 Build for Fortune For:Pro 1.8.
+   FT21 Build for Fortune For:Pro 2.1.
+   GEMDOS Build for Atari ST GEMDOS.
+   GFTIMER Use high-precision floating-point file-transfer timers.
+   GID_T=xxx Group IDs are of type xxx (usually int, short, or gid_t).
+   HADDRLIST If gethostbyname() hostent struct contains a list of
+   addresses.
+   HDBUUCP Build with support for Honey DanBer UUCP.
+   HPUX Build for Hewlett Packard HP-UX.
+   HPUX9 Build for Hewlett Packard HP-UX 9.x.
+   HPUX10 Build for Hewlett Packard HP-UX 10.x.
+   HWPARITY Define if this version can SET PARITY HARDWARE { EVEN, ODD...}
+   I386IX Build for Interactive System V R3.
+   IFDEBUG Add IF stmts "if (deblog)" before "debug()" calls.
+   INADDRX TCP/IP inet_addr() type is struct inaddr, not unsigned long.
+   INTERLAN Build with support for Racal/Interlan TCP/IP.
+   ISDIRBUG System defs of S_ISDIR and S_ISREG have bug, define ourselves.
+   ISIII Build for Interactive System III.
+   IX370 Build for IBM IX/370.
+   KANJI Build with Kanji character-set translation support.
+   LCKDIR UUCP lock directory is /usr/spool/uucp/LCK/.
+   LFDEVNO UUCP lockfile name uses device numbers, as in SVR4.
+   LINUXFSSTND For Linux, use FSSTND UUCP lockfile conventions (default).
+   LOCK_DIR=xxx UUCP lock directory is xxx (quoted string).
+   LOCKF Use lockf() (in addition to lockfiles) on serial lines
+   LONGFN BSD long filenames supported using <dir.h> and opendir().
+   LYNXOS Build for Lynx OS 2.2 or later (POSIX-based).
+   MAC Build for Apple Macintosh with Mac OS.
+   MATCHDOT Make wildcards match filenames that start with period (.)
+   MAXRP=number Maximum receive-packet length.
+   MAXSP=number Maximum send-packet length.
+   MDEBUG Malloc-debugging requested.
+   MINIDIAL Minimum modem dialer support: CCITT, Hayes, Unknown, and None.
+   MINIX Build for MINIX.
+   MIPS Build for MIPS workstation.
+   MULTINET Build with support for TGV MultiNet TCP/IP (VAX/VMS).
+   M_UNIX Defined by SCO.
+   NAP The nap() is available (conflicts with SELECT and USLEEP)
+   NAPHACK The nap() call is available but only as syscall(3112,...)
+   NDIR BSD long filenames supported using <ndir.h> and opendir().
+   NDGPWNAM Don't declare getpwnam().
+   NDSYSERRLIST Don't declare sys_errlist[].
+   NEEDSELECTDEFS select() is available but we need to define FD_blah
+   ourselves.
+   NETCMD Build with support for SET HOST /COMMAND and PIPE commands.
+   NEXT Build for NeXT Mach 1.x or 2.x or 3.0, 3.1, or 3.2.
+   NEXT33 Build for NeXT Mach 3.3.
+   NOANSI Disable ANSI C function prototyping.
+   NOAPC Do not include CK_APC code.
+   NOARROWKEYS Exclude code to parse ANSI arrow-key sequences.
+   NOB_xxxx Disable SET SPEED xxxx
+   NOBIGBUF Override BIGBUFOK when it is the default
+   NOBRKC Don't try to refer to t_brkc or t_eof tchars structure members.
+   NOCKFQHOSTNAME Exclude code to get fully qualified hostname in case it
+   causes core dumps.
+   NOCCTRAP Disable Control-C (SIGINT) trapping.
+   NOCKSPEED Disable control-prefix removal feature (SET CONTROL).
+   NOCKTIMERS Build without support for dynamic timers.
+   NOCKXYZ Overrides CK_XYZ.
+   NOCKREGEX Do not include [...] or {xxx,xxx,xxx} matching in ckmatch().
+   NOCMDL Build with no command-line option processing.
+   NOCOTFMC No Close(Open()) To Force Mode Change (UNIX version).
+   NOCSETS Build with no support for character set translation.
+   NOCYRIL Build with no support for Cyrillic character set translation.
+   NOCYRILLIC Ditto.
+   NODEBUG Build with no debug logging capability.
+   NODIAL Build with no DIAL or SET DIAL commands.
+   NODISPO Build to always refuse incoming MAIL or REMOTE PRINT files.
+   DNODISPLAY Build with no file-transfer display.
+   NOESCSEQ Build with no support for ANSI escape sequence recognition.
+   NOFAST Do not make FAST Kermit protocol settings the default.
+   NOFDZERO Do not use file descriptor 0 for remote-mode file transfer.
+   NOFILEH Do not #include <sys/file.h>.
+   NOFLOAT Don't include any floating-point data types or operations.
+   NOFRILLS Build with "no frills" (this should be phased out...)
+   NOFTRUNCATE Include this on UNIXes that don't have ftruncate().
+   NOGETUSERSHELL Include this on UNIXes that don't have getusershell().
+   NOGFTIMER Don't use high-precision floating-point file-transfer timers.
+   NOHEBREW Build with no support for Hebrew character sets.
+   NOHELP Build with no built-in help.
+   NOIKSD Build with IKSD support excluded.
+   NOINITGROUPS Include this on UNIXes that don't have initgroups().
+   NOICP Build with no interactive command parser.
+   NOJC Build with no support for job control (suspend).
+   NOKANJI Build with no support for Japanese Kanji character sets.
+   NOKVERBS Build with no support for keyboard verbs (\Kverbs).
+   NOLATIN2 Build with no ISO Latin-2 character-set translation support.
+   NOLEARN Build with no support for learned scripts.
+   NOLINKBITS Use of S_ISLNK and _IFLNK untrustworthy; use readlink()
+   instead.
+   NOLOCAL Build without any local-mode features: No Making Connections.
+   NOLOGDIAL Disable connection log.
+   NOLOGIN Build without IKSD (network login) support.
+   NOLSTAT Not OK to use lstat().
+   NOMDMHUP Build without "modem-specific hangup" (e.g. ATH0) feature.
+   NOMHHOST Exclude the multihomed-host TCP/IP code (if compilation
+   errors)
+   NOMINPUT Build without MINPUT command.
+   NOMSEND Build with no MSEND command.
+   NONAWS Do not include TELNET Negotiate About Window Size support.
+   NONET Do not include any network support.
+   NONOSETBUF (See NOSETBUF)
+   NOPARSEN Build without automatic parity detection.
+   NOPIPESEND Disable file transfer using pipes and filters.
+   NOPOLL Override CK_POLL definition.
+   NOPOPEN The popen() library call is not available.
+   NOPURGE Build with no PURGE command.
+   NOPUSH Build with no escapes to operating system.
+   NOREALPATH In UNIX, realpath() function is not available.
+   NORECALL Disable the command-recall feature.
+   NOREDIRECT Disable REDIRECT command.
+   NORENAME Don't use rename() system call, use link()/unlink() (UNIX).
+   NORESEND Build with no RESEND command.
+   NORETRY Build with no command-retry feature.
+   NOSCRIPT Build with no SCRIPT command.
+   NOSELECT Don't try to use select().
+   NOSERVER Build with no SERVER mode and no server-related commands.
+   NOSETBUF Don't make console writes unbuffered.
+   NONOSETBUF DO make console writes unbuffered.
+   NOSETREU setreuid() and/or setregid() not available.
+   NOSHOW Build with no SHOW command (not recommended!).
+   NOSIGWINCH Disable SIGWINCH signal trapping.
+   NOSPL Build with no script programming language.
+   NOSTAT Don't call stat() from mainline code.
+   NOSYMLINK Include this for UNIXes that don't have readlink().
+   NOSYSIOCTLH Do not #include <sys/ioctl.h>.
+   NOSYSTIMEH Co not include <sys/time.h>.
+   NOSYSLOG Disable syslogging code.
+   NOTCPOPTS Build with no SET TCP options or underlying support.
+   NOTLOG Build with no support for transaction logging.
+   NOTM_ISDST Struct tm has no tm_isdst member.
+   NOUNICODE Build with no support for Unicode character-set translation.
+   NOURL Don't parse URLs
+   NOUUCP Build with no UUCP lockfile support (dangerous!).
+   NOWARN Make EXIT WARNING be OFF by default (otherwise it's ON).
+   NOWREFRESH Override built-in definition of CK_WREFRESH (q.v.).
+   NOXFER Build with no Kermit or other file-transfer protocols.
+   NOXMIT Build with no TRANSMIT command.
+   NOXPRINT Disables transparent print code.
+   OLDMSG Use old "entering server mode" message (see [172]ckcmai.c).
+   OLINUXHISPEED Build in old Linux hi-serial-speed code (for Linux <=
+   1.0).
+   OPENBSD Build for OpenBSD.
+   OS2 Build for OS/2.
+   OSF Build for OSF/1.
+   OSFPC Build for OSF/1 on a PC.
+   OSF32 Digital UNIX 3.2 or later.
+   OSF40 Build for Digital UNIX 4.0.
+   OSF50 Build for Digital UNIX 5.0.
+   OSK Build for OS-9.
+   OXOS Build for Olivetti X/OS 2.3.
+   PCIX Build for PC/IX
+   PID_T=xxx Type for pids is xxx (normally int or pid_t).
+   POSIX Build for POSIX: use POSIX header files, functions, etc.
+   _POSIX_SOURCE Disable non-POSIX features.
+   PROVX1 Build for Venix 1.0 on DEC Professional 3xx.
+   PTX Build for Dynix/PTX
+   PWID_T=xxx getpwid() type is xxx.
+   RBSIZ=xxx Define overall size of receive-packet buffer (with DYNAMIC).
+   RDCHK rdchk() system call is available.
+   RENAME rename() system call is available (UNIX).
+   RTAIX Build for AIX 2.2.1 on IBM RT PC.
+   RTU Build for Masscomp / Concurrent RTU.
+   SAVEDUID BSD or other non-AT&T UNIX has saved-setuid feature.
+   SBSIZ=xxx Define overall size of send-packet buffer (use with DYNAMIC).
+   SDIRENT Directory structure specified in <sys/dirent.h>.
+   SELECT select() function available (conflicts with RDCHK and CK_POLL)
+   SELECT_H Include <sys/select.h> for select()-related definitions.
+   SETEUID BSD 4.4-style seteXid() functions available.
+   SIG_V Type for signal() is void. Used to override normal assumption.
+   SIG_I Type for signal() is int. Used to override normal assumption.
+   SOCKOPT_T Override default data type for get/setsockopt() option
+   length.
+   SOLARIS Build for Solaris.
+   SOLARIS25 Build for Solaris 2.5 or later.
+   SONYNEWS Build for Sony NEWS-OS.
+   STERMIOX <sys/termiox.h> is available.
+   STRATUS Build for Stratus VOS.
+   STRATUSX25 Include Stratus VOS X.25 support.
+   SUN4S5 Build for SUNOS 4.x in the System V R3 environment.
+   SUNOS4 Build for SUNOS 4.0 in the BSD environment.
+   SUNOS41 Build for SUNOS 4.1 in the BSD environment.
+   SUNX25 Build with support for SunLink X.25.
+   SVR3 Build for AT&T System V Release 3.
+   SVR3JC Allow job control support on System V Release 3 UNIX versions.
+   SVR4 Build for AT&T System V Release 4.
+   SW_ACC_ID UNIX only -- swap real & effective ids around access() calls.
+   sxaE50 Build for PFU Compact A Series SX/A TISP.
+   SYSLOGLEVEL=n Force syslogging at given level.
+   SYSTIMEH Include <sys/time.h>.
+   SYSUTIMEH Include <sys/utime.h> for setting file dates (88OPEN)
+   TCPSOCKET Build with support for TCP/IP via Berkeley sockets library.
+   TERMIOX <termiox.h> header file is available (mostly SVR4).
+   TNCODE Include TELNET-specific code.
+   TOWER1 Build for NCR Tower 1632 with OS 1.02.
+   TRS16 Build for Tandy 16/6000.
+   UID_T=xxx Type for uids is xxx (normally int or uid_t).
+   UNIX Must be defined for all UNIX versions.
+   UNIX351M AT&T UNIX 3.51m on the AT&T 7300 UNIX PC.
+   USE_ARROWKEYS Include code to parse ANSI arrow-key sequences.
+   USE_LSTAT OK to use lstat().
+   USE_MEMCPY Define this if memcpy()/memset()/memmove() available.
+   USE_STRERROR Define this if strerror() is available.
+   USLEEP usleep() system call available (conflicts with NAP & SELECT).
+   UTEK Build for Tektronix workstations with UTEK OS.
+   UTIMEH Include <utime.h> for setting file dates (SVR4, POSIX)
+   UTS24 Build for Amdahl UTS 2.4.
+   V7 Build for Version 7 UNIX.
+   VMS Build for VAX/VMS.
+   VOID=xxx VOID type for functions (int or void).
+   VXVE Build for CDC VX/VE 5.2.1.
+   WAIT_T=xxx Type of argument passed to wait().
+   WINTCP Build with Wollongong VAX/VMS TCP/IP (implies TCPSOCKET)
+   WOLLONGONG Build with Wollongong UNIX TCP/IP (implies TCPSOCKET)
+   XENIX Build for Xenix (SCO, Tandy, others).
+   XNDIR Support for BSD long filenames via <sys/ndir.h>.
+   XYZ_INTERNAL Support for XYZMODEM protocols is internal, not external.
+   ZFCDAT Define this if zfcdat() function is available in Kermit.
+   ZILOG Build for Zilog ZEUS.
+   ZJDATE Has zjdate() function that converts date to Julian format.
+   XPRINT Transparent print code included in CONNECT module.
+
+   [ [173]Top ] [ [174]Contents ] [ [175]C-Kermit Home ] [ [176]Kermit
+   Home ]
+     __________________________________________________________________
+
+
+    C-Kermit Configuration Options / [177]The Kermit Project /
+    [178]kermit@columbia.edu / 30 June 2011
+
+References
+
+   1. http://www.columbia.edu/
+   2. mailto:kermit@columbia.edu
+   3. http://www.columbia.edu/kermit/index.html
+   4. http://www.columbia.edu/kermit/k95.html
+   5. http://www.columbia.edu/kermit/ckermit.html
+   6. http://www.columbia.edu/kermit/ckscripts.html
+   7. http://www.columbia.edu/kermit/current.html
+   8. http://www.columbia.edu/kermit/whatsnew.html
+   9. http://www.columbia.edu/kermit/faq.html
+  10. http://www.columbia.edu/kermit/support.html
+  11. http://www.columbia.edu/kermit/ckccfg.html
+  12. http://www.columbia.edu/kermit/ckermit.html
+  13. http://www.columbia.edu/kermit/index.html
+  14. http://www.columbia.edu/kermit/ckccfg.html#x1
+  15. http://www.columbia.edu/kermit/ckccfg.html#x2
+  16. http://www.columbia.edu/kermit/ckccfg.html#x3
+  17. http://www.columbia.edu/kermit/ckccfg.html#x4
+  18. http://www.columbia.edu/kermit/ckccfg.html#x5
+  19. http://www.columbia.edu/kermit/ckccfg.html#x6
+  20. http://www.columbia.edu/kermit/ckccfg.html#x7
+  21. http://www.columbia.edu/kermit/ckccfg.html#x8
+  22. http://www.columbia.edu/kermit/ckccfg.html#x9
+  23. http://www.columbia.edu/kermit/ckccfg.html#x10
+  24. http://www.columbia.edu/kermit/ckccfg.html#x11
+  25. http://www.columbia.edu/kermit/ckccfg.html#x12
+  26. http://www.columbia.edu/kermit/ckccfg.html#x13
+  27. http://www.columbia.edu/kermit/ckccfg.html#x14
+  28. http://www.columbia.edu/kermit/ckccfg.html#xa1
+  29. http://www.columbia.edu/kermit/ckuins.html
+  30. http://www.columbia.edu/kermit/ckermit.html
+  31. http://www.columbia.edu/kermit/index.html
+  32. http://www.columbia.edu/kermit/ckccfg.html#top
+  33. http://www.columbia.edu/kermit/ckccfg.html#contents
+  34. http://www.columbia.edu/kermit/ckccfg.html#x2
+  35. http://www.columbia.edu/kermit/ckccfg.html#x0
+  36. http://www.columbia.edu/kermit/ckermit.html
+  37. http://www.columbia.edu/kermit/index.html
+  38. http://www.columbia.edu/kermit/ckccfg.html#top
+  39. http://www.columbia.edu/kermit/ckccfg.html#contents
+  40. http://www.columbia.edu/kermit/ckccfg.html#x3
+  41. http://www.columbia.edu/kermit/ckccfg.html#x1
+  42. ftp://kermit.columbia.edu/kermit/c-kermit/ckutio.c
+  43. ftp://kermit.columbia.edu/kermit/c-kermit/ckcdeb.h
+  44. ftp://kermit.columbia.edu/kermit/c-kermit/ckuus3.c
+  45. ftp://kermit.columbia.edu/kermit/c-kermit/ckcdeb.h
+  46. ftp://kermit.columbia.edu/kermit/c-kermit/ckutio.c
+  47. ftp://kermit.columbia.edu/kermit/c-kermit/ckutio.c
+  48. http://www.columbia.edu/kermit/ckermit.html
+  49. http://www.columbia.edu/kermit/index.html
+  50. http://www.columbia.edu/kermit/ckccfg.html#top
+  51. http://www.columbia.edu/kermit/ckccfg.html#contents
+  52. http://www.columbia.edu/kermit/ckccfg.html#x4
+  53. http://www.columbia.edu/kermit/ckccfg.html#x2
+  54. ftp://kermit.columbia.edu/kermit/c-kermit/makefile
+  55. http://www.columbia.edu/kermit/ckuins.html
+  56. http://www.columbia.edu/kermit/ckuins.html#x4
+  57. http://www.columbia.edu/kermit/ckuins.html#x9.2
+  58. ftp://kermit.columbia.edu/kermit/c-kermit/ckuusx.c
+  59. ftp://kermit.columbia.edu/kermit/c-kermit/ckutio.c
+  60. ftp://kermit.columbia.edu/kermit/c-kermit/ckufio.c
+  61. ftp://kermit.columbia.edu/kermit/c-kermit/ckuusx.c
+  62. ftp://kermit.columbia.edu/kermit/c-kermit/ckucmd.c
+  63. http://www.columbia.edu/kermit/ckermit.html
+  64. http://www.columbia.edu/kermit/index.html
+  65. http://www.columbia.edu/kermit/ckccfg.html#top
+  66. http://www.columbia.edu/kermit/ckccfg.html#contents
+  67. http://www.columbia.edu/kermit/ckccfg.html#x5
+  68. http://www.columbia.edu/kermit/ckccfg.html#x3
+  69. http://www.columbia.edu/kermit/unicode.html
+  70. http://www.columbia.edu/kermit/ckermit.html
+  71. http://www.columbia.edu/kermit/index.html
+  72. http://www.columbia.edu/kermit/ckccfg.html#top
+  73. http://www.columbia.edu/kermit/ckccfg.html#contents
+  74. http://www.columbia.edu/kermit/ckccfg.html#x6
+  75. http://www.columbia.edu/kermit/ckccfg.html#x4
+  76. ftp://kermit.columbia.edu/kermit/c-kermit/ckuusr.h
+  77. ftp://kermit.columbia.edu/kermit/c-kermit/ckuusr.h
+  78. http://www.columbia.edu/kermit/ckermit.html
+  79. http://www.columbia.edu/kermit/index.html
+  80. http://www.columbia.edu/kermit/ckccfg.html#top
+  81. http://www.columbia.edu/kermit/ckccfg.html#contents
+  82. http://www.columbia.edu/kermit/ckccfg.html#x7
+  83. http://www.columbia.edu/kermit/ckccfg.html#x5
+  84. http://www.columbia.edu/kermit/ckccfg.html#x6.1
+  85. http://www.columbia.edu/kermit/ckccfg.html#x6.2
+  86. http://www.columbia.edu/kermit/ckccfg.html#x6.3
+  87. http://www.columbia.edu/kermit/ckccfg.html#x6.4
+  88. http://www.columbia.edu/kermit/ckccfg.html#x4
+  89. http://www.columbia.edu/kermit/gkermit.html
+  90. ftp://kermit.columbia.edu/kermit/c-kermit/ckuusr.h
+  91. ftp://kermit.columbia.edu/kermit/c-kermit/ckcker.h
+  92. ftp://kermit.columbia.edu/kermit/c-kermit/ckcdeb.h
+  93. http://www.columbia.edu/kermit/ckermit.html
+  94. http://www.columbia.edu/kermit/index.html
+  95. http://www.columbia.edu/kermit/ckccfg.html#top
+  96. http://www.columbia.edu/kermit/ckccfg.html#contents
+  97. http://www.columbia.edu/kermit/ckccfg.html#x8
+  98. http://www.columbia.edu/kermit/ckccfg.html#x6
+  99. ftp://kermit.columbia.edu/kermit/c-kermit/ckudia.c
+ 100. http://www.columbia.edu/kermit/ckermit.html
+ 101. http://www.columbia.edu/kermit/index.html
+ 102. http://www.columbia.edu/kermit/ckccfg.html#top
+ 103. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 104. http://www.columbia.edu/kermit/ckccfg.html#x9
+ 105. http://www.columbia.edu/kermit/ckccfg.html#x7
+ 106. http://www.columbia.edu/kermit/ckccfg.html#x8.1
+ 107. http://www.columbia.edu/kermit/ckccfg.html#x8.2
+ 108. http://www.columbia.edu/kermit/ckccfg.html#x8.3
+ 109. http://www.columbia.edu/kermit/ckccfg.html#x8.1.1
+ 110. http://www.columbia.edu/kermit/ckccfg.html#x8.1.2
+ 111. http://www.columbia.edu/kermit/ckccfg.html#x8.1.3
+ 112. http://www.columbia.edu/kermit/ckccfg.html#x8.1.4
+ 113. http://www.columbia.edu/kermit/ckccfg.html#x8.1.5
+ 114. http://www.columbia.edu/kermit/ckccfg.html#x8.1.6
+ 115. ftp://kermit.columbia.edu/kermit/c-kermit/ckcnet.h
+ 116. ftp://kermit.columbia.edu/kermit/c-kermit/ckctel.c
+ 117. ftp://kermit.columbia.edu/kermit/c-kermit/ckctel.c
+ 118. ftp://kermit.columbia.edu/kermit/c-kermit/ckctel.h
+ 119. ftp://kermit.columbia.edu/kermit/c-kermit/ckcftp.c
+ 120. http://www.columbia.edu/kermit/ckermit.html
+ 121. ftp://kermit.columbia.edu/kermit/c-kermit/ckcnet.c
+ 122. ftp://kermit.columbia.edu/kermit/c-kermit/ckcnet.h
+ 123. ftp://kermit.columbia.edu/kermit/c-kermit/ckutio.c
+ 124. http://www.columbia.edu/kermit/ckccfg.html#x11
+ 125. mailto:kermit@columbia.edu
+ 126. http://www.columbia.edu/kermit/ckermit.html
+ 127. http://www.columbia.edu/kermit/index.html
+ 128. http://www.columbia.edu/kermit/ckccfg.html#top
+ 129. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 130. http://www.columbia.edu/kermit/ckccfg.html#x10
+ 131. http://www.columbia.edu/kermit/ckccfg.html#x8
+ 132. http://www.columbia.edu/kermit/ckermit.html
+ 133. http://www.columbia.edu/kermit/index.html
+ 134. http://www.columbia.edu/kermit/ckccfg.html#top
+ 135. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 136. http://www.columbia.edu/kermit/ckccfg.html#x11
+ 137. http://www.columbia.edu/kermit/ckccfg.html#x9
+ 138. http://www.columbia.edu/kermit/ckuins.html#x11
+ 139. http://www.columbia.edu/kermit/ckuins.html
+ 140. http://www.columbia.edu/kermit/ckermit.html
+ 141. http://www.columbia.edu/kermit/index.html
+ 142. http://www.columbia.edu/kermit/ckccfg.html#top
+ 143. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 144. http://www.columbia.edu/kermit/ckccfg.html#x12
+ 145. http://www.columbia.edu/kermit/ckccfg.html#x10
+ 146. ftp://kermit.columbia.edu/kermit/c-kermit/ckucns.c
+ 147. ftp://kermit.columbia.edu/kermit/c-kermit/ckucon.c
+ 148. http://www.columbia.edu/kermit/ckermit.html
+ 149. http://www.columbia.edu/kermit/index.html
+ 150. http://www.columbia.edu/kermit/ckccfg.html#top
+ 151. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 152. http://www.columbia.edu/kermit/ckccfg.html#x13
+ 153. http://www.columbia.edu/kermit/ckccfg.html#x11
+ 154. http://www.columbia.edu/kermit/ckermit.html
+ 155. http://www.columbia.edu/kermit/index.html
+ 156. http://www.columbia.edu/kermit/ckccfg.html#top
+ 157. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 158. http://www.columbia.edu/kermit/ckccfg.html#x14
+ 159. http://www.columbia.edu/kermit/ckccfg.html#x12
+ 160. ftp://kermit.columbia.edu/kermit/c-kermit/ckcdeb.h
+ 161. http://www.columbia.edu/kermit/ckermit.html
+ 162. http://www.columbia.edu/kermit/index.html
+ 163. http://www.columbia.edu/kermit/ckccfg.html#top
+ 164. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 165. http://www.columbia.edu/kermit/ckccfg.html#x13
+ 166. http://www.columbia.edu/kermit/ckermit.html
+ 167. http://www.columbia.edu/kermit/index.html
+ 168. http://www.columbia.edu/kermit/ckccfg.html#top
+ 169. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 170. ftp://kermit.columbia.edu/kermit/c-kermit/ckcdeb.h
+ 171. ftp://kermit.columbia.edu/kermit/c-kermit/ckcnet.h
+ 172. ftp://kermit.columbia.edu/kermit/c-kermit/ckcmai.c
+ 173. http://www.columbia.edu/kermit/ckccfg.html#top
+ 174. http://www.columbia.edu/kermit/ckccfg.html#contents
+ 175. http://www.columbia.edu/kermit/ckermit.html
+ 176. http://www.columbia.edu/kermit/index.html
+ 177. http://www.columbia.edu/kermit/index.html
+ 178. mailto:kermit@columbia.edu

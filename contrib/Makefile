@@ -1,6 +1,6 @@
 #	@(#)Makefile	8.13 (Berkeley) 4/29/95
 
-SUBDIR= kermit-5A.188 diskspeed portio fullsize opkg
+SUBDIR=	diskspeed fullsize kermit opkg portio
 
 cleandir: clean
 
