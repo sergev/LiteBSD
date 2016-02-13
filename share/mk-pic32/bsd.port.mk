@@ -10,8 +10,6 @@ PREFIX=/usr/local
 BINDIR=${PREFIX}/bin
 LOCALBASE=${PREFIX}
 MANDIR=${PREFIX}/man/man
-PKGBASE=${LOCALBASE}/pkg
-PLISTBASE=${PKGBASE}/plists/
 PKGNAME=${PORT}-${V}
 TRUEDESTDIR=${DESTDIR}
 ARCH?=mipsel
@@ -20,34 +18,8 @@ build: all
 
 fake: build
 	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
-.if exists(${.CURDIR}/plist)
-	install -d ${FAKEDIR}${PLISTBASE}
-	install -c -m 444 plist ${FAKEDIR}${PLISTBASE}${PKGNAME}
-.endif
 
-plist: fake
-.if !exists(${.CURDIR}/plist)
-	@echo -n "Creating ${PKGNAME} plist... "
-	@echo "Put a one-line description of the package here." >${FAKEDIR}/${PKGNAME}-tempplist
-	@echo "Maintainer: Your Name <your@email.com>" >>${FAKEDIR}/${PKGNAME}-tempplist
-	@echo "License: BSD, MIT, ISC, GPLv2, GPLv2+, GPLv3, GPLv3+, LGPLv2.1+, etc." >>${FAKEDIR}/${PKGNAME}-tempplist
-	@echo "###" >>${FAKEDIR}/${PKGNAME}-tempplist
-	@find ${FAKEDIR}/${PREFIX} -type f | xargs ls -1 | \
-		sed 's,${FAKEDIR}/${PREFIX}/,,' >>${FAKEDIR}/${PKGNAME}-tempplist
-	@mkdir -p ${FAKEDIR}${PLISTBASE}
-	@mv ${FAKEDIR}/${PKGNAME}-tempplist "${FAKEDIR}${PLISTBASE}${PKGNAME}"
-	@echo "done!"
-.endif
-
-pkg: plist
-	@echo -n "Creating ${PKGNAME} package... "
-	@(cd ${FAKEDIR} && tar -cz -f "${PKGNAME}".tgz usr/)
-	@echo "done!"
-
-fakeroot: build
-	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
-
-control: fakeroot
+control: fake
 .if !exists(${.CURDIR}/control)
 	@echo -n "Creating ${PKGNAME} control file... "
 	@echo "Package: ${PORT}" >control
@@ -58,7 +30,6 @@ control: fakeroot
 	@echo "License: BSD, MIT, ISC, GPLv2, GPLv2+, GPLv3, GPLv3+, LGPLv2.1+, etc." >>control
 	@echo "Architecture: ${ARCH}" >>control
 	@echo "Installed-Size: nbytes" >>control
-	@echo "Depends: list of dependencies" >>control
 	@echo "done!"
 .endif
 
@@ -101,14 +72,6 @@ install: package
 	@tar xzf ${FAKEDIR}/data.tar.gz -C "${TRUEDESTDIR}"
 	@echo "done!"
 #	@echo "Remember to edit etc/rootfs.manifest to include the port's files."
-#	@echo "Use ${TRUEDESTDIR}${PLISTBASE}${PKGNAME} as a guide."
-
-uninstall:
-	@echo -n "Deleting ${PKGNAME}... "
-	@tail -n +5 ${TRUEDESTDIR}${PLISTBASE}${PKGNAME} | \
-		while read x; do rm -rf ${TRUEDESTDIR}${LOCALBASE}/"$x"; done
-	@rm -f ${TRUEDESTDIR}${PLISTBASE}${PKGNAME}
-	@echo "done!"
 
 clean-package: cleandir
 	rm -rf ${FAKEDIR}
