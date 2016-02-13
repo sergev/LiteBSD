@@ -1,0 +1,2152 @@
+
+   [1]The Columbia Crown The Kermit Project | Columbia University
+   612 West 115th Street, New York NY 10025 USA o [2]kermit@columbia.edu
+   ...since 1981
+   [3]Home [4]Kermit 95 [5]C-Kermit [6]Scripts [7]Current [8]New [9]FAQ
+   [10]Support
+
+
+      [11]CLICK HERE to read about some of these items.
+
+          [12]Table of platforms   [13]Book: Using C-Kermit   [14]Download
+                                                              C-Kermit 9.0
+
+C-Kermit 9.0 Update Notes
+
+   Note:   C-Kermit 9.0.301 contains a correction that applies only to
+   Solaris 10 and 11.
+     C-Kermit 9.0.302 contains corrections that apply only to FreeBSD 8
+   and 9.
+     * [15]Large Files
+     * [16]How to Test Large-File Transfer
+     * [17]Arithmetic with Large Integers
+     * [18]FORCE-3 Packet Protocol
+     * [19]Variable Evaluation
+
+     * [20]The RENAME Command You Always Wanted
+     * [21]Other New Features
+     * [22]Incompatibilities
+     * [23]What's Not In C-Kermit 9.0
+     * [24]And a Loose End
+
+     * [25]Demonstration: Secure POP mail fetcher
+     * [26]Demonstration: HP Switch Configuration Backup
+     * [27]Demonstration: HP iLO Blade Configuration
+     * [28]Demonstration: IBM/Rolm/Siemens CBX Management
+     * [29]Demonstration: CSV and TSV Files
+     * [30]Demonstration Scripts for Webmasters
+
+   This is the third supplement to [31]Using C-Kermit, Second Edition. I
+   apologize for the scattered nature of the information and I hope I can
+   organize it and gather it all into one place for easy and definitive
+   reference some day. It's a big job so it depends on the demand. For the
+   time being the definitive reference and introduction is the book (which
+   is now available also in a [32]Kindle Edition), plus the [33]C-Kermit
+   7.0 update, [34]C-Kermit 8.0 update, and now this one. Plus tons of
+   other web pages on this site, sample script programs, and so on.
+
+   In version 6.0, C-Kermit was a pretty powerful and flexible
+   communication program with scripting capabilities. By version 9.0, I'd
+   like to think of it more as a scripting language with built-in
+   communications. You can get an idea of the kinds of programs you can
+   write in Kermit language [35]here. You can develop programs quickly
+   because it's an interactive program, not a compiler. The scripting
+   language is the command language. Kind of like the Unix shell but
+   "somewhat" less cryptic, including concepts not only from C but from
+   PL/I, Snobol, LISP, Bliss, and Smalltalk. The language itself is built
+   upon the command language of the much-loved [36]DECSYSTEM-20 from the
+   1970s and 80s, the Clipper Ship of the Text Era. (Text is not a bad
+   word. Those of us who can touch-type and who are proficient in
+   text-based computing environments like Unix shell or VMS DCL are likely
+   to be orders of magnitude more productive than users of GUIs.)
+
+   Thanks to (at least) Jeff Altman, William Bader, Ian Beckwith, Nelson
+   Beebe, Gerry Belanger, Joop Boonen, Rob Brown, Christian Corti, Alexey
+   Dokuchaev, John Dunlap, Peter Eichhorn, Carl Friedberg, Terry Kennedy,
+   Günter Knauf, Jason Lehr, Arthur Marsh, Lewis McCarthy, Gary Mills, Ed
+   Ravin, Jonathan Reams, Mike Rechtman, Mark Sapiro, Steven Schweda
+   (SMS), Kinjal Shah, Michael Sokolov, Andy Tanenbaum, Seth Theriault,
+   Zach A. Thomas, Martin Vorländer, and Eric Weaver for assistance, and
+   to Hewlett-Packard Company for support.
+
+     - Frank da Cruz   [37]fdc@columbia.edu, 30 June 2011
+
+   P.S. It occurred to me just before the end of the day that maybe I
+   should back up the Kermit website on DVD, just in case. Using
+   [38]Kermit 95 on the desktop over an SSH connection to the Unix file
+   system where the website resides, I made a fresh directory on the PC,
+   CD'd to it, and on Unix cd'd to the Website directory, and told
+   C-Kermit 9.0 to:
+
+C-Kermit> send /recursive /dotfiles /nobackup *
+
+   and it re-created the website directory tree in the PC directory, text
+   files correctly converted to Windows format and binary files correctly
+   left as-is. The /dotfiles switch means to include files such as
+   .htaccess whose names start with a dot (period), and the /nobackup
+   switch means to skip backup files created by EMACs (such as
+   index.html.~243~). And then I did the same with the FTP sites, about
+   8GB in all. Watching the file-transfer display was kind of like having
+   30 years of my life flash before my eyes in a few minutes. Then I
+   copied the two directories to DVD (the FTP site had to be split over 2
+   DVDs). The whole operation took under half an hour. The directory tree
+   on the CD is directly usable in Windows, Unix, or any other operating
+   system (unlike if I had transferred the files all in binary mode or all
+   in text mode, or if I had made, say, a gzipped tar archive or a zip
+   archive). I believe that, to this day, Kermit is the only software that
+   can do this. If someday I have to upload from these DVDs to Unix, VMS,
+   or any other operating system, it can be done exactly the same way,
+   with any necessary conversions on text files done automatically, and
+   binary files left intact, recursively through a whole very large
+   directory tree.
+
+What's New in General
+
+   Very briefly, the major items:
+     * [39]Open Source license.
+     * [40]64-bit file access and transfer and 64-bit integer arithmetic
+       on most common platforms.
+     * Support for recent releases of Linux, Mac OS X, *BSD, etc ([41]see
+       table).
+     * Support for newer OpenSSL releases up to and including 1.0.0d
+       ([42]see table).
+     * [43]Strengthened error checking for file transfer under extremely
+       harsh conditions.
+     * [44]Simplified semantics for variables used in scripts.
+     * Super-handy [45]extensions to the RENAME command.
+     * Other scripting improvements including support for reading and
+       writing [46]CSV and TSV files.
+     * [47]MIME character-set names are now recognized.
+     * Improved logging and debugging (see demo [48]here).
+     * Lots more described or listed below, and [49]here.
+
+Open Source License
+
+   C-Kermit 9.0 has the [50]Revised 3-Clause BSD License, an open source
+   license approved by OSI, the [51]Open Source Initiative.
+
+Large Files
+
+   Kermit is, first and foremost, a file-transfer program. One might
+   expect it to be able to transfer any kind of file, but that has been
+   decreasingly the case as file sizes began to cross the 2 gigabyte
+   threshold.
+
+   The biggest change since C-Kermit 8.0.211 is support for large files on
+   platforms that support them. A "large file" is one whose size is
+   greater than 2^31-1 (2,147,483,647) bytes (2GB-1); that is, one whose
+   size requires more than 31 bits to represent. Before now, Kermit was
+   able to access such files only on 100% 64-bit platforms such as Digital
+   Unix, later known as Tru64 Unix. In the new release, Kermit takes
+   advantage of the X/Open Single UNIX Specification Version 2 (UNIX 98)
+   Large File Support (LFS) specification, which allows 32-bit platforms
+   to create, access, and manage files larger than 2GB.
+
+   Accommodating large files required code changes in many modules,
+   affecting not only file transfer, but also file management functions
+   from directory listings to local file manipulation, plus the user
+   interface itself to allow entry and display of large numbers. All this
+   had to be done in a way that would not affect pure 32-bit builds on
+   platforms that do not support large files. Large file support is
+   summarized in the [52]Table of Platforms; entries in Yellow (32-bit
+   builds that support 64-bit integers) and Green (64-bit builds) support
+   large files.
+
+   Note that VMS C-Kermit and Kermit 95 for Windows have always been able
+   to transfer large files. However their user interface used 32-bit
+   integers for statistics and the file transfer display. In C-Kermit 9.0
+   Alpha.03, VMS C-Kermit on 64-bit platforms (Alpha and Itanium) should
+   now give correct statistics and progress displays. (We'll see about
+   Kermit 95 later.)
+
+How to Test Large-File Transfer
+
+   Several methods are available for testing large-file transfers:
+     * By transferring a real file that is more than 2147483648 bytes long
+       (a file whose length requires more than 31 bits to express); or to
+       be totally sure, that is longer than 4294967296 bytes (32 bits or
+       more). Or to be double super sure, longer than 8589934592 (33
+       bits).
+     * If you don't have such a file or there is not sufficient disk space
+       for such a file, you can create a special kind of file that takes
+       up one block on the disk but appears to be 4.3GB long by compiling
+       and running [53]THIS C PROGRAM on Linux, Solaris, HP-UX, or other
+       Unix platform that supports large files. Kermit or FTP or any other
+       file transfer program will transfer the result (BIGFILE) in such a
+       way as to actually put 4.3GB (or other desired size; see source) on
+       the wire.
+     * You can use Kermit's CALIBRATE feature to transfer a large file
+       that doesn't exist. At the receiver, use RECEIVE /CALIBRATE. At the
+       sender, use SEND /CALIBRATE:length, e.g.:
+
+     (At remote kermit...)
+     $ kermit -Y
+     C-Kermit> receive /calibrate
+     (Return to local kermit...)
+     Ctrl-\c
+     C-Kermit> send /calibrate:4300000000
+       This sends a simulated file 4.3GB in length, that does not exist on
+       the sender and will not take up any disk space on the receiver.
+       SEND /CALIBRATE: accepts big numbers only in Kermit versions that
+       support them (this does not include Kermit 95 on Windows). This
+       method tests only Kermit's ability to express and understand large
+       file sizes, but does not test Kermit's file-system interface, since
+       no files are involved.
+
+Arithmetic with Large Integers
+
+   Because large file support requires the availability of a 64-bit signed
+   integer data type, other aspects of C-Kermit were adapted to use it
+   too, most notably Kermit's algebraic expression evaluator and its
+   [54]S-Expression interpreter, on all platforms that support large files
+   (those listed as 64 or 32/64 in the Word column of the [55]table). In
+   fact, every Kermit command that parses a number in any field can now
+   parse a large number on those platforms.
+
+   S-Expressions can now be forced to operate with integers only, without
+   floating-point conversion or having to explicitly truncate each result;
+   as an example. see the revised [56]Easter date calculation script.
+
+FORCE-3 Packet Protocol
+
+   The Kermit protocol has proven itself over the past 30 years to be
+   robust in terms of surviving harsh transmission environments and
+   delivering the data correctly and completely. In these times of
+   Internet everywhere and error-correcting modems in the few places where
+   the Internet isn't, few people even recall the kinds of difficult
+   conditions that were common when the Kermit protocol was first
+   developed: noisy telephone lines, serial interfaces that drop
+   characters, lack of transparency to control or 8-bit characters,
+   absence of flow control, "bare" modems without error correction.
+
+   But the Internet is not everywhere, and not all modems are
+   error-correcting. Perhaps the most difficult trial so far for Kermit or
+   any other protocol is the [57]EM-APEX project, in which floats are
+   dropped into the ocean from an aircraft into the path of a hurricane;
+   these floats dive into the water measuring current, temperature, and
+   salinity at different depths and then surface to phone home, sending
+   the data to land stations using Kermit protocol over
+   non-error-correcting 300bps [58]Iridium satellite modems, with high
+   seas and winds battering the floats and heavy ([59]sometimes
+   electrical) storms between the modem and the satellite.
+
+   Because of the transmission speed and long distances involved, the
+   transfers were very slow. The Kermit software in the floats is
+   [60]Embedded Kermit, which did not implement sliding windows, which
+   would have sped up the flow considerably. John Dunlap, engineer at the
+   University of Washington's Applied Physics Laboratory, undertook the
+   task of adding sliding windows to E-Kermit. For testing, he rigged up a
+   [61]simulator in which Kermit transfers take place over a connection
+   with different amounts of noise and delay. He found that occasionally,
+   a transfer would appear to succeed, but the received file would be
+   corrupt.
+
+   According to the Kermit protocol definition, the first packet always
+   has block-check type 1, a 6-bit checksum, which is the only block check
+   type that all Kermit implementations are required to support; thus any
+   Kermit partner can process this packet. This packet itself can
+   negotiate a higher level of checking, such that subsequent packets have
+   (say) block-check type 3, a 16-bit cyclic redundancy check (CRC)
+   encoded as three printable 7-bit ASCII characters. The 16-bit CRC can
+   catch all errors of certain kinds (single-bit, double-bit, bursts of 16
+   bits or less), and more than 99.9984741210937% of all other possible
+   errors.
+
+   John's simulations revealed that file corruption could occur undetected
+   when the initial packet was corrupted in such a way that a parameter or
+   capability byte was changed and the checksum also changed to make the
+   packet appear to be correct, thus allowing the transfer to proceed with
+   the two Kermit partners out of sync as to packet encoding and
+   interpretation (the chances of two such errors producing a seemingly
+   valid packet are about 1 in 6000 when using the 6-bit checksum). For
+   example, the compression technique might be misnegotiated and then the
+   receiver might store incoming data without decompressing it.
+
+   The solution is a new option, selected by:
+
+     BLOCK-CHECK TYPE 5
+
+   to require a type 3 block check (16-bit CRC) on every packet, including
+   the initial ones, thus reducing the probability of a misnegotiation by
+   many orders of magnitude. THIS PARAMETER CAN NOT BE NEGOTIATED. Each
+   Kermit program must be given the "set block 5" command prior to
+   transfer. That's because normally every Kermit program expects the
+   first packet to have a 6-bit checksum, and if the first packet has a
+   3-byte, 16-bit CRC, the packet receiver will think it is corrupted.
+
+   In practice, however, it is possible to code the packet receiver
+   "cheat" by reading the packet data before verifying the block check.
+   Thus when the receiver is C-Kermit 9.0 or later or E-Kermit 1.7 or
+   later, it is only necessary to give the "set block 5" command to the
+   file sender, and the receiver will check for a FORCE-3 first packet. If
+   the receiver does not support this feature, however, the initial packet
+   will be be rejected (after several retries) and the file transfer will
+   not take place. There is no attempt to "back off" to normal behavior.
+
+   CAPTION: Table 4. Kermit Protocol Packet Block Check Types
+
+   Type Command Bytes Status Explanation
+   1 SET BLOCK 1 1 Required in all Kermit implementations. Negotiated.
+   6-bit checksum, suitable for good connections.
+   2 SET BLOCK 2 2 Optional, negotiated. 12-bit checksum. 64 times
+   stronger than type 1.
+   3 SET BLOCK 3 3 Optional, negotiated. 16-bit CRC.
+   BLANK-FREE-2 SET BLOCK 4 2 Optional, negotiated. 12-bit checksum, two
+   nonblank bytes.
+   FORCE-3 SET BLOCK 5 3 Optional, not negotiated. 16-bit CRC forced all
+   packets.
+
+   BLANK-FREE-2 is for environments where Kermit packets are treated as
+   lines of text, and in which trailing blanks can be stripped; for
+   example, when transferring files with an IBM mainframe through a 3270
+   protocol converter.
+   [62]E-Kermit 1.7
+
+Variable Evaluation
+
+     Does the strange behavior of Kermit's \%x variables puzzle or annoy
+     you?
+
+   Kermit software development has been a collaborative project over the
+   years, with contributions coming in from almost every country and every
+   sector of the economy - academic, corporate, government. Thus not all
+   versions, and not all features of a given version, are a product of
+   systematic design.
+
+   One example was the introduction of variables for text substitution,
+   first in a version of MS-DOS Kermit that was sent in by someone
+   somewhere (I could look it up, but no time...) Although the design of
+   the notation for variable names (table below) is mine, the underlying
+   code was contributed. In that code there was only one kind of variable,
+   and if I recall correctly the variable name was a backslash followed by
+   a single letter, for example \a, \b, etc. The contributed code
+   evaluated these variables recursively, meaning if the definition of a
+   variable contained variable references, then these were resolved when
+   dereferencing the variable, and the process would continue as deep down
+   as necessary to resolve the thing fully.
+
+   This was sometimes handy, but it had one severe drawback: There was no
+   way to use variables in a straightforward way to represent strings that
+   contained literal backslashes; for example, DOS or Windows pathnames.
+   This gave rise to all kinds of quoting rules and conventions (e.g.
+   doubling backslashes or forcing single-level evaluation with
+   \\fcontents()), and also to the introduction of other kinds of
+   variables that were evaluated one level deep, rather than recursively.
+
+   To accommodate coexistence of different kinds of variables as well as
+   "escape sequences" for representing control and 8-bit characters, the
+   syntax for variable names was extended to include three elements: the
+   leading backslash, then a single character indicating the type of
+   variable, and then the name of the variable in a format corresponding
+   to the type designator, as shown in this somewhat simplified table:
+
+   CAPTION: Table 1. Variable-name Syntax in Kermit
+
+   Notation Meaning
+   \000 - \255 8-bit character constant (decimal)
+   \d000 - \d255 Alternative notation for 8-bit character (byte) constant
+   (decimal)
+   \o000 - \o377 8-bit character constant (octal)
+   \x00 - \xff 8-bit character constant (hexadecimal)
+   \%a - \%z Scalar variable, evaluated recursively.
+   \%0 - \%9 Macro argument, scalar, evaluated recursively.
+   \&a - \%& Array name
+   \&a[x] Array reference, evaluated recursively (x is any constant or
+   variable)
+   \v(name) Built-in scalar variable, evaluated one level deep.
+   \m(name) User-defined scalar variable, evaluated one level deep.
+   \$(name) An environment variable, evaluated one level deep.
+   \s(name[n:m]) Compact substring notation, evaluated one level deep.
+   \fname(args...) Built-in function with zero or more arguments.
+   \\ Literal backslash
+   \N OUTPUT command only: NUL, ASCII 0
+   \B OUTPUT command only: BREAK (250ms, for serial connections)
+   \L OUTPUT command only: Long BREAK (1.5sec, ditto)
+
+   Variable names in Kermit are case-independent. The simplifications in
+   the table are that the notation for decimal and octal bytes can have
+   from one to three digits, and can include braces to separate them from
+   text digits, e.g. \7, \{123}, \o{50}. Hex bytes too, except they must
+   always have exactly two hex digits, 0-9a-f. Array indices must be, or
+   must evaluate to, numbers (floating point numbers are truncated).
+   Associative arrays are also available (dynamic arrays with arbitrary
+   text as subscript), but they are really just a variation on \m()
+   variables (read about associative arrays [63]here). Also, there are
+   some alternative notations for compact substring notation.
+
+   We didn't want to have lots of "distinguished" characters, as the UNIX
+   shell does; one is enough, clarity over brevity. Although the notation
+   can be a bit cumbersome, we can use the \m(name) form to circumvent the
+   overevaluation in most contexts. But macro arguments are always
+   assigned to the \%0-9 variables, and thus always evaluated recursively,
+   making it difficult and confusing to pass (e.g.) Windows pathnames as
+   arguments to macros. The same is true for array elements, especially in
+   contexts where they are used to return results from built-in functions
+   (for example, \fsplit() used to return the elements of a
+   [64]comma-separated value list if any of the values contained
+   backslashes). An even worse scenario is when macro arguments are passed
+   from one macro to another; for some graphic illustrations see
+   [65]Taming the Wild Backslash - Part Deux from the [66]C-Kermit 7.0
+   Update Notes.
+
+   We can't just change how variables are evaluated because that would
+   break existing scripts. But we can always add Yet Another SET Command:
+
+     SET COMMAND VARIABLE-EVALUATION { RECURSIVE, SIMPLE }
+
+   This applies only to \%a-z and \%0-9 variables and to \&a-z[] arrays
+   (since all other kinds of variables are evaluated only one level deep).
+   The default, of course, for backwards compatibility, is RECURSIVE.
+   SIMPLE forces the evaluation of these variables to return their literal
+   contents, without further evaluation:
+
+     * An exception is made in the case of array subscripts, because
+       changing how they are evaluated could break a lot of scripts, and
+       anyway there should never be any harm in evaluating them
+       recursively because their final value is always (or should be)
+       numeric, not some string that might contain backslashes.
+     * The VARIABLE-EVALUATION setting is on the command stack. Thus you
+       can give this command in a macro, command file, or user-defined
+       function without affecting the calling environment.
+     * The new \frecurse() function forces recursive evaluation of its
+       argument regardless of the VARIABLE-EVALUATION setting. The
+       argument can be any string (or nothing at all); all the variables
+       in the string, even \m() ones, are evaluated recursively:
+
+def \%a 1 \%b 3
+def \%b 2
+def xx easy as \%a
+show mac xx
+echo \frecurse(\m(xx))
+easy as 1 2 3
+echo \frecurse(it's as easy as \m(xx))
+it's as easy as easy as 1 2 3
+
+     * The new \v(vareval) built-in variable contains the current setting
+       (recursive or simple) at the current command-stack level.
+
+   Here's a short script for illustration:
+
+define path c:\users\fdc\somefile.txt
+define test1 {        # Normal recursive argument evaluation
+  echo \%0: arg=\%1
+}
+define test2 {        # Simple argument evaluation
+  set var simple
+  echo \%0: arg=\%1
+}
+test1 \m(path)
+test2 \m(path)
+exit
+
+   And here's the result:
+
+?<ERROR:NO_SUCH_FUNCTION:\fdc\somefile.txt()>
+test2: arg=c:\users\fdc\somefile.txt
+
+   The first line might seem surprising, but under the normal rules (see
+   table above) \f indicates a function call, with the letters following
+   the 'f' being the name of the function. But there is no function by
+   that name... and if there were, you probably didn't intend to call it!
+
+   SET COMMAND VARIABLE-EVALUATION SIMPLE has no effect on constants, only
+   on variables. Note how \m(path) is defined. The DEFINE command assigns
+   the literal value of its argument to the named variable (see Table 3
+   below), thus in this case no special syntax is needed. But in other
+   contexts, you must double the backslashes or use the \fliteral()
+   function to use literal backslashes in data:
+
+test2 c:\\users\\fdc\\somefile.txt
+test2 \fliteral(c:\users\fdc\somefile.txt)
+
+   C-Kermit 9.0 adds a new notation for \fliteral() which also has certain
+   advantages over it: \q(string):
+
+test2 \q(c:\users\fdc\somefile.txt)
+
+   Since \fliteral() is a function, its argument list (the text within
+   parentheses) has special syntax of its own, in which commas and braces
+   are treated specially and introduce another set of quoting problems.
+   \q(string) doesn't have these problems. The only consideration is that
+   parentheses must be balanced or else quoted (preceded by backslash), or
+   represented as numeric character entities (left paren = \40, (right
+   paren = \41).
+
+   Or else hold the value in a simple variable as we did with \\m(path)
+   above.
+
+   SET COMMAND VARIABLE-EVALUATION SIMPLE is a big change and might have
+   repercussions that didn't show up in the initial tests; a lot more
+   testing is needed.
+
+   On the topic of variables, let's summarize in one place the ways in
+   which values can be explicitly assigned to variables. There is nothing
+   new here except the table itself:
+
+   CAPTION: Table 2. Variable Assignment in Kermit
+
+   Command Shorthand Explanation
+   DEFINE name value .name = value The literal value becomes the contents
+   of the named variable; variables names in the value are copied without
+   evaluation. This command is for defining macros that take parameters,
+   as well as for defining simple variables, especially if the values
+   contain backslashes.
+   _DEFINE name value   Like DEFINE but the name is evaluated before use.
+   ASSIGN name value .name := value The value is evaluated and the result
+   becomes the contents of the named variable.
+   _ASSIGN name value   Like ASSIGN but the name is evaluated before use.
+   EVALUATE name expression .name ::= value The expression (in regular
+   algebraic notation) is evaluated arithmetically and the result becomes
+   the contents of the named variable. If the expression contains any
+   variables they are evaluated first.
+   _EVALUATE name expression   Like EVALUATE but the name is evaluated
+   before use.
+   INCREMENT name expression   Evaluates the variables in the expression,
+   then evaluates the expression arithmetically, and then adds the value
+   to the contents of the named variable, which must be a number or an
+   algebraic expression. If the expression is empty, a value of 1 is used.
+   _INCREMENT name expression   Like INCREMENT but the name is evaluated
+   before use.
+   DECREMENT name expression   Evaluates the variables in the expression,
+   then evaluates the expression arithmetically, and then subtracts the
+   value from the contents of the named variable, which must be a number
+   or an algebraic expression. If the expression is empty, a value of 1 is
+   used.
+   _DECREMENT name expression   Like DECREMENT but the name is evaluated
+   before use.
+   DECLARE name = list   An array declaration can include an initializer
+   list; items in the list are evaluated before assignment. This can be
+   defeated by doubling any backslashes or enclosing individual arguments
+   in \fliteral().
+   DO name arguments name arguments When invoking a macro with a DO
+   command (or an implied one), the arguments are evaluated, then assigned
+   to \%1, \%2, etc, and the macro's name to \%0.
+   (SETQ name value)   Kermit also includes a mini-[67]LISP interpreter
+
+   Variables are evaluated automatically in Kermit commands simply by
+   referencing them, according to rules given in Table 1. The following
+   functions can be used to change how a a particular variable is
+   evaluated:
+
+   CAPTION: Table 3. Kermit Functions for Evaluating Variables
+
+   Function Argument Description
+   \fcontents() \%x or \&x[y] Evaluates the variable or array element
+   (which normally would be evaluated recursively) one level deep.
+   \fdefinition() name If the argument is a \%x variable or an array
+   element, it is evaluated to get the name; otherwise the argument is the
+   name. Its definition is returned with no recursion.
+   \m() name Equivalent to \fdefinition().
+   \frecurse() \m(name) Forces recursive evaluation of a macro definition
+   (a.k.a. long variable name). NOTE: \frecurse() can operate on any kind
+   of variable as well as on any string containing any mixture of
+   variables.
+
+C-Kermit's RENAME Command
+
+   C-Kermit's RENAME command, which is used for changing the names of
+   local files or for moving files locally, has two basic forms:
+
+   RENAME [ optional-switches ] oldfilename newfilename
+          This form lets you change the name of a single file from
+          oldfilename to newfilename. Example:
+          rename thismonth.log lastmonth.log
+
+   RENAME [ optional-switches ] filespec directoryname
+          This form lets you move (without renaming) one or more files
+          (all the files that match the filespec, which may contain
+          wildcard characters such as "*") to the given directory.
+          Example:
+          rename *.txt ~/textfiles/
+
+   Traditionally, the optional switches have been:
+
+   RENAME /LIST oldname newname
+          Display the old and new name for each file while renaming.
+          Synonyms: /LOG, /VERBOSE. Example:
+          rename /list *.txt ~/textfiles/
+
+   RENAME /NOLIST oldname newname
+          Don't display the old and new name for each file while renaming.
+          This is the default behavior. Synonyms: /NOLOG, /QUIET. Example:
+          rename /nolist *.txt ~/textfiles/
+
+   Reminder: Every switch starts with a slash (/) and must be preceded by
+   a space.
+
+New RENAME Features for C-Kermit 9.0
+
+   A series of new options (switches) have been added to let you change
+   the names of multiple files at once by case conversion, string
+   substitution, or character-set conversion, and optionally also move
+   them to a different directory:
+
+     /LOWER:      Convert the filename to lowercase
+     /UPPER:      Convert the filename to uppercase
+     /CONVERT:    Change the filename's character encoding
+     /REPLACE:    Do string substitutions on the filename
+
+   If the source-file specification includes a path or directory, any
+   changes are applied to the filenames only, not to the directory or path
+   specification.
+
+   Since name changes, when applied to many files at once, can have
+   consequences that are not easily undone, there are also some new
+   controls, safeguards, and conveniences:
+
+   RENAME /SIMULATE
+          This switch tells Kermit to show you what the RENAME command
+          would do without actually doing it. /SIMULATE implies /LIST.
+
+   RENAME /COLLISION:{FAIL,SKIP,OVERWRITE}
+          This switch governs Kermit's behavior when renaming multiple
+          files, and any of the names would collide with the name of a
+          file that already exists. The default, for compatibility with
+          earlier releases of C-Kermit, is OVERWRITE, i.e. write over the
+          existing file. The other two protect existing files. SKIP means
+          to skip (not rename) the file that would cause the collision,
+          and proceed to the next file, if any. FAIL means that no files
+          will be renamed if there would be any collisions; for this
+          Kermit makes two passes, checking each new name it constructs
+          for existence before starting the second pass (however, there is
+          no guarantee that in the second pass, it won't create the same
+          new name for more than one file; in that case, it will stop
+          before executing the second rename). Example:
+          rename /simulate /collision:proceed * ~/tmp/
+
+   Reminder: In switches such as /COLLISION that take arguments
+   (operands), the switch name and its argument(s) are separated by a
+   colon (:) with no intervening spaces. Also remember that Kermit
+   keywords can always be abbreviated by leaving off characters from the
+   right, as long as the result is still unique in its context. Thus "ren
+   /col:f" would be equivalent to "rename /collision:fail".
+
+   You can change the following preferences for the RENAME command with
+   the new SET RENAME command:
+
+   SET RENAME LIST { ON, OFF }
+          Tells the RENAME command whether to list its actions if you
+          don't include a /LIST or /NOLIST or equivalent switch.
+
+   SET RENAME COLLISION { FAIL, OVERWRITE, SKIP }
+          Tells the RENAME command how to handle filename collisions in
+          the absence of a /COLLISION switch. That is, it replaces the
+          default action of OVERWRITE with action of your choosing, which
+          is then used in any RENAME command that does not include an
+          explicit /COLLISION switch.
+
+   SHOW RENAME
+          Displays the current SET RENAME settings.
+
+Changing the Case of Filenames
+
+   RENAME /UPPER:{ALL,LOWER} filespec [ directory ]
+          RENAME /LOWER:{ALL,UPPER} filespec [ directory ]
+          These switches let you change the alphabetic case of letters in
+          all the files whose names match the filespec. If a directory
+          name is given after the filespec, then the files are also moved
+          to the given directory.
+
+   By default, all files that match the given filespec have their names
+   changed (if necessary). This is what the ALL argument means, e.g.:
+
+     RENAME /LOWER:ALL *
+     RENAME /LOWER *
+
+   You can use either form: RENAME /LOWER is equivalent to RENAME
+   /LOWER:ALL. The other argument (/LOWER:UPPER or /UPPER:LOWER) means to
+   leave mixed-case filenames alone, and rename only those files whose
+   names contain letters of only the given case. Examples:
+
+   RENAME /UPPER:ALL foo.bar
+          Changes the filename to FOO.BAR.
+
+   RENAME /UPPER foo.bar
+          Same as "rename /upper:all foo.bar".
+
+   RENAME /UPPER foo.bar ~/old/
+          Renames foo.bar to FOO.BAR and moves it to the user's old
+          directory (Unix).
+
+   RENAME /LOWER *
+          Changes the names of all files to have only lowercase letters.
+
+   RENAME /LOWER:UPPER *
+          Changes the names of only those files whose names contain no
+          lowercase letters to have only lowercase letters. For example,
+          FOO.BAR would be changed, Foo.Bar would not be changed. foo.bar
+          would not be changed either because it's already all lowercase.
+
+   RENAME /LOWER:UPPER * ~/new/
+          Same as the previous example, but also moves each file to the
+          user's new directory (whether it was renamed or not).
+
+   Case conversion works reliably for ASCII characters only. Kermit uses
+   the C library for this, which on any given platform might or might not
+   handle non-ASCII letters, and if it does, then how it works would
+   normally depend on your locale definitions (the LC_CTYPE and/or LANG
+   environment variable in Unix). When non-ASCII letters are not handled
+   by the C library, the RENAME command does change their case. For
+   example, Olga_Tañón.txt might become OLGA_TAñóN.TXT.
+
+String Replacement in Filenames
+
+   The RENAME command also lets you change filenames by string
+   substitution.
+
+   RENAME /FIXSPACES[:String] filespec [ directory ]
+          Replaces all spaces in each matching filename by the given
+          string, if any, or if none is given, by underscore. Examples:
+
+     RENAME /FIX *
+     RENAME /FIXSPACES:_ *
+     RENAME /FIXSPACES:"" *
+     RENAME /FIXSPACES:<040> *
+
+          The first two are equivalent, replacing each space with
+          underscore; a file called "My Favorite Photo.jpg" becomes
+          "My_Favorite_Photo.jpg". The third example removes all spaces
+          ("MyFavoritePhoto.jpg"). The fourth replaces each space with the
+          string "<040>" ("My<040>Favorite<040>Photo.jpg").
+
+   RENAME /REPLACE:{{String1}{String2}} filespec [ directory ]
+          Renames each matching file by changing occurrences of String1 in
+          its name to String2. If a directory specification is included,
+          the file is also moved to the given directory (even if the name
+          was not changed). Note that in this case, the curly braces are
+          part of the command. Example:
+
+     RENAME /REPLACE:{{.jpeg}{.jpg}} *
+
+          changes all *.jpeg files to *.jpg.
+
+   By default, RENAME /REPLACE changes all occurrences of String1 in each
+   filename to String2 so, for example, if you had a file called
+   abcjpegxyz.jpeg, the command just shown would change its name to
+   abcjpgxyz.jpg.
+
+   For greater control and flexibility, the /REPLACE: switch argument can
+   take several distinct forms:
+
+   RENAME /REPLACE:String1 filespec [ directory ]
+          This means to remove all occurrences of String1 from the given
+          filenames name. It is equivalent to /REPLACE:{{String1}{}}. A
+          handy use for this option is to remove spaces from filenames.
+
+   RENAME /REPLACE:{{String1}{String2}} filespec [ directory ]
+          As already noted, this replaces every occurrence of String1 with
+          String2 in each filename. Alphabetic case in string matching is
+          done according to the current SET CASE setting.
+
+   RENAME /REPLACE:{{ }{_}} filespec [ directory ]
+          This replaces all spaces in the given filenames with underscore,
+          equivalent to RENAME /FIXSPACES.
+
+   RENAME /REPLACE:{{String1}{String2}{Options}} filespec [ directory ]
+          Options can be included that add more control to the process.
+          The option string is a sequence of characters; each character in
+          the string is an option. The choices are:
+
+   A String matching is to be case-sensitive, regardless of SET CASE.
+   a String matching is to be case-independent, regardless of SET CASE.
+   ^ String replacement will occur only at the beginning of the filename.
+   $ String replacement will occur only at the end of the filename.
+   1 Only the first occurrence of the string will be replaced.
+   2 Only the second occurrence of the string will be replaced.
+   3 4 5 6 7 8 ...
+   9 Only the ninth occurrence of the string will be replaced.
+   - (hyphen, minus sign) Before a digit: occurrences will be counted from
+   the right.
+   ~ (tilde) Before digit or minus sign: all occurrences but the given one
+   will be replaced.
+
+   The tilde modifier works only with single-byte character sets such as
+   ASCII, CP437, ISO 8859-1, etc, but not with multibyte character sets
+   such as UCS2, UTF8, or any of the Japanese Kanji sets.
+
+   Here are some examples showing how to use the /REPLACE options:
+
+   RENAME /REPLACE:{{foo}{bar}{^}} *
+          For all files whose names start with "foo", replaces the "foo"
+          at the beginning with "bar".
+
+   RENAME /REPLACE:{{}{New-}{^}} *
+          Prepends "New-" to the name of each file.
+
+   RENAME /REPLACE:{{.jpeg}{.jpg}{$}} *
+          Replaces ".jpeg" at the end of each filename with ".jpg".
+
+   RENAME /REPLACE:{{}{-Old}{$}} *
+          Appends "-Old" to the name of each file.
+
+   RENAME /REPLACE:{{foo}{bar}{a}} *
+          Replaces "foo", "FOO", "Foo", "fOO", etc, with "bar" in each
+          filename.
+
+   RENAME /REPLACE:{{foo}{bar}{A}} *
+          Replaces only (lowercase) "foo" in filenames with "bar".
+
+   RENAME /REPLACE:{{a}{XX}} *
+          Changes every "a" to "XX". For example a file called "a.a.a.a"
+          would become "XX.XX.XX.XX".
+
+   RENAME /REPLACE:{{a}{X}{2}}
+          Changes only the second "a" to "X". For example a file called
+          "a.a.a.a" would become "a.X.a.a".
+
+   RENAME /REPLACE:{{a}{X}{-1}}
+          Changes only the final "a" in the filename (it doesn't have to
+          be at the end) to "X". For example a file called "a.b.a.c.a.d"
+          would become "a.b.a.c.X.d".
+
+   RENAME /REPLACE:{{foo}{NOTFOO}{-2}}
+          Changes the second-to-last "foo" (if any) in the filename to
+          "NOTFOO".
+
+   RENAME /REPLACE:{{foo}{}{-2}}
+          Deletes the second-to-last "foo" (if any) from the filename.
+
+   RENAME /REPLACE:{{.}{_}{~1}}
+          Changes all but the first period to an underscore; for example,
+          "a.b.c.d.e" would become "a.b_c_d_e".
+
+   RENAME /REPLACE:{{.}{_}{~-1}}
+          Changes all but the final period to an underscore; for example,
+          "a.b.c.d.e" would become "a_b_c_d.e".
+
+   In the Options field, digits (and their modifiers), ^, and $ are
+   mutually exclusive. If you include more than one of these in the option
+   string, only the last one is used. Similarly for 'a' and 'A':
+
+   RENAME /REPLACE:{{foo}{bar}{Aa2$^}} *
+          This replaces "foo" with "bar" no matter what combination of
+          upper and lower case letters are used in "foo" ('a' overrides
+          'A' in the option string), but only if "foo" is at the beginning
+          of the filename ('^' overrides '$' and '2').
+
+   If you give an /UPPER or /LOWER switch and a /REPLACE switch in the
+   same RENAME command, the /REPLACE action occurs first, then the case
+   conversion:
+
+   RENAME /REPLACE:{{foo}{bar}} /UPPER * /tmp
+          For each file: changes all occurrences of "foo" in the name to
+          "bar", then converts the result to uppercase, and then moves the
+          file to the /tmp directory. So (for example) "foot.txt" would
+          become "/tmp/BART.TXT".
+
+Changing the Character Encoding of Filenames
+
+   As you know, text is represented on the computer as a series of
+   numbers, with a given number corresponding to a given character
+   according to some convention or standard. Filenames are represented the
+   same way. The trouble is, different computers, or even different
+   applications on the same computer, might use different standards or
+   conventions ("character sets") for representing the same characters.
+   Usually ASCII is safe, but anything beyond that -- non-ASCII characters
+   such as accented or non-Roman letters -- is likely to vary. Sometimes
+   you have text that's in the "wrong" character set and you need to
+   convert it to something you can can use. Kermit has always been able to
+   handle this as part of file transfer and terminal emulation, as well as
+   being able to convert text files locally with its TRANSLATE command.
+   Now there's a way to convert filenames too, for example after copying
+   files from a CD that uses a different encoding:
+
+   RENAME /CONVERT:charset1:charset2 filespec [ directory ]
+          Converts filenames from the first character set to the second
+          one. The two character sets can be chosen from the SET FILE
+          CHARACTER-SET list; for complete details see [68]this page. For
+          example suppose you have a file called "Olga_Tañón.txt" on a
+          computer where ISO 8859-1 Latin Alphabet 1 is used, and you have
+          transported it (e.g. on CDROM) to another computer where the
+          text encoding is UTF8. Maybe you also have a lot of other files
+          with similar names in the same directory. You can convert the
+          filenames to UTF8 like this:
+
+     RENAME /CONVERT:latin1:utf8 *
+
+   /CONVERT can not be combined with /UPPER, /LOWER, or /REPLACE.
+
+   You should NOT use UCS2 for filenames since this encoding is not
+   compatible with C strings used in Unix and elsewhere.
+
+   RENAME /CONVERT affects only the filename, not the file's contents. You
+   can use the TRANSLATE command to convert the encoding of the contents
+   of a text file.
+
+Other New Features
+
+   See the [69]C-Kermit Daily Builds page for details. Very briefly:
+
+     * Perhaps most important, modernized makefile targets for the major
+       Unix platforms: Linux, Mac OS X, AIX, Solaris, etc. These are
+       somewhat automated; not autoconf exactly, but they cut down
+       significantly on redundant targets. For example, one single "linux"
+       target works on many (hopefully all) different Linux
+       configurations, where before different targets were required for
+       different combinations of (e.g.) curses / ncurses / no curses;
+       32-bit / 64-bit; different feature sets and library locations.
+       (Separate targets are still required for Kerberos and/or SSL
+       builds, but they are "subroutinized".)
+     * Bigger buffers, more storage for commands, macros, scripts,
+       strings, and filename expansion in 64-bit versions and in 32-bit
+       versions that support large files.
+     * User-settable FTP timeout, works on both the data and control
+       connection.
+     * FTP access to ports higher than 16383.
+     * Built-in FTP client for VMS. This is the [70]same FTP client Unix
+       C-Kermit has had since version 8.0, minimally adapted to VMS by
+       SMS, supporting binary and Stream_LF file transfer only (in other
+       words, nothing to handle RMS files), but otherwise fully functional
+       (and scriptable) and theoretically capable of making connections
+       secured by SSL (at least it compiles and links OK with SSL - HP SSL
+       1.3 in this case).
+     * Large file support in VMS, also by SMS. Alpha and Itanium only (not
+       VAX). VMS C-Kermit was already able to transfer large files, but
+       the file-transfer display (numbers and progress bar) and statistics
+       were wrong because they used ints. In the present Alpha test
+       release, this is an optional feature requested by including the "f"
+       option in P1.
+     * New PUTENV command that allows Kermit to pass environment variables
+       to subprocesses (Unix only, "help putenv").
+     * New TOUCH command, many file selection options ("help touch").
+     * New DIRECTORY command options and switches (/TOP, /COUNT;
+       HDIRECTORY, WDIRECTORY...). To see the ten biggest files in the
+       current directory: "dir /top:10 /sort:size /reverse *" or
+       equivalently, "hdir /top:10 *". WDIR lists files in reverse
+       chronological order, shorthand for "dir /sort:date /reverse".
+     * New command FSEEK /FIND:string-or-pattern, seeks to the first line
+       in an FOPEN'd file that contains the given string or matches the
+       given pattern. Example: Suppose you have a file of lines like this:
+
+     quantity   description...
+       in which the first "word" is a number, followed by a description
+       (for example, the name of an item). Here is how to use FSEEK to
+       quickly get the total quantity of any given item, which is passed
+       as a parameter (either a literal string or a pattern) on the
+       command line:
+
+#!/usr/local/bin/kermit +
+if not def \%1 exit 1 Usage: \fbasename(\%0) string-or-pattern
+
+.filename = /usr/local/data/items.log        # Substitute the actual filename
+set case off                                 # Searches are case-independent
+fopen /read \%c \m(filename)                 # Open the file
+if fail exit 1 "\m(filename): \v(errstring)" # Fail: exit with error message
+.total = 0                                   # OK: Initialize the total
+echo Searching "\%1"...
+
+while true {
+    fseek /line /relative /find:\%1 \%c 0    # Get next line that has target
+    if fail break                            # Failure indicates EOF
+    fread /line \%c line                     # Read it
+    if fail break                            # (shouldn't happen)
+    increment total \fword(\m(line),1)       # Increment the total
+}
+fclose \%c                                   # Close the file
+echo Total for "\%1" : \m(total)             # Print the result
+exit 0
+
+       The syntax of the FSEEK command in this example indicates that each
+       search should start relative to the current file line. Since Kermit
+       is an interpretive language, FSEEK is a lot faster than FREAD'ing
+       each line and checking it for the target, especially for big files.
+       An especially handy use for FSEEK is for use with potentially huge
+       sequentially timestamped logs, to seek directly to the date-time
+       where you want to start processing. Some other improvements for the
+       FOPEN/FREAD/FWRITE/FCLOSE family of commands are included also
+       (performance, bug fixes, convenience features), listed in the
+       [71]change log. (Prior to 9.0.299 Alpha.02, the FSEEK /FIND:
+       command always started from the top.)
+     * MIME synonyms for character-set names: A new equivalence between
+       MIME names and Kermit names for character sets, with a new table
+       showing the supported sets [72]HERE (this feature is also
+       illustrated in the [73]Weblog script).
+     * Unix C-Kermit SET TERMINAL TYPE now passes its arguments to
+       subprocesses as an environment variable.
+     * SET SESSION-LOG TEXT now strips out ANSI escape sequences from the
+       session log.
+     * For interacting with POP servers over clear-text or SSL-secured
+       connections:
+          + New SSL and TLS "raw" connections (no Telnet protocol).
+          + New INPUT command options for reading and capturing (perhaps
+            while scanning) continuous incoming text, such as INPUT
+            /NOWRAP (explained [74]HERE).
+          + New \femailaddress() command to extract the e-mail address
+            from an Internet mail message To: or From: line, used in
+            fetching mail from POP servers.
+          + Improved date parsing commands and functions for parsing the
+            different date formats that can appear in e-mail.
+          + Production scripts for fetching mail from a secure POP server,
+            available [75]HERE.
+     * Various features added to make Kermit more useful for writing CGI
+       scripts such as INPUT /COUNT:n to INPUT exactly n characters
+       (useful for reading form data).
+     * New \fpictureinfo() function for getting orientation and dimensions
+       of JPG and GIF images, described [76]HERE.
+     * New \fgetpidinfo() function for testing whether a given process
+       exists.
+     * \fkwdvalue() function fixed to allow multiword values.
+     * New function \fcount(s1,s2) to tell the number of occurrences of s1
+       in s2.
+     * New \flopx() function returns rightmost field from string (such as
+       a file's extension).
+     * New function \ffunction(s1) to tell whether a built-in s1 function
+       exists.
+     * New \fsqueeze(s1) function removes leading and trailing whitespace
+       from string s1, changes tabs to spaces, squeezing each run of
+       repeated whitespace characters to a single space.
+     * Compact substring notation: \s(somestring[12:18]) is the same as
+       \fsubstring(\m(somestring),12,18), i.e. the substring starting at
+       position 12, 18 characters long. \s(somestring[12_18]) means
+       characters 12 through 18 of the string (7 characters). Also,
+       \s(somestring[17.]) returns character number 17 of somestring.
+     * The string indexing functions now accept an optional trailing
+       argument specifying the occurrence number of the target string.
+       Likewise, \fword() can fetch words from the right as well as the
+       left.
+     * The COPY command in Unix C-Kermit has a new /PRESERVE switch,
+       equivalent to Unix "cp -p".
+     * ASKQ /ECHO:c can be used to make the characters the user types echo
+       as the character c, e.g. asterisk when typing a password.
+     * IF LINK filename to test if the filename is a symlink.
+     * Ctrl-K, when typed at the command parser, replaces itself with most
+       recently entered file specification.
+     * In Unix, the ability to log a terminal session to a serial port,
+       for use with speaking devices or serial printers; described
+       [77]HERE. Also for the same purpose, SET SESSION-LOG
+       NULL-PADDED-LINES for a speech synthesizer than needed this.
+     * Adaptation to OpenSSL 0.9.8 and 1.0.0.
+     * Lifted the restriction on having a remote Kermit program send
+       REMOTE commands to the local. A very big ex-client needed to be
+       able to do this (branches would connect to headquarters and upload
+       files; HQ would then download patches, a REMOTE HOST command was
+       necessary to allow the remote headquarters machines to install the
+       patches on the local client; of course the client first has to
+       ENABLE HOST because this is a risky scenario). The reason for the
+       restriction was that the server, upon receiving any REMOTE command
+       would send the results (output) back to the client as a file
+       transfer with "destination screen", but of course the remote has no
+       screen.
+     * Added XMESSAGE, which is to [78]MESSAGE as XECHO is ECHO: it
+       outputs a string with no line terminator DEBUG MESSAGE is ON.
+     * Fixed \frecurse() to not dump core when invoked with no arguments.
+     * Improved text for HELP FUNCTION SPLIT and HELP FUNCTION WORD.
+     * Patches for Debian 6.0 "Squeeze" from Ian Beckwith.
+     * \fcontents(\&a[3]) got an error if the array was declared but its
+       dimension was less than 3. Now it simply returns and empty string.
+     * \fsplit(), when parsing lines from CSV and TSV files, was treating
+       backslash in the data the same way it treats backslash in Kermit
+       commands. This was fixed to treat backslash like any other
+       character.
+     * Builds for Solaris 9 and later now use streams ptys rather then the
+       old BSD-style ptys. Thanks to Gary Mills for this one, who noticed
+       that he couldn't have more than 48 C-Kermit SSH sessions going at
+       once and figured out why.
+     * As noted [79]below DES encryption is being retired from many
+       platforms and libraries that once used it. I changed the Solaris
+       and Linux OpenSSL builds to account for this by testing for it. I
+       probably should also add a OMITDES option to omit DES even if it is
+       installed, but "KFLAGS=-UCK_DES" seems to do the job for now.
+     * I changed the Linux build to test for the OpenSSL version (like the
+       Solaris version already did), rather than assuming OpenSSL 0.9.7.
+     * A couple minor changes for Tru64 Unix 5.1B from Steven Schweda but
+       we still have some trouble on that platform. As a workaround "make
+       osf1" can be used there.
+     * Unix makefile and man page are now included in the Zip
+       distribution.
+     * \fjoin(), which is the inverse function of fsplit() now accepts CSV
+       and TSV as a second argument, to transform an array into a
+       comma-separated or tab-separated value list, as described [80]HERE.
+     * Even in 2010, Unix distributions continue to change their UUCP
+       lockfile conventions. C-Kermit 9.0 contains support from Joop
+       Boonen for OpenSuSE >= 11.3 and recent Debian, which no longer have
+       baudboy.h, which first appeared in Red Hat 7.2 in 2003.
+     * From Lewis McCarthy:
+
+     Based on code inspection, C-Kermit appears to have an SSL-related
+     security vulnerability analogous to that identified as CVE-2009-3767
+     (see e.g.
+     [81]http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3767).
+
+     I'm attaching a patch for this issue relative to the revision of
+     ck_ssl.c obtained from a copy of
+     [82]http://www.columbia.edu/kermit/ftp/test/tar/x.zip downloaded on
+     2010/07/30, which I believe is the latest.
+     When this flaw was first widely publicized at last year's Black Hat
+     conference, it was claimed that some public certificate authorities
+     had indeed issued certificates that could be used to exploit this
+     class of vulnerability. As far as I know they have not revealed
+     specifically which public CA(s) had been found issuing such
+     certificates. Some references:
+          + [83]http://www.mseclab.com/?p=180
+          + [84]http://www.theregister.co.uk/2009/07/30/universal_ssl_cert
+            ificate/
+
+     * Peter Eichhorn reported that "RENAME ../x ." didn't work; fixed
+       now.
+     * If only one file is FOPEN'd, FCLOSE given with no arguments would
+       close it; this was a "convenience feature" that turned out to be
+       dangerous. For safety FCLOSE has to require a specific channel
+       number or the word ALL.
+     * Added \fstrcmp(s1,s2,case,start,length), which has the advantage
+       over IF EQU,LGT,LLT that case sensitivity can be specified as a
+       function arg, and also substrings can be specified.
+     * New built-in functions:
+
+        \fcvtcsets(string,cs1,cs2)
+                Function to convert a string from one character set to
+                another.
+
+        \fdecodehex(string[,prefix])
+                Function to decode a string containing hex escapes.
+
+        \fstringtype(string)
+                Function to tell whether a string is 7-bit, 8-bit, or
+                UTF-8.
+
+       For the motivation for these features and an application that uses
+       them to analyze web logs, see the Weblog script below.
+     *
+
+        Lazy IF Conditions: Now you can do this:
+                define foo some number
+                if foo command
+
+        instead of this:
+                define foo some number
+                if \m(foo) command
+
+       Of course the old way still works too. But watch out because if the
+       variable name is the same as a symbolic IF condition (for example
+       COUNT), it won't do what you expected. (IF COUNT was used for loop
+       control in early versions of MS-DOS Kermit, before it got real FOR
+       and WHILE loops; it was added to C-Kermit for compatibility, and it
+       can't be removed because that could break existing scripts).
+     * Escape sequences are now stripped from text-mode session logs not
+       only in CONNECT sessions but also in whatever is logged by the
+       INPUT command; described in the [85]next section.
+     * New commands for selectively issuing progress or debugging messages
+       from scripts, also described in the next section.
+     * Fix from [86]John Dunlap to prevent the fixed packet-timeout
+       interval from going to an unexpected value.
+     * Alpha.04 fixes a problem with FTP connections made from 64-bit Unix
+       platforms. All the other changes in this section were to Alpha.03.
+     * Relaunching a closed SSH connection with the CONNECT command is now
+       possible, as it always has been with Telnet and other connection
+       types; suggested by Peter Eichhorn (needs testing).
+     * A symbol conflict fixed that prevented successful build on
+       [87]FreeBSD 8.0.
+     * Fixes from Christian Corti for building on SunOS 4.1.
+     * New aixg target for building on AIX with gcc.
+     * New aix+ibmssl target. This is nice because the IBM-supplied SSL
+       libraries and header files are in a known location; no need to
+       [88]set environment variables giving their locations.
+     * "Large File Support" is now included by default on Alpha and IA64
+       hardware on VMS 7.3 and later, and it should work much better than
+       before.
+     * Kermit's internal FTP client is now included by default in any
+       build that also includes TCP/IP networking. At present, the FTP
+       client seems to work well for binary-mode transfers; text (ASCII)
+       mode transfers still need some work. In builds that also include
+       Secure Sockets Layer (SSL) security (next item) the FTP client
+       should be able to make securely authenticated and encrypted
+       connections.
+     * In network builds that request OpenSSL support, e.g.:
+
+     $ @ckvker  ""  ""  "CK_SSL"
+       the OpenSSL version is detected automatically and the appropriate
+       compile-time options are emitted (such as
+       OPENSSL_DISABLE_OLD_DES_SUPPORT).
+     * Preliminary / limited support for the ODS-5 file system on VMS 7.2
+       and later, Alpha and Itanium only (needs testing): Filenames can be
+       mixed case and can be longer.
+     * Support for older and older VMS versions.
+     * In the VMS build procedure, CKVKER.COM, the "i" option in P1 now
+       means don't include the internal FTP client, and the "f" option
+       means do not include "Large File" support. Large File support in
+       VMS really only applies to the file-transfer display and
+       statistics, which would go out of whack as soon as the byte count
+       overflowed 31 bits because this is C-Kermit, built with the C
+       compiler and the C library (runtime system), which did not support
+       long integers until VMS 7.3.
+     * The [89]LISP Operator ROUND now takes an optional second argument
+       that specifies the number of places to round to, e.g.
+       (ROUND dollars 2) rounds dollars to 2 decimal places.
+     * Improved pattern matching in many commands for both strings and
+       filenames.
+     * Various minor new features, plus numerous bug fixes and speedups.
+
+Incompatibilities
+
+   A top priority for new Kermit software releases has always been
+   backwards compatibility. A script written for a previous Kermit release
+   should run the same way in the new release.
+
+   There's one exception this time. The [90]\fsplit() function is
+   incredibly handy, it can do almost anything, up to and including
+   parsing a LISP program (the underlying code is the basis of the
+   [91]S-Expression interpreter). But did you ever try to use it to parse
+   (say) a Tab-Separated-List (TSV file) or Comma-Separated-List (CSV)? It
+   works as expected as long as the data contains only 7-bit characters.
+   But if your data contains (say) Spanish or German or Russian text
+   written in an 8-bit character set such as ISO 8859-1, every 8-bit
+   character (any value 128-255) is treated as a break character. This is
+   fixed in C-Kermit 9.0 by treating all 8-bit bytes as "include"
+   characters rather than break characters, a total reversal of past
+   behavior. I don't think it will affect anyone though, because if this
+   had happened to anyone, I would have heard about it!
+
+   Since most standard 8-bit character sets have control characters in
+   positions 128-160, it might have made sense to keep 128-160 in the
+   break set, but with the proliferation of Microsoft Windows code pages,
+   there is no telling which 8-bit character is likely to be some kind of
+   text, e.g. "smart quotes" or East European or Turkish accented letters.
+
+What's Not In C-Kermit 9.0
+
+   Some large projects that were contemplated have not been done,
+   including:
+     * IPv6. Honestly, there has been zero demand for this, and it would
+       be a lot of work and disruption to the code base. Volunteers
+       welcome, I guess. It could be a CS project.
+     * A database interface - MySQL or ODBC. For this one, there is some
+       demand but I haven't had a chance to even look into it.
+     * There's a looming issue with DES encryption; major vendors are
+       removing it from their platforms, starting with Apple in Mac OS X
+       10.6, with Microsoft to follow suit. A secure version of Kermit can
+       be built without DES, but in limited testing successful connections
+       were spotty (e.g. with Kerberos 5).
+     * Cleaning up the Unix makefile. It has 25 years' worth of targets in
+       it. It is very likely safe to remove most of them, since (a) most
+       old platforms have gone away by now, or have been upgraded, due to
+       hacking vulnerabilities; (b) the market has consolidated
+       considerably; and (c) most of the new features of C-Kermit 9.0,
+       such as large files, won't be of any use on older platforms and
+       previous C-Kermit versions will remain available.
+     * Packages. Everybody wants an install package custom made for their
+       own computer, Linux RPMs being the prime example but far from the
+       only one. These will come, I suppose (especially with some Linux
+       sites having a policy against installing any application that does
+       not come as an RPM). In the meantime, here's a page that describes
+       some Kermit-specific issues in package construction:
+       [92]ckpackages.html.
+
+And a Loose End...
+Using External File-Transfer Protocols on Secure Connections
+
+   After C-Kermit 8.0.212 Dev.27 (2006/12/22), I spent a big chunk of time
+   trying to solve a particular problem that some of you have complained
+   about and others might be familiar with: If you use C-Kermit to make a
+   secure Telnet connection to another host (e.g. with Telnet SSL/TLS,
+   Kerberos, or SRP) and then attempt to transfer a file using an external
+   protocol such as Zmodem, it doesn't work.
+
+   That's because as coded (through 8.0.211), C-Kermit simply starts the
+   external protocol in a fork with its standard i/o redirected to the
+   connection. This completely bypasses the encryption and decryption that
+   is done by C-Kermit itself, and of course it doesn't work. The same
+   thing occurs if you use the REDIRECT command. The routine that handles
+   this is ttruncmd() in ckutio.c.
+
+   In order to allow (say) Zmodem transfers on secure connections, it is
+   necessary for C-Kermit to interpose itself between the external Zmodem
+   program and the connection, decrypting the incoming stream before
+   feeding it to Zmodem and encrypting Zmodem's output before sending out
+   the connection.
+
+   In principal, this is simple enough. We open a pseudoterminal pair
+   ("master" and "slave") for Zmodem's i/o and we create a fork and start
+   Zmodem in it; we read from the fork pty's standard output, encrypt, and
+   send to the net; we read from the net, decrypt, and write to the fork
+   pty's standard input.
+
+   In practice, it's not so simple. First of all, pseudoterminals (ptys)
+   don't seem to interface correctly with certain crucial APIs, at least
+   not in the OS's I have tried (Mac OS X, Linux, NetBSD, etc), such as
+   select(). And i/o with the pty often - perhaps always - fails to
+   indicate errors when they occur; for example, when the fork has exited.
+
+   But, even after coding around the apparent uselessness of select() for
+   multiplexing pty and net, and using various tricks to detect when the
+   external protocol exits and what its exit status is, I'm still left
+   with a show-stopping problem: I just simply can not download (receive)
+   a file with Zmodem, which is the main thing that people would probably
+   want to do. I can send files just fine, but not receive. The incoming
+   stream is delivered to Zmodem (to the pty slave) but upon arrival at
+   the Zmodem process itself, pieces are always missing and/or corrupt.
+   Yet I can receive files just fine if I use Kermit itself (C-Kermit or
+   G-Kermit) as the external protocol, rather than Zmodem.
+
+   I can think of two reasons why this might be the case:
+
+    1. Zmodem sends all 8-bit bytes and control codes in the clear, and
+       maybe the pty is choking on them because it thinks it is a real
+       terminal.
+
+   But Zmodem puts its controlling terminal into raw mode. And C-Kermit
+   puts the pty into raw mode too, just for good measure. If any 0xFF
+   codes are in the Zmodem data stream, and it's a Telnet session, Kermit
+   does any needed byte stuffing/unstuffing automatically. Anyway, if I
+   tell Zmodem to prefix everything, it makes no difference.
+
+    2. Zmodem is a streaming protocol and perhaps the pty driver can't
+       keep up with a sustained stream of input at network speeds. What
+       would be the method of flow control?
+
+   I can vary the size of the i/o buffers used for writing to the pty, and
+   get different effects, but I am not able to get a clean download, no
+   matter what buffer size I use. write()'ing to the pty does not return
+   an error, and I can't see the errors because they happen on the master
+   side. It's as if the path between the pty slave and master lacks flow
+   control; I deliver a valid data stream to the pty slave and the master
+   gets bits and pieces. This impression is bolstered somewhat by the
+   "[93]man 7 pty" page in HP-UX, which talks about some special modes for
+   ptys that turn off all termio processing and guarantee a
+   flow-controlled reliable stream of bytes in both directions - a feature
+   that seems to be specific to HP-UX, and exactly the one we need
+   everywhere.
+
+   Well, in Pass One I used C-Kermit's existing pty routines from
+   ckupty.[ch], which are well-proven in terms of portability and of
+   actually working. They are currently used by SET HOST /PTY for making
+   terminal connections to external processes. But these routines are
+   written on the assumption that the pty is to be accessed interactively,
+   and maybe they are setting the fork/pty arrangement up in such a way
+   that that's not suitable for file transfer. The Pass One routine is
+   called xttptycmd() in ckutio.c.
+
+   So in Pass Two I made a second copy of the routine, yttptycmd(), that
+   manages the pty and fork itself, so all the code is in one place and
+   it's simple and understandable. But it still doesn't work for Zmodem
+   downloads. In this routine, I use openpty() to get the pty pair, which
+   is not portable, so I can have access to both the master and slave pty
+   file descriptors. This version can be used only a platforms that have
+   openpty(): Linux, Mac OS X, NetBSD, etc.
+
+   In Pass Three, zttptycmd(), I tried using pipes instead of ptys, in
+   case ptys are simply not up to this task (but that can't be true
+   because if I make a Telnet or SSH connection into a host, I can send
+   files to it with Zmodem, and the remote Zmodem receiver is, indeed,
+   running on a pty). But pipes didn't work either.
+
+   In Pass Four, I extracted the relevant routines into a standalone
+   program based on yttptycmd() (the openpty() version, for simplicity),
+   which I tested on Mac OS X, the idea being to rule out any
+   "environmental" effects of running inside the C-Kermit process. There
+   was no difference -- Kermit transfers (with C-Kermit itself as the
+   external protocol) worked; Zmodem transfers (neither sz or lsz) did
+   not.
+
+   Well, it's a much longer story. As the external protocol, I've tried
+   rzsz, crzsz, and lrzsz. We know that some of these have quirks
+   regarding standard i/o, etc, which is one of the reasons for using ptys
+   in the first place, and i/o does work - just not reliably. Anyway, the
+   1100 lines or so of [94]ckc299.txt, starting just below where it says
+   "--- Dev.27 ---" tell the full story. At this point I have to give up
+   and move on; it might be more productive to let somebody else who has
+   more experience with ptys take a look at it - if indeed anyone still
+   cares about being able to do Zmodem transfers over secure Telnet
+   connections.
+
+   C-Kermit 9.0 contains the three new routines (and some auxiliary ones),
+   but they are not compiled or called unless you build it specially:
+
+     make targetname KFLAGS=-DXTTPTYCMD (builds with xttptycmd())
+     make targetname KFLAGS=-DYTTPTYCMD (builds with yttptycmd())
+     make targetname KFLAGS=-DZTTPTYCMD (builds with zttptycmd())
+
+   These are all in [95]ckutio.c. As noted, the second one works only for
+   Linux, FreeBSD, NetBSD, and Mac OS X, because it uses non-POSIX,
+   non-portable openpty(). If you want to try it on some other platform
+   that has openpty(), you can build it like this:
+
+     make targetname "KFLAGS=-DYTTPTYCMD -DHAVE_OPENPTY"
+
+   (and let me know, so I can have HAVE_OPENPTY predefined for that
+   platform too). The best strategy to get this working, I think, would be
+   to concentrate on yttptycmd(), which is the simpler of the two
+   pty-based routines. If it can be made to work, then we'll see if we can
+   retrofit it to use the ckupty.c routines so it will be portable to
+   non-BSD platforms.
+
+   By the way, if you build with any of [XYZ]TTPTYCMD defined, then the
+   selected routine will always be used in place of ttruncmd(). This is to
+   allow testing on all kinds of connections, not just secure ones, in
+   both local and remote mode. Once the thing works, if it ever does, I'll
+   add the appropriate tests and/or commands.
+
+   By default, in the initial test release, C-Kermit 9.0 uses ttruncmd()
+   on serial connections and ttyptycmd() on network connections. Even when
+   a network connection is not encrypted, Kermit still needs to handle the
+   network protocol, e.g. the quoting of 0xff bytes on Telnet connections.
+
+Demonstration: Fetch Mail from POP Server Secured by SSL
+
+   [96]pop.ksc is a fully elaborated production script for fetching one's
+   mail from a POP3 server over a connection secured by SSL. For
+   explanation and documentation, [97]CLICK HERE. [98]mailcheck is a
+   wrapper for the pop.ksc script, which collects your password one time,
+   and then checks for new mail every 5 minutes (or other selected
+   interval) and calls pop.ksc to fetch it if there is any.
+
+Demonstration: HP Switch Configuration Backup
+
+   A common use for Kermit software is to make automated backups of the
+   configuration of network switches and routers, such as those made by
+   Cisco or Hewlett-Packard (although [99]tftp can be used for this, it is
+   not available in all such devices; Kermit, however, works with those
+   that have tftp as well as those that don't).
+
+   Typically a backup can be done by making a Telnet, SSH, or serial
+   connection to the device with Kermit and giving a command such as "show
+   config" at the command-line prompt of the device with Kermit's session
+   log activated. The result is a list of the commands that were used to
+   establish the current configuration, suitable for feeding back to the
+   device's console (e.g. with C-Kermit's TRANSMIT command) to reestablish
+   the same configuration or to duplicate it on another device.
+
+   At an HP installation it was noted, however, that while the HP switches
+   (various ProCurve models) produced the desired list of commands, they
+   were interspersed with escape sequences for special effects, thus
+   rendering the recorded sessions unsuitable for feeding back into the
+   switches.
+
+   C-Kermit 9.0 introduces a new feature to strip the offending sequences
+   out of a session log, leaving just the text. The command SET
+   SESSION-LOG TEXT activates this feature. In C-Kermit 9.0 Alpha.02 and
+   earlier, escape sequence stripping occurred only while logging
+   interactive (CONNECT) sessions; beginning with Alpha.03 it is done also
+   for data that is read by INPUT commands and therefore works for scripts
+   too.
+
+   A sample HP Switch Configuration Backup script is [100]HERE, and its
+   data file is [101]HERE. This script also illustrates some other new
+   features of Alpha.03:
+
+   MESSAGE text
+          This lets you put debugging messages in your script that can be
+          displayed or not, according to SET DEBUG MESSAGE (below). This
+          way you don't have to change your script for debugging.  Hint:
+          In Unix, invoke the script like this:
+
+     $ DEBUG=1 scriptname arg1 arg2...
+
+          and then include the following command in your script:
+
+     if defined \$(DEBUG) set debug message on
+
+   XMESSAGE text
+          Like MESSAGE but prints the text with no line terminator, so it
+          can be continued by subsequent messages.
+
+   SET DEBUG MESSAGE { ON, OFF, STDERR }
+          ON means MESSAGE commands should print to standard output; OFF
+          means they shouldn't print anything; STDERR means the messages
+          should be printed to [102]stderr. DEBUG MESSAGE is OFF by
+          default, i.e. unless you SET it to ON or STDERR.
+
+   IF DEBUG command
+          Executes the command if SET DEBUG MESSAGE is not OFF.
+
+   The \v(lastcommand) variable
+          This variable contains the previous command. You can use it in
+          debugging and error message to show (for example) exactly what
+          the command was that just failed, without having to make a copy
+          of the command:
+
+set host somehost.somecompany.com
+if fail exit 1 "FATAL - \v(lastcommand)"
+
+          which, if the SET HOST command fails, prints "FATAL - set host
+          somehost.somecompany.com" and then exits with status 1 (which
+          normally indicates failure).
+
+Demonstration: HP iLO Blade Configuration
+
+   [103]THIS DOCUMENT describes a script in production use at Columbia
+   University for configuring and deploying racks full of HP blade servers
+   through their "integrated Lights Out" (iLO) management interface,
+   bypassing the tedious and error-prone process of configuring the
+   servers one by one through the vendor-provided point-and-click Web
+   interface, which is ill-suited to configuring large numbers of blades.
+   The script illustrates some of C-Kermit 9.0's new features; source code
+   is available through the link. The code is apt to change from time to
+   time as new requirements surface.
+
+Demonstration: IBM/Rolm/Siemens CBX Management
+
+   [104]THIS DOCUMENT describes a suite of scripts (some in production,
+   some in development) used to manage the Columbia campus 20,000-line
+   main telephone switch, along with about 10 satellite switches at
+   off-campus locations. These switches are 1980s technology*, their
+   management consoles are serial ports. Access is via Telnet to reverse
+   terminal servers. The scripts allow for interactive sessions as well as
+   automatic production (and in some cases formatting) of different
+   reports required by different groups at different intervals. These
+   scripts replace a whole assortment of ad-hoc ProComm ASPECT scripts
+   that were scattered all over the place, with passwords embedded. The
+   new scripts are intended to be run from a centralized server where
+   there is a single well-secured configuration file, and where they can
+   be used on demand, or in cron jobs. They are modular so code
+   duplication is minimal.
+   __________________________
+   *  Of course the University is deploying new technology but the but the
+   old system will be used in parallel for some time to come.
+
+Demonstration: CSV and TSV Files
+
+   Contents
+
+     * [105]Reading a CSV or TSV Record and Converting it to an Array
+     * [106]Using \fjoin() to create a Comma- or Tab-Separated Value List
+       from an Array
+     * [107]Using CSV or TSV Files
+
+   Comma-Separated Value (CSV) format is commonly output by spreadsheets
+   and databases when exporting data into plain-text files for import into
+   other applications. Here are the details:
+
+   Comma-Separated List Syntax
+
+    1. Each record is a series of fields.
+    2. Records are in whatever format is used by the underlying file
+       system for lines of text.
+    3. Fields within records are separated by commas, with zero or more
+       whitespace characters (space or tab) before and/or after the comma;
+       such whitespace is considered part of the separator.
+    4. Fields with embedded commas must be enclosed in ASCII doublequote
+       characters.
+    5. Fields with leading or trailing spaces must be enclosed in ASCII
+       doublequotes.
+    6. Any field may be enclosed in ASCII doublequotes.
+    7. Fields with embedded doublequotes must be enclosed in doublequotes
+       and each interior doublequote is doubled.
+
+   Here is an example:
+
+aaa, bbb, has spaces,,"ddd,eee,fff", " has spaces ","Muhammad ""The Greatest"" A
+li"
+
+   The first two are regular fields. The second is a field that has an
+   embedded space but in which any leading or trailing spaces are to be
+   ignored. The fourth is an empty field, but still a field. The fifth is
+   a field that contains embedded commas. The sixth has leading and
+   trailing spaces. The last field has embedded quotation marks.
+
+   Prior to C-Kermit 9.0 Alpha.06, C-Kermit did not handle CSV files
+   according to the specification above. Most seriously, there was no
+   provision for a separator to be surrounded by whitespace that was to be
+   considered part of the separator. Also there was no provision for
+   quoting doublequotes inside of a quoted string.
+
+Reading a CSV record
+
+   Now the \fsplit() function can handle any CSV-format string if you
+   include the symbolic include set "CSV" as the 4th parameter. To
+   illustrate, this program:
+
+def xx {
+   echo [\fcontents(\%1)]
+   .\%9 := \fsplit(\fcontents(\%1), &a, \44, CSV)
+   for \%i 1 \%9 1 { echo "\flpad(\%i,3). [\&a[\%i]]" }
+   echo "-----------"
+}
+xx {a,b,c}
+xx { a , b , c }
+xx { aaa,,ccc," with spaces ",zzz }
+xx { "1","2","3","","5" }
+xx { this is a single field }
+xx { this is one field, " and this is another  " }
+xx { name,"Mohammad ""The Greatest"" Ali", age, 67 }
+xx { """field enclosed in doublequotes""" }
+exit
+
+   gives the following results:
+
+[a,b,c]
+  1. [a]
+  2. [b]
+  3. [c]
+-----------
+[ a , b , c ]
+  1. [a]
+  2. [b]
+  3. [c]
+-----------
+[ aaa,,ccc," with spaces ",zzz ]
+  1. [aaa]
+  2. []
+  3. [ccc]
+  4. [ with spaces ]
+  5. [zzz]
+-----------
+[ "1","2","3","","5" ]
+  1. [1]
+  2. [2]
+  3. [3]
+  4. []
+  5. [5]
+-----------
+[ this is a single field ]
+  1. [this is a single field]
+-----------
+[ this is one field, " and this is another  " ]
+  1. [this is one field]
+  2. [ and this is another  ]
+-----------
+[ name,"Mohammad ""The Greatest"" Ali", age, 67 ]
+  1. [name]
+  2. [Mohammad "The Greatest" Ali]
+  3. [age]
+  4. [67]
+-----------
+[ """field enclosed in doublequotes""" ]
+  1. ["field enclosed in doublequotes"]
+-----------
+
+   The separator \44 (comma) must still be specified as the break set (3rd
+   \fsplit() parameter). When "CSV" is specified as the include set:
+     * The Grouping Mask is automatically set to 1 (which specifies that
+       the ASCII doublequote character (") is used for grouping;
+     * The Separator Flag is automatically set to 1 so that adjacent field
+       separators will not be collapsed;
+     * All bytes (values 0 through 255) other than the break character are
+       added to the include set;
+     * Any leading whitespace is stripped from the first element unless it
+       is enclosed in doublequotes;
+     * Any trailing whitespace is trimmed from the end of the last element
+       unless it is enclosed in doublequotes;
+     * If the separator character has any spaces or tabs preceding it or
+       following it, they are ignored and discarded;
+     * The separator character is treated as an ordinary data character if
+       it appears in a quoted field;
+     * A sequence of two doublequote characters ("") within a quoted field
+       is converted to a single doublequote.
+
+   There is also a new TSV symbolic include set, which is like CSV except
+   without the quoting rules or the stripping of whitespace around the
+   separator because, by definition, TSV fields do not contain tabs.
+
+   Of course you can specify any separator(s) you want with either the
+   CSV, TSV, or ALL symbolic include sets. For example, if you have a TSV
+   file in which you want the spaces around each Tab to be discarded, you
+   can use:
+
+\fsplit(variable, &a, \9, CSV)
+
+   \9 is Tab.
+
+   The new symbolic include sets can also be used with \fword(), which is
+   just like \fsplit() except that it retrieves the nth word from the
+   argument string, rather than an array of all the words. In C-Kermit you
+   can get information about these or any other functions with the HELP
+   FUNCTION command, e.g.:
+
+C-Kermit> help func word
+
+Function \fword(s1,n1,s2,s3,n2,n3) - Extracts a word from a string.
+    s1 = source string.
+    n1 = word number (1-based) counting from left; if negative, from right.
+    s2 = optional break set.
+    s3 = optional include set (or ALL, CSV, or TSV).
+    n2 = optional grouping mask.
+    n3 = optional separator flag:
+       0 = collapse adjacent separators;
+       1 = don't collapse adjacent separators.
+
+  \fword() returns the n1th "word" of the string s1, according to the
+  criteria specified by the other parameters.
+
+  The BREAK SET is the set of all characters that separate words. The
+  default break set is all characters except ASCII letters and digits.
+  ASCII (C0) control characters are treated as break characters by default,
+  as are spacing and punctuation characters, brackets, and so on, and
+  all 8-bit characters.
+
+  The INCLUDE SET is the set of characters that are to be treated as
+  parts of words even though they normally would be separators.  The
+  default include set is empty.  Three special symbolic include sets are
+  also allowed:
+
+    ALL (meaning include all bytes that are not in the break set)
+    CSV (special treatment for Comma-Separated-Value records)
+    TSV (special treatment for Tab-Separated-Value records)
+
+  For operating on 8-bit character sets, the include set should be ALL.
+
+  If the GROUPING MASK is given and is nonzero, words can be grouped by
+  quotes or brackets selected by the sum of the following:
+
+     1 = doublequotes:    "a b c"
+     2 = braces:          {a b c}
+     4 = apostrophes:     'a b c'
+     8 = parentheses:     (a b c)
+    16 = square brackets: [a b c]
+    32 = angle brackets:  <a b c>
+
+  Nesting is possible with {}()[]<> but not with quotes or apostrophes.
+
+Returns string:
+  Word number n1, if there is one, otherwise an empty string.
+
+Also see:
+  HELP FUNCTION SPLIT
+
+C-Kermit>
+
+Using \fjoin() to create Comma- or Tab-Separated Value Lists from Arrays
+
+   In C-Kermit 9.0, \fsplit()'s inverse function, [108]\fjoin() received
+   the capability of converting an array into a comma-separated or a
+   tab-separated value list. Thus, given a CSV, if you split it into an
+   array with \fsplit() and then join the array with \fjoin(), giving each
+   function the new CSV parameter in the appropriate argument position,
+   the result will be will be equivalent to the original, according to the
+   CSV definition. It might not be identical, because if the result had
+   extraneous spaces before or after the separating commas, these are
+   discarded, but that does not affect the elements themselves. The new
+   syntax for \fjoin() is:
+
+   \fjoin(&a,CSV)
+          Given the array \&a[] or any other valid array designator, joins
+          its elements into a comma-separated list according to the
+          [109]rules listed above.
+
+   \fjoin(&a,TSV)
+          Joins the elements of the given array into a tab-separated list,
+          also described above.
+
+   [110]Previous calling conventions for \fjoin() are undisturbed,
+   including the ability to specify a portion of an array, rather than the
+   whole array:
+
+declare \&a[] = 1 2 3 4 5 6 7 8 9
+echo \fjoin(&a[3:7],CSV)
+3,4,5,6,7
+
+   Using \fsplit() and \fjoin() it is now possible to convert a
+   comma-separated value list into a tab-separated value list, and vice
+   versa (which is not a simple matter of changing commas to tabs or vice
+   versa).
+
+Applications for CSV Files
+
+   Databases such as MS Access or MySQL can export tables or reports in
+   CSV format, and then Kermit can read the resulting CSV file and do
+   whatever you like with it; typically something that could not be done
+   with the database query language itself (or that you didn't know how to
+   do that way): create reports or datasets based on complex criteria or
+   procedures, edit or modify some fields, etc, and then use \fjoin() to
+   put each record back in CSV form so it can be reimported into a
+   spreadsheet or database.
+
+   Here is a simple example in which we purge all records of customers who
+   have two or more unpaid bills. The file is sorted so that each license
+   purchase record is followed by its annual maintenance payment records
+   in chronological order.
+
+#!/usr/local/bin/kermit
+.filename = somefile.csv        # Input file in CSV format
+fopen /read \%c \m(filename)    # Open it
+if fail exit                    # Don't go on if open failed
+copy \m(filename) ./new         # Make a copy of the file
+
+.oldserial = 00000000000        # Multiple records for each serial number
+.zeros = 0                      # Unpaid bill counter
+
+while true {                    # Loop
+    fread /line \%c line        # Get a record
+    if fail exit                # End of file
+    .n := \fsplit(\m(line),&a,\44,CSV)    # Split the fields into an array
+    if not equ "\m(oldserial)" "\&a[6]" { # Have new serial number?
+        # Remove all records for previous serial number
+        # if two or more bills were not paid...
+        if > \m(zeros) 1 {
+            grep /nomatch \m(oldserial) /output:./new2 ./new
+            rename ./new2 ./new
+        }
+        .oldserial := \&a[6]    # To detect next time serial number changes
+        .zeros = 0              # Reset unpaid bill counter
+    }
+    if equ "\&a[5]" "$0.00" {   # Element 5 is amount paid
+        increment zeros         # If it's zero, count it.
+    }
+}
+fclose \%c
+
+   Rewriting the file multiple times is inelegant, but this is a quick and
+   dirty use-once-and-discard script, so elegance doesn't count. The
+   example is interesting in that it purges certain records based on the
+   contents of other records. Maybe there is a way to do this directly
+   with SQL, but why use SQL when you can use Kermit?
+
+   Here is the same task but this time no shelling out, and this time we
+   do change and add some fields and then join the result back into a CSV
+   record and write it out to a new file. The object is to create a record
+   for each license that shows not only the date and purchase price of the
+   license but also the date and amount of the last maintenance payment,
+   and to add new fields for sorting by anniversary (month and day):
+
+#!usr/local/bin/kermit +
+cd ~/somedirectory                      # CD to appropriate directory
+if fail exit 1                          # Make sure we did
+.filename := \%1                        # Filename from command line
+if not def filename {                   # If none give usage message
+    exit 1 "Usage: \%0: infile [ outfile ]"
+}
+fopen /read \%c \m(filename)            # Open the input CSV file
+if fail exit                            # Make sure we did
+
+.output := \%2                          # Output filename from command line
+if not def output {                     # Supply one if not given
+    .output := New_\m(filename)
+}
+fopen /write \%o \m(output)             # Open output file
+if fail exit                            # Check that we did
+
+.serial = 00000000000                   # Initialize serial number
+.licenses = 0                           # and license counter
+
+fread /line \%c line                        # First line is column labels
+if fail exit                                # Check
+fwrite /line \%o "\m(line),AMM_DD,AYYYY"    # Write new labels line
+
+# Remaining lines are license purchases (K95B) followed by zero or more
+# maintenance invoices (K95BM) for each license.
+
+.datepaid = 00/00/0000                  # Initialize last maint payment date
+.amtpaid = $0.00                        # Initialize last maint payment amount
+set flag off                            # For remembering we're at end of file
+while not flag {                        # Loop to read all records
+    fread /line \%c line                # Read a record
+    if fail set flag on                 # If EOF set flag for later
+    .n := \fsplit(\m(line),&a,\44,CSV)  # Break record into array
+    if ( flag || equ "\&a[3]" "K95B" ) { # License or EOF
+        if fail exit 1 "FAILED: \v(lastcommand)"
+        if licenses {                   # If this is not the first license
+            .\&x[5] := \m(amtpaid)      # Substitute most recent amount paid
+            .\&x[21] := \m(datepaid)    # Substitute most recent date paid
+            void \fsplit(\&x[18],&d,/)  # Break up original (anniversary) date
+            # and put mm_dd and yyyy in separate fields for sorting...
+            fwrite /line \%o "\fjoin(&x,CSV),\flpad(\&d[1],2,0)_\flpad(\&d[2],2,
+0),\&d[3]"
+            if fail exit 1 WRITE        # Check for error
+            xecho .                     # Show progress as one dot per record
+        }
+        if flag break                   # We're at EOF so we're finished
+        increment licenses              # New license - count it
+        array copy &a &x                # Keep this record while reading next
+        .serial := \&a[6]               # Remember serial number
+        .datepaid = 00/00/0000          # Initial maintenance payment date
+        .amtpaid = $0.00                # and amount
+        continue                        # and go back to read next record
+    }
+    if not eq "\m(serial)" "\&a[6]" {   # Catch out-of-sequence record
+        echo
+        echo "SEQUENCE: \m(serial)..\&a[6]: \&a[7] [\&a[1]]"
+        continue
+    }
+    if equ "\&a[5]" "" .\&a[5] = $0.00  # If amount is empty make it $0.00
+    if not equ "\&a[5]" "$0.00" {       # If amount is not $0.00
+        .datepaid := \&a[21]            # remember date paid
+        .amtpaid := \&a[5]              # and amount paid
+    }
+}
+fclose ALL                              # Done - close all files and exit
+exit 0 Done.
+
+
+   The result imports back into Excel, where it can be sorted, formatted,
+   or otherwise manipulated as desired.
+
+Using CSV Files: Extending Kermit's Data Structures
+
+   Now that we can parse a CSV record, what would we do with a CSV file -
+   that is, a sequence of records? If we needed all the data available at
+   once, we would want to load it into a matrix of (row,column) values.
+   But Kermit doesn't have matrices. Or does it?
+
+   Kermit has several built-in data types, but you can invent your own
+   data types as needed using Kermit's macro feature:
+
+define variablename value
+
+   For example:
+
+define alphabet abcdefghijklmnopqrstuvwxyz
+
+   This defines a macro named alphabet and gives it the value
+   abcdefghijklmnopqrstuvwxyz. A more convenient notation (added in
+   C-Kermit 7.0, see [111]Table 2) for this is:
+
+.alphabet = abcdefghijklmnopqrstuvwxyz
+
+   The two are exactly equivalent: they make a literal copy the "right
+   hand side" as the value of the macro. Then you can refer to the macro
+   anywhere in a Kermit command as "\m(macroname)":
+
+echo "Alphabet = \m(alphabet)"
+
+   There is a second way to define a macro, which is like the first except
+   that the right-hand side is evaluated first; that is, any variable
+   references or function calls in the right-hand side are replaced by
+   their values before the result is assigned to the macro. The command
+   for this is ASSIGN rather than DEFINE:
+
+define alphabet abcdefghijklmnopqrstuvwxyz
+assign backwards \freverse(\m(alphabet))
+echo "Alphabet backwards = \m(backwards)"
+
+   which prints:
+
+Alphabet backwards = zyxwvutsrqponmlkjihgfedcba
+
+   This kind of assignment can also be done like this:
+
+.alphabet = abcdefghijklmnopqrstuvwxyz
+.backwards := \freverse(\m(alphabet))
+
+   [112]Any command starting with a period is an assignment, and the
+   operator (= or :=) tells what to do with the right-hand side before
+   making the assignment.
+
+   In both the DEFINE and ASSIGN commands, the variable name itself is
+   taken literally. It is also possible, however, to have Kermit compute
+   the variable name. This is done (as described in [113]Using C-Kermit,
+   2nd Ed., p.457), using parallel commands that start with underscore:
+   _DEFINE and _ASSIGN (alias _DEF and _ASG). These are just like DEFINE
+   and ASSIGN except they evaluate the variable name before making the
+   assignment. For example:
+
+define \%a one
+_define \%a\%a\%a 111
+
+   would create a macro named ONEONEONE with a value of 111, and:
+
+define \%a one
+define number 111
+_assign \%a\%a\%a \m(number)
+
+   would create the same macro with the same value, but:
+
+define \%a one
+define number 111
+_define \%a\%a\%a \m(number)
+
+   would give the macro a value of "\m(number)".
+
+   You can use the _ASSIGN command to create any kind of data structure
+   you want; you can find some examples in the [114]Object-Oriented
+   Programming section of the [115]Kermit Script Library. In the following
+   program we use this capability to create a two-dimensional array, or
+   matrix, to hold the all the elements of the CSV file, and then to
+   display the matrix:
+
+fopen /read \%c data.csv                # Open CSV file
+if fail exit 1
+
+.\%r = 0                                # Row
+.\%m = 0                                # Maximum columns
+while true {
+    fread /line \%c line                # Read a record
+    if fail break                       # End of file
+    .\%n := \fsplit(\m(line),&a,\44,CSV) # Split record into items
+    incr \%r                            # Count this row
+    for \%i 1 \%n 1 {                   # Assign items to this row of matrix
+        _asg a[\%r][\%i] \&a[\%i]
+    }
+    if > \%i \%m { .\%m := \%i }        # Remember width of widest row
+}
+fclose \%c                              # Close CSV file
+decrement \%m                           # (because of how FOR loop works)
+echo MATRIX A ROWS: \%r COLUMNS: \%m    # Show the matrix
+
+for \%i 1 \%r 1 {                       # Loop through rows
+    for \%j 1 \%m 1 {                   # Loop through columns of each row
+        xecho "\flpad(\m(a[\%i][\%j]),6)"
+    }
+    echo
+}
+exit 0
+
+   The matrix is called a and its elements are a[1][1], a[1][2], a[1][3],
+   ... a[2][1], etc, and you can treat this data structure exactly like a
+   two-dimensional array, in which you can refer to any element by its "X
+   and Y coordinates". For example, if the CSV file contained numeric data
+   you could compute row and column sums using simple FOR loops and
+   Kermit's built-in one-dimensional array data type:
+
+declare \&r[\%r]                        # Make an array for the row sums
+declare \&c[\%m]                        # Make an array for the column sums
+for \%i 1 \%r 1 {                       # Loop through rows
+    for \%j 1 \%m 1 {                   # Loop through columns of each row
+        increment \&r[\%i] \m(a[\%i][\%j]) # Accumulate row sum
+        increment \&c[\%j] \m(a[\%i][\%j]) # Accumulate column sum
+    }
+}
+
+   Note that the sum arrays don't have to be initialized to zero because
+   Kermit's INCREMENT command treats empty definitions as zero.
+
+Demonstration Scripts for Webmasters
+
+   These scripts all use new features of C-Kermit 9.0.
+
+   [116]ksitemap
+          A C-Kermit 9.0 script to build sitemap.xml for a website,
+          complete with Google image extensions (this is the file used by
+          webmasters to get their sites crawled and indexed optimally).
+
+   [117]The Weblog Script
+          Reads a web log, extracts the Google searches, normalizes the
+          search strings, and prints the top 20 searches, along with their
+          counts.
+
+   [118]The Amazon Script
+          Reads an Amazon Associate orders report and lists the products
+          according to the number of orders for each, or the number of
+          clicks on each.
+
+   [119]Photoalbum
+          Makes a website from a collection of JPG images.
+
+            [120]Home [121]Kermit 95 [122]C-Kermit [123]Scripts [124]Current
+   [125]New [126]FAQ  [127]Support
+
+
+    C-Kermit 9.0 / [128]The Kermit Project / [129]Columbia University /
+    [130]kermit@columbia.edu / [131]validate
+
+References
+
+   1. http://www.columbia.edu/
+   2. mailto:kermit@columbia.edu
+   3. http://www.columbia.edu/kermit/index.html
+   4. http://www.columbia.edu/kermit/k95.html
+   5. http://www.columbia.edu/kermit/ckermit.html
+   6. http://www.columbia.edu/kermit/ckscripts.html
+   7. http://www.columbia.edu/kermit/current.html
+   8. http://www.columbia.edu/kermit/whatsnew.html
+   9. http://www.columbia.edu/kermit/faq.html
+  10. http://www.columbia.edu/kermit/support.html
+  11. http://www.columbia.edu/cu/computinghistory/books/#menagerie
+  12. http://www.columbia.edu/kermit/ck90tables.html
+  13. http://www.amazon.com/gp/product/1555581641?ie=UTF8&tag=aleidmoreldom-20&linkCode=as2&camp=1789&creative=9325&creativeASIN=1555581641
+  14. http://www.columbia.edu/kermit/ckermit.html#download
+  15. http://www.columbia.edu/kermit/ckermit90.html#LargeFiles
+  16. http://www.columbia.edu/kermit/ckermit90.html#TestLargeFiles
+  17. http://www.columbia.edu/kermit/ckermit90.html#Bignums
+  18. http://www.columbia.edu/kermit/ckermit90.html#force3
+  19. http://www.columbia.edu/kermit/ckermit90.html#Vareval
+  20. http://www.columbia.edu/kermit/ckermit90.html#rename
+  21. http://www.columbia.edu/kermit/ckermit90.html#Other
+  22. http://www.columbia.edu/kermit/ckermit90.html#Incompatibilities
+  23. http://www.columbia.edu/kermit/ckermit90.html#NotIn9.0
+  24. http://www.columbia.edu/kermit/ckermit90.html#LooseEnd
+  25. http://www.columbia.edu/kermit/ckermit90.html#pop
+  26. http://www.columbia.edu/kermit/ckermit90.html#HPswitch
+  27. http://www.columbia.edu/kermit/ckermit90.html#iLO
+  28. http://www.columbia.edu/kermit/ckermit90.html#Rolm
+  29. http://www.columbia.edu/kermit/ckermit90.html#CSV
+  30. http://www.columbia.edu/kermit/ckermit90.html#Otherdemos
+  31. http://www.columbia.edu/kermit/ck60manual.html
+  32. http://www.amazon.com/gp/product/B002ACPF9M?ie=UTF8&tag=aleidmoreldom-20&linkCode=as2&camp=1789&creative=390957&creativeASIN=B002ACPF9M
+  33. http://www.columbia.edu/kermit/ckermit70.html
+  34. http://www.columbia.edu/kermit/ckermit80.html
+  35. http://www.columbia.edu/kermit/ckscripts.html
+  36. http://www.columbia.edu/cu/computinghistory/dec20.html
+  37. mailto:fdc@columbia.edu
+  38. http://www.columbia.edu/kermit/k95.html
+  39. http://www.columbia.edu/kermit/cu-bsd-license.html
+  40. http://www.columbia.edu/kermit/ckermit90.html#LargeFiles
+  41. http://www.columbia.edu/kermit/ck90tables.html
+  42. http://www.columbia.edu/kermit/ck90tables.html
+  43. http://www.columbia.edu/kermit/ckermit90.html#force3
+  44. http://www.columbia.edu/kermit/ckermit90.html#Vareval
+  45. http://www.columbia.edu/kermit/ckrename.html
+  46. http://www.columbia.edu/kermit/csv.html
+  47. http://www.columbia.edu/kermit/csetnames.html
+  48. http://www.columbia.edu/kermit/ckermit90.html#HPswitch
+  49. http://www.columbia.edu/kermit/ckdaily.html
+  50. http://www.columbia.edu/kermit/cu-bsd-license.html
+  51. http://www.opensource.org/
+  52. http://kermit.columbia.edu/ck90tables.html#LF
+  53. ftp://kermit.columbia.edu/kermit/utils/bigfile.c
+  54. http://www.columbia.edu/kermit/ckermit80.html#x9
+  55. http://www.columbia.edu/kermit/ck90tables.html#LF
+  56. ftp://kermit.columbia.edu/kermit/scripts/ckermit/easter2
+  57. http://www.columbia.edu/kermit/em-apex.html
+  58. http://www.iridium.com/
+  59. http://science1.nasa.gov/science-news/science-at-nasa/2006/09jan_electrichurricanes/
+  60. http://www.columbia.edu/kermit/ek.html
+  61. ftp://kermit.columbia.edu/kermit/ek/simirid/
+  62. http://www.columbia.edu/kermit/ek.html
+  63. http://www.columbia.edu/kermit/ckermit70.html#x7.10.10
+  64. http://www.columbia.edu/kermit/csv.html
+  65. http://www.columbia.edu/kermit/ckermit70.html#x1.11
+  66. http://www.columbia.edu/kermit/ckermit70.html
+  67. http://www.columbia.edu/kermit/ckermit80.html#x9
+  68. http://www.columbia.edu/kermit/csetnames.html
+  69. http://www.columbia.edu/kermit/ckdaily.html
+  70. http://www.columbia.edu/kermit/ftpclient.html
+  71. http://www.columbia.edu/kermit/ckdaily.html
+  72. http://www.columbia.edu/kermit/csetnames.html
+  73. http://www.columbia.edu/kermit/ckermit90.html#Otherdemos
+  74. http://www.columbia.edu/kermit/input_nowrap.html
+  75. http://www.columbia.edu/~fdc/mm/index.html
+  76. http://www.columbia.edu/kermit/photoalbum.html
+  77. http://www.columbia.edu/~fdc/kermit/logserial.html
+  78. http://www.columbia.edu/kermit/ckermit90.html#message
+  79. http://www.columbia.edu/kermit/ckermit90.html#NotIn9.0
+  80. http://www.columbia.edu/kermit/csv.html#join
+  81. http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3767
+  82. http://www.columbia.edu/kermit/ftp/test/tar/x.zip
+  83. http://www.mseclab.com/?p=180
+  84. http://www.theregister.co.uk/2009/07/30/universal_ssl_certificate/
+  85. http://www.columbia.edu/kermit/ckermit90.html#HPswitch
+  86. http://www.columbia.edu/kermit/em-apex.html
+  87. http://www.freebsd.org/releases/8.0R/announce.html
+  88. http://www.columbia.edu/kermit/security81.html#x4.2.3
+  89. http://www.columbia.edu/kermit/ckermit80.html#x9
+  90. http://www.columbia.edu/kermit/ckermit80.html#x8.7.2
+  91. http://www.columbia.edu/kermit/ckermit80.html#x9
+  92. http://www.columbia.edu/kermit/ckpackages.html
+  93. http://docs.hp.com/en/B9106-90013/pty.7.html
+  94. http://www.columbia.edu/kermit/test/text/ckc299.txt
+  95. http://www.columbia.edu/kermit/test/text/ckutio.c
+  96. http://www.columbia.edu/~fdc/mm/pop
+  97. http://www.columbia.edu/~fdc/mm/
+  98. http://www.columbia.edu/~fdc/mm/mailcheck
+  99. http://en.wikipedia.org/wiki/Trivial_File_Transfer_Protocol
+ 100. http://www.columbia.edu/kermit/ftp/scripts/ckermit/gethpconfig
+ 101. http://www.columbia.edu/kermit/ftp/scripts/ckermit/TestSwitches.txt
+ 102. http://en.wikipedia.org/wiki/Standard_streams
+ 103. http://kermit.columbia.edu/cudocs/ilosetup.html
+ 104. http://www.columbia.edu/kermit/cudocs/cbx.html
+ 105. http://www.columbia.edu/kermit/ckermit90.html#record
+ 106. http://www.columbia.edu/kermit/ckermit90.html#join
+ 107. http://www.columbia.edu/kermit/ckermit90.html#file
+ 108. http://www.columbia.edu/kermit/ckermit80.html#fjoin
+ 109. http://www.columbia.edu/kermit/ckermit90.html#rules
+ 110. http://www.columbia.edu/kermit/ckermit80.html#fjoin
+ 111. http://www.columbia.edu/kermit/ckermit90.html#varasg
+ 112. http://www.columbia.edu/kermit/ckermit70.html#x7.9
+ 113. http://www.amazon.com/gp/product/1555581641?ie=UTF8&tag=aleidmoreldom-20&linkCode=as2&camp=1789&creative=9325&creativeASIN=1555581641
+ 114. http://www.columbia.edu/kermit/ckscripts.html#oops
+ 115. http://www.columbia.edu/kermit/ckscripts.html
+ 116. http://www.columbia.edu/kermit/ksitemap.html
+ 117. http://www.columbia.edu/kermit/weblog.html
+ 118. http://kermit.columbia.edu/ftp/scripts/ckermit/amazon
+ 119. http://www.columbia.edu/kermit/photoalbum.html
+ 120. http://www.columbia.edu/kermit/index.html
+ 121. http://www.columbia.edu/kermit/k95.html
+ 122. http://www.columbia.edu/kermit/ckermit.html
+ 123. http://www.columbia.edu/kermit/ckscripts.html
+ 124. http://www.columbia.edu/kermit/current.html
+ 125. http://www.columbia.edu/kermit/whatsnew.html
+ 126. http://www.columbia.edu/kermit/faq.html
+ 127. http://www.columbia.edu/kermit/support.html
+ 128. http://www.columbia.edu/kermit/index.html
+ 129. http://www.columbia.edu/
+ 130. mailto:kermit@columbia.edu
+ 131. http://validator.w3.org/check?uri=http%3A%2F%2Fkermit.columbia.edu%2Fckermit90.html

@@ -1,0 +1,380 @@
+ckaaaa.txt                                                        July 2011
+
+                           C-KERMIT VERSION 9.0.301
+                              OVERVIEW OF FILES
+
+               Communications software for UNIX and (Open)VMS.
+
+                       And in former versions also for:
+                          Stratus VOS, AOS/VS, QNX,
+             Plan 9, OS-9, Apollo Aegis, and the Commodore Amiga.
+                      The Apple Macintosh, the Atari ST.
+
+                  The Kermit Project - Columbia University
+
+              http://kermit.columbia.edu/ - kermit@columbia.edu
+
+
+  Copyright (C) 1985, 2011,
+    Trustees of Columbia University in the City of New York.
+    All rights reserved.  See the C-Kermit COPYING.TXT file or the
+    copyright text in the ckcmai.c module for disclaimer and permissions.
+    BRIEFLY: C-Kermit 9.0 has the OPEN SOURCE 3-clause MODIFIED BSD LICENSE.
+
+
+DOCUMENTATION
+
+  C-Kermit is documented in the book "Using C-Kermit", Second Edition, by
+  Frank da Cruz and Christine M. Gianone, Digital Press, ISBN 1-55558-164-1,
+  supplemented by Web-based updates for C-Kermit 7.0, 8.0, and 9.0.
+
+PLATFORMS
+                   Security
+   Name            Included   Last Updated
+
+   Unix               Yes     9.0.300  30 Jun 2011
+   (Open)VMS          Yes     9.0.300  30 Jun 2011
+   Windows (K95)      Yes     8.0.208  14 Mar 2003  (K95 2.1)
+   OS/2 (K95)         Yes     8.0.208  14 Mar 2003  (K95 2.1)
+   DG AOS/VS          No      7.0.196   1 Jan 2000
+   Stratus VOS        No      7.0.196   1 Jan 2000
+   Bell Plan 9        No      7.0.196   1 Jan 2000
+   Microware OS-9     No      7.0.196   1 Jan 2000
+   Commodore Amiga    No      7.0.196   1 Jan 2000
+   Macintosh          No      5A(190)  16 Aug 1994  (Mac Kermit 0.991)
+   Atari ST           No      5A(189)  30 Jun 1993
+
+QUICK START FOR FTP USERS
+
+  If you have a Web browser, go to:
+
+    http://www.columbia.edu/kermit/ckermit.html
+
+  And take it from there.  Otherwise...
+
+  The definitive FTP source for Kermit software is kermit.columbia.edu.
+  Kermit software obtained from other FTP sites is not necessarily complete
+  or up to date, and may have been modified.
+
+C-Kermit for UNIX computers that have a C compiler and 'make' program:
+
+  Directory kermit/archives, binary mode, file cku211.tar.Z or cku211.tar.gz
+
+  This is a compressed tar archive of UNIX C-Kermit source code, makefile, and
+  other files.  It unpacks into its current directory, so download it into a
+  fresh directory.  Transfer in binary mode, uncompress (or gunzip), untar (tar
+  xvf cku211.tar), and then give the appropriate "make" command to build for
+  your UNIX system; read the comments in the makefile and ckuins.txt for
+  further info.
+
+C-Kermit for VMS:
+
+  If you have VMS UNZIP, get the file kermit/archives/ckv211.zip in binary
+  mode, unzip -aa, and build with CKVKER.COM (@ckvker.com).  Read the comments
+  at the top of CKVKER.COM for details.
+
+Others:  In the kermit/f or kermit/test directories under the appropriate
+prefixes, explained below.
+
+
+INSTALLATION
+
+Installation procedures depend on the operating system.  Please read the
+CK?INS.TXT, if any, file for your operating system (?=U for UNIX, V for VMS,
+etc).  Please note the naming and placement for the initialization files:
+
+  CKERMIT.INI
+    .kermrc in the user's home directory (UNIX).
+    CKERMIT.INI in the user's home directory (other OS's).
+
+
+  CKERMOD.INI
+    .mykermrc in the user's home directory (UNIX).
+    CKERMOD.INI elsewhere.
+
+  DIALING DIRECTORIES
+    Dialing directory files can be system-wide, per-group, or per-user, or
+    any combination.  For example, there can be a corporate wide directory
+    shared by all users, a supplemental directory for each division or
+    department, and a personal directory for each user.  Simply be sure the
+    dialing directory files are identified a SET DIAL DIRECTORY command in
+    the user's (or the system-wide) C-Kermit initialization file, or in the
+    environment variable (logical name, symbol) K_DIAL_DIRECTORY.  (The
+    standard initialization file looks by default in the user's home or login
+    directory.)  When installing C-Kermit on multiuser platforms from which
+    users will dial out, you can also set environment variables for area
+    code, country code, and the various dialing prefixes as described on page
+    478 of "Using C-Kermit" (second edition), so users don't have to worry
+    about defining these items themselves.   Network directories and service
+    directories can also be set up in a similar manner.
+
+  DOCUMENTATION
+    In UNIX, the general C-Kermit man page (or one of the versions tailored
+    for a specific platform, like HP-UX or Solaris) should be installed in
+    the appropriate place.  In VMS, the VMS help topic (CKVKER.HLP) should
+    be installed as described in CKVINS.TXT.  Plain-text documentation such
+    as CKERMIT2.TXT should be put in whatever place people are accustomed
+    to looking.
+
+FILES AND FILE NAMING CONVENTIONS
+
+C-Kermit is a family of Kermit programs for many different computer systems.
+The program shares a common set of system-independent file transfer protocol
+modules, written in the C language.  System-dependent operations are collected
+into system-specific modules for each system.
+
+C-Kermit file names all start with the letters "CK", followed by a single
+letter indicating the subgroup.  When referring to these files in the UNIX,
+AOS/VS, or VOS environments, use lowercase letters, rather than the uppercase
+letters shown here.  Subgroups:
+
+  _: Security/Authentication/Encryption code, possibly regulated by law
+  a: General descriptive material and documentation
+  b: BOO file encoders and decoders (obsolete)
+  c: All platforms with C compilers
+  d: Data General AOS/VS
+  e: Reserved for "ckermit" files, like CKERMIT.INI, CKERMIT80.TXT
+  f: (reserved)
+  g: (reserved)
+  h: (reserved)
+  i: Commodore Amiga (Intuition)
+  j: (unused)
+  k: (unused)
+  l: Stratus VOS
+  m: Macintosh with Mac OS
+  n: Microsoft Windows NT
+  o: OS/2 and/or Microsoft Windows 95/98/ME/NT/2000/XP/...
+  p: Bell Labs Plan 9
+  q: (reserved)
+  r: DEC PDP-11 with RSTS/E (reserved)
+  s: Atari ST GEMDOS (last supported in version 5A(189))
+  t: DEC PDP-11 with RT-11 (reserved)
+  u: UNIX or environments with UNIX-like C libraries
+  v: VMS and OpenVMS
+  w: Wart (Lex-like preprocessor, used with all systems)
+  x: (reserved)
+  y: (reserved)
+  z: (reserved)
+  0-3: (reserved)
+  4: IBM AS/400 (reserved but probably never will be used)
+  5-8: (reserved)
+  9: Microware OS-9
+
+Examples:
+
+  ckaaaa.txt - This file
+  ckufio.c   - File i/o for UNIX
+  ckstio.c   - Communications i/o for the Atari ST
+  makefile   - makefile for building UNIX C-Kermit
+  ckpker.mk  - makefile for building Plan 9 C-Kermit
+  ckvker.com - build procedure for VMS C-Kermit
+
+IMPORTANT FILES (use lowercase names on UNIX, VOS, or AOS/VS):
+
+  ckaaaa.txt  - This file (overview of the C-Kermit files).
+                For system-specific distributions, this will normally
+                be replaced by a system-specific READ.ME file.
+
+  ckermit70.txt - Updates: Supplement to "Using C-Kermit", 2nd Ed, for 7.0.
+  ckermit80.txt - Updates: Supplement to "Using C-Kermit", 2nd Ed, for 8.0.
+  ckututor.txt  - C-Kermit Tutorial for Unix (plain text)
+  ckcbwr.txt  - "Beware file" (limitations, known bugs, hints), general.
+  ckermit.ini - Standard initialization file (rename to .kermrc in UNIX, OS-9)
+  ckermod.ini - Sample customization file (rename to .mykermrc in UNIX, OS-9)
+
+The following can be found at the Kermit FTP site:
+
+  ckermit.kdd - Sample dialing directory file (rename to .kdd in UNIX, OS-9)
+  ckermit.knd - Sample dialing directory file (rename to .knd in UNIX, OS-9)
+  ckermit.ksd - Sample services directory file (rename to .ksd in UNIX, OS-9)
+  ckedemo.ksc - Demonstration macros from "Using C-Kermit"
+  ckepage.ksc - Ditto
+  ckevt.ksc   - Ditto
+
+UNIX-specific files:
+
+  ckuins.txt - UNIX-specific installation instructions.
+  ckubwr.txt - UNIX-specific beware file.
+  ckuker.nr  - "man page" for UNIX.
+
+VMS-specific files:
+
+  ckvins.txt - VMS-specific installation instructions.
+  ckvbwr.txt - VMS-specific beware file
+  ckvker.hlp - VMS C-Kermit HELP topic (needs updating).
+
+DG AOS/VS-specific files:
+
+  ckdins.txt - Data General AOS/VS C-Kermit installation instructions
+  ckdbwr.txt - AOS/VS "beware" file
+  ckd*.cli   - Procedures for building AOS/VS C-Kermit
+
+The following files are of interest mainly to programmers and historians
+(find them at the Kermit ftp site in the kermit/f directory):
+
+  ckcker.ann - Release announcements.
+  ckccfg.txt - Configuration information (feature selection), general.
+  ckcplm.txt - Program logic manual (for programmers).
+  ckc300.txt - Program update history for edit 212-300 (C-Kermit 9.0).
+  ckc211.txt - Program update history for edit 201-211.
+  ckc200.txt - Program update history for edit 198-200 (big)
+  ckc197.txt - Program update history for edit 195-197 (big)
+  ckc190.txt - Program update history for edits 189-190 (big).
+  ckc188.txt - Program update history, edits 179-188 (big).
+  ckc178.txt - Program edit history, 5A edits through 178 (very big).
+  ckcv4f.txt - Program edit history, version 4F.
+  ckcv4e.txt - Program edit history, version 4E.
+
+BINARIES
+
+If you have FTP access to kermit.columbia.edu (also known as
+kermit.cc.columbia.edu, ftp.cc.columbia.edu), you can also retrieve various
+C-Kermit binaries from the directory kermit/bin/ck*.*, or more conveniently
+from the web page:
+
+  http://www.columbia.edu/kermit/ck80binaries.html
+
+Test versions would be in kermit/test/bin/ck*.*.  Be sure to transfer these
+files in binary mode.  The READ.ME file in that directory explains what's
+what.
+
+SOURCE FILES
+
+The source files for the UNIX version (all UNIX versions) are available in
+kermit/archives/ckuNNN.tar.Z, approximately 1MB in size.  Transfer this file
+in binary mode.  This is a compressed tar archive.  There is also a gzip'd
+version, cku211.tar.gz.  To get the binary tar archive:
+
+  mkdir kermit                   (at shell prompt, make a Kermit directory)
+  cd kermit                      (make it your current directory)
+
+  ftp kermit.columbia.edu        (make an ftp connection)
+  user: anonymous                (log in as user "anonymous", lower case!)
+  password:                      (use your email id as a password)
+  cd kermit/archives             (go to the archives directory)
+  type binary                    (specify binary file transfer)
+  get cku300.tar.Z               (get the tar archive) (or get cku192.tar.gz)
+  bye                            (disconnect and exit from ftp)
+
+  uncompress cku300.tar.Z        (at the shell prompt, uncompress the archive)
+  tar xvf cku300.tar             (extract the files from the tar archive)
+  make xxx                       (build C-Kermit for your system)
+
+(where "xxx" is the makefile entry appropriate for your system.)
+
+All C-Kermit source and other text files are also kept separately in the
+kermit/f directory.  The files necessary to build a particular implementation
+of C-Kermit are listed in the appropriate makefile or equivalent:
+
+       UNIX: makefile (or rename ckuker.mak to makefile)
+   2.11 BSD: ckubs2.mak (rename to makefile), ckustr.sed
+     Plan 9: ckpker.mk  (rename to mkfile)
+  Macintosh: ckmker.mak (rename to kermit.make, use MPW C 3.2)
+        VMS: CKVKER.COM (DCL) (and optionally also CKVKER.MMS)
+             or CKVOLD.COM (for VMS 4.x)
+      Amiga: CKIKER.MAK (Aztec C) or CKISAS.MAK (SAS C)
+   Atari ST: CKSKER.MAK
+       OS-9: ck9ker.mak or ck9ker.gcc
+     AOS/VS: ckdmak.cli, ckdcc.cli, ckdlnk.cli
+Stratus VOS: cklmak.cm
+
+Minimal source files for building selected versions (these patterns get all
+the files you need, and in some cases maybe a few extra):
+
+   UNIX:   ck[cuw]*.[cwh]   (including QNX, Plan 9, and BeBox)
+   UNIX:   ck[cuw_]*.[cwh]  (Unix with security modules)
+   VMS:    ck[cuwv]*.[cwh]  VMS
+   VMS:    ck[cuwv_]*.[cwh] VMS with SSL/TLS
+   Mac:    ck[cuwm]*.[cwhr] Old Mac OS, not Mac OS X, which is UNIX.
+   AOS/VS: ck[cuwd]*.[cwh]
+   VOS:    ck[cwhl]*.[cwh]
+   Amiga:  ck[cuwi]*.[cwh]
+   Atari:  ck[cuws]*.[cwh]
+   OS-9:   ck[cuw9]*.[cwha]
+
+Finally, here is a more detailed description of the C-Kermit file naming
+conventions.  A C-Kermit filename has the form:
+
+  CK<system><what>.<type>
+
+where:
+
+<system> is described earlier in this file;
+
+<type> is the file type (use lowercase on UNIX, VOS, or AOS/VS):
+
+  c:   C language source
+  h:   Header file for C language source
+  w:   Wart preprocessor source, converted by Wart (or Lex) to a C program
+  r:   Macintosh resource file (8-bit text)
+  a:   Assembler source
+
+  txt: Plain text.
+  nr:  Nroff/Troff text formatter source for UNIX "man page"
+  mss: Scribe text formatter source
+  ps:  Typeset material to be printed on a PostScript printer
+  pdf: An Adobe PDF file
+  hlp: A VMS Help topic
+
+  ini: Initialization file
+  ksc: A Kermit Script to be executed by the TAKE command
+  kdd: A Kermit Dialing Directory
+  knd: A Kermit Network Directory
+  ksd: A Kermit Services Directory
+
+  mak: A Makefile or other build procedure (often needs renaming)
+  com: (VMS only) a DCL command procedure
+  cli: (AOS/VS only) a command procedure
+  cmd: (OS/2 only) a Rexx command procedure
+
+  boo: "boo"-encoded executable program, decode with CKBUNB program.
+  hex: "hex"-encoded executable program, decode with CKVDEH program (VMS only).
+  hqx: BinHex'd Macintosh Kermit program, decode with BinHex version 4.0.
+  uue: A uuencoded binary file, decode with uudecode or (DG only) CKDECO.
+
+  def: An OS/2 linker definitions file.
+  sh:  A UNIX shell script.
+  sed: A UNIX sed (editor) script.
+  str: A file of character strings extracted from C-Kermit (BSD 2.1x only).
+
+<what> is mnemonic (up to 3 characters) for what's in the file:
+
+NOTE: After C-Kermit 6.0, text filetypes such as .DOC and .HLP were changed
+to .TXT to avoid confusion in Windows-based Web browsers, which would
+otherwise mistake them for Microsoft Word or Windows Help documents.
+
+  aaa: A "read-me" file, like this one
+  ins: Installation instructions or procedures
+  bwr: "Beware" file -- things to watch out for, hints and tips
+  plm: Program Logic Manual
+  ker: General C-Kermit definitions, information, documentation
+
+  nnn: Digits: C-Kermit edit number (e.g. cku300.tar.gz)
+  cmd: Command parsing
+  con: CONNECT command
+  cns: CONNECT command (UNIX only - version that uses select(), not fork())
+  deb: Debug/Transaction Log formats, Typedefs
+  dia: Modem/Dialer control
+  fio: System-dependent File I/O
+  fns: Protocol support functions
+  fn2: More protocol support functions (and FN3, ...)
+  lib: Common library routines module
+  mai: Main program
+  net: Network i/o module
+  pro: Protocol
+  scr: SCRIPT command
+  tel: Telnet protocol module
+  tio: System-dependent communications i/o & control and interrupt handing
+  sig: Signal handling module
+  usr: Interactive/script user interface
+  us2: More user interface (mainly help text)
+  us3: Still more user interface (and USR4, USR5, USR6, USR7)
+  usx: Common user interface functions
+  usy: Command-line parsing
+  xla: Character set translation module
+  uni: Unicode support
+  pty: Pseudoterminal support
+  mdb: Malloc-debugging module (not included in real builds)
+  str: Strings module (only for 2.xBSD)
+
+(End of ckaaaa.txt)
