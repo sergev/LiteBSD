@@ -8,7 +8,7 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 	join jot kdump ktrace lam last lastcomm leave locate \
 	lock logger login logname lorder lua m4 mail make man mesg mg mkdep \
 	mkfifo mklocale mkstr more msgs mt nc netstat nfsstat nice nm nohup \
-	pagesize passwd paste patch pcc pkg pr printenv printf quota \
+	pagesize passwd paste patch pcc pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
 	script sed shar showmount size sl soelim sort split sqlite3 \
 	strings su talk tcopy tee telnet tftp time tip \
