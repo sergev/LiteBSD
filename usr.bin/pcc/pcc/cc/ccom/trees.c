@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.368 2016/01/07 18:26:56 ragge Exp $	*/
+/*	$Id: trees.c,v 1.371 2016/02/09 21:36:33 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -80,7 +80,6 @@ static P1ND *strargs(P1ND *);
 static void rmcops(P1ND *p);
 static P1ND *tymatch(P1ND *p);
 static P1ND *rewincop(P1ND *p1, P1ND *p2, int op);
-void putjops(P1ND *, void *);
 static int has_se(P1ND *p);
 static struct symtab *findmember(struct symtab *, char *);
 int inftn; /* currently between epilog/prolog */
@@ -1519,17 +1518,18 @@ ptmatch(P1ND *p)
 		if (t1 != t2) {
 			/*
 			 * Check for void pointer types. They are allowed
-			 * to cast to/from any pointers.
+			 * to cast to/from any pointers; 6.5.15 #6.
+			 * XXX qualified versions of void?
 			 */
 			if (ISPTR(t1) && ISPTR(t2)) {
 				if (BTYPE(t1) == VOID) {
-					t = t1;
-					break;
-				}
-				if (BTYPE(t2) == VOID) {
 					t = t2;
+					d = d2;
+					ap = ap2;
 					break;
 				}
+				if (BTYPE(t2) == VOID)
+					break;
 			}
 			uerror("illegal types in :");
 		}

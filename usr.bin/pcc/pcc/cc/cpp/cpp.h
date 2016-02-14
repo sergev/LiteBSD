@@ -1,4 +1,4 @@
-/*	$Id: cpp.h,v 1.89 2015/11/14 17:02:07 ragge Exp $	*/
+/*	$Id: cpp.h,v 1.90 2016/02/06 09:39:21 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2010 Anders Magnusson (ragge@ludd.luth.se).
@@ -60,6 +60,7 @@ extern	FILE	*of;
 #define	PBMAX	10	/* min pushbackbuffer size */
 #define	BBUFSZ	(PBMAX+CPPBUF+1)
 
+#define	CTRLOC	0xf8	/* __COUNTER__ */
 #define	DEFLOC	0xf9	/* defined */
 #define	PRAGLOC	0xfa	/* _Pragma */
 #define	LINLOC	0xfb	/* __LINE__ */

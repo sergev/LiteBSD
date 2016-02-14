@@ -1,4 +1,4 @@
-/*	$Id: cgram.y,v 1.411 2016/01/10 18:08:13 ragge Exp $	*/
+/*	$Id: cgram.y,v 1.412 2016/02/11 13:23:41 ragge Exp $	*/
 
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -1432,7 +1432,7 @@ gccexpr(int bn, P1ND *q)
 	p1mfree(s);
 	q = r->n_right;
 	/* XXX end hack */
-	if (q->n_op != ICON && q->n_type != STRTY) {
+	if (!(q->n_op == ICON && q->n_type == STRTY) && (r->n_type != VOID)) {
 		p = tempnode(0, q->n_type, q->n_df, q->n_ap);
 		r = buildtree(ASSIGN, p1tcopy(p), r);
 		r = buildtree(COMOP, r, p);

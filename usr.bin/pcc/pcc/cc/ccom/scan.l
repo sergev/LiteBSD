@@ -1,5 +1,5 @@
 %{
-/*	$Id: scan.l,v 1.144 2016/01/07 13:56:12 ragge Exp $	*/
+/*	$Id: scan.l,v 1.145 2016/02/07 18:04:28 ragge Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Magnusson. All rights reserved.
@@ -29,6 +29,7 @@
 %}
 
 
+B			[0-1]
 D			[0-9]
 L			[a-zA-Z_]
 H			[a-fA-F0-9]
@@ -122,6 +123,7 @@ extern void yyset_lineno (int);
 
 0[xX]{H}+{IS}?		{ yylval.nodep = cvtdig(16); return(C_ICON); }
 0{D}+{IS}?		{ yylval.nodep = cvtdig(8); return(C_ICON); }
+0[bB]{B}+{IS}?		{ yylval.nodep = cvtdig(2); return(C_ICON); }
 {D}+{IS}?		{ yylval.nodep = cvtdig(10); return(C_ICON); }
 {UC}'(\\.|[^\\'])*'	{ yylval.nodep = wcharcon(); return(C_ICON); }
 '(\\.|[^\\'])*'		{ yylval.nodep = charcon(); return(C_ICON); }
@@ -513,9 +515,9 @@ cvtdig(int radix)
 	char *ch = yytext;
 	int n, numl, numu;
 
-	if (radix == 16)
-		ch += 2; /* Skip 0x */
-	
+	if (radix == 16 || radix == 2)
+		ch += 2; /* Skip 0x or 0b */
+
 	v = 0;
 	while ((*ch >= '0' && *ch <= '9') || (*ch >= 'a' && *ch <= 'f') ||
 	    (*ch >= 'A' && *ch <= 'F')) {

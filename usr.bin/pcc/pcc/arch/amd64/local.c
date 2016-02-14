@@ -1,4 +1,4 @@
-/*	$Id: local.c,v 1.93 2015/12/13 09:00:04 ragge Exp $	*/
+/*	$Id: local.c,v 1.95 2016/02/07 17:51:37 ragge Exp $	*/
 /*
  * Copyright (c) 2008 Michael Shalayeff
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -420,6 +420,15 @@ clocal(NODE *p)
 
 		if (o == ICON) {
 			CONSZ val = glval(l);
+
+			/* if named constant and pointer, allow cast 
+			   to long/ulong */
+			if (!nncon(l) && (l->n_type & TMASK) &&
+			    (m == LONG || m == ULONG)) {
+				l->n_type = m;
+				l->n_ap = 0;
+				return nfree(p);
+			}
 
 			if (ISPTR(l->n_type) && !nncon(l))
 				break; /* cannot convert named pointers */

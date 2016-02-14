@@ -1,4 +1,4 @@
-/*	$Id: optim.c,v 1.60 2016/01/14 18:42:54 ragge Exp $	*/
+/*	$Id: optim.c,v 1.61 2016/02/09 17:57:35 ragge Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *
@@ -455,6 +455,7 @@ again:	o = p->n_op;
 		if (!nncon(p->n_left))
 			break;
 		if (LV(p) == 0) { /* right not evaluated */
+			p1walkf(p, putjops, 0);
 			p1tfree(p);
 			p = bcon(0);
 		} else {
@@ -467,6 +468,7 @@ again:	o = p->n_op;
 		if (!nncon(p->n_left))
 			break;
 		if (LV(p) != 0) { /* right not evaluated */
+			p1walkf(p, putjops, 0);
 			p1tfree(p);
 			p = bcon(1);
 		} else {

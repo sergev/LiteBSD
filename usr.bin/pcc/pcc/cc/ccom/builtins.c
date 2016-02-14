@@ -1,4 +1,4 @@
-/*	$Id: builtins.c,v 1.65 2016/01/07 18:26:56 ragge Exp $	*/
+/*	$Id: builtins.c,v 1.66 2016/02/09 17:57:35 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -66,7 +66,6 @@ builtin_alloca(const struct bitable *bt, P1ND *a)
 static P1ND *
 builtin_constant_p(const struct bitable *bt, P1ND *a)
 {
-	void putjops(P1ND *p, void *arg);
 	P1ND *f;
 	int isconst;
 
@@ -361,7 +360,6 @@ builtin_ffsll(const struct bitable *bt, P1ND *a)
 static P1ND *
 builtin_object_size(const struct bitable *bt, P1ND *a)
 {
-	extern void putjops(P1ND *, void *);
 	CONSZ v = icons(a->n_right);
 	int r;
 

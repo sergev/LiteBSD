@@ -1,4 +1,4 @@
-/*	$Id: local.c,v 1.15 2015/11/13 11:38:47 ragge Exp $	*/
+/*	$Id: local.c,v 1.16 2016/01/30 17:26:19 ragge Exp $	*/
 /*
  * Copyright (c) 2014 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -182,14 +182,14 @@ clocal(NODE *p)
 		case AUTO:
 			/* fake up a structure reference */
 			r = block(REG, NIL, NIL, PTR+STRTY, 0, 0);
-			r->n_lval = 0;
+			slval(r, 0);
 			r->n_rval = FPREG;
 			p = stref(block(STREF, r, p, 0, 0, 0));
 			break;
 
 		case REGISTER:
 			p->n_op = REG;
-			p->n_lval = 0;
+			slval(p, 0);
 			p->n_rval = q->soffset;
 			break;
 
@@ -325,7 +325,7 @@ myp2tree(NODE *p)
 	ninval(0, tsize(sp->stype, sp->sdf, sp->sap), p);
 
 	p->n_op = NAME;
-	p->n_lval = 0;
+	slval(p, 0);
 	p->n_sp = sp;
 
 }
@@ -370,14 +370,14 @@ spalloc(NODE *t, NODE *p, OFFSZ off)
 
 	/* sub the size from sp */
 	sp = block(REG, NIL, NIL, UNSIGNED+PTR, 0, 0);
-	sp->n_lval = 0;
+	slval(sp, 0);
 	sp->n_rval = STKREG;
 	p = (buildtree(MINUSEQ, sp, p));
 	ecomp(p);
 
 	/* save the address of sp */
 	sp = block(REG, NIL, NIL, PTR+UNSIGNED, t->n_df, t->n_ap);
-	sp->n_lval = 0;
+	slval(sp, 0);
 	sp->n_rval = STKREG;
 	t->n_type = sp->n_type;
 	p = (buildtree(ASSIGN, t, sp)); /* Emit! */

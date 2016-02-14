@@ -1,4 +1,4 @@
-/*	$Id: local2.c,v 1.16 2015/11/07 16:43:48 ragge Exp $	*/
+/*	$Id: local2.c,v 1.17 2016/01/30 17:26:19 ragge Exp $	*/
 /*
  * Copyright (c) 2014 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -335,7 +335,7 @@ adrcon(CONSZ val)
 void
 conput(FILE *fp, NODE *p)
 {
-	long val = p->n_lval;
+	long val = getlval(p);
 
 	if (p->n_type <= UCHAR)
 		val &= 255;
@@ -374,13 +374,13 @@ upput(NODE *p, int size)
 		break;
 	case NAME:
 	case OREG:
-		p->n_lval += 4;
+		setlval(p, getlval(p) + 4);
 		adrput(stdout, p);
-		p->n_lval -= 4;
+		setlval(p, getlval(p) - 4);
 		break;
 
 	case ICON:
-		printf("#%d", (int)p->n_lval);
+		printf("#%d", (int)getlval(p));
 		break;
 
 	default:
@@ -396,8 +396,8 @@ adrput(FILE *io, NODE *p)
 	/* output an address, with offsets, from p */
 	switch (p->n_op) {
 	case NAME:
-		if (p->n_lval)
-			fprintf(io, CONFMT "%s", p->n_lval, 
+		if (getlval(p))
+			fprintf(io, CONFMT "%s", getlval(p),
 			    *p->n_name ? "+" : "");
 		if (p->n_name[0])
 			printf("%s", p->n_name);
@@ -408,8 +408,8 @@ adrput(FILE *io, NODE *p)
 	case OREG:
 		r = p->n_rval;
 		
-		if (p->n_lval)
-			fprintf(io, CONFMT "%s", p->n_lval, 
+		if (getlval(p))
+			fprintf(io, CONFMT "%s", getlval(p),
 			    *p->n_name ? "+" : "");
 		if (p->n_name[0])
 			printf("%s", p->n_name);
@@ -427,7 +427,7 @@ adrput(FILE *io, NODE *p)
 	case ICON:
 		/* addressable value of the constant */
 		if (p->n_type == LONGLONG || p->n_type == ULONGLONG) {
-			fprintf(io, "#" CONFMT, p->n_lval >> 32);
+			fprintf(io, "#" CONFMT, getlval(p) >> 32);
 		} else {
 			fputc('#', io);
 			conput(io, p);

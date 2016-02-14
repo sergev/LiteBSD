@@ -1,4 +1,4 @@
-/*	$Id: cpp.c,v 1.251 2016/01/24 10:02:23 ragge Exp $	*/
+/*	$Id: cpp.c,v 1.252 2016/02/06 09:39:21 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2010 Anders Magnusson (ragge@ludd.luth.se).
@@ -63,6 +63,7 @@
 #define	SBSIZE	1000000
 
 static usch	sbf[SBSIZE];
+static int	counter;
 /* C command */
 
 int tflag;	/* traditional cpp syntax */
@@ -99,6 +100,7 @@ static struct symtab *filloc;
 static struct symtab *linloc;
 static struct symtab *pragloc;
 static struct symtab *defloc;
+static struct symtab *ctrloc;
 int	trulvl;
 int	flslvl;
 int	elflvl;
@@ -156,7 +158,8 @@ static void *xrealloc(void *p, int sz);
 static void *xmalloc(int sz);
 
 usch locs[] =
-	{ FILLOC, LINLOC, PRAGLOC, DEFLOC, 'd','e','f','i','n','e','d',0 };
+	{ FILLOC, LINLOC, PRAGLOC, DEFLOC,
+	    'd','e','f','i','n','e','d',0, CTRLOC };
 
 int
 main(int argc, char **argv)
@@ -281,10 +284,12 @@ main(int argc, char **argv)
 	linloc = lookup((const usch *)"__LINE__", ENTER);
 	pragloc = lookup((const usch *)"_Pragma", ENTER);
 	defloc = lookup((const usch *)"defined", ENTER);
+	ctrloc = lookup((const usch *)"__COUNTER__", ENTER);
 	filloc->value = locs;
 	linloc->value = locs+1;
 	pragloc->value = locs+2;
-	defloc->value = locs+3;
+	defloc->value = locs+3; /* also have macro name here */
+	ctrloc->value = locs+12;
 
 	if (Mflag && !dMflag) {
 		char *c;
@@ -1483,6 +1488,10 @@ kfind(struct symtab *sp)
 		bufree(ib);
 		break;
 
+	case CTRLOC:
+		sheap("%d", counter++);
+		return 1;
+
 	default:
 		/* Search for '(' */
 		while (ISWSNL(c = cinput()))
@@ -1575,6 +1584,9 @@ submac(struct symtab *sp, int lvl, struct iobuf *ib, struct blocker *obl)
 		ob = exparg(lvl+1, ib, ob, bl);
 		bufree(ib);
 		DPRINT(("%d:submac: return exparg\n", lvl));
+		break;
+	case CTRLOC:
+		ob = strtobuf(sheap("%d", counter++), NULL);
 		break;
 	default:
 		cp = ib->cptr;
@@ -1709,10 +1721,14 @@ readargs1(struct symtab *sp, const usch **args)
 				do {
 					savch(c);
 				} while ((spechr[c = cinput()] & C_ID));
-				if ((sp = lookup(bp, FIND)) && 
-				    (sp == linloc)) {
-					stringbuf = bp;
-					sheap("%d", ifiles->lineno);
+				if ((sp = lookup(bp, FIND)) != NULL) {
+					if (sp == linloc) {
+						stringbuf = bp;
+						sheap("%d", ifiles->lineno);
+					} else if (sp == ctrloc) {
+						stringbuf = bp;
+						sheap("%d", counter++);
+					}
 				}
 				cunput(c);
 			} else

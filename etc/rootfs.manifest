@@ -953,7 +953,6 @@ file /usr/bin/paste
 file /usr/bin/patch
 file /usr/bin/pcc
 file /usr/bin/pcpp
-file /usr/bin/pkg
 file /usr/bin/portio
 file /usr/bin/pr
 file /usr/bin/printenv
@@ -1656,12 +1655,8 @@ file /usr/libexec/uucpd
 #
 # Files: /usr/local
 #
-default
-filemode 0755
-dir /usr/local/pkg
-dir /usr/local/pkg/plists
-mode 0444
-file /usr/local/pkg/plists/*** pkg info ***
+#default
+#filemode 0755
 
 #
 # Files: /usr/share

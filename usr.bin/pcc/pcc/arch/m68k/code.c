@@ -1,4 +1,4 @@
-/*	$Id: code.c,v 1.7 2015/10/08 18:45:29 ragge Exp $	*/
+/*	$Id: code.c,v 1.8 2016/01/30 17:26:19 ragge Exp $	*/
 /*
  * Copyright (c) 2014 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -244,7 +244,7 @@ builtin_return_address(const struct bitable *bt, NODE *a)
 	NODE *f;
 
 cerror((char *)__func__);
-	nframes = a->n_lval;
+	nframes = glval(a);
 	tfree(a);
 
 	f = block(REG, NIL, NIL, PTR+VOID, 0, 0);
@@ -269,7 +269,7 @@ builtin_frame_address(const struct bitable *bt, NODE *a)
 	NODE *f;
 
 cerror((char *)__func__);
-	nframes = a->n_lval;
+	nframes = glval(a);
 	tfree(a);
 
 	f = block(REG, NIL, NIL, PTR+VOID, 0, 0);
