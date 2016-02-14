@@ -5,7 +5,7 @@
 THISISAPORT="Yes"
 .include <bsd.prog.mk>
 
-FAKEDIR=./work
+FAKEDIR=${.CURDIR}/work
 PREFIX=/usr/local
 BINDIR=${PREFIX}/bin
 LOCALBASE=${PREFIX}
