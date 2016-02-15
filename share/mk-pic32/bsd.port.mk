@@ -11,10 +11,12 @@ BINDIR=${PREFIX}/bin
 LOCALBASE=${PREFIX}
 MANDIR=${PREFIX}/man/man
 PKGNAME=${PORT}-${V}
-TRUEDESTDIR=${DESTDIR}
 ARCH?=mipsel
 
 build: all
+
+# A special target for when we manually install files.
+do-install: beforeinstall
 
 fake: build
 	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
@@ -65,13 +67,7 @@ package: control
 
 # Update Installed-Size field in control file
 update-control: control
-	sed "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" -i control
-
-install: package
-	@echo -n "Installing ${PKGNAME}... "
-	@tar xzf ${FAKEDIR}/data.tar.gz -C "${TRUEDESTDIR}"
-	@echo "done!"
-#	@echo "Remember to edit etc/rootfs.manifest to include the port's files."
+	@sed "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" -i control
 
 clean-package: cleandir
 	rm -rf ${FAKEDIR}
