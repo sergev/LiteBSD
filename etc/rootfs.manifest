@@ -1247,6 +1247,7 @@ file /usr/include/ttyent.h
 file /usr/include/tzfile.h
 file /usr/include/unctrl.h
 file /usr/include/unistd.h
+file /usr/include/util.h
 file /usr/include/utime.h
 file /usr/include/utmp.h
 file /usr/include/vis.h
