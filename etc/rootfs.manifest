@@ -913,7 +913,11 @@ file /usr/bin/luac
 file /usr/bin/m4
 file /usr/bin/mail
 file /usr/bin/make
+
 file /usr/bin/man
+symlink /usr/bin/help
+target man
+
 file /usr/bin/mesg
 file /usr/bin/mg
 file /usr/bin/mkdep
@@ -1842,6 +1846,7 @@ file /usr/share/man/cat1/grep.0
 file /usr/share/man/cat1/groups.0
 file /usr/share/man/cat1/gzip.0
 file /usr/share/man/cat1/head.0
+file /usr/share/man/cat1/help.0
 file /usr/share/man/cat1/hexdump.0
 file /usr/share/man/cat1/hostname.0
 file /usr/share/man/cat1/id.0

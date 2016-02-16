@@ -50,6 +50,7 @@ static char sccsid[] = "@(#)man.c	8.17 (Berkeley) 1/31/95";
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <glob.h>
+#include <libgen.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +61,8 @@ static char sccsid[] = "@(#)man.c	8.17 (Berkeley) 1/31/95";
 #include "pathnames.h"
 
 int f_all, f_where;
+
+extern char *__progname;
 
 static void	 build_page __P((char *, char **));
 static void	 cat __P((char *));
@@ -85,6 +88,15 @@ main(argc, argv)
 	int ch, f_cat, f_how, found;
 	char **ap, *cmd, *machine, *p, *p_add, *p_path, *pager, *slashp;
 	char *conffile, buf[MAXPATHLEN * 2];
+
+	if (argv[1] == NULL && strcmp(basename(__progname), "help") == 0) {
+		static char *nargv[3];
+		nargv[0] = "man";
+		nargv[1] = "help";
+		nargv[2] = NULL;
+		argv = nargv;
+		argc = 2;
+	}
 
 	f_cat = f_how = 0;
 	conffile = p_add = p_path = NULL;
