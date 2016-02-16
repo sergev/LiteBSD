@@ -145,9 +145,7 @@ realinstall: _PROGSUBDIR
 	done; true
 .endif
 
-.if !defined(THISISAPORT)
 install: afterinstall maninstall
-.endif
 afterinstall: realinstall
 realinstall: beforeinstall
 .endif

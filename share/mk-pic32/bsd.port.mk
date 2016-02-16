@@ -2,7 +2,6 @@
 # Let us do special work with ports.
 #
 
-THISISAPORT="Yes"
 .include <bsd.prog.mk>
 
 FAKEDIR=${.CURDIR}/work
@@ -15,11 +14,12 @@ ARCH?=mipsel
 
 build: all
 
-# A special target for when we manually install files.
-do-install: beforeinstall
-
 fake: build
-	DESTDIR=${FAKEDIR} ${MAKE} afterinstall maninstall
+.ifdef "${PROG}"
+	DESTDIR=${FAKEDIR} ${MAKE} install
+.else
+	DESTDIR=${FAKEDIR} ${MAKE} do-install
+.endif
 
 control: fake
 .if !exists(${.CURDIR}/control)
