@@ -76,3 +76,7 @@ objdir: _SUBDIRUSE
 .if !target(tags)
 tags: _SUBDIRUSE
 .endif
+
+.if !target(package)
+package: _SUBDIRUSE
+.endif
