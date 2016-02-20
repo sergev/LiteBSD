@@ -183,13 +183,13 @@ prompt()
 			putstr(pbuf);
 		}
 		if ((pos = position(BOTTOM)) != NULL_POSITION) {
-			(void)snprintf(pbuf, sizeof(pbuf), " byte %lld",
-			    (long long)pos);
+			(void)snprintf(pbuf, sizeof(pbuf), " byte %ld",
+			    (long)pos);
 			putstr(pbuf);
 			if (!ispipe && (len = ch_length())) {
 				(void)snprintf(pbuf, sizeof(pbuf),
-				    "/%lld pct %lld%%", (long long)len,
-				    (long long)((100 * pos) / len));
+				    "/%ld pct %ld%%", (long)len,
+				    (long)((100 * pos) / len));
 				putstr(pbuf);
 			}
 		}
@@ -210,8 +210,8 @@ prompt()
 		else if (!ispipe &&
 		    (pos = position(BOTTOM)) != NULL_POSITION &&
 		    (len = ch_length())) {
-			(void)snprintf(pbuf, sizeof(pbuf), " (%lld%%)",
-			    (long long)((100 * pos) / len));
+			(void)snprintf(pbuf, sizeof(pbuf), " (%ld%%)",
+			    (long)((100 * pos) / len));
 			putstr(pbuf);
 		}
 		so_exit();
