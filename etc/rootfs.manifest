@@ -1204,6 +1204,7 @@ file /usr/include/libdwarf.h
 file /usr/include/libelf.h
 file /usr/include/libelftc.h
 file /usr/include/limits.h
+file /usr/include/linenoise.h
 file /usr/include/locale.h
 file /usr/include/lua.h
 file /usr/include/lua.hpp
@@ -1603,6 +1604,7 @@ file /usr/lib/libelftc.a
 file /usr/lib/libform.a
 file /usr/lib/libgcc.a
 file /usr/lib/libkvm.a
+file /usr/lib/liblinenoise.a
 file /usr/lib/liblua.a
 file /usr/lib/libm.a
 file /usr/lib/libmenu.a
