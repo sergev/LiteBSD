@@ -1221,6 +1221,7 @@ file /usr/include/nlist.h
 file /usr/include/ocurses.h
 file /usr/include/panel.h
 file /usr/include/paths.h
+file /usr/include/poll.h
 file /usr/include/pwd.h
 file /usr/include/ranlib.h
 file /usr/include/regex.h
@@ -1483,6 +1484,7 @@ file /usr/include/sys/msgbuf.h
 file /usr/include/sys/mtio.h
 file /usr/include/sys/namei.h
 file /usr/include/sys/param.h
+file /usr/include/sys/poll.h
 file /usr/include/sys/proc.h
 file /usr/include/sys/protosw.h
 file /usr/include/sys/ptrace.h
