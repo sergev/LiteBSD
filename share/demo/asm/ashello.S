@@ -5,7 +5,7 @@
  *  cc -c ashello.S
  *  ld ashello.o -o ashello
  */
-#include <syscall.h>
+#include <sys/syscall.h>
 
         .data                               // begin data segment
 hello:  .ascii  "Hello, assembly world!\n"  // a string

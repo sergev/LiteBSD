@@ -8,7 +8,7 @@
  * Run as:
  *  ./echo Make love not war
  */
-#include <syscall.h>
+#include <sys/syscall.h>
 
         .data                           // begin data segment
 eoln:   .ascii  "\n"
