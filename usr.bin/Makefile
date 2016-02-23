@@ -39,7 +39,7 @@ SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "luna68k"
 SUBDIR+=cmp ld look systat tail vmstat
 .elif	${MACHINE} == "mips"
-SUBDIR+=cmp ld look systat tail vmstat
+SUBDIR+=cmp ld look systat tail vmstat as
 .elif	${MACHINE} == "sparc"
 SUBDIR+=cmp ld look tail vmstat.sparc
 .elif	${MACHINE} == "tahoe"

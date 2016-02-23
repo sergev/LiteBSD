@@ -808,6 +808,7 @@ target /sbin/newfs
 file /usr/bin/apply
 file /usr/bin/apropos
 file /usr/bin/ar
+file /usr/bin/as
 file /usr/bin/at
 mode 04555
 owner 0                 root
