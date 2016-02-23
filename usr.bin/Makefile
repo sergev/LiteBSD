@@ -7,11 +7,11 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 	fsplit fstat ftp gcore gprof grep gzip head hexdump id indent \
 	join jot kdump ktrace lam last lastcomm leave locate \
 	lock logger login logname lorder lua m4 mail make man mesg mg mkdep \
-	mkfifo mklocale mkstr more msgs mt nc netstat nfsstat nice nm nohup \
-	pagesize passwd paste patch pcc pr printenv printf quota \
+	mkfifo mklocale mkstr mktemp more msgs mt nc netstat nfsstat nice \
+	nm nohup pagesize passwd paste patch pcc pr printenv printf quota \
 	rdist readelf renice rev rlogin rs rsh ruptime rwho sccs \
-	script sed shar showmount size sl soelim sort split sqlite3 \
-	strings su talk tcopy tee telnet tftp time tip \
+	script sed shar showmount size sl soelim sort split spell \
+	sqlite3 strings su talk tcopy tee telnet tftp time tip \
 	touch tput tr true tset tsort tty ul uname unexpand \
 	unifdef uniq unvis users uudecode uuencode vacation vi \
 	vis w wall wc what whatis whereis who whois window write \
@@ -27,8 +27,10 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 # compress: ported from RetroBSD
 # dc: ported from FreeBSD
 # deroff: ported from OpenBSD
+# spell: ported from OpenBSD (this is what the other BSDs use)
 
 # TODO: ex file sort uucp
+# file: most recent version in ports (2016-02-17)
 # sort: ported from last OpenBSD sort(1) (2015-03-16)
 
 # Cmp, look and tail all use mmap, so new-VM only.

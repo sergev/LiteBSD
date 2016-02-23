@@ -1,3 +1,6 @@
+.\"	$OpenBSD: rm.1,v 1.39 2015/10/13 04:30:53 daniel Exp $
+.\"	$NetBSD: rm.1,v 1.8 1995/07/25 19:37:30 jtc Exp $
+.\"
 .\" Copyright (c) 1990, 1993, 1994
 .\"	The Regents of the University of California.  All rights reserved.
 .\"
@@ -12,11 +15,7 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
+.\" 3. Neither the name of the University nor the names of its contributors
 .\"    may be used to endorse or promote products derived from this software
 .\"    without specific prior written permission.
 .\"
@@ -34,7 +33,7 @@
 .\"
 .\"	@(#)rm.1	8.5 (Berkeley) 12/5/94
 .\"
-.Dd December 5, 1994
+.Dd $Mdocdate: October 13 2015 $
 .Dt RM 1
 .Os
 .Sh NAME
@@ -42,12 +41,11 @@
 .Nd remove directory entries
 .Sh SYNOPSIS
 .Nm rm
-.Op Fl f | Fl i
-.Op Fl dPRrW
-.Ar file ...
+.Op Fl dfiPRr
+.Ar
 .Sh DESCRIPTION
 The
-.Nm rm
+.Nm
 utility attempts to remove the non-directory type files specified on the
 command line.
 If the permissions of the file do not permit writing, and the standard
@@ -55,7 +53,7 @@ input device is a terminal, the user is prompted (on the standard error
 output) for confirmation.
 .Pp
 The options are as follows:
-.Bl -tag -width flag
+.Bl -tag -width Ds
 .It Fl d
 Attempt to remove directories as well as other types of files.
 .It Fl f
@@ -66,7 +64,7 @@ the exit status to reflect an error.
 The
 .Fl f
 option overrides any previous
-.Fl i 
+.Fl i
 options.
 .It Fl i
 Request confirmation before attempting to remove each file, regardless of
@@ -75,69 +73,92 @@ terminal.
 The
 .Fl i
 option overrides any previous
-.Fl f 
+.Fl f
 options.
 .It Fl P
 Overwrite regular files before deleting them.
 Files are overwritten three times, first with the byte pattern 0xff,
 then 0x00, and then 0xff again, before they are deleted.
+Files with multiple links will be unlinked but not overwritten.
 .It Fl R
 Attempt to remove the file hierarchy rooted in each file argument.
-The 
+The
 .Fl R
 option implies the
 .Fl d
 option.
 If the
 .Fl i
-option is specified, the user is prompted for confirmation before 
-each directory's contents are processed (as well as before the attempt
-is made to remove the directory).
+option is specified, the user is prompted for confirmation before
+each directory (and its contents) are processed.
 If the user does not respond affirmatively, the file hierarchy rooted in
 that directory is skipped.
-.Pp
 .It Fl r
 Equivalent to
 .Fl R .
-.It Fl W
-Attempts to undelete the named files.
-Currently, this option can only be used to recover
-files covered by whiteouts.
 .El
 .Pp
 The
-.Nm rm
+.Nm
 utility removes symbolic links, not the files referenced by the links.
 .Pp
-It is an error to attempt to remove the files ``.'' and ``..''.
-.Pp
+It is an error to attempt to remove the files
+.Dq \&.
+or
+.Dq .. .
+It is forbidden to remove the file
+.Dq ..
+merely to avoid the antisocial consequences of inadvertently
+doing something like
+.Dq Cm rm -r .* .
+.Sh EXIT STATUS
 The
-.Nm rm
+.Nm
 utility exits 0 if all of the named files or file hierarchies were removed,
 or if the
 .Fl f
 option was specified and all of the existing files or file hierarchies were
 removed.
 If an error occurs,
-.Nm rm
+.Nm
 exits with a value >0.
+.Sh EXAMPLES
+Recursively remove all files contained within the
+.Pa foobar
+directory hierarchy:
+.Pp
+.Dl $ rm -rf foobar
+.Pp
+Either of these commands will remove the file
+.Pa -f :
+.Bd -literal -offset indent
+$ rm -- -f
+$ rm ./-f
+.Ed
 .Sh SEE ALSO
 .Xr rmdir 1 ,
-.Xr undelete 2 ,
+.\" .Xr undelete 2 ,
 .Xr unlink 2 ,
 .Xr fts 3 ,
 .Xr symlink 7
-.Sh BUGS
+.Sh STANDARDS
 The
-.Fl P
-option assumes that the underlying file system is a fixed-block file
-system.
-UFS is a fixed-block file system, LFS is not.
-In addition, only regular files are overwritten, other types of files
-are not.
-.Sh COMPATIBILITY
+.Nm
+utility is compliant with the
+.St -p1003.1-2008
+specification.
+.Pp
+The flags
+.Op Fl dP
+are extensions to that specification.
+.Sh HISTORY
+An
+.Nm
+command appeared in
+.At v1 .
+.Pp
 The
-.Nm rm
+.Nm
 utility differs from historical implementations in that the
 .Fl f
 option only masks attempts to remove non-existent files instead of
@@ -147,9 +168,17 @@ Also, historical
 .Bx
 implementations prompted on the standard output,
 not the standard error output.
-.Sh STANDARDS
+.Pp
+The interactive mode used to be a
+.Nm dsw
+command, a carryover from the ancient past with an
+amusing etymology.
+.Sh BUGS
 The
-.Nm rm
-command is expected to be
-.St -p1003.2
-compatible.
+.Fl P
+option assumes that both the underlying file system and storage medium write
+in place.
+This is true for the FFS and MS-DOS file systems and magnetic hard disks,
+but not true for most flash storage.
+In addition, only regular files are overwritten; other types of files
+are not.
