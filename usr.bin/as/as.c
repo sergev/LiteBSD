@@ -2028,6 +2028,8 @@ void align(align_bits)
         for (c=0; c<nbytes; c++) {
             count[segm]++;
             fputc(0, sfile[segm]);
+            if (count[segm] % WORDSZ == 0)
+                fputrel(0, rfile[segm]);
         }
     } else {
         count[segm] += nbytes;
@@ -2623,9 +2625,8 @@ void makeheader(rtsize, rdsize)
 
     section[S_SYMTAB].sh_offset = offset;
     section[S_SYMTAB].sh_size   = stlength;
-    offset += stlength;
 
-    section[S_SHSTRTAB].sh_offset = offset;
+    section[S_SHSTRTAB].sh_offset = shstroff;
     section[S_SHSTRTAB].sh_size   = sizeof shstr;
 
     shoff = ftell(stdout);
