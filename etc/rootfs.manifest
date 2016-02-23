@@ -1769,6 +1769,21 @@ link /usr/share/tmac/tmac.an
 target /usr/share/tmac/tmac.andoc
 
 #
+# Files: /usr/share/demo
+#
+dir /usr/share/demo
+dir /usr/share/demo/c
+file /usr/share/demo/c/Makefile
+file /usr/share/demo/c/hello.c
+file /usr/share/demo/c/q8.c
+file /usr/share/demo/c/skeleton.c
+file /usr/share/demo/c/rain.c
+dir /usr/share/demo/asm
+file /usr/share/demo/asm/Makefile
+file /usr/share/demo/asm/echo.S
+file /usr/share/demo/asm/ashello.S
+
+#
 # Files: /usr/share/man
 #
 dir /usr/share/man
