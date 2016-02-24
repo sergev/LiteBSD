@@ -2,7 +2,7 @@
 
 OUTPUT_FORMAT("elf32-littlemips")
 ENTRY(_start)
-SEARCH_DIR("/lib"); SEARCH_DIR("/usr/lib");
+SEARCH_DIR("/usr/lib");
 SECTIONS {
 	PROVIDE (__executable_start = 0x00400000);
 	. = 0x00400000 + SIZEOF_HEADERS;
