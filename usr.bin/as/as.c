@@ -826,6 +826,7 @@ int lookacmd()
         break;
     case 'p':
         if (! strcmp(".previous", name)) return LPREVIOUS;
+        if (! strcmp(".p2align", name)) return LALIGN;
         break;
     case 'r':
         if (! strcmp(".rdata", name)) return LRDATA;
@@ -1678,6 +1679,15 @@ fsa:    offset = getexpr(&segment);
         if ((type & (FOFF16 | FOFF18 | FHIGH16)) && getlex(&cval) != ',')
             uerror("comma expected");
 foff16: expr_flags = 0;
+        if (type & FRSB) {
+            /* Load/store instruction: check for empty offset expression. */
+            clex = getlex(&cval);
+            ungetlex(clex, cval);
+            if (clex == '(') {
+                /* Empty offset expression. */
+                goto frsb;
+            }
+        }
         offset = getexpr(&segment);
         relinfo.r_type = segmrel[segment];
         if (relinfo.r_type == REXT)
@@ -1767,6 +1777,7 @@ foff16: expr_flags = 0;
     /*
      * Last argument.
      */
+frsb:
     if (type & FRSB) {
         if (getlex(&cval) != '(')
             uerror("left par expected");
