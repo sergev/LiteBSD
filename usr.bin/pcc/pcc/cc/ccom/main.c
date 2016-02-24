@@ -1,4 +1,4 @@
-/*	$Id: main.c,v 1.132 2015/12/29 10:00:42 ragge Exp $	*/
+/*	$Id: main.c,v 1.133 2016/02/21 11:04:01 ragge Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Magnusson. All rights reserved.
@@ -308,6 +308,10 @@ main(int argc, char *argv[])
 	builtin_init();
 #endif
 
+#ifdef DWARF
+	if (gflag)
+		dwarf_init(argc ? argv[0] : "");
+#endif
 #ifdef STABS
 	if (gflag) {
 		stabs_file(argc ? argv[0] : "");
@@ -356,6 +360,10 @@ main(int argc, char *argv[])
 	}
 	fprintf(stderr, "ccom total time: %ld s %ld us\n",
 	    t2.tv_sec, t2.tv_usec);
+#endif
+#ifdef DWARF
+	if (gflag)
+		dwarf_end();
 #endif
 
 	if (sflag)

@@ -17,6 +17,7 @@ stripping=yes
 native=no
 useyasm=no
 stabs=no
+dwarf=no
 # allowed: UNSIGNED (4-char u_int), INT (4-char int), SHORT (2-char u_short)
 wchar_type=INT
 
@@ -352,6 +353,10 @@ esac
 
 if test "$stabs" = "yes"; then
 	AC_DEFINE(STABS, 1, [Enable STABS debugging output])
+fi
+
+if test "$dwarf" = "yes"; then
+	AC_DEFINE(DWARF, 1, [Enable DWARF debugging output])
 fi
 
 # Specify alternate assembler, linker, include and lib paths

@@ -2373,6 +2373,7 @@ stripping=yes
 native=no
 useyasm=no
 stabs=no
+dwarf=no
 # allowed: UNSIGNED (4-char u_int), INT (4-char int), SHORT (2-char u_short)
 wchar_type=INT
 
@@ -2725,6 +2726,12 @@ esac
 if test "$stabs" = "yes"; then
 
 $as_echo "#define STABS 1" >>confdefs.h
+
+fi
+
+if test "$dwarf" = "yes"; then
+
+$as_echo "#define DWARF 1" >>confdefs.h
 
 fi
 

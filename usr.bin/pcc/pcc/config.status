@@ -774,7 +774,7 @@ D["HAVE_ALLOCA"]=" 1"
 D["PCC_MAJOR"]=" 1"
 D["PCC_MINOR"]=" 2"
 D["PCC_MINORMINOR"]=" 0"
-D["VERSSTR"]=" \"Portable C Compiler 1.2.0.DEVEL 20160212 for mipsel-unknown-litebsd0.1\""
+D["VERSSTR"]=" \"Portable C Compiler 1.2.0.DEVEL 20160224 for mipsel-unknown-litebsd0.1\""
   for (key in D) D_is_set[key] = 1
   FS = ""
 }

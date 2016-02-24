@@ -145,6 +145,9 @@
 /* Enable STABS debugging output */
 /* #undef STABS */
 
+/* Enable DWARF debugging output */
+/* #undef DWARF */
+
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
@@ -161,7 +164,7 @@
 /* #undef TLS */
 
 /* Version string */
-#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160212 for mipsel-unknown-litebsd0.1"
+#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160224 for mipsel-unknown-litebsd0.1"
 
 /* Size of wide-character type in chars */
 #define WCHAR_SIZE 2
