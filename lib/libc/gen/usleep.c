@@ -48,7 +48,7 @@ static char sccsid[] = "@(#)usleep.c	8.1 (Berkeley) 6/4/93";
 static int ringring;
 static void sleephandler();
 
-void
+int
 usleep(useconds)
 	unsigned int useconds;
 {
