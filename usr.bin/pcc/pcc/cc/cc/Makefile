@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.36 2015/11/17 22:34:17 plunky Exp $
+#	$Id: Makefile.in,v 1.37 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for the cc part of pcc.
 #
@@ -23,24 +23,24 @@ TARGET = mipsel-unknown-litebsd0.1
 VERSION = 1.2.0.DEVEL
 PCCLIBDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/lib
 PCCINCDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/include
-CFLAGS += -Wall -Wmissing-prototypes -Wshadow -Wsign-compare -Wno-error \
-	-ffunction-sections -fdata-sections
+CFLAGS += -ffunction-sections -fdata-sections
 CPPFLAGS =  -DLIBEXECDIR=\"$(libexecdir)/\" \
-	 -DGCC_COMPAT -DINCLUDEDIR=\"$(includedir)/\" \
+	 -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -DINCLUDEDIR=\"$(includedir)/\" \
 	-DPCCINCDIR=\"$(PCCINCDIR)/\" -DPCCLIBDIR=\"$(PCCLIBDIR)/\" \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) -DTARGOSVER=$(TARGOSVER) \
 	-DCXXPROGNAME=\"$(BINPREFIX)p++$(EXEEXT)\" \
 	-DCPPROGNAME=\"$(BINPREFIX)pcpp$(EXEEXT)\" \
 	-I$(top_srcdir)/cc/driver -I$(top_builddir) \
-	-I$(top_srcdir)/os/$(TARGOS) -I$(MIPDIR) -I$(MDIR)
-LIBS =
-LDFLAGS += -Wl,--gc-sections
+	-I$(top_srcdir)/os/$(TARGOS) -I$(MIPDIR) -I$(MDIR) -I$(COMMONDIR)
+LIBS = -lc -lgcc
+LDFLAGS += -Wl,--gc-sections -s
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 
 MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
+COMMONDIR=$(top_srcdir)/common
 
 DEST=cc$(EXEEXT)
 DRIVERS=pcc pcpp p++ cc
@@ -52,8 +52,8 @@ OBJS=	cc.o compat.o strlist.o xalloc.o
 cc.o:	$(srcdir)/cc.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cc.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 strlist.o: $(top_srcdir)/cc/driver/strlist.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(top_srcdir)/cc/driver/strlist.c
@@ -62,7 +62,7 @@ xalloc.o: $(top_srcdir)/cc/driver/xalloc.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(top_srcdir)/cc/driver/xalloc.c
 
 $(DEST): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 install:
 	test -z "$(DESTDIR)$(bindir)" || mkdir -p "$(DESTDIR)$(bindir)"
@@ -79,5 +79,3 @@ clean:
 
 distclean: clean
 	rm -f  Makefile
-
-.include <bsd.prog.mk>

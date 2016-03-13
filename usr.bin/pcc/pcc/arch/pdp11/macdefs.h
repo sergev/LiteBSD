@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.10 2015/11/24 17:35:12 ragge Exp $	*/
+/*	$Id: macdefs.h,v 1.11 2016/03/05 15:53:04 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -233,4 +233,3 @@ int COLORMAP(int c, int *r);
 #define	SINCW		(MAXSPECIAL+3)	/* post-increment */
 #define	SARGSUB		(MAXSPECIAL+4)	/* arg pointer to array */
 #define	SARGINC		(MAXSPECIAL+5)	/* post-increment arg */
-#define NATIVE_FLOATING_POINT

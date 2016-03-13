@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.17 2015/11/24 17:35:11 ragge Exp $	*/
+/*	$Id: macdefs.h,v 1.19 2016/03/09 18:19:56 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -251,7 +251,12 @@ int features(int f);
 	{ "__builtin_va_copy", arm_builtin_va_copy },
 #endif
 
+#undef NODE
+#ifdef LANG_CXX
 #define NODE struct node
+#else
+#define NODE struct p1node
+#endif
 struct node;
 struct bitable;
 NODE *arm_builtin_stdarg_start(const struct bitable *bt, NODE *a);
@@ -262,4 +267,3 @@ NODE *arm_builtin_va_copy(const struct bitable *bt, NODE *a);
 
 #define COM     "\t@ "
 #define NARGREGS	4
-#define NATIVE_FLOATING_POINT

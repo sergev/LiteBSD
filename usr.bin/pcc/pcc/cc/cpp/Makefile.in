@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.53 2014/12/22 22:06:22 plunky Exp $
+#	$Id: Makefile.in,v 1.54 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for cpp
 #
@@ -17,7 +17,8 @@ CC = @CC@
 EXEEXT = @EXEEXT@
 CFLAGS = @CFLAGS@ @ADD_CFLAGS@
 CPPFLAGS = @CPPFLAGS@ @ADD_CPPFLAGS@ \
-	-I$(srcdir) -I$(top_builddir) -I$(builddir) -I$(MIPDIR) -I$(MDIR)
+	-I$(srcdir) -I$(top_builddir) -I$(builddir) -I$(MIPDIR) -I$(MDIR) \
+	-I$(COMMONDIR)
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 YACC = @YACC@
@@ -29,6 +30,7 @@ TARGMACH = @targmach@
 
 MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
+COMMONDIR=$(top_srcdir)/common
 
 DEST=@BINPREFIX@cpp$(EXEEXT)
 MANPAGE=@BINPREFIX@cpp
@@ -40,8 +42,8 @@ HDRS=	cpp.h
 
 $(OBJS): $(HDRS)
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 cpp.o: $(srcdir)/cpp.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cpp.c

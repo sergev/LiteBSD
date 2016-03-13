@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.20 2015/12/31 16:21:02 ragge Exp $	*/
+/*	$Id: trees.c,v 1.21 2016/03/05 15:31:25 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -178,12 +178,12 @@ buildtree(int o, NODE *l, NODE *r)
 
 	if (o == ANDAND || o == OROR || o == NOT) {
 		if (l->n_op == FCON) {
-			p = bcon(!FLOAT_ISZERO(((union flt *)l->n_dcon)));
+			p = bcon(!FLOAT_ISZERO(FCAST(l->n_dcon)));
 			nfree(l);
 			l = p;
 		}
 		if (o != NOT && r->n_op == FCON) {
-			p = bcon(!FLOAT_ISZERO(((union flt *)r->n_dcon)));
+			p = bcon(!FLOAT_ISZERO(FCAST(r->n_dcon)));
 			nfree(r);
 			r = p;
 		}
@@ -202,7 +202,7 @@ buildtree(int o, NODE *l, NODE *r)
 	} else if (o == NOT && l->n_op == FCON) {
 		l = clocal(block(SCONV, l, NIL, INT, 0, 0));
 	} else if( o == UMINUS && l->n_op == FCON ){
-			FLOAT_NEG(((union flt *)l->n_dcon));
+			FLOAT_NEG(FCAST(l->n_dcon));
 			return(l);
 
 	} else if( o==QUEST &&
@@ -272,18 +272,21 @@ buildtree(int o, NODE *l, NODE *r)
 	} else if (opty == BITYPE && (l->n_op == FCON || l->n_op == ICON) &&
 	    (r->n_op == FCON || r->n_op == ICON) && (o == PLUS || o == MINUS ||
 	    o == MUL || o == DIV || (o >= EQ && o <= GT) )) {
-		TWORD t;
-#define D(x)	((union flt *)x)
+#define D(x)	((FLT *)x)
 #ifndef CC_DIV_0
 		if (o == DIV &&
 		    ((r->n_op == ICON && glval(r) == 0) ||
 		     (r->n_op == FCON && FLOAT_EQ(D(r->n_dcon), FLOAT_ZERO))))
 				goto runtime; /* HW dependent */
 #endif
-		if (l->n_op == ICON)
-			FLOAT_INT2FP(D(l->n_dcon), glval(l), l->n_type);
-		if (r->n_op == ICON)
-			FLOAT_INT2FP(D(r->n_dcon), glval(r), r->n_type);
+		if (l->n_op == ICON) {
+			if (!concast(l, r->n_type))
+				cerror("fail cast const");
+		} else if (r->n_op == ICON) {
+			if (!concast(r, l->n_type))
+				cerror("fail cast const");
+		}
+
 		switch(o){
 		case PLUS:
 		case MINUS:
@@ -291,21 +294,18 @@ buildtree(int o, NODE *l, NODE *r)
 		case DIV:
 			switch (o) {
 			case PLUS:
-				FLOAT_PLUS(D(l->n_dcon), D(l->n_dcon), D(r->n_dcon));
+				FLOAT_PLUS(l, r);
 				break;
 			case MINUS:
-				FLOAT_MINUS(D(l->n_dcon), D(l->n_dcon), D(r->n_dcon));
+				FLOAT_MINUS(l, r);
 				break;
 			case MUL:
-				FLOAT_MUL(D(l->n_dcon), D(l->n_dcon), D(r->n_dcon));
+				FLOAT_MUL(l, r);
 				break;
 			case DIV:
-				FLOAT_DIV(D(l->n_dcon), D(l->n_dcon), D(r->n_dcon));
+				FLOAT_DIV(l, r);
 				break;
 			}
-			t = (l->n_type > r->n_type ? l->n_type : r->n_type);
-			l->n_op = FCON;
-			l->n_type = t;
 			nfree(r);
 			return(l);
 		case EQ:

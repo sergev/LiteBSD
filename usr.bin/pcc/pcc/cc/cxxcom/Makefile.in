@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.6 2014/12/22 22:06:23 plunky Exp $
+#	$Id: Makefile.in,v 1.7 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for cxxcom
 #
@@ -14,7 +14,7 @@ CFLAGS = @CFLAGS@ @ADD_CFLAGS@
 CPPFLAGS = @CPPFLAGS@ @ADD_CPPFLAGS@ -D_ISOC99_SOURCE -DLANG_CXX \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) -I$(MIPDIR) -I$(MDIR) \
-	-I$(top_srcdir)/os/$(TARGOS)
+	-I$(top_srcdir)/os/$(TARGOS) -I$(COMMONDIR)
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 LEX = @LEX@
@@ -36,6 +36,7 @@ INSTALL_DATA = @INSTALL_DATA@
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 MIPDIR=$(top_srcdir)/mip
+COMMONDIR=$(top_srcdir)/common
 
 DEST=@BINPREFIX@cxxcom$(EXEEXT)
 MANPAGE=@BINPREFIX@cxxcom
@@ -51,7 +52,7 @@ OBJS=	builtins.o cgram.o code.o common.o compat.o external.o		\
 LOBJS=	mkext.lo common.lo table.lo
 
 HDRS=	$(srcdir)/pass1.h $(MIPDIR)/pass2.h $(MIPDIR)/manifest.h	\
-	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(MIPDIR)/compat.h
+	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(COMMONDIR)/compat.h
 
 #
 # round 1: generate external.[ch], cgram.[ch] & scan.c
@@ -101,8 +102,8 @@ code.o: $(MDIR)/code.c
 common.o: $(MIPDIR)/common.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/common.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 cxxcode.o: $(srcdir)/cxxcode.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cxxcode.c

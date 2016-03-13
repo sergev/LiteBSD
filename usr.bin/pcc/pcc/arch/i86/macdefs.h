@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.6 2015/11/24 17:35:11 ragge Exp $	*/
+/*	$Id: macdefs.h,v 1.7 2016/03/05 15:53:04 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -332,4 +332,3 @@ int xasmconstregs(char *);
 
 /* target specific attributes */
 #define	ATTR_MI_TARGET	ATTR_I86_FPPOP
-#define NATIVE_FLOATING_POINT

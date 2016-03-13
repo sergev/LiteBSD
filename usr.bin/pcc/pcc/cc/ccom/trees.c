@@ -1,4 +1,4 @@
-/*	$Id: trees.c,v 1.371 2016/02/09 21:36:33 ragge Exp $	*/
+/*	$Id: trees.c,v 1.373 2016/03/05 15:49:36 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -275,7 +275,8 @@ buildtree(int o, P1ND *l, P1ND *r)
 	} else if (opty == BITYPE && (l->n_op == FCON || l->n_op == ICON) &&
 	    (r->n_op == FCON || r->n_op == ICON) && (o == PLUS || o == MINUS ||
 	    o == MUL || o == DIV || (o >= EQ && o <= GT) )) {
-		TWORD t;
+		/* at least one side is FCON */
+
 #ifndef CC_DIV_0
 		if (o == DIV &&
 		    ((r->n_op == ICON && glval(r) == 0) ||
@@ -283,15 +284,13 @@ buildtree(int o, P1ND *l, P1ND *r)
 				goto runtime; /* HW dependent */
 #endif
 		if (l->n_op == ICON) {
-			CONSZ v = glval(l);
-			l->n_dcon = stmtalloc(sizeof(union flt));
-			FLOAT_INT2FP(l->n_dcon, v, l->n_type);
+			if (!concast(l, r->n_type))
+				cerror("fail cast const");
+		} else if (r->n_op == ICON) {
+			if (!concast(r, l->n_type))
+				cerror("fail cast const");
 		}
-		if (r->n_op == ICON) {
-			CONSZ v = glval(r);
-			r->n_dcon = stmtalloc(sizeof(union flt));
-			FLOAT_INT2FP(r->n_dcon, v, r->n_type);
-		}
+
 		switch(o){
 		case PLUS:
 		case MINUS:
@@ -299,21 +298,18 @@ buildtree(int o, P1ND *l, P1ND *r)
 		case DIV:
 			switch (o) {
 			case PLUS:
-				FLOAT_PLUS(l->n_dcon, l->n_dcon, r->n_dcon);
+				FLOAT_PLUS(l, r);
 				break;
 			case MINUS:
-				FLOAT_MINUS(l->n_dcon, l->n_dcon, r->n_dcon);
+				FLOAT_MINUS(l, r);
 				break;
 			case MUL:
-				FLOAT_MUL(l->n_dcon, l->n_dcon, r->n_dcon);
+				FLOAT_MUL(l, r);
 				break;
 			case DIV:
-				FLOAT_DIV(l->n_dcon, l->n_dcon, r->n_dcon);
+				FLOAT_DIV(l, r);
 				break;
 			}
-			t = (l->n_type > r->n_type ? l->n_type : r->n_type);
-			l->n_op = FCON;
-			l->n_type = t;
 			p1nfree(r);
 			return(l);
 		case EQ:
@@ -795,7 +791,7 @@ ccast(P1ND *p, TWORD t, TWORD u, union dimfun *df, struct attr *ap)
 
 /*
  * Do an actual cast of a constant (if possible).
- * Routine assumes 2-complement (is there anything else today?)
+ * Routine assumes 2-complement.  p is cast to type t.
  * Returns 1 if handled, 0 otherwise.
  */
 int
@@ -834,7 +830,7 @@ concast(P1ND *p, TWORD t)
 			}
 		} else if (t <= LDOUBLE) {
 			p->n_op = FCON;
-			p->n_dcon = stmtalloc(sizeof(union flt));
+			p->n_dcon = fltallo();
 			FLOAT_INT2FP(p->n_dcon, val, p->n_type);
 		}
 	} else { /* p->n_op == FCON */

@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.36 2015/11/17 22:34:17 plunky Exp $
+#	$Id: Makefile.in,v 1.37 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for the cc part of pcc.
 #
@@ -32,7 +32,7 @@ CPPFLAGS = @CPPFLAGS@ -DLIBEXECDIR=\"$(libexecdir)/\" \
 	-DCXXPROGNAME=\"$(BINPREFIX)p++$(EXEEXT)\" \
 	-DCPPROGNAME=\"$(BINPREFIX)pcpp$(EXEEXT)\" \
 	-I$(top_srcdir)/cc/driver -I$(top_builddir) \
-	-I$(top_srcdir)/os/$(TARGOS) -I$(MIPDIR) -I$(MDIR)
+	-I$(top_srcdir)/os/$(TARGOS) -I$(MIPDIR) -I$(MDIR) -I$(COMMONDIR)
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 INSTALL = @INSTALL@
@@ -41,6 +41,7 @@ INSTALL_DATA = @INSTALL_DATA@
 
 MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
+COMMONDIR=$(top_srcdir)/common
 
 DEST=cc$(EXEEXT)
 DRIVERS=pcc pcpp p++
@@ -52,8 +53,8 @@ OBJS=	cc.o compat.o strlist.o xalloc.o
 cc.o:	$(srcdir)/cc.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cc.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 strlist.o: $(top_srcdir)/cc/driver/strlist.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(top_srcdir)/cc/driver/strlist.c

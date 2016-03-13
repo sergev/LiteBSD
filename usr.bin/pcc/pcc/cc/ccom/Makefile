@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.47 2015/08/13 20:03:17 ragge Exp $
+#	$Id: Makefile.in,v 1.49 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for ccom
 #
@@ -10,14 +10,13 @@ top_builddir=../..
 EXEEXT = 
 BINPREFIX = 
 CC_FOR_BUILD = gcc
-CFLAGS += -Wall -Wmissing-prototypes -Wshadow -Wsign-compare -Wno-error \
-	-ffunction-sections -fdata-sections
-CPPFLAGS =   -DGCC_COMPAT -D_ISOC99_SOURCE \
+CFLAGS += -ffunction-sections -fdata-sections
+CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -D_ISOC99_SOURCE \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) -I$(MIPDIR) -I$(MDIR) \
-	-I$(top_srcdir)/os/$(TARGOS)
-LIBS =
-LDFLAGS += -Wl,--gc-sections
+	-I$(top_srcdir)/os/$(TARGOS) -I$(COMMONDIR)
+LIBS = -lc -lgcc
+LDFLAGS += -Wl,--gc-sections -s
 LEX = flex
 LFLAGS =
 LEX_OUTPUT_ROOT = lex.yy
@@ -42,6 +41,7 @@ CF1=
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 MIPDIR=$(top_srcdir)/mip
+COMMONDIR=$(top_srcdir)/common
 
 DEST=$(BINPREFIX)ccom$(EXEEXT)
 MANPAGE=$(BINPREFIX)ccom
@@ -49,12 +49,12 @@ MKEXT=mkext$(EXEEXT)
 
 all: $(DEST)
 
-OBJS=	builtins.o cgram.o code.o common.o compat.o external.o		\
+OBJS=	builtins.o cgram.o code.o common.o compat.o dwarf.o external.o	\
 	gcc_compat.o init.o inline.o local.o local2.o main.o		\
 	match.o optim.o optim2.o order.o pftn.o reader.o		\
 	regs.o scan.o stabs.o symtabs.o table.o trees.o unicode.o
 
-OBJS0=  builtins.o cgram.o code.o common.o compat.o external.o          \
+OBJS0=  builtins.o cgram.o code.o common.o compat.o dwarf.o external.o	\
 	gcc_compat.o init.o inline.o local.o main.o             	\
 	optim.o pftn.o 							\
 	scan.o stabs.o symtabs.o trees.o unicode.o
@@ -68,8 +68,8 @@ OBJS1=  common2.o compat.o external.o           			\
 LOBJS=	mkext.lo common.lo table.lo
 
 HDRS=	$(srcdir)/pass1.h $(MIPDIR)/pass2.h $(MIPDIR)/manifest.h	\
-	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(MIPDIR)/compat.h		\
-	$(MIPDIR)/unicode.h
+	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(COMMONDIR)/compat.h	\
+	$(COMMONDIR)/unicode.h
 
 #
 # round 1: generate external.[ch], cgram.[ch] & scan.c
@@ -87,7 +87,7 @@ table.lo: $(MDIR)/table.c
 	$(CC_FOR_BUILD) $(CPPFLAGS) -DMKEXT -c -o $@ $(MDIR)/table.c
 
 $(MKEXT): $(LOBJS)
-	$(CC_FOR_BUILD) $(LOBJS) -o $@ $(LIBS)
+	$(CC_FOR_BUILD) $(LOBJS) -o $@
 
 external.c: $(MKEXT)
 	$(builddir)/$(MKEXT)
@@ -122,8 +122,11 @@ common.o: $(MIPDIR)/common.c
 common2.o: $(MIPDIR)/common.c
 	$(CC) $(CF1) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/common.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
+
+dwarf.o: $(srcdir)/dwarf.c
+	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/dwarf.c
 
 external.o: external.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ external.c
@@ -185,21 +188,21 @@ table.o: $(MDIR)/table.c
 trees.o: $(srcdir)/trees.c
 	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/trees.c
 
-unicode.o: $(MIPDIR)/unicode.c
-	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/unicode.c
+unicode.o: $(COMMONDIR)/unicode.c
+	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/unicode.c
 
 #
 # round 3: build $(DEST)
 #
 
 $(CCOM): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 $(CC0):	$(OBJS0)
-	$(CC) $(LDFLAGS) $(OBJS0) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS0) -o $@ $(LIBS)
 
 $(CC1):	$(OBJS1)
-	$(CC) $(LDFLAGS) $(OBJS1) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS1) -o $@ $(LIBS)
 
 install: $(DEST)
 	test -z "$(DESTDIR)$(libexecdir)" || mkdir -p "$(DESTDIR)$(libexecdir)"

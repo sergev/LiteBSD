@@ -5,8 +5,8 @@
 
 top_srcdir=../..
 top_builddir=../..
-prefix = /usr
-exec_prefix = ${prefix}
+prefix = /usr/local
+exec_prefix = /usr/local
 bindir = ${exec_prefix}/bin
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
@@ -21,7 +21,7 @@ PCCLIBDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/lib
 PCCINCDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/include
 F77LIBDIR=-L$(prefix)/lib
 CFLAGS = -g -O2  -Wall -Wmissing-prototypes -Wshadow -Wsign-compare
-CPPFLAGS =   -DGCC_COMPAT -DLANG_F77 \
+CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -DLANG_F77 \
 	-DLIBEXECDIR=\"$(libexecdir)\" -DINCLUDEDIR=\"$(includedir)\" \
 	-DPCCINCDIR=\"$(PCCINCDIR)/\" -DPCCLIBDIR=\"$(PCCLIBDIR)/\" \
 	-DLIBDIR=\"$(F77LIBDIR)\" -Dmach_$(TARGMACH) -Dos_$(TARGOS) \
@@ -29,10 +29,10 @@ CPPFLAGS =   -DGCC_COMPAT -DLANG_F77 \
 LIBS = 
 LDFLAGS = 
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL}
+INSTALL_PROGRAM = ${INSTALL} -s
 INSTALL_DATA = ${INSTALL} -m 644
 OBJS=f77.o
-DEST=f77
+DEST=mipsel-unknown-litebsd0.1-f77
 
 MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)

@@ -7,17 +7,11 @@
 /* Using a.out ABI */
 /* #undef AOUTABI */
 
-/* Define path to alternate assembler */
-/* #undef ASSEMBLER */
-
 /* Using Classic 68k ABI */
 /* #undef CLASSIC68K */
 
 /* Using COFF ABI */
 /* #undef COFFABI */
-
-/* Define path to alternate compiler */
-/* #undef COMPILER */
 
 /* Using ECOFF ABI */
 /* #undef ECOFFABI */
@@ -34,17 +28,11 @@
 /* Define to 1 if you have the `getopt' function. */
 #define HAVE_GETOPT 1
 
-/* Define to 1 if you have the <inttypes.h> header file. */
-/* #undef HAVE_INTTYPES_H */
-
 /* Define to 1 if you have the <libgen.h> header file. */
-/* #undef HAVE_LIBGEN_H */
-
-/* Define to 1 if you have the <malloc.h> header file. */
-/* #undef HAVE_MALLOC_H */
+#define HAVE_LIBGEN_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-/* #undef HAVE_MEMORY_H */
+#define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `mkstemp' function. */
 #define HAVE_MKSTEMP 1
@@ -59,7 +47,7 @@
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
@@ -69,9 +57,6 @@
 
 /* Define to 1 if you have the `strlcpy' function. */
 #define HAVE_STRLCPY 1
-
-/* Define to 1 if you have the `strtold' function. */
-/* #undef HAVE_STRTOLD */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
@@ -96,12 +81,6 @@
 
 /* Define if host is LITTLE endian */
 #define HOST_LITTLE_ENDIAN 1
-
-/* Define alternate standard lib directory */
-/* #undef LIBDIR */
-
-/* Define path to alternate linker */
-/* #undef LINKER */
 
 /* Using Mach-O ABI */
 /* #undef MACHOABI */
@@ -139,9 +118,6 @@
 /* Using PE/COFF ABI */
 /* #undef PECOFFABI */
 
-/* Define path to alternate preprocessor */
-/* #undef PREPROCESSOR */
-
 /* Enable STABS debugging output */
 /* #undef STABS */
 
@@ -150,9 +126,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
-
-/* Define alternate standard include directory */
-/* #undef STDINC */
 
 /* Define if target defaults to BIG endian */
 /* #undef TARGET_BIG_ENDIAN */
@@ -164,13 +137,13 @@
 /* #undef TLS */
 
 /* Version string */
-#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160224 for mipsel-unknown-litebsd0.1"
+#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160313 for mipsel-unknown-litebsd0.1"
 
 /* Size of wide-character type in chars */
-#define WCHAR_SIZE 2
+#define WCHAR_SIZE 4
 
 /* Type to use for wide characters */
-#define WCHAR_TYPE USHORT
+#define WCHAR_TYPE INT
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

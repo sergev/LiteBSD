@@ -1,4 +1,4 @@
-/*	$Id: local.c,v 1.37 2015/12/31 16:21:57 ragge Exp $	*/
+/*	$Id: local.c,v 1.38 2016/03/05 15:56:14 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -303,8 +303,8 @@ clocal(NODE *p)
 			case DOUBLE:
 			case FLOAT:
 				l->n_op = FCON;
-				l->n_dcon = tmpalloc(sizeof(union flt));
-				((union flt *)l->n_dcon)->fp = val;
+				l->n_dcon = fltallo();
+				FCAST(l->n_dcon)->fp = val;
 				break;
 			default:
 				cerror("unknown type %d", m);
@@ -315,9 +315,9 @@ clocal(NODE *p)
 		} else if (o == FCON) {
 			CONSZ lv;
 			if (p->n_type == BOOL)
-				lv = !FLOAT_ISZERO(((union flt *)l->n_dcon));
+				lv = !FLOAT_ISZERO(FCAST(l->n_dcon));
 			else {
-				FLOAT_FP2INT(lv, ((union flt *)l->n_dcon), m);
+				FLOAT_FP2INT(lv, FCAST(l->n_dcon), m);
 			}
 			slval(l, lv);
 			l->n_sp = NULL;
@@ -495,7 +495,7 @@ ninval(CONSZ off, int fsz, NODE *p)
                 return 0;
         case LDOUBLE:
         case DOUBLE:
-                u.d = (double)((union flt *)p->n_dcon)->fp;
+                u.d = (double)FCAST(p->n_dcon)->fp;
 		if (bigendian) {
 	                printf("\t.word\t%d\n", u.i[0]);
 			printf("\t.word\t%d\n", u.i[1]);
@@ -505,7 +505,7 @@ ninval(CONSZ off, int fsz, NODE *p)
 		}
                 break;
         case FLOAT:
-                u.f = (float)((union flt *)p->n_dcon)->fp;
+                u.f = (float)FCAST(p->n_dcon)->fp;
                 printf("\t.word\t0x%x\n", u.i[0]);
                 break;
         default:

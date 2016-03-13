@@ -1,4 +1,4 @@
-/*      $Id: dwarf.c,v 1.1 2016/02/21 11:11:55 ragge Exp $     */
+/*      $Id: dwarf.c,v 1.2 2016/03/08 18:17:45 ragge Exp $     */
 
 /*
  * Copyright (c) 2016 Anders Magnusson (ragge@ludd.luth.se).
@@ -120,7 +120,7 @@ apair(int d, int e)
 static void
 strng(char *s)
 {
-	printf(PRTPREF "\t.cstring \"%s\"\n", s); /* XXX common code? */
+	printf(PRTPREF "\t.ascii \"%s\\0\"\n", s); /* XXX common code? */
 }
 
 static void
@@ -225,13 +225,24 @@ dwarf_init(char *iname)
 	il128(1); /* first entry */
 	ilbl(dwcfl = dwlab());
 	istring(PACKAGE_STRING);
-	istring(getwd(buf));
+	istring(getcwd(buf, MAXPATHLEN));
 	il128(DW_LANG_C99);
 	ilbl(dwbtext = dwlab());
 	ilbl(dwetext = dwlab());
 
 	locctr(PROG, NULL);
 	printf(PRTPREF DLABEL ":\n", dwbtext);
+}
+
+void
+dwarf_file(char *fn)
+{
+	/* if first file name, print out as initial and remember */
+	if (dwcfl) {
+		dwslabstr(dwcfl, fn);
+		dwcfl = 0;
+	}
+	/* XXX add more here */
 }
 
 void

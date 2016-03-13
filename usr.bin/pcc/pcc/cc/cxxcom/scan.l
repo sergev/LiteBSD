@@ -1,5 +1,5 @@
 %{
-/*	$Id: scan.l,v 1.6 2015/11/13 11:33:14 ragge Exp $	*/
+/*	$Id: scan.l,v 1.7 2016/03/05 15:31:25 ragge Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Magnusson. All rights reserved.
@@ -343,8 +343,8 @@ f2(char *str)
 #endif
 	dc = typround(dc, eptr, &tw);
 	p = block(FCON, NIL, NIL, tw, 0, 0);
-	p->n_dcon = tmpalloc(sizeof(union flt));;
-	((union flt *)p->n_dcon)->fp = dc;
+	p->n_dcon = fltallo();
+	FCAST(p->n_dcon)->fp = dc;
 	return p;
 }
 
@@ -407,8 +407,8 @@ fhexcon(char *c)
 		d /= 2, ed++;
 	d = typround(d, ep, &tw);
 	p = block(FCON, NIL, NIL, tw, 0, 0);
-	p->n_dcon = tmpalloc(sizeof(union flt));;
-	((union flt *)p->n_dcon)->fp = d;
+	p->n_dcon = fltallo();
+	FCAST(p->n_dcon)->fp = d;
 	return p;
 }
 #endif

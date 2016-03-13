@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.17 2015/11/24 17:35:12 ragge Exp $	*/
+/*	$Id: macdefs.h,v 1.18 2016/03/05 15:53:04 ragge Exp $	*/
 
 /*
  * Copyright (c) 2008 David Crawshaw <david@zentus.com>
@@ -264,4 +264,3 @@ typedef long long OFFSZ;
 #define ENCRD(x)	(x)
 
 int COLORMAP(int c, int *r);
-#define NATIVE_FLOATING_POINT

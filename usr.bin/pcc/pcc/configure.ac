@@ -15,6 +15,7 @@ gcccompat=yes
 pccdebug=yes
 stripping=yes
 native=no
+nativefp=yes
 useyasm=no
 stabs=no
 dwarf=no
@@ -123,7 +124,6 @@ case "$target_os" in
     litebsd*)
 	targos=litebsd
 	abi=elf
-	wchar_type=USHORT
 	case "$target_cpu" in
 	    mips*) targmach=mips ;;
 	esac
@@ -437,6 +437,17 @@ if test "$stripping" = "yes"; then
 	fi
 fi
 
+AC_ARG_ENABLE(nativefp,
+	AS_HELP_STRING([--disable-nativefp],
+		[Disable use of compiler host floating point.]),
+	[nfp=$enableval], [])
+if test "$nfp" = "no"; then
+	nativefp=no
+fi
+if test "$nativefp" = "yes"; then
+	ADD_CPPFLAGS="$ADD_CPPFLAGS -DNATIVE_FLOATING_POINT"
+fi
+
 AC_ARG_WITH(yasm,
 	AS_HELP_STRING([--use-yasm], [Use yasm assembler]),
 	useyasm=$withval,
@@ -682,6 +693,7 @@ echo "Using Multi-Arch path ............ ${multiarch}"
 echo "Using include path ............... ${altincdir-<default>}"
 echo "Using library path ............... ${altlibdir-<default>}"
 echo "Has TLS support .................. $tls"
+echo "Has native floating point ........ $nativefp"
 echo "Has GCC compatibility ............ $gcccompat"
 echo "Has PCC debugging ................ $pccdebug"
 echo "Type of wchar_t is ............... ${wchar_type} (${wchar_size} chars)"

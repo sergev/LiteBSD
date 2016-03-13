@@ -1,4 +1,4 @@
-/*	$Id: pass1.h,v 1.292 2016/02/21 11:04:01 ragge Exp $	*/
+/*	$Id: pass1.h,v 1.295 2016/03/08 18:17:45 ragge Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *
@@ -234,6 +234,8 @@ void symdirec(struct symtab *sp);
 /*
  * Tree struct for pass1.  
  */
+struct flt;
+
 typedef struct p1node {
 	int	n_op;
 	TWORD	n_type;
@@ -256,8 +258,8 @@ typedef struct p1node {
 			} n_r;
 		} n_u;
 		struct {
-			union flt *_dcon;
-			union flt *_ccon;
+			struct flt *_dcon;
+			struct flt *_ccon;
 		};
 	} n_f;
 } P1ND;
@@ -305,8 +307,8 @@ OFFSZ	tsize(TWORD, union dimfun *, struct attr *),
 P1ND *	typenode(P1ND *new);
 void	spalloc(P1ND *, P1ND *, OFFSZ);
 char	*exname(char *);
-union flt *floatcon(char *);
-union flt *fhexcon(char *);
+struct flt	*floatcon(char *);
+struct flt *fhexcon(char *);
 P1ND	*bdty(int op, ...);
 extern struct rstack *rpole;
 
@@ -445,6 +447,64 @@ void p1flist(P1ND *p, void (*f)(P1ND *, void *), void *);
 P1ND *p1nfree(P1ND *);
 void p1tfree(P1ND *);
 P1ND *p1tcopy(P1ND *);
+
+struct flt {
+	union {
+		long double fp; 
+		struct softfloat sf;
+	};
+	TWORD t;
+};	
+typedef struct flt FLT;	
+FLT flt_zero; 
+#define	fltallo()		stmtalloc(sizeof(FLT))
+#define FLOAT_ZERO		(&flt_zero)
+#define	FCAST(x)		((FLT *)(x))
+
+#ifdef NATIVE_FLOATING_POINT
+#define FLOAT_PLUS(p1,p2)	((p1)->n_dcon->fp += (p2)->n_dcon->fp)
+#define FLOAT_MINUS(p1,p2)	((p1)->n_dcon->fp -= (p2)->n_dcon->fp)
+#define FLOAT_MUL(p1,p2)	((p1)->n_dcon->fp *= (p2)->n_dcon->fp)
+#define FLOAT_DIV(p1,p2)	((p1)->n_dcon->fp /= (p2)->n_dcon->fp)
+#define FLOAT_ISZERO(p)		((p)->fp == 0.0)
+#define FLOAT_FP2FP(f,t)	(f->fp = (t == FLOAT ? (float)f->fp :	\
+	t == DOUBLE ? (double)f->fp : f->fp))
+#define FLOAT_INT2FP(d,p,v)	(ISUNSIGNED(v) ? \
+	(d->fp = (long double)(U_CONSZ)(p)) : (d->fp = (long double)(CONSZ)(p)))
+#define FLOAT_FP2INT(i,d,t)     (ISUNSIGNED(t) ? \
+	(i = (U_CONSZ)(d->fp)) : (i = d->fp))
+#define FLOAT_EQ(d1,d2)		(d1->fp == d2->fp)
+#define FLOAT_NE(d1,d2)		(d1->fp != d2->fp)
+#define FLOAT_GE(d1,d2)		(d1->fp >= d2->fp)
+#define FLOAT_GT(d1,d2)		(d1->fp > d2->fp)
+#define FLOAT_LE(d1,d2)		(d1->fp <= d2->fp)
+#define FLOAT_LT(d1,d2)		(d1->fp < d2->fp)
+#define FLOAT_NEG(p)		(p->fp = -p->fp)
+#define	FLOAT_SETZERO(d)	(d)->fp = FLOAT_ZERO
+
+#else
+#define FLOAT_PLUS(p1,p2)	p1->n_dcon->sf = \
+	soft_plus(p1->n_dcon->sf, p2->n_dcon->sf)
+#define FLOAT_MINUS(p1,p2)	p1->n_dcon->sf = \
+	soft_minus(p1->n_dcon->sf, p2->n_dcon->sf)
+#define FLOAT_MUL(p1,p2)	p1->n_dcon->sf = \
+	soft_mul(p1->n_dcon->sf, p2->n_dcon->sf)
+#define FLOAT_DIV(p1,p2)	p1->n_dcon->sf = \
+	soft_div(p1->n_dcon->sf, p2->n_dcon->sf)
+#define FLOAT_ISZERO(p)		soft_isz(p->sf)
+#define FLOAT_FP2FP(f,t)	f->sf = soft_fp2fp(f->sf, t)
+#define FLOAT_INT2FP(f,p,t)	f->sf = soft_int2fp(p, t)
+#define FLOAT_FP2INT(i,d,t)	i = soft_fp2int(d->sf, t) /* XXX fp format */
+#define FLOAT_EQ(d1,d2)		soft_cmp(d1->sf, d2->sf, EQ)
+#define FLOAT_NE(d1,d2)		soft_cmp(d1->sf, d2->sf, NE)
+#define FLOAT_GE(d1,d2)		soft_cmp(d1->sf, d2->sf, GE)
+#define FLOAT_GT(d1,d2)		soft_cmp(d1->sf, d2->sf, GT)
+#define FLOAT_LE(d1,d2)		soft_cmp(d1->sf, d2->sf, LE)
+#define FLOAT_LT(d1,d2)		soft_cmp(d1->sf, d2->sf, LT)
+#define FLOAT_NEG(flt)		flt->sf = soft_neg(flt->sf)
+#define	FLOAT_SETZERO(d)	(d)->sf = FLOAT_ZERO
+
+#endif
 
 enum {	ATTR_FIRST = ATTR_MI_MAX + 1,
 
@@ -590,6 +650,7 @@ void stabs_struct(struct symtab *, struct attr *);
 #endif
 #ifdef DWARF
 void dwarf_init(char *);
+void dwarf_file(char *);
 void dwarf_end(void);
 #endif
 

@@ -1,4 +1,4 @@
-/*	$Id: pftn.c,v 1.15 2015/11/24 17:30:20 ragge Exp $	*/
+/*	$Id: pftn.c,v 1.16 2016/03/05 15:31:25 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -129,6 +129,8 @@ static void alprint(union arglist *al, int in);
 static void lcommadd(struct symtab *sp);
 static NODE *mkcmplx(NODE *p, TWORD dt);
 extern int fun_inline;
+
+FLT flt_zero = { .fp = 0.0, };
 
 /*
  * Declaration of an identifier.  Handles redeclarations, hiding,

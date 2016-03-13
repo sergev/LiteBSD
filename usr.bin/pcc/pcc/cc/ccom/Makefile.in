@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.48 2016/02/21 11:04:01 ragge Exp $
+#	$Id: Makefile.in,v 1.49 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for ccom
 #
@@ -15,7 +15,7 @@ CFLAGS = @CFLAGS@ @ADD_CFLAGS@
 CPPFLAGS = @CPPFLAGS@ @ADD_CPPFLAGS@ -D_ISOC99_SOURCE \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) -I$(MIPDIR) -I$(MDIR) \
-	-I$(top_srcdir)/os/$(TARGOS)
+	-I$(top_srcdir)/os/$(TARGOS) -I$(COMMONDIR)
 LIBS = @LIBS@
 LDFLAGS = @LDFLAGS@
 LEX = @LEX@
@@ -42,6 +42,7 @@ CF1=@CF1@
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 MIPDIR=$(top_srcdir)/mip
+COMMONDIR=$(top_srcdir)/common
 
 DEST=@CCNAMES@
 MANPAGE=$(BINPREFIX)ccom
@@ -68,8 +69,8 @@ OBJS1=  common2.o compat.o external.o           			\
 LOBJS=	mkext.lo common.lo table.lo
 
 HDRS=	$(srcdir)/pass1.h $(MIPDIR)/pass2.h $(MIPDIR)/manifest.h	\
-	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(MIPDIR)/compat.h		\
-	$(MIPDIR)/unicode.h
+	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(COMMONDIR)/compat.h	\
+	$(COMMONDIR)/unicode.h
 
 #
 # round 1: generate external.[ch], cgram.[ch] & scan.c
@@ -122,8 +123,8 @@ common.o: $(MIPDIR)/common.c
 common2.o: $(MIPDIR)/common.c
 	$(CC) $(CF1) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/common.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 dwarf.o: $(srcdir)/dwarf.c
 	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/dwarf.c
@@ -188,8 +189,8 @@ table.o: $(MDIR)/table.c
 trees.o: $(srcdir)/trees.c
 	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/trees.c
 
-unicode.o: $(MIPDIR)/unicode.c
-	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/unicode.c
+unicode.o: $(COMMONDIR)/unicode.c
+	$(CC) $(CF0) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/unicode.c
 
 #
 # round 3: build $(DEST)

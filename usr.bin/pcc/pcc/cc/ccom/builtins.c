@@ -1,4 +1,4 @@
-/*	$Id: builtins.c,v 1.66 2016/02/09 17:57:35 ragge Exp $	*/
+/*	$Id: builtins.c,v 1.67 2016/03/05 15:31:24 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -735,7 +735,7 @@ static const unsigned char nLDOUBLE[] = { 0x7f, 0xff, 0xc0, 0, 0, 0, 0, 0, 0, 0,
 	x = MIN(sizeof(n ## TYP), sizeof(d));			\
 	memcpy(&d, v ## TYP, x);				\
 	f = block(FCON, NULL, NULL, TYP, NULL, 0);		\
-	f->n_dcon = stmtalloc(sizeof(union flt));		\
+	f->n_dcon = stmtalloc(sizeof(FLT));			\
 	f->n_dcon->fp = d;					\
 	return f;						\
 }
@@ -766,7 +766,7 @@ builtin_nanx(const struct bitable *bt, P1ND *a)
 		a->n_type = bt->rt;
 		if (sizeof(nLDOUBLE) < sizeof(long double))
 			cerror("nLDOUBLE too small");
-		a->n_dcon = stmtalloc(sizeof(union flt));
+		a->n_dcon = stmtalloc(sizeof(FLT));
 		memcpy(&a->n_dcon->fp, nLDOUBLE, sizeof(long double));
 	} else
 		a = binhelp(eve(a), bt->rt, &bt->name[10]);

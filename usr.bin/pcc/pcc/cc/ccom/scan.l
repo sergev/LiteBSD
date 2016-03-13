@@ -1,5 +1,5 @@
 %{
-/*	$Id: scan.l,v 1.145 2016/02/07 18:04:28 ragge Exp $	*/
+/*	$Id: scan.l,v 1.147 2016/03/08 18:17:45 ragge Exp $	*/
 
 /*
  * Copyright (c) 2002 Anders Magnusson. All rights reserved.
@@ -386,39 +386,25 @@ endtyp(char *s)
 	return tw;
 }
 
-#ifdef NATIVE_FLOATING_POINT
-/*
- * Convert floating point string to union flt.
- */
-static union flt *
-strtoflt(char *str)
-{
-	union flt *flt;
-	long double dc;
-
-#ifdef HAVE_STRTOLD
-	dc = strtold(str, NULL);
-#else
-	dc = strtod(str, NULL);
-#endif
-
-	flt = stmtalloc(sizeof(union flt));
-	flt->fp = dc;
-	return flt;
-}
-#endif
-
-union flt *
+FLT *
 floatcon(char *s)
 {
-	union flt *flt;
+	FLT *flt;
 	TWORD tw;
 
-	flt = strtoflt(s);			/* parse number */
-	tw = flt->fa[FP_TOP] = endtyp(s);	/* parse type */
+	flt = stmtalloc(sizeof(FLT));
+#ifdef NATIVE_FLOATING_POINT
+#ifdef HAVE_STRTOLD
+	flt->fp = strtold(s, NULL);
+#else
+	flt->fp = strtod(s, NULL);
+#endif
+#else
+	flt->sf = strtosf(s);		/* parse number */
+#endif
+	flt->t = tw = endtyp(s);
 	if (ISITY(tw))
 		tw -= (FIMAG-FLOAT);
-	FLOAT_FP2FP(flt, tw);			/* cast accordingly */
 	return flt;
 }
 
@@ -459,10 +445,10 @@ fdecl(char *c, char **ep)
 	return val;
 }
 
-union flt *
+FLT *
 fhexcon(char *c)
 {
-	union flt *flt;
+	FLT *flt;
 	TWORD tw;
 	char *ep;
 	long double d;
@@ -500,9 +486,9 @@ fhexcon(char *c)
 	while (ed < 0)
 		d /= 2, ed++;
 	d = typround(d, ep, &tw);
-	flt = stmtalloc(sizeof(union flt));
+	flt = stmtalloc(sizeof(FLT));
 	flt->fp = d;
-	flt->fa[FP_TOP] = tw;
+	flt->t = tw;
 	return flt;
 }
 
@@ -549,7 +535,7 @@ cvtdig(int radix)
 	switch (ntype) {
 	case DOUBLE: /* special case */
 		p = block(FCON, NULL, NULL, IMAG, 0, 0);
-		p->n_dcon = stmtalloc(sizeof(union flt));
+		p->n_dcon = stmtalloc(sizeof(FLT));
 		FLOAT_INT2FP(p->n_dcon, v, ULONGLONG);
 		FLOAT_FP2FP(p->n_dcon, DOUBLE);
 		return p;
@@ -772,6 +758,10 @@ control(int t)
 		issyshdr = 0;
 		if (*wr == '3')
 			issyshdr = 1;
+#ifdef DWARF
+		if (gflag)
+			dwarf_file(ftitle);
+#endif
 #ifdef STABS
 		if (gflag)
 			stabs_file(ftitle);

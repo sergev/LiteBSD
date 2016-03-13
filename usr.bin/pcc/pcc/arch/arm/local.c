@@ -1,4 +1,4 @@
-/*      $Id: local.c,v 1.33 2015/01/07 05:20:48 gmcgarry Exp $    */
+/*      $Id: local.c,v 1.34 2016/03/09 18:19:56 ragge Exp $    */
 /*
  * Copyright (c) 2007 Gregory McGarry (g.mcgarry@ieee.org).
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -34,7 +34,29 @@
 
 #include "pass1.h"
 
+#undef NIL
+#define NIL NULL
+
+#ifdef LANG_CXX
+#define p1listf listf
+#define p1tfree tfree
+#else
+#define NODE P1ND
+#define talloc p1alloc
+#define tcopy p1tcopy
+#define nfree p1nfree
+#endif
+
 extern void defalign(int);
+
+static char *
+getsoname(struct symtab *sp)
+{
+	struct attr *ap;
+	return (ap = attr_find(sp->sap, ATTR_SONAME)) ?
+	    ap->sarg(0) : sp->sname;
+}
+
 
 /*
  * clocal() is called to do local transformations on
@@ -113,24 +135,24 @@ clocal(NODE *p)
 		case AUTO:
 			/* fake up a structure reference */
 			r = block(REG, NIL, NIL, PTR+STRTY, 0, 0);
-			r->n_lval = 0;
+			slval(r, 0);
 			r->n_rval = FPREG;
 			p = stref(block(STREF, r, p, 0, 0, 0));
 			break;
 		case REGISTER:
 			p->n_op = REG;
-			p->n_lval = 0;
+			slval(p, 0);
 			p->n_rval = q->soffset;
 			break;
 		case STATIC:
 			if (q->slevel > 0) {
-				p->n_lval = 0;
+				slval(p, 0);
 				p->n_sp = q;
 			}
 			/* FALL-THROUGH */
 		default:
 			ty = p->n_type;
-			n = p->n_sp->soname ? p->n_sp->soname : p->n_sp->sname;
+			n = getsoname(p->n_sp);
 			if (strncmp(n, "__builtin", 9) == 0)
 				break;
 			p = block(ADDROF, p, NIL, INCREF(ty), p->n_df, p->n_ap);
@@ -180,38 +202,39 @@ clocal(NODE *p)
 		}
 
 		if (l->n_op == ICON) {
-			CONSZ val = l->n_lval;
+			CONSZ val = glval(l);
+			CONSZ lval;
 
 			if (!ISPTR(p->n_type)) /* Pointers don't need to be conv'd */
 			switch (p->n_type) {
 			case BOOL:
-				l->n_lval = l->n_lval != 0;
+				slval(l, glval(l) != 0);
 				break;
 			case CHAR:
-				l->n_lval = (char)val;
+				lval = (char)val;
 				break;
 			case UCHAR:
-				l->n_lval = val & 0377;
+				lval = val & 0377;
 				break;
 			case SHORT:
-				l->n_lval = (short)val;
+				lval = (short)val;
 				break;
 			case USHORT:
-				l->n_lval = val & 0177777;
+				lval = val & 0177777;
 				break;
 			case ULONG:
 			case UNSIGNED:
-				l->n_lval = val & 0xffffffff;
+				lval = val & 0xffffffff;
 				break;
 			case LONG:
 			case INT:
-				l->n_lval = (int)val;
+				lval = (int)val;
 				break;
 			case LONGLONG:
-				l->n_lval = (long long)val;
+				lval = (long long)val;
 				break;
 			case ULONGLONG:
-				l->n_lval = val;
+				lval = val;
 				break;
 			case VOID:
 				break;
@@ -219,17 +242,19 @@ clocal(NODE *p)
 			case DOUBLE:
 			case FLOAT:
 				l->n_op = FCON;
-				l->n_dcon = val;
+				((FLT *)l->n_dcon)->fp = val;
 				break;
 			default:
 				cerror("unknown type %d", l->n_type);
 			}
+			if (p->n_type < FLOAT)
+				slval(l, lval);
 			l->n_type = p->n_type;
 			l->n_ap = 0;
 			nfree(p);
 			return l;
 		} else if (p->n_op == FCON) {
-			l->n_lval = l->n_dcon;
+			slval(l, ((FLT *)l->n_dcon)->fp);
 			l->n_sp = NULL;
 			l->n_op = ICON;
 			l->n_type = p->n_type;
@@ -250,7 +275,7 @@ clocal(NODE *p)
 	case PCONV:
 		l = p->n_left;
 		if (l->n_op == ICON) {
-			l->n_lval = (unsigned)l->n_lval;
+			slval(l, (unsigned)glval(l));
 			goto delp;
 		}
 		if (l->n_type < INT || DEUNSIGN(l->n_type) == LONGLONG) {
@@ -304,7 +329,7 @@ myp2tree(NODE *p)
 	ninval(0, tsize(sp->stype, sp->sdf, sp->sap), p);
 
 	p->n_op = NAME;
-	p->n_lval = 0;	
+	slval(p, 0);
 	p->n_sp = sp;
 }
 
@@ -350,13 +375,13 @@ spalloc(NODE *t, NODE *p, OFFSZ off)
 
 	/* sub the size from sp */
 	sp = block(REG, NIL, NIL, p->n_type, 0, 0);
-	sp->n_lval = 0;
+	slval(sp, 0);
 	sp->n_rval = SP;
 	ecomp(buildtree(MINUSEQ, sp, p));
 
 	/* save the address of sp */
 	sp = block(REG, NIL, NIL, PTR+INT, t->n_df, t->n_ap);
-	sp->n_lval = 0;
+	slval(sp, 0);
 	sp->n_rval = SP;
 	t->n_type = sp->n_type;
 	ecomp(buildtree(ASSIGN, t, sp));
@@ -386,36 +411,35 @@ ninval(CONSZ off, int fsz, NODE *p)
 	switch (t) {
 	case LONGLONG:
 	case ULONGLONG:
-		i = (p->n_lval >> 32);
-		j = (p->n_lval & 0xffffffff);
+		i = (glval(p) >> 32);
+		j = (glval(p) & 0xffffffff);
 		p->n_type = INT;
 		if (features(FEATURE_BIGENDIAN)) {
-			p->n_lval = i;
+			slval(p, i);
 			ninval(off+32, 32, p);
-			p->n_lval = j;
+			slval(p, j);
 			ninval(off, 32, p);
 		} else {
-			p->n_lval = j;
+			slval(p, j);
 			ninval(off, 32, p);
-			p->n_lval = i;
+			slval(p, i);
 			ninval(off+32, 32, p);
 		}
 		break;
 	case INT:
 	case UNSIGNED:
-		printf("\t.word 0x%x", (int)p->n_lval);
+		printf("\t.word 0x%x", (int)glval(p));
 		if ((q = p->n_sp) != NULL) {
 			if ((q->sclass == STATIC && q->slevel > 0)) {
 				printf("+" LABFMT, q->soffset);
 			} else
-				printf("+%s",
-				    q->soname ? q->soname : exname(q->sname));
+				printf("+%s", getexname(q));
 		}
 		printf("\n");
 		break;
 	case LDOUBLE:
 	case DOUBLE:
-		u.d = (double)p->n_dcon;
+		u.d = (double)((FLT *)p->n_dcon)->fp;
 #if defined(HOST_BIG_ENDIAN)
 		if (features(FEATURE_BIGENDIAN))
 #else
@@ -428,7 +452,7 @@ ninval(CONSZ off, int fsz, NODE *p)
 			    u.i[1], u.i[0]);
 		break;
 	case FLOAT:
-		u.f = (float)p->n_dcon;
+		u.f = (float)((FLT *)p->n_dcon)->fp;
 		printf("\t.word\t0x%x\n", u.i[0]);
 		break;
 	default:
@@ -492,8 +516,7 @@ defzero(struct symtab *sp)
 	off = (off+(SZCHAR-1))/SZCHAR;
 	printf("	.%scomm ", sp->sclass == STATIC ? "l" : "");
 	if (sp->slevel == 0)
-		printf("%s,0%o\n",
-		    sp->soname ? sp->soname : exname(sp->sname), off);
+		printf("%s,0%o\n", getexname(sp), off);
 	else
 		printf(LABFMT ",0%o\n", sp->soffset, off);
 }
@@ -598,7 +621,7 @@ bad:
 NODE *
 arm_builtin_va_end(const struct bitable *bt, NODE *a)
 {
-	tfree(a);
+	p1tfree(a);
  
 	return bcon(0);
 }

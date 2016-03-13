@@ -249,4 +249,3 @@ int COLORMAP(int c, int *r);
 int targarg(char *w, void *arg);
 #define XASM_TARGARG(w, ary) (w[1] == 'b' ? w++, 0 : targarg(w, ary))
 
-#define NATIVE_FLOATING_POINT

@@ -26,5 +26,3 @@ distclean:
 		echo "<=== $$_nextdir_"; \
 	done
 	rm -f Makefile
-
-.include <bsd.prog.mk>

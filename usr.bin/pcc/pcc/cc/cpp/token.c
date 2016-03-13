@@ -1,4 +1,4 @@
-/*	$Id: token.c,v 1.157 2016/01/09 09:53:44 ragge Exp $	*/
+/*	$Id: token.c,v 1.162 2016/03/12 15:46:06 ragge Exp $	*/
 
 /*
  * Copyright (c) 2004,2009 Anders Magnusson. All rights reserved.
@@ -479,19 +479,25 @@ fastspcg(void)
 	return ch;
 }
 
+usch idbuf[MAXIDSZ+1];
 /*
- * readin chars and store on heap. Warn about too long names.
+ * readin chars and store in buf. Warn about too long names.
  */
 usch *
-heapid(int ch)
+readid(int ch)
 {
-	usch *bp = stringbuf;
+	int p = 0;
+
 	do {
-		savch(ch);
+		if (p == MAXIDSZ)
+			warning("identifier exceeds C99 5.2.4.1, truncating");
+		if (p < MAXIDSZ)
+			idbuf[p] = ch;
+		p++;
 	} while (spechr[ch = inch()] & C_ID);
-	savch(0);
+	idbuf[p] = 0;
 	unch(ch);
-	return bp;
+	return idbuf;
 }
 
 /*
@@ -587,9 +593,10 @@ fastnum(int ch, void (*d)(int))
 static void
 fastscan(void)
 {
+	struct iobuf *ob;
 	struct symtab *nl;
 	int ch, c2, i, nch;
-	usch *cp, *cp2;
+	usch *cp, *dp;
 
 	goto run;
 
@@ -697,22 +704,20 @@ run:			while ((ch = inch()) == '\t' || ch == ' ')
 		ident:
 			if (flslvl)
 				error("fastscan flslvl");
-			cp = stringbuf;
-			heapid(ch);
-			stringbuf = cp;
-			if ((nl = lookup(cp, FIND))) {
-				if (kfind(nl)) {
-					if (*cp == '-' || *cp == '+')
+			dp = readid(ch);
+			if ((nl = lookup(dp, FIND))) {
+				if ((ob = kfind(nl))) {
+					if (*ob->buf == '-' || *ob->buf == '+')
 						putch(' ');
-					putstr(cp);
-					for (cp2 = cp; *cp2; cp2++)
-						;
-					if (cp2[-1] == '-' || cp2[-1] == '+')
+					for (cp = ob->buf; cp < ob->cptr; cp++)
+						putch(*cp);
+					if (ob->cptr[-1] == '-' ||
+					    ob->cptr[-1] == '+')
 						putch(' ');
+					bufree(ob);
 				}
 			} else
-				putstr(cp);
-			stringbuf = cp;
+				putstr(dp);
 			break;
 
 		case '\\':
@@ -743,9 +748,10 @@ int inexpr;
 static int
 exprline(void)
 {
+	struct iobuf *ob;
 	struct symtab *nl;
 	int oCflag = Cflag;
-	usch *cp, *bp = stringbuf;
+	usch *bp = stringbuf, *dp;
 	int c, d, ifdef;
 
 	Cflag = ifdef = 0;
@@ -768,19 +774,19 @@ exprline(void)
 				continue;
 		}
 		if (ISID0(c)) {
-			cp = heapid(c);
-			stringbuf = cp;
-			nl = lookup(cp, FIND);
-			if (strcmp((char *)cp, "defined") == 0) {
+			dp = readid(c);
+			nl = lookup(dp, FIND);
+			if (nl && *nl->value == DEFLOC) {
 				ifdef = 1;
 			} else if (ifdef) {
 				savch(nl ? '1' : '0');
 				ifdef = 0;
 			} else if (nl != NULL) {
 				inexpr = 1;
-				if (kfind(nl)) {
-					while (*stringbuf)
-						stringbuf++;
+				if ((ob = kfind(nl))) {
+					putob(ob, 0);
+					savstr(ob->buf);
+					bufree(ob);
 				} else
 					savch('0');
 				inexpr = 0;
@@ -978,7 +984,7 @@ pushfile(const usch *file, const usch *fn, int idx, void *incs)
 void
 prtline(int nl)
 {
-	usch *sb = stringbuf;
+	struct iobuf *ob;
 
 	if (Mflag) {
 		if (dMflag)
@@ -991,13 +997,13 @@ prtline(int nl)
 				printf("%s:\n", ifiles->fname);
 		}
 	} else if (!Pflag) {
-		sheap("\n# %d \"%s\"", ifiles->lineno, ifiles->fname);
+		ob = bsheap(0, "\n# %d \"%s\"", ifiles->lineno, ifiles->fname);
 		if (ifiles->idx == SYSINC)
-			sheap(" 3");
-		if (nl) sheap("\n");
-		putstr(sb);
+			bsheap(ob, " 3");
+		if (nl) bsheap(ob, "\n");
+		putstr(ob->buf);
+		bufree(ob);
 	}
-	stringbuf = sb;
 }
 
 void
@@ -1151,8 +1157,7 @@ ifdefstmt(void)
 
 	if (!ISID0(ch = fastspc()))
 		error("bad #ifdef");
-	bp = heapid(ch);
-	stringbuf = bp;
+	bp = readid(ch);
 
 	if (lookup(bp, FIND) == NULL)
 		flslvl++;
@@ -1169,8 +1174,7 @@ ifndefstmt(void)
 
 	if (!ISID0(ch = fastspc()))
 		error("bad #ifndef");
-	bp = heapid(ch);
-	stringbuf = bp;
+	bp = readid(ch);
 	if (lookup(bp, FIND) != NULL)
 		flslvl++;
 	else
@@ -1268,33 +1272,32 @@ undefstmt(void)
 
 	if (!ISID0(ch = fastspc()))
 		error("bad #undef");
-	bp = heapid(ch);
+	bp = readid(ch);
 	if ((np = lookup(bp, FIND)) != NULL)
 		np->value = 0;
-	stringbuf = bp;
 	chknl(0);
 }
 
 static void
 identstmt(void)
 {
+	struct iobuf *ob = NULL;
 	struct symtab *sp;
 	usch *bp;
 	int ch;
 
-	bp = stringbuf;
 	if (ISID0(ch = fastspc())) {
-		bp = heapid(ch);
-		stringbuf = bp;
+		bp = readid(ch);
 		if ((sp = lookup(bp, FIND)))
-			kfind(sp);
-		if (bp[0] != '\"')
+			ob = kfind(sp);
+		if (ob->buf[0] != '\"')
 			goto bad;
+		if (ob)
+			bufree(ob);
 	} else if (ch == '\"') {
 		faststr(ch, savch);
 	} else
 		goto bad;
-	stringbuf = bp;
 	chknl(1);
 	return;
 bad:
@@ -1409,8 +1412,7 @@ redo:	Cflag = 0;
 	Cflag = oldC;
 	if ((spechr[ch] & C_ID0) == 0)
 		goto out;
-	bp = heapid(ch);
-	stringbuf = bp;
+	bp = readid(ch);
 
 	/* got some keyword */
 	for (i = 0; i < NPPD; i++) {
@@ -1432,6 +1434,8 @@ redo:	Cflag = 0;
 			goto redo;
 		}
 	}
+	flscan();
+	goto redo;
 
 out:
 	if (flslvl == 0 && Aflag == 0)

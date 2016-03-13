@@ -7,9 +7,9 @@ top_srcdir=../..
 builddir=.
 top_builddir=../..
 CC = gcc
-CC_FOR_BUILD = pcc
+CC_FOR_BUILD = gcc
 CFLAGS = -g -O2  -Wall -Wmissing-prototypes -Wshadow -Wsign-compare
-CPPFLAGS =   -DGCC_COMPAT -DFCOM -DLANG_F77 \
+CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -DFCOM -DLANG_F77 \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) \
 	-I$(MIPDIR) -I$(MDIR) -I$(top_srcdir)/os/$(TARGOS)
@@ -23,19 +23,19 @@ YFLAGS =
 TARGOS = litebsd
 TARGOSVER = 0
 TARGMACH = mips
-prefix = /usr
-exec_prefix = ${prefix}
+prefix = /usr/local
+exec_prefix = /usr/local
 libexecdir = ${exec_prefix}/libexec
 datarootdir = ${prefix}/share
 mandir = ${datarootdir}/man
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL}
+INSTALL_PROGRAM = ${INSTALL} -s
 INSTALL_DATA = ${INSTALL} -m 644
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 MIPDIR=$(top_srcdir)/mip
 
-DEST=fcom$(EXEEXT)
+DEST=mipsel-unknown-litebsd0.1-fcom$(EXEEXT)
 MKEXT=mkext$(EXEEXT)
 
 OBJS=	common.o compat.o data.o equiv.o error.o exec.o expr.o	\

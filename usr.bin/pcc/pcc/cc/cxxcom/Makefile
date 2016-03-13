@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.6 2014/12/22 22:06:23 plunky Exp $
+#	$Id: Makefile.in,v 1.7 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for cxxcom
 #
@@ -9,14 +9,13 @@ builddir=.
 top_builddir=../..
 EXEEXT = 
 CC_FOR_BUILD = gcc
-CFLAGS += -Wall -Wmissing-prototypes -Wshadow -Wsign-compare -Wno-error \
-	-ffunction-sections -fdata-sections
-CPPFLAGS =   -DGCC_COMPAT -D_ISOC99_SOURCE -DLANG_CXX \
+CFLAGS += -ffunction-sections -fdata-sections
+CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -D_ISOC99_SOURCE -DLANG_CXX \
 	-Dos_$(TARGOS) -Dmach_$(TARGMACH) \
 	-I$(srcdir) -I$(builddir) -I$(top_builddir) -I$(MIPDIR) -I$(MDIR) \
-	-I$(top_srcdir)/os/$(TARGOS)
-LIBS =
-LDFLAGS += -Wl,--gc-sections
+	-I$(top_srcdir)/os/$(TARGOS) -I$(COMMONDIR)
+LIBS = -lc -lgcc
+LDFLAGS += -Wl,--gc-sections -s
 LEX = flex
 LFLAGS =
 LEX_OUTPUT_ROOT = lex.yy
@@ -36,6 +35,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
 MIPDIR=$(top_srcdir)/mip
+COMMONDIR=$(top_srcdir)/common
 
 DEST=cxxcom$(EXEEXT)
 MANPAGE=cxxcom
@@ -51,7 +51,7 @@ OBJS=	builtins.o cgram.o code.o common.o compat.o external.o		\
 LOBJS=	mkext.lo common.lo table.lo
 
 HDRS=	$(srcdir)/pass1.h $(MIPDIR)/pass2.h $(MIPDIR)/manifest.h	\
-	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(MIPDIR)/compat.h
+	$(MDIR)/macdefs.h $(MIPDIR)/node.h $(COMMONDIR)/compat.h
 
 #
 # round 1: generate external.[ch], cgram.[ch] & scan.c
@@ -69,7 +69,7 @@ table.lo: $(MDIR)/table.c
 	$(CC_FOR_BUILD) $(CPPFLAGS) -DMKEXT -c -o $@ $(MDIR)/table.c
 
 $(MKEXT): $(LOBJS)
-	$(CC_FOR_BUILD) $(LOBJS) -o $@ $(LIBS)
+	$(CC_FOR_BUILD) $(LOBJS) -o $@
 
 external.c: $(MKEXT)
 	$(builddir)/$(MKEXT)
@@ -101,8 +101,8 @@ code.o: $(MDIR)/code.c
 common.o: $(MIPDIR)/common.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/common.c
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 cxxcode.o: $(srcdir)/cxxcode.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cxxcode.c
@@ -169,7 +169,7 @@ trees.o: $(srcdir)/trees.c
 #
 
 $(DEST): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 install: $(DEST)
 	test -z "$(DESTDIR)$(libexecdir)" || mkdir -p "$(DESTDIR)$(libexecdir)"

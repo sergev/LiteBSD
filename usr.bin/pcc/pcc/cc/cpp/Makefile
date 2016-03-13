@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.53 2014/12/22 22:06:22 plunky Exp $
+#	$Id: Makefile.in,v 1.54 2016/03/08 18:42:13 ragge Exp $
 #
 # Makefile.in for cpp
 #
@@ -14,12 +14,12 @@ libexecdir = ${exec_prefix}/libexec
 datarootdir = ${prefix}/share
 mandir = ${datarootdir}/man
 EXEEXT = 
-CFLAGS += -Wall -Wmissing-prototypes -Wshadow -Wsign-compare \
-	-ffunction-sections -fdata-sections
-CPPFLAGS =   -DGCC_COMPAT \
-	-I$(srcdir) -I$(top_builddir) -I$(builddir) -I$(MIPDIR) -I$(MDIR)
-LIBS =
-LDFLAGS += -Wl,--gc-sections
+CFLAGS += -ffunction-sections -fdata-sections
+CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT \
+	-I$(srcdir) -I$(top_builddir) -I$(builddir) -I$(MIPDIR) -I$(MDIR) \
+	-I$(COMMONDIR)
+LIBS = -lc -lgcc
+LDFLAGS += -Wl,--gc-sections -s
 YACC = bison -y
 YFLAGS = 
 INSTALL = /usr/bin/install -c
@@ -29,6 +29,7 @@ TARGMACH = mips
 
 MIPDIR=$(top_srcdir)/mip
 MDIR=$(top_srcdir)/arch/$(TARGMACH)
+COMMONDIR=$(top_srcdir)/common
 
 DEST=cpp$(EXEEXT)
 MANPAGE=cpp
@@ -40,8 +41,8 @@ HDRS=	cpp.h
 
 $(OBJS): $(HDRS)
 
-compat.o: $(MIPDIR)/compat.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(MIPDIR)/compat.c
+compat.o: $(COMMONDIR)/compat.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(COMMONDIR)/compat.c
 
 cpp.o: $(srcdir)/cpp.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/cpp.c
@@ -53,7 +54,7 @@ token.o: $(srcdir)/token.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $(srcdir)/token.c
 
 $(DEST): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -lc -lgcc
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 test: $(DEST)
 	@for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 ; do	\

@@ -1,4 +1,4 @@
-/*	$Id: builtins.c,v 1.6 2015/11/24 17:30:20 ragge Exp $	*/
+/*	$Id: builtins.c,v 1.7 2016/03/05 15:31:25 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -568,9 +568,9 @@ static const unsigned char nLDOUBLE[] = { 0x7f, 0xff, 0xc0, 0, 0, 0, 0, 0, 0, 0 
 	NODE *f;						\
 	x = MIN(sizeof(n ## TYP), sizeof(d));			\
 	memcpy(&d, v ## TYP, x);				\
-	f = block(FCON, NIL, NIL, TYP, NULL, 0);	\
-	f->n_dcon = tmpalloc(sizeof(union flt));		\
-	((union flt *)f->n_dcon)->fp = d;					\
+	f = block(FCON, NIL, NIL, TYP, NULL, 0);		\
+	f->n_dcon = fltallo();					\
+	((FLT *)f->n_dcon)->fp = d;				\
 	return f;						\
 }
 
@@ -597,8 +597,8 @@ builtin_nanx(const struct bitable *bt, NODE *a)
 	} else if (a->n_op == STRING && *a->n_name == '\0') {
 		a->n_op = FCON;
 		a->n_type = bt->rt;
-		a->n_dcon = tmpalloc(sizeof(union flt));
-		memcpy(&((union flt *)a->n_dcon)->fp, nLDOUBLE, sizeof(long double));
+		a->n_dcon = fltallo();
+		memcpy(&FCAST(a->n_dcon)->fp, nLDOUBLE, sizeof(long double));
 	} else
 		a = binhelp(eve(a), bt->rt, &bt->name[10]);
 	return a;

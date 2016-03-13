@@ -1,4 +1,4 @@
-/*      $Id: local2.c,v 1.38 2015/01/07 05:24:53 gmcgarry Exp $    */
+/*      $Id: local2.c,v 1.39 2016/03/09 18:19:56 ragge Exp $    */
 /*
  * Copyright (c) 2007 Gregory McGarry (g.mcgarry@ieee.org).
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -405,7 +405,7 @@ static void
 stasg(NODE *p)
 {
 	NODE *l = p->n_left;
-	int val = l->n_lval;
+	int val = getlval(l);
 
 	/* R0 = dest, R1 = src, R2 = len */
 	load_constant_into_reg(R2, attr_find(p->n_ap, ATTR_P2STRUCT)->iarg(0));
@@ -440,31 +440,31 @@ shiftop(NODE *p)
 	TWORD ty = p->n_type;
 	char *shifttype;
 
-	if (p->n_op == LS && r->n_op == ICON && r->n_lval < 32) {
+	if (p->n_op == LS && r->n_op == ICON && getlval(r) < 32) {
 		expand(p, INBREG, "\tmov A1,AL,lsr ");
-		printf(CONFMT COM "64-bit left-shift\n", 32 - r->n_lval);
+		printf(CONFMT COM "64-bit left-shift\n", 32 - getlval(r));
 		expand(p, INBREG, "\tmov U1,UL,asl AR\n");
 		expand(p, INBREG, "\torr U1,U1,A1\n");
 		expand(p, INBREG, "\tmov A1,AL,asl AR\n");
-	} else if (p->n_op == LS && r->n_op == ICON && r->n_lval < 64) {
+	} else if (p->n_op == LS && r->n_op == ICON && getlval(r) < 64) {
 		expand(p, INBREG, "\tmov A1,#0" COM "64-bit left-shift\n");
 		expand(p, INBREG, "\tmov U1,AL");
-		if (r->n_lval - 32 != 0)
-			printf(",asl " CONFMT, r->n_lval - 32);
+		if (getlval(r) - 32 != 0)
+			printf(",asl " CONFMT, getlval(r) - 32);
 		printf("\n");
 	} else if (p->n_op == LS && r->n_op == ICON) {
 		expand(p, INBREG, "\tmov A1,#0" COM "64-bit left-shift\n");
 		expand(p, INBREG, "\tmov U1,#0\n");
-	} else if (p->n_op == RS && r->n_op == ICON && r->n_lval < 32) {
+	} else if (p->n_op == RS && r->n_op == ICON && getlval(r) < 32) {
 		expand(p, INBREG, "\tmov U1,UL,asl ");
-		printf(CONFMT COM "64-bit right-shift\n", 32 - r->n_lval);
+		printf(CONFMT COM "64-bit right-shift\n", 32 - getlval(r));
 		expand(p, INBREG, "\tmov A1,AL,lsr AR\n");
 		expand(p, INBREG, "\torr A1,A1,U1\n");
 		if (ty == LONGLONG)
 			expand(p, INBREG, "\tmov U1,UL,asr AR\n");
 		else
 			expand(p, INBREG, "\tmov U1,UL,lsr AR\n");
-	} else if (p->n_op == RS && r->n_op == ICON && r->n_lval < 64) {
+	} else if (p->n_op == RS && r->n_op == ICON && getlval(r) < 64) {
 		if (ty == LONGLONG) {
 			expand(p, INBREG, "\tmvn U1,#1" COM "64-bit right-shift\n");
 			expand(p, INBREG, "\tmov A1,UL");
@@ -474,8 +474,8 @@ shiftop(NODE *p)
 			expand(p, INBREG, "\tmov A1,UL");
 			shifttype = "lsr";
 		}
-		if (r->n_lval - 32 != 0)
-			printf(",%s " CONFMT, shifttype, r->n_lval - 32);
+		if (getlval(r) - 32 != 0)
+			printf(",%s " CONFMT, shifttype, getlval(r) - 32);
 		printf("\n");
 	} else if (p->n_op == RS && r->n_op == ICON) {
 		expand(p, INBREG, "\tmov A1,#0" COM "64-bit right-shift\n");
@@ -653,6 +653,7 @@ halfword(NODE *p)
         NODE *r = getlr(p, 'R');
         NODE *l = getlr(p, 'L');
 	int idx0 = 0, idx1 = 1;
+	CONSZ lval;
 
 	if (features(FEATURE_BIGENDIAN)) {
 		idx0 = 1;
@@ -661,31 +662,35 @@ halfword(NODE *p)
 
 	if (p->n_op == ASSIGN && r->n_op == OREG) {
                 /* load */
+		lval = getlval(r);
                 expand(p, 0, "\tldrb A1,");
-                printf("[%s," CONFMT "]\n", rnames[r->n_rval], r->n_lval+idx0);
+                printf("[%s," CONFMT "]\n", rnames[r->n_rval], lval+idx0);
                 expand(p, 0, "\tldrb AL,");
-                printf("[%s," CONFMT "]\n", rnames[r->n_rval], r->n_lval+idx1);
+                printf("[%s," CONFMT "]\n", rnames[r->n_rval], lval+idx1);
                 expand(p, 0, "\torr AL,A1,AL,asl #8\n");
         } else if (p->n_op == ASSIGN && l->n_op == OREG) {
                 /* store */
+		lval = getlval(l);
                 expand(p, 0, "\tstrb AR,");
-                printf("[%s," CONFMT "]\n", rnames[l->n_rval], l->n_lval+idx0);
+                printf("[%s," CONFMT "]\n", rnames[l->n_rval], lval+idx0);
                 expand(p, 0, "\tmov A1,AR,asr #8\n");
                 expand(p, 0, "\tstrb A1,");
-                printf("[%s," CONFMT "]\n", rnames[l->n_rval], l->n_lval+idx1);
+                printf("[%s," CONFMT "]\n", rnames[l->n_rval], lval+idx1);
         } else if (p->n_op == SCONV || p->n_op == UMUL) {
                 /* load */
+		lval = getlval(l);
                 expand(p, 0, "\tldrb A1,");
-                printf("[%s," CONFMT "]\n", rnames[l->n_rval], l->n_lval+idx0);
+                printf("[%s," CONFMT "]\n", rnames[l->n_rval], lval+idx0);
                 expand(p, 0, "\tldrb A2,");
-                printf("[%s," CONFMT "]\n", rnames[l->n_rval], l->n_lval+idx1);
+                printf("[%s," CONFMT "]\n", rnames[l->n_rval], lval+idx1);
                 expand(p, 0, "\torr A1,A1,A2,asl #8\n");
         } else if (p->n_op == NAME || p->n_op == ICON || p->n_op == OREG) {
                 /* load */
+		lval = getlval(p);
                 expand(p, 0, "\tldrb A1,");
-                printf("[%s," CONFMT "]\n", rnames[p->n_rval], p->n_lval+idx0);
+                printf("[%s," CONFMT "]\n", rnames[p->n_rval], lval+idx0);
                 expand(p, 0, "\tldrb A2,");
-                printf("[%s," CONFMT "]\n", rnames[p->n_rval], p->n_lval+idx1);
+                printf("[%s," CONFMT "]\n", rnames[p->n_rval], lval+idx1);
                 expand(p, 0, "\torr A1,A1,A2,asl #8\n");
 	} else {
 		comperr("halfword");
@@ -767,14 +772,14 @@ zzzcode(NODE *p, int c)
 		if (p->n_name[0] != '\0')
 			comperr("named init");
 		load_constant_into_reg(DECRA(p->n_reg, 1),
-		    p->n_lval & 0xffffffff);
+		    getlval(p) & 0xffffffff);
 		break;
 
 	case 'J':		/* init longlong constant */
 		load_constant_into_reg(DECRA(p->n_reg, 1) - R0R1,
-		    p->n_lval & 0xffffffff);
+		    getlval(p) & 0xffffffff);
 		load_constant_into_reg(DECRA(p->n_reg, 1) - R0R1 + 1,
-                    (p->n_lval >> 32));
+                    (getlval(p) >> 32));
                 break;
 
 	case 'O': /* 64-bit left and right shift operators */
@@ -858,7 +863,7 @@ void
 conput(FILE *fp, NODE *p)
 {
 	char *s;
-	int val = p->n_lval;
+	int val = getlval(p);
 
 	switch (p->n_op) {
 	case ICON:
@@ -915,12 +920,12 @@ upput(NODE *p, int size)
 
 	case NAME:
 	case OREG:
-		p->n_lval += size;
+		setlval(p, getlval(p) + size);
 		adrput(stdout, p);
-		p->n_lval -= size;
+		setlval(p, getlval(p) - size);
 		break;
 	case ICON:
-		printf(CONFMT, p->n_lval >> 32);
+		printf(CONFMT, getlval(p) >> 32);
 		break;
 	default:
 		comperr("upput bad op %d size %d", p->n_op, size);
@@ -941,10 +946,10 @@ adrput(FILE *io, NODE *p)
 	case NAME:
 		if (p->n_name[0] != '\0') {
 			fputs(p->n_name, io);
-			if (p->n_lval != 0)
-				fprintf(io, "+%lld", p->n_lval);
+			if (getlval(p) != 0)
+				fprintf(io, "+%lld", getlval(p));
 		} else
-			fprintf(io, CONFMT, p->n_lval);
+			fprintf(io, CONFMT, getlval(p));
 		return;
 
 	case OREG:
@@ -955,7 +960,7 @@ adrput(FILE *io, NODE *p)
 				rnames[R2UPK2(r)],
 				R2UPK3(r));
 		else
-			fprintf(io, "[%s,#%d]", rnames[p->n_rval], (int)p->n_lval);
+			fprintf(io, "[%s,#%d]", rnames[p->n_rval], (int)getlval(p));
 		return;
 
 	case ICON:
@@ -1078,7 +1083,7 @@ prtaddr(NODE *p, void *arg)
 		p = p->n_right;
 
 		/* Restore addrof */
-		l = mklnode(NAME, p->n_lval, 0, 0);
+		l = mklnode(NAME, getlval(p), 0, 0);
 		l->n_name = p->n_name;
 		p->n_left = l;
 		p->n_op = ADDROF;
@@ -1099,7 +1104,7 @@ prtaddr(NODE *p, void *arg)
 	/* write address to byte stream */
 
 	SLIST_FOREACH(el, &aslist, link) {
-		if (el->num == l->n_lval && el->name[0] == l->n_name[0] &&
+		if (el->num == getlval(l) && el->name[0] == l->n_name[0] &&
 		    strcmp(el->name, l->n_name) == 0) {
 			found = 1;
 			break;
@@ -1110,15 +1115,15 @@ prtaddr(NODE *p, void *arg)
 		/* we know that this is text segment */
 		lab = prtnumber++;
 		if (nodcnt <= 1000 && notfirst == 0) {
-			if (l->n_lval)
+			if (getlval(l))
 				printf(PRTLAB ":\n\t.word %s+%lld\n",
-				    lab, l->n_name, l->n_lval);
+				    lab, l->n_name, getlval(l));
 			else
 				printf(PRTLAB ":\n\t.word %s\n",
 				    lab, l->n_name);
 		}
 		el = tmpalloc(sizeof(struct addrsymb));
-		el->num = l->n_lval;
+		el->num = getlval(l);
 		el->name = l->n_name;
 		el->str = tmpalloc(32);
 		snprintf(el->str, 32, PRTLAB, lab);
@@ -1127,7 +1132,7 @@ prtaddr(NODE *p, void *arg)
 
 	nfree(l);
 	p->n_op = NAME;
-	p->n_lval = 0;
+	setlval(p, 0);
 	p->n_name = el->str;
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: pftn.c,v 1.420 2016/01/07 20:05:56 ragge Exp $	*/
+/*	$Id: pftn.c,v 1.421 2016/03/05 15:31:24 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -93,6 +93,10 @@ int blevel;
 int reached, prolab;
 
 struct params;
+
+#ifdef NATIVE_FLOATING_POINT
+FLT flt_zero = { { .fp = 0.0, }, LDOUBLE };
+#endif
 
 #define MKTY(p, t, d, s) r = p1alloc(); *r = *p; \
 	r = argcast(r, t, d, s); *p = *r; nfree(r);
@@ -3405,7 +3409,8 @@ imret(NODE *p, NODE *q)
 		p1tfree(p);
 		if (ISITY(q->n_type)) {
 			p = block(FCON, 0, 0, q->n_type, 0, 0);
-			p->n_dcon = FLOAT_ZERO;
+			p->n_dcon = fltallo();
+			*p->n_dcon = *FLOAT_ZERO;
 		} else
 			p = bcon(0);
 	}

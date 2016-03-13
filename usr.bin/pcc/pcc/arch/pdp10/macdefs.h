@@ -1,4 +1,4 @@
-/*	$Id: macdefs.h,v 1.35 2015/11/24 17:35:12 ragge Exp $	*/
+/*	$Id: macdefs.h,v 1.36 2016/03/05 15:53:04 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -241,4 +241,3 @@ typedef long long OFFSZ;
 #define ENCRA(x,y)      ((x) << (6+y*6))        /* encode regs in int */
 #define GCLASS(x)	(x < 16 ? CLASSA : CLASSB)
 int COLORMAP(int c, int *r);
-#define NATIVE_FLOATING_POINT

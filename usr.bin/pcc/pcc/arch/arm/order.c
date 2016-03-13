@@ -1,4 +1,4 @@
-/*      $Id: order.c,v 1.9 2008/09/27 07:35:22 ragge Exp $    */
+/*      $Id: order.c,v 1.10 2016/03/09 18:19:56 ragge Exp $    */
 /*
  * Copyright (c) 2007 Gregory McGarry (g.mcgarry@ieee.org).
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -72,7 +72,7 @@ offstar(NODE *p, int shape)
 		}
 		/* usually for arraying indexing: */
 		if (r->n_op == LS && r->n_right->n_op == ICON &&
-		    r->n_right->n_lval == 2 && p->n_op == PLUS) {
+		    getlval(r->n_right) == 2 && p->n_op == PLUS) {
 			if (isreg(p->n_left) == 0)
 				(void)geninsn(p->n_left, INAREG);
 			if (isreg(r->n_left) == 0)
@@ -109,16 +109,16 @@ myormake(NODE *q)
 		(void)geninsn(p, INAREG);
 	} else if (p->n_op == REG) {
 		q->n_op = OREG;
-		q->n_lval = p->n_lval;
+		setlval(q, getlval(p));
 		q->n_rval = p->n_rval;
 		tfree(p);
 	} else if (p->n_op == PLUS && (r = p->n_right)->n_op == LS &&
-	    r->n_right->n_op == ICON && r->n_right->n_lval == 2 &&
+	    r->n_right->n_op == ICON && getlval(r->n_right) == 2 &&
  	    p->n_left->n_op == REG && r->n_left->n_op == REG) {
 		q->n_op = OREG;
- 		q->n_lval = 0;
+		setlval(q, 0);
 		q->n_rval = R2PACK(p->n_left->n_rval, r->n_left->n_rval,
-				   r->n_right->n_lval);
+				   getlval(r->n_right));
 		tfree(p);
 	}
 }

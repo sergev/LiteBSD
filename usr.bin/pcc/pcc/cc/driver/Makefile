@@ -25,7 +25,7 @@ PCCLIBDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/lib
 PCCINCDIR = $(libdir)/pcc/$(TARGET)/$(VERSION)/include
 CFLAGS = -g -O2  -Wall -Wmissing-prototypes -Wshadow -Wsign-compare
 CPPFLAGS =  -DLIBEXECDIR=\"$(libexecdir)/\" \
-	 -DGCC_COMPAT -DINCLUDEDIR=\"$(includedir)/\" \
+	 -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT -DINCLUDEDIR=\"$(includedir)/\" \
 	-DPCCINCDIR=\"$(PCCINCDIR)/\" -DPCCLIBDIR=\"$(PCCLIBDIR)/\" \
 	-DTARGOS=\"$(TARGOS)\" -DTARGOSVER=$(TARGOSVER) -Dos_$(TARGOS) \
 	-DTARGMACH=\"$(TARGMACH)\" -Dmach_$(TARGMACH) \

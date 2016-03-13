@@ -1,4 +1,4 @@
-/*	$Id: local.c,v 1.95 2016/02/07 17:51:37 ragge Exp $	*/
+/*	$Id: local.c,v 1.96 2016/03/05 15:49:36 ragge Exp $	*/
 /*
  * Copyright (c) 2008 Michael Shalayeff
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
@@ -472,8 +472,8 @@ clocal(NODE *p)
 			case DOUBLE:
 			case FLOAT:
 				l->n_op = FCON;
-				l->n_dcon = tmpalloc(sizeof(union flt));
-				((union flt *)l->n_dcon)->fp = val;
+				l->n_dcon = fltallo();
+				FCAST(l->n_dcon)->fp = val;
 				break;
 			default:
 				cerror("unknown type %d", m);
@@ -485,9 +485,9 @@ clocal(NODE *p)
 		} else if (l->n_op == FCON) {
 			CONSZ lv;
 			if (p->n_type == BOOL)
-				lv = !FLOAT_ISZERO(((union flt *)l->n_dcon));
+				lv = !FLOAT_ISZERO(FCAST(l->n_dcon));
 			else {
-				FLOAT_FP2INT(lv, ((union flt *)l->n_dcon), m);
+				FLOAT_FP2INT(lv, FCAST(l->n_dcon), m);
 			}
 			slval(l, lv);
 			l->n_sp = NULL;
@@ -703,7 +703,7 @@ ninval(CONSZ off, int fsz, NODE *p)
 	switch (p->n_type) {
 	case LDOUBLE:
 		u.i[2] = 0;
-		u.l = (long double)((union flt *)p->n_dcon)->fp;
+		u.l = (long double)FCAST(p->n_dcon)->fp;
 #if defined(HOST_BIG_ENDIAN)
 		/* XXX probably broken on most hosts */
 		printf("\t.long\t0x%x,0x%x,0x%x,0\n", u.i[2], u.i[1], u.i[0]);
@@ -713,7 +713,7 @@ ninval(CONSZ off, int fsz, NODE *p)
 #endif
 		break;
 	case DOUBLE:
-		u.d = (double)((union flt *)p->n_dcon)->fp;
+		u.d = (double)FCAST(p->n_dcon)->fp;
 #if defined(HOST_BIG_ENDIAN)
 		printf("\t.long\t0x%x,0x%x\n", u.i[1], u.i[0]);
 #else
@@ -721,7 +721,7 @@ ninval(CONSZ off, int fsz, NODE *p)
 #endif
 		break;
 	case FLOAT:
-		u.f = (float)((union flt *)p->n_dcon)->fp;
+		u.f = (float)FCAST(p->n_dcon)->fp;
 		printf("\t.long\t0x%x\n", u.i[0]);
 		break;
 	default:
