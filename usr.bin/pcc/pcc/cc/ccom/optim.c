@@ -1,4 +1,4 @@
-/*	$Id: optim.c,v 1.61 2016/02/09 17:57:35 ragge Exp $	*/
+/*	$Id: optim.c,v 1.62 2016/03/28 15:38:01 ragge Exp $	*/
 /*
  * Copyright(C) Caldera International Inc. 2001-2002. All rights reserved.
  *
@@ -253,6 +253,7 @@ again:	o = p->n_op;
 			p->n_right->n_left = p->n_right->n_right;
 		}
 		p->n_right->n_op = UMUL; /* for tfree() */
+		p1walkf(p, putjops, 0);
 		tfree(p);
 		p = q;
 		break;

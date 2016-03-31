@@ -1,4 +1,4 @@
-/*	$Id: local2.c,v 1.186 2015/11/17 19:19:40 ragge Exp $	*/
+/*	$Id: local2.c,v 1.187 2016/03/13 10:14:25 ragge Exp $	*/
 /*
  * Copyright (c) 2003 Anders Magnusson (ragge@ludd.luth.se).
  * All rights reserved.
@@ -363,7 +363,7 @@ ulltofp(NODE *p)
 {
 	int jmplab;
 
-#if defined(ELFABI) || defined(PECOFFABI)
+#if defined(ELFABI) || defined(PECOFFABI) || defined(AOUTABI)
 	static int loadlab;
 
 	if (loadlab == 0) {
@@ -381,7 +381,7 @@ ulltofp(NODE *p)
 	expand(p, 0, "	cmpl $0,UL\n");
 	printf("	jge " LABFMT "\n", jmplab);
 
-#if defined(ELFABI)
+#if defined(ELFABI) || defined(AOUTABI)
 	printf("	fldt " LABFMT "%s\n", loadlab, kflag ? "@GOTOFF" : "");
 #elif defined(MACHOABI)
 	printf("\tpushl 0x5f800000\n");

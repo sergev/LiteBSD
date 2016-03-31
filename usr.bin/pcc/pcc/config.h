@@ -137,7 +137,7 @@
 /* #undef TLS */
 
 /* Version string */
-#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160313 for mipsel-unknown-litebsd0.1"
+#define VERSSTR "Portable C Compiler 1.2.0.DEVEL 20160329 for mipsel-unknown-litebsd0.1"
 
 /* Size of wide-character type in chars */
 #define WCHAR_SIZE 4

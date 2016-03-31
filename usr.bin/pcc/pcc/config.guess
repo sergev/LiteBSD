@@ -882,7 +882,7 @@ EOF
 	echo ${UNAME_MACHINE}-unknown-`echo ${UNAME_SYSTEM} | sed 's,^[^/]*/,,' | tr '[A-Z]' '[a-z]'``echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'`-${LIBC}
 	exit ;;
     i*86:Minix:*:*)
-	echo ${UNAME_MACHINE}-pc-minix
+	echo ${UNAME_MACHINE}-pc-minix${UNAME_RELEASE}
 	exit ;;
     aarch64:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
