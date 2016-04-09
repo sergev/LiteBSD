@@ -173,10 +173,13 @@ main(int argc, char *argv[])
 	mktables();
 
 	/* create efficient bitset sizes */
+#ifndef os_litebsd
 	if (sizeof(long) == 8) { /* 64-bit arch */
 		bitary = "long";
 		bitsz = 64;
-	} else {
+	} else
+#endif
+        {
 		bitary = "int";
 		bitsz = sizeof(int) == 4 ? 32 : 16;
 	}
@@ -219,7 +222,7 @@ main(int argc, char *argv[])
 			break;
 		}
 		/* check that reclaim is not the wrong class */
-		if ((q->rewrite & (RESC1|RESC2|RESC3)) && 
+		if ((q->rewrite & (RESC1|RESC2|RESC3)) &&
 		    !(q->needs & REWRITE)) {
 			if ((q->visit & getrcl(q)) == 0) {
 				compl(q, "wrong RESCx class");
