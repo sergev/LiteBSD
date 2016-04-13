@@ -1,0 +1,95 @@
+#
+# PIC32MZ target: Olimex EMZ64 Board
+#
+# To build the kernel, use:
+#   ../../../usr.sbin/config/config EMZ64.pic32
+#   cd ../../compile/EMZ64.pic32
+#   bmake depend
+#   bmake
+#
+machine         "pic32"
+cpu             "PIC32MZ"
+ident           "EMZ64"
+
+# Linker script
+ldscript        "pic32/bare-mz.ld"
+
+# Need to set locally
+timezone        8 dst
+maxusers        2
+
+# Standard system options
+options         SWAPPAGER               # swap pager (anonymous and swap space)
+options         VNODEPAGER              # vnode pager (mapped files)
+options         DEVPAGER                # device pager (mapped devices)
+options         DIAGNOSTIC              # extra kernel debugging checks
+options         DEBUG                   # extra kernel debugging support
+options         "NKMEMCLUSTERS=64"      # 4K pages in kernel malloc pool, default 128 pages
+options         "NMBCLUSTERS=64"        # 4K pages in network mbuf pool, default 256/512 pages
+options         "NBUF=18"               # Number of i/o buffers (4k), min 16
+options         "BUFPAGES=18"           # Number of i/o pages, default 10% of ram, min 16
+options         "CPU_KHZ=200000"        # Oscillator frequency of CPU core
+options         "HZ=100"                # Frequency of clock interrupt
+
+# Filesystem options
+options         FIFO            # POSIX fifo support (in all filesystems)
+options         FFS             # fast filesystem with user and group quotas
+options         UNION           # Union filesystem
+options         KERNFS          # kernel data-structure filesystem
+options         FDESC           # user file descriptor filesystem
+options         PROCFS          # /proc filesystem
+
+# Networking options
+options         INET            # Internet protocols
+
+config          vmunix  root on sd0a
+                        swap on sd0b
+
+device          uart4   flags 0x4044    # pins rx=RD0, tx=RD4
+
+# Console options
+options         "CONS_MAJOR=17"         # UART device
+options         "CONS_MINOR=3"          # UART4
+
+controller      spi2    flags 0x4342    # pins sdi=RD3,  sdo=RD2  - SD card
+controller      spi4    flags 0x4b45    # pins sdi=RD11, sdo=RD5  - UEXT
+
+disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9
+options         "SD_LED=0x28"                           # LED1 is RB8
+
+# General purpose I/O ports
+device          gpio1   flags 0x77c0    # port B
+                                        # RB6  - ICSP PGEC2
+                                        # RB7  - ICSP PGED2
+                                        # RB8  - LED1 (output)
+                                        # RB9  - LED2 (output)
+                                        # RB10 - LED3 (output)
+                                        # RB12 - BUT1 (input)
+                                        # RB13 - BUT2 (input)
+                                        # RB14 - BUT3 (input)
+
+device          gpio3   flags 0x0200    # port D
+                                        # RD9  - UEXT SS4 (output)
+
+device          gpio5   flags 0x003b    # port F
+                                        # RF0  - SD CP (input)
+                                        # RF1  - OLED RST (output)
+                                        # RF3  - USB ID (input)
+                                        # RF4  - OLED SDA5
+                                        # RF5  - OLED SCL5 (output)
+
+device          gpio6   flags 0x0180    # port G
+                                        # RG7  - UEXT SDA4
+                                        # RG8  - UEXT SCL4 (output)
+
+# Ethernet controller
+controller      en0
+options         "ETHERNET_PHY_ADDR=0"   # PHY address is 0 on EMZ64 board
+
+# Buttons
+options         "BUTTON1=0x2c"          # button 1 at pin RB12
+
+pseudo-device   pty             4       # pseudo ptys
+pseudo-device   loop                    # network loopback interface
+pseudo-device   ether                   # generic Ethernet protocol
+pseudo-device   vn                      # block/character interface to a vnode

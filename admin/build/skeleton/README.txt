@@ -40,7 +40,7 @@ Windows, or /dev/tty.usbmodemfa131 on Mac OS X. Some boards
 use special names, like /dev/tty.SLAB_USBtoUART on Whitecat.
 
 For boards which don't have bootloader (Microchip MEB-II,
-Olimex HMZ144) you need to use an external programmer like
+Olimex HMZ144 and EMZ64) you need to use an external programmer like
 PICkit2 or one of it's clones (like iCP02). For these boards
 you do not need to specify the -d option and device name.
 

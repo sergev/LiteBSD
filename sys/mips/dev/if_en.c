@@ -1146,6 +1146,12 @@ static void setup_signals()
     case 0x05104053:            /* MZ2048ECG064 */
     case 0x05109053:            /* MZ2048ECH064 */
     case 0x05131053:            /* MZ2048ECM064 */
+    case 0x07203053:            /* MZ1024EFG064 */
+    case 0x07204053:            /* MZ2048EFG064 */
+    case 0x07208053:            /* MZ1024EFH064 */
+    case 0x07209053:            /* MZ2048EFH064 */
+    case 0x07230053:            /* MZ1024EFM064 */
+    case 0x07231053:            /* MZ2048EFM064 */
         if (*(unsigned*)DEVCFG3 & DEVCFG3_FETHIO) {
             /*
              * Default setup for 64-pin device.
@@ -1174,6 +1180,12 @@ static void setup_signals()
     case 0x0510E053:            /* MZ2048ECG100 */
     case 0x05113053:            /* MZ2048ECH100 */
     case 0x0513B053:            /* MZ2048ECM100 */
+    case 0x0720D053:            /* MZ1024EFG100 */
+    case 0x0720E053:            /* MZ2048EFG100 */
+    case 0x07212053:            /* MZ1024EFH100 */
+    case 0x07213053:            /* MZ2048EFH100 */
+    case 0x0723A053:            /* MZ1024EFM100 */
+    case 0x0723B053:            /* MZ2048EFM100 */
         if (*(unsigned*)DEVCFG3 & DEVCFG3_FETHIO) {
             /*
              * Default setup for 100-pin devices.
@@ -1208,12 +1220,24 @@ static void setup_signals()
     case 0x05118053:            /* MZ2048ECG124 */
     case 0x0511D053:            /* MZ2048ECH124 */
     case 0x05145053:            /* MZ2048ECM124 */
+    case 0x07217053:            /* MZ1024EFG124 */
+    case 0x07218053:            /* MZ2048EFG124 */
+    case 0x0721C053:            /* MZ1024EFH124 */
+    case 0x0721D053:            /* MZ2048EFH124 */
+    case 0x07244053:            /* MZ1024EFM124 */
+    case 0x07245053:            /* MZ2048EFM124 */
         panic("en: 124-pin devices not supported yet\n");
         break;
 
     case 0x05122053:            /* MZ2048ECG144 */
     case 0x05127053:            /* MZ2048ECH144 */
     case 0x0514F053:            /* MZ2048ECM144 */
+    case 0x07221053:            /* MZ1024EFG144 */
+    case 0x07222053:            /* MZ2048EFG144 */
+    case 0x07226053:            /* MZ1024EFH144 */
+    case 0x07227053:            /* MZ2048EFH144 */
+    case 0x0724E053:            /* MZ1024EFM144 */
+    case 0x0724F053:            /* MZ2048EFM144 */
         /*
          * Setup for 144-pin devices.
          */

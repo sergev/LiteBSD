@@ -5,6 +5,7 @@ BOARD_LIST      = WIFIRE.pic32\
                   SDZL.pic32\
                   MEBII.pic32\
                   HMZ144.pic32\
+                  EMZ64.pic32\
                   Whitecat.pic32\
                   SNADPIC.pic32
 

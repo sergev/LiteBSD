@@ -108,7 +108,7 @@ int     dumpmag = (int)0x8fca0101;      /* magic number for savecore */
 int     dumpsize = 0;                   /* also for savecore */
 long    dumplo = 0;
 
-#if defined(MEBII) || defined(SNADPIC)
+#if defined(MEBII) || defined(SNADPIC) || defined(EMZ64)
 /*
  * Chip configuration.
  */
@@ -157,7 +157,7 @@ PIC32_DEVCFG (
     DEVCFG3_USERID(0xffff));    /* User-defined ID */
 #endif
 
-#if defined(MEBII) || defined(HMZ144) || defined(SNADPIC)
+#if defined(MEBII) || defined(HMZ144) || defined(SNADPIC) || defined(EMZ64)
 /*
  * Boot code at bfc00000.
  * Jump to Flash memory.
@@ -234,6 +234,17 @@ mach_init()
                 (1 << 9);   /* Set digital mode for RE8 and RE9 */
     U2RXR = 13;             /* Group 3: 1101 = RE9 */
     RPE8R = 2;              /* Group 4: 0010 = U2TX */
+#endif
+
+#if defined(EMZ64)
+    /* Olimex EMZ64 board: use UART4 for console.
+     * Map signals rx=RD0, tx=RD4. */
+    U4RXR = 3;              /* Group 4: 0011 = RD0 */
+    RPD4R = 2;              /* Group 3: 0010 = U4TX */
+
+    /* Enable the Ethernet PHY chip. */
+    LATBSET = 1 << 11;      /* set RB11 high for EPHY-RST# */
+    TRISBCLR = 1 << 11;     /* set RB11 as output */
 #endif
 
     /*
