@@ -30,12 +30,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)mkioconf.c	8.2 (Berkeley) 1/21/94";
-#endif /* not lint */
-
-#include <stdio.h>
 #include "y.tab.h"
 #include "config.h"
 
@@ -820,6 +814,28 @@ void pmax_ioconf()
 #endif
 
 #if MACHINE_PIC32
+static void print_pins(FILE *fp, struct device *dp)
+{
+        int i;
+
+        if (dp->d_npins > 0) {
+                fprintf(fp, "{");
+                for (i=dp->d_npins-1; i>=0; i--) {
+                    int bit = dp->d_pins[i] & 0xff;
+                    int port = dp->d_pins[i] >> 8;
+                    if (bit > 15 || port < 1 || port > 11 || port == 9) {
+                            printf("R%c%u: invalid pin name\n", 'A'+port-1, bit);
+                            exit(1);
+                    }
+                    fprintf(fp, "0x%x%x", port, bit);
+                    if (i > 0)
+                            fprintf(fp, ",");
+                }
+                fprintf(fp, "}");
+        } else
+                fprintf(fp, "{0}");
+}
+
 void pic32_ioconf()
 {
 	register struct device *dp, *mp;
@@ -854,9 +870,11 @@ void pic32_ioconf()
 		if (dp->d_unit == UNKNOWN || dp->d_unit == QUES)
 			dp->d_unit = 0;
 		fprintf(fp,
-			"\t{ &%sdriver,\t%d,\tC 0x%08x,\t%d,\t0x%x },\n",
+			"\t{ &%sdriver,\t%d,\tC 0x%08x,\t%d,\t0x%x,\t",
 			dp->d_name, dp->d_unit, dp->d_addr, dp->d_pri,
 			dp->d_flags);
+                print_pins(fp, dp);
+                fprintf(fp, " },\n");
 	}
 	fprintf(fp, "\t{ 0 }\n};\n");
 
@@ -878,8 +896,10 @@ void pic32_ioconf()
                     fprintf(fp, "0,\t\t%d,\t0,\t",
                             dp->d_unit);
                 }
-                fprintf(fp, "%d,\t%d,\t%d,\t0x%x },\n",
+                fprintf(fp, "%d,\t%d,\t%d,\t0x%x,\t",
                         dp->d_drive, dp->d_slave, dp->d_dk, dp->d_flags);
+                print_pins(fp, dp);
+                fprintf(fp, " },\n");
 	}
 	fprintf(fp, "{ 0 }\n};\n");
 	pseudo_ioconf(fp);

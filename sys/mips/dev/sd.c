@@ -232,13 +232,18 @@ static int card_cmd(unsigned int unit, unsigned int cmd, unsigned int addr)
 static inline void
 sd_led(int val)
 {
-#ifdef SD_LED
-    gpio_set_output(SD_LED);
-    if (val) {
-        gpio_set(SD_LED);
-    } else {
-        gpio_clr(SD_LED);
-    }
+#ifdef SD_LED_PORT
+#ifndef SD_LED_INVERT
+    if (val)
+        LAT_SET(SD_LED_PORT) = 1 << SD_LED_PIN;
+    else
+        LAT_CLR(SD_LED_PORT) = 1 << SD_LED_PIN;
+#else
+    if (val)
+        LAT_CLR(SD_LED_PORT) = 1 << SD_LED_PIN;
+    else
+        LAT_SET(SD_LED_PORT) = 1 << SD_LED_PIN;
+#endif
 #endif
 }
 
@@ -1022,7 +1027,7 @@ sdprobe(config)
         return 0;
     io = &u->spiio;
 
-    if (spi_setup(io, config->dev_ctlr, config->dev_flags) != 0) {
+    if (spi_setup(io, config->dev_ctlr, config->dev_pins[0]) != 0) {
         printf("sd%u: cannot open SPI%u port\n", unit, config->dev_ctlr);
         return 0;
     }
@@ -1041,6 +1046,11 @@ sdprobe(config)
         dk_wpms[u->dkindex] = SD_KHZ / 32;
     } else
         u->dkindex = -1;
+
+    /* Configure LED pin as output. */
+#ifdef SD_LED_PORT
+    TRIS_CLR(SD_LED_PORT) = 1 << SD_LED_PIN;
+#endif
     return 1;
 }
 

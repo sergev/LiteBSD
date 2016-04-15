@@ -37,6 +37,7 @@
  * Config.
  */
 #include <sys/types.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -122,6 +123,9 @@ struct device {
 	int	d_drq;			/* DMA request  */
 	int	d_irq;			/* interrupt request  */
 	struct	device *d_next;		/* Next one in list */
+#define MAXPINS 32                      /* max number of pins */
+        short   d_pins[MAXPINS];        /* pins assigned */
+        int     d_npins;                /* pin count */
 };
 #define TO_NEXUS	(struct device *)-1
 #define TO_VBA		(struct device *)-2
@@ -170,15 +174,23 @@ struct opt {
 	struct	opt *op_next;
 } *opt, *mkopt;
 
+/*
+ * Mapping of signal names to pins.
+ */
+struct signal {
+        char    *sig_name;
+        int     sig_pin;
+        int     sig_invert;
+        struct  signal *sig_next;
+} *siglist;
+
 char	*ident;
 char	*ldscript;
-char	*ns();
-char	*tc();
-char	*qu();
-char	*get_word();
-char	*get_quoted_word();
-char	*path();
-char	*raise();
+char	*ns(char *);
+char	*get_word(FILE *);
+char	*get_quoted_word(FILE *);
+char	*path(char *);
+char	*raise(char *);
 
 int	do_trace;
 
@@ -193,7 +205,6 @@ int	seen_isa;
 #endif
 int	seen_cd;
 
-struct	device *connect();
 struct	device *dtab;
 dev_t	nametodev(char *, int);
 char	*devtoname(dev_t);

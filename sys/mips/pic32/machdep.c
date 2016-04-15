@@ -176,11 +176,17 @@ asm ("          .text");
 static inline int
 button1_pressed()
 {
-#ifdef BUTTON1
-    gpio_set_input(BUTTON1);
-    return gpio_get(BUTTON1);
-#else
+#ifndef BUTTON1_PORT
     return 0;
+#else
+    int val;
+
+    TRIS_SET(BUTTON1_PORT) = 1 << BUTTON1_PIN;
+    val = PORT_VAL(BUTTON1_PORT);
+#ifdef BUTTON1_INVERT
+    val = ~val;
+#endif
+    return (val >> BUTTON1_PIN) & 1;
 #endif
 }
 

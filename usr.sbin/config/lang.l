@@ -70,6 +70,7 @@ struct kt {
 	{ "hz",		HZ },
 	{ "ident",	IDENT },
 	{ "interleave",	INTERLEAVE },
+        { "invert",     INVERT },
 #if MACHINE_I386
 	{ "iomem",	IOMEM },
 	{ "iosiz",	IOSIZ },
@@ -88,6 +89,8 @@ struct kt {
 	{ "nexus",	NEXUS },
 	{ "on",		ON },
 	{ "options",	OPTIONS },
+	{ "pin",	PINS },
+	{ "pins",	PINS },
 #if MACHINE_I386
 	{ "port",	PORT },
 #endif
@@ -98,6 +101,7 @@ struct kt {
 	{ "scode",	NEXUS },
 #endif
 	{ "sequential",	SEQUENTIAL },
+	{ "signal",	SIGNAL },
 	{ "size",	SIZE },
 	{ "slave",	SLAVE },
 	{ "swap",	SWAP },
@@ -116,7 +120,14 @@ int octal(char *str);
 int hex(char *str);
 %}
 WORD	[A-Za-z_][-A-Za-z_]*
+PIN     R[A-Z][0-9][0-9]*
 %%
+{PIN}           {
+                        /* Pin name from RA0 to RZ255. */
+                        yylval.val = atoi(yytext + 2) & 0xff;
+                        yylval.val |= (yytext[1] - 'A' + 1) << 8;
+                        return PIN;
+                }
 {WORD}		{
 			int i;
 

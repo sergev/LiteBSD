@@ -57,6 +57,10 @@ struct conf_ctlr {
     int             ctlr_pri;       /* interrupt priority */
     int             ctlr_flags;     /* flags */
 
+    /* assignment of signals to physical pins */
+#define KCONF_MAXPINS 16
+    char            dev_pins[KCONF_MAXPINS];
+
     int             ctlr_alive;     /* true if init routine succeeded */
 };
 
@@ -73,6 +77,10 @@ struct conf_device {
     int             dev_slave;      /* LUN if device has multiple units */
     int             dev_dk;         /* used for disk statistics */
     int             dev_flags;      /* flags */
+
+    /* assignment of signals to physical pins */
+    char            dev_pins[KCONF_MAXPINS];
+
     int             dev_alive;      /* true if init routine succeeded */
 };
 

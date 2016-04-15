@@ -617,6 +617,22 @@
 #define CNSTATKSET      PIC32_R (0x60998)
 #define CNSTATKINV      PIC32_R (0x6099C)
 
+/*
+ * Port i/o access, relative to TRIS base.
+ */
+#define TRIS_VAL(p)     (&p)[0]
+#define TRIS_CLR(p)     (&p)[1]
+#define TRIS_SET(p)     (&p)[2]
+#define TRIS_INV(p)     (&p)[3]
+#define PORT_VAL(p)     (&p)[4]
+#define PORT_CLR(p)     (&p)[5]
+#define PORT_SET(p)     (&p)[6]
+#define PORT_INV(p)     (&p)[7]
+#define LAT_VAL(p)      (&p)[8]
+#define LAT_CLR(p)      (&p)[9]
+#define LAT_SET(p)      (&p)[10]
+#define LAT_INV(p)      (&p)[11]
+
 /*--------------------------------------
  * Timer registers.
  */

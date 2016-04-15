@@ -844,8 +844,8 @@ spiprobe(config)
 {
     int channel = config->ctlr_unit - 1;
     struct spiio *io = &spitab[channel];
-    int sdi = config->ctlr_flags >> 8 & 0xFF;
-    int sdo = config->ctlr_flags & 0xFF;
+    int sdi = config->dev_pins[0];
+    int sdo = config->dev_pins[1];
     int sck;
     static const int sck_tab[6] = {
         RP('D',1),  /* SCK1 */

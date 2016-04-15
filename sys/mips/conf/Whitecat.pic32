@@ -56,10 +56,10 @@ config          vmunix  root on sd0a
                         swap on sd0b
 
 # UART configuration
-device          uart1   flags 0x6465    # pins rx=RF4 , tx=RF5  - tty1 console
-device          uart2   flags 0x2726    # pins rx=RB7 , tx=RB6  - tty2
-device          uart3   flags 0x3d3e    # pins rx=RC13, tx=RC14 - tty3
-device          uart4   flags 0x4544    # pins rx=RD5 , tx=RD4  - tty4
+device          uart1   pins RF4, RF5   # tty1 console
+device          uart2   pins RB7, RB6   # tty2
+device          uart3   pins RC13, RC14 # tty3
+device          uart4   pins RD5, RD4   # tty4
 options         "UART_BAUD=115200"      # initial baud rate
 #options        "UART_BUFSZ=1024"       # Uncomment this to increase the size of the UART buffers
 
@@ -68,14 +68,14 @@ options         "CONS_MAJOR=17"         # UART device
 options         "CONS_MINOR=0"          # UART1 - On board Silabs CP2104 to Serial TTL
 
 # SPI configuration
-controller      spi1    flags 0x4243    # pins sdi=RD2 , sdo=RD3 - sd card
-controller      spi2    flags 0x7778    # pins sdi=RG7 , sdo=RG8
-controller      spi3    flags 0x2a29    # pins sdi=RB10, sdo=RB9 - spi flash
-controller      spi4    flags 0x4b40    # pins sdi=RD11, sdo=RD0
+controller      spi1    pins RD2, RD3   # sd card
+controller      spi2    pins RG7, RG8
+controller      spi3    pins RB10, RB9  # spi flash
+controller      spi4    pins RD11, RD0
 
 # SD configuration
-disk            sd0     at spi1 drive 0 flags 0x63  # select pin RF3  -- CS not used, mapped to RF3
-options         "SD_LED=0x63"                       # sd active led RF3
+disk            sd0     at spi1 pin RF3 # CS not used, mapped to RF3
+signal          "SD_LED"        pin RF3 # SD activity
 
 # General purpose I/O ports
 device      gpio1   flags 0xb13f # port B
@@ -85,7 +85,7 @@ device      gpio4   flags 0x00ff # port E
 # ethernet	en0	at spi2
 
 # CANBus not implemented yet
-# controller    can0    flags 0x6061    # pins canrx=RF0, cantx=RF1
+# controller    can0    pins RF0, RF1
 
 pseudo-device   pty             4       # pseudo ptys
 #pseudo-device  sl              1       # serial line IP interfaces (SLIP)

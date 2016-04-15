@@ -660,7 +660,7 @@ mrf_probe(config)
     struct conf_device *config;
 {
     int unit = config->dev_unit;
-    int pin_cs = config->dev_flags & 0xFF;
+    int pin_cs = config->dev_pins[0];
     struct wifi_port *w = &wifi_port[unit];
     struct ifnet *ifp = &w->netif;
     struct spiio *io = &w->spiio;
@@ -676,9 +676,9 @@ mrf_probe(config)
     spi_set(io, PIC32_SPICON_CKE);
 
     /* Detect mrf24g chip. */
-    w->pin_irq = config->dev_flags >> 8 & 0xFF;
-    w->pin_reset = config->dev_flags >> 16 & 0xFF;
-    w->pin_hibernate = config->dev_flags >> 24 & 0xFF;
+    w->pin_irq = config->dev_pins[1];
+    w->pin_reset = config->dev_pins[2];
+    w->pin_hibernate = config->dev_pins[3];
     if (mrf_detect(w) < 0) {
         printf("mrf%u not found at port %s, pin cs=R%c%d\n",
             unit, spi_name(io), spi_csname(io), spi_cspin(io));

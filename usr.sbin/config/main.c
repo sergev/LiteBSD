@@ -30,21 +30,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1980, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)main.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
 #include "y.tab.h"
@@ -87,15 +75,15 @@ usage:		fputs("usage: config [-gp] sysname\n", stderr);
 		exit(1);
 	}
 
-	if (freopen(PREFIX = *argv, "r", stdin) == NULL) {
-fprintf(stderr, "--- PREFIX\n");
+	PREFIX = *argv;
+	if (freopen(PREFIX, "r", stdin) == NULL) {
 		perror(PREFIX);
 		exit(2);
 	}
 	mkdir("../../compile", 0777);
-	if (stat(p = path((char *)NULL), &buf)) {
-		if (mkdir(p, 0777)) {
-fprintf(stderr, "--- mkdir path\n");
+	p = path((char *)NULL);
+	if (stat(p, &buf) < 0) {
+		if (mkdir(p, 0777) < 0) {
 			perror(p);
 			exit(2);
 		}

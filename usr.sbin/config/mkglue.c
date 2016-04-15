@@ -31,14 +31,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)mkglue.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 /*
  * Make the bus adaptor interrupt glue files.
  */
-#include <stdio.h>
 #include "config.h"
 #include "y.tab.h"
 #include <ctype.h>

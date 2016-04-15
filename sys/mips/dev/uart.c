@@ -745,8 +745,8 @@ uartprobe(config)
     uart_regmap_t *reg;
     struct tty *tp;
     int unit = config->dev_unit - 1;
-    int rx = config->dev_flags >> 8 & 0xFF;
-    int tx = config->dev_flags & 0xFF;
+    int rx = config->dev_pins[0];
+    int tx = config->dev_pins[1];
     int is_console = (CONS_MAJOR == 17 && CONS_MINOR == unit);
 
     if (unit < 0 || unit >= NUART)

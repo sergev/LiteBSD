@@ -57,8 +57,8 @@ config          vmunix  root on sd0a
                         swap on sd0b
 
 # UART ports
-device          uart1   flags 0x614f    # pins rx=RD14, tx=RD15 - logical 39/40
-device          uart4   flags 0x6268    # pins rx=RF2,  tx=RF8  - serial-to-USB converter
+device          uart1   pins RD14, RD15 # pins rx=RD14, tx=RD15 - logical 39/40
+device          uart4   pins RF2, RF8   # pins rx=RF2,  tx=RF8  - serial-to-USB converter
 
 # Use UART4 as console
 options         "CONS_MAJOR=17"         # UART device
@@ -68,15 +68,15 @@ options         "CONS_MINOR=3"          # UART4 - chipKIT WiFire board
 #options         "UART_BUFSZ=1024"
 
 # SPI ports
-controller      spi1    flags 0x4e31    # pins sdi=RF1,  sdo=RC1  - logical 36/35/5
-controller      spi2    flags 0x604b    # pins sdi=RF0,  sdo=RD11 - logical 12/11/13
-controller      spi3    flags 0x2a34    # pins sdi=RB10, sdo=RC4  - SD card
-controller      spi4    flags 0x6570    # pins sdi=RF5,  sdo=RG0  - Wi-Fi interface
+controller      spi1    pins RF1, RC1   # logical 36/35/5
+controller      spi2    pins RF0, RD11  # logical 12/11/13
+controller      spi3    pins RB10, RC4  # SD card
+controller      spi4    pins RF5, RG0   # Wi-Fi interface
 
 # microSD card
-disk            sd0     at spi3 drive 0 flags 0x33      # select pin RC3
-options         "SD_LED=0x7f"                           # LED4 is G15
-#disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
+disk            sd0     at spi3 pin RC3
+signal          "SD_LED"        pin RG15    # SD activity on LED4
+#disk           sd1     at spi3 pin RB6 drive 1
 
 # General purpose I/O ports
 # Flags define a mask of available pins
@@ -97,14 +97,18 @@ device          gpio4   flags 0x03ff    # port E
 device          gpio5   flags 0x3008    # port F
 device          gpio6   flags 0xf380    # port G
 
-# Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
-device          mrf0    at spi4 flags 0x71641f49
+# Wi-Fi controller
+device          mrf0    at spi4
+                        pins RD9,       # select
+                             RA15,      # interrupt
+                             RF4,       # reset
+                             RG1        # hibernate
 options         "WF_INT=4"              # use INT4 interrupt pin
 options         WF_ERROR_CHECKING
 
 # Buttons
-options         "BUTTON1=0x15"          # button 1 at pin RA5
-options         "BUTTON2=0x14"          # button 2 at pin RA4
+signal          "BUTTON1"   pin RA5     # BTN1
+signal          "BUTTON2"   pin RA4     # BTN2
 
 pseudo-device   sl              1       # serial line IP interfaces (SLIP)
 pseudo-device   pty             4       # pseudo ptys

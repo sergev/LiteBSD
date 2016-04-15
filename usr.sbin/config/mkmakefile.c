@@ -31,17 +31,11 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)mkmakefile.c	8.1 (Berkeley) 6/6/93";
-#endif /* not lint */
-
 /*
  * Build the makefile for the system, from
  * the information in the files files and the
  * additional files for the machine being compiled to.
  */
-
-#include <stdio.h>
 #include <ctype.h>
 #include "y.tab.h"
 #include "config.h"
@@ -485,6 +479,7 @@ void makefile()
 	char line[BUFSIZ];
 	struct opt *op;
 	struct users *up;
+        struct signal *sig;
 
 	read_files();
 	strcpy(line, "Makefile.");
@@ -516,6 +511,25 @@ void makefile()
 		else
 			fprintf(ofp, " -D%s", op->op_name);
 	fprintf(ofp, "\n");
+	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
+	    zone, dst, maxusers);
+	if (hz > 0)
+		fprintf(ofp, " -DHZ=%d", hz);
+	fprintf(ofp, "\n");
+        for (sig = siglist; sig; sig = sig->sig_next) {
+                int bit = sig->sig_pin & 0xff;
+                int port = sig->sig_pin >> 8;
+                if (bit > 15 || port < 1 || port > 11 || port == 9) {
+                        printf("%s: invalid pin name R%c%u\n",
+                                sig->sig_name, 'A'+port-1, bit);
+                        exit(1);
+                }
+                fprintf(ofp, "PARAM+=-D%s_PORT=TRIS%c -D%s_PIN=%d",
+                        sig->sig_name, 'A'+port-1, sig->sig_name, bit);
+                if (sig->sig_invert)
+                        fprintf(ofp, " -D%s_INVERT", sig->sig_name);
+                fprintf(ofp, "\n");
+        }
 	if (ldscript)
             fprintf(ofp, "LDSCRIPT=\"%s\"\n", ldscript);
 	if (hadtz == 0)
@@ -533,11 +547,6 @@ void makefile()
 		maxusers = up->u_min;
 	} else if (maxusers > up->u_max)
 		printf("warning: maxusers > %d (%d)\n", up->u_max, maxusers);
-	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
-	    zone, dst, maxusers);
-	if (hz > 0)
-		fprintf(ofp, " -DHZ=%d", hz);
-	fprintf(ofp, "\n");
 	for (op = mkopt; op; op = op->op_next)
 		fprintf(ofp, "%s=%s\n", op->op_name, op->op_value);
 	if (debugging)

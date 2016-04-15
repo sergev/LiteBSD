@@ -26,6 +26,7 @@
 %token	HZ
 %token	IDENT
 %token	INTERLEAVE
+%token  INVERT
 %token	IOMEM
 %token	IOSIZ
 %token	IRQ
@@ -41,6 +42,7 @@
 %token	ON
 %token	OPTIONS
 %token	MAKEOPTIONS
+%token  PINS
 %token	PORT
 %token	PRIORITY
 %token	PSEUDO_DEVICE
@@ -58,6 +60,7 @@
 %token	<str>	ID
 %token	<val>	NUMBER
 %token	<val>	FPNUMBER
+%token  <val>   PIN
 
 %type	<str>	Save_id
 %type	<str>	Opt_value
@@ -65,6 +68,7 @@
 %type	<lst>	Id_list
 %type	<val>	optional_size
 %type	<val>	optional_sflag
+%type   <val>   optional_invert
 %type	<str>	device_name
 %type	<val>	major_minor
 %type	<val>	arg_device_spec
@@ -109,10 +113,8 @@
  *
  *	@(#)config.y	8.1 (Berkeley) 6/6/93
  */
-
 #include "config.h"
 #include <ctype.h>
-#include <stdio.h>
 
 struct	device cur;
 struct	device *curp = 0;
@@ -199,6 +201,15 @@ Config_spec:
 	      = { ident = ns($2); } |
 	LDSCRIPT ID
 	      = { ldscript = ns($2); } |
+        SIGNAL ID PINS PIN optional_invert
+              = {
+                struct signal *s = (struct signal*) malloc(sizeof(struct signal));
+                s->sig_name = strdup($2);
+                s->sig_next = siglist;
+                s->sig_pin = $4;
+                s->sig_invert = $5;
+                siglist = s;
+              } |
 	System_spec
 		|
 	HZ NUMBER
@@ -360,6 +371,13 @@ optional_sflag:
 	| /* empty */
 	      = { $$ = 0; }
 	;
+
+optional_invert:
+          INVERT
+              = { $$ = 1; }
+        | /* empty */
+              = { $$ = 0; }
+        ;
 
 device_name:
 	  Save_id
@@ -602,7 +620,8 @@ Info:
 	NET
 	      = { cur.d_mask = "net"; } |
 	FLAGS NUMBER
-	      = { cur.d_flags = $2; };
+	      = { cur.d_flags = $2; } |
+        PINS Pin_list;
 
 Int_spec:
 	VECTOR Id_list
@@ -624,6 +643,11 @@ Id_list:
 	        a->id = $1; a->id_next = $2; $$ = a;
 		};
 
+Pin_list:
+        PIN
+              = { cur.d_pins[cur.d_npins++] = $1; } |
+        PIN COMMA Pin_list
+              = { cur.d_pins[cur.d_npins++] = $1; };
 %%
 
 void yyerror(s)
@@ -888,6 +912,7 @@ void init_dev(dp)
 	dp->d_drq = -1;
 	dp->d_maddr = 0;
 	dp->d_msize = 0;
+        dp->d_npins = 0;
 	dp->d_mask = "null";
 }
 

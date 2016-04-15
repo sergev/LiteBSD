@@ -59,27 +59,23 @@ options         INET            # Internet protocols
 config          vmunix  root on sd0a
                         swap on sd0b
 
-device          uart1   flags 0x4243    # pins rx=RD2,  tx=RD3  - logical 39/40
-device          uart2   flags 0x2726    # pins rx=RB7,  tx=RB6  - serial-to-USB converter
+device          uart1   pins RD2, RD3   # logical 39/40
+device          uart2   pins RB7, RB6   # serial-to-USB converter
 options         "UART_BAUD=115200"      # initial baud rate
 # Uncomment this to increase the size of the UART buffers
 #options         "UART_BUFSZ=1024"
 
-controller      spi1    flags 0x6160    # pins sdi=RF1,  sdo=RF0 - logical 15/14/8
-controller      spi2    flags 0x7778    # pins sdi=RG7,  sdo=RG8 - SD card
-controller      spi3    flags 0x2923    # pins sdi=RB9,  sdo=RB3 - logical A5/A13/A1
-controller      spi4    flags 0x4b40    # pins sdi=RD11, sdo=RD0 - logical 4/5/3
+controller      spi1    pins RF1, RF0   # logical 15/14/8
+controller      spi2    pins RG7, RG8   # SD card
+controller      spi3    pins RB9, RB3   # logical A5/A13/A1
+controller      spi4    pins RD11, RD0  # logical 4/5/3
 
-disk            sd0     at spi2 drive 0 flags 0x79      # select pin RG9  - logical 27
-options         "SD_LED=0x57"                           # LED4 is RE7
-#disk           sd1     at spi3 drive 1 flags 0x26      # select pin RB6
-
-# Wi-Fi controller, pins hibernate=RG1, reset=RF4, irq=RA15, select=RD9
-#device         mrf0    at spi4 flags 0x71641f49
+disk            sd0     at spi2 pin RG9 # logical 27
+signal          "SD_LED"        pin RE7 # use LED4 as SD activity
+#disk           sd1     at spi3 drive 1 pin RB6
 
 # Buttons
-#options         "BUTTON1=0x25"    # button 1 at pin RB5
-#options         "BUTTON2=0x14"    # button 2 at pin RA4
+signal          "BUTTON1"   pin RB5 invert  # PROG, active low
 
 #pseudo-device   sl              1       # serial line IP interfaces (SLIP)
 pseudo-device   pty             4       # pseudo ptys
