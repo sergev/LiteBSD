@@ -511,11 +511,6 @@ void makefile()
 		else
 			fprintf(ofp, " -D%s", op->op_name);
 	fprintf(ofp, "\n");
-	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
-	    zone, dst, maxusers);
-	if (hz > 0)
-		fprintf(ofp, " -DHZ=%d", hz);
-	fprintf(ofp, "\n");
         for (sig = siglist; sig; sig = sig->sig_next) {
                 int bit = sig->sig_pin & 0xff;
                 int port = sig->sig_pin >> 8;
@@ -524,12 +519,17 @@ void makefile()
                                 sig->sig_name, 'A'+port-1, bit);
                         exit(1);
                 }
-                fprintf(ofp, "PARAM+=-D%s_PORT=TRIS%c -D%s_PIN=%d",
+                fprintf(ofp, "IDENT+=-D%s_PORT=TRIS%c -D%s_PIN=%d",
                         sig->sig_name, 'A'+port-1, sig->sig_name, bit);
                 if (sig->sig_invert)
                         fprintf(ofp, " -D%s_INVERT", sig->sig_name);
                 fprintf(ofp, "\n");
         }
+	fprintf(ofp, "PARAM=-DTIMEZONE=%d -DDST=%d -DMAXUSERS=%d",
+	    zone, dst, maxusers);
+	if (hz > 0)
+		fprintf(ofp, " -DHZ=%d", hz);
+	fprintf(ofp, "\n");
 	if (ldscript)
             fprintf(ofp, "LDSCRIPT=\"%s\"\n", ldscript);
 	if (hadtz == 0)

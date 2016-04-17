@@ -1049,6 +1049,7 @@ sdprobe(config)
 
     /* Configure LED pin as output. */
 #ifdef SD_LED_PORT
+    ANSEL_CLR(SD_LED_PORT) = 1 << SD_LED_PIN;
     TRIS_CLR(SD_LED_PORT) = 1 << SD_LED_PIN;
 #endif
     return 1;
