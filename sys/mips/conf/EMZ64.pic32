@@ -88,6 +88,8 @@ options         "ETHERNET_PHY_ADDR=0"   # PHY address is 0 on EMZ64 board
 
 # Buttons
 signal          "BUTTON1"   pin RB12 invert # BUT1, active low
+signal          "BUTTON2"   pin RB13 invert # BUT2, active low
+signal          "BUTTON3"   pin RB14 invert # BUT3, active low
 
 pseudo-device   pty             4       # pseudo ptys
 pseudo-device   loop                    # network loopback interface

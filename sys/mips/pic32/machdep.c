@@ -181,7 +181,6 @@ button1_pressed()
 #else
     int val;
 
-    TRIS_SET(BUTTON1_PORT) = 1 << BUTTON1_PIN;
     val = PORT_VAL(BUTTON1_PORT);
 #ifdef BUTTON1_INVERT
     val = ~val;
@@ -251,6 +250,43 @@ mach_init()
     /* Enable the Ethernet PHY chip. */
     LATBSET = 1 << 11;      /* set RB11 high for EPHY-RST# */
     TRISBCLR = 1 << 11;     /* set RB11 as output */
+#endif
+
+    /*
+     * Enable buttons.
+     */
+#ifdef BUTTON1_PORT
+    ANSEL_CLR(BUTTON1_PORT) = 1 << BUTTON1_PIN;
+    TRIS_SET(BUTTON1_PORT) = 1 << BUTTON1_PIN;
+#ifdef BUTTON1_INVERT
+    /* Active low - enable Pull Up resistor. */
+    CNPU_SET(BUTTON1_PORT) = 1 << BUTTON1_PIN;
+#else
+    /* Active high - enable Pull Down resistor. */
+    CNPD_SET(BUTTON1_PORT) = 1 << BUTTON1_PIN;
+#endif
+#endif
+#ifdef BUTTON2_PORT
+    ANSEL_CLR(BUTTON2_PORT) = 1 << BUTTON2_PIN;
+    TRIS_SET(BUTTON2_PORT) = 1 << BUTTON2_PIN;
+#ifdef BUTTON2_INVERT
+    /* Active low - enable Pull Up resistor. */
+    CNPU_SET(BUTTON2_PORT) = 1 << BUTTON2_PIN;
+#else
+    /* Active high - enable Pull Down resistor. */
+    CNPD_SET(BUTTON2_PORT) = 1 << BUTTON2_PIN;
+#endif
+#endif
+#ifdef BUTTON3_PORT
+    ANSEL_CLR(BUTTON3_PORT) = 1 << BUTTON3_PIN;
+    TRIS_SET(BUTTON3_PORT) = 1 << BUTTON3_PIN;
+#ifdef BUTTON3_INVERT
+    /* Active low - enable Pull Up resistor. */
+    CNPU_SET(BUTTON3_PORT) = 1 << BUTTON3_PIN;
+#else
+    /* Active high - enable Pull Down resistor. */
+    CNPD_SET(BUTTON3_PORT) = 1 << BUTTON3_PIN;
+#endif
 #endif
 
     /*

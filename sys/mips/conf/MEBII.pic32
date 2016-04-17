@@ -88,8 +88,8 @@ controller      en0
 options         "ETHERNET_PHY_ADDR=0"   # PHY address is 0 on LAN8720A and LAN8740A daughter boards
 
 # Buttons
-signal          "BUTTON1"   pin RB12 invert     # BUT1, active low
-signal          "BUTTON2"   pin RB13 invert     # BUT2, active low
+signal          "BUTTON1"   pin RB12 invert     # SW1, active low
+signal          "BUTTON2"   pin RB13 invert     # SW2, active low
 
 pseudo-device   pty             4       # pseudo ptys
 #pseudo-device   sl              1       # serial line IP interfaces (SLIP)

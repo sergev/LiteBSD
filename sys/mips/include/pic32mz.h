@@ -620,6 +620,10 @@
 /*
  * Port i/o access, relative to TRIS base.
  */
+#define ANSEL_VAL(p)    (&p)[-4]
+#define ANSEL_CLR(p)    (&p)[-3]
+#define ANSEL_SET(p)    (&p)[-2]
+#define ANSEL_INV(p)    (&p)[-1]
 #define TRIS_VAL(p)     (&p)[0]
 #define TRIS_CLR(p)     (&p)[1]
 #define TRIS_SET(p)     (&p)[2]
@@ -632,6 +636,18 @@
 #define LAT_CLR(p)      (&p)[9]
 #define LAT_SET(p)      (&p)[10]
 #define LAT_INV(p)      (&p)[11]
+#define ODC_VAL(p)      (&p)[12]
+#define ODC_CLR(p)      (&p)[13]
+#define ODC_SET(p)      (&p)[14]
+#define ODC_INV(p)      (&p)[15]
+#define CNPU_VAL(p)     (&p)[16]
+#define CNPU_CLR(p)     (&p)[17]
+#define CNPU_SET(p)     (&p)[18]
+#define CNPU_INV(p)     (&p)[19]
+#define CNPD_VAL(p)     (&p)[20]
+#define CNPD_CLR(p)     (&p)[21]
+#define CNPD_SET(p)     (&p)[22]
+#define CNPD_INV(p)     (&p)[23]
 
 /*--------------------------------------
  * Timer registers.
