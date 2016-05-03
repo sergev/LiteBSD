@@ -59,6 +59,13 @@
 #define _POSIX2_LINE_MAX        2048
 #define _POSIX2_RE_DUP_MAX      255
 
+/*
+ * X/Open CAE Specifications.
+ * adopted in IEEE Std. 1003.1-2001 XSI.
+ */
+/* XXX: Should have guards.  */
+#define NL_TEXTMAX		2048
+
 #include <machine/limits.h>
 #include <sys/syslimits.h>
 

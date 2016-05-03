@@ -937,6 +937,7 @@ file /usr/bin/nfsstat
 mode 02555
 group 2                 kmem
 file /usr/bin/nice
+file /usr/bin/nl
 file /usr/bin/nm
 file /usr/bin/nohup
 
@@ -1916,6 +1917,7 @@ file /usr/share/man/cat1/nc.0
 file /usr/share/man/cat1/netstat.0
 file /usr/share/man/cat1/nfsstat.0
 file /usr/share/man/cat1/nice.0
+file /usr/share/man/cat1/nl.0
 file /usr/share/man/cat1/nm.0
 file /usr/share/man/cat1/nohup.0
 file /usr/share/man/cat1/nvi.0
