@@ -10,3 +10,6 @@ For more information, see [LiteBSD Wiki pages](https://github.com/sergev/LiteBSD
 
 Precompiled binaries for several PIC32MZ boards are available from
 [Autobuild Download page](http://litebsd.org/wiki/autobuild.php).
+
+If you are looking for the LiteBSD ports tree please see
+[this repository](https://github.com/ibara/LiteBSD-Ports).
