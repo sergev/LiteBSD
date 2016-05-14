@@ -1,89 +1,56 @@
-/*
- * Copyright (c) 1989 The Regents of the University of California.
- * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Robert Paul Corbett.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-#ifndef lint
-static char sccsid[] = "@(#)error.c	5.3 (Berkeley) 6/1/90";
-#endif /* not lint */
+/* $Id: error.c,v 1.11 2014/04/07 22:22:49 tom Exp $ */
 
 /* routines for printing error messages  */
 
 #include "defs.h"
 
-
-fatal(msg)
-char *msg;
+void
+fatal(const char *msg)
 {
     fprintf(stderr, "%s: f - %s\n", myname, msg);
     done(2);
 }
 
-
-no_space()
+void
+no_space(void)
 {
     fprintf(stderr, "%s: f - out of space\n", myname);
     done(2);
 }
 
-
-open_error(filename)
-char *filename;
+void
+open_error(const char *filename)
 {
     fprintf(stderr, "%s: f - cannot open \"%s\"\n", myname, filename);
     done(2);
 }
 
+void
+missing_brace(void)
+{
+    fprintf(stderr, "%s: e - line %d of \"%s\", missing '}'\n",
+	    myname, lineno, input_file_name);
+    done(1);
+}
 
-unexpected_EOF()
+void
+unexpected_EOF(void)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unexpected end-of-file\n",
 	    myname, lineno, input_file_name);
     done(1);
 }
 
-
-print_pos(st_line, st_cptr)
-char *st_line;
-char *st_cptr;
+static void
+print_pos(const char *st_line, const char *st_cptr)
 {
-    register char *s;
+    const char *s;
 
-    if (st_line == 0) return;
+    if (st_line == 0)
+	return;
     for (s = st_line; *s != '\n'; ++s)
     {
-	if (isprint(*s) || *s == '\t')
+	if (isprint(UCH(*s)) || *s == '\t')
 	    putc(*s, stderr);
 	else
 	    putc('?', stderr);
@@ -100,11 +67,8 @@ char *st_cptr;
     putc('\n', stderr);
 }
 
-
-syntax_error(st_lineno, st_line, st_cptr)
-int st_lineno;
-char *st_line;
-char *st_cptr;
+void
+syntax_error(int st_lineno, char *st_line, char *st_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", syntax error\n",
 	    myname, st_lineno, input_file_name);
@@ -112,11 +76,8 @@ char *st_cptr;
     done(1);
 }
 
-
-unterminated_comment(c_lineno, c_line, c_cptr)
-int c_lineno;
-char *c_line;
-char *c_cptr;
+void
+unterminated_comment(int c_lineno, char *c_line, char *c_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unmatched /*\n",
 	    myname, c_lineno, input_file_name);
@@ -124,11 +85,8 @@ char *c_cptr;
     done(1);
 }
 
-
-unterminated_string(s_lineno, s_line, s_cptr)
-int s_lineno;
-char *s_line;
-char *s_cptr;
+void
+unterminated_string(int s_lineno, char *s_line, char *s_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unterminated string\n",
 	    myname, s_lineno, input_file_name);
@@ -136,11 +94,8 @@ char *s_cptr;
     done(1);
 }
 
-
-unterminated_text(t_lineno, t_line, t_cptr)
-int t_lineno;
-char *t_line;
-char *t_cptr;
+void
+unterminated_text(int t_lineno, char *t_line, char *t_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unmatched %%{\n",
 	    myname, t_lineno, input_file_name);
@@ -148,11 +103,8 @@ char *t_cptr;
     done(1);
 }
 
-
-unterminated_union(u_lineno, u_line, u_cptr)
-int u_lineno;
-char *u_line;
-char *u_cptr;
+void
+unterminated_union(int u_lineno, char *u_line, char *u_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unterminated %%union \
 declaration\n", myname, u_lineno, input_file_name);
@@ -160,9 +112,8 @@ declaration\n", myname, u_lineno, input_file_name);
     done(1);
 }
 
-
-over_unionized(u_cptr)
-char *u_cptr;
+void
+over_unionized(char *u_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", too many %%union \
 declarations\n", myname, lineno, input_file_name);
@@ -170,11 +121,8 @@ declarations\n", myname, lineno, input_file_name);
     done(1);
 }
 
-
-illegal_tag(t_lineno, t_line, t_cptr)
-int t_lineno;
-char *t_line;
-char *t_cptr;
+void
+illegal_tag(int t_lineno, char *t_line, char *t_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", illegal tag\n",
 	    myname, t_lineno, input_file_name);
@@ -182,9 +130,8 @@ char *t_cptr;
     done(1);
 }
 
-
-illegal_character(c_cptr)
-char *c_cptr;
+void
+illegal_character(char *c_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", illegal character\n",
 	    myname, lineno, input_file_name);
@@ -192,93 +139,86 @@ char *c_cptr;
     done(1);
 }
 
-
-used_reserved(s)
-char *s;
+void
+used_reserved(char *s)
 {
-    fprintf(stderr, "%s: e - line %d of \"%s\", illegal use of reserved symbol \
+    fprintf(stderr,
+	    "%s: e - line %d of \"%s\", illegal use of reserved symbol \
 %s\n", myname, lineno, input_file_name, s);
     done(1);
 }
 
-
-tokenized_start(s)
-char *s;
+void
+tokenized_start(char *s)
 {
-     fprintf(stderr, "%s: e - line %d of \"%s\", the start symbol %s cannot be \
+    fprintf(stderr,
+	    "%s: e - line %d of \"%s\", the start symbol %s cannot be \
 declared to be a token\n", myname, lineno, input_file_name, s);
-     done(1);
+    done(1);
 }
 
-
-retyped_warning(s)
-char *s;
+void
+retyped_warning(char *s)
 {
     fprintf(stderr, "%s: w - line %d of \"%s\", the type of %s has been \
 redeclared\n", myname, lineno, input_file_name, s);
 }
 
-
-reprec_warning(s)
-char *s;
+void
+reprec_warning(char *s)
 {
-    fprintf(stderr, "%s: w - line %d of \"%s\", the precedence of %s has been \
+    fprintf(stderr,
+	    "%s: w - line %d of \"%s\", the precedence of %s has been \
 redeclared\n", myname, lineno, input_file_name, s);
 }
 
-
-revalued_warning(s)
-char *s;
+void
+revalued_warning(char *s)
 {
     fprintf(stderr, "%s: w - line %d of \"%s\", the value of %s has been \
 redeclared\n", myname, lineno, input_file_name, s);
 }
 
-
-terminal_start(s)
-char *s;
+void
+terminal_start(char *s)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", the start symbol %s is a \
 token\n", myname, lineno, input_file_name, s);
     done(1);
 }
 
-
-restarted_warning()
+void
+restarted_warning(void)
 {
     fprintf(stderr, "%s: w - line %d of \"%s\", the start symbol has been \
 redeclared\n", myname, lineno, input_file_name);
 }
 
-
-no_grammar()
+void
+no_grammar(void)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", no grammar has been \
 specified\n", myname, lineno, input_file_name);
     done(1);
 }
 
-
-terminal_lhs(s_lineno)
-int s_lineno;
+void
+terminal_lhs(int s_lineno)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", a token appears on the lhs \
 of a production\n", myname, s_lineno, input_file_name);
     done(1);
 }
 
-
-prec_redeclared()
+void
+prec_redeclared(void)
 {
     fprintf(stderr, "%s: w - line %d of  \"%s\", conflicting %%prec \
 specifiers\n", myname, lineno, input_file_name);
 }
 
-
-unterminated_action(a_lineno, a_line, a_cptr)
-int a_lineno;
-char *a_line;
-char *a_cptr;
+void
+unterminated_action(int a_lineno, char *a_line, char *a_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", unterminated action\n",
 	    myname, a_lineno, input_file_name);
@@ -286,20 +226,15 @@ char *a_cptr;
     done(1);
 }
 
-
-dollar_warning(a_lineno, i)
-int a_lineno;
-int i;
+void
+dollar_warning(int a_lineno, int i)
 {
     fprintf(stderr, "%s: w - line %d of \"%s\", $%d references beyond the \
 end of the current rule\n", myname, a_lineno, input_file_name, i);
 }
 
-
-dollar_error(a_lineno, a_line, a_cptr)
-int a_lineno;
-char *a_line;
-char *a_cptr;
+void
+dollar_error(int a_lineno, char *a_line, char *a_cptr)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", illegal $-name\n",
 	    myname, a_lineno, input_file_name);
@@ -307,51 +242,161 @@ char *a_cptr;
     done(1);
 }
 
-
-untyped_lhs()
+void
+untyped_lhs(void)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", $$ is untyped\n",
 	    myname, lineno, input_file_name);
     done(1);
 }
 
-
-untyped_rhs(i, s)
-int i;
-char *s;
+void
+untyped_rhs(int i, char *s)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", $%d (%s) is untyped\n",
 	    myname, lineno, input_file_name, i, s);
     done(1);
 }
 
-
-unknown_rhs(i)
-int i;
+void
+unknown_rhs(int i)
 {
     fprintf(stderr, "%s: e - line %d of \"%s\", $%d is untyped\n",
 	    myname, lineno, input_file_name, i);
     done(1);
 }
 
-
-default_action_warning()
+void
+default_action_warning(void)
 {
-    fprintf(stderr, "%s: w - line %d of \"%s\", the default action assigns an \
+    fprintf(stderr,
+	    "%s: w - line %d of \"%s\", the default action assigns an \
 undefined value to $$\n", myname, lineno, input_file_name);
 }
 
-
-undefined_goal(s)
-char *s;
+void
+undefined_goal(char *s)
 {
     fprintf(stderr, "%s: e - the start symbol %s is undefined\n", myname, s);
     done(1);
 }
 
-
-undefined_symbol_warning(s)
-char *s;
+void
+undefined_symbol_warning(char *s)
 {
     fprintf(stderr, "%s: w - the symbol %s is undefined\n", myname, s);
 }
+
+#if ! defined(YYBTYACC)
+void
+unsupported_flag_warning(const char *flag, const char *details)
+{
+    fprintf(stderr, "%s: w - %s flag unsupported, %s\n",
+	    myname, flag, details);
+}
+#endif
+
+#if defined(YYBTYACC)
+void
+at_warning(int a_lineno, int i)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", @%d references beyond the \
+end of the current rule\n", myname, a_lineno, input_file_name, i);
+}
+
+void
+at_error(int a_lineno, char *a_line, char *a_cptr)
+{
+    fprintf(stderr,
+	    "%s: e - line %d of \"%s\", illegal @$ or @N reference\n",
+	    myname, a_lineno, input_file_name);
+    print_pos(a_line, a_cptr);
+    done(1);
+}
+
+void
+unterminated_arglist(int a_lineno, char *a_line, char *a_cptr)
+{
+    fprintf(stderr,
+	    "%s: e - line %d of \"%s\", unterminated argument list\n",
+	    myname, a_lineno, input_file_name);
+    print_pos(a_line, a_cptr);
+    done(1);
+}
+
+void
+arg_number_disagree_warning(int a_lineno, char *a_name)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", number of arguments of %s "
+	    "doesn't agree with previous declaration\n",
+	    myname, a_lineno, input_file_name, a_name);
+}
+
+void
+bad_formals(void)
+{
+    fprintf(stderr, "%s: e - line %d of \"%s\", bad formal argument list\n",
+	    myname, lineno, input_file_name);
+    print_pos(line, cptr);
+    done(1);
+}
+
+void
+arg_type_disagree_warning(int a_lineno, int i, char *a_name)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", type of argument %d "
+	    "to %s doesn't agree with previous declaration\n",
+	    myname, a_lineno, input_file_name, i, a_name);
+}
+
+void
+unknown_arg_warning(int d_lineno, const char *dlr_opt, const char *d_arg, const char
+		    *d_line, const char *d_cptr)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", unknown argument %s%s\n",
+	    myname, d_lineno, input_file_name, dlr_opt, d_arg);
+    print_pos(d_line, d_cptr);
+}
+
+void
+untyped_arg_warning(int a_lineno, const char *dlr_opt, const char *a_name)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", untyped argument %s%s\n",
+	    myname, a_lineno, input_file_name, dlr_opt, a_name);
+}
+
+void
+wrong_number_args_warning(const char *which, const char *a_name)
+{
+    fprintf(stderr,
+	    "%s: w - line %d of \"%s\", wrong number of %sarguments for %s\n",
+	    myname, lineno, input_file_name, which, a_name);
+    print_pos(line, cptr);
+}
+
+void
+wrong_type_for_arg_warning(int i, char *a_name)
+{
+    fprintf(stderr,
+	    "%s: w - line %d of \"%s\", wrong type for default argument %d to %s\n",
+	    myname, lineno, input_file_name, i, a_name);
+    print_pos(line, cptr);
+}
+
+void
+start_requires_args(char *a_name)
+{
+    fprintf(stderr,
+	    "%s: w - line %d of \"%s\", start symbol %s requires arguments\n",
+	    myname, 0, input_file_name, a_name);
+
+}
+
+void
+destructor_redeclared_warning(int a_lineno, char *a_line, char *a_cptr)
+{
+    fprintf(stderr, "%s: w - line %d of \"%s\", destructor redeclared\n",
+	    myname, a_lineno, input_file_name);
+    print_pos(a_line, a_cptr);
+}
+#endif

@@ -1,131 +1,188 @@
-/*
- * Copyright (c) 1989 The Regents of the University of California.
- * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Robert Paul Corbett.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1989 The Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)main.c	5.5 (Berkeley) 5/24/93";
-#endif /* not lint */
+/* $Id: main.c,v 1.56 2016/03/25 00:16:28 Jung-uk.Kim Exp $ */
 
 #include <signal.h>
+#ifndef _WIN32
+#include <unistd.h>		/* for _exit() */
+#else
+#include <stdlib.h>		/* for _exit() */
+#endif
+
 #include "defs.h"
 
+#ifdef HAVE_MKSTEMP
+# define USE_MKSTEMP 1
+#elif defined(HAVE_FCNTL_H)
+# define USE_MKSTEMP 1
+# include <fcntl.h>		/* for open(), O_EXCL, etc. */
+#else
+# define USE_MKSTEMP 0
+#endif
+
+#if USE_MKSTEMP
+#include <sys/types.h>
+#include <sys/stat.h>
+
+typedef struct _my_tmpfiles
+{
+    struct _my_tmpfiles *next;
+    char *name;
+}
+MY_TMPFILES;
+
+static MY_TMPFILES *my_tmpfiles;
+#endif /* USE_MKSTEMP */
+
 char dflag;
+char gflag;
+char iflag;
 char lflag;
+static char oflag;
 char rflag;
+char sflag;
 char tflag;
 char vflag;
 
-char *symbol_prefix;
-char *file_prefix = "y";
-char *myname = "yacc";
-char *temp_form = "yacc.XXXXXXX";
+const char *symbol_prefix;
+const char *myname = "yacc";
 
 int lineno;
 int outline;
 
-char *action_file_name;
+static char empty_string[] = "";
+static char default_file_prefix[] = "y";
+
+static char *file_prefix = default_file_prefix;
+
 char *code_file_name;
+char *input_file_name = empty_string;
 char *defines_file_name;
-char *input_file_name = "";
-char *output_file_name;
-char *text_file_name;
-char *union_file_name;
-char *verbose_file_name;
+char *externs_file_name;
+
+static char *graph_file_name;
+static char *output_file_name;
+static char *verbose_file_name;
 
 FILE *action_file;	/*  a temp file, used to save actions associated    */
-			/*  with rules until the parser is written	    */
+			/*  with rules until the parser is written          */
 FILE *code_file;	/*  y.code.c (used when the -r option is specified) */
-FILE *defines_file;	/*  y.tab.h					    */
-FILE *input_file;	/*  the input file				    */
-FILE *output_file;	/*  y.tab.c					    */
-FILE *text_file;	/*  a temp file, used to save text until all	    */
-			/*  symbols have been defined			    */
-FILE *union_file;	/*  a temp file, used to save the union		    */
-			/*  definition until all symbol have been	    */
-			/*  defined					    */
-FILE *verbose_file;	/*  y.output					    */
+FILE *defines_file;	/*  y.tab.h                                         */
+FILE *externs_file;	/*  y.tab.i                                         */
+FILE *input_file;	/*  the input file                                  */
+FILE *output_file;	/*  y.tab.c                                         */
+FILE *text_file;	/*  a temp file, used to save text until all        */
+			/*  symbols have been defined                       */
+FILE *union_file;	/*  a temp file, used to save the union             */
+			/*  definition until all symbol have been           */
+			/*  defined                                         */
+FILE *verbose_file;	/*  y.output                                        */
+FILE *graph_file;	/*  y.dot                                           */
 
-int nitems;
-int nrules;
-int nsyms;
-int ntokens;
-int nvars;
+Value_t nitems;
+Value_t nrules;
+Value_t nsyms;
+Value_t ntokens;
+Value_t nvars;
 
-int   start_symbol;
-char  **symbol_name;
-short *symbol_value;
-short *symbol_prec;
-char  *symbol_assoc;
+Value_t start_symbol;
+char **symbol_name;
+char **symbol_pname;
+Value_t *symbol_value;
+Value_t *symbol_prec;
+char *symbol_assoc;
 
-short *ritem;
-short *rlhs;
-short *rrhs;
-short *rprec;
-char  *rassoc;
-short **derives;
+int pure_parser;
+int token_table;
+
+#if defined(YYBTYACC)
+Value_t *symbol_pval;
+char **symbol_destructor;
+char **symbol_type_tag;
+int locations = 0;	/* default to no position processing */
+int backtrack = 0;	/* default is no backtracking */
+#endif
+
+int exit_code;
+
+Value_t *ritem;
+Value_t *rlhs;
+Value_t *rrhs;
+Value_t *rprec;
+Assoc_t *rassoc;
+Value_t **derives;
 char *nullable;
 
-extern char *mktemp();
-extern char *getenv();
+/*
+ * Since fclose() is called via the signal handler, it might die.  Don't loop
+ * if there is a problem closing a file.
+ */
+#define DO_CLOSE(fp) \
+	if (fp != 0) { \
+	    FILE *use = fp; \
+	    fp = 0; \
+	    fclose(use); \
+	}
 
+static int got_intr = 0;
 
-done(k)
-int k;
+void
+done(int k)
 {
-    if (action_file) { fclose(action_file); unlink(action_file_name); }
-    if (text_file) { fclose(text_file); unlink(text_file_name); }
-    if (union_file) { fclose(union_file); unlink(union_file_name); }
+    DO_CLOSE(input_file);
+    DO_CLOSE(output_file);
+    if (iflag)
+	DO_CLOSE(externs_file);
+    if (rflag)
+	DO_CLOSE(code_file);
+
+    DO_CLOSE(action_file);
+    DO_CLOSE(defines_file);
+    DO_CLOSE(graph_file);
+    DO_CLOSE(text_file);
+    DO_CLOSE(union_file);
+    DO_CLOSE(verbose_file);
+
+    if (got_intr)
+	_exit(EXIT_FAILURE);
+
+#ifdef NO_LEAKS
+    if (rflag)
+	DO_FREE(code_file_name);
+
+    if (dflag)
+	DO_FREE(defines_file_name);
+
+    if (iflag)
+	DO_FREE(externs_file_name);
+
+    if (oflag)
+	DO_FREE(output_file_name);
+
+    if (vflag)
+	DO_FREE(verbose_file_name);
+
+    if (gflag)
+	DO_FREE(graph_file_name);
+
+    lr0_leaks();
+    lalr_leaks();
+    mkpar_leaks();
+    mstring_leaks();
+    output_leaks();
+    reader_leaks();
+#endif
+
     exit(k);
 }
 
-
-void
-onintr(signo)
-	int signo;
+static void
+onintr(int sig GCC_UNUSED)
 {
-    done(1);
+    got_intr = 1;
+    done(EXIT_FAILURE);
 }
 
-
-set_signals()
+static void
+set_signals(void)
 {
 #ifdef SIGINT
     if (signal(SIGINT, SIG_IGN) != SIG_IGN)
@@ -141,31 +198,131 @@ set_signals()
 #endif
 }
 
-
-usage()
+static void
+usage(void)
 {
-    fprintf(stderr, "usage: %s [-dlrtv] [-b file_prefix] [-p symbol_prefix] filename\n", myname);
+    static const char *msg[] =
+    {
+	""
+	,"Options:"
+	,"  -b file_prefix        set filename prefix (default \"y.\")"
+	,"  -B                    create a backtracking parser"
+	,"  -d                    write definitions (" DEFINES_SUFFIX ")"
+	,"  -i                    write interface (y.tab.i)"
+	,"  -g                    write a graphical description"
+	,"  -l                    suppress #line directives"
+	,"  -L                    enable position processing, e.g., \"%locations\""
+	,"  -o output_file        (default \"" OUTPUT_SUFFIX "\")"
+	,"  -p symbol_prefix      set symbol prefix (default \"yy\")"
+	,"  -P                    create a reentrant parser, e.g., \"%pure-parser\""
+	,"  -r                    produce separate code and table files (y.code.c)"
+	,"  -s                    suppress #define's for quoted names in %token lines"
+	,"  -t                    add debugging support"
+	,"  -v                    write description (y.output)"
+	,"  -V                    show version information and exit"
+    };
+    unsigned n;
+
+    fflush(stdout);
+    fprintf(stderr, "Usage: %s [options] filename\n", myname);
+    for (n = 0; n < sizeof(msg) / sizeof(msg[0]); ++n)
+	fprintf(stderr, "%s\n", msg[n]);
+
     exit(1);
 }
 
-
-getargs(argc, argv)
-int argc;
-char *argv[];
+static void
+setflag(int ch)
 {
-    register int i;
-    register char *s;
+    switch (ch)
+    {
+    case 'B':
+#if defined(YYBTYACC)
+	backtrack = 1;
+#else
+	unsupported_flag_warning("-B", "reconfigure with --enable-btyacc");
+#endif
+	break;
 
-    if (argc > 0) myname = argv[0];
+    case 'd':
+	dflag = 1;
+	break;
+
+    case 'g':
+	gflag = 1;
+	break;
+
+    case 'i':
+	iflag = 1;
+	break;
+
+    case 'l':
+	lflag = 1;
+	break;
+
+    case 'L':
+#if defined(YYBTYACC)
+	locations = 1;
+#else
+	unsupported_flag_warning("-B", "reconfigure with --enable-btyacc");
+#endif
+	break;
+
+    case 'P':
+	pure_parser = 1;
+	break;
+
+    case 'r':
+	rflag = 1;
+	break;
+
+    case 's':
+	sflag = 1;
+	break;
+
+    case 't':
+	tflag = 1;
+	break;
+
+    case 'v':
+	vflag = 1;
+	break;
+
+    case 'V':
+	printf("%s - %s\n", myname, VERSION);
+	exit(EXIT_SUCCESS);
+
+    case 'y':
+	/* noop for bison compatibility. byacc is already designed to be posix
+	 * yacc compatible. */
+	break;
+
+    default:
+	usage();
+    }
+}
+
+static void
+getargs(int argc, char *argv[])
+{
+    int i;
+    char *s;
+    int ch;
+
+    if (argc > 0)
+	myname = argv[0];
+
     for (i = 1; i < argc; ++i)
     {
 	s = argv[i];
-	if (*s != '-') break;
-	switch (*++s)
+	if (*s != '-')
+	    break;
+	switch (ch = *++s)
 	{
 	case '\0':
 	    input_file = stdin;
-	    if (i + 1 < argc) usage();
+	    if (i + 1 < argc)
+		usage();
 	    return;
 
 	case '-':
@@ -174,20 +331,21 @@ char *argv[];
 
 	case 'b':
 	    if (*++s)
-		 file_prefix = s;
+		file_prefix = s;
 	    else if (++i < argc)
 		file_prefix = argv[i];
 	    else
 		usage();
 	    continue;
 
-	case 'd':
-	    dflag = 1;
-	    break;
-
-	case 'l':
-	    lflag = 1;
-	    break;
+	case 'o':
+	    if (*++s)
+		output_file_name = s;
+	    else if (++i < argc)
+		output_file_name = argv[i];
+	    else
+		usage();
+	    continue;
 
 	case 'p':
 	    if (*++s)
@@ -198,162 +356,286 @@ char *argv[];
 		usage();
 	    continue;
 
-	case 'r':
-	    rflag = 1;
-	    break;
-
-	case 't':
-	    tflag = 1;
-	    break;
-
-	case 'v':
-	    vflag = 1;
-	    break;
-
 	default:
-	    usage();
+	    setflag(ch);
+	    break;
 	}
 
 	for (;;)
 	{
-	    switch (*++s)
+	    switch (ch = *++s)
 	    {
 	    case '\0':
 		goto end_of_option;
 
-	    case 'd':
-		dflag = 1;
-		break;
-
-	    case 'l':
-		lflag = 1;
-		break;
-
-	    case 'r':
-		rflag = 1;
-		break;
-
-	    case 't':
-		tflag = 1;
-		break;
-
-	    case 'v':
-		vflag = 1;
-		break;
-
 	    default:
-		usage();
+		setflag(ch);
+		break;
 	    }
 	}
-end_of_option:;
+      end_of_option:;
     }
 
-no_more_options:;
-    if (i + 1 != argc) usage();
+  no_more_options:;
+    if (i + 1 != argc)
+	usage();
     input_file_name = argv[i];
 }
 
-
-char *
-allocate(n)
-unsigned n;
+void *
+allocate(size_t n)
 {
-    register char *p;
+    void *p;
 
     p = NULL;
     if (n)
     {
 	p = CALLOC(1, n);
-	if (!p) no_space();
+	NO_SPACE(p);
     }
     return (p);
 }
 
+#define CREATE_FILE_NAME(dest, suffix) \
+	dest = alloc_file_name(len, suffix)
 
-create_file_names()
+static char *
+alloc_file_name(size_t len, const char *suffix)
 {
-    int i, len;
-    char *tmpdir;
+    char *result = TMALLOC(char, len + strlen(suffix) + 1);
+    if (result == 0)
+	no_space();
+    strcpy(result, file_prefix);
+    strcpy(result + len, suffix);
+    return result;
+}
 
-    tmpdir = getenv("TMPDIR");
-    if (tmpdir == 0) tmpdir = "/tmp";
-
-    len = strlen(tmpdir);
-    i = len + 13;
-    if (len && tmpdir[len-1] != '/')
-	++i;
-
-    action_file_name = MALLOC(i);
-    if (action_file_name == 0) no_space();
-    text_file_name = MALLOC(i);
-    if (text_file_name == 0) no_space();
-    union_file_name = MALLOC(i);
-    if (union_file_name == 0) no_space();
-
-    strcpy(action_file_name, tmpdir);
-    strcpy(text_file_name, tmpdir);
-    strcpy(union_file_name, tmpdir);
-
-    if (len && tmpdir[len - 1] != '/')
+static char *
+find_suffix(char *name, const char *suffix)
+{
+    size_t len = strlen(name);
+    size_t slen = strlen(suffix);
+    if (len >= slen)
     {
-	action_file_name[len] = '/';
-	text_file_name[len] = '/';
-	union_file_name[len] = '/';
-	++len;
+	name += len - slen;
+	if (strcmp(name, suffix) == 0)
+	    return name;
+    }
+    return NULL;
+}
+
+static void
+create_file_names(void)
+{
+    size_t len;
+    const char *defines_suffix;
+    const char *externs_suffix;
+    char *suffix;
+
+    suffix = NULL;
+    defines_suffix = DEFINES_SUFFIX;
+    externs_suffix = EXTERNS_SUFFIX;
+
+    /* compute the file_prefix from the user provided output_file_name */
+    if (output_file_name != 0)
+    {
+	if (!(suffix = find_suffix(output_file_name, OUTPUT_SUFFIX))
+	    && (suffix = find_suffix(output_file_name, ".c")))
+	{
+	    defines_suffix = ".h";
+	    externs_suffix = ".i";
+	}
     }
 
-    strcpy(action_file_name + len, temp_form);
-    strcpy(text_file_name + len, temp_form);
-    strcpy(union_file_name + len, temp_form);
+    if (suffix != NULL)
+    {
+	len = (size_t) (suffix - output_file_name);
+	file_prefix = TMALLOC(char, len + 1);
+	NO_SPACE(file_prefix);
+	strncpy(file_prefix, output_file_name, len)[len] = 0;
+    }
+    else
+	len = strlen(file_prefix);
 
-    action_file_name[len + 5] = 'a';
-    text_file_name[len + 5] = 't';
-    union_file_name[len + 5] = 'u';
-
-    mktemp(action_file_name);
-    mktemp(text_file_name);
-    mktemp(union_file_name);
-
-    len = strlen(file_prefix);
-
-    output_file_name = MALLOC(len + 7);
+    /* if "-o filename" was not given */
     if (output_file_name == 0)
-	no_space();
-    strcpy(output_file_name, file_prefix);
-    strcpy(output_file_name + len, OUTPUT_SUFFIX);
+    {
+	oflag = 1;
+	CREATE_FILE_NAME(output_file_name, OUTPUT_SUFFIX);
+    }
 
     if (rflag)
     {
-	code_file_name = MALLOC(len + 8);
-	if (code_file_name == 0)
-	    no_space();
-	strcpy(code_file_name, file_prefix);
-	strcpy(code_file_name + len, CODE_SUFFIX);
+	CREATE_FILE_NAME(code_file_name, CODE_SUFFIX);
     }
     else
 	code_file_name = output_file_name;
 
     if (dflag)
     {
-	defines_file_name = MALLOC(len + 7);
-	if (defines_file_name == 0)
-	    no_space();
-	strcpy(defines_file_name, file_prefix);
-	strcpy(defines_file_name + len, DEFINES_SUFFIX);
+	CREATE_FILE_NAME(defines_file_name, defines_suffix);
+    }
+
+    if (iflag)
+    {
+	CREATE_FILE_NAME(externs_file_name, externs_suffix);
     }
 
     if (vflag)
     {
-	verbose_file_name = MALLOC(len + 8);
-	if (verbose_file_name == 0)
-	    no_space();
-	strcpy(verbose_file_name, file_prefix);
-	strcpy(verbose_file_name + len, VERBOSE_SUFFIX);
+	CREATE_FILE_NAME(verbose_file_name, VERBOSE_SUFFIX);
+    }
+
+    if (gflag)
+    {
+	CREATE_FILE_NAME(graph_file_name, GRAPH_SUFFIX);
+    }
+
+    if (suffix != NULL)
+    {
+	FREE(file_prefix);
     }
 }
 
+#if USE_MKSTEMP
+static void
+close_tmpfiles(void)
+{
+    while (my_tmpfiles != 0)
+    {
+	MY_TMPFILES *next = my_tmpfiles->next;
 
-open_files()
+	(void)chmod(my_tmpfiles->name, 0644);
+	(void)unlink(my_tmpfiles->name);
+
+	free(my_tmpfiles->name);
+	free(my_tmpfiles);
+
+	my_tmpfiles = next;
+    }
+}
+
+#ifndef HAVE_MKSTEMP
+static int
+my_mkstemp(char *temp)
+{
+    int fd;
+    char *dname;
+    char *fname;
+    char *name;
+
+    /*
+     * Split-up to use tempnam, rather than tmpnam; the latter (like
+     * mkstemp) is unusable on Windows.
+     */
+    if ((fname = strrchr(temp, '/')) != 0)
+    {
+	dname = strdup(temp);
+	dname[++fname - temp] = '\0';
+    }
+    else
+    {
+	dname = 0;
+	fname = temp;
+    }
+    if ((name = tempnam(dname, fname)) != 0)
+    {
+	fd = open(name, O_CREAT | O_EXCL | O_RDWR);
+	strcpy(temp, name);
+    }
+    else
+    {
+	fd = -1;
+    }
+
+    if (dname != 0)
+	free(dname);
+
+    return fd;
+}
+#define mkstemp(s) my_mkstemp(s)
+#endif
+
+#endif
+
+/*
+ * tmpfile() should be adequate, except that it may require special privileges
+ * to use, e.g., MinGW and Windows 7 where it tries to use the root directory.
+ */
+static FILE *
+open_tmpfile(const char *label)
+{
+#define MY_FMT "%s/%.*sXXXXXX"
+    FILE *result;
+#if USE_MKSTEMP
+    int fd;
+    const char *tmpdir;
+    char *name;
+    const char *mark;
+
+    if ((tmpdir = getenv("TMPDIR")) == 0 || access(tmpdir, W_OK) != 0)
+    {
+#ifdef P_tmpdir
+	tmpdir = P_tmpdir;
+#else
+	tmpdir = "/tmp";
+#endif
+	if (access(tmpdir, W_OK) != 0)
+	    tmpdir = ".";
+    }
+
+    /* The size of the format is guaranteed to be longer than the result from
+     * printing empty strings with it; this calculation accounts for the
+     * string-lengths as well.
+     */
+    name = malloc(strlen(tmpdir) + sizeof(MY_FMT) + strlen(label));
+
+    result = 0;
+    if (name != 0)
+    {
+	mode_t save_umask = umask(0177);
+
+	if ((mark = strrchr(label, '_')) == 0)
+	    mark = label + strlen(label);
+
+	sprintf(name, MY_FMT, tmpdir, (int)(mark - label), label);
+	fd = mkstemp(name);
+	if (fd >= 0)
+	{
+	    result = fdopen(fd, "w+");
+	    if (result != 0)
+	    {
+		MY_TMPFILES *item;
+
+		if (my_tmpfiles == 0)
+		{
+		    atexit(close_tmpfiles);
+		}
+
+		item = NEW(MY_TMPFILES);
+		NO_SPACE(item);
+
+		item->name = name;
+		NO_SPACE(item->name);
+
+		item->next = my_tmpfiles;
+		my_tmpfiles = item;
+	    }
+	}
+	(void)umask(save_umask);
+    }
+#else
+    result = tmpfile();
+#endif
+
+    if (result == 0)
+	open_error(label);
+    return result;
+#undef MY_FMT
+}
+
+static void
+open_files(void)
 {
     create_file_names();
 
@@ -364,13 +646,8 @@ open_files()
 	    open_error(input_file_name);
     }
 
-    action_file = fopen(action_file_name, "w");
-    if (action_file == 0)
-	open_error(action_file_name);
-
-    text_file = fopen(text_file_name, "w");
-    if (text_file == 0)
-	open_error(text_file_name);
+    action_file = open_tmpfile("action_file");
+    text_file = open_tmpfile("text_file");
 
     if (vflag)
     {
@@ -379,14 +656,36 @@ open_files()
 	    open_error(verbose_file_name);
     }
 
+    if (gflag)
+    {
+	graph_file = fopen(graph_file_name, "w");
+	if (graph_file == 0)
+	    open_error(graph_file_name);
+	fprintf(graph_file, "digraph %s {\n", file_prefix);
+	fprintf(graph_file, "\tedge [fontsize=10];\n");
+	fprintf(graph_file, "\tnode [shape=box,fontsize=10];\n");
+	fprintf(graph_file, "\torientation=landscape;\n");
+	fprintf(graph_file, "\trankdir=LR;\n");
+	fprintf(graph_file, "\t/*\n");
+	fprintf(graph_file, "\tmargin=0.2;\n");
+	fprintf(graph_file, "\tpage=\"8.27,11.69\"; // for A4 printing\n");
+	fprintf(graph_file, "\tratio=auto;\n");
+	fprintf(graph_file, "\t*/\n");
+    }
+
     if (dflag)
     {
 	defines_file = fopen(defines_file_name, "w");
 	if (defines_file == 0)
 	    open_error(defines_file_name);
-	union_file = fopen(union_file_name, "w");
-	if (union_file ==  0)
-	    open_error(union_file_name);
+	union_file = open_tmpfile("union_file");
+    }
+
+    if (iflag)
+    {
+	externs_file = fopen(externs_file_name, "w");
+	if (externs_file == 0)
+	    open_error(externs_file_name);
     }
 
     output_file = fopen(output_file_name, "w");
@@ -403,12 +702,13 @@ open_files()
 	code_file = output_file;
 }
 
-
 int
-main(argc, argv)
-int argc;
-char *argv[];
+main(int argc, char *argv[])
 {
+    SRexpect = -1;
+    RRexpect = -1;
+    exit_code = EXIT_SUCCESS;
+
     set_signals();
     getargs(argc, argv);
     open_files();
@@ -416,8 +716,10 @@ char *argv[];
     lr0();
     lalr();
     make_parser();
+    graph();
+    finalize_closure();
     verbose();
     output();
-    done(0);
-    /*NOTREACHED*/
+    done(exit_code);
+    /*NOTREACHED */
 }
