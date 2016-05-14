@@ -925,6 +925,7 @@ file /usr/bin/mkdep
 file /usr/bin/mkfifo
 file /usr/bin/mklocale
 file /usr/bin/mkstr
+file /usr/bin/mktemp
 file /usr/bin/more
 file /usr/bin/msgs
 file /usr/bin/mt
@@ -991,6 +992,7 @@ file /usr/bin/size
 file /usr/bin/sl
 file /usr/bin/soelim
 file /usr/bin/sort
+file /usr/bin/spell
 file /usr/bin/split
 file /usr/bin/sqlite3
 file /usr/bin/strings
@@ -1657,6 +1659,7 @@ file /usr/libexec/ntalkd
 file /usr/libexec/rexecd
 file /usr/libexec/rlogind
 file /usr/libexec/rshd
+file /usr/libexec/spellprog
 file /usr/libexec/telnetd
 file /usr/libexec/tftpd
 file /usr/libexec/uucpd
@@ -1686,12 +1689,18 @@ file /usr/share/calendar/calendar.music
 file /usr/share/calendar/calendar.usholiday
 
 dir /usr/share/dict
+dir /usr/share/dict/special
+file /usr/share/dict/american
+file /usr/share/dict/british
 file /usr/share/dict/connectives
 file /usr/share/dict/propernames
 file /usr/share/dict/README
+file /usr/share/dict/stop
 file /usr/share/dict/web2
 file /usr/share/dict/web2a
 file /usr/share/dict/words
+file /usr/share/dict/special/4bsd
+file /usr/share/dict/special/math
 
 dir /usr/share/doc
 dir /usr/share/doc/mg
@@ -1909,6 +1918,7 @@ file /usr/share/man/cat1/mkdir.0
 file /usr/share/man/cat1/mkfifo.0
 file /usr/share/man/cat1/mklocale.0
 file /usr/share/man/cat1/mkstr.0
+file /usr/share/man/cat1/mktemp.0
 file /usr/share/man/cat1/more.0
 file /usr/share/man/cat1/msgs.0
 file /usr/share/man/cat1/mt.0
@@ -1959,6 +1969,7 @@ file /usr/share/man/cat1/sl.0
 file /usr/share/man/cat1/sleep.0
 file /usr/share/man/cat1/soelim.0
 file /usr/share/man/cat1/sort.0
+file /usr/share/man/cat1/spell.0
 file /usr/share/man/cat1/split.0
 file /usr/share/man/cat1/sqlite3.0
 file /usr/share/man/cat1/strings.0
