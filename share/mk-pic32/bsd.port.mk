@@ -10,6 +10,8 @@ BINDIR=${PREFIX}/bin
 LOCALBASE=${PREFIX}
 MANDIR=${PREFIX}/man/man
 PKGNAME=${PORT}-${V}
+PORTSDIR?=${BSDSRC}/ports
+PKGDIR=${PORTSDIR}/packages
 ARCH?=mipsel
 
 build: all
@@ -63,11 +65,18 @@ package: control
 	@echo 2.0 > ${FAKEDIR}/debian-binary
 	@(cd ${FAKEDIR} && ar cr ${PKGNAME}_${ARCH}.ar debian-binary control.tar.gz data.tar.gz)
 	@rm -f ${FAKEDIR}/debian-binary ${FAKEDIR}/control.tar.gz
+	@mv ${FAKEDIR}/${PKGNAME}_${ARCH}.ar ${PKGDIR}
 	@echo "done!"
 
 # Update Installed-Size field in control file
 update-control: control
 	@sed "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" -i control
 
-clean-package: cleandir
+# Extra clean routines, when in doubt just 'make clean-all'
+clean-work: cleandir
 	rm -rf ${FAKEDIR}
+
+clean-package:
+	rm -f ${PKGDIR}/${PKGNAME}_${ARCH}.ar
+
+clean-all: clean-work clean-package
