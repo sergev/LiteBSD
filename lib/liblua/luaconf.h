@@ -1,5 +1,5 @@
 /*
-** $Id: luaconf.h,v 1.254 2015/10/21 18:17:40 roberto Exp $
+** $Id: luaconf.h,v 1.255 2016/05/01 20:06:09 roberto Exp $
 ** Configuration file for Lua
 ** See Copyright Notice in lua.h
 */
@@ -80,6 +80,7 @@
 #if defined(LUA_USE_C89) && !defined(LUA_USE_WINDOWS)
 #define LUA_C89_NUMBERS
 #endif
+
 
 
 /*
@@ -542,8 +543,6 @@
 #elif LUA_INT_TYPE == LUA_INT_LONGLONG	/* }{ long long */
 
 /* use presence of macro LLONG_MAX as proxy for C99 compliance */
-#define LLONG_MAX	0x7fffffffffffffffLL
-#define LLONG_MIN	(-0x7fffffffffffffffLL-1)
 #if defined(LLONG_MAX)		/* { */
 /* use ISO C99 stuff */
 
@@ -613,7 +612,7 @@
 ** provide its own implementation.
 */
 #if !defined(LUA_USE_C89)
-#define lua_number2strx(L,b,sz,f,n)	l_sprintf(b,sz,f,n)
+#define lua_number2strx(L,b,sz,f,n)	((void)L, l_sprintf(b,sz,f,n))
 #endif
 
 
