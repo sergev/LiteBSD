@@ -81,7 +81,7 @@ INSTALL		= /usr/bin/install -c
 INSTALL_PROG	= ${INSTALL}
 transform	= s,x,x,
 
-AWK		= mawk
+AWK		= awk
 LN_S		= ln -s -f
 
 CTAGS		= ctags

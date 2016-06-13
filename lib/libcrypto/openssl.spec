@@ -82,7 +82,7 @@ documentation and POD files from which the man pages were produced.
 
 %define CONFIG_FLAGS -DSSL_ALLOW_ADH --prefix=/usr --openssldir=%{openssldir}
 
-perl util/perlpath.pl /usr/bin/perl
+perl util/perlpath.pl perl
 
 %ifarch i386 i486 i586 i686
 ./Configure %{CONFIG_FLAGS} linux-elf shared

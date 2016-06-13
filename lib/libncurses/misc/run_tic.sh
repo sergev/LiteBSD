@@ -50,7 +50,7 @@ echo '** Building terminfo database, please wait...'
 : ${srcdir:=.}
 : ${datarootdir:=${prefix}/share}
 : ${datadir:=${datarootdir}}
-: ${TIC_PATH:=/usr/bin/tic}
+: ${TIC_PATH:=tic}
 : ${ticdir:=/usr/share/terminfo}
 : ${source:=${top_srcdir}/misc/terminfo.src}
 : ${LN_S:="ln -s -f"}

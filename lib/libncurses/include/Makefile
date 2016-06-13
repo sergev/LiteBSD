@@ -55,7 +55,7 @@ INCLUDEDIR	= $(DESTDIR)$(includedir)$(includesubdir)
 INSTALL		= /usr/bin/install -c
 INSTALL_DATA	= ${INSTALL} -m 644
 
-AWK		= mawk
+AWK		= awk
 LN_S		= ln -s -f
 
 CTAGS		= ctags
