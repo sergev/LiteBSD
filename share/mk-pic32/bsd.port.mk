@@ -4,6 +4,8 @@
 
 .include <bsd.prog.mk>
 
+OS=`uname -s`
+
 FAKEDIR=${.CURDIR}/work
 PREFIX=/usr/local
 BINDIR=${PREFIX}/bin
@@ -59,7 +61,11 @@ CONTROLFILES=control
 #
 package: control
 	@echo -n "Creating ${PKGNAME}_${ARCH} package... "
+.if ${OS} == Linux
 	@${MAKE} update-control INSTALLED_SIZE="`du -b -s ${FAKEDIR}/usr | (read b x; echo $$b)`"
+.else
+	@${MAKE} update-control INSTALLED_SIZE="`gdu -b -s ${FAKEDIR}/usr | (read b x; echo $$b)`"
+.endif
 	@(cd ${FAKEDIR} && tar -cz -f data.tar.gz usr/)
 	@tar -cz -f ${FAKEDIR}/control.tar.gz ${CONTROLFILES}
 	@echo 2.0 > ${FAKEDIR}/debian-binary
@@ -70,7 +76,7 @@ package: control
 
 # Update Installed-Size field in control file
 update-control: control
-	@sed "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" -i control
+	@sed -i "/Installed-Size:/s/:.*/: ${INSTALLED_SIZE}/" control
 
 # Extra clean routines, when in doubt just 'make clean-all'
 clean-work: cleandir
