@@ -1,3 +1,5 @@
+/*	$NetBSD: pathnames.h,v 1.15 2011/03/08 23:55:19 riz Exp $	*/
+
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -13,11 +15,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -37,21 +35,6 @@
  */
 
 /*
- * Definitions of diversion files.  If the name of the file is changed,
- * adjust UNIQUE to point to the wildcard (*) character in the filename.
+ * Definitions of diversion files.
  */
-
-#ifdef msdos
-#define _PATH_DIVNAME	"\\M4*XXXXXX"		/* msdos diversion files */
-#define	UNIQUE		3			/* unique char location */
-#endif
-
-#ifdef unix
-#define _PATH_DIVNAME	"/tmp/m4.0XXXXXX"	/* unix diversion files */
-#define UNIQUE		8			/* unique char location */
-#endif
-
-#ifdef vms
-#define _PATH_DIVNAME	"sys$login:m4*XXXXXX"	/* vms diversion files */
-#define UNIQUE		12			/* unique char location */
-#endif
+#define _PATH_DIVNAME	"/tmp/m4.0XXXXXXXXXX"	/* unix diversion files */

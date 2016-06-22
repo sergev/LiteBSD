@@ -1,3 +1,9 @@
+-- $Id: README,v 1.2 2004/03/28 17:24:53 tom Exp $
+
+The original README is below.  I've updated this version of Berkeley Yacc
+to make it ANSI C compliant - Thomas Dickey
+
+-------------------------------------------------------------------------------
     Berkeley Yacc is an LALR(1) parser generator.  Berkeley Yacc has been made
 as compatible as possible with AT&T Yacc.  Berkeley Yacc can accept any input
 specification that conforms to the AT&T Yacc documentation.  Specifications

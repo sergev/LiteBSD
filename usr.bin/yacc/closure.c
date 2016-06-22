@@ -1,61 +1,30 @@
-/*
- * Copyright (c) 1989 The Regents of the University of California.
- * All rights reserved.
- *
- * This code is derived from software contributed to Berkeley by
- * Robert Paul Corbett.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-#ifndef lint
-static char sccsid[] = "@(#)closure.c	5.3 (Berkeley) 5/24/93";
-#endif /* not lint */
+/* $Id: closure.c,v 1.11 2014/09/18 00:40:07 tom Exp $ */
 
 #include "defs.h"
 
-short *itemset;
-short *itemsetend;
+Value_t *itemset;
+Value_t *itemsetend;
 unsigned *ruleset;
 
+static unsigned *first_base;
 static unsigned *first_derives;
 static unsigned *EFF;
 
+#ifdef	DEBUG
+static void print_closure(int);
+static void print_EFF(void);
+static void print_first_derives(void);
+#endif
 
-set_EFF()
+static void
+set_EFF(void)
 {
-    register unsigned *row;
-    register int symbol;
-    register short *sp;
-    register int rowsize;
-    register int i;
-    register int rule;
+    unsigned *row;
+    int symbol;
+    Value_t *sp;
+    int rowsize;
+    int i;
+    int rule;
 
     rowsize = WORDSIZE(nvars);
     EFF = NEW2(nvars * rowsize, unsigned);
@@ -83,15 +52,15 @@ set_EFF()
 #endif
 }
 
-
-set_first_derives()
+void
+set_first_derives(void)
 {
-    register unsigned *rrow;
-    register unsigned *vrow;
-    register int j;
-    register unsigned k;
-    register unsigned cword;
-    register short *rp;
+    unsigned *rrow;
+    unsigned *vrow;
+    int j;
+    unsigned k;
+    unsigned cword = 0;
+    Value_t *rp;
 
     int rule;
     int i;
@@ -100,7 +69,8 @@ set_first_derives()
 
     rulesetsize = WORDSIZE(nrules);
     varsetsize = WORDSIZE(nvars);
-    first_derives = NEW2(nvars * rulesetsize, unsigned) - ntokens * rulesetsize;
+    first_base = NEW2(nvars * rulesetsize, unsigned);
+    first_derives = first_base - ntokens * rulesetsize;
 
     set_EFF();
 
@@ -117,7 +87,7 @@ set_first_derives()
 		k = 0;
 	    }
 
-	    if (cword & (1 << k))
+	    if (cword & (unsigned)(1 << k))
 	    {
 		rp = derives[j];
 		while ((rule = *rp++) >= 0)
@@ -127,7 +97,6 @@ set_first_derives()
 	    }
 	}
 
-	vrow += varsetsize;
 	rrow += rulesetsize;
     }
 
@@ -138,26 +107,23 @@ set_first_derives()
     FREE(EFF);
 }
 
-
-closure(nucleus, n)
-short *nucleus;
-int n;
+void
+closure(Value_t *nucleus, int n)
 {
-    register int ruleno;
-    register unsigned word;
-    register unsigned i;
-    register short *csp;
-    register unsigned *dsp;
-    register unsigned *rsp;
-    register int rulesetsize;
+    unsigned ruleno;
+    unsigned word;
+    unsigned i;
+    Value_t *csp;
+    unsigned *dsp;
+    unsigned *rsp;
+    int rulesetsize;
 
-    short *csend;
+    Value_t *csend;
     unsigned *rsend;
     int symbol;
-    int itemno;
+    Value_t itemno;
 
     rulesetsize = WORDSIZE(nrules);
-    rsp = ruleset;
     rsend = ruleset + rulesetsize;
     for (rsp = ruleset; rsp < rsend; rsp++)
 	*rsp = 0;
@@ -185,9 +151,9 @@ int n;
 	{
 	    for (i = 0; i < BITS_PER_WORD; ++i)
 	    {
-		if (word & (1 << i))
+		if (word & (unsigned)(1 << i))
 		{
-		    itemno = rrhs[ruleno+i];
+		    itemno = rrhs[ruleno + i];
 		    while (csp < csend && *csp < itemno)
 			*itemsetend++ = *csp++;
 		    *itemsetend++ = itemno;
@@ -203,39 +169,37 @@ int n;
 	*itemsetend++ = *csp++;
 
 #ifdef	DEBUG
-  print_closure(n);
+    print_closure(n);
 #endif
 }
 
-
-
-finalize_closure()
+void
+finalize_closure(void)
 {
-  FREE(itemset);
-  FREE(ruleset);
-  FREE(first_derives + ntokens * WORDSIZE(nrules));
+    FREE(itemset);
+    FREE(ruleset);
+    FREE(first_base);
 }
-
 
 #ifdef	DEBUG
 
-print_closure(n)
-int n;
+static void
+print_closure(int n)
 {
-  register short *isp;
+    Value_t *isp;
 
-  printf("\n\nn = %d\n\n", n);
-  for (isp = itemset; isp < itemsetend; isp++)
-    printf("   %d\n", *isp);
+    printf("\n\nn = %d\n\n", n);
+    for (isp = itemset; isp < itemsetend; isp++)
+	printf("   %d\n", *isp);
 }
 
-
-print_EFF()
+static void
+print_EFF(void)
 {
-    register int i, j;
-    register unsigned *rowp;
-    register unsigned word;
-    register unsigned k;
+    int i, j;
+    unsigned *rowp;
+    unsigned word;
+    unsigned k;
 
     printf("\n\nEpsilon Free Firsts\n");
 
@@ -260,14 +224,14 @@ print_EFF()
     }
 }
 
-
-print_first_derives()
+static void
+print_first_derives(void)
 {
-    register int i;
-    register int j;
-    register unsigned *rp;
-    register unsigned cword;
-    register unsigned k;
+    int i;
+    int j;
+    unsigned *rp;
+    unsigned cword = 0;
+    unsigned k;
 
     printf("\n\n\nFirst Derives\n");
 
@@ -277,19 +241,19 @@ print_first_derives()
 	rp = first_derives + i * WORDSIZE(nrules);
 	k = BITS_PER_WORD;
 	for (j = 0; j <= nrules; k++, j++)
-        {
-	  if (k >= BITS_PER_WORD)
-	  {
-	      cword = *rp++;
-	      k = 0;
-	  }
+	{
+	    if (k >= BITS_PER_WORD)
+	    {
+		cword = *rp++;
+		k = 0;
+	    }
 
-	  if (cword & (1 << k))
-	    printf("   %d\n", j);
+	    if (cword & (1 << k))
+		printf("   %d\n", j);
 	}
     }
 
-  fflush(stdout);
+    fflush(stdout);
 }
 
 #endif

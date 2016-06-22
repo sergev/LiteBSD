@@ -5,7 +5,7 @@ SUBDIR=	apply apropos ar at awk banner basename bc bdes biff cal calendar \
 	comm compress cpp ctags cut dc deroff diff dirname du elfcopy \
 	env error expand false find finger fmt fold fpr from \
 	fsplit fstat ftp gcore gprof grep gzip head hexdump id indent \
-	join jot kdump ktrace lam last lastcomm leave locate \
+	join jot kdump ktrace lam last lastcomm leave lex locate \
 	lock logger login logname lorder lua m4 mail make man mesg mg mkdep \
 	mkfifo mklocale mkstr mktemp more msgs mt nc netstat nfsstat nice \
 	nl nm nohup pagesize passwd paste patch pcc pr printenv printf quota \

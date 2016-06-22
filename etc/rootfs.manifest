@@ -857,6 +857,7 @@ file /usr/bin/expand
 file /usr/bin/false
 file /usr/bin/find
 file /usr/bin/finger
+file /usr/bin/flex
 file /usr/bin/fmt
 file /usr/bin/fold
 file /usr/bin/fpr
@@ -886,6 +887,7 @@ file /usr/bin/last
 file /usr/bin/lastcomm
 file /usr/bin/ld
 file /usr/bin/leave
+file /usr/bin/lex
 file /usr/bin/locate
 file /usr/bin/lock
 mode 04555
@@ -1606,9 +1608,11 @@ file /usr/lib/libdwarf.a
 file /usr/lib/libedit.a
 file /usr/lib/libelf.a
 file /usr/lib/libelftc.a
+file /usr/lib/libfl.a
 file /usr/lib/libform.a
 file /usr/lib/libgcc.a
 file /usr/lib/libkvm.a
+file /usr/lib/libl.a
 file /usr/lib/liblua.a
 file /usr/lib/libm.a
 file /usr/lib/libmenu.a
@@ -1860,6 +1864,7 @@ file /usr/share/man/cat1/expr.0
 file /usr/share/man/cat1/false.0
 file /usr/share/man/cat1/find.0
 file /usr/share/man/cat1/finger.0
+file /usr/share/man/cat1/flex.0
 file /usr/share/man/cat1/fmt.0
 file /usr/share/man/cat1/fold.0
 file /usr/share/man/cat1/fpr.0
@@ -1891,6 +1896,7 @@ file /usr/share/man/cat1/lam.0
 file /usr/share/man/cat1/last.0
 file /usr/share/man/cat1/lastcomm.0
 file /usr/share/man/cat1/leave.0
+file /usr/share/man/cat1/lex.0
 file /usr/share/man/cat1/ln.0
 file /usr/share/man/cat1/locate.0
 file /usr/share/man/cat1/lock.0
