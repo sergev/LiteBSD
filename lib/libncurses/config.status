@@ -195,7 +195,7 @@ _ACEOF
 ### Special initialization commands, used to pass information from the
 ### configuration-run into config.status
 
-AWK="mawk"
+AWK="awk"
 ALTERNATE_SYMS=""
 DFT_ARG_SUFFIX=""
 DFT_LWR_MODEL="normal"
@@ -219,7 +219,7 @@ TERMINFO="/usr/share/terminfo"
 TICS_ARG_SUFFIX=""
 TICS_LIB_SUFFIX=""
 TICS_NAME="tic"
-TIC_PATH="/usr/bin/tic"
+TIC_PATH="tic"
 TINFO_ARG_SUFFIX="ncurses"
 TINFO_LIB_SUFFIX=""
 TINFO_NAME="ncurses"
@@ -392,7 +392,7 @@ s,@LDCONFIG@,/sbin/ldconfig,;t t
 s,@CXX@,/usr/bin/g++,;t t
 s,@CXXFLAGS@,-O2,;t t
 s,@ac_ct_CXX@,g++,;t t
-s,@AWK@,mawk,;t t
+s,@AWK@,awk,;t t
 s,@INSTALL_PROGRAM@,${INSTALL},;t t
 s,@INSTALL_SCRIPT@,${INSTALL},;t t
 s,@INSTALL_DATA@,${INSTALL} -m 644,;t t
@@ -598,7 +598,7 @@ s,@HAVE_STDINT_H@,1,;t t
 s,@HAVE_TERMIO_H@,1,;t t
 s,@HAVE_TERMIOS_H@,1,;t t
 s,@cross_compiling@,no,;t t
-s,@TIC_PATH@,/usr/bin/tic,;t t
+s,@TIC_PATH@,tic,;t t
 s,@MAKE_TESTS@,#,;t t
 s,@ADAHTML_DIR@,../../doc/html/ada,;t t
 s,@PANEL_NAME@,panel,;t t

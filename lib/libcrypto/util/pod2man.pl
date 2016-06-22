@@ -1,5 +1,5 @@
-: #!/usr/bin/perl-5.005
-    eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
+: #!/usr/bin/env perl
+    eval 'exec /usr/bin/env perl -S $0 ${1+"$@"}'
 	if $running_under_some_shell;
 
 $DEF_PM_SECTION = '3pm' || '3';

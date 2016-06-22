@@ -4307,6 +4307,7 @@ target /usr/share/man/cat8/slattach.0
 #
 # Files: /usr/share/terminfo
 #
+file /usr/share/terminfo.db
 dir /usr/share/terminfo
 dir /usr/share/terminfo/s
 file /usr/share/terminfo/s/screen

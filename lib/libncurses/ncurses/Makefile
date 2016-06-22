@@ -87,7 +87,7 @@ INSTALL_PROG	= ${INSTALL}
 INSTALL_DATA	= ${INSTALL} -m 644
 
 ARFLAGS		= -curv
-AWK		= mawk
+AWK		= awk
 LN_S		= ln -s -f
 NM		= nm
 
@@ -152,7 +152,7 @@ TERMINFO_CAPS	= $(top_srcdir)/include/Caps
 
 TERMINFO	= /usr/share/terminfo
 TERMINFO_SRC	= ${top_srcdir}/misc/terminfo.src
-TIC_PATH	= /usr/bin/tic
+TIC_PATH	= tic
 
 AUTO_SRC = \
 	./codes.c \

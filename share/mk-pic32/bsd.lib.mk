@@ -58,7 +58,7 @@ OBJS+=	${SRCS:R:S/$/.o/g}
 lib${LIB}.a:: ${OBJS}
 	@echo building standard ${LIB} library
 	@rm -f lib${LIB}.a
-	@${AR} cq lib${LIB}.a `lorder ${OBJS} | tsort` ${LDADD}
+	@${AR} cq lib${LIB}.a `${BSDSRC}/admin/build/lorder ${OBJS} | tsort` ${LDADD}
 	${RANLIB} lib${LIB}.a
 
 POBJS+=	${OBJS:.o=.po}

@@ -20,7 +20,7 @@ CPPFLAGS =   -D_BSD_SOURCE -DGCC_COMPAT -DNATIVE_FLOATING_POINT \
 	-I$(COMMONDIR)
 LIBS = -lc -lgcc
 LDFLAGS += -Wl,--gc-sections -s
-YACC = bison -y
+YACC = byacc
 YFLAGS = 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}

@@ -93,7 +93,7 @@ CF_EOF2
 	nCurses=ignore.3x
 	test no = yes && nCurses=ncurses.3x
 	aliases=`sed -f $top_srcdir/man/manlinks.sed $inalias |sed -f /home/retrobsd/ksh/litebsd/lib/libncurses/man_alias.sed | sort -u; test $inalias = $nCurses && echo curses`
-	cf_target=`grep "^$cf_source" /home/retrobsd/ksh/litebsd/lib/libncurses/man/man_db.renames | mawk '{print $2}'`
+	cf_target=`grep "^$cf_source" man/man_db.renames | awk '{print $2}'`
 	if test -z "$cf_target" ; then
 		echo '? missing rename for '$cf_source
 		cf_target="$cf_source"

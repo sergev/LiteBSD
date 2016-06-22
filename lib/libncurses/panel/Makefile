@@ -81,7 +81,7 @@ INSTALL_PROG	= ${INSTALL}
 INSTALL_DATA	= ${INSTALL} -m 644
 
 ARFLAGS		= -curv
-AWK		= mawk
+AWK		= awk
 LN_S		= ln -s -f
 
 CTAGS		= ctags
