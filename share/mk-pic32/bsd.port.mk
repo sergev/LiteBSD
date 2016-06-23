@@ -8,7 +8,12 @@ OS=`uname -s`
 
 FAKEDIR=${.CURDIR}/work
 PREFIX=/usr/local
+SBININSTALL?=No
+.if ${SBININSTALL} == "Yes"
+BINDIR=${PREFIX}/sbin
+.else
 BINDIR=${PREFIX}/bin
+.endif
 LOCALBASE=${PREFIX}
 MANDIR=${PREFIX}/man/man
 PKGNAME=${PORT}-${V}
