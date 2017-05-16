@@ -167,6 +167,8 @@ openit:
 	}
 next:
 	/*
+	 * #<ignored line>
+	 * 	-OR-
 	 * filename	[ standard | optional ] [ config-dependent ]
 	 *	[ dev* | profiling-routine ] [ device-driver]
 	 *	[ compile-with "compile rule" ]
@@ -191,6 +193,13 @@ next:
 	if (wd == 0)
 		goto next;
 	this = ns(wd);
+	if (*wd == '#') {
+		/*printf("%s: %s", fname, wd);*/
+		while ((wd = get_word(fp)) != 0)
+			/*printf(" %s"wd)*/;
+		/*printf("\n");*/
+		goto next;
+	}
 	next_word(fp, wd);
 	if (wd == 0) {
 		printf("%s: No type for %s.\n",
