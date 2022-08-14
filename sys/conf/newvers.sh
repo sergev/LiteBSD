@@ -49,10 +49,10 @@ set `pwd | rev`
 d=`echo "$1/$2/$3/$4" | rev`
 
 cat >vers.c <<EOF
-char ostype[] = "4.4BSD";
-char osrelease[] = "4.4BSD-Lite";
+char ostype[] = "LiteBSD";
+char osrelease[] = "LiteBSD-nightly";
 //char sccs[4] = { '@', '(', '#', ')' };
-char version[] = "4.4BSD-Lite build ${v} compiled ${t}\n"
+char version[] = "LiteBSD build ${v} compiled ${t}\n"
 "    ${u}@${h}:${d}\n";
 EOF
 
