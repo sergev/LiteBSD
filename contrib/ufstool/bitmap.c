@@ -139,11 +139,7 @@ static const u_char *fragtbl[MAXFRAG + 1] = {
  * of some frags.
  */
 void
-ffs_fragacct(fs, fragmap, fraglist, cnt)
-    struct fs *fs;
-    int fragmap;
-    int32_t fraglist[];
-    int cnt;
+ffs_fragacct(struct fs *fs, int fragmap, int32_t fraglist[], int cnt)
 {
     int inblk;
     int field, subfield;
@@ -175,10 +171,7 @@ ffs_fragacct(fs, fragmap, fraglist, cnt)
  * check if a block is available
  */
 int
-ffs_isblock(fs, cp, h)
-    struct fs *fs;
-    unsigned char *cp;
-    ufs1_daddr_t h;
+ffs_isblock(struct fs *fs, unsigned char *cp, ufs1_daddr_t h)
 {
     unsigned char mask;
 
@@ -204,10 +197,7 @@ ffs_isblock(fs, cp, h)
  * check if a block is free
  */
 int
-ffs_isfreeblock(fs, cp, h)
-    struct fs *fs;
-    u_char *cp;
-    ufs1_daddr_t h;
+ffs_isfreeblock(struct fs *fs, u_char *cp, ufs1_daddr_t h)
 {
 
     switch ((int)fs->fs_frag) {
@@ -229,10 +219,7 @@ ffs_isfreeblock(fs, cp, h)
  * take a block out of the map
  */
 void
-ffs_clrblock(fs, cp, h)
-    struct fs *fs;
-    u_char *cp;
-    ufs1_daddr_t h;
+ffs_clrblock(struct fs *fs, u_char *cp, ufs1_daddr_t h)
 {
 
     switch ((int)fs->fs_frag) {
@@ -257,10 +244,7 @@ ffs_clrblock(fs, cp, h)
  * put a block into the map
  */
 void
-ffs_setblock(fs, cp, h)
-    struct fs *fs;
-    unsigned char *cp;
-    ufs1_daddr_t h;
+ffs_setblock(struct fs *fs, unsigned char *cp, ufs1_daddr_t h)
 {
 
     switch ((int)fs->fs_frag) {
@@ -288,11 +272,7 @@ ffs_setblock(fs, cp, h)
  * Cnt == 1 means free; cnt == -1 means allocating.
  */
 void
-ffs_clusteracct(fs, cgp, blkno, cnt)
-    struct fs *fs;
-    struct cg *cgp;
-    ufs1_daddr_t blkno;
-    int cnt;
+ffs_clusteracct(struct fs *fs, struct cg *cgp, ufs1_daddr_t blkno, int cnt)
 {
     int32_t *sump;
     int32_t *lp;

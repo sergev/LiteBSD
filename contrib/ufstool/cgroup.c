@@ -129,7 +129,7 @@ ufs_print_cg(struct cg *cgr, FILE *out)
  */
 ufs1_daddr_t
 ufs_cgroup_hashalloc(ufs_t *disk, int cg, ufs1_daddr_t pref, int param,
-    ufs1_daddr_t (*allocator)())
+    ufs1_daddr_t (*allocator)(ufs_t *disk, int cg, ufs1_daddr_t ipref, int mode))
 {
     struct fs *fs = &disk->d_fs;
     ufs1_daddr_t result;

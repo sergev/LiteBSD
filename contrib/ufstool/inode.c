@@ -1280,8 +1280,7 @@ gotit:
  * free inodes, the one with the smallest number of directories.
  */
 static ufs_ino_t
-ffs_dirpref(fs)
-    struct fs *fs;
+ffs_dirpref(struct fs *fs)
 {
     int cg, minndir, mincg, avgifree;
 

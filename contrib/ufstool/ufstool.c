@@ -56,7 +56,7 @@ static unsigned pindex;
 static ufs_t disk;
 
 static const char *program_version =
-    "BSD 4.4 file system tool, version 0.1\n"
+    "BSD 4.4 file system tool, version 0.2\n"
     "Copyright (C) 2014 Serge Vakulenko";
 
 static const char *program_bug_address = "<serge@vak.ru>";
